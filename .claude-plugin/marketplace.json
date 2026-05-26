@@ -16,7 +16,7 @@
         "typescript": {
           "args": [
             "-c",
-            "mise x pnpm@latest -- pnpm add -g typescript-language-server typescript >/dev/null 2>&1 && exec mise x pnpm@latest -- typescript-language-server --stdio"
+            "mise x node@latest -- npm add -g typescript-language-server typescript >/dev/null 2>&1 && exec mise x node@latest -- typescript-language-server --stdio"
           ],
           "command": "sh",
           "extensionToLanguage": {
@@ -35,7 +35,7 @@
       "name": "ts-js-lsp",
       "source": "./",
       "strict": false,
-      "version": "1.0.2"
+      "version": "1.0.3"
     },
     {
       "author": {
