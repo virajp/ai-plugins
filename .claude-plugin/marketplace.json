@@ -15,19 +15,10 @@
       "lspServers": {
         "typescript": {
           "args": [
-            "x",
-            "pnpm@latest",
-            "--",
-            "pnpm",
-            "dlx",
-            "--package",
-            "typescript-language-server",
-            "--package",
-            "typescript",
-            "typescript-language-server",
-            "--stdio"
+            "-c",
+            "mise x pnpm@latest -- pnpm add -g typescript-language-server typescript >/dev/null 2>&1 && exec mise x pnpm@latest -- typescript-language-server --stdio"
           ],
-          "command": "mise",
+          "command": "sh",
           "extensionToLanguage": {
             ".cjs": "javascript",
             ".cts": "typescript",
@@ -44,7 +35,7 @@
       "name": "ts-js-lsp",
       "source": "./",
       "strict": false,
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "author": {
