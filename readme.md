@@ -31,3 +31,11 @@ TypeScript/JavaScript language server (via `typescript-language-server`).
 ```sh
 claude plugin install --scope project ts-js-lsp@virajp-claude-plugins
 ```
+
+### dart-lsp
+
+Dart language server.
+
+```sh
+claude plugin install --scope project dart-lsp@virajp-claude-plugins
+```

@@ -33,10 +33,40 @@
             ".mts": "typescript",
             ".ts": "typescript",
             ".tsx": "typescriptreact"
-          }
+          },
+          "startupTimeout": 60000
         }
       },
       "name": "ts-js-lsp",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Dart language server",
+      "lspServers": {
+        "dart": {
+          "args": [
+            "x",
+            "dart@latest",
+            "--",
+            "dart",
+            "language-server",
+            "--client-id=claude-code",
+            "--protocol=lsp"
+          ],
+          "command": "mise",
+          "extensionToLanguage": {
+            ".dart": "dart"
+          },
+          "startupTimeout": 60000
+        }
+      },
+      "name": "dart-lsp",
       "source": "./",
       "strict": false,
       "version": "1.0.0"
