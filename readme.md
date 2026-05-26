@@ -6,6 +6,8 @@ A curated collection of opinionated Claude Code plugins by Viraj Patel — LSP s
 
 [Claude Code CLI](https://claude.ai/code) & [Mise](https://mise.jdx.dev/) installed.
 
+> NOTE: `MISE` is required to use plugins
+
 ## Installation
 
 **Step 1 — Add the marketplace (once, user-scoped):**
