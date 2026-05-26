@@ -20,6 +20,10 @@
             "--",
             "pnpm",
             "dlx",
+            "--package",
+            "typescript-language-server",
+            "--package",
+            "typescript",
             "typescript-language-server",
             "--stdio"
           ],
@@ -40,7 +44,7 @@
       "name": "ts-js-lsp",
       "source": "./",
       "strict": false,
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "author": {
