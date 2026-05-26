@@ -4,7 +4,7 @@ A curated collection of opinionated Claude Code plugins by Viraj Patel — LSP s
 
 ## Prerequisites
 
-[Claude Code CLI](https://claude.ai/code) installed.
+[Claude Code CLI](https://claude.ai/code) & [Mise](https://mise.jdx.dev/) installed.
 
 ## Installation
 
