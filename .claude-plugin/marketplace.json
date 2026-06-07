@@ -25,9 +25,14 @@
         "language-server",
         "lsp"
       ],
-      "version": "1.0.3"
+      "version": "1.0.4"
     },
     {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Dart language server",
       "name": "vlsp-dart",
       "source": "./plugins/vlsp-dart",
       "strict": true,
@@ -36,9 +41,14 @@
         "language-server",
         "lsp"
       ],
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Collection of Skills to develop a product as solo developer or small team",
       "name": "vskills",
       "source": "./plugins/vskills/skills",
       "strict": true,
