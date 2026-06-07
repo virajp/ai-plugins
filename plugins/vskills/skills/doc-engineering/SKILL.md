@@ -18,7 +18,7 @@ Writes or updates engineering docs for a project. The project's **type**
 | `worker`   | workflows, activities, triggers, retries    | `worker.md`    | entity     |
 | `packages` | shared modules + schemas & data contracts   | `packages.md`  | module     |
 | `site`     | pages/routes, rendering, content, SEO       | `site.md`      | page       |
-| `frontend` | screens, state, navigation, edge cases      | `frontend.md`  | entity     |
+| `frontend` | screens (per-screen specs), state, navigation| `frontend.md`  | entity     |
 
 Each set runs independently — run one, several, or all depending on what the
 feature touches.
@@ -46,7 +46,8 @@ so all brainstorming happens in the orchestrator.
 | Packages        | `docs/engineering/packages/<module>.md`           |
 | Schemas         | `docs/engineering/packages/schemas/<entity>.md`   |
 | Site            | `docs/engineering/site/<page>.md`                 |
-| Frontend        | `docs/engineering/frontend/<entity>.md`           |
+| Frontend (entity)| `docs/engineering/frontend/<entity>/index.md`    |
+| Frontend (screen)| `docs/engineering/frontend/<entity>/<screen>.md` |
 | Templates       | `.claude/skills/doc-engineering/templates/`     |
 
 Schemas and data contracts live under `packages/` because they are shared across

@@ -27,6 +27,36 @@ if the project declares ssr/ssg. -->
 
 <!-- Internal links, dynamic route generation, how pages connect. -->
 
+## Layout (regions, top → bottom)
+
+<!-- The wireframe substitute: the page as ordered regions, each listing its
+elements. Square brackets mark conditionally shown elements. -->
+
+## Elements & Actions
+
+| Element | Type | Content / Source | Event | Result |
+| ------- | ---- | ---------------- | ----- | ------ |
+
+## States
+
+<!-- Every state the page can render: loading/SSR-pending, populated, empty,
+error/404, auth-gated, offline. -->
+
+| State | Trigger | What's shown | Available actions |
+| ----- | ------- | ------------ | ----------------- |
+
+## Forms
+
+<!-- Only if the page has inputs. Note client vs server validation. -->
+
+| Field | Type | Required | Validation | Default | Error copy |
+| ----- | ---- | -------- | ---------- | ------- | ---------- |
+
+## Interaction Flows
+
+<!-- Numbered multi-step interactions: user action → system response →
+resulting state. -->
+
 ## SEO
 
 <!-- Meta tags, sitemap, structured data, canonical URLs per route. Only if the
