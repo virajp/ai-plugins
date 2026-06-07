@@ -2,6 +2,6 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "vskills",
   "skills": [
-    "./plugins/vskills/skills/"
+    "./"
   ]
 }
