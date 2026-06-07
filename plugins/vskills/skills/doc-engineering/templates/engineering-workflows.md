@@ -1,15 +1,25 @@
 # <Entity> Workflows
 
+> Replace `<workflow-engine>` with the project's engine from the registry.
+> Retry/timeout fields apply only if the project has the `durable-workflows`
+> capability.
+
 ## <Workflow Name>
 
-**Trigger:** <event or cron schedule>
+**Trigger:** <event, API call, or cron schedule>
+
+**Drives state transition:** <from → to>, if applicable
 
 **Activities:** <ordered list of activity names>
 
-**Retry policy:**
-`maximumAttempts: N, initialInterval: Xs, backoffCoefficient: N`
+**Retry policy:** `maximumAttempts: N, initialInterval: Xs, backoffCoefficient: N`
 
-**Timeout:** `workflowRunTimeout: Xm, activityStartToCloseTimeout: Xs`
+**Timeouts:** `workflowRunTimeout: Xm, activityStartToCloseTimeout: Xs`
+
+**Signals / queries:** <any, or None>
+
+**Failure handling:** what happens if an activity fails after retries are
+exhausted.
 
 ---
 
@@ -17,4 +27,4 @@
 
 # <Entity> Workflows
 
-No Temporal worker activity for this entity.
+No background worker activity for this entity.

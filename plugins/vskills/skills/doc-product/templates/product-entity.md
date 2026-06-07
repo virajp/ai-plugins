@@ -33,8 +33,8 @@ perspective (no implementation mitigations here — just the risk).
 
 ## Data Model
 
-> See [<Entity> Schema](../../engineering/common/schemas/<entity>.md) for the
-> Firestore document structure.
+> See [<Entity> Schema & Contract](../../engineering/packages/schemas/<entity>.md)
+> for the shared data contract.
 
 ## Actions
 

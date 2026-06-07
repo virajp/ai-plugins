@@ -1,45 +1,138 @@
 ---
 name: v-doc-engineering
-description: Use when backend or frontend engineering documentation needs to be
-  written or updated for an entity in the 95octane workspace. Requires product
-  docs to exist. NOT auto-triggered.
+description: Use when engineering documentation needs to be written or updated
+  for a project in the workspace. Reads docs/architecture.md to learn each
+  project's type, stack, and capabilities, then runs the matching doc set
+  (service, worker, packages, site, or frontend). Requires architecture.md and,
+  for entity-driven types, the relevant product docs. NOT auto-triggered.
 ---
 
 # v-doc-engineering — Engineering Documentation
 
-Writes or updates engineering docs for an entity. Covers backend (schemas, API
-spec, workflows) and frontend (screens, state, navigation). Each path runs
-independently — run one, both, or neither depending on feature scope.
+Writes or updates engineering docs for a project. The project's **type**
+(declared in `docs/architecture.md`) decides which doc set runs:
+
+| Type       | Doc set covers                              | Sub-file       | `doc_unit` |
+| ---------- | ------------------------------------------- | -------------- | ---------- |
+| `service`  | endpoints, auth, query patterns, indexes    | `service.md`   | entity     |
+| `worker`   | workflows, activities, triggers, retries    | `worker.md`    | entity     |
+| `packages` | shared modules + schemas & data contracts   | `packages.md`  | module     |
+| `site`     | pages/routes, rendering, content, SEO       | `site.md`      | page       |
+| `frontend` | screens, state, navigation, edge cases      | `frontend.md`  | entity     |
+
+Each set runs independently — run one, several, or all depending on what the
+feature touches.
+
+> **Run this skill with your session on Opus** (`/model opus`). The persona,
+> elicitation judgment, and convergence reasoning run in the orchestrator, i.e.
+> your session model. See Step 0.
+
+## Topology
+
+The orchestrator (your interactive session) adopts the persona for the chosen
+type and runs the entire interactive flow — elicitation and writing.
+**Subagents are used for one thing only: the isolated reviewer in each sub-file's
+Ralph loop.** A subagent cannot run an interactive multiple-choice elicitation,
+so all brainstorming happens in the orchestrator.
 
 ## Doc Paths
 
-| Doc type       | Path                                                   |
-| -------------- | ------------------------------------------------------ |
-| Product        | `docs/product/` (prerequisite — read-only here)        |
-| Backend Engr.  | `docs/engineering/` (common/, service/, worker/, web/) |
-| Frontend Engr. | `docs/engineering/frontend/<entity>.md`                |
-| Schema         | `docs/engineering/common/schemas/<entity>.md`          |
-| API spec       | `docs/engineering/service/api/<entity>.md`             |
-| Workflows      | `docs/engineering/worker/workflows/<entity>.md`        |
-| Templates      | `.claude/skills/v-doc-engineering/templates/`          |
+| Doc type        | Path                                              |
+| --------------- | ------------------------------------------------- |
+| Architecture    | `docs/architecture.md` (prerequisite — read-only) |
+| Product         | `docs/product/<entity>/` (prereq for entity types)|
+| Service API     | `docs/engineering/service/api/<entity>.md`        |
+| Worker          | `docs/engineering/worker/workflows/<entity>.md`   |
+| Packages        | `docs/engineering/packages/<module>.md`           |
+| Schemas         | `docs/engineering/packages/schemas/<entity>.md`   |
+| Site            | `docs/engineering/site/<page>.md`                 |
+| Frontend        | `docs/engineering/frontend/<entity>.md`           |
+| Templates       | `.claude/skills/v-doc-engineering/templates/`     |
 
-## Halt Condition
+Schemas and data contracts live under `packages/` because they are shared across
+projects; `service`, `worker`, `frontend`, and `site` docs reference them by
+link rather than restating the shape.
 
-**Both paths:** halt if `docs/product/<entity>/` does not exist. Tell the user:
-"No product doc found. Run `v-doc-product` first."
+## Step 0 — Session model check
 
-## Which Path to Run
+State which model you are running as. If it is not Opus, alert the user:
+"This skill is designed for Opus. You appear to be on `<model>`. Run
+`/model opus` and re-invoke." Halt until the user confirms Opus or explicitly
+tells you to proceed anyway.
 
-| User request          | Run                 |
-| --------------------- | ------------------- |
-| Backend-only feature  | Backend only        |
-| Frontend-only feature | Frontend only       |
-| Full-stack feature    | Both (either order) |
-| Unclear               | Ask one question    |
+## Prerequisites & Halt Conditions
 
-**Before executing:** read the corresponding sub-file listed below.
+1. **Architecture.** If `docs/architecture.md` does not exist, halt:
+   "No architecture doc found. Run `v-doc-architecture` first." Read it and
+   parse the **Project Registry** ` ```yaml ` block to obtain, for the target
+   project: `type`, `stack`, `capabilities`, `depends_on`, `doc_unit`.
+2. **Product (entity-driven types only).** For `service`, `worker`, and
+   `frontend` (where `doc_unit: entity`), if `docs/product/<entity>/` does not
+   exist, halt: "No product doc found for `<entity>`. Run `v-doc-product`
+   first." For `site` (page) and `packages` (module), product docs are optional
+   context — read any related entity's product docs if they exist, but do not
+   halt.
 
-| Path     | Sub-file      |
-| -------- | ------------- |
-| Backend  | `backend.md`  |
-| Frontend | `frontend.md` |
+## Process
+
+1. Run Step 0 (session check).
+2. Read `docs/architecture.md`; parse the registry. Identify the target
+   project(s) and their `type`. If the user's request spans multiple projects
+   (e.g. a full-stack feature touching `service` + `worker` + `frontend`), run
+   each type's doc set in turn.
+3. Enforce the halt conditions above for each type being run.
+4. Invoke `superpowers:using-git-worktrees` — keep the worktree **local**, never
+   push remotely.
+5. **Read the sub-file for the type and follow it.** Each sub-file injects the
+   project's `stack` into its persona and fires capability-gated questions based
+   on the project's `capabilities`.
+
+| Type       | Sub-file      |
+| ---------- | ------------- |
+| `service`  | `service.md`  |
+| `worker`   | `worker.md`   |
+| `packages` | `packages.md` |
+| `site`     | `site.md`     |
+| `frontend` | `frontend.md` |
+
+## New capability or pattern discovered
+
+If elicitation surfaces a capability, dependency, or architectural pattern not
+present in the registry, **do not edit `docs/architecture.md` here** — it is
+owned by `v-doc-architecture`. Instead, alert the user: "This introduces
+`<capability/pattern>`, which isn't in the architecture registry. Consider
+running `v-doc-architecture` to record it." Then continue.
+
+## Shared conventions (all sub-files)
+
+- **Elicitation:** Invoke `superpowers:brainstorming`. Ask one question at a
+  time. Every question must offer multiple-choice answers including "Other
+  (please specify)" — even open answers (types, retry values) get common options
+  plus Other.
+- **Stack injection:** Replace bracketed placeholders in templates
+  (`<datastore>`, `<auth-mechanism>`, `<state-management>`, `<workflow-engine>`,
+  etc.) with the project's actual `stack` from the registry.
+- **Ralph loop (reviewer):** After writing, spawn a `model: opus` subagent (the
+  `opus` alias resolves to the latest Opus model) with **only** the written
+  engineering docs plus the product/schema docs they reference — no conversation
+  context. It returns a gap list only, no rewrites. Resolve gaps via
+  brainstorming (one at a time, MCQ), update, re-review. Apply the **convergence
+  guard**: the orchestrator keeps each round's gap list in memory; pause and
+  surface to the user if the gap count did not strictly decrease, or if a
+  resolved gap resurfaces. Otherwise loop until the reviewer returns `NO GAPS`.
+  Context bleed makes the reviewer fill gaps from memory instead of surfacing
+  them — keep its context to the doc files only.
+- **Approval gate:** When the type's docs are clean, pause and wait for explicit
+  user approval before continuing to `v-spec-plan`.
+
+## Commit Message Format
+
+Use conventional commits, scoped by type. Examples:
+
+```
+docs(engineering): add ride service API spec
+docs(engineering): add ride status worker workflows
+docs(engineering): add shared ride schema contract
+docs(engineering): add community site pages
+docs(engineering): add ride frontend screens & state
+```
