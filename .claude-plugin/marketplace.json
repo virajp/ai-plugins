@@ -11,19 +11,41 @@
   },
   "plugins": [
     {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "TypeScript/JavaScript language server",
       "name": "vlsp-ts-js",
       "source": "./plugins/vlsp-ts-js",
-      "strict": true
+      "strict": true,
+      "tags": [
+        "typescript",
+        "javascript",
+        "language-server",
+        "lsp"
+      ],
+      "version": "1.0.3"
     },
     {
       "name": "vlsp-dart",
       "source": "./plugins/vlsp-dart",
-      "strict": true
+      "strict": true,
+      "tags": [
+        "dart",
+        "language-server",
+        "lsp"
+      ],
+      "version": "1.0.0"
     },
     {
       "name": "vskills",
       "source": "./plugins/vskills/skills",
-      "strict": true
+      "strict": true,
+      "tags": [
+        "skills"
+      ],
+      "version": "1.0.1"
     }
   ]
 }
