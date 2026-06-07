@@ -82,6 +82,11 @@
       "version": "1.0.0"
     },
     {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Collection of Skills to develop a product as solo developer or small team",
       "name": "vskills",
       "skills": [
         "./skills/"
@@ -90,7 +95,7 @@
       "tags": [
         "skills"
       ],
-      "version": "1.0.0"
+      "version": "1.0.1"
     }
   ]
 }
