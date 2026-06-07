@@ -1,5 +1,5 @@
 ---
-name: v-doc-engineering
+name: doc-engineering
 description: Use when engineering documentation needs to be written or updated
   for a project in the workspace. Reads docs/architecture.md to learn each
   project's type, stack, and capabilities, then runs the matching doc set
@@ -7,7 +7,7 @@ description: Use when engineering documentation needs to be written or updated
   for entity-driven types, the relevant product docs. NOT auto-triggered.
 ---
 
-# v-doc-engineering — Engineering Documentation
+# doc-engineering — Engineering Documentation
 
 Writes or updates engineering docs for a project. The project's **type**
 (declared in `docs/architecture.md`) decides which doc set runs:
@@ -47,7 +47,7 @@ so all brainstorming happens in the orchestrator.
 | Schemas         | `docs/engineering/packages/schemas/<entity>.md`   |
 | Site            | `docs/engineering/site/<page>.md`                 |
 | Frontend        | `docs/engineering/frontend/<entity>.md`           |
-| Templates       | `.claude/skills/v-doc-engineering/templates/`     |
+| Templates       | `.claude/skills/doc-engineering/templates/`     |
 
 Schemas and data contracts live under `packages/` because they are shared across
 projects; `service`, `worker`, `frontend`, and `site` docs reference them by
@@ -63,12 +63,12 @@ tells you to proceed anyway.
 ## Prerequisites & Halt Conditions
 
 1. **Architecture.** If `docs/architecture.md` does not exist, halt:
-   "No architecture doc found. Run `v-doc-architecture` first." Read it and
+   "No architecture doc found. Run `doc-architecture` first." Read it and
    parse the **Project Registry** ` ```yaml ` block to obtain, for the target
    project: `type`, `stack`, `capabilities`, `depends_on`, `doc_unit`.
 2. **Product (entity-driven types only).** For `service`, `worker`, and
    `frontend` (where `doc_unit: entity`), if `docs/product/<entity>/` does not
-   exist, halt: "No product doc found for `<entity>`. Run `v-doc-product`
+   exist, halt: "No product doc found for `<entity>`. Run `doc-product`
    first." For `site` (page) and `packages` (module), product docs are optional
    context — read any related entity's product docs if they exist, but do not
    halt.
@@ -99,9 +99,9 @@ tells you to proceed anyway.
 
 If elicitation surfaces a capability, dependency, or architectural pattern not
 present in the registry, **do not edit `docs/architecture.md` here** — it is
-owned by `v-doc-architecture`. Instead, alert the user: "This introduces
+owned by `doc-architecture`. Instead, alert the user: "This introduces
 `<capability/pattern>`, which isn't in the architecture registry. Consider
-running `v-doc-architecture` to record it." Then continue.
+running `doc-architecture` to record it." Then continue.
 
 ## Shared conventions (all sub-files)
 
@@ -123,7 +123,7 @@ running `v-doc-architecture` to record it." Then continue.
   Context bleed makes the reviewer fill gaps from memory instead of surfacing
   them — keep its context to the doc files only.
 - **Approval gate:** When the type's docs are clean, pause and wait for explicit
-  user approval before continuing to `v-spec-plan`.
+  user approval before continuing to `spec-plan`.
 
 ## Commit Message Format
 

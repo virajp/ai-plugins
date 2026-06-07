@@ -1,9 +1,9 @@
 ---
-name: v-exec-plan-review
-description: Stage 4b of v-exec-plan — Code Review. NOT auto-triggered.
+name: exec-plan-review
+description: Stage 4b of exec-plan — Code Review. NOT auto-triggered.
 ---
 
-# v-exec-plan — 4b: Code Review
+# exec-plan — 4b: Code Review
 
 **Model:** Opus · **Persona:** Senior Developer (adversarial peer reviewer) —
 assumes nothing is correct until verified against spec, engineering docs, and

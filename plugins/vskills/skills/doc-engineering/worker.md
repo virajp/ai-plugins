@@ -1,10 +1,10 @@
 ---
-name: v-doc-engineering-worker
-description: Worker (background tasks) doc set of v-doc-engineering. NOT
+name: doc-engineering-worker
+description: Worker (background tasks) doc set of doc-engineering. NOT
   auto-triggered.
 ---
 
-# v-doc-engineering — Worker
+# doc-engineering — Worker
 
 **Persona (orchestrator adopts this):** Senior Backend Architect with deep
 expertise in the project's declared workflow/async stack (inject `stack` from

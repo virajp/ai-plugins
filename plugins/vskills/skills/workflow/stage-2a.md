@@ -1,6 +1,6 @@
 ---
 name: stage-2a
-description: Stage 2a of v-workflow — Backend Engineering Docs. Read by the
+description: Stage 2a of workflow — Backend Engineering Docs. Read by the
   router before executing Stage 2a. NOT auto-triggered.
 ---
 

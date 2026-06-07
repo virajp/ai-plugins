@@ -1,16 +1,16 @@
 ---
-name: v-doc-architecture
+name: doc-architecture
 description: Use when the workspace-level architecture doc needs to be created or
   updated. Produces docs/architecture.md — the single source of truth that
-  v-doc-engineering parses to learn each project's type, stack, and
+  doc-engineering parses to learn each project's type, stack, and
   capabilities. NOT auto-triggered.
 ---
 
-# v-doc-architecture — System Architecture Documentation
+# doc-architecture — System Architecture Documentation
 
 Creates or updates the one workspace-level `docs/architecture.md`. The document
 is written for two readers: a human engineer who needs the system's shape, and
-the `v-doc-engineering` skill, which parses the machine-readable **Project
+the `doc-engineering` skill, which parses the machine-readable **Project
 Registry** block to decide which doc set, stack vocabulary, and deep questions
 apply to each project.
 
@@ -28,7 +28,7 @@ never invents a project, stack, or capability the user did not confirm.
 | Doc                | Path                  |
 | ------------------ | --------------------- |
 | Architecture       | `docs/architecture.md` |
-| Template           | `.claude/skills/v-doc-architecture/templates/architecture.md` |
+| Template           | `.claude/skills/doc-architecture/templates/architecture.md` |
 
 There is exactly one architecture doc per workspace. It describes every project.
 
@@ -72,7 +72,7 @@ tells you to proceed anyway.
    - `path` — repo or directory location
    - `stack` — languages and frameworks (offer common per-type options + Other)
    - `capabilities` — multi-select from the **Capability Vocabulary** below,
-     plus Other. These gate the deep questions `v-doc-engineering` will ask.
+     plus Other. These gate the deep questions `doc-engineering` will ask.
    - `depends_on` — other projects/packages it depends on (multi-select from the
      enumerated projects, plus None)
    - `doc_unit` — `entity`, `page`, or `module` (default by type below)
@@ -104,7 +104,7 @@ Store / Play Store.
 ## Capability Vocabulary
 
 Capabilities are stack-agnostic feature flags. They are the gates that decide
-which deep, stack-specific questions `v-doc-engineering` asks. Pick all that
+which deep, stack-specific questions `doc-engineering` asks. Pick all that
 apply per project; add Other for anything not listed. This list is extensible —
 add new capabilities as the system grows.
 

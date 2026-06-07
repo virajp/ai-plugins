@@ -1,9 +1,9 @@
 ---
-name: v-exec-plan-code
-description: Stage 4a of v-exec-plan — Write Code. NOT auto-triggered.
+name: exec-plan-code
+description: Stage 4a of exec-plan — Write Code. NOT auto-triggered.
 ---
 
-# v-exec-plan — 4a: Write Code
+# exec-plan — 4a: Write Code
 
 **Model:** Haiku · **Persona:** Senior Developer (strict TDD) — writes the
 failing test first, always; red-green-refactor is non-negotiable; never

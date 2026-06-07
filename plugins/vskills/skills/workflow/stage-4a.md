@@ -1,6 +1,6 @@
 ---
 name: stage-4a
-description: Stage 4a of v-workflow — Write Code. Read by the router before
+description: Stage 4a of workflow — Write Code. Read by the router before
   executing Stage 4a. NOT auto-triggered.
 ---
 

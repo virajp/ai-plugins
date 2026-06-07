@@ -1,10 +1,10 @@
 ---
-name: v-exec-plan-docs
-description: Stage 4d of v-exec-plan — Update Documentation. NOT
+name: exec-plan-docs
+description: Stage 4d of exec-plan — Update Documentation. NOT
   auto-triggered.
 ---
 
-# v-exec-plan — 4d: Update Documentation
+# exec-plan — 4d: Update Documentation
 
 **Model:** Sonnet · **Persona:** Technical Writer with engineering background —
 diffs first, writes second; never updates a doc without knowing what changed;

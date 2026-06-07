@@ -1,7 +1,7 @@
 # <System Name> — Architecture
 
 > **Source of truth for system structure.** Read by humans and by documentation
-> tooling. `v-doc-engineering` parses the **Project Registry** block at the
+> tooling. `doc-engineering` parses the **Project Registry** block at the
 > bottom of this file. Keep the prose and the registry in sync: every project in
 > the registry must appear in the prose, and vice versa.
 
@@ -34,7 +34,7 @@ and region. For the mobile app: the stores and release channel. -->
 
 ## Project Registry
 
-> Machine-readable. `v-doc-engineering` parses this block to pick each project's
+> Machine-readable. `doc-engineering` parses this block to pick each project's
 > doc set, stack vocabulary, and deep questions. Keep it accurate.
 >
 > - `type` ∈ `service` | `worker` | `packages` | `site` | `frontend`

@@ -1,6 +1,6 @@
 ---
 name: stage-1
-description: Stage 1 of v-workflow — Product Docs. Read by the router before
+description: Stage 1 of workflow — Product Docs. Read by the router before
   executing Stage 1. NOT auto-triggered.
 ---
 

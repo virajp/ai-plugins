@@ -46,7 +46,7 @@ decision.
 details the entity. Action docs live as sibling files inside that same folder,
 which is why the entity template links to them as `./<action>.md`. Never write
 an entity as a flat `docs/product/<entity>.md` file — downstream skills
-(`v-doc-engineering`) halt on the presence of the `docs/product/<entity>/`
+(`doc-engineering`) halt on the presence of the `docs/product/<entity>/`
 directory and will not find a flat file.
 
 ---

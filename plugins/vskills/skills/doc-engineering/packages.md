@@ -1,10 +1,10 @@
 ---
-name: v-doc-engineering-packages
+name: doc-engineering-packages
 description: Packages (shared libraries, schemas & data contracts) doc set of
-  v-doc-engineering. NOT auto-triggered.
+  doc-engineering. NOT auto-triggered.
 ---
 
-# v-doc-engineering — Packages
+# doc-engineering — Packages
 
 **Persona (orchestrator adopts this):** Senior Library/Platform Engineer with
 deep expertise in the project's declared stack (inject `stack` from the

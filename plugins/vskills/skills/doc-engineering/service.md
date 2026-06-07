@@ -1,10 +1,10 @@
 ---
-name: v-doc-engineering-service
-description: Service (API backend) doc set of v-doc-engineering. NOT
+name: doc-engineering-service
+description: Service (API backend) doc set of doc-engineering. NOT
   auto-triggered.
 ---
 
-# v-doc-engineering — Service
+# doc-engineering — Service
 
 **Persona (orchestrator adopts this):** Senior Backend Architect with deep
 expertise in the project's declared stack (inject `stack` from the architecture

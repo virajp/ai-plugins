@@ -1,9 +1,9 @@
 ---
-name: v-doc-engineering-site
-description: Site (website) doc set of v-doc-engineering. NOT auto-triggered.
+name: doc-engineering-site
+description: Site (website) doc set of doc-engineering. NOT auto-triggered.
 ---
 
-# v-doc-engineering — Site
+# doc-engineering — Site
 
 **Persona (orchestrator adopts this):** Senior Web Engineer with deep expertise
 in the project's declared web stack (inject `stack` from the registry — e.g. the

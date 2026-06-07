@@ -1,11 +1,11 @@
 ---
-name: v-exec-plan
+name: exec-plan
 description: Use when executing an approved implementation plan in the 95octane
   workspace. Covers code writing, code review, security review, and doc updates.
   Requires a spec and plan in docs/superpowers/. NOT auto-triggered.
 ---
 
-# v-exec-plan — Execute Implementation Plan
+# exec-plan — Execute Implementation Plan
 
 Executes an approved spec & plan through four sequential stages. Each stage has
 a mandatory approval gate before proceeding. Issues found in review stages loop
@@ -14,7 +14,7 @@ back to code.
 ## Halt Condition
 
 Halt if no plan exists in `docs/superpowers/`: "No spec & plan found. Run
-`v-spec-plan` first."
+`spec-plan` first."
 
 ## Pipeline
 

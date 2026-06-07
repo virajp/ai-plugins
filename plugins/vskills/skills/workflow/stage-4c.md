@@ -1,6 +1,6 @@
 ---
 name: stage-4c
-description: Stage 4c of v-workflow — Security Review. Read by the router
+description: Stage 4c of workflow — Security Review. Read by the router
   before executing Stage 4c. NOT auto-triggered.
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: stage-4d
-description: Stage 4d of v-workflow — Update Documentation. Read by the router
+description: Stage 4d of workflow — Update Documentation. Read by the router
   before executing Stage 4d. NOT auto-triggered.
 ---
 

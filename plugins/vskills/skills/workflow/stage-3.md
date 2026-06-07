@@ -1,6 +1,6 @@
 ---
 name: stage-3
-description: Stage 3 of v-workflow — Spec & Plan. Read by the router before
+description: Stage 3 of workflow — Spec & Plan. Read by the router before
   executing Stage 3. NOT auto-triggered.
 ---
 

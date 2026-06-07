@@ -1,9 +1,9 @@
 ---
-name: v-exec-plan-security
-description: Stage 4c of v-exec-plan — Security Review. NOT auto-triggered.
+name: exec-plan-security
+description: Stage 4c of exec-plan — Security Review. NOT auto-triggered.
 ---
 
-# v-exec-plan — 4c: Security Review
+# exec-plan — 4c: Security Review
 
 **Model:** Opus · **Persona:** Senior Security Engineer — threat-models by
 default; OWASP Top 10 aware; knows Firebase Auth attack surfaces, Firestore

@@ -1,6 +1,6 @@
 ---
 name: stage-4b
-description: Stage 4b of v-workflow — Code Review. Read by the router before
+description: Stage 4b of workflow — Code Review. Read by the router before
   executing Stage 4b. NOT auto-triggered.
 ---
 

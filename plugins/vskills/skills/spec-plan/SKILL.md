@@ -1,11 +1,11 @@
 ---
-name: v-spec-plan
+name: spec-plan
 description: Use when an implementation spec and plan needs to be created for an
   entity in the 95octane workspace. Requires engineering docs to exist. NOT
   auto-triggered.
 ---
 
-# v-spec-plan — Spec & Plan
+# spec-plan — Spec & Plan
 
 **Model:** Sonnet · **Persona:** Senior Developer and Architect who knows the
 95octane stack intimately — Effect v3 with Effect Schema and Layer-based DI,
@@ -24,7 +24,7 @@ by line without ambiguity.
 ## Halt Condition
 
 Halt if no engineering docs exist for the entity: "No engineering doc found. Run
-`v-doc-engineering` first."
+`doc-engineering` first."
 
 ## Process
 
@@ -62,4 +62,4 @@ rather than surfacing them for the user to resolve.
 ## Approval Gate
 
 Pause and wait for explicit user approval before the user continues to
-`v-exec-plan`.
+`exec-plan`.

@@ -1,10 +1,10 @@
 ---
-name: v-doc-engineering-frontend
-description: Frontend (mobile app) doc set of v-doc-engineering. NOT
+name: doc-engineering-frontend
+description: Frontend (mobile app) doc set of doc-engineering. NOT
   auto-triggered.
 ---
 
-# v-doc-engineering — Frontend
+# doc-engineering — Frontend
 
 **Persona (orchestrator adopts this):** Senior Mobile Architect with deep
 expertise in the project's declared stack (inject `stack` from the registry —

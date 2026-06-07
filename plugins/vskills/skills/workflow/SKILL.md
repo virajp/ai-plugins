@@ -1,10 +1,10 @@
 ---
-name: v-workflow
+name: workflow
 description: Explicit project workflow router. Call this to start any product or
   engineering work. NOT auto-triggered.
 ---
 
-# v-workflow — Project Workflow
+# workflow — Project Workflow
 
 Explicitly called by user to start or continue the product development workflow.
 Never auto-triggered. Supports running the full pipeline or jumping to any

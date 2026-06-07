@@ -39,3 +39,23 @@ Dart language server.
 ```sh
 claude plugin install --scope project dart-lsp@virajp-plugins
 ```
+
+### vskills
+
+A collection of reusable skills for the Claude Code CLI.
+
+```sh
+claude plugin install --scope project vskills@virajp-plugins
+```
+
+**Skills included:**
+
+| Skill | Description |
+|---|---|
+| `doc-architecture` | Create or update the workspace-level `docs/architecture.md` — the single source of truth for project type, stack, and capabilities |
+| `doc-engineering` | Write or update engineering docs for a project; reads `docs/architecture.md` and runs the matching doc set (service, worker, packages, site, or frontend) |
+| `doc-product` | Write or update product documentation for an entity or action |
+| `spec-plan` | Create an implementation spec and plan for an entity; requires engineering docs to exist |
+| `exec-plan` | Execute an approved implementation plan; covers code writing, code review, security review, and doc updates |
+| `workflow` | Explicit project workflow router — start here for any product or engineering work |
+| `karpathy-guidelines` | Behavioral guidelines to reduce common LLM coding mistakes: avoid overcomplication, make surgical changes, surface assumptions, define verifiable success criteria |

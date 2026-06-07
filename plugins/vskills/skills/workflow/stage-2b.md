@@ -1,6 +1,6 @@
 ---
 name: stage-2b
-description: Stage 2b of v-workflow — Frontend Engineering Docs. Read by the
+description: Stage 2b of workflow — Frontend Engineering Docs. Read by the
   router before executing Stage 2b. NOT auto-triggered.
 ---
 
