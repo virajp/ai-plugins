@@ -2,10 +2,10 @@
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "allowCrossMarketplaceDependenciesOn": [],
   "description": "Opinionated Plugins for Claude Code & Antigravity",
-  "displayName": "vPlugins",
+  "displayName": "Viraj Patel's Plugins",
   "forceRemoveDeletedPlugins": true,
   "metadata": {},
-  "name": "vplugins",
+  "name": "virajp-plugins",
   "owner": {
     "name": "Viraj Patel"
   },
