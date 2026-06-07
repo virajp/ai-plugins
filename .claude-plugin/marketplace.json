@@ -1,6 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "allowCrossMarketplaceDependenciesOn": [],
+  "allowCrossMarketplaceDependenciesOn": [
+    "claude-plugins-official"
+  ],
   "description": "Opinionated Plugins for Claude Code & Antigravity",
   "displayName": "Viraj Patel's Plugins",
   "forceRemoveDeletedPlugins": true,
@@ -48,6 +50,12 @@
         "name": "Viraj Patel"
       },
       "category": "development",
+      "dependencies": [
+        {
+          "marketplace": "claude-plugins-official",
+          "name": "superpowers"
+        }
+      ],
       "description": "Collection of Skills to develop a product as solo developer or small team",
       "name": "vskills",
       "source": "./plugins/vskills/skills",
