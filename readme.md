@@ -13,13 +13,13 @@ A curated collection of opinionated Claude Code plugins by Viraj Patel — LSP s
 **Step 1 — Add the marketplace (once, user-scoped):**
 
 ```sh
-claude plugin marketplace add --scope user virajp/claude-plugins
+claude plugin marketplace add --scope user virajp/ai-plugins
 ```
 
 **Step 2 — Install a plugin into your project:**
 
 ```sh
-claude plugin install --scope project <plugin-name>@virajp-claude-plugins
+claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 ## Plugins
@@ -29,7 +29,7 @@ claude plugin install --scope project <plugin-name>@virajp-claude-plugins
 TypeScript/JavaScript language server (via `typescript-language-server`).
 
 ```sh
-claude plugin install --scope project ts-js-lsp@virajp-claude-plugins
+claude plugin install --scope project ts-js-lsp@virajp-plugins
 ```
 
 ### dart-lsp
@@ -37,5 +37,5 @@ claude plugin install --scope project ts-js-lsp@virajp-claude-plugins
 Dart language server.
 
 ```sh
-claude plugin install --scope project dart-lsp@virajp-claude-plugins
+claude plugin install --scope project dart-lsp@virajp-plugins
 ```

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "author": {
+    "name": "Viraj Patel"
+  },
+  "category": "development",
+  "description": "TypeScript/JavaScript language server",
+  "lspServers": {
+    "typescript": {
+      "args": [
+        "-c",
+        "mise x node@latest -- npm add -g typescript-language-server typescript >/dev/null 2>&1 && exec mise x node@latest -- typescript-language-server --stdio"
+      ],
+      "command": "sh",
+      "extensionToLanguage": {
+        ".cjs": "javascript",
+        ".cts": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".mts": "typescript",
+        ".ts": "typescript",
+        ".tsx": "typescriptreact"
+      },
+      "startupTimeout": 60000
+    }
+  },
+  "name": "vlsp-ts-js",
+  "tags": [
+    "typescript",
+    "javascript",
+    "language-server",
+    "lsp"
+  ],
+  "version": "1.0.3"
+}

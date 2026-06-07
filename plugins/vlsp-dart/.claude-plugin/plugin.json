@@ -1,0 +1,33 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "author": {
+    "name": "Viraj Patel"
+  },
+  "category": "development",
+  "description": "Dart language server",
+  "lspServers": {
+    "dart": {
+      "args": [
+        "x",
+        "dart@latest",
+        "--",
+        "dart",
+        "language-server",
+        "--client-id=claude-code",
+        "--protocol=lsp"
+      ],
+      "command": "mise",
+      "extensionToLanguage": {
+        ".dart": "dart"
+      },
+      "startupTimeout": 60000
+    }
+  },
+  "name": "vlsp-dart",
+  "tags": [
+    "dart",
+    "language-server",
+    "lsp"
+  ],
+  "version": "1.0.0"
+}
