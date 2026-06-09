@@ -1,0 +1,55 @@
+[settings]
+activate_aggressive  = true
+all_compile          = false
+env_shell_expand     = true
+gpg_verify           = true
+paranoid             = true
+raw                  = true
+status.missing_tools = "always"
+
+# NodeJS settings
+node.compile        = false
+npm.package_manager = "pnpm"
+
+# Python settings
+pipx.uvx            = true
+python.compile      = false
+python.uv_venv_auto = true
+
+[tools]
+# Development tools
+doppler    = { version = "latest" }
+node       = { version = "latest" }
+pnpm       = { version = "latest" }
+pre-commit = { version = "latest" }
+
+# Formatter
+dprint = { postinstall = "dprint completions fish | source", version = "latest" }
+taplo  = { version = "latest" }
+
+# Security tools
+gitleaks = { version = "latest" }
+grype    = { version = "latest" }
+
+# AI Tools
+jq       = { version = "latest" }
+opencode = { version = "latest" }
+python   = { version = "latest" }
+uv       = { version = "latest" }
+
+[env]
+DISABLE_TELEMETRY = 1
+_.path            = { path = "node_modules/.bin", tools = true }
+
+[tasks.init]
+description = "Initialize mise tasks"
+hide        = true
+run         = "find .config/mise/tasks/ -name '*' -type f -exec chmod 755 {} \\;"
+
+[shell_alias]
+be-setup  = "mise run --cd ../backend setup:all"
+cc        = "claude --allow-dangerously-skip-permissions --dangerously-skip-permissions"
+fe-setup  = "mise run --cd ../frontend setup:all"
+oc        = "opencode"
+precommit = "mise run code:precommit"
+setup     = "mise run setup:all"

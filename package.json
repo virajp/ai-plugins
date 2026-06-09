@@ -1,0 +1,54 @@
+{
+  "author": {
+    "email": "askviraj@gmail.com",
+    "name": "Viraj Patel",
+    "url": "https://github.com/virajp"
+  },
+  "bin": {
+    "linter": "dist/index.js"
+  },
+  "bugs": {
+    "url": "https://github.com/virajp/ai-plugins/issues"
+  },
+  "dependencies": {
+    "commander": "latest"
+  },
+  "description": "CLI to setup AI tools for Claude & OpenCode",
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsc-alias": "latest",
+    "typescript": "latest"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./auto": "./dist/auto.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "homepage": "https://github.com/virajp/ai-plugins",
+  "keywords": [
+    "cli",
+    "ai",
+    "claude",
+    "opencode",
+    "skills",
+    "plugins",
+    "hooks"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "name": "@askviraj/ai-setup",
+  "packageManager": "pnpm@11.2.2",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/virajp/ai-plugins.git"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm run build"
+  },
+  "type": "module",
+  "version": "1.0.0"
+}

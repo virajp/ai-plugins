@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+#MISE description="Helper functions for mise tasks"
+#MISE hide=true
+
+# Style codes
+readonly BOLD='\033[1m'
+readonly NORMAL='\033[0m'
+# Color codes
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[0;33m'
+readonly RED='\033[0;31m'
+readonly BLUE='\033[0;34m'
+readonly MAGENTA='\033[0;35m'
+readonly CYAN='\033[0;36m'
+readonly WHITE='\033[0;37m'
+
+# Print colored section header with new line
+print_header() {
+  local msg="$1"
+  echo -e "${GREEN}${BOLD}${msg}${NORMAL}"
+}
+
+# Print colored section header without new line
+print_header_wait() {
+  local msg="$1"
+  echo -en "${GREEN}${BOLD}${msg}${NORMAL}"
+}
+
+# Print colored section header without new line
+print_wait() {
+  local msg="$1"
+  echo -en "${YELLOW}${BOLD}${msg}${NORMAL}"
+}
+
+# Print OK in green
+print_ok() {
+  echo -e "${GREEN}${BOLD}OK${NORMAL}"
+}
+
+# Print empty line
+print_newline() {
+  echo ""
+}
+
+# Print warning (yellow)
+print_warn() {
+  local msg="$1"
+  echo -e "${YELLOW}${BOLD}${msg}${NORMAL}"
+}
+
+# Print error (red)
+print_error() {
+  local msg="$1"
+  echo -e "${RED}${BOLD}${msg}${NORMAL}"
+}
+
+# Print yellow
+print_yellow() {
+  local msg="$1"
+  echo -e "${YELLOW}${msg}${NORMAL}"
+}
+
+# Print line separator
+line_sep() {
+  local COL
+  COL=$(stty size 2>/dev/null | awk '{print $2}')
+  # Build a string of spaces equal to width, then replace with '='
+  local line
+  printf -v line '%*s' "${COL:-80}" ''
+  printf '%s\n' "${line// /$1}"
+}
+
+# Run pnpm command in a directory
+run_script() {
+  local dir="$1"
+  shift
+  print_header "Running pnpm command in ${dir}..."
+  pnpm run --dir "$dir" "$@"
+}
+
+# Run pnpm script in a project
+run_pnpm_script() {
+  local project="$1"
+  local script="$2"
+  print_header "Running ${script}..."
+  pnpm run --filter "${project}" "${script}"
+}
+
+# Build a project using turbo
+build_project() {
+  local filter="$1"
+  print_header "Building ${filter}..."
+  turbo build --filter="${filter}"
+}
+
+# Build a project using turbo
+build_project_force() {
+  local filter="$1"
+  print_header "Building ${filter}..."
+  turbo build --filter="${filter}" --force
+}

@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+#MISE description="Count lines of code"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+print_header "Counting lines of code ..."
+find . -name "*.ts" -not -path "*/node_modules/*" -not -path "*/dist/*" -not -path "*/.git/*" -not -path "*/build/*" -not -path "*/coverage/*" -not -path "*/.turbo/*" -exec cat {} \; | wc -l | awk '{printf "%'"'"'d\n", $1}'

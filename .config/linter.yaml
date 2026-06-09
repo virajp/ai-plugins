@@ -1,0 +1,19 @@
+# @askviraj/linter configuration
+#
+# Add custom ignores, rule overrides, and additional config blocks below.
+
+version: 1
+
+# ignores:
+#   - "**/generated/**"
+#   - "**/*.d.ts"
+#
+# overrides:
+#   typescript:
+#     rules:
+#       "@typescript-eslint/no-explicit-any": "error"
+#
+# configs:
+#   - name: "custom"
+#     files: ["**/*.ts"]
+#     rules: {}

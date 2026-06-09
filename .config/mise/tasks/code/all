@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+#MISE description="Format, lint, scan all code"
+#MISE dir="."
+
+#USAGE flag "--debug" help="emit debug logs"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+[[ "${usage_debug:-false}" == "true" ]] && FLAGS="--debug" || FLAGS=""
+
+line_sep "-"
+mise run code:format
+
+line_sep "-"
+mise run code:lint
+
+line_sep "-"
+mise run code:sec

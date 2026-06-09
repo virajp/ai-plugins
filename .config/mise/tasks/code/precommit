@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Run pre-commit hooks on all files"
+#MISE hide=true
+
+#USAGE flag "--all" "Run pre-commit hooks on all files (default: only staged/unstaged changed files)"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+if [[ "${usage_all:-false}" == "true" ]]; then
+  print_header "Running pre-commit on all files ..."
+  pre-commit run --config .config/pre-commit-config.yaml --all-files || true
+else
+  print_header "Running pre-commit on changed files (staged & unstaged) ..."
+
+  # 1. Get both staged and unstaged modified/added files, excluding deleted ones
+  #    - Diff-filter=d excludes deleted files so pre-commit doesn't throw a "file not found" error
+  mapfile -t changed_files < <(git diff --name-only --diff-filter=d HEAD)
+
+  if [[ ${#changed_files[@]} -eq 0 ]]; then
+    print_header "No changed files found to scan."
+  else
+    # 2. Pass the array of filenames directly to pre-commit
+    pre-commit run --config .config/pre-commit-config.yaml --files "${changed_files[@]}" || true
+  fi
+fi

@@ -1,0 +1,33 @@
+# https://pnpm.io/settings#blockexoticsubdeps
+blockExoticSubdeps: true
+
+# https://pnpm.io/workspaces#injectworkspacepackages
+injectWorkspacePackages: true
+
+# Use workspace protocol for local packages
+linkWorkspacePackages: "deep"
+
+# Automatically install the package manager version from package.json
+managePackageManagerVersions: true
+
+# Minimum age (24 hours) of a release before it can be automatically updated
+minimumReleaseAge: 1440
+
+# Exclude specific packages from the minimum release age requirement
+minimumReleaseAgeExclude:
+  - "@askviraj/*"
+  - "typescript"
+  - "@types/node"
+
+requiredScripts:
+  - clean
+  - build
+
+strictDepBuilds: true
+
+# https://pnpm.io/settings#trustpolicy
+trustPolicy: "no-downgrade"
+trustPolicyIgnoreAfter: 43200 # 30 days in minutes
+
+# Fail fast
+verifyDepsBeforeRun: "error"

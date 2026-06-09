@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Run pnpm outdated"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+# Check for outdated packages across all workspaces
+print_header "Check for outdated packages ..."
+pnpm outdated --color --aggregate-output --recursive --long --depth 0 || true

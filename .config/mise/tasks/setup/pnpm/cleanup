@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#MISE description="Cleanup the project: delete dist, node_modules, lock files, etc."
+#MISE hide=true
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+print_header "Deleting dist ..."
+find . -type d -name "dist" -exec rm -rf {} + || true
+
+print_header "Deleting node_modules ..."
+find . -type d -name ".pnpm" -prune -o -type d -name "node_modules" -exec rm -rf {} + || true
+
+print_header "Deleting lock files ..."
+find . -type f -name "pnpm-lock.yaml" -exec rm -rf {} + || true
+
+print_header "Deleting tsbuildinfo ..."
+find . -type f -name "*.tsbuildinfo" -exec rm -f {} \; || true
+
+print_header "Deleting .astro cache files ..."
+find . -type d -name ".astro" -exec rm -rf {} + || true
+
+print_header "Deleting turbo caches ..."
+find . -type d -name ".turbo" -exec rm -rf {} + || true
+
+print_header "Prune pnpm store ..."
+pnpm store prune || true

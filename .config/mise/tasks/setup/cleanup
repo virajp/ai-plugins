@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Cleanup dependency resources"
+#MISE hide=true
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+if [ "$MISE_ENV" != "dev" ]; then
+  exit 0
+fi
+
+# These tasks should only be run in the dev environment
+
+print_header "Cleaning up the dependencies ..."
+docker system prune --volumes --force
