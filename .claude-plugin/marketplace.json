@@ -18,8 +18,8 @@
       },
       "category": "development",
       "description": "TypeScript/JavaScript language server",
-      "name": "vlsp-ts-js",
-      "source": "./plugins/vlsp-ts-js",
+      "name": "typscript-lsp",
+      "source": "./plugins/typscript-lsp",
       "strict": true,
       "tags": [
         "typescript",
@@ -35,8 +35,8 @@
       },
       "category": "development",
       "description": "Dart language server",
-      "name": "vlsp-dart",
-      "source": "./plugins/vlsp-dart",
+      "name": "dart-lsp",
+      "source": "./plugins/dart-lsp",
       "strict": true,
       "tags": [
         "dart",
@@ -57,8 +57,8 @@
         }
       ],
       "description": "Collection of Skills to develop a product as solo developer or small team",
-      "name": "vskills",
-      "source": "./plugins/vskills/skills",
+      "name": "skills",
+      "source": "./plugins/skills/skills",
       "strict": true,
       "tags": [
         "skills"

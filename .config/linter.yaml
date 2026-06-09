@@ -4,10 +4,9 @@
 
 version: 1
 
-# ignores:
-#   - "**/generated/**"
-#   - "**/*.d.ts"
-#
+ignores:
+  - "**/archived/**"
+
 # overrides:
 #   typescript:
 #     rules:
