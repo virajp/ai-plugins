@@ -20,5 +20,5 @@
       "startupTimeout": 60000
     }
   },
-  "name": "typscript-lsp"
+  "name": "typescript-lsp"
 }

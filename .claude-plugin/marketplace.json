@@ -18,8 +18,8 @@
       },
       "category": "development",
       "description": "TypeScript/JavaScript language server",
-      "name": "typscript-lsp",
-      "source": "./plugins/typscript-lsp",
+      "name": "typescript-lsp",
+      "source": "./plugins/typescript-lsp",
       "strict": true,
       "tags": [
         "typescript",
