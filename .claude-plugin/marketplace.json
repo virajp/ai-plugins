@@ -58,10 +58,16 @@
       ],
       "description": "Collection of Skills to develop a product as solo developer or small team",
       "name": "skills",
-      "source": "./plugins/skills/skills",
+      "source": "./plugins/skills",
       "strict": true,
       "tags": [
-        "skills"
+        "skills",
+        "product",
+        "engineering",
+        "coding",
+        "review",
+        "security",
+        "architecture"
       ],
       "version": "1.0.4"
     }
