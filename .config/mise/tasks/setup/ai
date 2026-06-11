@@ -45,17 +45,15 @@ updatePlugin context7 claude-plugins-official user
 updatePlugin superpowers claude-plugins-official user
 updatePlugin frontend-design claude-plugins-official user
 updatePlugin mempalace mempalace user
-updatePlugin vskills virajp-plugins user
+updatePlugin skills virajp-plugins user
 
-updatePlugin vlsp-dart virajp-plugins user
-updatePlugin vlsp-ts-js virajp-plugins user
-updatePlugin kotlin-lsp claude-plugins-official user
-updatePlugin swift-lsp claude-plugins-official user
-# updatePlugin playwright claude-plugins-official user
+updatePlugin typescript-lsp virajp-plugins user
 
-# Install graphify plugin for Claude
+# Install graphify skill
 print_header "Installing Graphify skill for Claude..."
 graphify install --platform claude
+print_header "Installing Graphify skill for OpenCode..."
+graphify install --platform opencode
 
 # Install graphify post-commit hook
 print_header "Installing Graphify post-commit hook..."

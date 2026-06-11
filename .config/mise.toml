@@ -41,6 +41,10 @@ uv       = { version = "latest" }
 DISABLE_TELEMETRY = 1
 _.path            = { path = "node_modules/.bin", tools = true }
 
+OPENCODE_DISABLE_CLAUDE_CODE        = true
+OPENCODE_DISABLE_CLAUDE_CODE_PROMPT = true
+OPENCODE_DISABLE_CLAUDE_CODE_SKILLS = true
+
 [tasks.init]
 description = "Initialize mise tasks"
 hide        = true
