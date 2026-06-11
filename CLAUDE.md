@@ -1,59 +1,64 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) and OpenCode
-(opencode.ai) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## What This Repo Is
 
-A collection of Claude Code and OpenCode plugins. Each plugin lives in its own
-subdirectory and is defined entirely by a `plugin.json` file (Claude Code)
-and/or a JS plugin file (OpenCode).
+A Claude Code plugin marketplace (`virajp-plugins`) containing LSP servers and
+skill collections. The root `.claude-plugin/marketplace.json` defines the
+marketplace; each plugin lives in `plugins/<name>/.claude-plugin/plugin.json`.
 
 ## Plugin Structure
 
-Every Claude Code plugin is a directory containing a `plugin.json` with at
-minimum:
+Every plugin is a directory under `plugins/` with a
+`.claude-plugin/plugin.json`:
 
 ```json
 {
-  "name": "<plugin-name>",
-  "version": "1.0.0",
-  "description": "..."
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "<plugin-name>"
 }
 ```
 
 Plugins may declare any combination of:
 
 - **`lspServers`** — LSP server definitions keyed by language ID. Each entry
-  needs `command`, `args`, and `extensionToLanguage`. See `dart-lsp/plugin.json`
-  for a working example using `mise` to run the language server.
-- **`skills`** — skill definitions for Claude Code's Skill tool
-- **`hooks`** — shell commands that run on Claude Code lifecycle events
-- **`mcpServers`** — MCP server configurations
+  needs `command`, `args`, `extensionToLanguage`, and optionally
+  `startupTimeout`. See `plugins/dart-lsp/.claude-plugin/plugin.json` for a
+  working example using `mise`.
+- **`skills`** — array of paths to skill directories (relative to the plugin
+  root). The `plugins/skills` plugin uses `"./"` to register all skill
+  subdirectories.
 
-OpenCode plugins live in `.opencode/plugins/` and are auto-discovered JS files
-that export hooks (see `.opencode/plugins/graphify.js` for the pattern).
+The marketplace manifest at `.claude-plugin/marketplace.json` lists each plugin
+with its `source`, `version`, `category`, and `tags`.
 
 ## Adding a Plugin
 
-1. Create a new directory named after the plugin (e.g., `rust-lsp/`)
-2. Add a `plugin.json` following the structure above
-3. Include only the fields relevant to what the plugin provides — don't copy
-   boilerplate fields that don't apply
+1. Create `plugins/<name>/.claude-plugin/plugin.json` with only the fields the
+   plugin needs
+2. Register it in `.claude-plugin/marketplace.json` under `plugins[]`
 
-There are no build, lint, or test steps — plugins are pure JSON configuration.
+No build, lint, or test steps — plugins are pure JSON configuration.
 
-## Installing Skills in OpenCode
+## Skills Plugin
 
-The repo ships an OpenCode plugin entry point at `opencode-skills-plugin.js`
-that registers the skills from `plugins/skills/` on startup.
+Skills live in `plugins/skills/<skill-name>/SKILL.md`. The
+`.claude-plugin/plugin.json` registers them via `"skills": ["./"]`. The `skills`
+plugin declares a dependency on the official `superpowers` plugin.
 
-To install in any project, add to that project's `opencode.json`:
+To add a skill: create `plugins/skills/<name>/SKILL.md` — no other registration
+needed.
 
-```json
-{
-  "plugin": ["@askviraj/ai-setup@git+https://github.com/virajp/ai-plugins.git"]
-}
+## Installation (end-user)
+
+```sh
+# Add marketplace once (user-scoped)
+claude plugin marketplace add --scope user virajp/ai-plugins
+
+# Install a plugin into a project
+claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-After saving, restart OpenCode for the skills to appear.
+Available plugin names: `typescript-lsp`, `dart-lsp`, `skills`.
