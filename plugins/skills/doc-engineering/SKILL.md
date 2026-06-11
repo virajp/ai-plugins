@@ -13,6 +13,12 @@ product docs and the architecture registry, scans the codebase to discover what
 is actually built, identifies gaps, syncs existing docs, then writes complete
 engineering docs for every project in the registry that touches those entities.
 
+**Primary objective:** Produce engineering specs that enable building the
+`planned` and `partially-live` features for each entity. These are documented as
+implementation specs — even when no code exists yet. `live` features are
+documented as-is from the codebase. `wishlist` items are ignored entirely and
+never appear in engineering docs.
+
 > **Run this skill with your session on Opus** (`/model opus`). Codebase gap
 > analysis, elicitation judgment, and convergence reasoning all run in the
 > orchestrator. See Step 0.
@@ -97,8 +103,37 @@ For each entity provided in Step 1, read all files in `docs/product/<entity>/`.
 If the directory does not exist, halt: "No product doc found for `<entity>`. Run
 `doc-product` first."
 
-Build an **entity summary** in your context covering: purpose, all defined
-actions, user roles, failure cases, edge cases, and out-of-scope items.
+Product docs use five explicit status values. Match features to exactly these —
+do not invent or conflate statuses:
+
+| Status             | Meaning                                         | Treatment in engineering docs                               |
+| ------------------ | ----------------------------------------------- | ----------------------------------------------------------- |
+| **live**           | Fully built and shipped                         | Document what exists in the codebase                        |
+| **partially-live** | Exists in code but incomplete or behind a flag  | Document the built parts; write a spec for what remains     |
+| **planned**        | Confirmed not built; fully scoped, next release | Write a complete implementation spec                        |
+| **wishlist**       | Confirmed not built; post-launch, not committed | **Skip entirely — never appears in engineering docs**       |
+| **untriaged**      | New doc; never verified against the codebase    | Treat as unknown — ask the user to triage before proceeding |
+
+Build an **entity summary** in your context with five sections:
+
+```text
+entity: <name>
+  live:
+    - <feature> — <product doc reference>
+  partially-live:
+    - <feature> — <product doc reference> — remaining spec: <what's unbuilt>
+  planned:
+    - <feature> — <product doc reference>
+  wishlist (excluded):
+    - <feature>
+  untriaged (needs classification):
+    - <feature>
+```
+
+The summary covers purpose, user roles, failure cases, and edge cases — but only
+for `live`, `partially-live`, and `planned` items. Wishlist items are listed so
+the user can see what was dropped, then ignored for all subsequent steps.
+Untriaged items must be classified by the user before the skill continues.
 
 ---
 
@@ -164,8 +199,10 @@ entity: ride
 Cross-reference the Codebase Map (Step 4) against the entity summaries (Step 3)
 and any existing engineering docs.
 
-**Implementation gaps** — features described in the product docs that are absent
-from the Codebase Map. These are missing from the code, not just undocumented.
+**Implementation gaps** — features with status `planned` (Step 3) that are
+absent from the Codebase Map, plus the unbuilt portions of `partially-live`
+features. These need implementation specs written. `wishlist` features are never
+implementation gaps — they were excluded in Step 3.
 
 **Documentation gaps** — features present in the Codebase Map but absent or
 stale in `docs/engineering/`. Read each existing engineering doc for the
@@ -174,25 +211,35 @@ entities and compare against the codebase scan to identify these.
 Present both lists to the user in this format:
 
 ```text
-Implementation gaps (in product docs, not in code):
-  - <entity>: <feature> — <product doc reference>
+Implementation gaps (planned / partially-live remainder, not yet in code):
+  - <entity>: <feature> [planned | partially-live] — <product doc reference>
   ...
 
 Documentation gaps (in code, not in engineering docs):
   - <project>/<entity>: <feature or section> — <file reference>
   ...
+
+Wishlist items excluded (not documented):
+  - <entity>: <feature>
+  ...
+
+Untriaged items (need classification before proceeding):
+  - <entity>: <feature>
+  ...
 ```
 
-Then ask: "How should I handle implementation gaps?"
+**Automatic handling — no user choice required:**
 
-- **(a) Skip them** — document only what is built; note nothing about unbuilt
-  features.
-- **(b) Note as planned** — add a `<!-- planned: not yet implemented -->` marker
-  in the engineering docs where the feature would live.
-- **(c) Stop and flag** — pause here; do not proceed until the team has
-  reviewed.
+| Status           | Action                                                                                                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live`           | Document what the codebase contains                                                                                                                                              |
+| `partially-live` | Document the built parts from code; write an implementation spec for what remains; open the unbuilt section with `> **Status: Partially Live** — remaining work is a build spec` |
+| `planned`        | Write a full implementation spec; open with `> **Status: Planned** — Not yet implemented. This section is a build spec.`                                                         |
+| `wishlist`       | Skip; list in the transparency section only                                                                                                                                      |
+| `untriaged`      | Block — ask the user to triage before proceeding                                                                                                                                 |
 
-Wait for the user's choice before continuing.
+If a planned or partially-live feature has conflicting or missing scope, surface
+it to the user before writing the spec. Do not guess.
 
 ---
 
@@ -245,8 +292,23 @@ that lists it as a dependency.
    where the code makes the answer unambiguous. Only ask elicitation questions
    for details the scan could not determine (e.g. auth rules, retry policies,
    design intent).
-3. Apply the implementation-gap decision from Step 5 when a product feature is
-   absent from the code.
+3. Apply the status-based handling from Step 5 for every feature section:
+   - **`live`** — document what exists in the code.
+   - **`partially-live`** — document the built parts from the codebase, then
+     write an implementation spec for the remaining unbuilt work. Open the
+     unbuilt section with:
+     ```markdown
+     > **Status: Partially Live** — The section above reflects what is built. Below
+     > is a build spec for what remains.
+     ```
+   - **`planned`** — write a complete implementation spec (data models, API
+     contracts, sequence flows, error cases, acceptance criteria). Open the
+     section with:
+     ```markdown
+     > **Status: Planned** — Not yet implemented. This section is a build spec.
+     ```
+   - **`wishlist`** — do not include at all.
+   - **`untriaged`** — do not write; surface to the user for triage first.
 4. Run the **Ralph loop** and **Approval gate** (see Shared conventions) before
    starting the next project.
 
