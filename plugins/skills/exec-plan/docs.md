@@ -13,7 +13,7 @@ output is precise, minimal, and style-consistent.
 
 ## Process
 
-1. Invoke `superpowers:using-git-worktrees`.
+1. Invoke `skills:git-workflow`.
 2. Spawn `model: sonnet` subagent with persona above.
 3. Diff the implementation branch against its base. For each changed area update
    if needed:

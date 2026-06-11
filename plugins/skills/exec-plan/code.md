@@ -12,7 +12,7 @@ Temporal TypeScript SDK, Firestore, Bun, pnpm.
 
 ## Process
 
-1. Invoke `superpowers:using-git-worktrees`.
+1. Invoke `skills:git-workflow`.
 2. Spawn `model: haiku` subagent with persona above.
 3. Invoke `superpowers:test-driven-development` before any implementation code.
 4. Implement per the plan following RED → GREEN → REFACTOR for every change.

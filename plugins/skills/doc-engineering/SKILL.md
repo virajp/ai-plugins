@@ -81,8 +81,8 @@ anyway.
    (e.g. a full-stack feature touching `service` + `worker` + `frontend`), run
    each type's doc set in turn.
 3. Enforce the halt conditions above for each type being run.
-4. Invoke `superpowers:using-git-worktrees` — keep the worktree **local**, never
-   push remotely.
+4. Invoke `skills:git-workflow` — keep the worktree **local**, never push
+   remotely.
 5. **Read the sub-file for the type and follow it.** Each sub-file injects the
    project's `stack` into its persona and fires capability-gated questions based
    on the project's `capabilities`.

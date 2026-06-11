@@ -31,7 +31,7 @@ Halt if no engineering docs exist for the entity: "No engineering doc found. Run
 1. Read all product and engineering docs for the entity, then read relevant
    source files. Code is the source of truth for current structure and
    constraints.
-2. Invoke `superpowers:using-git-worktrees`.
+2. Invoke `skills:git-workflow`.
 3. Spawn `model: sonnet` subagent with persona above.
 4. Invoke `superpowers:brainstorming` to surface open questions.
 5. Invoke `superpowers:writing-plans` to produce the implementation plan.

@@ -72,8 +72,7 @@ fallback when no docs exist yet.
 
 ## Scan Mode Process
 
-1. Invoke `superpowers:using-git-worktrees` — keep worktree **local**, never
-   push remotely.
+1. Invoke `skills:git-workflow` — keep worktree **local**, never push remotely.
 2. Read all files in `docs/product/` (scoped to the entity/entities named in the
    query if provided, otherwise all files). **When scoped, also load any docs
    the scoped entity links to** (cross-references in its `## Actions` list or
@@ -127,8 +126,7 @@ actually been verified against code versus never checked. Values:
 
 ## Author Mode Process
 
-1. Invoke `superpowers:using-git-worktrees` — keep worktree **local**, never
-   push remotely.
+1. Invoke `skills:git-workflow` — keep worktree **local**, never push remotely.
 2. **Intake:** Read all existing docs in `docs/product/` to understand the
    domain and conventions already established. Then ask the user:
    - What entity or action is this doc for?

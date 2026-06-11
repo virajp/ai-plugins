@@ -49,8 +49,8 @@ anyway.
 
 ## Process
 
-1. Invoke `superpowers:using-git-worktrees` — keep the worktree **local**, never
-   push remotely.
+1. Invoke `skills:git-workflow` — keep the worktree **local**, never push
+   remotely.
 2. **Detect mode.** If `docs/architecture.md` exists, read it fully — this is an
    update; preserve confirmed content and only fill or revise. If it does not
    exist, this is first creation.
