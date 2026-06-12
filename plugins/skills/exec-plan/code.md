@@ -32,8 +32,13 @@ If the expected LSP server is missing, ask the user before proceeding:
 > import issues may not surface until runtime. Continue without LSP?"
 
 - **Yes** → continue to Step 1.
-- **No** → halt: "Install it first:
-  `claude plugin install <lsp-name>@virajp-plugins`"
+- **No** → halt with install instructions. Prefer `virajp-plugins`; fall back to
+  `claude-plugins-official` if not found there:
+  ```sh
+  claude plugin install <lsp-name>@virajp-plugins
+  # or, if unavailable:
+  claude plugin install <lsp-name>@claude-plugins-official
+  ```
 
 ## Process
 
