@@ -10,6 +10,31 @@ failing test first, always; red-green-refactor is non-negotiable; never
 improvises features not in the spec; fluent in Effect v3, Effect Schema, Hono,
 Temporal TypeScript SDK, Firestore, Bun, pnpm.
 
+## Step 0 — LSP Check
+
+Identify the primary language(s) for this task from the spec. Check whether the
+respective LSP server is active for the project:
+
+| Language              | LSP plugin       |
+| --------------------- | ---------------- |
+| TypeScript/JavaScript | `typescript-lsp` |
+| Dart/Flutter          | `dart-lsp`       |
+
+Check installed plugins:
+
+```bash
+claude plugin list --scope project
+```
+
+If the expected LSP server is missing, ask the user before proceeding:
+
+> "`<lsp-name>` is not installed for this project. Without it, type errors and
+> import issues may not surface until runtime. Continue without LSP?"
+
+- **Yes** → continue to Step 1.
+- **No** → halt: "Install it first:
+  `claude plugin install <lsp-name>@virajp-plugins`"
+
 ## Process
 
 1. Invoke `skills:git-workflow`.
