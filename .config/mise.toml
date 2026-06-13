@@ -3,7 +3,6 @@ activate_aggressive  = true
 all_compile          = false
 env_shell_expand     = true
 gpg_verify           = true
-paranoid             = true
 raw                  = true
 status.missing_tools = "always"
 
