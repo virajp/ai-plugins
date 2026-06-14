@@ -1,7 +1,7 @@
 ---
 name: doc-product
 description: Use when product documentation for an entity or action needs to be
-  written or updated in the 95octane workspace. NOT auto-triggered.
+  written or updated. NOT auto-triggered.
 ---
 
 # doc-product — Product Documentation
@@ -17,8 +17,7 @@ lists below), regardless of whether they would influence a product decision.
 
 **Implementation details that must NEVER appear in a product doc:**
 
-- Named technologies: Firebase, Firestore, Temporal, Hono, Bun, Flutter, GetX,
-  RevenueCat, GCP, Cloud Run, Nanoid, or any library/service name
+- Named technologies: any library, framework, service, or infrastructure name
 - API shapes, field names, endpoint paths, or error codes
 - Database structure, collection names, or query patterns
 - Background job mechanics or worker internals
@@ -111,10 +110,10 @@ After the reviewer finds no gaps, ask the user:
 > "Would you like me to scan the codebase to tag each feature as `live`,
 > `partially-live`, `planned`, or `wishlist` based on what's actually built?"
 
-If yes: use `graphify` and scan `@backend/` and `@frontend/` to identify build
-status. Apply status tags to docs using the frontmatter field `status`. New docs
-are born `untriaged` (see templates) so this step can tell which docs have
-actually been verified against code versus never checked. Values:
+If yes: use `graphify` to scan the codebase and identify build status. Apply
+status tags to docs using the frontmatter field `status`. New docs are born
+`untriaged` (see templates) so this step can tell which docs have actually been
+verified against code versus never checked. Values:
 
 - `untriaged` — default for a new doc; never verified against the codebase
 - `live` — feature is fully built and shipped
@@ -158,46 +157,11 @@ actually been verified against code versus never checked. Values:
 
 ## Reviewer Prompt
 
-Use this verbatim as the subagent's system prompt. Pass only the doc file(s) as
-content — nothing else.
-
-```markdown
-You are a Senior Product Manager reviewing product documentation for 95octane, a
-motorcycle riding community app. Your job is to find gaps — not to rewrite.
-
-Output a numbered list of gaps only. No prose, no rewrites, no suggestions on
-phrasing. If you find no gaps, output exactly: NO GAPS
-
-Check every doc against this completion checklist:
-
-1. Every user role that can perform or be affected by this feature is named
-2. The happy path is fully described from the user's perspective
-3. All failure cases are listed in plain language (no error codes)
-4. An "Out of Scope" section is present and explicitly states what this feature
-   does NOT do
-5. Edge cases are covered: concurrent actions, offline behaviour, permission
-   states, partial failures
-6. Abuse and trust vectors are considered. Seed list for this app's domain —
-   check each applies and add others you identify:
-   - Location spoofing (fake GPS to appear in a ride they haven't joined)
-   - Ride hijacking (unauthorised user taking host/leader role)
-   - Push-to-talk abuse (broadcasting unwanted audio to a group)
-   - Fake group membership (bypassing invite or approval flows)
-   - Replay attacks on join/invite links
-   - Mass-invite spam or group flooding
-   - Impersonation of another rider's identity or bike
-   - Leaking private ride details to non-members
-7. No implementation details appear: no technology names, no API shapes, no
-   field names, no database references, no error codes
-8. Platform-visible permissions (location, microphone, notifications) are noted
-   where relevant
-9. All template sections are present and filled. Treat these as gaps to report:
-   any `<!-- TODO: needs input -->` marker (the author's sanctioned "needs
-   input" flag), any leftover literal placeholder (`...`, `<Entity>`,
-   `<Action Name>`), and any blank section.
-
-Be strict. A gap is anything a reader of this doc would have to guess.
-```
+Load `checklists/reviewer-prompt.md` as the subagent's system prompt. Before
+spawning, replace `{{PRODUCT_CONTEXT}}` with a one-sentence description of the
+product derived from existing docs or user input (e.g. "a group ride
+coordination app for motorcyclists"). Pass only the doc file(s) as content —
+nothing else.
 
 ---
 
