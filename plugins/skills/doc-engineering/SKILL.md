@@ -38,13 +38,13 @@ in the orchestrator.
 
 ## Doc Types
 
-| Project type | Sub-file      | Unit   | Output path                                     |
-| ------------ | ------------- | ------ | ----------------------------------------------- |
-| `service`    | `service.md`  | entity | `docs/engineering/service/api/<entity>.md`      |
-| `worker`     | `worker.md`   | entity | `docs/engineering/worker/workflows/<entity>.md` |
-| `packages`   | `packages.md` | module | `docs/engineering/packages/<module>.md`         |
-| `site`       | `site.md`     | page   | `docs/engineering/site/<page>.md`               |
-| `frontend`   | `frontend.md` | entity | `docs/engineering/frontend/<entity>/`           |
+| Project type | Framework file           | Unit   | Output path                                     |
+| ------------ | ------------------------ | ------ | ----------------------------------------------- |
+| `service`    | `frameworks/service.md`  | entity | `docs/engineering/service/api/<entity>.md`      |
+| `worker`     | `frameworks/worker.md`   | entity | `docs/engineering/worker/workflows/<entity>.md` |
+| `packages`   | `frameworks/packages.md` | module | `docs/engineering/packages/<module>.md`         |
+| `site`       | `frameworks/site.md`     | page   | `docs/engineering/site/<page>.md`               |
+| `frontend`   | `frameworks/frontend.md` | entity | `docs/engineering/frontend/<entity>/`           |
 
 For any project type not in this table: alert the user
 (`"Project '<name>' has unknown type '<type>' — no sub-file found. Skipping."`)
@@ -286,8 +286,8 @@ that lists it as a dependency.
 
 **For each relevant project:**
 
-1. Read the sub-file matching its `type` (see Doc Types table) and follow it
-   completely.
+1. Read the framework file matching its `type` (see Doc Types table) from
+   `frameworks/<type>.md` and follow it completely.
 2. You already hold the Codebase Map from Step 4 — use it to pre-fill answers
    where the code makes the answer unambiguous. Only ask elicitation questions
    for details the scan could not determine (e.g. auth rules, retry policies,
@@ -332,15 +332,16 @@ record it." Then continue.
 - **Stack injection:** Replace bracketed placeholders in templates
   (`<datastore>`, `<auth-mechanism>`, `<state-management>`, etc.) with the
   actual values from the project's `stack` in the registry.
-- **Ralph loop (reviewer):** After writing, spawn a `model: opus` subagent with
-  **only** the written engineering docs plus the product/schema docs they
-  reference — no conversation context. Context bleed causes the reviewer to fill
-  gaps from memory instead of surfacing them — keep its context to doc files
-  only. The subagent returns a gap list only, no rewrites. Resolve gaps via
-  brainstorming (one at a time, MCQ), update, re-review. **Convergence guard:**
-  the orchestrator keeps each round's gap list in memory; pause and surface to
-  the user if the gap count did not strictly decrease, or if a resolved gap
-  resurfaces. Loop until the reviewer returns `NO GAPS`.
+- **Ralph loop (reviewer):** After writing, load `checklists/ralph-prompt.md` as
+  the system prompt and spawn a `model: opus` subagent with **only** the written
+  engineering docs plus the product/schema docs they reference — no conversation
+  context. Context bleed causes the reviewer to fill gaps from memory instead of
+  surfacing them — keep its context to doc files only. The subagent returns a
+  gap list only, no rewrites. Resolve gaps via brainstorming (one at a time,
+  MCQ), update, re-review. **Convergence guard:** the orchestrator keeps each
+  round's gap list in memory; pause and surface to the user if the gap count did
+  not strictly decrease, or if a resolved gap resurfaces. Loop until the
+  reviewer returns `NO GAPS`.
 - **Approval gate:** When a project's docs are clean, pause and wait for
   explicit user approval before continuing to the next project.
 
