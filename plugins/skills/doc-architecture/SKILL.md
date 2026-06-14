@@ -89,17 +89,17 @@ anyway.
 
 ## Project Types
 
-| Type       | What it is                      | Default `doc_unit` | Hosted on |
-| ---------- | ------------------------------- | ------------------ | --------- |
-| `service`  | API backend                     | `entity`           | cloud     |
-| `worker`   | Background-task processor       | `entity`           | cloud     |
-| `packages` | Shared libraries used by others | `module`           | n/a (lib) |
-| `site`     | Website                         | `page`             | cloud     |
-| `frontend` | Mobile app (client device)      | `entity`           | device    |
+| Type       | What it is                                 | Default `doc_unit` | Hosted on |
+| ---------- | ------------------------------------------ | ------------------ | --------- |
+| `service`  | API backend                                | `entity`           | cloud     |
+| `worker`   | Background-task processor                  | `entity`           | cloud     |
+| `packages` | Shared libraries used by others            | `module`           | n/a (lib) |
+| `site`     | Website                                    | `page`             | cloud     |
+| `frontend` | Client-side application (mobile apps only) | `entity`           | device    |
 
-`service`, `worker`, `packages`, and `site` share the `packages` common code and
-are cloud-hosted; `frontend` runs on the client device and ships through the App
-Store / Play Store.
+`service`, `worker`, `packages`, and `site` are cloud-hosted; `frontend` runs on
+the client (browser, mobile device, or desktop) and ships through whatever
+distribution channel the project uses (app store, web host, etc.).
 
 ## Capability Vocabulary
 
