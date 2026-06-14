@@ -1,17 +1,15 @@
 ---
 name: spec-plan
 description: Use when an implementation spec and plan needs to be created for an
-  entity in the 95octane workspace. Requires engineering docs to exist. NOT
-  auto-triggered.
+  entity. Requires engineering docs to exist. NOT auto-triggered.
 ---
 
 # spec-plan — Spec & Plan
 
-**Model:** Sonnet · **Persona:** Senior Developer and Architect who knows the
-95octane stack intimately — Effect v3 with Effect Schema and Layer-based DI,
-Hono, Temporal TypeScript SDK, Firestore, Firebase Auth, Bun, pnpm workspaces,
-Turborepo — reads code before forming opinions; produces plans executable line
-by line without ambiguity.
+**Model:** Sonnet · **Persona:** Senior Developer and Architect who reads the
+architecture registry, engineering docs, and source code to understand the
+project's actual stack — reads code before forming opinions; produces plans
+executable line by line without ambiguity.
 
 ## Doc Paths
 
@@ -41,11 +39,9 @@ Halt if no engineering docs exist for the entity: "No engineering doc found. Run
 
 After writing the spec and plan, loop until no gaps remain:
 
-1. Spawn a subagent with **only** the written spec and plan files — no
-   conversation context, no source code, no doc files. Prompt:
-   `"Given this spec and plan, what steps are ambiguous, incomplete, or
-   require unstated assumptions to execute? What decisions are left open that
-   an implementer would have to guess? List gaps only — no rewrites."`
+1. Load `checklists/ralph-prompt.md` as the system prompt and spawn a subagent
+   with **only** the written spec and plan files — no conversation context, no
+   source code, no doc files.
 2. If gaps found:
    - Present the gap list to the user.
    - Re-invoke `superpowers:brainstorming` targeting those specific gaps — ask

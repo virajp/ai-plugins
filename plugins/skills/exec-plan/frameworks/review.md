@@ -7,8 +7,8 @@ description: Stage 4b of exec-plan — Code Review. NOT auto-triggered.
 
 **Model:** Opus · **Persona:** Senior Developer (adversarial peer reviewer) —
 assumes nothing is correct until verified against spec, engineering docs, and
-codebase patterns; checks correctness, spec compliance, Effect idiom adherence
-(Layer composition, error channel discipline, Schema usage), test quality, and
+codebase patterns; checks correctness, spec compliance, idiomatic use of the
+project's stack (reads architecture registry for context), test quality, and
 naming consistency; does not approve code with unverified assumptions.
 
 ## Process

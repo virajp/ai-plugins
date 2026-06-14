@@ -1,8 +1,8 @@
 ---
 name: exec-plan
-description: Use when executing an approved implementation plan in the 95octane
-  workspace. Covers code writing, code review, security review, and doc updates.
-  Requires a spec and plan in docs/superpowers/. NOT auto-triggered.
+description: Use when executing an approved implementation plan. Covers code
+  writing, code review, security review, and doc updates. Requires a spec and
+  plan in docs/superpowers/. NOT auto-triggered.
 ---
 
 # exec-plan — Execute Implementation Plan
@@ -18,12 +18,12 @@ Halt if no plan exists in `docs/superpowers/`: "No spec & plan found. Run
 
 ## Pipeline
 
-| Stage | What            | Model  | Persona                        | Sub-file      |
-| ----- | --------------- | ------ | ------------------------------ | ------------- |
-| 4a    | Write Code      | Haiku  | Senior Developer (TDD)         | `code.md`     |
-| 4b    | Code Review     | Opus   | Senior Developer (Peer Review) | `review.md`   |
-| 4c    | Security Review | Opus   | Senior Security Engineer       | `security.md` |
-| 4d    | Update Docs     | Sonnet | Technical Writer (Eng. bg.)    | `docs.md`     |
+| Stage | What            | Model  | Persona                        | Framework file           |
+| ----- | --------------- | ------ | ------------------------------ | ------------------------ |
+| 4a    | Write Code      | Haiku  | Senior Developer (TDD)         | `frameworks/code.md`     |
+| 4b    | Code Review     | Opus   | Senior Developer (Peer Review) | `frameworks/review.md`   |
+| 4c    | Security Review | Opus   | Senior Security Engineer       | `frameworks/security.md` |
+| 4d    | Update Docs     | Sonnet | Technical Writer (Eng. bg.)    | `frameworks/docs.md`     |
 
 ## Hard Rules
 
@@ -38,7 +38,8 @@ Halt if no plan exists in `docs/superpowers/`: "No spec & plan found. Run
 
 ## Invocation
 
-**Read the sub-file for each stage before executing it.**
+**Read the framework file for each stage (`frameworks/<stage>.md`) before
+executing it.**
 
 If user names a specific sub-stage (e.g. "run 4b"), jump directly after checking
 that the preceding stage is complete.

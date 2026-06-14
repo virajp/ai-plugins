@@ -28,10 +28,9 @@ output is precise, minimal, and style-consistent.
      navigation, or API dependencies changed
    - `docs/engineering/architecture.md` — only if a new pattern was introduced
      not anticipated in the engineering docs
-4. Update CHANGELOG for every backend package/project with new commits:
-   `backend/packages/common`, `backend/projects/service`,
-   `backend/projects/worker`, `backend/projects/web`. Skip packages with no new
-   commits.
+4. Update CHANGELOG for every project in the architecture registry that has new
+   commits on the implementation branch. Derive project paths from the
+   registry's `path` field. Skip projects with no new commits.
 5. **Archive (mandatory)** — move all spec & plan files for this entity from
    `docs/superpowers/` to `docs/superpowers/archived/`. Do not delete. Halt and
    report if the move fails — do not skip.
