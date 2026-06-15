@@ -1,20 +1,23 @@
 ---
 name: doc-engineering
 type: standalone
-version: 0.1.0
+version: 0.2.0
 category: documentation
-description: Use when engineering documentation needs to be written or updated
-  for one or more entities. Entity-driven — requires entity names as input.
-  Reads product docs, architecture.md, and the codebase before writing. NOT
-  auto-triggered.
+description: Use when engineering documentation needs to be written or updated.
+  Two modes — entity mode (per-entity docs, requires entity names) and
+  foundations mode (cross-cutting concerns like auth and errors). Reads product
+  docs, architecture.md, and the codebase before writing. NOT auto-triggered.
 ---
 
 # doc-engineering — Engineering Documentation
 
-Entity-driven: the user provides one or more entity names. The skill reads
-product docs and the architecture registry, scans the codebase to discover what
-is actually built, identifies gaps, syncs existing docs, then writes complete
-engineering docs for every project in the registry that touches those entities.
+Two modes. **Entity mode** (default): the user provides one or more entity
+names; the skill reads product docs and the architecture registry, scans the
+codebase to discover what is actually built, identifies gaps, syncs existing
+docs, then writes complete engineering docs for every project that touches those
+entities. **Foundations mode**: the user names a cross-cutting concern (auth,
+errors, observability, config, testing, integrations) and the skill writes its
+canonical contract for entity docs to link to.
 
 **Primary objective:** Produce engineering specs that enable building the
 `planned` and `partially-live` features for each entity. These are documented as
@@ -24,14 +27,19 @@ never appear in engineering docs.
 
 <activation>
 ## What
-Entity-driven engineering documentation: reads product docs and the architecture
-registry, scans the codebase, identifies gaps, syncs existing docs, then writes
-complete engineering docs for every project that touches the named entities.
+Engineering documentation in two modes. **Entity mode** (default): reads product
+docs and the architecture registry, scans the codebase, identifies gaps, syncs
+existing docs, then writes complete engineering docs for every project that
+touches the named entities. **Foundations mode**: documents cross-cutting
+concerns (auth, errors, observability, config, testing, integrations) as
+canonical contracts that entity docs link to.
 
 ## When to Use
 
 - Documenting `live`, `partially-live`, or `planned` features for one or more
-  named entities
+  named entities (entity mode)
+- Documenting a cross-cutting concern that entity docs depend on (foundations
+  mode)
 - After product docs and `docs/architecture.md` already exist
 
 ## Not For
@@ -69,9 +77,11 @@ the Doc Types / Doc Paths tables, topology, and shared conventions)
 
 ## Load on Demand
 
-@frameworks/service.md · @frameworks/worker.md · @frameworks/packages.md ·
-@frameworks/site.md · @frameworks/frontend.md (one per project type, read during
-full documentation) @templates/engineering-*.md (output structure per doc type)
+@tasks/document-service.md · @tasks/document-worker.md ·
+@tasks/document-packages.md · @tasks/document-site.md ·
+@tasks/document-frontend.md (one sub-task per project type, read during full
+documentation) @tasks/document-foundation.md (cross-cutting concerns, read in
+foundations mode) @templates/engineering-*.md (output structure per doc type)
 @checklists/ralph-prompt.md (reviewer subagent system prompt)
 
 Invokes `skills:git-workflow`, `superpowers:brainstorming`, and `graphify`
@@ -86,8 +96,13 @@ To document one or more entities, read `tasks/document-engineering.md` and
 follow it end to end.
 
 <greeting>
-doc-engineering loaded — entity-driven. I read product + architecture docs, scan
-the codebase, then write engineering docs project-by-project.
+doc-engineering loaded. I read product + architecture docs, scan the codebase,
+then write engineering docs. Two modes:
 
-Which entities should I document? (e.g. ride, user, group)
+- **Entity** (default) — engineering docs for one or more entities, project by
+  project. (e.g. ride, user, group)
+- **Foundations** — a cross-cutting contract (auth, errors, observability,
+  config, testing, integrations) that entity docs link to.
+
+Which would you like — and which entity or concern?
 </greeting>

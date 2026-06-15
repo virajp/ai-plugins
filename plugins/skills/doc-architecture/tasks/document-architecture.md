@@ -82,12 +82,33 @@ for each project gather:
 - `doc_unit` — `entity`, `page`, or `module` (default by type below)
   </step>
 
+<step name="elicit_cross_cutting">
+Elicit the **cross-cutting decisions** — one-line selections for system-wide
+concerns. These are the inputs `doc-engineering`'s foundations mode expands into
+canonical contracts. Record only the *decision* here (e.g. `auth:
+firebase-id-token`), not the full spec. Ask one at a time (MCQ + "Other"), and
+let the user mark a concern **not applicable** so it is omitted:
+
+- `auth` — authentication mechanism (e.g. third-party ID token, JWT, session
+  cookie, none)
+- `errors` — error strategy (e.g. coded envelope, HTTP-status-only)
+- `observability` — logging/metrics/tracing approach (or none)
+- `config` — configuration & secrets approach (e.g. env vars, secrets manager)
+- `testing` — testing strategy (or none)
+- `integrations` — external services the system depends on (or none)
+
+Capture these in the `cross_cutting` block of the registry and the matching
+Cross-cutting Decisions prose table. Omit concerns the system does not have.
+</step>
+
 <step name="write_doc">
 1. Write `docs/architecture.md` from `templates/architecture.md`. Fill the human
-   prose sections from `elicit_system_level` and the `` ```yaml `` Project
-   Registry block from `elicit_project_registry`. Keep the prose and the registry
-   in sync — every project in the registry must be described in the prose, and
-   vice versa.
+   prose sections from `elicit_system_level`, the `` ```yaml `` Project Registry
+   block from `elicit_project_registry`, and the Cross-cutting Decisions table +
+   `cross_cutting` registry block from `elicit_cross_cutting`. Keep the prose and
+   the registry in sync — every project in the registry must be described in the
+   prose and vice versa, and the cross-cutting table must match the
+   `cross_cutting` block.
 2. Mark anything genuinely unresolved with `<!-- TODO: needs input -->` rather
    than guessing.
 3. When done, suggest:
@@ -151,6 +172,9 @@ sections and a machine-readable Project Registry `yaml` block kept in sync.
 - [ ] Mode detected (create vs update) and existing content preserved on update
 - [ ] System-level prose elicited via one-at-a-time MCQ questions
 - [ ] Every project has name, type, path, stack, capabilities, depends_on, doc_unit
-- [ ] Prose and Project Registry are in sync — no project in one but not the other
+- [ ] Cross-cutting decisions elicited; only applicable concerns recorded in the
+      `cross_cutting` block and the matching prose table
+- [ ] Prose and Project Registry are in sync — no project in one but not the other;
+      cross-cutting table matches the `cross_cutting` block
 - [ ] Unresolved items marked with `<!-- TODO: needs input -->`, not guessed
 </acceptance-criteria>

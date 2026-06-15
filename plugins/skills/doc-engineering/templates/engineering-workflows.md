@@ -1,33 +1,62 @@
-# <Entity> Workflows
+# Worker Workflows Template
 
-> Replace `<workflow-engine>` with the project's engine from the registry.
+Background workflows for one entity. Save as
+`docs/engineering/worker/workflows/{entity}.md`.
+
+> Replace `{workflow-engine}` with the project's engine from the registry.
 > Retry/timeout fields apply only if the project has the `durable-workflows`
-> capability.
+> capability. If no worker activity exists for the entity, use the "No worker
+> activity" variant in the section specs below.
 
-## <Workflow Name>
+```template
+# {Entity} Workflows
 
-**Trigger:** <event, API call, or cron schedule>
+> Runs on `{workflow-engine}`. Retry/timeout fields apply only with the
+> `durable-workflows` capability.
 
-**Drives state transition:** <from → to>, if applicable
+## [Workflow Name]
 
-**Activities:** <ordered list of activity names>
+**Trigger:** [event, API call, or cron schedule]
 
-**Retry policy:**
-`maximumAttempts: N, initialInterval: Xs, backoffCoefficient: N`
+**Drives state transition:** [from → to], if applicable
 
-**Timeouts:** `workflowRunTimeout: Xm, activityStartToCloseTimeout: Xs`
+**Activities:** [ordered list of activity names]
 
-**Signals / queries:** <any, or None>
+**Retry policy:** `maximumAttempts: [N], initialInterval: [Xs], backoffCoefficient: [N]`
 
-**Failure handling:** what happens if an activity fails after retries are
-exhausted.
+**Timeouts:** `workflowRunTimeout: [Xm], activityStartToCloseTimeout: [Xs]`
 
----
+**Signals / queries:** [any, or None]
 
-<!-- If no worker activity exists for this entity, replace the entire file with: -->
+**Failure handling:** [what happens if an activity fails after retries are
+exhausted].
+```
+
+## Field Documentation
+
+| Field                                               | Convention | Description                                                         |
+| --------------------------------------------------- | ---------- | ------------------------------------------------------------------- |
+| `{entity}`                                          | variable   | Entity name, used in the heading and the doc path.                  |
+| `{workflow-engine}`                                 | variable   | The workflow/async engine from the project `stack` (e.g. Temporal). |
+| `[Workflow Name]`                                   | prose      | Human name of the workflow.                                         |
+| `[Trigger]` / `[Activities]` / `[Failure handling]` | prose      | Section bodies as described below.                                  |
+| `[N]` / `[Xs]` / `[Xm]`                             | prose      | Concrete retry and timeout values.                                  |
+
+## Section Specifications
+
+| Section                 | Required               | Guidance                                                                           |
+| ----------------------- | ---------------------- | ---------------------------------------------------------------------------------- |
+| Workflow (repeatable)   | One per workflow       | Trigger, the state transition it drives, ordered activities, and failure handling. |
+| Retry policy / Timeouts | If `durable-workflows` | Concrete values; omit when the capability is absent.                               |
+| Signals / queries       | Always                 | List any, or write "None".                                                         |
+
+### No worker activity
+
+If the entity has no background worker activity, replace the entire file body
+with:
 
 ```markdown
-# <Entity> Workflows
+# {Entity} Workflows
 
 No background worker activity for this entity.
 ```
