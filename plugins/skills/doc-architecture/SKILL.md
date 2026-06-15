@@ -1,13 +1,13 @@
 ---
 name: doc-architecture
 type: standalone
-version: 0.1.0
+version: 0.2.0
 category: documentation
 description: Use when the workspace-level architecture doc needs to be created
   or
   updated. Produces docs/architecture.md — the single source of truth that
-  doc-engineering parses to learn each project's type, stack, and
-  capabilities. NOT auto-triggered.
+  doc-engineering parses to learn each project's type, stack, capabilities, and
+  cross-cutting decisions. NOT auto-triggered.
 ---
 
 # doc-architecture — System Architecture Documentation

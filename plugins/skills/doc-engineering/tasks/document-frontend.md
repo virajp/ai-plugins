@@ -1,10 +1,18 @@
----
-name: doc-engineering-frontend
-description: Frontend (mobile app) doc set of doc-engineering. NOT
-  auto-triggered.
----
+<purpose>
+Document one entity's frontend (mobile app) screens for a `frontend` project: read
+context, elicit the screen set through tiered questions, and write the entity
+index plus one engineering doc per screen.
+</purpose>
 
-# doc-engineering — Frontend
+<user-story>
+As a mobile engineer, I want a code-grounded spec of an entity's screens, state,
+and navigation, so that the team can program each screen without a wireframe.
+</user-story>
+
+<when-to-use>
+- Documenting a `frontend` (mobile app) project's entity during the
+  `full_documentation` step of `document-engineering.md`
+- The architecture registry lists the project as `type: frontend`
 
 **Persona (orchestrator adopts this):** Senior Mobile Architect with deep
 expertise in the project's declared stack (inject `stack` from the registry —
@@ -22,15 +30,20 @@ Every entity is a folder. The `index.md` holds the screen inventory, controller/
 state, navigation graph, API dependencies, and caching. Each screen gets its own
 file with the full programmable spec (layout regions, elements & actions,
 states, forms, interaction flows) — purely textual, no wireframes.
+</when-to-use>
 
-## Process
+<steps>
 
-1. Read any existing files under `docs/engineering/frontend/<entity>/` — do not
-   silently overwrite. If the folder does not exist, create it.
-2. Read every file in `docs/product/<entity>/` and the entity's service API doc
-   (the endpoints these screens call).
-3. Adopt the persona with injected stack. Brainstorm one question at a time
-   (MCQ + "Other").
+<step name="read_context" priority="first">
+Read any existing files under `docs/engineering/frontend/<entity>/` — do not
+silently overwrite. If the folder does not exist, create it. Read every file in
+`docs/product/<entity>/` and the entity's service API doc (the endpoints these
+screens call).
+</step>
+
+<step name="elicit_screens">
+Adopt the persona with injected stack. Brainstorm one question at a time
+(MCQ + "Other"). **Wait for response after each.**
 
 ### Tier 1 — entity level (for `index.md`)
 
@@ -80,17 +93,47 @@ programmed without a wireframe:
 - `payments-subscriptions` → paywall screens, entitlement checks, store
   integration.
 - `third-party-auth` → SSO flows, any reviewer/hidden login path, session
-  lifecycle.
+  lifecycle. Link auth-gated states to `foundations/auth.md` rather than
+  restating the mechanism.
 - `deep-linking` → link routing and cold-start handling.
 - `device-permissions` → permission-request UX and denial handling.
+  </step>
 
-4. Write `docs/engineering/frontend/<entity>/index.md` using
-   `templates/engineering-frontend.md`, then one
-   `docs/engineering/frontend/<entity>/<screen>.md` per screen using
-   `templates/engineering-frontend-screen.md`. Link each screen from the index's
-   Screens table.
-5. Update `docs/engineering/frontend/readme.md` (index of entities).
-6. Run the shared **Ralph loop** and **Approval gate** from the main SKILL. The
-   reviewer must receive the `index.md` **and** every screen file — a missing
-   state or unhandled gesture on a single screen is exactly the kind of gap it
-   should catch.
+<step name="write_docs">
+Write `docs/engineering/frontend/<entity>/index.md` using
+`templates/engineering-frontend.md`, then one
+`docs/engineering/frontend/<entity>/<screen>.md` per screen using
+`templates/engineering-frontend-screen.md`. Link each screen from the index's
+Screens table.
+
+Update `docs/engineering/frontend/readme.md` (index of entities).
+</step>
+
+<step name="review">
+Run the shared **Ralph loop** and **Approval gate** from the main SKILL. The
+reviewer must receive the `index.md` **and** every screen file — a missing
+state or unhandled gesture on a single screen is exactly the kind of gap it
+should catch.
+</step>
+
+</steps>
+
+<output>
+`docs/engineering/frontend/<entity>/index.md` (screen inventory, controller/
+state, navigation graph, API dependencies, caching) plus one
+`docs/engineering/frontend/<entity>/<screen>.md` per screen (layout regions,
+elements & actions, states, forms, interaction flows) — plus an updated entity
+index, passing the Ralph reviewer.
+</output>
+
+<acceptance-criteria>
+- [ ] Existing files under the entity folder read; not silently overwritten; folder created if absent
+- [ ] Product docs and the entity's service API doc read
+- [ ] Tier 1 entity-level and per-screen questions answered; Tier 2 asked only for declared capabilities
+- [ ] `index.md` written from `templates/engineering-frontend.md`
+- [ ] One `<screen>.md` written per screen from `templates/engineering-frontend-screen.md`, linked from the index's Screens table
+- [ ] Frontend entity index (`readme.md`) updated
+- [ ] Ralph loop and approval gate honoured, with reviewer receiving the index and every screen file
+</acceptance-criteria>
+</content>
+</invoke>

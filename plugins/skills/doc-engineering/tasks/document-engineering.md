@@ -34,13 +34,19 @@ in the orchestrator.
 
 ## Doc Types
 
-| Project type | Framework file           | Unit   | Output path                                     |
-| ------------ | ------------------------ | ------ | ----------------------------------------------- |
-| `service`    | `frameworks/service.md`  | entity | `docs/engineering/service/api/<entity>.md`      |
-| `worker`     | `frameworks/worker.md`   | entity | `docs/engineering/worker/workflows/<entity>.md` |
-| `packages`   | `frameworks/packages.md` | module | `docs/engineering/packages/<module>.md`         |
-| `site`       | `frameworks/site.md`     | page   | `docs/engineering/site/<page>.md`               |
-| `frontend`   | `frameworks/frontend.md` | entity | `docs/engineering/frontend/<entity>/`           |
+| Project type    | Sub-task file                  | Unit    | Output path                                     |
+| --------------- | ------------------------------ | ------- | ----------------------------------------------- |
+| `service`       | `tasks/document-service.md`    | entity  | `docs/engineering/service/api/<entity>.md`      |
+| `worker`        | `tasks/document-worker.md`     | entity  | `docs/engineering/worker/workflows/<entity>.md` |
+| `packages`      | `tasks/document-packages.md`   | module  | `docs/engineering/packages/<module>.md`         |
+| `site`          | `tasks/document-site.md`       | page    | `docs/engineering/site/<page>.md`               |
+| `frontend`      | `tasks/document-frontend.md`   | entity  | `docs/engineering/frontend/<entity>/`           |
+| `foundations`\* | `tasks/document-foundation.md` | concern | `docs/engineering/foundations/<concern>.md`     |
+
+\* `foundations` is a **mode**, not a registry project type — it documents
+cross-cutting concerns (auth, errors, observability, config, testing,
+integrations) and runs as layer-0 (before `packages`). See the `intake` mode
+branch.
 
 For any project type not in this table: alert the user
 (`"Project '<name>' has unknown type '<type>' — no sub-file found. Skipping."`)
@@ -52,6 +58,7 @@ and continue without halting.
 | ----------------- | ------------------------------------------------- |
 | Architecture      | `docs/architecture.md` (prerequisite — read-only) |
 | Product           | `docs/product/<entity>/` (prerequisite)           |
+| Foundation        | `docs/engineering/foundations/<concern>.md`       |
 | Service API       | `docs/engineering/service/api/<entity>.md`        |
 | Worker            | `docs/engineering/worker/workflows/<entity>.md`   |
 | Packages          | `docs/engineering/packages/<module>.md`           |
@@ -70,11 +77,31 @@ anyway.
 </step>
 
 <step name="intake">
-1. Confirm the entity or entities to document. If the user has not provided
-   entity names, ask: "Which entities should I document? (e.g. ride, user,
-   group)"
-2. Invoke `skills:git-workflow` — keep the worktree **local**, never push
+1. Determine the **mode**:
+   - **Entity mode** (default) — the user named one or more entities.
+   - **Foundations mode** — the user asked for `foundations`, or named a
+     cross-cutting concern (auth, errors, observability, config, testing,
+     integrations).
+
+If the request is ambiguous, ask: "Entity mode (engineering docs for an entity)
+or foundations mode (a cross-cutting contract)? And which entity or concern?"
+**Wait for response.** 2. Confirm the target:
+
+- Entity mode → confirm the entity or entities. If none provided, ask: "Which
+  entities should I document? (e.g. ride, user, group)" **Wait for response.**
+- Foundations mode → confirm the concern(s). If none provided, ask: "Which
+  concern? (auth, errors, observability, config, testing, integrations)" **Wait
+  for response.**
+
+3. Invoke `skills:git-workflow` — keep the worktree **local**, never push
    remotely.
+
+<if condition="mode is foundations">
+Foundations mode skips `product_understanding` (concerns are not product
+features) and runs only `architecture_registry`, `codebase_scan`,
+`gap_analysis`, then `foundation_documentation` (below). The `full_documentation`
+project loop does not run.
+</if>
 </step>
 
 <step name="architecture_registry">
@@ -85,12 +112,24 @@ Parse the **Project Registry** `` ```yaml `` block. For each project, extract:
 `name`, `type`, `stack`, `capabilities`, `depends_on`, and the project's
 filesystem root (use the `root` field if present; otherwise infer it as
 `./<name>/`). Build a **project map** you will reference throughout.
+
+Also parse the **`cross_cutting`** block in the same registry yaml (one-line
+selections such as `auth: firebase-id-token`, `errors: coded-envelope`). These
+are the `{decision}` lines for foundation docs. If the block is absent,
+foundations mode derives the decisions from the codebase and asks the user to
+confirm (and suggests recording them via `doc-architecture`).
 </step>
 
 <step name="product_understanding">
-For each entity provided in `intake`, read all files in `docs/product/<entity>/`.
-If the directory does not exist, halt: "No product doc found for `<entity>`. Run
-`doc-product` first."
+<if condition="mode is foundations">
+Skip this step — cross-cutting concerns are not product features. Their scope
+comes from the architecture decisions and the codebase scan. Proceed to
+`codebase_scan`.
+</if>
+
+For each entity provided in `intake`, read all files in
+`docs/product/<entity>/`. If the directory does not exist, halt: "No product doc
+found for `<entity>`. Run `doc-product` first."
 
 Product docs use five explicit status values. Match features to exactly these —
 do not invent or conflate statuses:
@@ -126,6 +165,16 @@ Untriaged items must be classified by the user before the skill continues.
 </step>
 
 <step name="codebase_scan">
+<if condition="mode is foundations">
+Scan for the **concern**, not an entity: locate where it is implemented across
+all projects (e.g. for `auth`, the auth middleware and role checks; for `errors`,
+the error enum/envelope; for `observability`, the logging setup). Use graphify if
+available ("Where is `<concern>` implemented? List files and what each does."),
+else spawn one scan subagent per project root with the concern as the target.
+Merge into a Codebase Map keyed by concern, then by project. Then proceed to
+`gap_analysis`.
+</if>
+
 Scan the codebase to discover what is actually built for the specified entities.
 
 **Strategy — prefer graphify, fall back to parallel subagents:**
@@ -226,9 +275,29 @@ Untriaged items (need classification before proceeding):
 
 If a planned or partially-live feature has conflicting or missing scope, surface
 it to the user before writing the spec. Do not guess.
+
+**Foundations gaps** — a cross-cutting concern an entity doc references (or will
+reference) that has no `docs/engineering/foundations/<concern>.md` yet. The most
+common are `auth` (any role-gated endpoint or auth-gated screen) and `errors`
+(any error code). List them so the foundation can be documented first:
+
+```text
+Foundations gaps (referenced cross-cutting concerns without a foundation doc):
+  - <concern> — referenced by <entity/doc> — run foundations mode first
+  ...
+```
+
+In **foundations mode**, the gap is simpler: which parts of the concern are
+`live` in code (document as-is) versus `planned`/`partially-live` (write as a
+build spec). There are no entity status buckets.
 </step>
 
 <step name="documentation_sync">
+<if condition="mode is foundations">
+Skip — `foundation_documentation` reads any existing foundation doc and updates
+it in place. Proceed there.
+</if>
+
 Before writing new docs, bring existing engineering docs up to date with the
 current codebase.
 
@@ -246,7 +315,29 @@ Get user approval after all sync edits before proceeding to
 `full_documentation`.
 </step>
 
+<step name="foundation_documentation">
+**Foundations mode only.** For each concern confirmed in `intake`:
+
+1. Read `tasks/document-foundation.md` and follow it completely.
+2. Use the Codebase Map and the architecture cross-cutting decision to pre-fill
+   what the code makes unambiguous; ask only what the scan cannot determine.
+3. Apply status handling: document `live`/`partially-live` parts from code;
+   write `planned` parts as build specs with the status callout.
+4. Write `docs/engineering/foundations/<concern>.md` using
+   `templates/engineering-foundation.md`, then update
+   `docs/engineering/foundations/readme.md`.
+5. Run the **Ralph loop** and **Approval gate** before the next concern.
+
+When done, stop — the `full_documentation` project loop does not run in
+foundations mode.
+</step>
+
 <step name="full_documentation">
+**Entity mode only.** Foundations are layer-0: any concern these entities depend
+on should already have a foundation doc (if not, it surfaced as a foundations gap
+in `gap_analysis` — document it in foundations mode first). Entity docs **link**
+to the foundation docs; they never restate auth flows or the standard error set.
+
 For each project in the registry, determine relevance to the specified entities:
 
 **Relevant** if either holds:
@@ -270,8 +361,8 @@ that lists it as a dependency.
 
 **For each relevant project:**
 
-1. Read the framework file matching its `type` (see Doc Types table) from
-   `frameworks/<type>.md` and follow it completely.
+1. Read the sub-task matching its `type` (see Doc Types table) from
+   `tasks/document-<type>.md` and follow it completely.
 2. You already hold the Codebase Map — use it to pre-fill answers where the code
    makes the answer unambiguous. Only ask elicitation questions for details the
    scan could not determine (e.g. auth rules, retry policies, design intent).
@@ -340,21 +431,27 @@ docs(engineering): add shared ride schema contract
 ```
 
 <output>
-Complete engineering docs under `docs/engineering/` for every relevant project
-that touches the named entities — `live` features documented from code,
-`partially-live`/`planned` features written as build specs with status callouts,
-`wishlist` excluded — each passing the Ralph reviewer (`NO GAPS`) with user
-approval per project.
+**Entity mode:** complete engineering docs under `docs/engineering/` for every
+relevant project that touches the named entities — `live` features documented
+from code, `partially-live`/`planned` features written as build specs with status
+callouts, `wishlist` excluded, cross-cutting concerns linked to their foundation
+docs — each passing the Ralph reviewer (`NO GAPS`) with user approval per project.
+
+**Foundations mode:** a canonical contract at
+`docs/engineering/foundations/<concern>.md` for each named concern, that entity
+docs link to — passing the Ralph reviewer (`NO GAPS`) with user approval.
 </output>
 
 <acceptance-criteria>
 - [ ] Session model confirmed as Opus (or user explicitly overrode)
-- [ ] Architecture registry and product docs read; halt messages honored if missing
-- [ ] Entity summary built with all five status buckets
-- [ ] Codebase scanned (graphify or parallel subagents) into a Codebase Map
-- [ ] Implementation and documentation gaps presented to the user
-- [ ] Existing docs synced before new docs written; user approval obtained
-- [ ] Projects documented in dependency order using the matching framework file
+- [ ] Mode determined (entity vs foundations); target confirmed
+- [ ] Architecture registry read (incl. cross-cutting decisions); halt messages honored if missing
+- [ ] Entity mode: product docs read and entity summary built with all five status buckets
+- [ ] Codebase scanned (graphify or parallel subagents) into a Codebase Map keyed by entity or concern
+- [ ] Implementation, documentation, and foundations gaps presented to the user
+- [ ] Entity mode: existing docs synced before new docs written; user approval obtained
+- [ ] Entity mode: projects documented in dependency order using the matching sub-task; cross-cutting concerns linked to foundation docs, not restated
+- [ ] Foundations mode: each concern documented from code/decision with status callouts via `tasks/document-foundation.md`
 - [ ] Status-based handling applied; `wishlist` excluded; `untriaged` blocked
-- [ ] Ralph loop run to `NO GAPS` and approval gate honored per project
+- [ ] Ralph loop run to `NO GAPS` and approval gate honored per project/concern
 </acceptance-criteria>

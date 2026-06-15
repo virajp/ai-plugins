@@ -1,7 +1,7 @@
 ---
 name: exec-plan
 type: standalone
-version: 0.1.0
+version: 0.2.0
 category: development
 description: Use when executing an approved implementation plan. Covers code
   writing, code review, security review, and doc updates. Requires a spec and
@@ -49,10 +49,10 @@ purpose-specific subagent on the model the stage requires.
 
 <routing>
 ## Load on Command
-@frameworks/code.md (Stage 4a — write code)
-@frameworks/review.md (Stage 4b — code review)
-@frameworks/security.md (Stage 4c — security review)
-@frameworks/docs.md (Stage 4d — update docs)
+@tasks/write-code.md (Stage 4a — write code)
+@tasks/code-review.md (Stage 4b — code review)
+@tasks/security-review.md (Stage 4c — security review)
+@tasks/update-docs.md (Stage 4d — update docs)
 
 ## Load on Demand
 
@@ -66,12 +66,12 @@ Halt if no plan exists in `docs/superpowers/`: "No spec & plan found. Run
 
 ## Pipeline
 
-| Stage | What            | Model  | Persona                        | Framework file           |
-| ----- | --------------- | ------ | ------------------------------ | ------------------------ |
-| 4a    | Write Code      | Haiku  | Senior Developer (TDD)         | `frameworks/code.md`     |
-| 4b    | Code Review     | Opus   | Senior Developer (Peer Review) | `frameworks/review.md`   |
-| 4c    | Security Review | Opus   | Senior Security Engineer       | `frameworks/security.md` |
-| 4d    | Update Docs     | Sonnet | Technical Writer (Eng. bg.)    | `frameworks/docs.md`     |
+| Stage | What            | Model  | Persona                        | Sub-task file              |
+| ----- | --------------- | ------ | ------------------------------ | -------------------------- |
+| 4a    | Write Code      | Haiku  | Senior Developer (TDD)         | `tasks/write-code.md`      |
+| 4b    | Code Review     | Opus   | Senior Developer (Peer Review) | `tasks/code-review.md`     |
+| 4c    | Security Review | Opus   | Senior Security Engineer       | `tasks/security-review.md` |
+| 4d    | Update Docs     | Sonnet | Technical Writer (Eng. bg.)    | `tasks/update-docs.md`     |
 
 ## Hard Rules
 
@@ -86,7 +86,7 @@ Halt if no plan exists in `docs/superpowers/`: "No spec & plan found. Run
 
 ## Invocation
 
-**Read the framework file for each stage (`frameworks/<stage>.md`) before
+**Read the sub-task file for each stage (see the Pipeline table) before
 executing it.**
 
 If user names a specific sub-stage (e.g. "run 4b"), jump directly after checking

@@ -34,6 +34,24 @@ move between projects). A simple text diagram is welcome. -->
 <!-- Where each project runs and how it ships. For cloud projects: the platform
 and region. For the mobile app: the stores and release channel. -->
 
+## Cross-cutting Decisions
+
+<!-- One-line selections for system-wide engineering concerns. These are the
+inputs `doc-engineering`'s foundations mode expands into canonical contracts
+under docs/engineering/foundations/. Record the *decision* (the selection) here;
+the *contract* (the full spec) lives in the foundation doc. Include only concerns
+the system actually has; omit the rest. Keep this table in sync with the
+`cross_cutting` block in the registry below. -->
+
+| Concern       | Decision            |
+| ------------- | ------------------- |
+| auth          | <selection>         |
+| errors        | <selection>         |
+| observability | <selection>         |
+| config        | <selection>         |
+| testing       | <selection>         |
+| integrations  | <selection or none> |
+
 ## Project Registry
 
 > Machine-readable. `doc-engineering` parses this block to pick each project's
@@ -42,6 +60,8 @@ and region. For the mobile app: the stores and release channel. -->
 > - `type` ∈ `service` | `worker` | `packages` | `site` | `frontend`
 > - `doc_unit` ∈ `entity` | `page` | `module`
 > - `capabilities` — see the Capability Vocabulary in the skill; extensible.
+> - `cross_cutting` — one-line decision per system-wide concern; the input to
+>   `doc-engineering` foundations mode. Include only the concerns that exist.
 
 ```yaml
 projects:
@@ -52,4 +72,12 @@ projects:
     capabilities: [ <capability>, <...> ]
     depends_on: [ <project-name>, <...> ] # or []
     doc_unit: <entity|page|module>
+
+cross_cutting: # system-wide concerns → doc-engineering foundations mode
+  auth: <selection> # e.g. firebase-id-token, jwt, session-cookie, none
+  errors: <selection> # e.g. coded-envelope, http-status-only
+  observability: <selection> # e.g. structured-json-logs, otel-tracing, none
+  config: <selection> # e.g. env-vars, secrets-manager
+  testing: <selection> # e.g. vitest-unit-integration, none
+  integrations: [ <service-name>, <...> ] # external services, or []
 ```
