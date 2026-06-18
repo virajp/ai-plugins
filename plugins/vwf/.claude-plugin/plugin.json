@@ -1,12 +1,4 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "vwf",
-  "settings": {
-    "statusLine": {
-      "command": "pnpm dlx ccstatusline",
-      "padding": 0,
-      "refreshInterval": 4,
-      "type": "command"
-    }
-  }
+  "name": "vwf"
 }
