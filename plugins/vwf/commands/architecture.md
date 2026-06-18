@@ -26,8 +26,8 @@ There is exactly one architecture doc per workspace; it describes every project.
 
 ## Step 1 — Setup
 
-Invoke `/git-workflow` to ensure an isolated local worktree before making any
-changes. Never push a worktree branch directly.
+Invoke `/vwf:git-workflow` to ensure an isolated local worktree before making
+any changes. Never push a worktree branch directly.
 
 ---
 
@@ -152,10 +152,10 @@ and report the unresolved item rather than looping indefinitely.
 
 ## Step 7 — Commit
 
-**If this command was invoked as the final step of `/product`:** return control
-to the parent run. The parent pipeline commits; do not double-commit.
+**If this command was invoked as the final step of `/vwf:product`:** return
+control to the parent run. The parent pipeline commits; do not double-commit.
 
-**Otherwise (standalone invocation):** commit via the `git-workflow` skill.
+**Otherwise (standalone invocation):** commit via `/vwf:git-workflow`.
 
 Commit message format — use `docs(architecture):` prefix, imperative mood,
 lowercase, under 72 characters:

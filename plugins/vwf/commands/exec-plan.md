@@ -20,7 +20,7 @@ strict about per-stage model assignment.
 ## Halt Condition
 
 Halt if no plan exists in `docs/superpowers/`: "No spec & plan found. Run
-`/spec-plan` first."
+`/vwf:spec-plan` first."
 
 ## Pipeline
 
@@ -77,11 +77,11 @@ missing, ask the user and **wait**:
   claude plugin install <lsp-name>@claude-plugins-official
   ```
 
-**Setup & dispatch.** Invoke `/git-workflow` for an isolated local workspace.
-Then dispatch the `exec-plan-coder` subagent with the plan and the registry
-stack. It invokes `superpowers:test-driven-development`, implements per the plan
-following RED → GREEN → REFACTOR for every change, and runs the test suite to
-100% coverage. It returns the coverage report.
+**Setup & dispatch.** Invoke `/vwf:git-workflow` for an isolated local
+workspace. Then dispatch the `exec-plan-coder` subagent with the plan and the
+registry stack. It invokes `superpowers:test-driven-development`, implements per
+the plan following RED → GREEN → REFACTOR for every change, and runs the test
+suite to 100% coverage. It returns the coverage report.
 
 **Approval gate.** Show the coverage report. Wait for explicit user approval
 before 4b.
@@ -107,13 +107,13 @@ impact. It returns the findings.
 
 ## Stage 4d — Update Docs (`exec-plan-doc-writer`, sonnet)
 
-Invoke `/git-workflow`, then dispatch the `exec-plan-doc-writer` subagent. It
-diffs the implementation branch against its base, updates only the docs the diff
-shows changed (product / engineering / architecture), updates the CHANGELOG for
-every registry project with new commits, and **archives** all spec & plan files
-for the entity from `docs/superpowers/` to `docs/superpowers/archived/` (move,
-not delete; halt and report on failure). It returns the changed doc paths and
-the archived paths.
+Invoke `/vwf:git-workflow`, then dispatch the `exec-plan-doc-writer` subagent.
+It diffs the implementation branch against its base, updates only the docs the
+diff shows changed (product / engineering / architecture), updates the CHANGELOG
+for every registry project with new commits, and **archives** all spec & plan
+files for the entity from `docs/superpowers/` to `docs/superpowers/archived/`
+(move, not delete; halt and report on failure). It returns the changed doc paths
+and the archived paths.
 
 **Approval gate.** Confirm (a) all doc changes made and (b) spec & plan files
 archived (list moved paths). Both required before 4d is done. Wait for the user.
@@ -122,8 +122,8 @@ archived (list moved paths). Both required before 4d is done. Wait for the user.
 
 ## Commit
 
-When the user is ready, commit via `/git-workflow`. Keep the worktree **local**
-— never push remotely. Then suggest the merge/cleanup sequence:
+When the user is ready, commit via `/vwf:git-workflow`. Keep the worktree
+**local** — never push remotely. Then suggest the merge/cleanup sequence:
 
 `commit changes, merge to default branch of main worktree, push changes, switch
 to main worktree & clean up additional worktree`

@@ -1,7 +1,7 @@
 ---
 name: product-reviewer
-description: Read-only product-doc reviewer for the /product command.
-  Invoked only by /product for the audit and verify phases — do not
+description: Read-only product-doc reviewer for the /vwf:product command.
+  Invoked only by /vwf:product for the audit and verify phases — do not
   delegate to it for general tasks. Returns NO GAPS or a numbered,
   options-framed gap list. Stateless by design.
 tools: Read, Grep, Glob

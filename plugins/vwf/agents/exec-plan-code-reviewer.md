@@ -1,7 +1,7 @@
 ---
 name: exec-plan-code-reviewer
-description: Stage 4b adversarial code reviewer for the /exec-plan command.
-  Invoked only by /exec-plan — do not delegate to it for general tasks. Reviews
+description: Stage 4b adversarial code reviewer for the /vwf:exec-plan command.
+  Invoked only by /vwf:exec-plan — do not delegate to it for general tasks. Reviews
   the Stage 4a code against the spec, engineering docs, and registry stack, using
   /code-review as its engine. Returns findings only.
 tools: Read, Bash, Grep, Glob

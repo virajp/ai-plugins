@@ -12,7 +12,7 @@ and how it is meant to be used.
 
 <when-to-use>
 - Documenting a `packages` (shared libraries, schemas & data contracts) project's
-  module or schema during the pipeline's author phase of the `/engineering` command
+  module or schema during the pipeline's author phase of the `/vwf:engineering` command
 - The architecture registry lists the project as `type: packages`
 - The unit is a shared module consumed across projects, or a schema/data contract
   shared across `service`, `worker`, `frontend`, and `site`

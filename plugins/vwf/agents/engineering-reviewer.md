@@ -1,7 +1,7 @@
 ---
 name: engineering-reviewer
-description: Read-only engineering-doc reviewer for the /engineering
-  command's verify phase. Invoked only by /engineering — do not delegate to
+description: Read-only engineering-doc reviewer for the /vwf:engineering
+  command's verify phase. Invoked only by /vwf:engineering — do not delegate to
   it for general tasks. Reviews written engineering docs for completeness across
   all project types and returns NO GAPS or a numbered, options-framed gap list.
   Stateless by design — pass only the relevant doc files as content, no

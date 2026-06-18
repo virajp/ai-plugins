@@ -11,7 +11,7 @@ and navigation, so that the team can program each screen without a wireframe.
 
 <when-to-use>
 - Documenting a `frontend` (mobile app) project's entity during the
-  pipeline's author phase of the `/engineering` command
+  pipeline's author phase of the `/vwf:engineering` command
 - The architecture registry lists the project as `type: frontend`
 
 **Persona (the author subagent adopts this):** Senior Mobile Architect with deep

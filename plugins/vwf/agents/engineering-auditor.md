@@ -1,7 +1,8 @@
 ---
 name: engineering-auditor
-description: Gap-analysis auditor for the /engineering command's audit phase.
-  Invoked only by /engineering — do not delegate to it for general tasks.
+description: Gap-analysis auditor for the /vwf:engineering command's audit
+  phase.
+  Invoked only by /vwf:engineering — do not delegate to it for general tasks.
   Cross-references the Codebase Map, entity summary, and existing docs against
   each project type's playbook tiers, then returns a categorized gap report with
   options-framed questions. Read-only and stateless.

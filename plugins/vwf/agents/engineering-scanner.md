@@ -1,7 +1,7 @@
 ---
 name: engineering-scanner
-description: Read-only codebase scanner for the /engineering command's seed
-  phase (graphify fallback). Invoked only by /engineering — do not delegate
+description: Read-only codebase scanner for the /vwf:engineering command's seed
+  phase (graphify fallback). Invoked only by /vwf:engineering — do not delegate
   to it for general tasks. Scans one project root for code related to the given
   entities or concern and returns a structured findings block. Stateless and
   mechanical.

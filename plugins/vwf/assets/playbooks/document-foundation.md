@@ -11,7 +11,7 @@ so that entity docs can link to it instead of restating system-wide behaviour.
 
 <when-to-use>
 - Documenting a cross-cutting engineering concern during the
-  pipeline's author phase of the `/engineering` command, as a layer-0 unit
+  pipeline's author phase of the `/vwf:engineering` command, as a layer-0 unit
 - The unit is a concern (not an entity) — e.g. auth, errors, observability
 - A concern exists in the codebase or is a declared `planned` decision, and
   downstream specs depend on it
@@ -38,14 +38,14 @@ like project types (no worker doc if there is no worker).
 Document a concern only when it exists in the codebase or is a declared
 `planned` decision. Start with the two that downstream specs depend on most:
 
-| Concern       | Slug            | Owns                                                     |
-| ------------- | --------------- | -------------------------------------------------------- |
-| Auth          | `auth`          | AuthN mechanism + AuthZ model (roles/claims/permissions) |
-| Errors        | `errors`        | Canonical error-code registry + error-envelope shape     |
-| Observability | `observability` | Log / event / metric schema, correlation IDs             |
-| Config        | `config`        | Configuration & secret inventory, where each is read     |
-| Testing       | `testing`       | Testing strategy, layers, conventions for `/spec-plan`   |
-| Integrations  | `integrations`  | External-service contracts (third-party APIs, webhooks)  |
+| Concern       | Slug            | Owns                                                       |
+| ------------- | --------------- | ---------------------------------------------------------- |
+| Auth          | `auth`          | AuthN mechanism + AuthZ model (roles/claims/permissions)   |
+| Errors        | `errors`        | Canonical error-code registry + error-envelope shape       |
+| Observability | `observability` | Log / event / metric schema, correlation IDs               |
+| Config        | `config`        | Configuration & secret inventory, where each is read       |
+| Testing       | `testing`       | Testing strategy, layers, conventions for `/vwf:spec-plan` |
+| Integrations  | `integrations`  | External-service contracts (third-party APIs, webhooks)    |
 
 For any other cross-cutting concern, use the same template and an apt slug.
 

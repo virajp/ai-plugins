@@ -1,7 +1,8 @@
 ---
 name: spec-plan-author
-description: Produces the implementation spec & plan for the /spec-plan command.
-  Invoked only by /spec-plan — do not delegate to it for general tasks. Turns
+description: Produces the implementation spec & plan for the /vwf:spec-plan
+  command.
+  Invoked only by /vwf:spec-plan — do not delegate to it for general tasks. Turns
   resolved decisions and code-grounded context into a line-by-line plan written
   directly to docs/superpowers/. Returns a change summary only.
 tools: Read, Write, Edit, Grep, Glob

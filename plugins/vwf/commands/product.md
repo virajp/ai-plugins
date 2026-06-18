@@ -51,8 +51,8 @@ Read the mode from `$ARGUMENTS`:
 - Platform differences visible to the user (iOS vs Android behaviour)
 - Connectivity requirements (e.g. "requires active internet connection")
 
-The architecture step (`/architecture`, offered after the product loop) is the
-only step exempt from these boundaries.
+The architecture step (`/vwf:architecture`, offered after the product loop) is
+the only step exempt from these boundaries.
 
 ## Doc Paths
 
@@ -67,14 +67,14 @@ only step exempt from these boundaries.
 details the entity. Action docs are sibling files inside that same folder, which
 is why the entity template links to them as `./<action>.md`. Never write an
 entity as a flat `docs/product/<entity>.md` file — downstream commands
-(`/engineering`) halt on the presence of the `docs/product/<entity>/` directory
-and will not find a flat file.
+(`/vwf:engineering`) halt on the presence of the `docs/product/<entity>/`
+directory and will not find a flat file.
 
 ## Pipeline
 
 ### 1. Setup
 
-Invoke `/git-workflow` to ensure an isolated workspace. Keep the worktree
+Invoke `/vwf:git-workflow` to ensure an isolated workspace. Keep the worktree
 **local** — never push remotely.
 
 ### 2. Seed
@@ -182,15 +182,15 @@ looping again if either holds:
 ### 9. Offer architecture
 
 Ask: "Would you like me to create or update `docs/architecture.md` as a final
-step?" On **yes**, invoke `/architecture` via the SlashCommand tool; if that
+step?" On **yes**, invoke `/vwf:architecture` via the SlashCommand tool; if that
 tool is unavailable, follow `${CLAUDE_PLUGIN_ROOT}/commands/architecture.md`
 directly. On **no**, skip.
 
 ### 10. Commit
 
-Commit via the `git-workflow` skill using a conventional `docs(product): …`
-message — include the architecture doc if phase 9 ran. Keep the worktree
-**local** — never push remotely. Then suggest the merge/cleanup sequence:
+Commit via `/vwf:git-workflow` using a conventional `docs(product): …` message —
+include the architecture doc if phase 9 ran. Keep the worktree **local** — never
+push remotely. Then suggest the merge/cleanup sequence:
 
 `commit changes, merge to default branch of main worktree, push changes, switch
 to main worktree & clean up additional worktree`

@@ -2,7 +2,7 @@
 description: Create an implementation spec & plan for an entity, grounded in the
   architecture registry, engineering docs, and source code. Requires engineering
   docs to exist. Produces a line-by-line plan in docs/superpowers/ ready for
-  /exec-plan.
+  /vwf:exec-plan.
 argument-hint: "[entity]"
 model: inherit
 ---
@@ -12,7 +12,7 @@ model: inherit
 Create an implementation spec & plan for an entity, grounded in the architecture
 registry, engineering docs, and the actual source code, then drive it to
 completeness through a stateless plan-completeness reviewer loop. The result is
-a plan executable line by line without ambiguity, ready for `/exec-plan`.
+a plan executable line by line without ambiguity, ready for `/vwf:exec-plan`.
 
 You own the user conversation (brainstorming open questions, approval gate); the
 autonomous work (producing the plan, reviewing it for gaps) is delegated to
@@ -38,7 +38,7 @@ decisions rather than guessing.
 ### 1. Check prerequisites
 
 Halt if no engineering docs exist for the entity: "No engineering doc found. Run
-`/engineering` first."
+`/vwf:engineering` first."
 
 If the entity was not named in `$ARGUMENTS`, ask which entity to plan and wait.
 
@@ -50,7 +50,7 @@ Hold this context to pass to the author subagent.
 
 ### 3. Setup
 
-Invoke `/git-workflow` to ensure an isolated workspace. Keep the worktree
+Invoke `/vwf:git-workflow` to ensure an isolated workspace. Keep the worktree
 **local** — never push remotely.
 
 ### 4. Brainstorm open questions (orchestrator)
@@ -98,5 +98,5 @@ resolved gap resurfaced.
 ### 7. Approval gate
 
 Tell the user the plan is written and verified at `<paths>` and pause for
-explicit approval before they continue to `/exec-plan`. Keep the worktree
+explicit approval before they continue to `/vwf:exec-plan`. Keep the worktree
 **local** — never push remotely.

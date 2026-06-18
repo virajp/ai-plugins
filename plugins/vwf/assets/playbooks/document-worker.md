@@ -12,7 +12,7 @@ activities, state transitions, and failure/retry semantics.
 
 <when-to-use>
 - Documenting a `worker` (background tasks) project's entity during the
-  pipeline's author phase of the `/engineering` command
+  pipeline's author phase of the `/vwf:engineering` command
 - The architecture registry lists the project as `type: worker`
 </when-to-use>
 

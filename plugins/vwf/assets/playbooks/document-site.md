@@ -11,7 +11,7 @@ implement its routes, content, states, and interactions without a wireframe.
 
 <when-to-use>
 - Documenting a `site` (website) project's page during the pipeline's author
-  phase of the `/engineering` command
+  phase of the `/vwf:engineering` command
 - The architecture registry lists the project as `type: site`
 </when-to-use>
 

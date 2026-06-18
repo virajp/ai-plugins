@@ -1,7 +1,7 @@
 ---
 name: exec-plan-doc-writer
 description: Stage 4d documentation updater and spec/plan archiver for the
-  /exec-plan command. Invoked only by /exec-plan — do not delegate to it for
+  /vwf:exec-plan command. Invoked only by /vwf:exec-plan — do not delegate to it for
   general tasks. Diffs the implementation, updates only the docs that changed,
   updates project CHANGELOGs, and archives the spec & plan. Returns changed and
   archived paths.

@@ -1,7 +1,8 @@
 ---
 name: exec-plan-security-reviewer
-description: Stage 4c security reviewer for the /exec-plan command. Invoked only
-  by /exec-plan — do not delegate to it for general tasks. Threat-models the
+description: Stage 4c security reviewer for the /vwf:exec-plan command. Invoked
+  only
+  by /vwf:exec-plan — do not delegate to it for general tasks. Threat-models the
   implemented changes against the project's declared capabilities, using
   /security-review as its engine. Returns rated findings only.
 tools: Read, Bash, Grep, Glob

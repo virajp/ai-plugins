@@ -1,7 +1,7 @@
 ---
 name: architecture-writer
-description: Writes or updates docs/architecture.md for the /architecture
-  command. Invoked only by /architecture — do not delegate to it for
+description: Writes or updates docs/architecture.md for the /vwf:architecture
+  command. Invoked only by /vwf:architecture — do not delegate to it for
   general tasks. Fills the prose, the Project Registry yaml block, and the
   cross-cutting block, keeping prose and registry in sync.
 tools: Read, Write, Edit, Grep, Glob

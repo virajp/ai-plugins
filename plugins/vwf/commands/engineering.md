@@ -92,13 +92,13 @@ and continue without halting.
 
 ### 1. Setup
 
-Invoke `/git-workflow` to ensure an isolated workspace. Keep the worktree
+Invoke `/vwf:git-workflow` to ensure an isolated workspace. Keep the worktree
 **local** — never push remotely.
 
 ### 2. Seed (orchestrator + scan subagents)
 
 **2a — Architecture registry.** Read `docs/architecture.md`. If it does not
-exist, halt: "No architecture doc found. Run `/product` and accept its
+exist, halt: "No architecture doc found. Run `/vwf:product` and accept its
 architecture step first." Parse the **Project Registry** `yaml` block. For each
 project extract `name`, `type`, `stack`, `capabilities`, `depends_on`, and the
 filesystem root (`path`/`root` if present, else infer `./<name>/`). Build a
@@ -108,8 +108,8 @@ foundation docs.
 
 **2b — Product understanding (entity mode only; foundations mode skips this).**
 For each entity, read all files in `docs/product/<entity>/`. If the directory is
-absent, halt: "No product doc found for `<entity>`. Run `/product` first." Build
-an **entity summary** with five status buckets:
+absent, halt: "No product doc found for `<entity>`. Run `/vwf:product` first."
+Build an **entity summary** with five status buckets:
 
 | Status             | Treatment in engineering docs                               |
 | ------------------ | ----------------------------------------------------------- |
@@ -225,15 +225,15 @@ approval before the next unit.
 
 If clarification surfaces a capability, dependency, or pattern not in the
 registry, do **not** edit `docs/architecture.md` here — it is owned by
-`/product`'s architecture phase. Alert the user: "This introduces
+`/vwf:product`'s architecture phase. Alert the user: "This introduces
 `<capability/pattern>`, which isn't in the architecture registry. Consider
-running `/product` and accepting its architecture step to record it." Then
+running `/vwf:product` and accepting its architecture step to record it." Then
 continue.
 
 ### 7. Commit
 
-Commit via `/git-workflow` using a conventional `docs(engineering): …` message.
-Keep the worktree **local** — never push remotely. Then suggest the
+Commit via `/vwf:git-workflow` using a conventional `docs(engineering): …`
+message. Keep the worktree **local** — never push remotely. Then suggest the
 merge/cleanup sequence:
 
 `commit changes, merge to default branch of main worktree, push changes, switch

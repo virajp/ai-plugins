@@ -1,7 +1,8 @@
 ---
 name: spec-plan-reviewer
-description: Stateless plan-completeness reviewer for the /spec-plan command.
-  Invoked only by /spec-plan — do not delegate to it for general tasks. Surfaces
+description: Stateless plan-completeness reviewer for the /vwf:spec-plan
+  command.
+  Invoked only by /vwf:spec-plan — do not delegate to it for general tasks. Surfaces
   ambiguous steps, unstated assumptions, and open decisions in a spec & plan.
   Pass only the spec & plan files — no conversation context, no source code, no
   engineering docs.

@@ -10,7 +10,7 @@ the team can build and rely on its endpoints, auth, and error behaviour.
 
 <when-to-use>
 - Documenting a `service` (API backend) project's entity during the
-  pipeline's author phase of the `/engineering` command
+  pipeline's author phase of the `/vwf:engineering` command
 - The architecture registry lists the project as `type: service`
 </when-to-use>
 

@@ -1,7 +1,8 @@
 ---
 name: exec-plan-coder
-description: Stage 4a implementer for the /exec-plan command. Invoked only by
-  /exec-plan — do not delegate to it for general tasks. Implements the approved
+description: Stage 4a implementer for the /vwf:exec-plan command. Invoked only
+  by
+  /vwf:exec-plan — do not delegate to it for general tasks. Implements the approved
   plan under strict TDD and verifies 100% test coverage before handoff to code
   review. Returns the coverage report.
 tools: Read, Write, Edit, Bash, Grep, Glob

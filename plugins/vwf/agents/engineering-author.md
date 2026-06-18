@@ -1,7 +1,7 @@
 ---
 name: engineering-author
-description: Per-unit engineering-doc author for the /engineering command's
-  author phase. Invoked only by /engineering — do not delegate to it for
+description: Per-unit engineering-doc author for the /vwf:engineering command's
+  author phase. Invoked only by /vwf:engineering — do not delegate to it for
   general tasks. Adopts the project type's persona, writes the engineering doc(s)
   directly from the matching playbook and template with stack injection, and
   updates the index. Returns a change summary only.
