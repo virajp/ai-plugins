@@ -3,7 +3,7 @@ description: Manage git workflows — worktree isolation, commits, merges, and
   pushes. Use for all substantive changes; never work directly in the main
   worktree.
 argument-hint: "(no args)"
-allowed-tools: Bash(git:*) Bash(mise:*) Bash(supacode:*) Read
+allowed-tools: Bash(git:*) Bash(mise:*) Read
 model: sonnet
 ---
 
@@ -52,13 +52,7 @@ git rev-parse --show-superproject-working-tree 2>/dev/null
 **If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a
 linked worktree — skip directly to Step 3. Do NOT create another worktree.
 
-**If `GIT_DIR == GIT_COMMON`:** You are in the main checkout.
-
-**Check `$SUPACODE_WORKTREE_ID` first.** If the variable is set, you are inside
-Supacode — skip the consent question and proceed directly to Step 2a. Supacode
-is the registered workspace mechanism; no consent is needed.
-
-Otherwise, ask for consent:
+**If `GIT_DIR == GIT_COMMON`:** You are in the main checkout. Ask for consent:
 
 > "Would you like me to set up an isolated worktree? It protects your current
 > branch from changes."
@@ -72,38 +66,18 @@ in place and skip to Step 3.
 
 Try the mechanisms in this order — stop at the first that applies.
 
-### 2a. Supacode (check first)
-
-If `$SUPACODE_WORKTREE_ID` is set, you are inside Supacode. Use
-`supacode repo worktree-new` — this is the only way to create a worktree that
-Supacode registers and shows in its UI. A raw `git worktree add` will not appear
-in Supacode.
-
-```bash
-CURRENT_BRANCH=$(git branch --show-current)
-
-supacode repo worktree-new \
-  -r "$SUPACODE_REPO_ID" \
-  --branch "$BRANCH_NAME" \
-  --base "$CURRENT_BRANCH"
-```
-
-After the command returns, the worktree appears in `supacode worktree list` and
-in the Supacode UI. **Proceed to Step 2d** (submodules) — Supacode, like raw
-git, does not populate submodules in a new worktree.
-
-### 2b. Other Native Worktree Tools
+### 2a. Native Worktree Tools (preferred)
 
 Do you have a tool named `EnterWorktree`, `WorktreeCreate`, a `/worktree`
-command, or a `--worktree` flag? If so, use it and **proceed to Step 2d**
+command, or a `--worktree` flag? If so, use it and **proceed to Step 2c**
 (submodules).
 
 Native tools handle directory placement, branch creation, and cleanup
 automatically — prefer them over raw git commands.
 
-### 2c. Git Worktree Fallback
+### 2b. Git Worktree Fallback
 
-Only use this if neither 2a nor 2b applies.
+Only use this if no native worktree tool is available.
 
 #### Directory selection
 
@@ -143,13 +117,14 @@ cd "$path"
 **Sandbox fallback:** If `git worktree add` fails with a permission error,
 report it and proceed in the current directory instead.
 
-Then **proceed to Step 2d** (submodules).
+Then **proceed to Step 2c** (submodules).
 
-### 2d. Initialize Submodules (always, after any mechanism)
+### 2c. Initialize Submodules (always, after any mechanism)
 
 A newly created worktree does **not** inherit the submodules from the main
-checkout — git (and Supacode) leave the submodule directories empty. If the repo
-uses submodules, populate them in the new worktree before doing any work.
+checkout — a fresh worktree leaves the submodule directories empty. If the repo
+uses submodules, populate them in the new worktree before doing any work — they
+are required to build and run the project.
 
 Resolve the new worktree's path from git, then init its submodules — skip
 silently if the repo has none:
@@ -165,11 +140,10 @@ if [ -f "$WORKTREE_PATH/.gitmodules" ]; then
 fi
 ```
 
-Use `git -C "$WORKTREE_PATH"` rather than `cd` so it works the same whether the
-worktree was made by Supacode (under `.claude/worktrees/`) or the git fallback
-(under `.worktrees/`). For the **git fallback** where you already `cd`'d into
-the worktree, `git submodule update --init --recursive` from there is
-equivalent.
+Use `git -C "$WORKTREE_PATH"` rather than `cd` so it works regardless of where
+the native tool placed the worktree. For the **git fallback** where you already
+`cd`'d into the worktree, `git submodule update --init --recursive` from there
+is equivalent.
 
 If a submodule fails to fetch (e.g. no network or auth), report it and ask the
 user how to proceed — do not leave a partially-initialized worktree silently.
@@ -231,8 +205,8 @@ git push
 
 Then clean up the worktree:
 
-- **Supacode:** `supacode worktree archive -w "$SUPACODE_WORKTREE_ID"` (or
-  `supacode worktree delete` if the user prefers permanent removal)
+- **Native tool:** use its own teardown (e.g. `ExitWorktree` or equivalent) if
+  available.
 - **Git fallback:** `git worktree remove <path>`
 
 ### Merge, push & keep worktree
