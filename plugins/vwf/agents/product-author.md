@@ -1,7 +1,7 @@
 ---
-name: doc-product-author
-description: Applies approved product-doc changes for the /doc-product command.
-  Invoked only by /doc-product — do not delegate to it for general tasks.
+name: product-author
+description: Applies approved product-doc changes for the /product command.
+  Invoked only by /product — do not delegate to it for general tasks.
   Writes the doc files directly from an approved change outline and returns a
   change summary.
 tools: Read, Write, Edit, Grep, Glob

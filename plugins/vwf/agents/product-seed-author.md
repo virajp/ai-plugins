@@ -1,7 +1,7 @@
 ---
-name: doc-product-seed-author
-description: Drafts a new or updated product doc for the /doc-product command's
-  author mode. Invoked only by /doc-product — do not delegate to it for
+name: product-seed-author
+description: Drafts a new or updated product doc for the /product command's
+  author mode. Invoked only by /product — do not delegate to it for
   general tasks. Reads templates from ${CLAUDE_PLUGIN_ROOT}/assets/templates/, fills every
   section, marks unknowns, and links new actions from the entity index.
 tools: Read, Write, Edit, Grep, Glob

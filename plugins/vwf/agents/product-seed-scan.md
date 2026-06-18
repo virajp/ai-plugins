@@ -1,7 +1,7 @@
 ---
-name: doc-product-seed-scan
-description: Read-only doc indexer for the /doc-product command's scan mode.
-  Invoked only by /doc-product — do not delegate to it for general tasks.
+name: product-seed-scan
+description: Read-only doc indexer for the /product command's scan mode.
+  Invoked only by /product — do not delegate to it for general tasks.
   Indexes docs/product/ (in-scope entity plus cross-referenced docs) and returns
   the file list and a one-sentence product description.
 tools: Read, Grep, Glob

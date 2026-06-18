@@ -1,6 +1,6 @@
 ---
 description: Create or update docs/architecture.md — the system shape and
-  machine-readable Project Registry that doc-engineering parses.
+  machine-readable Project Registry that engineering parses.
 argument-hint: "(no args; detects create vs update)"
 model: inherit
 ---
@@ -64,15 +64,15 @@ Batch 2 — hosting and deployment:
 
 First ask the user to enumerate all projects. Then for each project gather:
 
-| Field          | How to elicit                                                                                        |
-| -------------- | ---------------------------------------------------------------------------------------------------- |
-| `name`         | Free text (short identifier)                                                                         |
-| `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend`                                         |
-| `path`         | Free text (repo-relative directory)                                                                  |
-| `stack`        | MCQ + Other (offer common per-type options)                                                          |
-| `capabilities` | Multi-select from the Capability Vocabulary (defined in the `doc-architecture-writer` agent) + Other |
-| `depends_on`   | Multi-select from named projects + None                                                              |
-| `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                                                  |
+| Field          | How to elicit                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| `name`         | Free text (short identifier)                                                                     |
+| `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend`                                     |
+| `path`         | Free text (repo-relative directory)                                                              |
+| `stack`        | MCQ + Other (offer common per-type options)                                                      |
+| `capabilities` | Multi-select from the Capability Vocabulary (defined in the `architecture-writer` agent) + Other |
+| `depends_on`   | Multi-select from named projects + None                                                          |
+| `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                                              |
 
 Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
 `entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`.
@@ -92,7 +92,7 @@ concern **not applicable** to omit it from the doc entirely.
 | `integrations`  | `[firebase, google-maps-platform]` |
 
 Capture each decision as a single short token or list. Record only the decision,
-not the full spec — `doc-engineering` foundations mode expands it.
+not the full spec — `engineering` foundations mode expands it.
 
 ---
 
@@ -111,7 +111,7 @@ for explicit approval before proceeding to Step 5.
 
 ## Step 5 — Write
 
-Dispatch the `doc-architecture-writer` subagent (Agent tool). Pass:
+Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 
 - All elicited prose answers (system overview, interconnects, hosting).
 - All per-project registry rows (name, type, path, stack, capabilities,
@@ -120,7 +120,7 @@ Dispatch the `doc-architecture-writer` subagent (Agent tool). Pass:
 - **Update mode only:** the full text of the existing `docs/architecture.md` so
   the agent edits in place rather than regenerating.
 
-The `doc-architecture-writer` agent writes `docs/architecture.md` directly and
+The `architecture-writer` agent writes `docs/architecture.md` directly and
 returns a change summary. Do not pass the file back through this session.
 
 ---
@@ -144,7 +144,7 @@ After the writer returns, read `docs/architecture.md` yourself. Check:
 - No literal placeholder strings (e.g. `YOUR_PROJECT_NAME`, `TBD`).
 
 **On a finding:** surface it to the user, ask for the missing information,
-re-dispatch `doc-architecture-writer` with the delta, then re-read and re-check.
+re-dispatch `architecture-writer` with the delta, then re-read and re-check.
 Apply a convergence guard: if the same gap appears after two re-dispatches, stop
 and report the unresolved item rather than looping indefinitely.
 
@@ -152,8 +152,8 @@ and report the unresolved item rather than looping indefinitely.
 
 ## Step 7 — Commit
 
-**If this command was invoked as the final step of `/doc-product`:** return
-control to the parent run. The parent pipeline commits; do not double-commit.
+**If this command was invoked as the final step of `/product`:** return control
+to the parent run. The parent pipeline commits; do not double-commit.
 
 **Otherwise (standalone invocation):** commit via the `git-workflow` skill.
 

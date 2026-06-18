@@ -1,7 +1,7 @@
 ---
-name: doc-architecture-writer
-description: Writes or updates docs/architecture.md for the /doc-architecture
-  command. Invoked only by /doc-architecture — do not delegate to it for
+name: architecture-writer
+description: Writes or updates docs/architecture.md for the /architecture
+  command. Invoked only by /architecture — do not delegate to it for
   general tasks. Fills the prose, the Project Registry yaml block, and the
   cross-cutting block, keeping prose and registry in sync.
 tools: Read, Write, Edit, Grep, Glob
@@ -80,7 +80,7 @@ the client and ships through whatever distribution channel the project uses.
 ## Capability Vocabulary
 
 Capabilities are stack-agnostic feature flags — the gates that decide which
-deep, stack-specific questions `doc-engineering` asks. Pick all that apply per
+deep, stack-specific questions `engineering` asks. Pick all that apply per
 project; add Other for anything not listed. Extensible — add new capabilities as
 the system grows.
 
