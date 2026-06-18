@@ -74,14 +74,6 @@
       "dependencies": [
         {
           "marketplace": "virajp-plugins",
-          "name": "typescript-lsp"
-        },
-        {
-          "marketplace": "virajp-plugins",
-          "name": "dart-lsp"
-        },
-        {
-          "marketplace": "virajp-plugins",
           "name": "context7"
         },
         {
