@@ -29,12 +29,20 @@
       "category": "development",
       "dependencies": [
         {
+          "marketplace": "mempalace",
+          "name": "mempalace"
+        },
+        {
           "marketplace": "claude-plugins-official",
           "name": "superpowers"
         },
         {
-          "marketplace": "mempalace",
-          "name": "mempalace"
+          "marketplace": "claude-plugins-official",
+          "name": "kotlin-lsp"
+        },
+        {
+          "marketplace": "claude-plugins-official",
+          "name": "swift-lsp"
         }
       ],
       "description": "Highly opinionated Claude Code Plugin for solo developers or small team",
@@ -57,7 +65,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "1.0.0"
+      "version": "1.0.1"
     }
   ]
 }

@@ -39,6 +39,14 @@
       "startupTimeout": 25000
     }
   },
+  "mcpServers": {
+    "context7": {
+      "args": [
+        "@upstash/context7-mcp"
+      ],
+      "command": "pnpx"
+    }
+  },
   "name": "vwf",
   "settings": {
     "statusLine": {
