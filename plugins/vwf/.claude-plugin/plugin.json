@@ -1,4 +1,14 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "dependencies": [
+    {
+      "marketplace": "mempalace",
+      "name": "mempalace"
+    },
+    {
+      "marketplace": "virajp-plugins",
+      "name": "context7"
+    }
+  ],
   "name": "vwf"
 }
