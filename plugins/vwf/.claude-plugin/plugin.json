@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "dependencies": [
     {
-      "marketplace": "mempalace",
+      "marketplace": "virajp-plugins",
       "name": "mempalace"
     },
     {
