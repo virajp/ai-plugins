@@ -52,7 +52,13 @@ git rev-parse --show-superproject-working-tree 2>/dev/null
 **If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a
 linked worktree — skip directly to Step 3. Do NOT create another worktree.
 
-**If `GIT_DIR == GIT_COMMON`:** You are in the main checkout. Ask for consent:
+**If `GIT_DIR == GIT_COMMON`:** You are in the main checkout.
+
+**Check `$SUPACODE_WORKTREE_ID` first.** If the variable is set, you are inside
+Supacode — skip the consent question and proceed directly to Step 2a. Supacode
+is the registered workspace mechanism; no consent is needed.
+
+Otherwise, ask for consent:
 
 > "Would you like me to set up an isolated worktree? It protects your current
 > branch from changes."
