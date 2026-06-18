@@ -89,12 +89,14 @@ supacode repo worktree-new \
 ```
 
 After the command returns, the worktree appears in `supacode worktree list` and
-in the Supacode UI. Skip to Step 3.
+in the Supacode UI. **Proceed to Step 2d** (submodules) — Supacode, like raw
+git, does not populate submodules in a new worktree.
 
 ### 2b. Other Native Worktree Tools
 
 Do you have a tool named `EnterWorktree`, `WorktreeCreate`, a `/worktree`
-command, or a `--worktree` flag? If so, use it and skip to Step 3.
+command, or a `--worktree` flag? If so, use it and **proceed to Step 2d**
+(submodules).
 
 Native tools handle directory placement, branch creation, and cleanup
 automatically — prefer them over raw git commands.
@@ -140,6 +142,37 @@ cd "$path"
 
 **Sandbox fallback:** If `git worktree add` fails with a permission error,
 report it and proceed in the current directory instead.
+
+Then **proceed to Step 2d** (submodules).
+
+### 2d. Initialize Submodules (always, after any mechanism)
+
+A newly created worktree does **not** inherit the submodules from the main
+checkout — git (and Supacode) leave the submodule directories empty. If the repo
+uses submodules, populate them in the new worktree before doing any work.
+
+Resolve the new worktree's path from git, then init its submodules — skip
+silently if the repo has none:
+
+```bash
+# Path of the worktree just created for this branch
+WORKTREE_PATH=$(git worktree list --porcelain \
+  | awk -v b="refs/heads/$BRANCH_NAME" '/^worktree /{p=substr($0,10)} /^branch /{if ($2==b) print p}')
+
+# Only if the repo declares submodules
+if [ -f "$WORKTREE_PATH/.gitmodules" ]; then
+  git -C "$WORKTREE_PATH" submodule update --init --recursive
+fi
+```
+
+Use `git -C "$WORKTREE_PATH"` rather than `cd` so it works the same whether the
+worktree was made by Supacode (under `.claude/worktrees/`) or the git fallback
+(under `.worktrees/`). For the **git fallback** where you already `cd`'d into
+the worktree, `git submodule update --init --recursive` from there is
+equivalent.
+
+If a submodule fails to fetch (e.g. no network or auth), report it and ask the
+user how to proceed — do not leave a partially-initialized worktree silently.
 
 ---
 
