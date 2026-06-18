@@ -44,7 +44,7 @@ Document a concern only when it exists in the codebase or is a declared
 | Errors        | `errors`        | Canonical error-code registry + error-envelope shape     |
 | Observability | `observability` | Log / event / metric schema, correlation IDs             |
 | Config        | `config`        | Configuration & secret inventory, where each is read     |
-| Testing       | `testing`       | Testing strategy, layers, conventions for `spec-plan`    |
+| Testing       | `testing`       | Testing strategy, layers, conventions for `/spec-plan`   |
 | Integrations  | `integrations`  | External-service contracts (third-party APIs, webhooks)  |
 
 For any other cross-cutting concern, use the same template and an apt slug.
