@@ -1,14 +1,16 @@
 # Plugins for Claude Code
 
 A curated collection of opinionated Claude Code plugins by Viraj Patel — LSP
-servers and other tooling for use with the Claude Code CLI.
+servers, MCP servers, and a full product/engineering workflow plugin (`vwf`) for
+use with the Claude Code CLI.
 
 ## Prerequisites
 
 [Claude Code CLI](https://claude.ai/code) & [Mise](https://mise.jdx.dev/)
 installed.
 
-> NOTE: `MISE` is required to use plugins
+> NOTE: `mise` is required — the LSP plugins and the `vwf` npm→pnpm hook resolve
+> their tools through it.
 
 ## Installation
 
@@ -24,14 +26,89 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
+Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
+`dart-lsp`.
+
 ## Plugins
 
-### ts-js-lsp
+### vwf
+
+The flagship plugin — a highly opinionated product/engineering workflow for solo
+developers and small teams. Ships slash commands, subagents, skills, and a
+`PreToolUse` hook that transparently rewrites `npm`/`npx` commands to `pnpm`.
+
+```sh
+claude plugin install --scope project vwf@virajp-plugins
+```
+
+**Slash commands** (`/vwf:<name>`):
+
+| Command        | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `product`      | Write or update product documentation (user goals + observable outcomes)                    |
+| `architecture` | Create or update `docs/architecture.md` — system shape and machine-readable registry        |
+| `engineering`  | Write or update engineering docs for one or more entities or a cross-cutting concern        |
+| `spec-plan`    | Create an implementation spec & plan for an entity (requires engineering docs)              |
+| `exec-plan`    | Execute an approved spec & plan through four gated stages (code → review → security → docs) |
+| `git-workflow` | Manage git workflows — worktree isolation, commits, merges, pushes                          |
+
+**Skills:**
+
+| Skill                 | Description                                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `karpathy-guidelines` | Behavioral guidelines to reduce common LLM coding mistakes: avoid overcomplication, make surgical changes, surface assumptions, define verifiable success criteria |
+| `rest-api-design`     | Technology-agnostic principles and best practices for designing REST APIs                                                                                          |
+
+#### vwf dependencies
+
+All of vwf's dependencies live in the **same `virajp-plugins` marketplace**
+(`mempalace` and `superpowers` are re-listed here), so a clean install needs no
+other marketplace registered:
+
+```sh
+claude plugin marketplace add --scope user virajp/ai-plugins
+claude plugin install --scope project vwf@virajp-plugins   # pulls + enables deps
+```
+
+> Auto-enable is **event-driven** — it fires when you enable `vwf`, not
+> continuously. If a dependency later gets disabled on its own, re-enable it
+> directly or toggle `vwf` off and on again.
+
+`vwf` depends on three other plugins, which Claude Code **auto-installs and
+auto-enables** when you enable `vwf` (requires Claude Code ≥ 2.1.143):
+
+- `context7@virajp-plugins` — Context7 MCP docs server
+- `mempalace@virajp-plugins` — AI memory system
+- `superpowers@virajp-plugins` — core skills library
+
+### mempalace
+
+AI memory system — mine projects and conversations into a searchable palace. 33
+MCP tools, auto-save hooks, and guided setup. Maintained externally
+([MemPalace/mempalace](https://github.com/MemPalace/mempalace)) and re-listed
+here; it is also a `vwf` dependency.
+
+> When you install `vwf`, `mempalace` is pulled in and enabled automatically —
+> you only need these steps to install `mempalace` on its own.
+
+```sh
+claude plugin install --scope user mempalace@virajp-plugins
+```
+
+### context7
+
+Context7 MCP server — fetches up-to-date library/framework documentation.
+
+```sh
+claude plugin install --scope user context7@virajp-plugins
+```
+
+### typescript-lsp
 
 TypeScript/JavaScript language server (via `typescript-language-server`).
 
 ```sh
-claude plugin install --scope project ts-js-lsp@virajp-plugins
+claude plugin install --scope project typescript-lsp@virajp-plugins
 ```
 
 ### dart-lsp
@@ -41,23 +118,3 @@ Dart language server.
 ```sh
 claude plugin install --scope project dart-lsp@virajp-plugins
 ```
-
-### vskills
-
-A collection of reusable skills for the Claude Code CLI.
-
-```sh
-claude plugin install --scope project vskills@virajp-plugins
-```
-
-**Skills included:**
-
-| Skill                 | Description                                                                                                                                                        |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `doc-architecture`    | Create or update the workspace-level `docs/architecture.md` — the single source of truth for project type, stack, and capabilities                                 |
-| `doc-engineering`     | Write or update engineering docs for a project; reads `docs/architecture.md` and runs the matching doc set (service, worker, packages, site, or frontend)          |
-| `doc-product`         | Write or update product documentation for an entity or action                                                                                                      |
-| `spec-plan`           | Create an implementation spec and plan for an entity; requires engineering docs to exist                                                                           |
-| `exec-plan`           | Execute an approved implementation plan; covers code writing, code review, security review, and doc updates                                                        |
-| `workflow`            | Explicit project workflow router — start here for any product or engineering work                                                                                  |
-| `karpathy-guidelines` | Behavioral guidelines to reduce common LLM coding mistakes: avoid overcomplication, make surgical changes, surface assumptions, define verifiable success criteria |

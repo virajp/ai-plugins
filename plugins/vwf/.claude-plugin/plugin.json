@@ -3,11 +3,15 @@
   "dependencies": [
     {
       "marketplace": "virajp-plugins",
+      "name": "context7"
+    },
+    {
+      "marketplace": "virajp-plugins",
       "name": "mempalace"
     },
     {
       "marketplace": "virajp-plugins",
-      "name": "context7"
+      "name": "superpowers"
     }
   ],
   "name": "vwf"

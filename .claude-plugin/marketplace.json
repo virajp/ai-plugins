@@ -1,9 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "allowCrossMarketplaceDependenciesOn": [
-    "claude-plugins-official",
-    "mempalace"
-  ],
   "description": "Opinionated Plugins for Claude Code & Antigravity",
   "displayName": "Viraj Patel's Plugins",
   "forceRemoveDeletedPlugins": true,
@@ -21,6 +17,16 @@
       "source": {
         "source": "url",
         "url": "https://github.com/MemPalace/mempalace.git"
+      }
+    },
+    {
+      "category": "development",
+      "description": "Core skills library — brainstorming, subagent-driven development, systematic debugging, and red/green TDD.",
+      "homepage": "https://github.com/obra/superpowers.git",
+      "name": "superpowers",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/obra/superpowers.git"
       }
     },
     {
@@ -84,11 +90,11 @@
           "name": "context7"
         },
         {
-          "marketplace": "mempalace",
+          "marketplace": "virajp-plugins",
           "name": "mempalace"
         },
         {
-          "marketplace": "claude-plugins-official",
+          "marketplace": "virajp-plugins",
           "name": "superpowers"
         }
       ],
@@ -113,7 +119,7 @@
         "lsp",
         "git-workflow"
       ],
-      "version": "1.0.9"
+      "version": "1.0.10"
     }
   ]
 }
