@@ -1,8 +1,5 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
-  "agents": "./agents/*.md",
-  "commands": "./commands",
-  "hooks": "./hooks/hooks.json",
   "lspServers": {
     "dart": {
       "args": [
