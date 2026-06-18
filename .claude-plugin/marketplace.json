@@ -1,7 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "allowCrossMarketplaceDependenciesOn": [
-    "claude-plugins-official"
+    "claude-plugins-official",
+    "mempalace"
   ],
   "description": "Opinionated Plugins for Claude Code & Antigravity",
   "displayName": "Viraj Patel's Plugins",
