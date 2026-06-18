@@ -6,6 +6,50 @@
   "description": "Opinionated Plugins for Claude Code & Antigravity",
   "displayName": "Viraj Patel's Plugins",
   "forceRemoveDeletedPlugins": true,
+  "lspServers": {
+    "dart": {
+      "args": [
+        "x",
+        "dart@latest",
+        "--",
+        "dart",
+        "language-server",
+        "--client-id=claude-code",
+        "--protocol=lsp"
+      ],
+      "command": "mise",
+      "extensionToLanguage": {
+        ".dart": "dart"
+      },
+      "startupTimeout": 25000
+    },
+    "typescript": {
+      "args": [
+        "-c",
+        "mise x node@latest -- npm add -g typescript-language-server typescript >/dev/null 2>&1 && exec mise x node@latest -- typescript-language-server --stdio"
+      ],
+      "command": "sh",
+      "extensionToLanguage": {
+        ".cjs": "javascript",
+        ".cts": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".mts": "typescript",
+        ".ts": "typescript",
+        ".tsx": "typescriptreact"
+      },
+      "startupTimeout": 25000
+    }
+  },
+  "mcpServers": {
+    "context7": {
+      "args": [
+        "@upstash/context7-mcp"
+      ],
+      "command": "pnpx"
+    }
+  },
   "metadata": {},
   "name": "virajp-plugins",
   "owner": {
@@ -28,6 +72,18 @@
       },
       "category": "development",
       "dependencies": [
+        {
+          "marketplace": "virajp-plugins",
+          "name": "typescript-lsp"
+        },
+        {
+          "marketplace": "virajp-plugins",
+          "name": "dart-lsp"
+        },
+        {
+          "marketplace": "virajp-plugins",
+          "name": "context7"
+        },
         {
           "marketplace": "mempalace",
           "name": "mempalace"
@@ -65,7 +121,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "1.0.2"
+      "version": "1.0.3"
     }
   ]
 }
