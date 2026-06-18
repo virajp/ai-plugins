@@ -68,7 +68,6 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `skills/` — `karpathy-guidelines`, `rest-api-design`
 - `assets/` — `playbooks/` and `templates/` consumed by the commands/agents
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
-- `bin/vwf` — plugin CLI entrypoint
 
 ### Dependencies
 
@@ -99,8 +98,14 @@ auto-enables** these dependencies at the same scope. Key rules:
 
 ## Hooks
 
-`vwf` ships a `PreToolUse` / `Bash` hook (`hooks/npm-to-pnpm.sh`) that rewrites
-`npm`/`npx` commands to `pnpm`. Two things to know when editing hooks here:
+`vwf` ships two `PreToolUse` / `Bash` hooks (declared in `hooks/hooks.json`):
+
+- `hooks/npm-to-pnpm.sh` — rewrites `npm`/`npx` commands to `pnpm`.
+- `rtk hook claude` — requires the `rtk` CLI on `PATH`, installed out-of-band
+  via `brew install --formulae rtk`. Plugin install does **not** provide it;
+  document it as a prerequisite.
+
+Things to know when editing hooks here:
 
 - **Plugin hooks are never written to `settings.json`.** They are
   auto-discovered from `hooks/hooks.json` and loaded in-memory at session start.

@@ -12,6 +12,12 @@ installed.
 > NOTE: `mise` is required — the LSP plugins and the `vwf` npm→pnpm hook resolve
 > their tools through it.
 
+> NOTE: `vwf` also ships an `rtk hook claude` hook — install `rtk` first:
+>
+> ```sh
+> brew install --formulae rtk
+> ```
+
 ## Installation
 
 **Step 1 — Add the marketplace (once, user-scoped):**
@@ -34,8 +40,10 @@ Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
 ### vwf
 
 The flagship plugin — a highly opinionated product/engineering workflow for solo
-developers and small teams. Ships slash commands, subagents, skills, and a
-`PreToolUse` hook that transparently rewrites `npm`/`npx` commands to `pnpm`.
+developers and small teams. Ships slash commands, subagents, skills, and two
+`PreToolUse` / `Bash` hooks: one that transparently rewrites `npm`/`npx`
+commands to `pnpm`, and an `rtk hook claude` hook (requires `rtk` — see
+Prerequisites).
 
 ```sh
 claude plugin install --scope project vwf@virajp-plugins
