@@ -6,50 +6,6 @@
   "description": "Opinionated Plugins for Claude Code & Antigravity",
   "displayName": "Viraj Patel's Plugins",
   "forceRemoveDeletedPlugins": true,
-  "lspServers": {
-    "dart": {
-      "args": [
-        "x",
-        "dart@latest",
-        "--",
-        "dart",
-        "language-server",
-        "--client-id=claude-code",
-        "--protocol=lsp"
-      ],
-      "command": "mise",
-      "extensionToLanguage": {
-        ".dart": "dart"
-      },
-      "startupTimeout": 25000
-    },
-    "typescript": {
-      "args": [
-        "-c",
-        "mise x node@latest -- npm add -g typescript-language-server typescript >/dev/null 2>&1 && exec mise x node@latest -- typescript-language-server --stdio"
-      ],
-      "command": "sh",
-      "extensionToLanguage": {
-        ".cjs": "javascript",
-        ".cts": "typescript",
-        ".js": "javascript",
-        ".jsx": "javascriptreact",
-        ".mjs": "javascript",
-        ".mts": "typescript",
-        ".ts": "typescript",
-        ".tsx": "typescriptreact"
-      },
-      "startupTimeout": 25000
-    }
-  },
-  "mcpServers": {
-    "context7": {
-      "args": [
-        "@upstash/context7-mcp"
-      ],
-      "command": "pnpx"
-    }
-  },
   "metadata": {},
   "name": "virajp-plugins",
   "owner": {
@@ -71,6 +27,56 @@
         "name": "Viraj Patel"
       },
       "category": "development",
+      "description": "Context7 MCP Server",
+      "name": "context7",
+      "source": "./plugins/context7",
+      "strict": true,
+      "tags": [
+        "typescript",
+        "javascript",
+        "language-server",
+        "lsp"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "TypeScript/JavaScript language server",
+      "name": "typescript-lsp",
+      "source": "./plugins/typescript-lsp",
+      "strict": true,
+      "tags": [
+        "typescript",
+        "javascript",
+        "language-server",
+        "lsp"
+      ],
+      "version": "1.0.5"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Dart language server",
+      "name": "dart-lsp",
+      "source": "./plugins/dart-lsp",
+      "strict": true,
+      "tags": [
+        "dart",
+        "language-server",
+        "lsp"
+      ],
+      "version": "1.0.2"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
       "dependencies": [
         {
           "marketplace": "virajp-plugins",
@@ -83,14 +89,6 @@
         {
           "marketplace": "claude-plugins-official",
           "name": "superpowers"
-        },
-        {
-          "marketplace": "claude-plugins-official",
-          "name": "kotlin-lsp"
-        },
-        {
-          "marketplace": "claude-plugins-official",
-          "name": "swift-lsp"
         }
       ],
       "description": "Highly opinionated Claude Code Plugin for solo developers or small team",

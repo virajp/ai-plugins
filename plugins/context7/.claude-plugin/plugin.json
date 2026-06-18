@@ -1,0 +1,12 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "mcpServers": {
+    "context7": {
+      "args": [
+        "@upstash/context7-mcp"
+      ],
+      "command": "pnpx"
+    }
+  },
+  "name": "context7"
+}
