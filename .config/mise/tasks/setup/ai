@@ -52,12 +52,12 @@ updatePlugin typescript-lsp virajp-plugins user
 # Install graphify skill
 print_header "Installing Graphify skill for Claude..."
 graphify install --platform claude
-print_header "Installing Graphify skill for OpenCode..."
-graphify install --platform opencode
+# print_header "Installing Graphify skill for OpenCode..."
+# graphify install --platform opencode
 
 # Install graphify post-commit hook
 print_header "Installing Graphify post-commit hook..."
 graphify hook install
 
 # OpenCode setup
-opencode plugin --global "@devtheops/opencode-plugin-mempalace"
+# opencode plugin --global "@devtheops/opencode-plugin-mempalace"
