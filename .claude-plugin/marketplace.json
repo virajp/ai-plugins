@@ -13,37 +13,14 @@
   },
   "plugins": [
     {
-      "author": {
-        "name": "Viraj Patel"
-      },
       "category": "development",
-      "description": "TypeScript/JavaScript language server",
-      "name": "typescript-lsp",
-      "source": "./plugins/typescript-lsp",
-      "strict": true,
-      "tags": [
-        "typescript",
-        "javascript",
-        "language-server",
-        "lsp"
-      ],
-      "version": "1.0.4"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
-      "description": "Dart language server",
-      "name": "dart-lsp",
-      "source": "./plugins/dart-lsp",
-      "strict": true,
-      "tags": [
-        "dart",
-        "language-server",
-        "lsp"
-      ],
-      "version": "1.0.1"
+      "description": "AI memory system — mine projects and conversations into a searchable palace. 33 MCP tools, auto-save hooks, guided setup.",
+      "homepage": "https://github.com/MemPalace/mempalace.git",
+      "name": "mempalace",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/MemPalace/mempalace.git"
+      }
     },
     {
       "author": {
@@ -54,22 +31,33 @@
         {
           "marketplace": "claude-plugins-official",
           "name": "superpowers"
+        },
+        {
+          "marketplace": "mempalace",
+          "name": "mempalace"
         }
       ],
-      "description": "Collection of Skills to develop a product as solo developer or small team",
-      "name": "skills",
-      "source": "./plugins/skills",
+      "description": "Highly opinionated Claude Code Plugin for solo developers or small team",
+      "name": "vwf",
+      "repository": "https://github.com/virajp/ai-plugins",
+      "source": "./plugins/vwf",
       "strict": true,
       "tags": [
+        "agents",
         "skills",
         "product",
         "engineering",
         "coding",
         "review",
         "security",
-        "architecture"
+        "architecture",
+        "dart",
+        "typescript",
+        "javascript",
+        "language-server",
+        "lsp"
       ],
-      "version": "1.1.2"
+      "version": "1.0.0"
     }
   ]
 }

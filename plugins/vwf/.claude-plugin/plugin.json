@@ -1,6 +1,25 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "agents": "./agents/*.md",
+  "commands": "./commands",
+  "hooks": "./hooks/hooks.json",
   "lspServers": {
+    "dart": {
+      "args": [
+        "x",
+        "dart@latest",
+        "--",
+        "dart",
+        "language-server",
+        "--client-id=claude-code",
+        "--protocol=lsp"
+      ],
+      "command": "mise",
+      "extensionToLanguage": {
+        ".dart": "dart"
+      },
+      "startupTimeout": 25000
+    },
     "typescript": {
       "args": [
         "-c",
@@ -17,8 +36,16 @@
         ".ts": "typescript",
         ".tsx": "typescriptreact"
       },
-      "startupTimeout": 60000
+      "startupTimeout": 25000
     }
   },
-  "name": "typescript-lsp"
+  "name": "vwf",
+  "settings": {
+    "statusLine": {
+      "command": "pnpm dlx ccstatusline",
+      "padding": 0,
+      "refreshInterval": 4,
+      "type": "command"
+    }
+  }
 }

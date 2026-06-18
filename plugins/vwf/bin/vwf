@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -e
+if ! command -v rtk &> /dev/null; then
+  echo "rtk not found. Please run \`brew install --formulae rtk\` to install it first."
+  exit 1
+fi
+if ! command -v graphify &> /dev/null; then
+  echo "graphify not found. Please run \`mise run setup:all\` to install it first."
+  exit 1
+fi
+if ! command -v mempalace &> /dev/null; then
+  echo "mempalace not found. Please run \`mise run setup:all\` to install it first."
+  exit 1
+fi
+
+echo "Installing rtk for Claude Code ..."
+rtk init --global --agent claude
+echo ""
+
+echo "Installing graphify for Claude Code ..."
+graphify install --platform claude
+echo ""
