@@ -1,9 +1,11 @@
 # <System Name> — Architecture
 
-> **Source of truth for system structure.** Read by humans and by documentation
-> tooling. `engineering` parses the **Project Registry** block at the bottom of
-> this file. Keep the prose and the registry in sync: every project in the
-> registry must appear in the prose, and vice versa.
+> **Source of truth for system structure.** Lives at
+> `docs/specs/architecture.md`. Read by humans and by documentation tooling.
+> `spec` and `plan` parse the **Project Registry** block at the bottom of this
+> file to resolve stack vocabulary and the entity→project mapping. Keep the
+> prose and the registry in sync: every project in the registry must appear in
+> the prose, and vice versa.
 
 ## System Overview
 
@@ -37,11 +39,10 @@ and region. For the mobile app: the stores and release channel. -->
 ## Cross-cutting Decisions
 
 <!-- One-line selections for system-wide engineering concerns. These are the
-inputs `engineering`'s foundations mode expands into canonical contracts
-under docs/engineering/foundations/. Record the *decision* (the selection) here;
-the *contract* (the full spec) lives in the foundation doc. Include only concerns
-the system actually has; omit the rest. Keep this table in sync with the
-`cross_cutting` block in the registry below. -->
+inputs `spec` expands into canonical contracts under docs/specs/conventions.md.
+Record the *decision* (the selection) here; the *contract* (the full spec) lives
+in conventions.md. Include only concerns the system actually has; omit the rest.
+Keep this table in sync with the `cross_cutting` block in the registry below. -->
 
 | Concern       | Decision            |
 | ------------- | ------------------- |
@@ -54,15 +55,16 @@ the system actually has; omit the rest. Keep this table in sync with the
 
 ## Project Registry
 
-> Machine-readable. `engineering` parses this block to pick each project's doc
-> set, stack vocabulary, and deep questions. Keep it accurate.
+> Machine-readable. `spec` and `plan` parse this block to resolve each entity
+> section's target project, stack vocabulary, and capabilities. Keep it
+> accurate.
 >
 > - `type` ∈ `service` | `worker` | `packages` | `site` | `frontend`
 > - `doc_unit` ∈ `entity` | `page` | `module`
 > - `capabilities` — see the Capability Vocabulary in the architecture phase;
 >   extensible.
 > - `cross_cutting` — one-line decision per system-wide concern; the input to
->   `engineering` foundations mode. Include only the concerns that exist.
+>   `spec`'s conventions.md. Include only the concerns that exist.
 
 ```yaml
 projects:
@@ -74,7 +76,7 @@ projects:
     depends_on: [ <project-name>, <...> ] # or []
     doc_unit: <entity|page|module>
 
-cross_cutting: # system-wide concerns → engineering foundations mode
+cross_cutting: # system-wide concerns → spec's conventions.md
   auth: <selection> # e.g. firebase-id-token, jwt, session-cookie, none
   errors: <selection> # e.g. coded-envelope, http-status-only
   observability: <selection> # e.g. structured-json-logs, otel-tracing, none
