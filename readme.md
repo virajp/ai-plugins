@@ -1,8 +1,8 @@
 # Plugins for Claude Code
 
 A curated collection of opinionated Claude Code plugins by Viraj Patel — LSP
-servers, MCP servers, and a full product/engineering workflow plugin (`vwf`) for
-use with the Claude Code CLI.
+servers, MCP servers, and a full Spec → Plan → Execute workflow plugin (`vwf`)
+for use with the Claude Code CLI.
 
 ## Prerequisites
 
@@ -39,9 +39,9 @@ Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
 
 ### vwf
 
-The flagship plugin — a highly opinionated product/engineering workflow for solo
-developers and small teams. Ships slash commands, subagents, skills, and two
-`PreToolUse` / `Bash` hooks: one that transparently rewrites `npm`/`npx`
+The flagship plugin — a highly opinionated Spec → Plan → Execute workflow for
+solo developers and small teams. Ships slash commands, subagents, skills, and
+two `PreToolUse` / `Bash` hooks: one that transparently rewrites `npm`/`npx`
 commands to `pnpm`, and an `rtk hook claude` hook (requires `rtk` — see
 Prerequisites).
 
@@ -51,14 +51,14 @@ claude plugin install --scope project vwf@virajp-plugins
 
 **Slash commands** (`/vwf:<name>`):
 
-| Command        | Description                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------- |
-| `product`      | Write or update product documentation (user goals + observable outcomes)                    |
-| `architecture` | Create or update `docs/architecture.md` — system shape and machine-readable registry        |
-| `engineering`  | Write or update engineering docs for one or more entities or a cross-cutting concern        |
-| `spec-plan`    | Create an implementation spec & plan for an entity (requires engineering docs)              |
-| `exec-plan`    | Execute an approved spec & plan through four gated stages (code → review → security → docs) |
-| `git-workflow` | Manage git workflows — worktree isolation, commits, merges, pushes                          |
+| Command        | Description                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `spec`         | Maintain the always-current, full-product blueprint under `docs/specs/` (one doc per entity)   |
+| `plan`         | Pick one slice of the spec, diff desired vs actual, write a reviewable cycle plan              |
+| `execute`      | Implement an approved plan under TDD, then code review + security review                       |
+| `archive`      | Move completed plans aside (never deletes)                                                     |
+| `architecture` | Bootstrap or correct `docs/specs/architecture.md` — system shape and machine-readable registry |
+| `git-workflow` | Internal — worktree isolation, commits, merges, pushes (used by plan/execute)                  |
 
 **Skills:**
 

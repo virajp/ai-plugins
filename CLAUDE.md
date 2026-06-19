@@ -6,7 +6,7 @@ code in this repository.
 ## What This Repo Is
 
 A Claude Code plugin marketplace (`virajp-plugins`) containing LSP servers, an
-MCP server, and `vwf` — a full product/engineering workflow plugin. The root
+MCP server, and `vwf` — a full Spec → Plan → Execute workflow plugin. The root
 `.claude-plugin/marketplace.json` defines the marketplace; each plugin lives in
 `plugins/<name>/.claude-plugin/plugin.json`.
 
@@ -61,13 +61,21 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
-- `commands/` — `/vwf:` slash commands: `architecture`, `product`,
-  `engineering`, `spec-plan`, `exec-plan`, `git-workflow`
-- `agents/` — subagents that the commands delegate to (e.g.
-  `engineering-author`, `exec-plan-coder`, `spec-plan-reviewer`)
+- `commands/` — `/vwf:` slash commands: the Spec → Plan → Execute model —
+  `spec`, `plan`, `execute`, `archive`, `architecture`, plus internal
+  `git-workflow`
+- `agents/` — subagents the commands delegate to: `spec-reviewer`,
+  `execute-coder`, `execute-code-reviewer`, `execute-security-reviewer`,
+  `architecture-writer`
 - `skills/` — `karpathy-guidelines`, `rest-api-design`
-- `assets/` — `playbooks/` and `templates/` consumed by the commands/agents
+- `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`
+  (stack-agnostic; section→project mapping resolved from the registry)
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
+
+Docs the commands maintain live under `docs/specs/` (registry `architecture.md`,
+`conventions.md`, one `<entity>.md` per entity) and `docs/plans/`
+(`<date>-<time>-<slice>.md`, with `archived/`). Superseded commands/agents/
+templates from the prior model are archived under `archived/vwf-2026-06-19/`.
 
 ### Dependencies
 
