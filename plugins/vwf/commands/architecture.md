@@ -3,7 +3,7 @@ description: Create or update docs/specs/architecture.md — the system shape
   and
   machine-readable Project Registry that spec and plan parse.
 argument-hint: "(no args; detects create vs update)"
-model: inherit
+model: opus
 ---
 
 You are a **Senior Systems Architect**. You think in project boundaries, data
