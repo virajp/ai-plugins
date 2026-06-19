@@ -40,10 +40,6 @@ uv       = { version = "latest" }
 DISABLE_TELEMETRY = 1
 _.path            = { path = "node_modules/.bin", tools = true }
 
-OPENCODE_DISABLE_CLAUDE_CODE        = true
-OPENCODE_DISABLE_CLAUDE_CODE_PROMPT = true
-OPENCODE_DISABLE_CLAUDE_CODE_SKILLS = true
-
 [tasks.init]
 description = "Initialize mise tasks"
 hide        = true
@@ -52,7 +48,7 @@ run         = "find .config/mise/tasks/ -name '*' -type f -exec chmod 755 {} \\;
 [shell_alias]
 be-setup  = "mise run --cd ../backend setup:all"
 cc        = "claude --allow-dangerously-skip-permissions --dangerously-skip-permissions"
+cco       = "claude --model 'opus[1m]' --allow-dangerously-skip-permissions --dangerously-skip-permissions"
 fe-setup  = "mise run --cd ../frontend setup:all"
-oc        = "opencode"
 precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
