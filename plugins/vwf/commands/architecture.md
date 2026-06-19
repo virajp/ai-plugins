@@ -1,6 +1,7 @@
 ---
-description: Create or update docs/architecture.md — the system shape and
-  machine-readable Project Registry that engineering parses.
+description: Create or update docs/specs/architecture.md — the system shape
+  and
+  machine-readable Project Registry that spec and plan parse.
 argument-hint: "(no args; detects create vs update)"
 model: inherit
 ---
@@ -10,14 +11,14 @@ flow, deployment topology, and shared-code strategy. You never invent a project,
 stack, or capability the user did not confirm.
 
 **Boundary exemption.** The product-doc boundaries (no technology names, no API
-shapes) do not apply here. `docs/architecture.md` deliberately records stacks,
-frameworks, and infrastructure.
+shapes) do not apply here. `docs/specs/architecture.md` deliberately records
+stacks, frameworks, and infrastructure.
 
 ## Doc Path
 
 | Doc          | Path                                                     |
 | ------------ | -------------------------------------------------------- |
-| Architecture | `docs/architecture.md`                                   |
+| Architecture | `docs/specs/architecture.md`                             |
 | Template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/architecture.md` |
 
 There is exactly one architecture doc per workspace; it describes every project.
@@ -33,7 +34,7 @@ any changes. Never push a worktree branch directly.
 
 ## Step 2 — Detect Mode
 
-Read `docs/architecture.md`.
+Read `docs/specs/architecture.md`.
 
 - **Exists → update/reconcile mode.** Preserve confirmed content. Ask only about
   genuine deltas — a new project, a changed stack, a new capability or
@@ -92,7 +93,7 @@ concern **not applicable** to omit it from the doc entirely.
 | `integrations`  | `[firebase, google-maps-platform]` |
 
 Capture each decision as a single short token or list. Record only the decision,
-not the full spec — `engineering` foundations mode expands it.
+not the full spec — `spec` expands it into `docs/specs/conventions.md`.
 
 ---
 
@@ -117,17 +118,18 @@ Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 - All per-project registry rows (name, type, path, stack, capabilities,
   depends_on, doc_unit).
 - All cross-cutting decisions.
-- **Update mode only:** the full text of the existing `docs/architecture.md` so
-  the agent edits in place rather than regenerating.
+- **Update mode only:** the full text of the existing
+  `docs/specs/architecture.md` so the agent edits in place rather than
+  regenerating.
 
-The `architecture-writer` agent writes `docs/architecture.md` directly and
+The `architecture-writer` agent writes `docs/specs/architecture.md` directly and
 returns a change summary. Do not pass the file back through this session.
 
 ---
 
 ## Step 6 — Sync-Verify (inline)
 
-After the writer returns, read `docs/architecture.md` yourself. Check:
+After the writer returns, read `docs/specs/architecture.md` yourself. Check:
 
 **(a) Prose ↔ registry sync**
 
@@ -152,8 +154,9 @@ and report the unresolved item rather than looping indefinitely.
 
 ## Step 7 — Commit
 
-**If this command was invoked as the final step of `/vwf:product`:** return
-control to the parent run. The parent pipeline commits; do not double-commit.
+**If this command was invoked as a sub-step of `/vwf:spec` or `/vwf:execute`
+(registry reconciliation):** return control to the parent run. The parent
+pipeline commits via `git-workflow`; do not double-commit.
 
 **Otherwise (standalone invocation):** commit via `/vwf:git-workflow`.
 
