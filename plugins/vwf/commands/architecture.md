@@ -46,25 +46,30 @@ Read `docs/specs/architecture.md`.
 
 ## Step 3 — Elicit (create) / Reconcile (update)
 
-Ask in batches using `AskUserQuestion`. Use MCQ + "Other" for single-valued
-fields. Frame multi-valued fields as numbered options with a recommendation.
+Elicit following the **elicitation protocol** in
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`: one decision per
+`AskUserQuestion` round, MCQ + "Other" for single-valued fields, multi-valued
+fields as numbered options with a recommendation. Advance one topic at a time,
+letting each answer shape the next; never guess — record an unresolved item
+rather than filling it in. In update mode, ask only about genuine deltas.
 
 ### 3a — System-level prose (create mode only; update: ask about deltas)
 
-Batch 1 — overview and topology:
+Overview and topology — ask in sequence:
 
 - What the system is and its high-level purpose.
 - Cloud-hosted vs client-device split and the shared-package strategy.
 - How projects interconnect: who calls whom, the auth flow, the data flow.
 
-Batch 2 — hosting and deployment:
+Hosting and deployment — ask in sequence:
 
 - Where each project runs (e.g. Cloud Run, App Store/Play Store).
 - How each project ships (e.g. GitHub Actions + Cloud Build, manual).
 
 ### 3b — Project Registry
 
-First ask the user to enumerate all projects. Then for each project gather:
+First ask the user to enumerate all projects. Then walk the projects one at a
+time, gathering for each:
 
 | Field          | How to elicit                                                                                    |
 | -------------- | ------------------------------------------------------------------------------------------------ |

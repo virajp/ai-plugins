@@ -70,8 +70,8 @@ claude plugin install --scope project vwf@virajp-plugins
 #### vwf dependencies
 
 All of vwf's dependencies live in the **same `virajp-plugins` marketplace**
-(`mempalace` and `superpowers` are re-listed here), so a clean install needs no
-other marketplace registered:
+(`mempalace` is re-listed here), so a clean install needs no other marketplace
+registered:
 
 ```sh
 claude plugin marketplace add --scope user virajp/ai-plugins
@@ -82,12 +82,11 @@ claude plugin install --scope project vwf@virajp-plugins   # pulls + enables dep
 > continuously. If a dependency later gets disabled on its own, re-enable it
 > directly or toggle `vwf` off and on again.
 
-`vwf` depends on three other plugins, which Claude Code **auto-installs and
+`vwf` depends on two other plugins, which Claude Code **auto-installs and
 auto-enables** when you enable `vwf` (requires Claude Code ≥ 2.1.143):
 
 - `context7@virajp-plugins` — Context7 MCP docs server
 - `mempalace@virajp-plugins` — AI memory system
-- `superpowers@virajp-plugins` — core skills library
 
 ### mempalace
 

@@ -15,14 +15,13 @@ build, lint, or test step.
 
 ## Plugins
 
-| Plugin           | Source                     | What it provides                                             |
-| ---------------- | -------------------------- | ------------------------------------------------------------ |
-| `vwf`            | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook            |
-| `context7`       | `./plugins/context7`       | Context7 MCP docs server                                     |
-| `typescript-lsp` | `./plugins/typescript-lsp` | TypeScript/JavaScript language server                        |
-| `dart-lsp`       | `./plugins/dart-lsp`       | Dart language server                                         |
-| `mempalace`      | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)    |
-| `superpowers`    | external (url)             | Re-listed in `virajp-plugins`; core skills library (vwf dep) |
+| Plugin           | Source                     | What it provides                                          |
+| ---------------- | -------------------------- | --------------------------------------------------------- |
+| `vwf`            | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook         |
+| `context7`       | `./plugins/context7`       | Context7 MCP docs server                                  |
+| `typescript-lsp` | `./plugins/typescript-lsp` | TypeScript/JavaScript language server                     |
+| `dart-lsp`       | `./plugins/dart-lsp`       | Dart language server                                      |
+| `mempalace`      | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep) |
 
 ## Plugin Structure
 
@@ -70,6 +69,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `skills/` — `karpathy-guidelines`, `rest-api-design`
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`
   (stack-agnostic; section→project mapping resolved from the registry)
+- `assets/elicitation.md` — the shared questioning protocol referenced by
+  `spec`, `plan`, and `architecture`
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
 
 Docs the commands maintain live under `docs/specs/` (registry `architecture.md`,
@@ -79,19 +80,17 @@ templates from the prior model are archived under `archived/vwf-2026-06-19/`.
 
 ### Dependencies
 
-`vwf` depends on `context7`, `mempalace`, and `superpowers` — **all resolved
-from the `virajp-plugins` marketplace itself**, so installing `vwf` needs no
-other marketplace registered. `mempalace` and `superpowers` are not authored
-here; they are **re-listed** in `.claude-plugin/marketplace.json` via `url`
-sources (pointing at their upstream repos) so they live under `virajp-plugins`.
+`vwf` depends on `context7` and `mempalace` — **both resolved from the
+`virajp-plugins` marketplace itself**, so installing `vwf` needs no other
+marketplace registered. `mempalace` is not authored here; it is **re-listed** in
+`.claude-plugin/marketplace.json` via a `url` source (pointing at its upstream
+repo) so it lives under `virajp-plugins`.
 
 The dependency list is declared in **two** places, which must stay in sync —
-both now reference `@virajp-plugins` for every entry:
+both reference `@virajp-plugins` for every entry:
 
-- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `mempalace`,
-  `superpowers`
-- `.claude-plugin/marketplace.json` (vwf entry) → `context7`, `mempalace`,
-  `superpowers`
+- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `mempalace`
+- `.claude-plugin/marketplace.json` (vwf entry) → `context7`, `mempalace`
 
 When `vwf` is enabled, Claude Code (≥ 2.1.143) **auto-installs and
 auto-enables** these dependencies at the same scope. Key rules:
@@ -147,9 +146,9 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `mempalace`, `superpowers`, `context7`,
-`typescript-lsp`, `dart-lsp`.
+Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
+`dart-lsp`.
 
-Installing `vwf` pulls in its dependencies (`context7`, `mempalace`,
-`superpowers`) automatically from the same `virajp-plugins` marketplace — no
-other marketplace needs to be registered. See the Dependencies section above.
+Installing `vwf` pulls in its dependencies (`context7`, `mempalace`)
+automatically from the same `virajp-plugins` marketplace — no other marketplace
+needs to be registered. See the Dependencies section above.

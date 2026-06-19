@@ -42,7 +42,6 @@ claude plugin marketplace update claude-plugins-official || true
 
 print_header "Setting up AI plugins ..."
 updatePlugin context7 claude-plugins-official user
-updatePlugin superpowers claude-plugins-official user
 updatePlugin frontend-design claude-plugins-official user
 updatePlugin mempalace mempalace user
 updatePlugin skills virajp-plugins user

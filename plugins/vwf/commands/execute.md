@@ -82,10 +82,10 @@ If a language's LSP server is missing, ask and **wait**:
 - **Yes** → proceed. **No** → halt; install via `/plugin` (Discover) then retry.
 
 **Setup & dispatch.** Invoke `/vwf:git-workflow` for an isolated local worktree.
-Then dispatch `execute-coder` with the plan and the registry stack. It invokes
-`superpowers:test-driven-development`, implements per the plan following RED →
-GREEN → REFACTOR for every change, and runs the suite to the coverage gate. It
-returns the coverage report.
+Then dispatch `execute-coder` with the plan and the registry stack. It
+implements per the plan under strict TDD — following RED → GREEN → REFACTOR for
+every change — and runs the suite to the coverage gate. It returns the coverage
+report.
 
 **Commit & gate.** Commit the implementation via `/vwf:git-workflow`. Show the
 coverage report and wait for explicit approval before `review`.

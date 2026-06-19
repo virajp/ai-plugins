@@ -13,8 +13,5 @@
 # ============================================================
 .claude/settings.local.json
 
-# Superpowers
-docs/superpowers
-
 # Graphify
 graphify-out/

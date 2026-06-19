@@ -20,16 +20,6 @@
       }
     },
     {
-      "category": "development",
-      "description": "Core skills library — brainstorming, subagent-driven development, systematic debugging, and red/green TDD.",
-      "homepage": "https://github.com/obra/superpowers.git",
-      "name": "superpowers",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/obra/superpowers.git"
-      }
-    },
-    {
       "author": {
         "name": "Viraj Patel"
       },
@@ -92,10 +82,6 @@
         {
           "marketplace": "virajp-plugins",
           "name": "mempalace"
-        },
-        {
-          "marketplace": "virajp-plugins",
-          "name": "superpowers"
         }
       ],
       "description": "Highly opinionated Claude Code Plugin for solo developers or small team",
@@ -121,7 +107,7 @@
         "lsp",
         "git-workflow"
       ],
-      "version": "1.1.0"
+      "version": "1.2.0"
     }
   ]
 }

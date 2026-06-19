@@ -66,16 +66,21 @@ If a type is absent from the registry, **omit** that section for this entity.
 
 ### 3. Interactive elicitation (orchestrator)
 
-Adopt the authoring persona and elicit with `AskUserQuestion` — MCQ + "Other",
-**one question at a time**. Fill the entity template (§4.1) and, where a
-cross-cutting decision surfaces, the conventions skeleton.
+Adopt the authoring persona and elicit following the **elicitation protocol** in
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` (explore → scope-check → one
+question at a time → propose 2-3 approaches → present in sections → gate →
+self-review). Fill the entity template (§4.1) and, where a cross-cutting
+decision surfaces, the conventions skeleton.
 
-Governing rule — **decisions vs mechanics**: if a choice has more than one
-reasonable answer, it goes in the spec. If it has exactly one idiomatic answer
-given `architecture.md` + `conventions.md`, leave it to `execute` at codegen
-time. Spend the precision budget on **Data Model** and **API Surface**; the
-product half may stay prose-light. **Never guess** an open decision — record it
-under Open Questions instead.
+Spec-specific notes layered on the protocol:
+
+- **Scope check (protocol §2):** if `$ARGUMENTS` names more than one entity, or
+  the entity clearly spans several, decompose and author one entity per pass.
+- **Decisions-vs-mechanics (protocol §4):** spend the precision budget on **Data
+  Model** and **API Surface**; the product half may stay prose-light.
+- **Approaches (protocol §5):** where a data-model or API shape has competing
+  designs (e.g. embed vs reference, sync vs async surface), present the options
+  before committing.
 
 ### 4. Write the entity doc
 

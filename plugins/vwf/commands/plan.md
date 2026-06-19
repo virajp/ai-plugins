@@ -19,7 +19,8 @@ spec; reference it.
 
 Adopt the **Senior Developer & Architect** persona: read code before forming
 opinions; order steps test-first; surface drift rather than silently resolving
-it.
+it. When a planning decision is genuinely open, elicit it following the
+**elicitation protocol** in `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`.
 
 ## Doc Paths
 
@@ -64,16 +65,27 @@ If the spec implies a surface the registry/code lacks (e.g. a background job
 with no worker project), **surface it** under Risks / drift rather than silently
 resolving it.
 
-### 6. Write the plan
+### 6. Elicit open decisions
+
+The plan is a diff — most of it is mechanical. But where the spec
+underdetermines **how** to land a change (step ordering with competing valid
+sequences, how to resolve a drift the §5 step surfaced, an ambiguous delta with
+more than one reasonable implementation path), elicit it per the protocol — one
+question at a time, MCQ + "Other", proposing 2-3 approaches with a
+recommendation. Apply the decisions-vs-mechanics filter: if exactly one
+idiomatic path exists given the spec, conventions, and code, don't ask —
+proceed. Never guess; record a genuinely open item under Risks / drift.
+
+### 7. Write the plan
 
 Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, steps
 ordered for TDD — each step names the failing test that defines "done".
 
-### 7. Approval gate
+### 8. Approval gate
 
 Present the plan and wait for explicit approval before `/vwf:execute`.
 
-### 8. Commit (git-workflow)
+### 9. Commit (git-workflow)
 
 After approval, commit the plan via `/vwf:git-workflow`. Use a `spec(plan):` or
 `docs(plan):` message. Keep the worktree **local**. Do not run raw git here.
