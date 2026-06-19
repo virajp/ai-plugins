@@ -5,6 +5,7 @@ description: Manage git workflows — worktree isolation, commits, merges, and
 argument-hint: "(no args)"
 allowed-tools: Bash(git:*) Bash(mise:*) Read
 model: sonnet
+effort: medium
 ---
 
 # Git Workflow
