@@ -4,6 +4,7 @@ description: Produce a reviewable cycle plan as a diff for one slice of the spec
   the delta to docs/plans/<date>-<time>-<slice>.md. Requires a spec to exist.
 argument-hint: "[entity | entity/section]"
 model: opus
+effort: high
 ---
 
 # plan — Cycle Plan (a Diff, not a re-Spec)

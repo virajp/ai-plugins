@@ -4,6 +4,7 @@ description: Execute an approved cycle plan under TDD, then code review and
   flags spec drift. Requires an approved plan in docs/plans/.
 argument-hint: "[full | code | review | security]"
 model: opus
+effort: high
 ---
 
 # execute — Implement an Approved Plan

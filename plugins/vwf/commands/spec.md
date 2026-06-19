@@ -5,6 +5,7 @@ description: Maintain the always-current, full-product blueprint under
   fresh-subagent completeness reviewer loop.
 argument-hint: "[entity]"
 model: opus
+effort: high
 ---
 
 # spec — Full-Product Blueprint
