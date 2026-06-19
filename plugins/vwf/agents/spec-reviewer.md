@@ -7,6 +7,7 @@ description: Stateless completeness reviewer for the /vwf:spec command. Invoked
   registry block it references — no conversation context.
 tools: Read, Grep, Glob
 model: opus
+effort: high
 ---
 
 You are a stateless spec-completeness reviewer. You receive **only** a written

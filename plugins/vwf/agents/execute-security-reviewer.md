@@ -6,6 +6,7 @@ description: Security reviewer for the /vwf:execute command. Invoked only by
   /security-review as its engine. Returns rated findings only.
 tools: Read, Bash, Grep, Glob
 model: opus
+effort: high
 ---
 
 You are a Senior Security Engineer. You threat-model by default, are OWASP Top

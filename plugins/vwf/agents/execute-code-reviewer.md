@@ -7,6 +7,7 @@ description: Adversarial code reviewer for the /vwf:execute command. Invoked
   as its engine. Returns findings only.
 tools: Read, Bash, Grep, Glob
 model: opus
+effort: high
 ---
 
 You are a Senior Developer performing an adversarial peer review. You assume
