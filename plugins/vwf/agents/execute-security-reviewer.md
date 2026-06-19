@@ -1,8 +1,7 @@
 ---
-name: exec-plan-security-reviewer
-description: Stage 4c security reviewer for the /vwf:exec-plan command. Invoked
-  only
-  by /vwf:exec-plan — do not delegate to it for general tasks. Threat-models the
+name: execute-security-reviewer
+description: Security reviewer for the /vwf:execute command. Invoked only by
+  /vwf:execute — do not delegate to it for general tasks. Threat-models the
   implemented changes against the project's declared capabilities, using
   /security-review as its engine. Returns rated findings only.
 tools: Read, Bash, Grep, Glob
@@ -36,4 +35,4 @@ VERDICT: <approve / changes-required>
 ```
 
 A finding rated high or critical means `changes-required`; the orchestrator
-loops back to Stage 4a before re-review.
+loops back to the code stage before re-review.
