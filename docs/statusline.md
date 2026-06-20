@@ -40,9 +40,14 @@ yourself in `~/.claude/settings.json` (or a project `.claude/settings.json`):
 ```json
 {
   "statusLine": {
-    "type": "command",
-    "command": "statusline",
-    "padding": 0
+    "command": "${CLAUDE_PLUGIN_ROOT}/bin/statusline",
+    "padding": 0,
+    "refreshInterval": 4,
+    "type": "command"
+  },
+  "subagentStatusLine": {
+    "command": "${CLAUDE_PLUGIN_ROOT}/bin/statusline",
+    "type": "command"
   }
 }
 ```
