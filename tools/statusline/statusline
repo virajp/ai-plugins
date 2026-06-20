@@ -454,10 +454,11 @@ function renderSubagents(d) {
     const typeSym = TYPE_SYM[String(t.type || "").toLowerCase()] || TYPE_SYM._default;
     const segs = [{ text: `${mk.sym} ${typeSym}`, bg: mk.bg, fg: headFg, bold: headBold }];
 
-    // Name: the subagent's identity as its own configurable segment. Prefer the
-    // explicit name, fall back to the agent type (e.g. "execute-coder") — whichever
-    // field Claude Code populates. (Not description; that has its own segment.)
-    const agentName = t.name || t.type;
+    // Name: the subagent's identity as its own configurable segment. Only the
+    // explicit name — Claude Code reports `type` as the generic "local_agent"
+    // regardless of subagent_type, and the type glyph already conveys that, so
+    // a fallback to type would just be redundant noise. Omitted when unnamed.
+    const agentName = t.name;
     if (agentName) {
       const st = subStyle("name", "orange");
       segs.push({ text: `${SYM.agent} ${agentName}`, bg: st.bg, fg: st.fg, bold: st.bold });
