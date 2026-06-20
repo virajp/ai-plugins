@@ -2,15 +2,13 @@
 
 A powerline-style
 [Claude Code statusline](https://docs.claude.com/en/docs/claude-code/statusline)
-shipped as the standalone `statusline` plugin. One script drives **two
-surfaces** — the main two-line status bar and the subagent panel — and
-everything it draws is data-driven from JSON, so you can restyle it per repo
-without touching code.
+installed by the `@askviraj/ai-plugins` CLI. One script drives **two surfaces**
+— the main two-line status bar and the subagent panel — and everything it draws
+is data-driven from JSON, so you can restyle it per repo without touching code.
 
-- Script:
-  [`plugins/statusline/bin/statusline`](../plugins/statusline/bin/statusline)
+- Script: [`tools/statusline/statusline`](../tools/statusline/statusline)
 - Defaults:
-  [`plugins/statusline/bin/statusline.json`](../plugins/statusline/bin/statusline.json)
+  [`tools/statusline/statusline.json`](../tools/statusline/statusline.json)
 - Schema: [`schemas/statusline.schema.json`](../schemas/statusline.schema.json)
 
 > **Requires a [Nerd Font](https://www.nerdfonts.com/).** The separators and
@@ -23,37 +21,45 @@ without touching code.
 
 ## Wiring it up
 
-Install the plugin:
+Run the installer with `npx` (or `pnpm dlx`) — no global install needed:
 
 ```sh
-claude plugin install --scope user statusline@virajp-plugins
+# install both surfaces
+npx @askviraj/ai-plugins --statusline --subagentstatusline
+
+# or just one
+npx @askviraj/ai-plugins --statusline
+npx @askviraj/ai-plugins --subagentstatusline
 ```
 
-Enabling the plugin adds its `bin/` to `PATH`, so the executable is reachable by
-the bare name `statusline`. The plugin also ships a `settings.json` that wires
-**`subagentStatusLine`** automatically — so the subagent panel works out of the
-box, nothing to configure.
+The CLI:
 
-Claude Code does not let a plugin set the main **`statusLine`**, so add that one
-yourself in `~/.claude/settings.json` (or a project `.claude/settings.json`):
+- copies the statusline script into `~/.claude/scripts/` (made executable),
+- seeds `~/.config/statusline.json` with the bundled defaults — or, if it
+  already exists, deep-merges any missing settings into it (your edits are
+  preserved), and
+- writes the requested key(s) into `~/.claude/settings.json`, leaving any other
+  settings untouched.
+
+If a target key already exists, the CLI prints the current value and asks before
+overwriting. Pass `--yes` (`-y`) to overwrite without prompting.
+
+The blocks it writes:
 
 ```json
 {
   "statusLine": {
+    "type": "command",
     "command": "${HOME}/.claude/scripts/statusline",
     "padding": 0,
-    "refreshInterval": 4,
-    "type": "command"
+    "refreshInterval": 4
   },
   "subagentStatusLine": {
-    "command": "${HOME}/.claude/scripts/statusline",
-    "type": "command"
+    "type": "command",
+    "command": "${HOME}/.claude/scripts/statusline"
   }
 }
 ```
-
-(If `statusline` isn't found on `PATH` in your environment, use the absolute
-path to the installed script instead.)
 
 The script reads the Claude Code payload on stdin and detects the surface: a
 payload with a `tasks` array renders the subagent panel, anything else renders
@@ -64,12 +70,13 @@ the main bar. Errors go to stderr so they never corrupt the line.
 Configuration is layered. Three files are deep-merged at render time, in
 increasing precedence (a higher layer overrides the same key in a lower one):
 
-1. **Plugin defaults** (lowest) — `${CLAUDE_PLUGIN_ROOT}/bin/statusline.json`,
-   the file shipped with the plugin. Holds **every** constant: palette,
-   separators, symbols, per-segment styling, the line layout, and the whole
-   subagent panel. This is the baseline for everyone. (When `CLAUDE_PLUGIN_ROOT`
-   is unset, the script falls back to the file next to it in `bin/`.)
-2. **Per-user overrides** — `~/.config/statusline.json`. Applied to every repo.
+1. **Defaults beside the script** (lowest) — the script reads a
+   `statusline.json` next to itself if present. The installer no longer writes
+   one here, so this layer is normally empty.
+2. **Per-user** — `~/.config/statusline.json`. The installer seeds this with the
+   **full** default config (palette, symbols, per-segment styling, line layout,
+   subagent panel, …) and, on re-run, deep-merges any settings you're missing
+   while preserving your edits. This is your global, editable config.
 3. **Per-repo overrides** (highest) — `<repo-root>/.config/statusline.json`.
 
 Any layer may be absent. Merge semantics: **objects merge key-by-key, arrays
@@ -196,8 +203,8 @@ the matched status; the subagent `name` renders as its own segment (styled via
 
 ```sh
 # main bar
-echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"cost":{"total_cost_usd":46.51,"total_duration_ms":33540000},"context_window":{"used_percentage":26,"context_window_size":1000000,"total_input_tokens":259000},"rate_limits":{"five_hour":{"used_percentage":7,"resets_at":1774200000},"seven_day":{"used_percentage":1.0,"resets_at":1774600000}}}' | node plugins/statusline/bin/statusline
+echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"cost":{"total_cost_usd":46.51,"total_duration_ms":33540000},"context_window":{"used_percentage":26,"context_window_size":1000000,"total_input_tokens":259000},"rate_limits":{"five_hour":{"used_percentage":7,"resets_at":1774200000},"seven_day":{"used_percentage":1.0,"resets_at":1774600000}}}' | node tools/statusline/statusline
 
 # subagent panel
-echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","type":"review","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node plugins/statusline/bin/statusline
+echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","type":"review","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node tools/statusline/statusline
 ```

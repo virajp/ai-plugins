@@ -32,8 +32,11 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `statusline`, `mempalace`, `context7`,
-`typescript-lsp`, `dart-lsp`.
+Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
+`dart-lsp`.
+
+> The **statusline** is not a plugin — it installs via a small CLI
+> (`npx @askviraj/ai-plugins …`). See [Statusline](#statusline) below.
 
 ## Plugins
 
@@ -91,13 +94,18 @@ auto-enables** when you enable `vwf` (requires Claude Code ≥ 2.1.143):
 ### statusline
 
 A standalone, powerline-style statusline (main two-line bar + subagent panel),
-fully data-driven from JSON and themeable across three config layers (plugin
-defaults → `~/.config/statusline.json` → `<repo-root>/.config/statusline.json`).
-Enabling it wires `subagentStatusLine` automatically; add the main `statusLine`
-to your settings yourself. Requires a [Nerd Font](https://www.nerdfonts.com/).
+fully data-driven from JSON and themeable across three config layers (defaults →
+`~/.config/statusline.json` → `<repo-root>/.config/statusline.json`). It
+installs via a small CLI rather than the plugin marketplace — the installer
+copies the script to `~/.claude/scripts/` and writes the chosen key(s) into
+`~/.claude/settings.json`. Requires a [Nerd Font](https://www.nerdfonts.com/).
 
 ```sh
-claude plugin install --scope user statusline@virajp-plugins
+# install both surfaces (use --statusline / --subagentstatusline individually too)
+npx @askviraj/ai-plugins --statusline --subagentstatusline
+
+# overwrite existing config without prompting
+npx @askviraj/ai-plugins --statusline --subagentstatusline --yes
 ```
 
 See **[docs/statusline.md](./docs/statusline.md)** for setup and the full

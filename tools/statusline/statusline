@@ -17,9 +17,9 @@
  * Configuration is fully data-driven and layered. Three files are deep-merged,
  * low → high precedence (a higher layer overrides the same key in a lower one;
  * objects merge key-by-key, arrays replace wholesale). Any layer may be absent:
- *   3. ${CLAUDE_PLUGIN_ROOT}/bin/statusline.json — the DEFAULTS shipped with the
- *      plugin. Holds every constant: palette, powerline glyphs, symbols,
- *      per-segment styling, line layout, and the subagent panel config.
+ *   3. statusline.json next to this script — the DEFAULTS. Holds every constant:
+ *      palette, powerline glyphs, symbols, per-segment styling, line layout, and
+ *      the subagent panel config.
  *   2. ~/.config/statusline.json — per-USER overrides, applied to every repo.
  *   1. <repo-root>/.config/statusline.json — per-REPO overrides (highest).
  * So a repo can set just `projectName` and inherit everything else, or override
@@ -80,19 +80,16 @@ function readJson(p) {
   try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (_) { return null; }
 }
 
-// Layer 3 (plugin defaults): ${CLAUDE_PLUGIN_ROOT}/bin/statusline.json, falling
-// back to the file next to this script when the env var is unset (e.g. local
-// testing or a manually-wired statusLine command) — both resolve to bin/.
-function pluginConfigPath() {
-  const root = process.env.CLAUDE_PLUGIN_ROOT;
-  return root ? path.join(root, "bin", CONFIG_FILE) : path.join(__dirname, CONFIG_FILE);
+// Layer 3 (defaults): statusline.json next to this script.
+function defaultConfigPath() {
+  return path.join(__dirname, CONFIG_FILE);
 }
 
 // Merge the three config layers, low → high precedence — each present layer is
 // deep-merged onto the accumulator so a higher layer wins:
-//   3. plugin defaults  ->  2. ~/.config/statusline.json  ->  1. <root>/.config/statusline.json
+//   3. defaults  ->  2. ~/.config/statusline.json  ->  1. <root>/.config/statusline.json
 function loadConfig(root) {
-  let cfg = readJson(pluginConfigPath()) || {};
+  let cfg = readJson(defaultConfigPath()) || {};
   const user = readJson(path.join(os.homedir(), ...CONFIG_REL));
   if (user) cfg = deepMerge(cfg, user);
   const repo = root ? readJson(path.join(root, ...CONFIG_REL)) : null;

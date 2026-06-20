@@ -74,25 +74,6 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Config-driven powerline statusline (main bar + subagent panel) for Claude Code",
-      "name": "statusline",
-      "repository": "https://github.com/virajp/ai-plugins",
-      "source": "./plugins/statusline",
-      "strict": true,
-      "tags": [
-        "statusline",
-        "powerline",
-        "subagent",
-        "ui",
-        "theme"
-      ],
-      "version": "1.0.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
       "dependencies": [
         {
           "marketplace": "virajp-plugins",

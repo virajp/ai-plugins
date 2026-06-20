@@ -6,20 +6,22 @@ code in this repository.
 ## What This Repo Is
 
 A Claude Code plugin marketplace (`virajp-plugins`) containing LSP servers, an
-MCP server, `vwf` — a full Spec → Plan → Execute workflow plugin — and
-`statusline`, a config-driven powerline statusline. The root
+MCP server, and `vwf` — a full Spec → Plan → Execute workflow plugin. The root
 `.claude-plugin/marketplace.json` defines the marketplace; each plugin lives in
 `plugins/<name>/.claude-plugin/plugin.json`.
 
-Plugins are pure JSON/markdown configuration plus shell scripts — there is no
-build, lint, or test step.
+The repo also ships a **statusline**, installed via a small `oclif` CLI
+(`@askviraj/ai-plugins`) rather than the marketplace — see The statusline CLI.
+
+Plugins are pure JSON/markdown configuration plus shell scripts (no build/test
+step). The one addition is the statusline CLI: a small plain-JS `oclif` package
+at the repo root — also no build step.
 
 ## Plugins
 
 | Plugin           | Source                     | What it provides                                          |
 | ---------------- | -------------------------- | --------------------------------------------------------- |
 | `vwf`            | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook         |
-| `statusline`     | `./plugins/statusline`     | Config-driven powerline statusline (bin/ script + JSON)   |
 | `context7`       | `./plugins/context7`       | Context7 MCP docs server                                  |
 | `typescript-lsp` | `./plugins/typescript-lsp` | TypeScript/JavaScript language server                     |
 | `dart-lsp`       | `./plugins/dart-lsp`       | Dart language server                                      |
@@ -54,12 +56,6 @@ convention** — they do not need to be listed in `plugin.json`:
 - `skills/<name>/SKILL.md` → skills
 - `agents/<name>.md` → subagents
 - `hooks/hooks.json` → hooks (see Hooks below)
-- `bin/` → executables added to the session `PATH` when the plugin is enabled
-  (the `statusline` plugin ships its script here; see The statusline Plugin)
-- `settings.json` at the plugin root → default settings applied when the plugin
-  is enabled. Only the `agent` and `subagentStatusLine` keys are honoured here —
-  the main `statusLine` cannot be shipped by a plugin and must be wired by the
-  user in their own `settings.json`.
 
 The marketplace manifest at `.claude-plugin/marketplace.json` lists each plugin
 with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
@@ -111,33 +107,48 @@ auto-enables** these dependencies at the same scope. Key rules:
   enabled — not on a continuous reconcile. If a dependency is later disabled on
   its own, re-enable it directly or toggle `vwf` off/on.
 
-## The statusline Plugin
+## The statusline CLI
 
-`statusline` is a standalone, config-driven powerline statusline. Its layout
-under `plugins/statusline/`:
+The statusline is **not** a Claude Code plugin — it is an `oclif` CLI published
+as `@askviraj/ai-plugins` that installs a powerline statusline into Claude Code.
+Layout:
 
-- `bin/statusline` — the Node script (executable, `#!/usr/bin/env node`). Drives
-  **both** surfaces from one file: a stdin payload with a `tasks` array renders
-  the subagent panel, anything else the main two-line bar.
-- `bin/statusline.json` — the default config (every constant: palette, powerline
-  glyphs, symbols, per-segment styling, line layout, subagent panel). This is
-  config **layer 3**.
-- `settings.json` — ships `subagentStatusLine` so the subagent panel auto-wires
-  when the plugin is enabled. The main `statusLine` is added by the user.
+- `tools/statusline/statusline` — the executable Node script (node shebang).
+  Drives **both** surfaces from one file: a stdin payload with a `tasks` array
+  renders the subagent panel, anything else the main two-line bar.
+- `tools/statusline/statusline.json` — the bundled default config (every
+  constant: palette, powerline glyphs, symbols, per-segment styling, line
+  layout, subagent panel). The installer seeds this into
+  `~/.config/statusline.json`.
+- `package.json` (root) — the npm package: oclif single-command CLI, `bin`
+  `ai-plugins`, sole runtime dep `@oclif/core`. Plain JS — no build step.
+- `bin/installer.js` — the whole CLI in one file: the oclif command class plus
+  the bootstrap that runs it (single-command `strategy`/`target` in
+  `package.json`; `settings.enableAutoTranspile = false` keeps oclif from
+  hunting for TypeScript).
+
+The command accepts `--statusline`, `--subagentstatusline`, and `--yes`. It
+copies the script into `~/.claude/scripts/` (chmod 755), seeds the bundled
+defaults into `~/.config/statusline.json` (deep-merging missing settings if it
+already exists, preserving user edits), and writes the chosen key(s) into
+`~/.claude/settings.json` (preserving other keys; prompting before overwrite
+unless `--yes`). Users run it via `npx @askviraj/ai-plugins …` — there is no
+`claude plugin install` path.
 
 **Three-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; any layer may be absent):
 
-1. `${CLAUDE_PLUGIN_ROOT}/bin/statusline.json` — plugin defaults (lowest). The
-   script falls back to the file next to it in `bin/` when the env var is unset.
-2. `~/.config/statusline.json` — per-user.
+1. `statusline.json` beside the installed script (lowest) — read if present; the
+   installer no longer writes one here, so normally empty.
+2. `~/.config/statusline.json` — per-user; the installer seeds this with the
+   full defaults and deep-merges missing settings on re-run.
 3. `<repo-root>/.config/statusline.json` — per-repo (highest).
 
 The JSON Schema lives at the **repo root** under
-`schemas/statusline.schema.json` (never shipped with the plugin — it is consumed
-only via its raw GitHub URL, referenced by `$schema`). User-facing reference
-docs are at `docs/statusline.md`. When changing the config shape, keep the
-script, `bin/statusline.json`, `schemas/statusline.schema.json`, and
+`schemas/statusline.schema.json` (consumed only via its raw GitHub URL,
+referenced by `$schema`). User-facing reference docs are at
+`docs/statusline.md`. When changing the config shape, keep the script,
+`tools/statusline/statusline.json`, `schemas/statusline.schema.json`, and
 `docs/statusline.md` in sync.
 
 ## Hooks
@@ -183,8 +194,9 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `statusline`, `mempalace`, `context7`,
-`typescript-lsp`, `dart-lsp`.
+Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
+`dart-lsp`. (The statusline is not a plugin — install it via
+`npx @askviraj/ai-plugins …`; see The statusline CLI.)
 
 Installing `vwf` pulls in its dependencies (`context7`, `mempalace`)
 automatically from the same `virajp-plugins` marketplace — no other marketplace
