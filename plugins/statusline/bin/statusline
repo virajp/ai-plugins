@@ -22,9 +22,9 @@
  *      per-segment styling, line layout, and the subagent panel config.
  *   2. ~/.config/statusline.json — per-USER overrides, applied to every repo.
  *   1. <repo-root>/.config/statusline.json — per-REPO overrides (highest).
- * So a repo can set just `projectName`/`symbol` and inherit everything else, or
- * override any nested value (a single segment's bg, one symbol, the gauge width,
- * a status colour, …).
+ * So a repo can set just `projectName` and inherit everything else, or override
+ * any nested value (a single segment's bg, one symbol, the gauge width, a status
+ * colour, …).
  *
  * Colours accept three forms anywhere a colour is expected: a palette name
  * ("blue"), a hex string ("#458588" or "#abc"), or an RGB triple ([69,133,136]).
@@ -391,7 +391,7 @@ function renderMain(d) {
     reset7d: humanResetIn(weekly.resets_at),
     sessionName: d.session_name,
     projectName: CFG.projectName,
-    projectSym: CFG.symbol || SYM.repo,
+    projectSym: SYM.project,
     wt: worktreeSubpath(cwd),
     branch: git.branch,
     dirty: git.branch ? gitDirtyMark(cwd) : "",

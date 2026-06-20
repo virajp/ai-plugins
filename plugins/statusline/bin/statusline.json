@@ -1,6 +1,5 @@
 {
   "$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/schemas/statusline.schema.json",
-  "projectName": "Project-Name",
   "defaultFg": "white",
   "gauge": {
     "empty": "▱",
@@ -79,6 +78,7 @@
     "sepThin": "",
     "thinFg": "grey"
   },
+  "projectName": "Project-Name",
   "segments": {
     "branch": {
       "bg": "aqua"
@@ -171,6 +171,7 @@
     "duration": "",
     "folder": "",
     "model": "⚡",
+    "project": "",
     "repo": "",
     "reset": "↻",
     "session": "",

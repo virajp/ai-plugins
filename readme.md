@@ -1,8 +1,8 @@
 # Plugins for Claude Code
 
 A curated collection of opinionated Claude Code plugins by Viraj Patel — LSP
-servers, MCP servers, and a full Spec → Plan → Execute workflow plugin (`vwf`)
-for use with the Claude Code CLI.
+servers, MCP servers, a full Spec → Plan → Execute workflow plugin (`vwf`), and
+a config-driven powerline `statusline` — for use with the Claude Code CLI.
 
 ## Prerequisites
 
@@ -32,8 +32,8 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
-`dart-lsp`.
+Available plugin names: `vwf`, `statusline`, `mempalace`, `context7`,
+`typescript-lsp`, `dart-lsp`.
 
 ## Plugins
 
@@ -67,13 +67,6 @@ claude plugin install --scope project vwf@virajp-plugins
 | `karpathy-guidelines` | Behavioral guidelines to reduce common LLM coding mistakes: avoid overcomplication, make surgical changes, surface assumptions, define verifiable success criteria |
 | `rest-api-design`     | Technology-agnostic principles and best practices for designing REST APIs                                                                                          |
 
-#### vwf statusline
-
-`vwf` also ships a powerline-style, config-driven statusline (main bar +
-subagent panel). Restyle it per repo via `<repo-root>/.config/statusline.json`.
-See **[STATUSLINE.md](./docs/statusline.md)** for setup and the full
-configuration reference.
-
 #### vwf dependencies
 
 All of vwf's dependencies live in the **same `virajp-plugins` marketplace**
@@ -94,6 +87,21 @@ auto-enables** when you enable `vwf` (requires Claude Code ≥ 2.1.143):
 
 - `context7@virajp-plugins` — Context7 MCP docs server
 - `mempalace@virajp-plugins` — AI memory system
+
+### statusline
+
+A standalone, powerline-style statusline (main two-line bar + subagent panel),
+fully data-driven from JSON and themeable across three config layers (plugin
+defaults → `~/.config/statusline.json` → `<repo-root>/.config/statusline.json`).
+Enabling it wires `subagentStatusLine` automatically; add the main `statusLine`
+to your settings yourself. Requires a [Nerd Font](https://www.nerdfonts.com/).
+
+```sh
+claude plugin install --scope user statusline@virajp-plugins
+```
+
+See **[docs/statusline.md](./docs/statusline.md)** for setup and the full
+configuration reference.
 
 ### mempalace
 

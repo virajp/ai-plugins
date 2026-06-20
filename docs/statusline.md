@@ -2,13 +2,15 @@
 
 A powerline-style
 [Claude Code statusline](https://docs.claude.com/en/docs/claude-code/statusline)
-that ships with the `vwf` plugin. One script drives **two surfaces** — the main
-two-line status bar and the subagent panel — and everything it draws is
-data-driven from JSON, so you can restyle it per repo without touching code.
+shipped as the standalone `statusline` plugin. One script drives **two
+surfaces** — the main two-line status bar and the subagent panel — and
+everything it draws is data-driven from JSON, so you can restyle it per repo
+without touching code.
 
-- Script: [`plugins/vwf/bin/statusline`](../plugins/vwf/bin/statusline)
+- Script:
+  [`plugins/statusline/bin/statusline`](../plugins/statusline/bin/statusline)
 - Defaults:
-  [`plugins/vwf/bin/statusline.json`](../plugins/vwf/bin/statusline.json)
+  [`plugins/statusline/bin/statusline.json`](../plugins/statusline/bin/statusline.json)
 - Schema: [`schemas/statusline.schema.json`](../schemas/statusline.schema.json)
 
 > **Requires a [Nerd Font](https://www.nerdfonts.com/).** The separators and
@@ -21,23 +23,32 @@ data-driven from JSON, so you can restyle it per repo without touching code.
 
 ## Wiring it up
 
-Point both statusline keys at the script in `~/.claude/settings.json` (or a
-project `.claude/settings.json`). Replace the path with the installed plugin
-location:
+Install the plugin:
+
+```sh
+claude plugin install --scope user statusline@virajp-plugins
+```
+
+Enabling the plugin adds its `bin/` to `PATH`, so the executable is reachable by
+the bare name `statusline`. The plugin also ships a `settings.json` that wires
+**`subagentStatusLine`** automatically — so the subagent panel works out of the
+box, nothing to configure.
+
+Claude Code does not let a plugin set the main **`statusLine`**, so add that one
+yourself in `~/.claude/settings.json` (or a project `.claude/settings.json`):
 
 ```json
 {
   "statusLine": {
     "type": "command",
-    "command": "${CLAUDE_PLUGIN_ROOT}/bin/statusline",
+    "command": "statusline",
     "padding": 0
-  },
-  "subagentStatusLine": {
-    "type": "command",
-    "command": "${CLAUDE_PLUGIN_ROOT}/bin/statusline"
   }
 }
 ```
+
+(If `statusline` isn't found on `PATH` in your environment, use the absolute
+path to the installed script instead.)
 
 The script reads the Claude Code payload on stdin and detects the surface: a
 payload with a `tasks` array renders the subagent panel, anything else renders
@@ -57,9 +68,9 @@ increasing precedence (a higher layer overrides the same key in a lower one):
 3. **Per-repo overrides** (highest) — `<repo-root>/.config/statusline.json`.
 
 Any layer may be absent. Merge semantics: **objects merge key-by-key, arrays
-replace wholesale.** So a repo (or user) can set just `projectName` and `symbol`
-and inherit everything else, override a single nested value (one segment's `bg`,
-one symbol, the gauge width, a status colour), or replace `lines` entirely.
+replace wholesale.** So a repo (or user) can set just `projectName` and inherit
+everything else, override a single nested value (one segment's `bg`, one symbol,
+the gauge width, a status colour), or replace `lines` entirely.
 
 Add the published schema for editor autocompletion and validation (already
 present in the defaults):
@@ -83,24 +94,23 @@ it everywhere.
 
 ### Top-level keys
 
-| Key               | Type            | Purpose                                                                                      |
-| ----------------- | --------------- | -------------------------------------------------------------------------------------------- |
-| `projectName`     | string          | Project display name for the `project` segment. Unset → the segment is omitted.              |
-| `symbol`          | string          | Glyph before the project name. Defaults to `symbols.repo`.                                   |
-| `palette`         | map<name,RGB>   | Named colours as `[r,g,b]` triples.                                                          |
-| `powerline`       | object          | Divider glyphs: `sep`, `sepThin`, `cap`, and `thinFg` (colour of the thin divider).          |
-| `defaultFg`       | colour          | Foreground for segments that don't set their own `fg`.                                       |
-| `gauge`           | object          | The `context` meter: `width`, `filled` glyph, `empty` glyph.                                 |
-| `worktreePattern` | regex string    | Path component that marks a git worktree; the subpath after it feeds the `worktree` segment. |
-| `symbols`         | map<key,glyph>  | Glyph per data type (see below).                                                             |
-| `typeSymbols`     | map<type,glyph> | Subagent `type` → glyph; `_default` is the fallback.                                         |
-| `segments`        | map<id,style>   | Default styling (`bg`/`fg`/`bold`) per main-bar segment.                                     |
-| `lines`           | array of rows   | The layout (see below).                                                                      |
-| `subagent`        | object          | The subagent panel config (see below).                                                       |
+| Key               | Type            | Purpose                                                                                                        |
+| ----------------- | --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `projectName`     | string          | Project display name for the `project` segment (glyph from `symbols.project`). Unset → the segment is omitted. |
+| `palette`         | map<name,RGB>   | Named colours as `[r,g,b]` triples.                                                                            |
+| `powerline`       | object          | Divider glyphs: `sep`, `sepThin`, `cap`, and `thinFg` (colour of the thin divider).                            |
+| `defaultFg`       | colour          | Foreground for segments that don't set their own `fg`.                                                         |
+| `gauge`           | object          | The `context` meter: `width`, `filled` glyph, `empty` glyph.                                                   |
+| `worktreePattern` | regex string    | Path component that marks a git worktree; the subpath after it feeds the `worktree` segment.                   |
+| `symbols`         | map<key,glyph>  | Glyph per data type (see below).                                                                               |
+| `typeSymbols`     | map<type,glyph> | Subagent `type` → glyph; `_default` is the fallback.                                                           |
+| `segments`        | map<id,style>   | Default styling (`bg`/`fg`/`bold`) per main-bar segment.                                                       |
+| `lines`           | array of rows   | The layout (see below).                                                                                        |
+| `subagent`        | object          | The subagent panel config (see below).                                                                         |
 
 `symbols` keys consumed by the script: `model`, `context`, `win5h`, `win7d`,
-`reset`, `session`, `cost`, `duration`, `repo`, `worktree`, `folder`, `branch`,
-`dirtyAdd`, `dirtyDel`, `dirtyMix`, `agent`, `tokens`.
+`reset`, `session`, `cost`, `duration`, `project`, `worktree`, `folder`,
+`branch`, `dirtyAdd`, `dirtyDel`, `dirtyMix`, `agent`, `tokens`.
 
 ### Lines and segments
 
@@ -138,13 +148,13 @@ the matched status.
 
 ## Examples
 
-**Just rename the project, keep everything else:**
+**Just rename the project (and change its glyph), keep everything else:**
 
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/schemas/statusline.schema.json",
   "projectName": "my-project",
-  "symbol": ""
+  "symbols": { "project": "" }
 }
 ```
 
@@ -180,8 +190,8 @@ the matched status.
 
 ```sh
 # main bar
-echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"cost":{"total_cost_usd":46.51,"total_duration_ms":33540000},"context_window":{"used_percentage":26,"context_window_size":1000000,"total_input_tokens":259000},"rate_limits":{"five_hour":{"used_percentage":7,"resets_at":1774200000},"seven_day":{"used_percentage":1.0,"resets_at":1774600000}}}' | node plugins/vwf/bin/statusline
+echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"cost":{"total_cost_usd":46.51,"total_duration_ms":33540000},"context_window":{"used_percentage":26,"context_window_size":1000000,"total_input_tokens":259000},"rate_limits":{"five_hour":{"used_percentage":7,"resets_at":1774200000},"seven_day":{"used_percentage":1.0,"resets_at":1774600000}}}' | node plugins/statusline/bin/statusline
 
 # subagent panel
-echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","type":"review","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node plugins/vwf/bin/statusline
+echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","type":"review","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node plugins/statusline/bin/statusline
 ```

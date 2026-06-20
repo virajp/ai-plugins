@@ -10,11 +10,7 @@
 
     "projectName": {
       "type": "string",
-      "description": "Project display name shown in the `project` segment. When unset, the segment is omitted."
-    },
-    "symbol": {
-      "type": "string",
-      "description": "Glyph rendered before the project name. Defaults to `symbols.repo`."
+      "description": "Project display name shown in the `project` segment (with the `symbols.project` glyph before it). When unset, the segment is omitted."
     },
 
     "palette": {
@@ -82,7 +78,7 @@
 
     "symbols": {
       "type": "object",
-      "description": "Glyph per data type. Keys consumed by the script: model, context, win5h, win7d, reset, session, cost, duration, repo, worktree, folder, branch, dirtyAdd, dirtyDel, dirtyMix, agent, tokens.",
+      "description": "Glyph per data type. Keys consumed by the script: model, context, win5h, win7d, reset, session, cost, duration, project, worktree, folder, branch, dirtyAdd, dirtyDel, dirtyMix, agent, tokens.",
       "additionalProperties": { "type": "string" }
     },
 
