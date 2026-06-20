@@ -170,17 +170,6 @@ function effortLevel(e) {
   return e.level || (typeof e === "string" ? e : "");
 }
 
-// Compact path: collapse $HOME to ~, keep the last N components.
-function shortPath(p, keep = 3) {
-  if (!p) return "";
-  const home = process.env.HOME || "";
-  let s = home && p.startsWith(home) ? "~" + p.slice(home.length) : p;
-  const parts = s.split("/").filter(Boolean);
-  const lead = s.startsWith("~") ? "" : "/";
-  if (parts.length <= keep) return lead + parts.join("/");
-  return "…/" + parts.slice(-keep).join("/");
-}
-
 // 1234567 -> "1.2M", 259000 -> "259k"
 function humanTokens(n) {
   if (n == null || isNaN(n)) return "?";
@@ -322,7 +311,7 @@ const SEGMENTS = {
   session: (c) => c.sessionName ? `${SYM.session} ${c.sessionName}` : null,
   cost: (c) => `${SYM.cost} ${c.cost.toFixed(2)}`,
   duration: (c) => c.dur == null ? null : `${SYM.duration} ${humanDuration(c.dur)}`,
-  project: (c) => c.repoName ? `${c.repoSym} ${c.repoName}` : shortPath(c.cwd, 3),
+  project: (c) => c.projectName ? `${c.projectSym} ${c.projectName}` : null,
   worktree: (c) => c.wt ? `${SYM.worktree} ${SYM.folder} ${c.wt}` : null,
   branch: (c) => {
     if (!c.branch) return null;
@@ -384,9 +373,8 @@ function renderMain(d) {
     reset5h: humanResetIn(rl.five_hour?.resets_at),
     reset7d: humanResetIn(weekly.resets_at),
     sessionName: d.session_name,
-    cwd,
-    repoName: CFG.repo || CFG.name,
-    repoSym: CFG.symbol || SYM.repo,
+    projectName: CFG.projectName,
+    projectSym: CFG.symbol || SYM.repo,
     wt: worktreeSubpath(cwd),
     branch: git.branch,
     dirty: git.branch ? gitDirtyMark(cwd) : "",

@@ -6,10 +6,10 @@ that ships with the `vwf` plugin. One script drives **two surfaces** — the mai
 two-line status bar and the subagent panel — and everything it draws is
 data-driven from JSON, so you can restyle it per repo without touching code.
 
-- Script: [`plugins/vwf/bin/statusline`](plugins/vwf/bin/statusline)
-- Defaults: [`plugins/vwf/bin/statusline.json`](plugins/vwf/bin/statusline.json)
-- Schema:
-  [`plugins/vwf/schemas/statusline.schema.json`](plugins/vwf/schemas/statusline.schema.json)
+- Script: [`plugins/vwf/bin/statusline`](../plugins/vwf/bin/statusline)
+- Defaults:
+  [`plugins/vwf/bin/statusline.json`](../plugins/vwf/bin/statusline.json)
+- Schema: [`schemas/statusline.schema.json`](../schemas/statusline.schema.json)
 
 > **Requires a [Nerd Font](https://www.nerdfonts.com/).** The separators and
 > most symbols are private-use glyphs; without a patched font they render as
@@ -65,7 +65,7 @@ Add the published schema for editor autocompletion and validation (already
 present in the defaults):
 
 ```json
-"$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/plugins/vwf/schemas/statusline.schema.json"
+"$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/schemas/statusline.schema.json"
 ```
 
 ### Colours
@@ -142,7 +142,7 @@ the matched status.
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/plugins/vwf/schemas/statusline.schema.json",
+  "$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/schemas/statusline.schema.json",
   "projectName": "my-project",
   "symbol": ""
 }

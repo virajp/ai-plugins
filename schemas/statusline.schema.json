@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/virajp/ai-plugins/main/plugins/vwf/schemas/statusline.schema.json",
+  "$id": "https://raw.githubusercontent.com/virajp/ai-plugins/main/schemas/statusline.schema.json",
   "title": "Claude Code statusline config",
   "description": "Configuration for the vwf statusline script. The file next to the script holds the defaults; a <repo-root>/.config/statusline.json is deep-merged on top (objects merge key-by-key, arrays replace wholesale).",
   "type": "object",
@@ -8,13 +8,9 @@
   "properties": {
     "$schema": { "type": "string" },
 
-    "repo": {
+    "projectName": {
       "type": "string",
-      "description": "Project display name shown in the `project` segment. When unset, a shortened cwd is shown instead."
-    },
-    "name": {
-      "type": "string",
-      "description": "Alias for `repo`; used only if `repo` is absent."
+      "description": "Project display name shown in the `project` segment. When unset, the segment is omitted."
     },
     "symbol": {
       "type": "string",
