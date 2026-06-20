@@ -35,9 +35,16 @@ code before a failing test exists:
 4. Repeat for each behavior in the plan, in plan order. Do not implement
    anything the plan does not call for.
 5. Run the project's full test suite (e.g. `mise run code:test`, or the
-   equivalent from `mise tasks`) and verify **100% coverage**. This stage does
-   not complete with uncovered lines — keep iterating until coverage is
-   complete.
+   equivalent from `mise tasks`) **non-interactively** — never a watch or serve
+   mode. **Redirect its output to a file and read the summary from there**, e.g.
+   `<test cmd> </dev/null >/tmp/vwf-coder-test.log 2>&1` then inspect the log.
+   Some suites spawn a background helper (a test server, worker, or daemon) that
+   inherits the shell's stdout and keeps the call open **forever even after the
+   tests finish** — redirecting to a file lets the call return regardless. If
+   such a helper is left running after the suite, tear it down before
+   continuing. Then verify **100% coverage**. If lines remain uncovered after a
+   bounded number of attempts, **stop and report them** as `file:line` — do not
+   loop indefinitely chasing coverage.
 
 ## Return contract
 
