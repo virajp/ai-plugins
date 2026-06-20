@@ -48,18 +48,21 @@ the main bar. Errors go to stderr so they never corrupt the line.
 
 ## Configuration
 
-Configuration is layered. Two files are deep-merged at render time:
+Configuration is layered. Three files are deep-merged at render time, in
+increasing precedence (a higher layer overrides the same key in a lower one):
 
-1. **Defaults** — `statusline.json` next to the script. Holds **every**
-   constant: palette, separators, symbols, per-segment styling, the line layout,
-   and the whole subagent panel. This is the baseline for everyone.
-2. **Per-repo overrides** — `<repo-root>/.config/statusline.json`. Merged on top
-   of the defaults.
+1. **Plugin defaults** (lowest) — `${CLAUDE_PLUGIN_ROOT}/bin/statusline.json`,
+   the file shipped with the plugin. Holds **every** constant: palette,
+   separators, symbols, per-segment styling, the line layout, and the whole
+   subagent panel. This is the baseline for everyone. (When `CLAUDE_PLUGIN_ROOT`
+   is unset, the script falls back to the file next to it in `bin/`.)
+2. **Per-user overrides** — `~/.config/statusline.json`. Applied to every repo.
+3. **Per-repo overrides** (highest) — `<repo-root>/.config/statusline.json`.
 
-Merge semantics: **objects merge key-by-key, arrays replace wholesale.** So a
-repo can set just `projectName` and `symbol` and inherit everything else,
-override a single nested value (one segment's `bg`, one symbol, the gauge width,
-a status colour), or replace `lines` entirely.
+Any layer may be absent. Merge semantics: **objects merge key-by-key, arrays
+replace wholesale.** So a repo (or user) can set just `projectName` and `symbol`
+and inherit everything else, override a single nested value (one segment's `bg`,
+one symbol, the gauge width, a status colour), or replace `lines` entirely.
 
 Add the published schema for editor autocompletion and validation (already
 present in the defaults):
