@@ -33,30 +33,20 @@ function updatePlugin() {
   fi
 }
 
-print_header "Adding marketplace to Claude..."
+print_header "Adding virajp/claude-plugins marketplace to Claude ..."
 claude plugin marketplace add virajp/claude-plugins || true
-claude plugin marketplace update virajp-plugins || true
-claude plugin marketplace add MemPalace/mempalace || true
-claude plugin marketplace update mempalace || true
-claude plugin marketplace update claude-plugins-official || true
+
+print_header "Updating all marketplaces ..."
+claude plugin marketplace update || true
 
 print_header "Setting up AI plugins ..."
-updatePlugin context7 claude-plugins-official user
-updatePlugin frontend-design claude-plugins-official user
-updatePlugin mempalace mempalace user
-updatePlugin skills virajp-plugins user
-
-updatePlugin typescript-lsp virajp-plugins user
+updatePlugin context7 virajp-plugins user
+updatePlugin mempalace virajp-plugins user
 
 # Install graphify skill
 print_header "Installing Graphify skill for Claude..."
 graphify install --platform claude
-# print_header "Installing Graphify skill for OpenCode..."
-# graphify install --platform opencode
 
 # Install graphify post-commit hook
 print_header "Installing Graphify post-commit hook..."
 graphify hook install
-
-# OpenCode setup
-# opencode plugin --global "@devtheops/opencode-plugin-mempalace"

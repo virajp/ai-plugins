@@ -74,7 +74,7 @@
     "AGENTS.md": "CLAUDE.md",
     "dockerfile.projects": "docker-bake.hcl",
     "firebase.json": "firebase-debug.json,.firebaserc,*.rules,firestore.indexes.json",
-    "linter.yaml": "taplo.toml,gitleaks.toml,grype.yaml,git-conventional-commits.yaml,pre-commit-config.yaml,",
+    "linter.yaml": "taplo.toml,gitleaks.toml,grype.yaml,git-conventional-commits.yaml,pre-commit-config.yaml,statusline.json,",
     "mise.lock": "mise.*.lock",
     "mise.toml": "miserc.toml,mise.*.toml,root.toml",
     "package.json": "tsconfig.base.json,tsconfig.json,biome.jsonc,waitOn.json,waitOnExternal.json,vitest.config.ts,esbuild.mjs,turbo.json,pnpm-lock.yaml,.npmrc,apphosting.*.yaml,apphosting.yaml,.prettierrc.yaml,.markdownlint.yaml,pnpm-workspace.yaml,build.ts,eslint.config.mjs,doppler.yaml,dprint.json",
