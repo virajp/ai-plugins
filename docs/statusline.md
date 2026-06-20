@@ -17,10 +17,7 @@ data-driven from JSON, so you can restyle it per repo without touching code.
 
 ## What it looks like
 
-```text
-⚡ Opus 4.8 [high]   ▰▰▰▱▱▱▱▱▱▱ 259k/1M (26%)   7.0% ↻ 4h36m   1.0% ↻ 5d2h   users-and-groups   46.51
-my-project   🌲  users-and-groups/backend   🌲  feat/users-and-groups +
-```
+![Statusline rendered in a terminal](./how-it-looks.png)
 
 ## Wiring it up
 
@@ -32,12 +29,12 @@ location:
 {
   "statusLine": {
     "type": "command",
-    "command": "node /absolute/path/to/plugins/vwf/bin/statusline",
+    "command": "${CLAUDE_PLUGIN_ROOT}/bin/statusline",
     "padding": 0
   },
   "subagentStatusLine": {
     "type": "command",
-    "command": "node /absolute/path/to/plugins/vwf/bin/statusline"
+    "command": "${CLAUDE_PLUGIN_ROOT}/bin/statusline"
   }
 }
 ```
