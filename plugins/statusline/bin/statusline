@@ -460,11 +460,15 @@ function renderSubagents(d) {
     if (!t || t.id == null) continue;
     const mk = taskMark(t.status);
 
-    // Head: status glyph · type glyph (replaces the raw type string) · name.
+    // Head: status glyph · type glyph (replaces the raw type string).
     const typeSym = TYPE_SYM[String(t.type || "").toLowerCase()] || TYPE_SYM._default;
-    let head = `${mk.sym} ${typeSym}`;
-    if (t.name) head += ` ${SYM.agent} ${t.name}`;
-    const segs = [{ text: head, bg: mk.bg, fg: headFg, bold: headBold }];
+    const segs = [{ text: `${mk.sym} ${typeSym}`, bg: mk.bg, fg: headFg, bold: headBold }];
+
+    // Name: the subagent's name, as its own configurable segment.
+    if (t.name) {
+      const st = subStyle("name", "orange");
+      segs.push({ text: `${SYM.agent} ${t.name}`, bg: st.bg, fg: st.fg, bold: st.bold });
+    }
 
     // Model / effort: prefer a per-task value (in case a future build adds one),
     // fall back to the panel-wide value, omit when neither is present.

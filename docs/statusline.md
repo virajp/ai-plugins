@@ -140,16 +140,17 @@ disappear when their data is absent (e.g. `session` with no session name,
 
 The `subagent` block configures the panel surface:
 
-| Key                  | Purpose                                                                                        |
-| -------------------- | ---------------------------------------------------------------------------------------------- |
-| `descBudgetFraction` | Fraction of terminal width given to the description before it's truncated (default `0.45`).    |
-| `statuses`           | Status buckets, tried in order. First whose `match` regex hits wins; empty `match` = fallback. |
-| `segments`           | Styling for each row segment: `head`, `model`, `desc`, `tokens`, `duration`.                   |
+| Key                  | Purpose                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `descBudgetFraction` | Fraction of terminal width given to the description before it's truncated (default `0.45`).                           |
+| `statuses`           | Status buckets, tried in order. First whose `match` regex hits wins; empty `match` = fallback.                        |
+| `segments`           | Styling per row segment: `head` (status + type glyph), `name` (subagent name), `model`, `desc`, `tokens`, `duration`. |
 
 Each `statuses` entry is `{ match, symbol, bg }` — `match` is a case-insensitive
 regex against the lower-cased task status, `symbol` is the status glyph, and
 `bg` colours the head segment. The head segment's background always comes from
-the matched status.
+the matched status; the subagent `name` renders as its own segment (styled via
+`subagent.segments.name`) when the task has a name.
 
 ## Examples
 

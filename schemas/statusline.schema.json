@@ -143,7 +143,11 @@
           "properties": {
             "head": {
               "$ref": "#/$defs/style",
-              "description": "Status/type/name head (background comes from the matched status; bg here is ignored)."
+              "description": "Status + type glyph head (background comes from the matched status; bg here is ignored)."
+            },
+            "name": {
+              "$ref": "#/$defs/style",
+              "description": "The subagent's name (rendered when the task has one)."
             },
             "model": { "$ref": "#/$defs/style" },
             "desc": { "$ref": "#/$defs/style" },
