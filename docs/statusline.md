@@ -67,19 +67,17 @@ the main bar. Errors go to stderr so they never corrupt the line.
 
 ## Configuration
 
-Configuration is layered. Three files are deep-merged at render time, in
+Configuration is layered. Two files are deep-merged at render time, in
 increasing precedence (a higher layer overrides the same key in a lower one):
 
-1. **Defaults beside the script** (lowest) — the script reads a
-   `statusline.json` next to itself if present. The installer no longer writes
-   one here, so this layer is normally empty.
-2. **Per-user** — `~/.config/statusline.json`. The installer seeds this with the
-   **full** default config (palette, symbols, per-segment styling, line layout,
-   subagent panel, …) and, on re-run, deep-merges any settings you're missing
-   while preserving your edits. This is your global, editable config.
-3. **Per-repo overrides** (highest) — `<repo-root>/.config/statusline.json`.
+1. **Per-user** (lowest) — `~/.config/statusline.json`. The installer seeds this
+   with the **full** default config (palette, symbols, per-segment styling, line
+   layout, subagent panel, …) and, on re-run, deep-merges any settings you're
+   missing while preserving your edits. This is your global, editable config and
+   the source of all defaults.
+2. **Per-repo overrides** (highest) — `<repo-root>/.config/statusline.json`.
 
-Any layer may be absent. Merge semantics: **objects merge key-by-key, arrays
+Either layer may be absent. Merge semantics: **objects merge key-by-key, arrays
 replace wholesale.** So a repo (or user) can set just `projectName` and inherit
 everything else, override a single nested value (one segment's `bg`, one symbol,
 the gauge width, a status colour), or replace `lines` entirely.

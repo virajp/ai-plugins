@@ -135,14 +135,13 @@ already exists, preserving user edits), and writes the chosen key(s) into
 unless `--yes`). Users run it via `npx @askviraj/ai-plugins …` — there is no
 `claude plugin install` path.
 
-**Three-layer config**, deep-merged low → high (objects merge key-by-key, arrays
-replace wholesale; any layer may be absent):
+**Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
+replace wholesale; either layer may be absent):
 
-1. `statusline.json` beside the installed script (lowest) — read if present; the
-   installer no longer writes one here, so normally empty.
-2. `~/.config/statusline.json` — per-user; the installer seeds this with the
-   full defaults and deep-merges missing settings on re-run.
-3. `<repo-root>/.config/statusline.json` — per-repo (highest).
+1. `~/.config/statusline.json` (lowest) — per-user; the installer seeds this
+   with the full defaults and deep-merges missing settings on re-run. The script
+   reads defaults **only** from here, never from a file beside itself.
+2. `<repo-root>/.config/statusline.json` — per-repo (highest).
 
 The JSON Schema lives at the **repo root** under
 `schemas/statusline.schema.json` (consumed only via its raw GitHub URL,

@@ -14,13 +14,12 @@
  * panel (one NDJSON {id,content} row per subagent); anything else is the main
  * two-line status bar. Debug goes to stderr so it never corrupts the line.
  *
- * Configuration is fully data-driven and layered. Three files are deep-merged,
+ * Configuration is fully data-driven and layered. Two files are deep-merged,
  * low → high precedence (a higher layer overrides the same key in a lower one;
- * objects merge key-by-key, arrays replace wholesale). Any layer may be absent:
- *   3. statusline.json next to this script — the DEFAULTS. Holds every constant:
- *      palette, powerline glyphs, symbols, per-segment styling, line layout, and
- *      the subagent panel config.
- *   2. ~/.config/statusline.json — per-USER overrides, applied to every repo.
+ * objects merge key-by-key, arrays replace wholesale). Either layer may be absent:
+ *   2. ~/.config/statusline.json — the per-USER config, applied to every repo.
+ *      Seeded with the full defaults by the installer (palette, symbols, line
+ *      layout, subagent panel, …).
  *   1. <repo-root>/.config/statusline.json — per-REPO overrides (highest).
  * So a repo can set just `projectName` and inherit everything else, or override
  * any nested value (a single segment's bg, one symbol, the gauge width, a status
@@ -46,7 +45,7 @@ const os = require("os");
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
 
-// Config filename, shared across all three layers.
+// Config filename, shared across both layers.
 const CONFIG_FILE = "statusline.json";
 // Relative location under a home/repo root for the user & repo layers.
 const CONFIG_REL = [".config", CONFIG_FILE];
@@ -80,18 +79,12 @@ function readJson(p) {
   try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (_) { return null; }
 }
 
-// Layer 3 (defaults): statusline.json next to this script.
-function defaultConfigPath() {
-  return path.join(__dirname, CONFIG_FILE);
-}
-
-// Merge the three config layers, low → high precedence — each present layer is
+// Merge the two config layers, low → high precedence — each present layer is
 // deep-merged onto the accumulator so a higher layer wins:
-//   3. defaults  ->  2. ~/.config/statusline.json  ->  1. <root>/.config/statusline.json
+//   2. ~/.config/statusline.json (per-user)  ->  1. <root>/.config/statusline.json (per-repo)
+// The per-user file is seeded with the full defaults by the installer.
 function loadConfig(root) {
-  let cfg = readJson(defaultConfigPath()) || {};
-  const user = readJson(path.join(os.homedir(), ...CONFIG_REL));
-  if (user) cfg = deepMerge(cfg, user);
+  let cfg = readJson(path.join(os.homedir(), ...CONFIG_REL)) || {};
   const repo = root ? readJson(path.join(root, ...CONFIG_REL)) : null;
   if (repo) cfg = deepMerge(cfg, repo);
   return cfg;
