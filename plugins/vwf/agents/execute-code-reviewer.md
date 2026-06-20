@@ -35,12 +35,17 @@ Merge both into one findings list. Do not rewrite the code — report only.
 
 ## Return contract
 
+Your entire reply is read verbatim into the orchestrator's context window.
+Synthesize — do **not** paste `/code-review` output, diffs, code excerpts, or
+per-file walkthroughs, and add no praise, "verified safe", or "looks good"
+notes. Report only real findings. Output **only** the block below:
+
 ```text
-FINDINGS:
-- [severity] <finding — file:line — what's wrong and why> (or "none")
-SPEC COMPLIANCE: <met / gaps listed>
-VERDICT: <approve / changes-required>
+FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
+- [severity] file:line — what's wrong and why   # (or the single line "none")
+SPEC COMPLIANCE: met   # or "gaps: <terse list>"
+VERDICT: approve   # or "changes-required"
 ```
 
-If `changes-required`, the orchestrator loops back to the code stage before
-re-review.
+Nothing before or after the block. If `changes-required`, the orchestrator loops
+back to the code stage before re-review.

@@ -48,6 +48,12 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
   times**: worktree at the start, a commit after each stage's work lands, and a
   final merge/push behind the approval gate. Never run raw git.
 - **Model enforcement** — dispatch each subagent on the model specified above.
+- **Terse subagent output** — a subagent's full reply lands in this
+  orchestrator's context. The pipeline agents already return fixed contract
+  blocks; for any *other* agent you spawn (e.g. `Explore` for research),
+  instruct it to return only conclusions and `file:line` pointers — never code
+  excerpts, diffs, or full file/dir dumps. Read files yourself when you need
+  their contents.
 - **Approval gates** — pause for explicit user approval before advancing. Never
   chain stages automatically.
 - **Loop on findings** — if review or security finds issues, loop back to `code`

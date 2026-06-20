@@ -29,11 +29,17 @@ Merge both into one rated findings list. Do not rewrite the code — report only
 
 ## Return contract
 
+Your entire reply is read verbatim into the orchestrator's context window.
+Synthesize — do **not** paste `/security-review` output, diffs, or code, and add
+no reassurances about what is safe or already-mitigated. Report only real
+findings. Output **only** the block below:
+
 ```text
-FINDINGS:
-- [severity: critical/high/medium/low] <finding — file:line — attack surface, exploitability, impact> (or "none")
-VERDICT: <approve / changes-required>
+FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
+- [critical/high/medium/low] file:line — surface · exploitability · impact   # (or "none")
+VERDICT: approve   # or "changes-required"
 ```
 
-A finding rated high or critical means `changes-required`; the orchestrator
-loops back to the code stage before re-review.
+Nothing before or after the block. A finding rated high or critical means
+`changes-required`; the orchestrator loops back to the code stage before
+re-review.

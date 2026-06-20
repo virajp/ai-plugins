@@ -41,11 +41,17 @@ code before a failing test exists:
 
 ## Return contract
 
-Return the coverage report plus a short summary:
+Your entire reply is read verbatim into the orchestrator's context window — keep
+it minimal. Output **only** the block below: no preamble, no narrative, no
+design notes, no "what I did" recap, and **never** paste test-runner output,
+diffs, or file contents.
 
 ```text
 IMPLEMENTED:
-- <one line per change, tied to the plan step it satisfies>
-TESTS: <suite command run> — <pass/fail counts>
-COVERAGE: <overall %> (must be 100%; list any uncovered lines if not)
+- <one terse line per plan step satisfied>   # ≤ 8 lines total
+TESTS: <suite command> — <N passed / M failed>
+COVERAGE: <overall %>   # if < 100%, append "— uncovered: file:line, file:line …"
 ```
+
+Nothing before or after the block. If a gate failed and you stopped, say so in
+one line in place of the relevant field — do not narrate the attempts.

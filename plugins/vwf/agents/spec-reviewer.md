@@ -59,5 +59,7 @@ GAPS:
 2. ...
 ```
 
-Do not include praise, summaries, or fixes — only `NO GAPS` or the numbered gap
-list.
+Your entire reply is read verbatim into the orchestrator's context window.
+Output **only** `NO GAPS` or the `GAPS:` list — never echo the doc, the
+checklist, your reasoning, or any praise, summary, or fix. One terse line per
+gap.

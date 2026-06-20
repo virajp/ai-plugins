@@ -102,12 +102,15 @@ grows.
 
 ## Return Contract
 
-After writing or editing `docs/specs/architecture.md`, return exactly:
+Your entire reply is read verbatim into the orchestrator's context window — the
+written file is on disk, so do **not** paste the doc, the yaml block, or section
+prose back. After writing or editing `docs/specs/architecture.md`, output
+**only** the block below, nothing before or after:
 
 ```text
 FILES_WRITTEN: docs/specs/architecture.md
 CHANGES:
-- <one line per section/registry change>
+- <one terse line per section/registry change>   # ≤ 10 lines total
 UNRESOLVED:
-- <anything left as TODO, with why> (or "none")
+- <TODO + why> (or "none")
 ```
