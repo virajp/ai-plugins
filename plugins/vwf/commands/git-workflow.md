@@ -44,11 +44,26 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 ```
 
 **Submodule guard:** `GIT_DIR != GIT_COMMON` is also true inside git submodules.
-Verify you are not in a submodule before concluding "already in a worktree":
+Before concluding anything, resolve whether you are inside a submodule:
 
 ```bash
-git rev-parse --show-superproject-working-tree 2>/dev/null
+SUPERPROJECT=$(git rev-parse --show-superproject-working-tree 2>/dev/null)
 ```
+
+**If `SUPERPROJECT` is non-empty, you are inside a submodule.** The worktree
+must be created for the **parent repo**, never for the submodule. Move to the
+superproject root and re-run the detection from there — every step below
+(consent, worktree creation, submodule init) then operates on the parent repo:
+
+```bash
+cd "$SUPERPROJECT"
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+```
+
+If the parent repo is itself nested in a further superproject, repeat until
+`git rev-parse --show-superproject-working-tree` is empty — the worktree is
+always created at the outermost parent.
 
 **If `GIT_DIR != GIT_COMMON` (and not a submodule):** You are already in a
 linked worktree — skip directly to Step 3. Do NOT create another worktree.
