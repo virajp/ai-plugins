@@ -1,0 +1,512 @@
+#!/usr/bin/env node
+"use strict";
+
+/**
+ * Claude Code statusline — powerline style, config-driven, with subagent mode.
+ *
+ * ONE file serves both surfaces. Wire both keys to it in ~/.claude/settings.json:
+ *   {
+ *     "statusLine":         { "type": "command", "command": "node ~/.claude/statusline", "padding": 0 },
+ *     "subagentStatusLine": { "type": "command", "command": "node ~/.claude/statusline" }
+ *   }
+ *
+ * Mode is detected from stdin: a payload with a `tasks` array is the subagent
+ * panel (one NDJSON {id,content} row per subagent); anything else is the main
+ * two-line status bar. Debug goes to stderr so it never corrupts the line.
+ *
+ * Configuration is fully data-driven and layered. Two files are merged:
+ *   1. statusline.json next to this script — the DEFAULTS. Holds every constant:
+ *      palette, powerline glyphs, symbols, per-segment styling, line layout, and
+ *      the subagent panel config. Edit it to change the defaults for everyone.
+ *   2. <repo-root>/.config/statusline.json — per-repo OVERRIDES. Deep-merged on
+ *      top of the defaults (objects merge key-by-key; arrays replace wholesale),
+ *      so a repo can set just `repo`/`symbol` and inherit everything else, or
+ *      override any nested value (a single segment's bg, one symbol, the gauge
+ *      width, a status colour, …).
+ *
+ * Colours accept three forms anywhere a colour is expected: a palette name
+ * ("blue"), a hex string ("#458588" or "#abc"), or an RGB triple ([69,133,136]).
+ *
+ * A line is a list of segment entries. An entry is either a segment id string
+ * ("model") or an object {name, bg?, fg?, bold?} that overrides that segment's
+ * styling inline — both resolve their defaults from the `segments` map.
+ *
+ * Main test:
+ *   echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"session_name":"users-and-groups","workspace":{"current_dir":"/Users/virajpatel/Projects/github.com/95octane/workspace/.worktrees/users-and-groups/backend"},"cost":{"total_cost_usd":46.51,"total_duration_ms":33540000},"context_window":{"used_percentage":26,"context_window_size":1000000,"total_input_tokens":259000},"rate_limits":{"five_hour":{"used_percentage":7,"resets_at":1774200000},"seven_day":{"used_percentage":1.0,"resets_at":1774600000}}}' | node statusline
+ * Subagent test:
+ *   echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node statusline
+ */
+
+const fs = require("fs");
+const path = require("path");
+
+const RESET = "\x1b[0m";
+const BOLD = "\x1b[1m";
+
+// Where to find the two config layers.
+const DEFAULT_CONFIG_PATH = path.join(__dirname, "statusline.json");
+const REPO_CONFIG_REL = [".config", "statusline.json"];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Config — resolved once per invocation, then exposed as module state so the
+// segment builders and renderers can stay terse.
+// ─────────────────────────────────────────────────────────────────────────────
+let CFG = {};          // the fully merged config object
+let PALETTE = {};      // name -> [r,g,b]
+let SYM = {};          // data-type glyphs
+let TYPE_SYM = {};     // subagent type -> glyph
+let GAUGE = {};        // { width, filled, empty }
+let SUB = {};          // subagent panel config
+let SEP, SEP_THIN, CAP, THIN_FG, DEFAULT_FG, WORKTREE_RE;
+
+const isObj = (v) => v != null && typeof v === "object" && !Array.isArray(v);
+
+// Deep-merge `override` onto `base`: objects merge recursively, everything else
+// (scalars AND arrays) is replaced wholesale by the override.
+function deepMerge(base, override) {
+  if (!isObj(base) || !isObj(override)) return override === undefined ? base : override;
+  const out = { ...base };
+  for (const k of Object.keys(override)) {
+    out[k] = isObj(base[k]) && isObj(override[k]) ? deepMerge(base[k], override[k]) : override[k];
+  }
+  return out;
+}
+
+function readJson(p) {
+  try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (_) { return null; }
+}
+
+// Defaults (next to script) ⊕ repo overrides (<root>/.config/statusline.json).
+function loadConfig(root) {
+  const defaults = readJson(DEFAULT_CONFIG_PATH) || {};
+  const repo = root ? readJson(path.join(root, ...REPO_CONFIG_REL)) : null;
+  return repo ? deepMerge(defaults, repo) : defaults;
+}
+
+// Hoist the hot paths of the merged config into module state.
+function applyConfig(cfg) {
+  CFG = cfg || {};
+  PALETTE = CFG.palette || {};
+  SYM = CFG.symbols || {};
+  TYPE_SYM = CFG.typeSymbols || {};
+  GAUGE = CFG.gauge || {};
+  SUB = CFG.subagent || {};
+  const pl = CFG.powerline || {};
+  SEP = pl.sep ?? "";
+  SEP_THIN = pl.sepThin ?? "";
+  CAP = pl.cap ?? "";
+  THIN_FG = color(pl.thinFg || "grey");
+  DEFAULT_FG = color(CFG.defaultFg || "white");
+  WORKTREE_RE = new RegExp(CFG.worktreePattern || "worktree", "i");
+}
+
+// Resolve a colour spec to an [r,g,b] triple. Accepts a palette name, a hex
+// string ("#rgb" or "#rrggbb"), or a literal triple. Falls back to white.
+function color(v) {
+  if (Array.isArray(v) && v.length === 3) return v;
+  if (typeof v === "string") {
+    if (PALETTE[v]) return PALETTE[v];
+    if (v[0] === "#") {
+      let h = v.slice(1);
+      if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+      if (h.length === 6) {
+        const n = parseInt(h, 16);
+        if (!isNaN(n)) return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+      }
+    }
+  }
+  return PALETTE.white || [251, 241, 199];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANSI + powerline rendering.
+// ─────────────────────────────────────────────────────────────────────────────
+const fg = ([r, g, b]) => `\x1b[38;2;${r};${g};${b}m`;
+const bg = ([r, g, b]) => `\x1b[48;2;${r};${g};${b}m`;
+const sameColor = (a, b) => a && b && a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+
+/**
+ * Render one powerline row from an ordered list of segments {text, bg, fg?, bold?}.
+ * Opens with a rounded CAP colored as the first bg, joins neighbours with the
+ * fill triangle (fg = prev bg, bg = next bg), and when two neighbours share a
+ * background uses a thin divider so the seam stays visible. Closes with a
+ * triangle that dissolves into the terminal's own background.
+ */
+function renderLine(segments) {
+  let out = "";
+  if (!segments.length) return out;
+  out += fg(segments[0].bg) + CAP + RESET;
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    out += bg(seg.bg) + fg(seg.fg || DEFAULT_FG) + (seg.bold ? BOLD : "");
+    out += ` ${seg.text} ` + RESET;
+
+    const next = segments[i + 1];
+    if (next && sameColor(seg.bg, next.bg)) {
+      out += bg(next.bg) + fg(THIN_FG) + SEP_THIN + RESET; // shared bg: thin seam
+    } else if (next) {
+      out += fg(seg.bg) + bg(next.bg) + SEP + RESET;       // colored transition
+    } else {
+      out += fg(seg.bg) + SEP + RESET;                     // closing cap
+    }
+  }
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Formatting utilities.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Normalize a model field (object {display_name|id} or plain string) to a label.
+function modelName(m) {
+  if (!m) return "";
+  const s = m.display_name || m.id || (typeof m === "string" ? m : "");
+  return s.replace(/\s*\([^)]*\)\s*$/, "");
+}
+
+// Normalize an effort field (object {level} or plain string) to a level string.
+function effortLevel(e) {
+  if (!e) return "";
+  return e.level || (typeof e === "string" ? e : "");
+}
+
+// Compact path: collapse $HOME to ~, keep the last N components.
+function shortPath(p, keep = 3) {
+  if (!p) return "";
+  const home = process.env.HOME || "";
+  let s = home && p.startsWith(home) ? "~" + p.slice(home.length) : p;
+  const parts = s.split("/").filter(Boolean);
+  const lead = s.startsWith("~") ? "" : "/";
+  if (parts.length <= keep) return lead + parts.join("/");
+  return "…/" + parts.slice(-keep).join("/");
+}
+
+// 1234567 -> "1.2M", 259000 -> "259k"
+function humanTokens(n) {
+  if (n == null || isNaN(n)) return "?";
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1e3) return Math.round(n / 1e3) + "k";
+  return String(n);
+}
+
+// ms -> "9hr 19m" / "4m 12s"
+function humanDuration(ms) {
+  if (ms == null || isNaN(ms)) return "?";
+  let s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600); s -= h * 3600;
+  const m = Math.floor(s / 60);   s -= m * 60;
+  if (h > 0) return `${h}hr ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+// Normalize a timestamp to epoch milliseconds. Accepts:
+//   - epoch seconds  (10-digit number, e.g. 1774200000)
+//   - epoch millis   (13-digit number)
+//   - ISO 8601 string ("2026-03-28T15:00:00Z")
+// Returns null if unparseable.
+function toEpochMs(v) {
+  if (v == null) return null;
+  if (typeof v === "number") return v > 1e12 ? v : v * 1000;
+  const t = Date.parse(String(v));
+  return isNaN(t) ? null : t;
+}
+
+// Time remaining until a reset timestamp -> "4h36m" / "5d2h" / "now".
+// Hardened to accept epoch seconds, epoch millis, or an ISO string.
+function humanResetIn(resetsAt) {
+  const ms = toEpochMs(resetsAt);
+  if (ms == null) return null;
+  let s = Math.floor((ms - Date.now()) / 1000);
+  if (s <= 0) return "now";
+  const d = Math.floor(s / 86400); s -= d * 86400;
+  const h = Math.floor(s / 3600);  s -= h * 3600;
+  const m = Math.floor(s / 60);
+  if (d > 0) return `${d}d${h}h`;
+  return h > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${m}m`;
+}
+
+// Fixed-width gauge: filled vs empty blocks (glyphs + width from config).
+function gauge(pct) {
+  const width = GAUGE.width || 10;
+  const p = Math.max(0, Math.min(100, pct || 0));
+  const filled = Math.round((p / 100) * width);
+  return (GAUGE.filled || "▰").repeat(filled) + (GAUGE.empty || "▱").repeat(width - filled);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Git (filesystem-only branch/root; one bounded git call for dirtiness).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Walk up from startDir resolving repo root (dir containing .git) and branch
+// from .git/HEAD. Handles worktrees/submodules (.git as a gitdir pointer file).
+function resolveGit(startDir) {
+  let dir = startDir;
+  for (let i = 0; i < 40 && dir; i++) {
+    try {
+      const gitPath = path.join(dir, ".git");
+      const st = fs.statSync(gitPath);
+      let headFile;
+      if (st.isDirectory()) {
+        headFile = path.join(gitPath, "HEAD");
+      } else {
+        const ref = fs.readFileSync(gitPath, "utf8").trim();
+        const m = ref.match(/^gitdir:\s*(.+)$/);
+        if (!m) return { root: dir, branch: null };
+        const gd = path.isAbsolute(m[1]) ? m[1] : path.join(dir, m[1]);
+        headFile = path.join(gd, "HEAD");
+      }
+      const head = fs.readFileSync(headFile, "utf8").trim();
+      const rm = head.match(/^ref:\s*refs\/heads\/(.+)$/);
+      return { root: dir, branch: rm ? rm[1] : head.slice(0, 7) };
+    } catch (_) {
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  return { root: null, branch: null };
+}
+
+// Path after a "worktree" keyword component, else null.
+function worktreeSubpath(cwd) {
+  const parts = cwd.split("/").filter(Boolean);
+  let idx = -1;
+  for (let i = 0; i < parts.length; i++) if (WORKTREE_RE.test(parts[i])) idx = i;
+  if (idx === -1 || idx === parts.length - 1) return null;
+  return parts.slice(idx + 1).join("/");
+}
+
+// Single dirty marker: "+" net additions, "-" net deletions, "±" both, "" clean.
+// Shells out to git once (twice on a fresh repo), bounded by a 250ms timeout.
+function gitDirtyMark(cwd) {
+  const { execFileSync } = require("child_process");
+  const opts = { cwd, encoding: "utf8", timeout: 250, stdio: ["ignore", "pipe", "ignore"] };
+  const run = (args) => execFileSync("git", args, opts);
+  let added = 0, removed = 0;
+  try {
+    let numstat;
+    try { numstat = run(["diff", "--numstat", "HEAD"]); }
+    catch (_) { numstat = run(["diff", "--numstat", "--cached"]); }
+    for (const line of numstat.split("\n")) {
+      const m = line.match(/^(\d+|-)\t(\d+|-)\t/);
+      if (!m) continue;
+      if (m[1] !== "-") added += parseInt(m[1], 10);
+      if (m[2] !== "-") removed += parseInt(m[2], 10);
+    }
+    if (run(["ls-files", "--others", "--exclude-standard"]).trim()) added += 1;
+  } catch (_) {
+    return "";
+  }
+  if (added && removed) return SYM.dirtyMix;
+  if (added) return SYM.dirtyAdd;
+  if (removed) return SYM.dirtyDel;
+  return "";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Segment registry — each builder takes the resolved context `c` and returns the
+// segment TEXT (a string), or null to omit (when its data is absent). All styling
+// (bg/fg/bold) is resolved separately from the `segments` config + inline entry
+// overrides, so this map carries only the text logic. Add an entry here plus a
+// `segments.<id>` default style to introduce a new segment.
+// ─────────────────────────────────────────────────────────────────────────────
+const SEGMENTS = {
+  model: (c) => `${SYM.model} ${c.model}${c.effort ? ` [${c.effort}]` : ""}`,
+  context: (c) =>
+    `${SYM.context} ${gauge(c.ctxPct)} ${humanTokens(c.ctxUsed)}/${humanTokens(c.ctxSize)} (${Math.round(c.ctxPct)}%)`,
+  rl5h: (c) => c.sessPct == null ? null
+    : `${SYM.win5h} ${c.sessPct.toFixed(1)}%${c.reset5h ? ` ${SYM.reset} ${c.reset5h}` : ""}`,
+  rl7d: (c) => c.weekPct == null ? null
+    : `${SYM.win7d} ${c.weekPct.toFixed(1)}%${c.reset7d ? ` ${SYM.reset} ${c.reset7d}` : ""}`,
+  session: (c) => c.sessionName ? `${SYM.session} ${c.sessionName}` : null,
+  cost: (c) => `${SYM.cost} ${c.cost.toFixed(2)}`,
+  duration: (c) => c.dur == null ? null : `${SYM.duration} ${humanDuration(c.dur)}`,
+  project: (c) => c.repoName ? `${c.repoSym} ${c.repoName}` : shortPath(c.cwd, 3),
+  worktree: (c) => c.wt ? `${SYM.worktree} ${SYM.folder} ${c.wt}` : null,
+  branch: (c) => {
+    if (!c.branch) return null;
+    let t = c.wt ? `${SYM.worktree} ${SYM.branch} ${c.branch}` : `${SYM.branch} ${c.branch}`;
+    if (c.dirty) t += ` ${c.dirty}`;
+    return t;
+  },
+};
+
+// Build one rendered segment from a line entry (id string or {name,bg,fg,bold}),
+// resolving styling as: inline override → segments.<id> default → hard fallback.
+function buildSegment(entry, c) {
+  const id = typeof entry === "string" ? entry : (entry.name || entry.id);
+  const build = SEGMENTS[id];
+  if (!build) { process.stderr.write(`statusline: unknown segment "${id}"\n`); return null; }
+
+  let text;
+  try { text = build(c); } catch (_) { return null; }
+  if (text == null) return null;
+
+  const base = (CFG.segments && CFG.segments[id]) || {};
+  const inline = typeof entry === "string" ? {} : entry;
+  const bgSpec = inline.bg ?? base.bg ?? "blue";
+  const fgSpec = inline.fg ?? base.fg;
+  const bold = inline.bold ?? base.bold ?? false;
+  return { text, bg: color(bgSpec), fg: fgSpec ? color(fgSpec) : undefined, bold: !!bold };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main status bar.
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMain(d) {
+  const cwd = d.workspace?.current_dir || d.cwd || process.cwd();
+  const git = resolveGit(cwd);
+  applyConfig(loadConfig(git.root));
+
+  const ctx     = d.context_window || {};
+  const usage   = ctx.current_usage || {};
+  const ctxSize = ctx.context_window_size;
+  const ctxPct  = ctx.used_percentage ?? 0;
+  // Prefer the input-only total (matches used_percentage); fall back gracefully.
+  const ctxUsed =
+    ctx.total_input_tokens ??
+    ([usage.input_tokens, usage.cache_creation_input_tokens, usage.cache_read_input_tokens]
+      .reduce((a, v) => a + (v || 0), 0) || null) ??
+    (ctxSize ? Math.round((ctxPct / 100) * ctxSize) : null);
+
+  const rl     = d.rate_limits || {};
+  const weekly = rl.seven_day || rl.weekly || {};
+
+  const c = {
+    model: modelName(d.model) || "Claude",
+    effort: effortLevel(d.effort),
+    cost: d.cost?.total_cost_usd ?? 0,
+    dur: d.cost?.total_duration_ms,
+    ctxPct, ctxUsed, ctxSize,
+    sessPct: rl.five_hour?.used_percentage,
+    weekPct: weekly.used_percentage,
+    reset5h: humanResetIn(rl.five_hour?.resets_at),
+    reset7d: humanResetIn(weekly.resets_at),
+    sessionName: d.session_name,
+    cwd,
+    repoName: CFG.repo || CFG.name,
+    repoSym: CFG.symbol || SYM.repo,
+    wt: worktreeSubpath(cwd),
+    branch: git.branch,
+    dirty: git.branch ? gitDirtyMark(cwd) : "",
+  };
+
+  const lines = Array.isArray(CFG.lines) ? CFG.lines : [];
+  return lines
+    .map((line) => {
+      const segs = (Array.isArray(line) ? line : [])
+        .map((entry) => buildSegment(entry, c))
+        .filter(Boolean);
+      return segs.length ? renderLine(segs) : null;
+    })
+    .filter((l) => l != null)
+    .join("\n");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Subagent panel — one NDJSON {id, content} row per running subagent.
+// Input shape: { columns, tasks: [{ id, name, type, status, description,
+//                label, startTime, tokenCount, cwd }, ...] }.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Map a status string to its configured glyph + colour. Statuses are tried in
+// config order; the first whose `match` regex hits wins. An entry with an empty
+// `match` is the fallback for anything unmatched (pending / queued / unknown).
+function taskMark(status) {
+  const s = String(status || "").toLowerCase();
+  const statuses = SUB.statuses || {};
+  let fallback = null;
+  for (const def of Object.values(statuses)) {
+    if (!def || !def.match) { if (def) fallback = def; continue; }
+    try { if (new RegExp(def.match, "i").test(s)) return { sym: def.symbol, bg: color(def.bg) }; }
+    catch (_) { /* bad regex in config: skip */ }
+  }
+  if (fallback) return { sym: fallback.symbol, bg: color(fallback.bg) };
+  return { sym: "", bg: color("bg3") };
+}
+
+// Resolve a subagent segment's styling from subagent.segments.<key>.
+function subStyle(key, fallbackBg) {
+  const s = (SUB.segments && SUB.segments[key]) || {};
+  return { bg: color(s.bg || fallbackBg), fg: s.fg ? color(s.fg) : undefined, bold: !!s.bold };
+}
+
+function renderSubagents(d) {
+  const cwd = d.cwd || (Array.isArray(d.tasks) && d.tasks[0] && d.tasks[0].cwd) || process.cwd();
+  applyConfig(loadConfig(resolveGit(cwd).root));
+
+  const tasks = Array.isArray(d.tasks) ? d.tasks : [];
+  const cols = Number(d.columns) || Number(process.env.COLUMNS) || 80;
+  const budgetFraction = SUB.descBudgetFraction ?? 0.45;
+
+  // Panel-wide fallbacks. Per the documented schema neither model nor effort is
+  // a per-task field, so these are usually the only source — and may be absent
+  // entirely. We read them defensively and only render when something exists.
+  const topModel = modelName(d.model);
+  const topEffort = effortLevel(d.effort);
+
+  const headBold = !!(SUB.segments && SUB.segments.head && SUB.segments.head.bold);
+  const headFg = SUB.segments && SUB.segments.head && SUB.segments.head.fg
+    ? color(SUB.segments.head.fg) : undefined;
+
+  const out = [];
+  for (const t of tasks) {
+    if (!t || t.id == null) continue;
+    const mk = taskMark(t.status);
+
+    // Head: status glyph · type glyph (replaces the raw type string) · name.
+    const typeSym = TYPE_SYM[String(t.type || "").toLowerCase()] || TYPE_SYM._default;
+    let head = `${mk.sym} ${typeSym}`;
+    if (t.name) head += ` ${SYM.agent} ${t.name}`;
+    const segs = [{ text: head, bg: mk.bg, fg: headFg, bold: headBold }];
+
+    // Model / effort: prefer a per-task value (in case a future build adds one),
+    // fall back to the panel-wide value, omit when neither is present.
+    const model = modelName(t.model) || topModel;
+    const effort = effortLevel(t.effort) || topEffort;
+    if (model || effort) {
+      const label = [model, effort ? `[${effort}]` : ""].filter(Boolean).join(" ");
+      const st = subStyle("model", "blue");
+      segs.push({ text: `${SYM.model} ${label}`, bg: st.bg, fg: st.fg, bold: st.bold });
+    }
+
+    const desc = (t.description || t.label || "").replace(/\s+/g, " ").trim();
+    if (desc) {
+      const budget = Math.max(12, Math.floor(cols * budgetFraction));
+      const st = subStyle("desc", "bg3");
+      segs.push({ text: desc.length > budget ? desc.slice(0, budget - 1) + "…" : desc, bg: st.bg, fg: st.fg, bold: st.bold });
+    }
+    if (t.tokenCount != null) {
+      const st = subStyle("tokens", "aqua");
+      segs.push({ text: `${SYM.tokens} ${humanTokens(t.tokenCount)}`, bg: st.bg, fg: st.fg, bold: st.bold });
+    }
+
+    const startMs = toEpochMs(t.startTime);
+    if (startMs) {
+      const st = subStyle("duration", "purple");
+      segs.push({ text: `${SYM.duration} ${humanDuration(Date.now() - startMs)}`, bg: st.bg, fg: st.fg, bold: st.bold });
+    }
+
+    out.push(JSON.stringify({ id: t.id, content: renderLine(segs) }));
+  }
+  return out.join("\n");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// stdin plumbing — route by payload shape.
+// ─────────────────────────────────────────────────────────────────────────────
+let buf = "";
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (c) => (buf += c));
+process.stdin.on("end", () => {
+  try {
+    let d = {};
+    try { d = JSON.parse(buf); } catch (_) { /* keep defaults */ }
+    const output = Array.isArray(d.tasks) ? renderSubagents(d) : renderMain(d);
+    process.stdout.write(output);
+  } catch (e) {
+    process.stderr.write(`statusline error: ${e && e.stack ? e.stack : e}\n`);
+    process.stdout.write("⚡ Claude"); // never leave the line blank
+  }
+});

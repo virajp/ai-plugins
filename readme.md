@@ -67,6 +67,13 @@ claude plugin install --scope project vwf@virajp-plugins
 | `karpathy-guidelines` | Behavioral guidelines to reduce common LLM coding mistakes: avoid overcomplication, make surgical changes, surface assumptions, define verifiable success criteria |
 | `rest-api-design`     | Technology-agnostic principles and best practices for designing REST APIs                                                                                          |
 
+#### vwf statusline
+
+`vwf` also ships a powerline-style, config-driven statusline (main bar +
+subagent panel). Restyle it per repo via `<repo-root>/.config/statusline.json`.
+See **[STATUSLINE.md](STATUSLINE.md)** for setup and the full configuration
+reference.
+
 #### vwf dependencies
 
 All of vwf's dependencies live in the **same `virajp-plugins` marketplace**
