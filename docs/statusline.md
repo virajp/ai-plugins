@@ -57,9 +57,9 @@ Configuration is layered. Two files are deep-merged at render time:
    of the defaults.
 
 Merge semantics: **objects merge key-by-key, arrays replace wholesale.** So a
-repo can set just `repo` and `symbol` and inherit everything else, override a
-single nested value (one segment's `bg`, one symbol, the gauge width, a status
-colour), or replace `lines` entirely.
+repo can set just `projectName` and `symbol` and inherit everything else,
+override a single nested value (one segment's `bg`, one symbol, the gauge width,
+a status colour), or replace `lines` entirely.
 
 Add the published schema for editor autocompletion and validation (already
 present in the defaults):
@@ -85,7 +85,7 @@ it everywhere.
 
 | Key               | Type            | Purpose                                                                                      |
 | ----------------- | --------------- | -------------------------------------------------------------------------------------------- |
-| `repo` / `name`   | string          | Project display name for the `project` segment. Unset → a shortened cwd is shown.            |
+| `projectName`     | string          | Project display name for the `project` segment. Unset → the segment is omitted.              |
 | `symbol`          | string          | Glyph before the project name. Defaults to `symbols.repo`.                                   |
 | `palette`         | map<name,RGB>   | Named colours as `[r,g,b]` triples.                                                          |
 | `powerline`       | object          | Divider glyphs: `sep`, `sepThin`, `cap`, and `thinFg` (colour of the thin divider).          |
@@ -112,7 +112,7 @@ the `segments` map. A row that resolves to no visible segments is dropped.
 Available segment ids: `model`, `context`, `rl5h`, `rl7d`, `session`, `cost`,
 `duration`, `project`, `worktree`, `branch`. Several render conditionally and
 disappear when their data is absent (e.g. `session` with no session name,
-`worktree`/`branch` outside a repo).
+`project` with no `projectName`, `worktree`/`branch` outside a repo).
 
 ```json
 "lines": [
@@ -143,7 +143,7 @@ the matched status.
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/plugins/vwf/schemas/statusline.schema.json",
-  "repo": "my-project",
+  "projectName": "my-project",
   "symbol": ""
 }
 ```

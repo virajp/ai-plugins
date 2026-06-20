@@ -71,8 +71,8 @@ claude plugin install --scope project vwf@virajp-plugins
 
 `vwf` also ships a powerline-style, config-driven statusline (main bar +
 subagent panel). Restyle it per repo via `<repo-root>/.config/statusline.json`.
-See **[STATUSLINE.md](STATUSLINE.md)** for setup and the full configuration
-reference.
+See **[STATUSLINE.md](./docs/statusline.md)** for setup and the full
+configuration reference.
 
 #### vwf dependencies
 
