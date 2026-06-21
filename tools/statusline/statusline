@@ -65,11 +65,14 @@ let SEP, SEP_THIN, CAP, THIN_FG, DEFAULT_FG, WORKTREE_RE;
 const isObj = (v) => v != null && typeof v === "object" && !Array.isArray(v);
 
 // Deep-merge `override` onto `base`: objects merge recursively, everything else
-// (scalars AND arrays) is replaced wholesale by the override.
+// (scalars AND arrays) is replaced wholesale by the override. Prototype-tampering
+// keys are skipped (override comes from user-controlled config JSON).
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 function deepMerge(base, override) {
   if (!isObj(base) || !isObj(override)) return override === undefined ? base : override;
   const out = { ...base };
   for (const k of Object.keys(override)) {
+    if (UNSAFE_KEYS.has(k)) continue;
     out[k] = isObj(base[k]) && isObj(override[k]) ? deepMerge(base[k], override[k]) : override[k];
   }
   return out;

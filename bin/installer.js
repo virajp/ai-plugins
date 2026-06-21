@@ -127,31 +127,44 @@ class Installer extends Command {
     }
 
     // Install first — so a fresh machine ends up with the requested plugins…
+    let marketplaceFresh = false;
     if (hasSelection) {
       this.checkDeps(plan);
       if (plan.plugins.length) {
-        this.installPlugins(plan.plugins);
+        marketplaceFresh = this.installPlugins(plan.plugins);
       }
       if (plan.statusLine || plan.subagentStatusLine) {
         await this.installStatusline(plan, flags.yes);
       }
     }
 
-    // …then upgrade everything that is installed to the latest versions.
+    // …then upgrade everything that is installed to the latest versions. Skip the
+    // marketplace refresh if the install phase just added it fresh.
     if (flags.upgrade) {
-      await this.upgrade();
+      await this.upgrade(marketplaceFresh);
     }
   }
 
   // Print the CLI version (vs npm latest), the bundled statusline version, and
   // each plugin's installed version (from `claude plugin list`) vs the latest in
-  // the remote marketplace, flagging updates. Errors out if the network or the
-  // claude CLI is unavailable.
+  // the remote marketplace, flagging updates. Errors out cleanly if the network
+  // or the claude CLI is unavailable.
   async printVersions() {
+    if (!hasBin("claude")) {
+      this.error("claude CLI not found. Install it first, then re-run.");
+    }
     const cli = this.config.version;
-    const cliLatest = (await fetchJson(NPM_LATEST_URL)).version;
-    const latest = await remoteLatest();
-    const installed = installedPlugins();
+    let cliLatest, latest, installed;
+    try {
+      cliLatest = (await fetchJson(NPM_LATEST_URL)).version;
+      latest = await remoteLatest();
+      installed = installedPlugins();
+    }
+    catch (e) {
+      this.error(
+        `Version check failed (network or claude unavailable): ${e.message}`,
+      );
+    }
 
     this.log(`${this.config.name}  ${cli}${updateNote(cli, cliLatest)}`);
     this.log(`  ${"statusline".padEnd(16)} ${cli}  (bundled with the CLI)`);
@@ -172,20 +185,32 @@ class Installer extends Command {
   // latest and only pre-existing ones get bumped. Installing missing plugins is
   // the install flags' job — this only upgrades what is present. Errors out if
   // the network or the claude CLI is unavailable.
-  async upgrade() {
+  async upgrade(marketplaceFresh = false) {
     if (!hasBin("claude")) {
       this.error("claude CLI not found. Install it first, then re-run.");
     }
-    // Fail fast on the remote reads before mutating anything.
-    const latest = await remoteLatest();
-    const cliLatest = (await fetchJson(NPM_LATEST_URL)).version;
-    const installed = installedPlugins();
+    // Fail fast (cleanly) on the remote reads before mutating anything.
+    let latest, cliLatest, installed;
+    try {
+      latest = await remoteLatest();
+      cliLatest = (await fetchJson(NPM_LATEST_URL)).version;
+      installed = installedPlugins();
+    }
+    catch (e) {
+      this.error(
+        `Upgrade check failed (network or claude unavailable): ${e.message}`,
+      );
+    }
     const ours = PLUGINS.filter(name => installed[name]);
 
     this.log(
       green(`\nUpgrading installed plugins (marketplace ${MARKETPLACE_NAME})…`),
     );
-    this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME]);
+    // The install phase already added the marketplace fresh (at latest), so only
+    // refresh it when it pre-existed this run.
+    if (!marketplaceFresh) {
+      this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME]);
+    }
 
     if (!ours.length) {
       this.log(
@@ -360,18 +385,19 @@ class Installer extends Command {
   }
 
   // Add the marketplace (user scope), then install each plugin at its scope.
+  // Returns true if the marketplace was freshly added (add exited 0), so a
+  // following --upgrade can skip the redundant marketplace refresh.
   installPlugins(plugins) {
     this.log(green(`\nAdding marketplace ${MARKETPLACE_NAME} (user scope)…`));
-    if (
-      !this.runClaude([
-        "plugin",
-        "marketplace",
-        "add",
-        "--scope",
-        "user",
-        MARKETPLACE_REF,
-      ])
-    ) {
+    const marketplaceFresh = this.runClaude([
+      "plugin",
+      "marketplace",
+      "add",
+      "--scope",
+      "user",
+      MARKETPLACE_REF,
+    ]);
+    if (!marketplaceFresh) {
       this.log(
         yellow(
           "Marketplace add returned non-zero (may already exist) — continuing.",
@@ -393,6 +419,7 @@ class Installer extends Command {
         this.log(red(`Failed to install ${name}.`));
       }
     }
+    return marketplaceFresh;
   }
 
   // Run a `claude` subcommand, streaming its output. Returns true on exit 0.
@@ -595,44 +622,92 @@ async function remoteLatest() {
   return out;
 }
 
-// Map of plugin name → installed version, parsed from `claude plugin list`,
-// restricted to the virajp-plugins marketplace. Throws if claude fails.
+// Map of plugin name → installed version from `claude plugin list --json`,
+// restricted to the virajp-plugins marketplace. Each entry's `id` is
+// `<name>@<marketplace>`. Throws if claude fails or its output isn't JSON.
 function installedPlugins() {
-  const res = spawnSync("claude", ["plugin", "list"], { encoding: "utf8" });
+  const res = spawnSync("claude", ["plugin", "list", "--json"], {
+    encoding: "utf8",
+  });
   if (res.error || res.status !== 0) {
     throw new Error(
-      "`claude plugin list` failed — is the claude CLI installed?",
+      "`claude plugin list --json` failed — is the claude CLI installed?",
     );
   }
+  let list;
+  try {
+    list = JSON.parse(res.stdout || "[]");
+  }
+  catch {
+    throw new Error("Could not parse `claude plugin list --json` output.");
+  }
   const out = {};
-  let current = null;
-  for (const line of (res.stdout || "").split("\n")) {
-    const name = line.match(/([A-Za-z0-9_-]+)@virajp-plugins\b/);
-    if (name) {
-      current = name[1];
+  for (const entry of Array.isArray(list) ? list : []) {
+    const id = entry && entry.id;
+    if (typeof id !== "string") {
       continue;
     }
-    if (current) {
-      const ver = line.match(/Version:\s*(\S+)/);
-      if (ver) {
-        out[current] = ver[1];
-        current = null;
-      }
+    const at = id.lastIndexOf("@");
+    if (at < 1) {
+      continue;
+    }
+    if (id.slice(at + 1) === MARKETPLACE_NAME) {
+      out[id.slice(0, at)] = entry.version;
     }
   }
   return out;
 }
 
-// Numeric semver compare of dotted versions: 1 if a>b, -1 if a<b, 0 if equal.
+// Compare semver-ish versions: 1 if a>b, -1 if a<b, 0 if equal. Tolerates a
+// leading "v" and a prerelease suffix — a release outranks its prerelease
+// (1.2.0 > 1.2.0-rc.1), and prereleases compare dot-segment by segment.
 function cmpVer(a, b) {
-  const pa = String(a).split(".").map(n => parseInt(n, 10) || 0);
-  const pb = String(b).split(".").map(n => parseInt(n, 10) || 0);
+  const parse = v => {
+    const [core, pre = ""] = String(v).replace(/^v/, "").split("-");
+    return { nums: core.split(".").map(n => parseInt(n, 10) || 0), pre };
+  };
+  const va = parse(a);
+  const vb = parse(b);
   for (let i = 0; i < 3; i++) {
-    if ((pa[i] || 0) > (pb[i] || 0)) {
+    const d = (va.nums[i] || 0) - (vb.nums[i] || 0);
+    if (d !== 0) {
+      return d > 0 ? 1 : -1;
+    }
+  }
+  if (va.pre === vb.pre) {
+    return 0;
+  }
+  if (!va.pre) {
+    return 1; // 1.2.0 > 1.2.0-rc.1
+  }
+  if (!vb.pre) {
+    return -1;
+  }
+  return cmpPre(va.pre, vb.pre);
+}
+
+// Compare two prerelease strings dot-segment by segment: numeric when both
+// segments are numeric, lexical otherwise; a shorter run of segments is smaller.
+function cmpPre(a, b) {
+  const sa = a.split(".");
+  const sb = b.split(".");
+  for (let i = 0; i < Math.max(sa.length, sb.length); i++) {
+    const x = sa[i];
+    const y = sb[i];
+    if (x === undefined) {
+      return -1;
+    }
+    if (y === undefined) {
       return 1;
     }
-    if ((pa[i] || 0) < (pb[i] || 0)) {
-      return -1;
+    if (/^\d+$/.test(x) && /^\d+$/.test(y)) {
+      const d = parseInt(x, 10) - parseInt(y, 10);
+      if (d !== 0) {
+        return d > 0 ? 1 : -1;
+      }
+    }
+    else if (x !== y) {
+      return x > y ? 1 : -1;
     }
   }
   return 0;
@@ -687,15 +762,23 @@ function requiredTools({ plugins, statusLine, subagentStatusLine }) {
 
 const isObject = v => v != null && typeof v === "object" && !Array.isArray(v);
 
+// Keys that must never be merged from user-controlled JSON — assigning them
+// (e.g. out["__proto__"] = …) would tamper with the prototype chain.
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 // Deep-merge: objects merge key-by-key; arrays and scalars from `override` win.
 // Called as deepMerge(defaults, existing) so existing user values are preserved
-// and only missing keys are filled from the defaults.
+// and only missing keys are filled from the defaults. Skips prototype-tampering
+// keys defensively (the override may be an attacker-influenced config file).
 function deepMerge(base, override) {
   if (!isObject(base) || !isObject(override)) {
     return override === undefined ? base : override;
   }
   const out = { ...base };
   for (const key of Object.keys(override)) {
+    if (UNSAFE_KEYS.has(key)) {
+      continue;
+    }
     out[key] = isObject(base[key]) && isObject(override[key])
       ? deepMerge(base[key], override[key])
       : override[key];
