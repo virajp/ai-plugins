@@ -138,11 +138,13 @@ The command does several jobs. **Plugins:** `--all` (everything), `--plugins`
 (all marketplace plugins), or `--plugin <name>` (repeatable) drive the `claude`
 CLI to add the `virajp-plugins` marketplace (user scope) and install each plugin
 at its default scope — `dart-lsp` is project-scoped, every other plugin is
-user-scoped (see `PROJECT_SCOPED` in `bin/installer.js`). **Statusline:**
-`--statusline` and/or `--subagentstatusline` (both implied by `--all`) copy the
-script into `~/.claude/scripts/` (chmod 755), seed the bundled defaults into
-`~/.config/statusline.json` (deep-merging missing settings if it already exists,
-preserving user edits), and write the chosen key(s) into
+user-scoped (see `PROJECT_SCOPED` in `bin/installer.js`). Plugin names are
+**bare and allowlisted** (`PLUGINS`); an `@marketplace` or path qualifier is
+rejected outright so the CLI can only ever install from `virajp-plugins`.
+**Statusline:** `--statusline` and/or `--subagentstatusline` (both implied by
+`--all`) copy the script into `~/.claude/scripts/` (chmod 755), seed the bundled
+defaults into `~/.config/statusline.json` (deep-merging missing settings if it
+already exists, preserving user edits), and write the chosen key(s) into
 `~/.claude/settings.json` (preserving other keys; prompting before overwrite
 unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version (vs the
 latest on npm), the bundled statusline version, and each plugin's installed

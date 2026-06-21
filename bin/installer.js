@@ -310,6 +310,17 @@ class Installer extends Command {
       plugins = [...PLUGINS];
     }
     else if (flags.plugin?.length) {
+      // This CLI installs ONLY from the virajp-plugins marketplace, so plugin
+      // names must be bare — reject any `@marketplace` / path qualifier outright
+      // rather than let it reach the claude CLI.
+      const qualified = flags.plugin.filter(n => /[@/]/.test(n));
+      if (qualified.length) {
+        this.error(
+          `Plugin names must be bare (e.g. "vwf") — this CLI installs only from `
+            + `the ${MARKETPLACE_NAME} marketplace and cannot target another. `
+            + `Drop the qualifier from: ${qualified.join(", ")}`,
+        );
+      }
       const invalid = flags.plugin.filter(n => !PLUGINS.includes(n));
       if (invalid.length) {
         this.error(
