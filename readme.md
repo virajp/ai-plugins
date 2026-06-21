@@ -65,6 +65,15 @@ pnpx @askviraj/ai-plugins --upgrade
 pnpx @askviraj/ai-plugins --all --upgrade
 ```
 
+**Uninstall** (mirrors the install flags — `--all` removes everything the CLI
+installed; the rest are specific):
+
+```sh
+pnpx @askviraj/ai-plugins --uninstall --plugin vwf   # one plugin
+pnpx @askviraj/ai-plugins --uninstall --statusline   # just the status bar key
+pnpx @askviraj/ai-plugins --uninstall --all          # all plugins + statusline
+```
+
 ## Plugins
 
 ### vwf

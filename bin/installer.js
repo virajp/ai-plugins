@@ -15,7 +15,7 @@ const { spawnSync } = require("node:child_process");
 // This is a plain-JS CLI (no TypeScript / ts-node). Tell oclif so it never tries
 // to auto-transpile, which otherwise warns "Could not find typescript".
 settings.enableAutoTranspile = false;
-const { chmod, copyFile, mkdir, readFile, writeFile } = require(
+const { chmod, copyFile, mkdir, readFile, rm, writeFile } = require(
   "node:fs/promises",
 );
 const { homedir } = require("node:os");
@@ -105,18 +105,29 @@ class Installer extends Command {
     }
 
     const plan = this.resolvePlan(flags);
-    const hasInstall = plan.plugins.length
+    const hasSelection = plan.plugins.length
       || plan.statusLine
       || plan.subagentStatusLine;
 
-    if (!hasInstall && !flags.upgrade) {
+    // Uninstall mode reuses the same selection flags but removes instead.
+    if (flags.uninstall) {
+      if (!hasSelection) {
+        this.error(
+          "Nothing to uninstall. Pass --all, --plugins, --plugin <name>, --statusline, and/or --subagentstatusline with --uninstall.",
+        );
+      }
+      await this.uninstall(plan);
+      return;
+    }
+
+    if (!hasSelection && !flags.upgrade) {
       this.error(
-        "Nothing to do. Pass --all, --plugins, --plugin <name>, --statusline, --subagentstatusline, --upgrade, or --version.",
+        "Nothing to do. Pass --all, --plugins, --plugin <name>, --statusline, --subagentstatusline, --upgrade, --uninstall, or --version.",
       );
     }
 
     // Install first — so a fresh machine ends up with the requested plugins…
-    if (hasInstall) {
+    if (hasSelection) {
       this.checkDeps(plan);
       if (plan.plugins.length) {
         this.installPlugins(plan.plugins);
@@ -221,6 +232,71 @@ class Installer extends Command {
       );
       this.log(
         yellow("Re-run with: pnpx @askviraj/ai-plugins@latest --upgrade"),
+      );
+    }
+  }
+
+  // Uninstall mode (mirrors the install selection): remove the selected plugins
+  // via claude and/or strip the statusline. Reverses what the CLI installed; it
+  // never touches external tools, since the CLI never installs those.
+  async uninstall(plan) {
+    if (plan.plugins.length) {
+      if (!hasBin("claude")) {
+        this.error("claude CLI not found. Install it first, then re-run.");
+      }
+      for (const name of plan.plugins) {
+        const scope = scopeFor(name);
+        this.log(yellow(`\nUninstalling ${name} (${scope} scope)…`));
+        if (
+          !this.runClaude([
+            "plugin",
+            "uninstall",
+            "--scope",
+            scope,
+            "--yes",
+            `${name}@${MARKETPLACE_NAME}`,
+          ])
+        ) {
+          this.log(
+            red(`Failed to uninstall ${name} (maybe not at ${scope} scope).`),
+          );
+        }
+      }
+    }
+    if (plan.statusLine || plan.subagentStatusLine) {
+      await this.uninstallStatusline(plan);
+    }
+  }
+
+  // Remove the requested statusline key(s) from settings.json; once no statusline
+  // key remains, delete the installed script too. The seeded ~/.config file is
+  // left in place (it may hold user edits) — note how to remove it.
+  async uninstallStatusline(plan) {
+    const settings = await this.readSettings();
+    let changed = false;
+    for (const key of ["statusLine", "subagentStatusLine"]) {
+      const want = key === "statusLine"
+        ? plan.statusLine
+        : plan.subagentStatusLine;
+      if (want && settings[key] !== undefined) {
+        delete settings[key];
+        this.log(yellow(`Removed ${key} from ${SETTINGS_PATH}`));
+        changed = true;
+      }
+    }
+    if (changed) {
+      await this.writeSettings(settings);
+    }
+
+    if (
+      settings.statusLine === undefined
+      && settings.subagentStatusLine === undefined
+      && existsSync(INSTALLED_SCRIPT)
+    ) {
+      await rm(INSTALLED_SCRIPT, { force: true });
+      this.log(yellow(`Removed script → ${INSTALLED_SCRIPT}`));
+      this.log(
+        `Left ${USER_CONFIG_PATH} in place — delete it manually for a full reset.`,
       );
     }
   }
@@ -430,6 +506,8 @@ Installer.examples = [
   "pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp",
   "pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes",
   "pnpx @askviraj/ai-plugins --all --upgrade",
+  "pnpx @askviraj/ai-plugins --uninstall --plugin vwf",
+  "pnpx @askviraj/ai-plugins --uninstall --all",
   "pnpx @askviraj/ai-plugins --version",
 ];
 
@@ -442,6 +520,10 @@ Installer.flags = {
   upgrade: Flags.boolean({
     description:
       "After any install, upgrade installed plugins to latest + refresh the statusline + check for a CLI update. Combine with --all for an idempotent install+upgrade (safe in setup scripts)",
+  }),
+  uninstall: Flags.boolean({
+    description:
+      "Remove instead of install: pair with --all / --plugins / --plugin <name> / --statusline / --subagentstatusline to uninstall those plugins or statusline keys",
   }),
   all: Flags.boolean({
     description:

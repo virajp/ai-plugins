@@ -152,7 +152,13 @@ manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:**
 installed virajp-plugins plugin that's outdated, refreshes the statusline, and
 notes a newer CLI; combine with `--all` for an idempotent install+upgrade fit
 for a setup script. `--version`/`--upgrade` need the network and `claude`, and
-error out (non-zero) if either is unavailable.
+error out (non-zero) if either is unavailable. **Uninstall:** `--uninstall`
+reuses the same selection flags but removes — `claude plugin uninstall`s the
+selected plugins (matching their install scope) and/or strips the chosen
+statusline key(s) from `settings.json`, deleting the installed script once no
+statusline key remains. It leaves the seeded `~/.config/statusline.json` (it may
+hold user edits) and never touches external tools (the CLI never installed
+those).
 
 Before any install, the CLI **checks required external tools** for the resolved
 plan (`CORE_DEPS` brew/mise/claude for any plugin install, `PLUGIN_EXTRA_DEPS`
