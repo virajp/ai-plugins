@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#MISE description="Smoke-test the installer CLI (non-mutating)"
+#MISE dir="{{ config_root }}"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+# The CLI needs @oclif/core to load; install deps if they are missing.
+if [[ ! -d node_modules/@oclif/core ]]; then
+  print_header "Installing dependencies ..."
+  pnpm install
+fi
+
+CLI=(node bin/installer.js)
+
+print_header "Checking syntax ..."
+node --check bin/installer.js
+
+print_header "Rendering --help ..."
+"${CLI[@]}" --help >/dev/null
+
+# The invocations below are chosen to NEVER mutate the system or call the claude
+# CLI — each exits before any install runs.
+print_header "Asserting no flags exits non-zero ..."
+if "${CLI[@]}" >/dev/null 2>&1; then
+  print_error "Expected non-zero exit with no flags"
+  exit 1
+fi
+
+print_header "Asserting unknown plugin is rejected ..."
+if "${CLI[@]}" --plugin bogus >/dev/null 2>&1; then
+  print_error "Expected non-zero exit for an unknown plugin"
+  exit 1
+fi
+
+print_header "Asserting the missing-dependency check fires ..."
+# With only node on PATH the required tools report as missing, so the CLI prints
+# install hints and exits non-zero before touching claude or the filesystem.
+NODE_DIR="$(dirname "$(command -v node)")"
+if env PATH="$NODE_DIR" "${CLI[@]}" --plugin vwf >/dev/null 2>&1; then
+  print_error "Expected non-zero exit when dependencies are missing"
+  exit 1
+fi
+
+print_header "All installer smoke tests passed!"

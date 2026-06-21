@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#MISE description="Publish the installer to npmjs.org"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--dry-run" help="run all checks and packaging without publishing"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+print_header "Verifying npm authentication ..."
+if ! pnpm whoami >/dev/null 2>&1; then
+  print_error "Not logged in to npm. Run \`pnpm login\` first, then retry."
+  exit 1
+fi
+
+# Gate publishing on the smoke tests and package verification.
+mise run i:test
+mise run i:build
+
+VERSION="$(node -p "require('./package.json').version")"
+
+if [[ "${usage_dry_run:-false}" == "true" ]]; then
+  print_header "Dry-run publish of @askviraj/ai-plugins@${VERSION} ..."
+  pnpm publish --access public --no-git-checks --dry-run
+  print_header "Dry run complete — nothing was published."
+  exit 0
+fi
+
+print_header "Publishing @askviraj/ai-plugins@${VERSION} to npmjs.org ..."
+# Keep pnpm's git checks on for a real publish (clean tree + expected branch).
+pnpm publish --access public
+print_header "Published @askviraj/ai-plugins@${VERSION}!"

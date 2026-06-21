@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Bump the installer package version (no git tag)"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--minor" help="bump the minor version (default: patch)"
+#USAGE flag "--major" help="bump the major version (default: patch)"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+if [[ "${usage_major:-false}" == "true" ]]; then
+  LEVEL="major"
+elif [[ "${usage_minor:-false}" == "true" ]]; then
+  LEVEL="minor"
+else
+  LEVEL="patch"
+fi
+
+print_header "Bumping ${LEVEL} version ..."
+# --no-git-tag-version: only edit package.json; the change is committed by hand.
+pnpm version "${LEVEL}" --no-git-tag-version
+
+VERSION="$(node -p "require('./package.json').version")"
+print_header "Version is now ${VERSION} — commit package.json to record it."

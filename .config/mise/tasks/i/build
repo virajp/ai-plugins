@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#MISE description="Verify the publishable installer package (no transpile step)"
+#MISE dir="{{ config_root }}"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+# This is a plain-JS package — there is nothing to compile or bundle. "Build"
+# here means verifying exactly what would ship to npm (the `files` allowlist in
+# package.json) before publishing.
+print_header "Listing package contents (dry run) ..."
+pnpm pack --dry-run
+
+print_header "Package verified — nothing to compile."
