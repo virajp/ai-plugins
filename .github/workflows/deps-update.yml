@@ -46,12 +46,12 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Security gate: fail (no release) if the updated tree has high/critical
-      # advisories. Lower the level or add minimumReleaseAgeExclude / pnpm
-      # overrides if a fix isn't yet available.
-      - name: Security-scan the updated dependencies
+      # Security gate: osv-scanner exits non-zero if the refreshed lockfile pulls
+      # in any known-vulnerable package, blocking the release. If a fix isn't yet
+      # available, add an osv-scanner.toml ignore or a pnpm override.
+      - name: Security-scan the updated dependencies (osv-scanner)
         if: steps.changed.outputs.changed == 'true'
-        run: pnpm audit --prod --audit-level high
+        run: osv-scanner scan source --lockfile=pnpm-lock.yaml
 
       - name: Cut a patch release (tests, version bump, commit, tag)
         if: steps.changed.outputs.changed == 'true'

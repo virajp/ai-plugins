@@ -213,8 +213,8 @@ environment-specific tools in the matching env file.
   **Publishing uses the npm CLI; everything else stays pnpm.** The local
   `i:publish` task mirrors this (auth check + the same gates + `npm publish`).
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
-  (bounded by the cooldown below); if anything changed, `pnpm audit` gates on
-  high/critical advisories, then it cuts a **patch release**
+  (bounded by the cooldown below); if anything changed, `osv-scanner` gates on
+  any known-vulnerable package, then it cuts a **patch release**
   (`mise run
   i:release` → tests + bump + commit + tag) and **publishes
   inline** via `npm publish` (OIDC), committing the refresh + bump to `main`. It
