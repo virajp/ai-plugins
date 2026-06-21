@@ -1,8 +1,9 @@
 # Plugins for Claude Code
 
 A curated collection of opinionated Claude Code plugins by Viraj Patel — LSP
-servers, MCP servers, a full Spec → Plan → Execute workflow plugin (`vwf`), and
-a config-driven powerline `statusline` — for use with the Claude Code CLI.
+servers, MCP servers, a full Spec → Plan → Execute workflow plugin (`vwf`), an
+opinionated `markdown` documentation skill, and a config-driven powerline
+`statusline` — for use with the Claude Code CLI.
 
 ## Prerequisites
 
@@ -46,8 +47,8 @@ pnpx @askviraj/ai-plugins --plugins
 pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp
 ```
 
-Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
-`dart-lsp`.
+Available plugin names: `vwf`, `markdown`, `mempalace`, `context7`,
+`typescript-lsp`, `dart-lsp`.
 
 > The **statusline** also installs through this CLI — see
 > [Statusline](#statusline) below.
@@ -125,6 +126,18 @@ auto-enables** when you enable `vwf` (requires Claude Code ≥ 2.1.143):
 
 - `context7@virajp-plugins` — Context7 MCP docs server
 - `mempalace@virajp-plugins` — AI memory system
+
+### markdown
+
+Opinionated Markdown & documentation standards as a **path-scoped skill** —
+writing style, code blocks, tables, CHANGELOGs, and `mermaid` diagrams. The
+skill auto-applies whenever you edit a Markdown file (`**/*.md`) and is hidden
+from the `/` menu, so it behaves like an always-on documentation rule rather
+than a command.
+
+```sh
+pnpx @askviraj/ai-plugins --plugin markdown
+```
 
 ### statusline
 

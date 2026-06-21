@@ -134,11 +134,11 @@ class Installer extends Command {
     }
 
     // Install first — so a fresh machine ends up with the requested plugins…
-    let marketplaceFresh = false;
+    let marketplaceRefreshed = false;
     if (hasSelection) {
       this.checkDeps(plan);
       if (plan.plugins.length) {
-        marketplaceFresh = this.installPlugins(plan.plugins);
+        marketplaceRefreshed = this.installPlugins(plan.plugins);
       }
       if (plan.statusLine || plan.subagentStatusLine) {
         await this.installStatusline(plan, flags.yes);
@@ -146,9 +146,9 @@ class Installer extends Command {
     }
 
     // …then upgrade everything that is installed to the latest versions. Skip the
-    // marketplace refresh if the install phase just added it fresh.
+    // marketplace refresh if the install phase already refreshed it.
     if (flags.upgrade) {
-      await this.upgrade(marketplaceFresh);
+      await this.upgrade(marketplaceRefreshed);
     }
   }
 
@@ -192,7 +192,7 @@ class Installer extends Command {
   // latest and only pre-existing ones get bumped. Installing missing plugins is
   // the install flags' job — this only upgrades what is present. Errors out if
   // the network or the claude CLI is unavailable.
-  async upgrade(marketplaceFresh = false) {
+  async upgrade(marketplaceRefreshed = false) {
     if (!hasBin("claude")) {
       this.error("claude CLI not found. Install it first, then re-run.");
     }
@@ -213,9 +213,9 @@ class Installer extends Command {
     this.log(
       green(`\nUpgrading installed plugins (marketplace ${MARKETPLACE_NAME})…`),
     );
-    // The install phase already added the marketplace fresh (at latest), so only
-    // refresh it when it pre-existed this run.
-    if (!marketplaceFresh) {
+    // The install phase already refreshed the marketplace, so only refresh it
+    // here when this run skipped the install phase.
+    if (!marketplaceRefreshed) {
       this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME]);
     }
 
@@ -391,12 +391,15 @@ class Installer extends Command {
     this.exit(1);
   }
 
-  // Add the marketplace (user scope), then install each plugin at its scope.
-  // Returns true if the marketplace was freshly added (add exited 0), so a
-  // following --upgrade can skip the redundant marketplace refresh.
+  // Add the marketplace (user scope), refresh it, then install each plugin at its
+  // scope. `marketplace add` is a no-op when the marketplace already exists on
+  // disk — it does NOT pull the latest manifest — so a newly published plugin
+  // would 404 against the stale local copy; always `marketplace update` after.
+  // Returns true (the marketplace is now refreshed) so a following --upgrade can
+  // skip its redundant refresh.
   installPlugins(plugins) {
     this.log(green(`\nAdding marketplace ${MARKETPLACE_NAME} (user scope)…`));
-    const marketplaceFresh = this.runClaude([
+    this.runClaude([
       "plugin",
       "marketplace",
       "add",
@@ -404,10 +407,15 @@ class Installer extends Command {
       "user",
       MARKETPLACE_REF,
     ]);
-    if (!marketplaceFresh) {
+    // Refresh the on-disk copy so newly published plugins resolve (add alone
+    // won't update an existing marketplace).
+    this.log(green(`Refreshing marketplace ${MARKETPLACE_NAME}…`));
+    if (
+      !this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME])
+    ) {
       this.log(
         yellow(
-          "Marketplace add returned non-zero (may already exist) — continuing.",
+          "Marketplace update returned non-zero — installs may use a stale copy.",
         ),
       );
     }
@@ -426,7 +434,7 @@ class Installer extends Command {
         this.log(red(`Failed to install ${name}.`));
       }
     }
-    return marketplaceFresh;
+    return true;
   }
 
   // Run a `claude` subcommand, streaming its output. Returns true on exit 0.
