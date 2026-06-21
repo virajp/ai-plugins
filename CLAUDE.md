@@ -213,8 +213,13 @@ environment-specific tools in the matching env file.
   **Publishing uses the npm CLI; everything else stays pnpm.** The local
   `i:publish` task mirrors this (auth check + the same gates + `npm publish`).
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
-  (bounded by the cooldown below), smoke-tests via `mise run i:test`, and
-  commits the refreshed `pnpm-lock.yaml` straight to `main` as `ops(deps): …`.
+  (bounded by the cooldown below); if anything changed, `pnpm audit` gates on
+  high/critical advisories, then it cuts a **patch release**
+  (`mise run
+  i:release` → tests + bump + commit + tag) and **publishes
+  inline** via `npm publish` (OIDC), committing the refresh + bump to `main`. It
+  publishes itself rather than via `release.yml` because a tag pushed with the
+  workflow's `GITHUB_TOKEN` would not trigger another workflow.
 
 ### Supply-chain settings
 

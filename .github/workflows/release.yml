@@ -32,7 +32,9 @@ jobs:
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
 
+      # Only meaningful for tag pushes; a manual workflow_dispatch run has no tag.
       - name: Verify the tag matches package.json version
+        if: github.ref_type == 'tag'
         run: |
           tag="${GITHUB_REF_NAME#v}"
           pkg="$(node -p "require('./package.json').version")"

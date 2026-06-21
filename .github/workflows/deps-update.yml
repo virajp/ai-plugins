@@ -1,16 +1,21 @@
-name: Monthly dependency update
+name: Monthly dependency update & release
 
-# Refreshes pnpm dependencies once a month so security fixes land without manual
-# intervention. The minimumReleaseAge cooldown in pnpm-workspace.yaml keeps this
-# from pulling brand-new (potentially compromised) releases. The refreshed
-# lockfile is committed straight to main.
+# Once a month: refresh pnpm dependencies (bounded by the minimumReleaseAge
+# cooldown in pnpm-workspace.yaml), security-scan them, then cut a patch release
+# and publish it to npm. The refreshed lockfile + version bump are committed to
+# main and tagged. If nothing changed, it does nothing.
+#
+# Publishing happens INLINE here, not via release.yml: a tag pushed with the
+# workflow's GITHUB_TOKEN does not trigger another workflow, so this job performs
+# the OIDC publish itself.
 on:
   schedule:
     - cron: "0 2 1 * *" # 02:00 UTC on the 1st of each month
   workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: write # commit + push the refresh, version bump, and tag
+  id-token: write # OIDC trusted publishing to npm
 
 concurrency:
   group: deps-update
@@ -31,17 +36,44 @@ jobs:
       - name: Update dependencies (respects the minimumReleaseAge cooldown)
         run: pnpm update
 
-      - name: Smoke-test the CLI with the updated dependencies
-        run: mise run i:test
-
-      - name: Commit the refreshed lockfile to main
+      - name: Check whether anything changed
+        id: changed
         run: |
           if git diff --quiet -- pnpm-lock.yaml package.json; then
-            echo "No dependency changes this month."
-            exit 0
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No dependency changes this month — nothing to release."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Security gate: fail (no release) if the updated tree has high/critical
+      # advisories. Lower the level or add minimumReleaseAgeExclude / pnpm
+      # overrides if a fix isn't yet available.
+      - name: Security-scan the updated dependencies
+        if: steps.changed.outputs.changed == 'true'
+        run: pnpm audit --prod --audit-level high
+
+      - name: Cut a patch release (tests, version bump, commit, tag)
+        if: steps.changed.outputs.changed == 'true'
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pnpm-lock.yaml package.json
-          git commit -m "ops(deps): monthly pnpm-lock refresh"
-          git push
+          git commit -m "ops(deps): monthly dependency refresh"
+          mise run i:release # clean tree now → i:test, patch bump, commit, tag
+          tag="v$(node -p "require('./package.json').version")"
+          git push origin HEAD:main
+          git push origin "$tag"
+
+      # OIDC trusted publishing needs npm >= 11.5.1; the node-bundled npm may lag.
+      - name: Ensure npm supports OIDC trusted publishing
+        if: steps.changed.outputs.changed == 'true'
+        run: npm install -g npm@latest
+
+      - name: Verify the publishable package
+        if: steps.changed.outputs.changed == 'true'
+        run: mise run i:build
+
+      - name: Publish to npm (OIDC trusted publishing + provenance)
+        if: steps.changed.outputs.changed == 'true'
+        run: npm publish --access public
