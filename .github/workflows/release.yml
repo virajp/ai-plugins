@@ -1,23 +1,37 @@
 name: Release
 
-# Publishes @askviraj/ai-plugins to npm when a version tag is pushed.
+# Publishes @askviraj/ai-plugins to npm. Triggered three ways:
+#   1. a pushed version tag (v*)   — the normal manual release path
+#   2. workflow_dispatch           — manual re-publish of whatever is on the ref
+#   3. workflow_call               — invoked by deps-update.yml after it cuts the
+#                                    monthly patch release
 # Auth is OIDC "trusted publishing" (no stored token) — npm verifies this repo +
-# workflow's GitHub identity and adds provenance automatically. One-time setup:
-# on npmjs.com, add this repo and `release.yml` as a Trusted Publisher for the
-# package. To release: bump the version, then push a matching tag (e.g. v1.2.0).
+# workflow's GitHub identity and adds provenance automatically. npm allows only
+# ONE Trusted Publisher per package, and OIDC's job_workflow_ref resolves to THIS
+# file even when it is called from deps-update.yml — so the single Trusted
+# Publisher (release.yml) authorizes both paths. One-time setup: on npmjs.com add
+# this repo + `release.yml` as the package's Trusted Publisher. To release
+# manually: bump the version, then push a matching tag (e.g. v1.2.0).
 on:
   push:
     tags:
       - "v*"
   workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      ref:
+        description: "Git ref (tag) to check out and publish"
+        required: true
+        type: string
 
-# id-token: write is required for OIDC trusted publishing.
+# id-token: write is required for OIDC trusted publishing. When this workflow is
+# called by deps-update.yml, the effective token is bounded by the caller's grant.
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.ref || github.ref }}
   cancel-in-progress: false
 
 env:
@@ -27,12 +41,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      # On a tag push / dispatch, inputs.ref is empty and this falls back to the
+      # triggering ref. When called by deps-update.yml, it is the freshly pushed
+      # release tag, so we publish that exact commit.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
 
-      # Only meaningful for tag pushes; a manual workflow_dispatch run has no tag.
+      # Only meaningful for a direct tag push; dispatch/called runs skip it.
       - name: Verify the tag matches package.json version
         if: github.ref_type == 'tag'
         run: |
@@ -63,5 +82,13 @@ jobs:
       - name: Ensure npm supports OIDC trusted publishing
         run: npm install -g npm@latest
 
+      # Idempotent: skip (don't fail) if this version is already on npm, so tag
+      # re-points, dispatch retries, and re-runs are safe no-ops.
       - name: Publish to npm (OIDC trusted publishing + provenance)
-        run: npm publish --access public
+        run: |
+          ver="$(node -p "require('./package.json').version")"
+          if npm view "@askviraj/ai-plugins@$ver" version >/dev/null 2>&1; then
+            echo "@askviraj/ai-plugins@$ver is already published — skipping."
+            exit 0
+          fi
+          npm publish --access public

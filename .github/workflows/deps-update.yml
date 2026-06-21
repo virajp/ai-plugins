@@ -1,13 +1,16 @@
 name: Monthly dependency update & release
 
 # Once a month: refresh pnpm dependencies (bounded by the minimumReleaseAge
-# cooldown in pnpm-workspace.yaml), security-scan them, then cut a patch release
-# and publish it to npm. The refreshed lockfile + version bump are committed to
-# main and tagged. If nothing changed, it does nothing.
+# cooldown in pnpm-workspace.yaml), security-scan them, cut a patch release, and
+# publish to npm. The refreshed lockfile + version bump are committed to main and
+# tagged. If nothing changed, it does nothing.
 #
-# Publishing happens INLINE here, not via release.yml: a tag pushed with the
-# workflow's GITHUB_TOKEN does not trigger another workflow, so this job performs
-# the OIDC publish itself.
+# Publishing is delegated to release.yml via `workflow_call` (not an inline
+# `npm publish`): npm allows only ONE Trusted Publisher per package, and OIDC's
+# job_workflow_ref resolves to release.yml even when called from here — so the
+# single release.yml Trusted Publisher authorizes this path too. (A tag pushed
+# with the workflow's GITHUB_TOKEN would not trigger release.yml on its own, so we
+# call it directly rather than relying on the tag-push event.)
 on:
   schedule:
     - cron: "0 2 1 * *" # 02:00 UTC on the 1st of each month
@@ -15,7 +18,7 @@ on:
 
 permissions:
   contents: write # commit + push the refresh, version bump, and tag
-  id-token: write # OIDC trusted publishing to npm
+  id-token: write # passed through to release.yml for OIDC publishing
 
 concurrency:
   group: deps-update
@@ -27,6 +30,9 @@ env:
 jobs:
   update:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.changed.outputs.changed }}
+      tag: ${{ steps.release.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
 
@@ -47,13 +53,15 @@ jobs:
           fi
 
       # Security gate: osv-scanner exits non-zero if the refreshed lockfile pulls
-      # in any known-vulnerable package, blocking the release. If a fix isn't yet
-      # available, add an osv-scanner.toml ignore or a pnpm override.
+      # in any known-vulnerable package, failing the run BEFORE anything is pushed.
+      # If a fix isn't yet available, add an osv-scanner.toml ignore or a pnpm
+      # override.
       - name: Security-scan the updated dependencies (osv-scanner)
         if: steps.changed.outputs.changed == 'true'
         run: osv-scanner scan source --lockfile=pnpm-lock.yaml
 
       - name: Cut a patch release (tests, version bump, commit, tag)
+        id: release
         if: steps.changed.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
@@ -64,16 +72,17 @@ jobs:
           tag="v$(node -p "require('./package.json').version")"
           git push origin HEAD:main
           git push origin "$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      # OIDC trusted publishing needs npm >= 11.5.1; the node-bundled npm may lag.
-      - name: Ensure npm supports OIDC trusted publishing
-        if: steps.changed.outputs.changed == 'true'
-        run: npm install -g npm@latest
-
-      - name: Verify the publishable package
-        if: steps.changed.outputs.changed == 'true'
-        run: mise run i:build
-
-      - name: Publish to npm (OIDC trusted publishing + provenance)
-        if: steps.changed.outputs.changed == 'true'
-        run: npm publish --access public
+  # Delegate the actual npm publish to release.yml so OIDC's job_workflow_ref
+  # matches the single Trusted Publisher. Checks out and publishes the tag the
+  # update job just pushed.
+  publish:
+    needs: update
+    if: needs.update.outputs.changed == 'true'
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      ref: ${{ needs.update.outputs.tag }}
