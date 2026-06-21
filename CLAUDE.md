@@ -198,28 +198,40 @@ resolves env variants):
   has this exported): the full dev toolchain (doppler, pre-commit, dprint,
   taplo, gitleaks, grype, jq, opencode, python, uv) + shell aliases.
 - `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this):
-  CI-only tools; empty today since CI only needs the generic node + pnpm.
+  CI-only tools/settings. Currently sets `node.gpg_verify = false` to work
+  around a mise-on-Linux bug where its bundled Node release-key import fails on
+  the CI runner's gpg with "no valid OpenPGP data found" (the Node tarball is
+  still SHA256-checksum verified). Same mise version verifies fine on macOS; see
+  jdx/mise discussion #10553.
 
 Keep common tools in `mise.toml` (don't duplicate across dev/ci); put
 environment-specific tools in the matching env file.
 
 ### Workflows (`.github/workflows/`)
 
-- **`release.yml`** — on a pushed `v*` tag: sets up mise (`MISE_ENV=ci`),
-  verifies the tag matches `package.json` version,
-  `pnpm install --frozen-lockfile`, **runs the tests** (`mise run i:test`) and
-  verifies the package (`mise run i:build`), then `npm publish` for **OIDC
-  trusted publishing** — no stored token, provenance added automatically.
-  **Publishing uses the npm CLI; everything else stays pnpm.** The local
-  `i:publish` task mirrors this (auth check + the same gates + `npm publish`).
+- **`release.yml`** — publishes `@askviraj/ai-plugins` to npm via **OIDC trusted
+  publishing** (no stored token, provenance automatic). Triggered three ways: a
+  pushed `v*` tag, `workflow_dispatch`, or **`workflow_call`** (invoked by
+  `deps-update.yml`). It sets up mise (`MISE_ENV=ci`), checks out the target ref
+  (the `ref` input when called, else the triggering ref), verifies the tag
+  matches `package.json` (tag pushes only), `pnpm install --frozen-lockfile`,
+  **osv-scans** the lockfile, **runs the tests** (`mise run i:test`), verifies
+  the package (`mise run i:build`), then `npm publish`. The publish step is
+  **idempotent** — it skips (does not fail) if that version is already on npm,
+  so tag re-points, dispatch retries, and re-runs are safe. **Publishing uses
+  the npm CLI; everything else stays pnpm.** The local `i:publish` task mirrors
+  the gates + `npm publish`.
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
   (bounded by the cooldown below); if anything changed, `osv-scanner` gates on
   any known-vulnerable package, then it cuts a **patch release**
-  (`mise run
-  i:release` → tests + bump + commit + tag) and **publishes
-  inline** via `npm publish` (OIDC), committing the refresh + bump to `main`. It
-  publishes itself rather than via `release.yml` because a tag pushed with the
-  workflow's `GITHUB_TOKEN` would not trigger another workflow.
+  (`mise run i:release` → tests + bump + commit + tag) and pushes the refresh +
+  bump + tag to `main`. It then **delegates the npm publish to `release.yml` via
+  `workflow_call`** (passing the new tag as `ref`) rather than publishing
+  inline: npm allows only **one Trusted Publisher per package**, and OIDC's
+  `job_workflow_ref` resolves to `release.yml` even when called — so the single
+  `release.yml` Trusted Publisher authorizes this path too. (A tag pushed with
+  the workflow's `GITHUB_TOKEN` would not trigger `release.yml` on its own, so
+  it is called directly.)
 
 ### Supply-chain settings
 
@@ -229,9 +241,12 @@ potentially compromised — releases.
 
 ### One-time manual setup (not automatable here)
 
-- On **npmjs.com**, add this repo + `release.yml` as a **Trusted Publisher** for
-  `@askviraj/ai-plugins` (enables OIDC). Until then `release.yml` cannot
-  publish.
+- On **npmjs.com**, add this repo + `release.yml` as the **Trusted Publisher**
+  for `@askviraj/ai-plugins` (enables OIDC). The workflow-filename field takes a
+  **single file** and a package has **exactly one** Trusted Publisher — set it
+  to `release.yml` only (not a comma-separated list, and not `deps-update.yml`,
+  which publishes *through* `release.yml`). A mismatch surfaces only at publish
+  time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
 - To cut a release: run **`mise run i:release`** (`--minor`/`--major` to choose
   the bump) — it requires a clean tree, runs the tests, bumps the version,
   commits, and creates the `vX.Y.Z` tag. Then
