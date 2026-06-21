@@ -1,0 +1,36 @@
+# Development-only environment — loaded when MISE_ENV=dev (set on the
+# maintainer's machine). These tools are NOT installed in CI (which uses
+# MISE_ENV=ci); the common node + pnpm runtime lives in mise.toml.
+
+[settings]
+# Only relevant to the python/uv dev tools below.
+pipx.uvx            = true
+python.compile      = false
+python.uv_venv_auto = true
+
+[tools]
+# Development tools
+doppler    = { version = "latest" }
+pre-commit = { version = "latest" }
+
+# Formatter
+dprint = { postinstall = "dprint completions fish | source", version = "latest" }
+taplo  = { version = "latest" }
+
+# Security tools
+gitleaks = { version = "latest" }
+grype    = { version = "latest" }
+
+# AI Tools
+jq       = { version = "latest" }
+opencode = { version = "latest" }
+python   = { version = "latest" }
+uv       = { version = "latest" }
+
+[shell_alias]
+be-setup  = "mise run --cd ../backend setup:all"
+cc        = "claude --allow-dangerously-skip-permissions --dangerously-skip-permissions"
+cco       = "claude --model 'opus[1m]' --allow-dangerously-skip-permissions --dangerously-skip-permissions"
+fe-setup  = "mise run --cd ../frontend setup:all"
+precommit = "mise run code:precommit"
+setup     = "mise run setup:all"

@@ -1,0 +1,53 @@
+name: Release
+
+# Publishes @askviraj/ai-plugins to npm when a version tag is pushed.
+# Auth is OIDC "trusted publishing" (no stored token) — npm verifies this repo +
+# workflow's GitHub identity and adds provenance automatically. One-time setup:
+# on npmjs.com, add this repo and `release.yml` as a Trusted Publisher for the
+# package. To release: bump the version, then push a matching tag (e.g. v1.2.0).
+on:
+  push:
+    tags:
+      - "v*"
+
+# id-token: write is required for OIDC trusted publishing.
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MISE_ENV: ci
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up mise (node + pnpm, ci env)
+        uses: jdx/mise-action@v4
+
+      - name: Verify the tag matches package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag v$tag does not match package.json version $pkg"
+            exit 1
+          fi
+          echo "Releasing @askviraj/ai-plugins@$pkg"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # OIDC trusted publishing needs npm >= 11.5.1; the node-bundled npm may lag.
+      - name: Ensure npm supports OIDC trusted publishing
+        run: npm install -g npm@latest
+
+      # Runs the i:test + i:build gates (pnpm) then `npm publish` (OIDC).
+      - name: Publish to npm
+        run: mise run i:publish --ci

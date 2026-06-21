@@ -1,0 +1,6 @@
+# CI-only environment — loaded when MISE_ENV=ci (set by the GitHub workflows in
+# .github/workflows/). The common runtime CI needs (node, pnpm) lives in
+# mise.toml, so no extra tools are required today. Add CI-specific tools here as
+# the pipelines grow — they will NOT leak into the dev environment.
+
+[tools]

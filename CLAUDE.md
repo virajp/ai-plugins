@@ -185,6 +185,53 @@ referenced by `$schema`). User-facing reference docs are at
 `tools/statusline/statusline.json`, `schemas/statusline.schema.json`, and
 `docs/statusline.md` in sync.
 
+## CI & Releases
+
+### mise environments
+
+The mise config is split by `MISE_ENV` (all under `.config/`, where mise
+resolves env variants):
+
+- `.config/mise.toml` — **generic**, loaded everywhere: the common `node` +
+  `pnpm` runtime plus settings/env/`tasks.init`.
+- `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
+  has this exported): the full dev toolchain (doppler, pre-commit, dprint,
+  taplo, gitleaks, grype, jq, opencode, python, uv) + shell aliases.
+- `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this):
+  CI-only tools; empty today since CI only needs the generic node + pnpm.
+
+Keep common tools in `mise.toml` (don't duplicate across dev/ci); put
+environment-specific tools in the matching env file.
+
+### Workflows (`.github/workflows/`)
+
+- **`release.yml`** — on a pushed `v*` tag: sets up mise (`MISE_ENV=ci`),
+  verifies the tag matches `package.json` version,
+  `pnpm install --frozen-lockfile`, then `mise run i:publish --ci`. **Publishing
+  uses the npm CLI** (`npm publish`) for **OIDC trusted publishing** — no stored
+  token, provenance added automatically; **everything else stays pnpm**. The
+  local `i:publish` (no `--ci`) also uses `npm publish` but with an interactive
+  auth check.
+- **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
+  (bounded by the cooldown below), smoke-tests via `mise run i:test`, and
+  commits the refreshed `pnpm-lock.yaml` straight to `main` as `ops(deps): …`.
+
+### Supply-chain settings
+
+`pnpm-workspace.yaml` sets **`minimumReleaseAge`** (a publish cooldown, in
+minutes) so neither installs nor the monthly update adopt brand-new —
+potentially compromised — releases.
+
+### One-time manual setup (not automatable here)
+
+- On **npmjs.com**, add this repo + `release.yml` as a **Trusted Publisher** for
+  `@askviraj/ai-plugins` (enables OIDC). Until then `release.yml` cannot
+  publish.
+- To cut a release: bump the version (`mise run i:version`), commit, then push a
+  matching tag — e.g. `git tag v1.2.0 && git push origin v1.2.0`. Prefer
+  releasing via CI over local `i:publish` so every version keeps the strongest
+  npm trust level (trusted publisher).
+
 ## Hooks
 
 `vwf` ships two `PreToolUse` / `Bash` hooks (declared in `hooks/hooks.json`):

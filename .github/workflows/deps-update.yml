@@ -1,0 +1,47 @@
+name: Monthly dependency update
+
+# Refreshes pnpm dependencies once a month so security fixes land without manual
+# intervention. The minimumReleaseAge cooldown in pnpm-workspace.yaml keeps this
+# from pulling brand-new (potentially compromised) releases. The refreshed
+# lockfile is committed straight to main.
+on:
+  schedule:
+    - cron: "0 6 1 * *" # 06:00 UTC on the 1st of each month
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deps-update
+  cancel-in-progress: false
+
+env:
+  MISE_ENV: ci
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up mise (node + pnpm, ci env)
+        uses: jdx/mise-action@v4
+
+      - name: Update dependencies (respects the minimumReleaseAge cooldown)
+        run: pnpm update
+
+      - name: Smoke-test the CLI with the updated dependencies
+        run: mise run i:test
+
+      - name: Commit the refreshed lockfile to main
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml package.json; then
+            echo "No dependency changes this month."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml package.json
+          git commit -m "ops(deps): monthly pnpm-lock refresh"
+          git push

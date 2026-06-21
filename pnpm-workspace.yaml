@@ -1,0 +1,13 @@
+# pnpm settings (this repo is a single package, not a workspace — pnpm reads its
+# settings from here regardless).
+
+# Supply-chain hardening: refuse to install a dependency version until it has been
+# public for at least this many MINUTES. A compromised release is usually caught
+# and unpublished within a few days, so this cooldown keeps fresh, malicious
+# versions out of installs and out of the monthly `pnpm update`.
+# https://pnpm.io/settings#minimumreleaseage
+minimumReleaseAge: 10080 # 7 days
+
+# Versions that must bypass the cooldown (e.g. a critical security hotfix):
+# minimumReleaseAgeExclude:
+#   - some-package@1.2.3

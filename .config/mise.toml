@@ -10,31 +10,13 @@ status.missing_tools = "always"
 node.compile        = false
 npm.package_manager = "pnpm"
 
-# Python settings
-pipx.uvx            = true
-python.compile      = false
-python.uv_venv_auto = true
-
+# Generic config — applies to every environment (dev + ci). Environment-specific
+# tools live in mise.dev.toml (MISE_ENV=dev, the maintainer's machine) and
+# mise.ci.toml (MISE_ENV=ci, the GitHub workflows). Only the common runtime that
+# both need (node, pnpm) lives here, to avoid duplicating it across both.
 [tools]
-# Development tools
-doppler    = { version = "latest" }
-node       = { version = "latest" }
-pnpm       = { version = "latest" }
-pre-commit = { version = "latest" }
-
-# Formatter
-dprint = { postinstall = "dprint completions fish | source", version = "latest" }
-taplo  = { version = "latest" }
-
-# Security tools
-gitleaks = { version = "latest" }
-grype    = { version = "latest" }
-
-# AI Tools
-jq       = { version = "latest" }
-opencode = { version = "latest" }
-python   = { version = "latest" }
-uv       = { version = "latest" }
+node = { version = "latest" }
+pnpm = { version = "latest" }
 
 [env]
 DISABLE_TELEMETRY = 1
@@ -44,11 +26,3 @@ _.path            = { path = "node_modules/.bin", tools = true }
 description = "Initialize mise tasks"
 hide        = true
 run         = "find .config/mise/tasks/ -name '*' -type f -exec chmod 755 {} \\;"
-
-[shell_alias]
-be-setup  = "mise run --cd ../backend setup:all"
-cc        = "claude --allow-dangerously-skip-permissions --dangerously-skip-permissions"
-cco       = "claude --model 'opus[1m]' --allow-dangerously-skip-permissions --dangerously-skip-permissions"
-fe-setup  = "mise run --cd ../frontend setup:all"
-precommit = "mise run code:precommit"
-setup     = "mise run setup:all"
