@@ -196,8 +196,9 @@ maintainers. 🙏
 - **[typescript-language-server](https://github.com/typescript-language-server/typescript-language-server)**
   and the **[Dart SDK](https://dart.dev/)** language server — the engines behind
   the LSP plugins.
-- **rtk (Rust Token Killer)** — the token-saving proxy `vwf`'s Bash hook shells
-  out to (installed via `brew install --formulae rtk`).
+- **[rtk](https://github.com/rtk-ai/rtk) (Rust Token Killer)** — the
+  token-saving proxy `vwf`'s Bash hook shells out to (installed via
+  `brew install --formulae rtk`).
 - **[graphify](https://pypi.org/project/graphifyy/)** — the knowledge-graph tool
   `vwf` integrates with.
 - **[oclif](https://oclif.io/)** — the framework this installer CLI is built on.
