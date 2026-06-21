@@ -216,7 +216,10 @@ class Installer extends Command {
     // The install phase already refreshed the marketplace, so only refresh it
     // here when this run skipped the install phase.
     if (!marketplaceRefreshed) {
-      this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME]);
+      this.runClaude(
+        `Refreshing marketplace ${MARKETPLACE_NAME}`,
+        ["plugin", "marketplace", "update", MARKETPLACE_NAME],
+      );
     }
 
     if (!ours.length) {
@@ -230,8 +233,10 @@ class Installer extends Command {
         const have = installed[name];
         const want = latest[name];
         if (want && cmpVer(want, have) > 0) {
-          this.log(yellow(`\nUpdating ${name} (${have} → ${want})…`));
-          this.runClaude(["plugin", "update", `${name}@${MARKETPLACE_NAME}`]);
+          this.runClaude(
+            `Updating ${name} (${have} → ${want})`,
+            ["plugin", "update", `${name}@${MARKETPLACE_NAME}`],
+          );
           updated++;
         }
         else {
@@ -278,21 +283,17 @@ class Installer extends Command {
       }
       for (const name of plan.plugins) {
         const scope = scopeFor(name);
-        this.log(yellow(`\nUninstalling ${name} (${scope} scope)…`));
-        if (
-          !this.runClaude([
+        this.runClaude(
+          `Uninstalling ${name} (${scope} scope)`,
+          [
             "plugin",
             "uninstall",
             "--scope",
             scope,
             "--yes",
             `${name}@${MARKETPLACE_NAME}`,
-          ])
-        ) {
-          this.log(
-            red(`Failed to uninstall ${name} (maybe not at ${scope} scope).`),
-          );
-        }
+          ],
+        );
       }
     }
     if (plan.statusLine || plan.subagentStatusLine) {
@@ -398,53 +399,47 @@ class Installer extends Command {
   // Returns true (the marketplace is now refreshed) so a following --upgrade can
   // skip its redundant refresh.
   installPlugins(plugins) {
-    this.log(green(`\nAdding marketplace ${MARKETPLACE_NAME} (user scope)…`));
-    this.runClaude([
-      "plugin",
-      "marketplace",
-      "add",
-      "--scope",
-      "user",
-      MARKETPLACE_REF,
-    ]);
+    this.runClaude(
+      `Adding marketplace ${MARKETPLACE_NAME} (user scope)`,
+      ["plugin", "marketplace", "add", "--scope", "user", MARKETPLACE_REF],
+    );
     // Refresh the on-disk copy so newly published plugins resolve (add alone
     // won't update an existing marketplace).
-    this.log(green(`Refreshing marketplace ${MARKETPLACE_NAME}…`));
-    if (
-      !this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME])
-    ) {
-      this.log(
-        yellow(
-          "Marketplace update returned non-zero — installs may use a stale copy.",
-        ),
-      );
-    }
+    this.runClaude(
+      `Refreshing marketplace ${MARKETPLACE_NAME}`,
+      ["plugin", "marketplace", "update", MARKETPLACE_NAME],
+    );
     for (const name of plugins) {
       const scope = scopeFor(name);
-      this.log(green(`\nInstalling ${name} (${scope} scope)…`));
-      if (
-        !this.runClaude([
-          "plugin",
-          "install",
-          "--scope",
-          scope,
-          `${name}@${MARKETPLACE_NAME}`,
-        ])
-      ) {
-        this.log(red(`Failed to install ${name}.`));
-      }
+      this.runClaude(
+        `Installing ${name} (${scope} scope)`,
+        ["plugin", "install", "--scope", scope, `${name}@${MARKETPLACE_NAME}`],
+      );
     }
     return true;
   }
 
-  // Run a `claude` subcommand, streaming its output. Returns true on exit 0.
-  runClaude(args) {
-    this.log(`$ claude ${args.join(" ")}`);
-    const res = spawnSync("claude", args, { stdio: "inherit" });
+  // Run a `claude` subcommand quietly under a one-line status: prints
+  // "<label> … ✅" on success, or "<label> … ❌" followed by the captured command
+  // output on failure. Output is surfaced ONLY on error — success stays a single
+  // tidy line. Returns true on exit 0.
+  runClaude(label, args) {
+    process.stdout.write(`${label} ... `);
+    const res = spawnSync("claude", args, { encoding: "utf8" });
     if (res.error) {
+      this.log(red("❌"));
       this.error(`Failed to run claude: ${res.error.message}`);
     }
-    return res.status === 0;
+    if (res.status === 0) {
+      this.log(green("✅ OK"));
+      return true;
+    }
+    this.log(red("❌ FAILED"));
+    const out = `${res.stdout || ""}${res.stderr || ""}`.trim();
+    if (out) {
+      this.log(out);
+    }
+    return false;
   }
 
   // Copy the script, seed the user config, and set the requested statusline keys.
