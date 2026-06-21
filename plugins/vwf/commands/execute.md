@@ -35,11 +35,11 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
 
 ## Pipeline
 
-| Stage    | What             | Model | Subagent                    |
-| -------- | ---------------- | ----- | --------------------------- |
-| code     | Write Code (TDD) | haiku | `execute-coder`             |
-| review   | Code Review      | opus  | `execute-code-reviewer`     |
-| security | Security Review  | opus  | `execute-security-reviewer` |
+| Stage    | What             | Model  | Subagent                    |
+| -------- | ---------------- | ------ | --------------------------- |
+| code     | Write Code (TDD) | sonnet | `execute-coder`             |
+| review   | Code Review      | opus   | `execute-code-reviewer`     |
+| security | Security Review  | opus   | `execute-security-reviewer` |
 
 ## Hard Rules
 
@@ -70,7 +70,7 @@ Read the run mode from `$ARGUMENTS`:
 
 ---
 
-## Stage: code (`execute-coder`, haiku)
+## Stage: code (`execute-coder`, sonnet)
 
 **LSP check (orchestrator — interactive, before dispatching).** Identify the
 primary language(s) from the plan and the registry's `stack` fields, then check

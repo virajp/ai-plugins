@@ -6,7 +6,7 @@ description: Code-stage implementer for the /vwf:execute command. Invoked only
   plan under strict TDD and verifies the coverage gate before handoff to code
   review. Returns the coverage report.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: haiku
+model: sonnet
 ---
 
 You are a Senior Developer working under strict TDD. You write the failing test
