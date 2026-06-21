@@ -47,6 +47,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Security gate: osv-scanner exits non-zero if the locked dependencies
+      # include any known-vulnerable package, blocking the publish. If a fix
+      # isn't yet available, add an osv-scanner.toml ignore or a pnpm override.
+      - name: Security-scan the dependencies (osv-scanner)
+        run: osv-scanner scan source --lockfile=pnpm-lock.yaml
+
       - name: Run tests
         run: mise run i:test
 
