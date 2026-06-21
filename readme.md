@@ -6,7 +6,7 @@ a config-driven powerline `statusline` — for use with the Claude Code CLI.
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) — runs the installer via `npx`.
+- [Node.js](https://nodejs.org/) — runs the installer via `pnpx` (or `npx`).
 - [Claude Code CLI](https://claude.ai/code) — the installer drives it to add the
   marketplace and install plugins.
 - [Mise](https://mise.jdx.dev/) — the LSP plugins and the `vwf` npm→pnpm hook
@@ -25,22 +25,25 @@ adds the `virajp-plugins` marketplace (user-scoped) and drives the Claude Code
 CLI for you, installing each plugin at its default scope (`dart-lsp` is
 project-scoped, every other plugin user-scoped).
 
+> The examples below use `pnpx`; if you don't use `pnpm`, swap in `npx` — the
+> commands are otherwise identical.
+
 **Install everything — all plugins + statusline:**
 
 ```sh
-npx @askviraj/ai-plugins --all
+pnpx @askviraj/ai-plugins --all
 ```
 
 **Install all plugins (no statusline):**
 
 ```sh
-npx @askviraj/ai-plugins --plugins
+pnpx @askviraj/ai-plugins --plugins
 ```
 
 **Install specific plugins (`--plugin` is repeatable):**
 
 ```sh
-npx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp
+pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp
 ```
 
 Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
@@ -60,7 +63,7 @@ commands to `pnpm`, and an `rtk hook claude` hook (requires `rtk` — see
 Prerequisites).
 
 ```sh
-npx @askviraj/ai-plugins --plugin vwf
+pnpx @askviraj/ai-plugins --plugin vwf
 ```
 
 **Slash commands** (`/vwf:<name>`):
@@ -88,7 +91,7 @@ All of vwf's dependencies live in the **same `virajp-plugins` marketplace**
 registered:
 
 ```sh
-npx @askviraj/ai-plugins --plugin vwf   # adds the marketplace, installs vwf + deps
+pnpx @askviraj/ai-plugins --plugin vwf   # adds the marketplace, installs vwf + deps
 ```
 
 > Auto-enable is **event-driven** — it fires when you enable `vwf`, not
@@ -112,10 +115,10 @@ copies the script to `~/.claude/scripts/` and writes the chosen key(s) into
 
 ```sh
 # install both surfaces (use --statusline / --subagentstatusline individually too)
-npx @askviraj/ai-plugins --statusline --subagentstatusline
+pnpx @askviraj/ai-plugins --statusline --subagentstatusline
 
 # overwrite existing config without prompting
-npx @askviraj/ai-plugins --statusline --subagentstatusline --yes
+pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes
 ```
 
 See **[docs/statusline.md](./docs/statusline.md)** for setup and the full
@@ -132,7 +135,7 @@ here; it is also a `vwf` dependency.
 > you only need these steps to install `mempalace` on its own.
 
 ```sh
-npx @askviraj/ai-plugins --plugin mempalace
+pnpx @askviraj/ai-plugins --plugin mempalace
 ```
 
 ### context7
@@ -140,7 +143,7 @@ npx @askviraj/ai-plugins --plugin mempalace
 Context7 MCP server — fetches up-to-date library/framework documentation.
 
 ```sh
-npx @askviraj/ai-plugins --plugin context7
+pnpx @askviraj/ai-plugins --plugin context7
 ```
 
 ### typescript-lsp
@@ -148,7 +151,7 @@ npx @askviraj/ai-plugins --plugin context7
 TypeScript/JavaScript language server (via `typescript-language-server`).
 
 ```sh
-npx @askviraj/ai-plugins --plugin typescript-lsp
+pnpx @askviraj/ai-plugins --plugin typescript-lsp
 ```
 
 ### dart-lsp
@@ -156,5 +159,5 @@ npx @askviraj/ai-plugins --plugin typescript-lsp
 Dart language server.
 
 ```sh
-npx @askviraj/ai-plugins --plugin dart-lsp
+pnpx @askviraj/ai-plugins --plugin dart-lsp
 ```
