@@ -127,13 +127,25 @@ Layout:
   `package.json`; `settings.enableAutoTranspile = false` keeps oclif from
   hunting for TypeScript).
 
-The command accepts `--statusline`, `--subagentstatusline`, and `--yes`. It
-copies the script into `~/.claude/scripts/` (chmod 755), seeds the bundled
-defaults into `~/.config/statusline.json` (deep-merging missing settings if it
-already exists, preserving user edits), and writes the chosen key(s) into
+The command does two jobs. **Plugins:** `--all` (everything), `--plugins` (all
+marketplace plugins), or `--plugin <name>` (repeatable) drive the `claude` CLI
+to add the `virajp-plugins` marketplace (user scope) and install each plugin at
+its default scope — `dart-lsp` is project-scoped, every other plugin is
+user-scoped (see `PROJECT_SCOPED` in `bin/installer.js`). **Statusline:**
+`--statusline` and/or `--subagentstatusline` (both implied by `--all`) copy the
+script into `~/.claude/scripts/` (chmod 755), seed the bundled defaults into
+`~/.config/statusline.json` (deep-merging missing settings if it already exists,
+preserving user edits), and write the chosen key(s) into
 `~/.claude/settings.json` (preserving other keys; prompting before overwrite
-unless `--yes`). Users run it via `npx @askviraj/ai-plugins …` — there is no
-`claude plugin install` path.
+unless `--yes`).
+
+Before any install, the CLI **checks required external tools** for the resolved
+plan (`CORE_DEPS` brew/mise/claude for any plugin install, `PLUGIN_EXTRA_DEPS`
+like vwf→rtk+pnpm+graphify, `node` for the statusline). If any are missing it
+prints the install command for each (`DEP_HINTS`) and exits non-zero — it never
+auto-installs a dependency. Keep `PLUGINS`, `PROJECT_SCOPED`, `DEP_HINTS`,
+`CORE_DEPS`, and `PLUGIN_EXTRA_DEPS` in sync with the marketplace and the
+plugins' actual runtime needs. Users run it via `npx @askviraj/ai-plugins …`.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):

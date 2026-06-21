@@ -10,6 +10,7 @@
 
 const { Command, Flags, execute, settings } = require("@oclif/core");
 const { existsSync } = require("node:fs");
+const { spawnSync } = require("node:child_process");
 
 // This is a plain-JS CLI (no TypeScript / ts-node). Tell oclif so it never tries
 // to auto-transpile, which otherwise warns "Could not find typescript".
@@ -18,7 +19,7 @@ const { chmod, copyFile, mkdir, readFile, writeFile } = require(
   "node:fs/promises",
 );
 const { homedir } = require("node:os");
-const { dirname, join } = require("node:path");
+const { delimiter, dirname, join } = require("node:path");
 const readline = require("node:readline/promises");
 
 const SCRIPTS_DIR = join(homedir(), ".claude", "scripts");
@@ -43,29 +44,168 @@ const SUBAGENT_STATUS_LINE = {
   command: COMMAND,
 };
 
+// GitHub shorthand passed to `claude plugin marketplace add`, and the marketplace
+// name it resolves to (used as `<plugin>@<name>` when installing).
+const MARKETPLACE_REF = "virajp/ai-plugins";
+const MARKETPLACE_NAME = "virajp-plugins";
+
+// All plugins published by the virajp-plugins marketplace.
+const PLUGINS = ["vwf", "typescript-lsp", "dart-lsp", "context7", "mempalace"];
+
+// Plugins that install at project scope by default; everything else is
+// user-scoped. The marketplace itself is always user-scoped.
+const PROJECT_SCOPED = new Set(["dart-lsp"]);
+const scopeFor = name => (PROJECT_SCOPED.has(name) ? "project" : "user");
+
+// How to install each external tool we depend on (matches this toolchain:
+// brew + mise drive the rest; rtk ships as a brew formula).
+const DEP_HINTS = {
+  brew:
+    "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
+  mise: "brew install mise",
+  claude: "mise use -g claude-code@latest",
+  rtk: "brew install --formulae rtk",
+  pnpm: "mise use -g pnpm@latest",
+  node: "mise use -g node@latest",
+  graphify: "mise use -g pipx:graphifyy@latest",
+};
+
+// Tools required whenever any plugin/marketplace install runs.
+const CORE_DEPS = ["brew", "mise", "claude"];
+
+// Extra tools specific plugins need: vwf ships an `rtk hook claude` Bash hook,
+// uses graphify, and pulls in context7, which runs its MCP server via pnpx (pnpm).
+const PLUGIN_EXTRA_DEPS = {
+  vwf: ["rtk", "pnpm", "graphify"],
+  context7: ["pnpm"],
+};
+
 class Installer extends Command {
   async run() {
     const { flags } = await this.parse(Installer);
+    const plan = this.resolvePlan(flags);
 
-    if (!flags.statusline && !flags.subagentstatusline) {
+    if (!plan.plugins.length && !plan.statusLine && !plan.subagentStatusLine) {
       this.error(
-        "Nothing to do. Pass --statusline and/or --subagentstatusline (optionally --yes).",
+        "Nothing to do. Pass --all, --plugins, --plugin <name>, --statusline, and/or --subagentstatusline.",
       );
     }
 
+    this.checkDeps(plan);
+
+    if (plan.plugins.length) {
+      this.installPlugins(plan.plugins);
+    }
+
+    if (plan.statusLine || plan.subagentStatusLine) {
+      await this.installStatusline(plan, flags.yes);
+    }
+  }
+
+  // Turn the parsed flags into a concrete plan: which plugins to install and
+  // which statusline keys to set. --all is the superset of everything.
+  resolvePlan(flags) {
+    const all = flags.all;
+    let plugins;
+    if (all || flags.plugins) {
+      plugins = [...PLUGINS];
+    }
+    else if (flags.plugin?.length) {
+      const invalid = flags.plugin.filter(n => !PLUGINS.includes(n));
+      if (invalid.length) {
+        this.error(
+          `Unknown plugin(s): ${invalid.join(", ")}. Valid: ${
+            PLUGINS.join(", ")
+          }`,
+        );
+      }
+      plugins = [...new Set(flags.plugin)];
+    }
+    else {
+      plugins = [];
+    }
+    return {
+      all,
+      plugins,
+      statusLine: all || flags.statusline,
+      subagentStatusLine: all || flags.subagentstatusline,
+    };
+  }
+
+  // Verify every tool the plan needs is on PATH. If any are missing, print the
+  // install command for each and exit so the user installs them and re-runs.
+  checkDeps(plan) {
+    const missing = requiredTools(plan).filter(t => !hasBin(t));
+    if (!missing.length) {
+      return;
+    }
+    this.log("\nMissing required dependencies — install these, then re-run:\n");
+    for (const t of missing) {
+      this.log(`  ${t}`);
+      this.log(`    ${DEP_HINTS[t] || "see project docs"}`);
+    }
+    this.exit(1);
+  }
+
+  // Add the marketplace (user scope), then install each plugin at its scope.
+  installPlugins(plugins) {
+    this.log(`\nAdding marketplace ${MARKETPLACE_NAME} (user scope)…`);
+    if (
+      !this.runClaude([
+        "plugin",
+        "marketplace",
+        "add",
+        "--scope",
+        "user",
+        MARKETPLACE_REF,
+      ])
+    ) {
+      this.log(
+        "Marketplace add returned non-zero (may already exist) — continuing.",
+      );
+    }
+    for (const name of plugins) {
+      const scope = scopeFor(name);
+      this.log(`\nInstalling ${name} (${scope} scope)…`);
+      if (
+        !this.runClaude([
+          "plugin",
+          "install",
+          "--scope",
+          scope,
+          `${name}@${MARKETPLACE_NAME}`,
+        ])
+      ) {
+        this.log(`Failed to install ${name}.`);
+      }
+    }
+  }
+
+  // Run a `claude` subcommand, streaming its output. Returns true on exit 0.
+  runClaude(args) {
+    this.log(`$ claude ${args.join(" ")}`);
+    const res = spawnSync("claude", args, { stdio: "inherit" });
+    if (res.error) {
+      this.error(`Failed to run claude: ${res.error.message}`);
+    }
+    return res.status === 0;
+  }
+
+  // Copy the script, seed the user config, and set the requested statusline keys.
+  async installStatusline(plan, yes) {
     await this.installScript();
     await this.seedUserConfig();
 
     const settings = await this.readSettings();
-    if (flags.statusline) {
-      await this.applyKey(settings, "statusLine", STATUS_LINE, flags.yes);
+    if (plan.statusLine) {
+      await this.applyKey(settings, "statusLine", STATUS_LINE, yes);
     }
-    if (flags.subagentstatusline) {
+    if (plan.subagentStatusLine) {
       await this.applyKey(
         settings,
         "subagentStatusLine",
         SUBAGENT_STATUS_LINE,
-        flags.yes,
+        yes,
       );
     }
     await this.writeSettings(settings);
@@ -151,15 +291,29 @@ class Installer extends Command {
 }
 
 Installer.description =
-  "Install the powerline statusline: copy the script to ~/.claude/scripts/, seed ~/.config/statusline.json, and wire ~/.claude/settings.json.";
+  "Install Viraj Patel's Claude Code toolkit: marketplace plugins (via the `claude` CLI) and the powerline statusline. Checks required tools (brew/mise/claude/rtk/pnpm/…) first and prints install hints for any that are missing.";
 
 Installer.examples = [
-  "<%= config.bin %> --statusline",
-  "<%= config.bin %> --subagentstatusline",
+  "<%= config.bin %> --all",
+  "<%= config.bin %> --plugins",
+  "<%= config.bin %> --plugin vwf --plugin dart-lsp",
   "<%= config.bin %> --statusline --subagentstatusline --yes",
 ];
 
 Installer.flags = {
+  all: Flags.boolean({
+    description:
+      "Install everything: every marketplace plugin plus both statusline keys",
+  }),
+  plugins: Flags.boolean({
+    description: `Install all marketplace plugins (${PLUGINS.join(", ")})`,
+  }),
+  plugin: Flags.string({
+    multiple: true,
+    description: `Install a specific plugin by name (repeatable). One of: ${
+      PLUGINS.join(", ")
+    }`,
+  }),
   statusline: Flags.boolean({
     description:
       "Install `statusLine` (the main status bar) in ~/.claude/settings.json",
@@ -173,6 +327,32 @@ Installer.flags = {
     description: "Overwrite existing config without prompting",
   }),
 };
+
+// True if `bin` is an executable found on PATH.
+function hasBin(bin) {
+  return (process.env.PATH || "")
+    .split(delimiter)
+    .some(dir => dir && existsSync(join(dir, bin)));
+}
+
+// The tools that must be present for the resolved install plan.
+function requiredTools({ plugins, statusLine, subagentStatusLine }) {
+  const tools = new Set();
+  if (plugins.length) {
+    for (const d of CORE_DEPS) {
+      tools.add(d);
+    }
+  }
+  for (const p of plugins) {
+    for (const d of PLUGIN_EXTRA_DEPS[p] || []) {
+      tools.add(d);
+    }
+  }
+  if (statusLine || subagentStatusLine) {
+    tools.add("node");
+  }
+  return [...tools];
+}
 
 const isObject = v => v != null && typeof v === "object" && !Array.isArray(v);
 
