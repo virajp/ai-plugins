@@ -65,7 +65,14 @@ const REMOTE_MARKETPLACE_URL =
 const NPM_LATEST_URL = "https://registry.npmjs.org/@askviraj/ai-plugins/latest";
 
 // All plugins published by the virajp-plugins marketplace.
-const PLUGINS = ["vwf", "typescript-lsp", "dart-lsp", "context7", "mempalace"];
+const PLUGINS = [
+  "vwf",
+  "markdown",
+  "typescript-lsp",
+  "dart-lsp",
+  "context7",
+  "mempalace",
+];
 
 // Plugins that install at project scope by default; everything else is
 // user-scoped. The marketplace itself is always user-scoped.

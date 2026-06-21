@@ -108,6 +108,25 @@
         "git-workflow"
       ],
       "version": "1.4.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file.",
+      "name": "markdown",
+      "source": "./plugins/markdown",
+      "strict": true,
+      "tags": [
+        "markdown",
+        "documentation",
+        "writing",
+        "changelog",
+        "mermaid",
+        "skills"
+      ],
+      "version": "0.1.0"
     }
   ]
 }
