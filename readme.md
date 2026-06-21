@@ -199,8 +199,8 @@ maintainers. 🙏
 - **[rtk](https://github.com/rtk-ai/rtk) (Rust Token Killer)** — the
   token-saving proxy `vwf`'s Bash hook shells out to (installed via
   `brew install --formulae rtk`).
-- **[graphify](https://pypi.org/project/graphifyy/)** — the knowledge-graph tool
-  `vwf` integrates with.
+- **[graphify](https://github.com/safishamsi/graphify)** — the knowledge-graph
+  tool `vwf` integrates with.
 - **[oclif](https://oclif.io/)** — the framework this installer CLI is built on.
 - **[Nerd Fonts](https://www.nerdfonts.com/)** — the glyphs that make the
   statusline render, and the **[Gruvbox](https://github.com/morhetz/gruvbox)**
