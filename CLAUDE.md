@@ -207,11 +207,11 @@ environment-specific tools in the matching env file.
 
 - **`release.yml`** — on a pushed `v*` tag: sets up mise (`MISE_ENV=ci`),
   verifies the tag matches `package.json` version,
-  `pnpm install --frozen-lockfile`, then `mise run i:publish --ci`. **Publishing
-  uses the npm CLI** (`npm publish`) for **OIDC trusted publishing** — no stored
-  token, provenance added automatically; **everything else stays pnpm**. The
-  local `i:publish` (no `--ci`) also uses `npm publish` but with an interactive
-  auth check.
+  `pnpm install --frozen-lockfile`, **runs the tests** (`mise run i:test`) and
+  verifies the package (`mise run i:build`), then `npm publish` for **OIDC
+  trusted publishing** — no stored token, provenance added automatically.
+  **Publishing uses the npm CLI; everything else stays pnpm.** The local
+  `i:publish` task mirrors this (auth check + the same gates + `npm publish`).
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
   (bounded by the cooldown below), smoke-tests via `mise run i:test`, and
   commits the refreshed `pnpm-lock.yaml` straight to `main` as `ops(deps): …`.
@@ -227,8 +227,10 @@ potentially compromised — releases.
 - On **npmjs.com**, add this repo + `release.yml` as a **Trusted Publisher** for
   `@askviraj/ai-plugins` (enables OIDC). Until then `release.yml` cannot
   publish.
-- To cut a release: bump the version (`mise run i:version`), commit, then push a
-  matching tag — e.g. `git tag v1.2.0 && git push origin v1.2.0`. Prefer
+- To cut a release: run **`mise run i:release`** (`--minor`/`--major` to choose
+  the bump) — it requires a clean tree, runs the tests, bumps the version,
+  commits, and creates the `vX.Y.Z` tag. Then
+  `git push && git push origin vX.Y.Z` to trigger `release.yml`. Prefer
   releasing via CI over local `i:publish` so every version keeps the strongest
   npm trust level (trusted publisher).
 

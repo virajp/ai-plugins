@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#MISE description="Cut a release: run tests, bump the version, commit, and tag"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--minor" help="bump the minor version (default: patch)"
+#USAGE flag "--major" help="bump the major version (default: patch)"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+# 1. A clean tree is required — the version bump and tag must point at a known
+#    commit, and `pnpm version` refuses to run on a dirty tree.
+if [[ -n "$(git status --porcelain)" ]]; then
+  print_error "Working tree is not clean. Commit or stash your changes first."
+  exit 1
+fi
+
+# 2. Tests must pass before anything is bumped or tagged.
+mise run i:test
+
+# 3. Bump the version (package.json only; no git tag yet).
+if [[ "${usage_major:-false}" == "true" ]]; then
+  mise run i:version --major
+elif [[ "${usage_minor:-false}" == "true" ]]; then
+  mise run i:version --minor
+else
+  mise run i:version
+fi
+
+VERSION="$(node -p "require('./package.json').version")"
+TAG="v${VERSION}"
+
+# 4. Commit the bump and create an annotated tag.
+git add package.json
+git commit -m "ops: release ${TAG}"
+git tag -a "${TAG}" -m "${TAG}"
+
+print_header "Created ${TAG}."
+print_yellow "Push to trigger the release workflow (OIDC publish to npm):"
+print_yellow "  git push && git push origin ${TAG}"

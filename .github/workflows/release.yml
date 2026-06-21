@@ -44,10 +44,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run tests
+        run: mise run i:test
+
+      - name: Verify the publishable package
+        run: mise run i:build
+
       # OIDC trusted publishing needs npm >= 11.5.1; the node-bundled npm may lag.
       - name: Ensure npm supports OIDC trusted publishing
         run: npm install -g npm@latest
 
-      # Runs the i:test + i:build gates (pnpm) then `npm publish` (OIDC).
-      - name: Publish to npm
-        run: mise run i:publish --ci
+      - name: Publish to npm (OIDC trusted publishing + provenance)
+        run: npm publish --access public
