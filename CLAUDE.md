@@ -134,17 +134,25 @@ Layout:
   `package.json`; `settings.enableAutoTranspile = false` keeps oclif from
   hunting for TypeScript).
 
-The command does two jobs. **Plugins:** `--all` (everything), `--plugins` (all
-marketplace plugins), or `--plugin <name>` (repeatable) drive the `claude` CLI
-to add the `virajp-plugins` marketplace (user scope) and install each plugin at
-its default scope — `dart-lsp` is project-scoped, every other plugin is
+The command does several jobs. **Plugins:** `--all` (everything), `--plugins`
+(all marketplace plugins), or `--plugin <name>` (repeatable) drive the `claude`
+CLI to add the `virajp-plugins` marketplace (user scope) and install each plugin
+at its default scope — `dart-lsp` is project-scoped, every other plugin is
 user-scoped (see `PROJECT_SCOPED` in `bin/installer.js`). **Statusline:**
 `--statusline` and/or `--subagentstatusline` (both implied by `--all`) copy the
 script into `~/.claude/scripts/` (chmod 755), seed the bundled defaults into
 `~/.config/statusline.json` (deep-merging missing settings if it already exists,
 preserving user edits), and write the chosen key(s) into
 `~/.claude/settings.json` (preserving other keys; prompting before overwrite
-unless `--yes`).
+unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version (vs the
+latest on npm), the bundled statusline version, and each plugin's installed
+version (from `claude plugin list`) vs the latest in the **remote** marketplace
+manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:**
+`--upgrade` runs **after** any install phase — it `claude plugin update`s every
+installed virajp-plugins plugin that's outdated, refreshes the statusline, and
+notes a newer CLI; combine with `--all` for an idempotent install+upgrade fit
+for a setup script. `--version`/`--upgrade` need the network and `claude`, and
+error out (non-zero) if either is unavailable.
 
 Before any install, the CLI **checks required external tools** for the resolved
 plan (`CORE_DEPS` brew/mise/claude for any plugin install, `PLUGIN_EXTRA_DEPS`

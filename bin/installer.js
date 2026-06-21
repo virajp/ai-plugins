@@ -49,6 +49,12 @@ const SUBAGENT_STATUS_LINE = {
 const MARKETPLACE_REF = "virajp/ai-plugins";
 const MARKETPLACE_NAME = "virajp-plugins";
 
+// Sources for the latest versions (used by --version and --upgrade): the
+// marketplace manifest on the repo's main branch, and the published CLI on npm.
+const REMOTE_MARKETPLACE_URL =
+  "https://raw.githubusercontent.com/virajp/ai-plugins/main/.claude-plugin/marketplace.json";
+const NPM_LATEST_URL = "https://registry.npmjs.org/@askviraj/ai-plugins/latest";
+
 // All plugins published by the virajp-plugins marketplace.
 const PLUGINS = ["vwf", "typescript-lsp", "dart-lsp", "context7", "mempalace"];
 
@@ -83,22 +89,122 @@ const PLUGIN_EXTRA_DEPS = {
 class Installer extends Command {
   async run() {
     const { flags } = await this.parse(Installer);
-    const plan = this.resolvePlan(flags);
 
-    if (!plan.plugins.length && !plan.statusLine && !plan.subagentStatusLine) {
+    if (flags.version) {
+      await this.printVersions();
+      return;
+    }
+
+    const plan = this.resolvePlan(flags);
+    const hasInstall = plan.plugins.length
+      || plan.statusLine
+      || plan.subagentStatusLine;
+
+    if (!hasInstall && !flags.upgrade) {
       this.error(
-        "Nothing to do. Pass --all, --plugins, --plugin <name>, --statusline, and/or --subagentstatusline.",
+        "Nothing to do. Pass --all, --plugins, --plugin <name>, --statusline, --subagentstatusline, --upgrade, or --version.",
       );
     }
 
-    this.checkDeps(plan);
-
-    if (plan.plugins.length) {
-      this.installPlugins(plan.plugins);
+    // Install first — so a fresh machine ends up with the requested plugins…
+    if (hasInstall) {
+      this.checkDeps(plan);
+      if (plan.plugins.length) {
+        this.installPlugins(plan.plugins);
+      }
+      if (plan.statusLine || plan.subagentStatusLine) {
+        await this.installStatusline(plan, flags.yes);
+      }
     }
 
-    if (plan.statusLine || plan.subagentStatusLine) {
-      await this.installStatusline(plan, flags.yes);
+    // …then upgrade everything that is installed to the latest versions.
+    if (flags.upgrade) {
+      await this.upgrade();
+    }
+  }
+
+  // Print the CLI version (vs npm latest), the bundled statusline version, and
+  // each plugin's installed version (from `claude plugin list`) vs the latest in
+  // the remote marketplace, flagging updates. Errors out if the network or the
+  // claude CLI is unavailable.
+  async printVersions() {
+    const cli = this.config.version;
+    const cliLatest = (await fetchJson(NPM_LATEST_URL)).version;
+    const latest = await remoteLatest();
+    const installed = installedPlugins();
+
+    this.log(`${this.config.name}  ${cli}${updateNote(cli, cliLatest)}`);
+    this.log(`  ${"statusline".padEnd(16)} ${cli}  (bundled with the CLI)`);
+
+    this.log(`\nPlugins (${MARKETPLACE_NAME}):`);
+    for (const name of PLUGINS) {
+      this.log(
+        `  ${name.padEnd(16)} ${
+          pluginVersionLine(installed[name], latest[name])
+        }`,
+      );
+    }
+  }
+
+  // Upgrade every installed virajp-plugins plugin to its latest version, refresh
+  // the statusline (if installed) to this CLI's bundled version, and note a newer
+  // CLI. Runs after the install phase, so newly installed plugins are already
+  // latest and only pre-existing ones get bumped. Installing missing plugins is
+  // the install flags' job — this only upgrades what is present. Errors out if
+  // the network or the claude CLI is unavailable.
+  async upgrade() {
+    if (!hasBin("claude")) {
+      this.error("claude CLI not found. Install it first, then re-run.");
+    }
+    // Fail fast on the remote reads before mutating anything.
+    const latest = await remoteLatest();
+    const cliLatest = (await fetchJson(NPM_LATEST_URL)).version;
+    const installed = installedPlugins();
+    const ours = PLUGINS.filter(name => installed[name]);
+
+    this.log(
+      `\nUpgrading installed plugins (marketplace ${MARKETPLACE_NAME})…`,
+    );
+    this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME]);
+
+    if (!ours.length) {
+      this.log("No virajp-plugins plugins are installed — nothing to upgrade.");
+    }
+    else {
+      let updated = 0;
+      for (const name of ours) {
+        const have = installed[name];
+        const want = latest[name];
+        if (want && cmpVer(want, have) > 0) {
+          this.log(`\nUpdating ${name} (${have} → ${want})…`);
+          this.runClaude(["plugin", "update", `${name}@${MARKETPLACE_NAME}`]);
+          updated++;
+        }
+        else {
+          this.log(
+            `${name} is up to date (${have}${want ? "" : ", external"}).`,
+          );
+        }
+      }
+      if (updated) {
+        this.log(
+          "\nPlugin updates applied — restart Claude Code to load them.",
+        );
+      }
+    }
+
+    // Refresh the installed statusline script + config (no settings.json change).
+    if (existsSync(INSTALLED_SCRIPT)) {
+      this.log("\nRefreshing statusline…");
+      await this.installScript();
+      await this.seedUserConfig();
+    }
+
+    if (cmpVer(cliLatest, this.config.version) > 0) {
+      this.log(
+        `\nA newer CLI is available: ${this.config.version} → ${cliLatest}`,
+      );
+      this.log("Re-run with: pnpx @askviraj/ai-plugins@latest --upgrade");
     }
   }
 
@@ -302,9 +408,20 @@ Installer.examples = [
   "pnpx @askviraj/ai-plugins --plugins",
   "pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp",
   "pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes",
+  "pnpx @askviraj/ai-plugins --all --upgrade",
+  "pnpx @askviraj/ai-plugins --version",
 ];
 
 Installer.flags = {
+  version: Flags.boolean({
+    char: "v",
+    description:
+      "Show CLI, statusline, and plugin versions (installed vs latest)",
+  }),
+  upgrade: Flags.boolean({
+    description:
+      "After any install, upgrade installed plugins to latest + refresh the statusline + check for a CLI update. Combine with --all for an idempotent install+upgrade (safe in setup scripts)",
+  }),
   all: Flags.boolean({
     description:
       "Install everything: every marketplace plugin plus both statusline keys",
@@ -331,6 +448,101 @@ Installer.flags = {
     description: "Overwrite existing config without prompting",
   }),
 };
+
+// Fetch and parse JSON over HTTP with a bounded timeout. Throws on any failure
+// (network down, non-2xx, bad JSON) so callers can hard-error per the offline
+// policy.
+async function fetchJson(url) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { "user-agent": "askviraj-ai-plugins" },
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} for ${url}`);
+    }
+    return await res.json();
+  }
+  finally {
+    clearTimeout(timer);
+  }
+}
+
+// Map of plugin name → latest version from the remote marketplace manifest
+// (null for url-sourced entries like mempalace, which pin no version here).
+async function remoteLatest() {
+  const mp = await fetchJson(REMOTE_MARKETPLACE_URL);
+  const out = {};
+  for (const p of mp.plugins || []) {
+    out[p.name] = p.version || null;
+  }
+  return out;
+}
+
+// Map of plugin name → installed version, parsed from `claude plugin list`,
+// restricted to the virajp-plugins marketplace. Throws if claude fails.
+function installedPlugins() {
+  const res = spawnSync("claude", ["plugin", "list"], { encoding: "utf8" });
+  if (res.error || res.status !== 0) {
+    throw new Error(
+      "`claude plugin list` failed — is the claude CLI installed?",
+    );
+  }
+  const out = {};
+  let current = null;
+  for (const line of (res.stdout || "").split("\n")) {
+    const name = line.match(/([A-Za-z0-9_-]+)@virajp-plugins\b/);
+    if (name) {
+      current = name[1];
+      continue;
+    }
+    if (current) {
+      const ver = line.match(/Version:\s*(\S+)/);
+      if (ver) {
+        out[current] = ver[1];
+        current = null;
+      }
+    }
+  }
+  return out;
+}
+
+// Numeric semver compare of dotted versions: 1 if a>b, -1 if a<b, 0 if equal.
+function cmpVer(a, b) {
+  const pa = String(a).split(".").map(n => parseInt(n, 10) || 0);
+  const pb = String(b).split(".").map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) {
+      return 1;
+    }
+    if ((pa[i] || 0) < (pb[i] || 0)) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+// " → X (update available)" when latest beats current, else " (latest)".
+function updateNote(current, latest) {
+  return latest && cmpVer(latest, current) > 0
+    ? `  →  ${latest}  (update available)`
+    : "  (latest)";
+}
+
+// The version column for one plugin given its installed and latest versions.
+function pluginVersionLine(installed, latest) {
+  if (!latest) {
+    return installed
+      ? `${installed}  (external; not tracked here)`
+      : "not installed  (external)";
+  }
+  if (!installed) {
+    return `not installed  (latest ${latest})`;
+  }
+  return `${installed}${updateNote(installed, latest)}`;
+}
 
 // True if `bin` is an executable found on PATH.
 function hasBin(bin) {

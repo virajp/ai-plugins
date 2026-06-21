@@ -52,6 +52,19 @@ Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
 > The **statusline** also installs through this CLI — see
 > [Statusline](#statusline) below.
 
+**Check versions, and keep everything up to date:**
+
+```sh
+# CLI, statusline, and each plugin's installed vs latest version
+pnpx @askviraj/ai-plugins --version
+
+# upgrade installed plugins + refresh the statusline (runs after any install)
+pnpx @askviraj/ai-plugins --upgrade
+
+# idempotent install + upgrade — safe to drop in a setup script
+pnpx @askviraj/ai-plugins --all --upgrade
+```
+
 ## Plugins
 
 ### vwf
@@ -161,3 +174,33 @@ Dart language server.
 ```sh
 pnpx @askviraj/ai-plugins --plugin dart-lsp
 ```
+
+## Credits & acknowledgements
+
+This project is a thin layer over a lot of excellent work. It would not exist —
+or would be far poorer — without these. Thank you to their authors and
+maintainers. 🙏
+
+- **[Claude Code](https://claude.ai/code)** by
+  [Anthropic](https://anthropic.com) — the host these plugins, hooks, and
+  statusline plug into.
+- **[MemPalace](https://github.com/MemPalace/mempalace)** — the AI memory system
+  that powers `vwf`'s cross-session recall (re-listed here as a dependency).
+- **[Context7](https://github.com/upstash/context7)** by
+  [Upstash](https://upstash.com) — the MCP docs server behind the `context7`
+  plugin.
+- **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the
+  LSP plugins and hooks depend on.
+- **[pnpm](https://pnpm.io/)** — the package manager the `npm→pnpm` hook and
+  `context7` rely on.
+- **[typescript-language-server](https://github.com/typescript-language-server/typescript-language-server)**
+  and the **[Dart SDK](https://dart.dev/)** language server — the engines behind
+  the LSP plugins.
+- **rtk (Rust Token Killer)** — the token-saving proxy `vwf`'s Bash hook shells
+  out to (installed via `brew install --formulae rtk`).
+- **[graphify](https://pypi.org/project/graphifyy/)** — the knowledge-graph tool
+  `vwf` integrates with.
+- **[oclif](https://oclif.io/)** — the framework this installer CLI is built on.
+- **[Nerd Fonts](https://www.nerdfonts.com/)** — the glyphs that make the
+  statusline render, and the **[Gruvbox](https://github.com/morhetz/gruvbox)**
+  palette it ships by default.

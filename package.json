@@ -7,6 +7,25 @@
     "@oclif/core": "latest"
   },
   "description": "CLI to install Viraj Patel's Claude Code toolkit: marketplace plugins (via the claude CLI) and the powerline statusline",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-code-plugin",
+    "claude-code-plugins",
+    "marketplace",
+    "statusline",
+    "powerline",
+    "subagent",
+    "cli",
+    "mcp",
+    "lsp",
+    "vwf",
+    "context7",
+    "mempalace",
+    "ai",
+    "anthropic",
+    "oclif"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -25,5 +44,5 @@
   },
   "repository": "github:virajp/ai-plugins",
   "type": "commonjs",
-  "version": "1.0.1"
+  "version": "1.1.0"
 }
