@@ -300,6 +300,20 @@ function gitDirtyMark(cwd) {
   return "";
 }
 
+// Up-arrow marker when the branch is ahead of its upstream (local commits not
+// pushed). Empty when in sync, when there is no upstream, or on any git error.
+// One bounded git call (250ms).
+function gitAheadMark(cwd) {
+  const { execFileSync } = require("child_process");
+  const opts = { cwd, encoding: "utf8", timeout: 250, stdio: ["ignore", "pipe", "ignore"] };
+  try {
+    const out = execFileSync("git", ["rev-list", "--count", "@{upstream}..HEAD"], opts).trim();
+    return parseInt(out, 10) > 0 ? SYM.ahead : "";
+  } catch (_) {
+    return "";
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Segment registry — each builder takes the resolved context `c` and returns the
 // segment TEXT (a string), or null to omit (when its data is absent). All styling
@@ -323,6 +337,7 @@ const SEGMENTS = {
   branch: (c) => {
     if (!c.branch) return null;
     let t = c.wt ? `${SYM.worktree} ${SYM.branch} ${c.branch}` : `${SYM.branch} ${c.branch}`;
+    if (c.ahead) t += ` ${c.ahead}`;
     if (c.dirty) t += ` ${c.dirty}`;
     return t;
   },
@@ -384,6 +399,7 @@ function renderMain(d) {
     projectSym: SYM.project,
     wt: worktreeSubpath(cwd),
     branch: git.branch,
+    ahead: git.branch ? gitAheadMark(cwd) : "",
     dirty: git.branch ? gitDirtyMark(cwd) : "",
   };
 

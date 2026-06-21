@@ -120,7 +120,13 @@ it everywhere.
 
 `symbols` keys consumed by the script: `model`, `context`, `win5h`, `win7d`,
 `reset`, `session`, `cost`, `duration`, `project`, `worktree`, `folder`,
-`branch`, `dirtyAdd`, `dirtyDel`, `dirtyMix`, `agent`, `tokens`.
+`branch`, `ahead`, `dirtyAdd`, `dirtyDel`, `dirtyMix`, `agent`, `tokens`.
+
+The `branch` segment appends markers after the branch name: `ahead` (default
+`↑`) when the branch is ahead of its upstream — i.e. there are local commits not
+yet pushed — followed by the dirty marker (`dirtyAdd`/`dirtyDel`/`dirtyMix`).
+Each is shown only when it applies; `ahead` is omitted when the branch is in
+sync or has no upstream.
 
 ### Lines and segments
 

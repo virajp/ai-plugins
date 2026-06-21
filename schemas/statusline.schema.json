@@ -78,7 +78,7 @@
 
     "symbols": {
       "type": "object",
-      "description": "Glyph per data type. Keys consumed by the script: model, context, win5h, win7d, reset, session, cost, duration, project, worktree, folder, branch, dirtyAdd, dirtyDel, dirtyMix, agent, tokens.",
+      "description": "Glyph per data type. Keys consumed by the script: model, context, win5h, win7d, reset, session, cost, duration, project, worktree, folder, branch, ahead, dirtyAdd, dirtyDel, dirtyMix, agent, tokens.",
       "additionalProperties": { "type": "string" }
     },
 
