@@ -1,11 +1,6 @@
 {
-  "author": "Viraj Patel",
-  "bin": {
-    "ai-plugins": "./bin/installer.js"
-  },
-  "dependencies": {
-    "@oclif/core": "latest"
-  },
+  "name": "@askviraj/ai-plugins",
+  "version": "1.2.0",
   "description": "CLI to install Viraj Patel's Claude Code toolkit: marketplace plugins (via the claude CLI) and the powerline statusline",
   "keywords": [
     "claude",
@@ -26,15 +21,17 @@
     "anthropic",
     "oclif"
   ],
-  "engines": {
-    "node": ">=18"
+  "repository": "github:virajp/ai-plugins",
+  "license": "MIT",
+  "author": "Viraj Patel",
+  "type": "commonjs",
+  "bin": {
+    "ai-plugins": "./bin/installer.js"
   },
   "files": [
     "bin",
     "tools"
   ],
-  "license": "MIT",
-  "name": "@askviraj/ai-plugins",
   "oclif": {
     "bin": "ai-plugins",
     "commands": {
@@ -42,7 +39,10 @@
       "target": "./bin/installer.js"
     }
   },
-  "repository": "github:virajp/ai-plugins",
-  "type": "commonjs",
-  "version": "1.2.0"
+  "dependencies": {
+    "@oclif/core": "latest"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }
