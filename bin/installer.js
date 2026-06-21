@@ -290,14 +290,18 @@ class Installer extends Command {
   }
 }
 
-Installer.description =
+// Use `summary` (not `description`) so oclif prints this once at the top of
+// --help; setting `description` would also render a duplicate DESCRIPTION block.
+Installer.summary =
   "Install Viraj Patel's Claude Code toolkit: marketplace plugins (via the `claude` CLI) and the powerline statusline. Checks required tools (brew/mise/claude/rtk/pnpm/…) first and prints install hints for any that are missing.";
 
+// Users invoke this via pnpx (npx works too), never the bare `ai-plugins` bin,
+// so spell the runnable command out rather than using <%= config.bin %>.
 Installer.examples = [
-  "<%= config.bin %> --all",
-  "<%= config.bin %> --plugins",
-  "<%= config.bin %> --plugin vwf --plugin dart-lsp",
-  "<%= config.bin %> --statusline --subagentstatusline --yes",
+  "pnpx @askviraj/ai-plugins --all",
+  "pnpx @askviraj/ai-plugins --plugins",
+  "pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp",
+  "pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes",
 ];
 
 Installer.flags = {
