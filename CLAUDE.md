@@ -75,6 +75,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (stack-agnostic; section→project mapping resolved from the registry)
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `spec`, `plan`, and `architecture`
+- `assets/memory.md` — the shared mempalace memory protocol (recall before work,
+  persist durable decisions, findings memory for loop-backs) referenced by
+  `spec` and `execute`. The orchestrator resolves the project wing and persists
+  decisions; the execute reviewers/coder file and recall findings **directly** —
+  they are granted scoped mempalace MCP tools in their agent frontmatter
+  (`mcp__plugin_mempalace_mempalace__mempalace_search` / `…_add_drawer`), so
+  rich review detail lives in mempalace instead of the orchestrator's context
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
 
 Docs the commands maintain live under `docs/specs/` (registry `architecture.md`,

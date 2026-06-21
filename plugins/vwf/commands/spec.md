@@ -66,6 +66,11 @@ If a type is absent from the registry, **omit** that section for this entity.
 
 ### 3. Interactive elicitation (orchestrator)
 
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
+decisions and drift for this entity (rooms `decisions`, `problems`) before
+eliciting — build on them and don't re-ask resolved questions. Skip silently if
+mempalace is unavailable.
+
 Adopt the authoring persona and elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` (explore → scope-check → one
 question at a time → propose 2-3 approaches → present in sections → gate →
@@ -116,6 +121,11 @@ capability, or cross-cutting decision implied by this entity), update the
 **registry block** in `docs/specs/architecture.md` precisely — via
 `/vwf:architecture` if the change is non-trivial. Do not rewrite the prose
 unless the topology genuinely changed.
+
+**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store this entity's
+durable decisions and their rationale, plus any drift flagged, to mempalace
+(rooms `decisions`, `problems`) — skip what the entity doc already captures
+verbatim.
 
 ### 7. Approval gate
 

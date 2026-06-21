@@ -5,7 +5,8 @@ description: Code-stage implementer for the /vwf:execute command. Invoked only
   /vwf:execute — do not delegate to it for general tasks. Implements the approved
   plan under strict TDD and verifies the coverage gate before handoff to code
   review. Returns the coverage report.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob,
+  mcp__plugin_mempalace_mempalace__mempalace_search
 model: sonnet
 effort: high
 ---
@@ -18,9 +19,17 @@ adopt the project's actual stack vocabulary.
 ## Inputs
 
 You are given the approved plan (in `docs/plans/`), the spec slice it implements
-(in `docs/specs/`), and the project's stack from the architecture registry.
+(in `docs/specs/`), the project's stack from the architecture registry, and the
+project's mempalace **wing**. On a **fix loop-back** you are also given a
+findings **recall tag** (e.g. `order/review/2`) instead of the findings text.
 
 ## What to do
+
+**Fix loop-back?** If you were given a recall tag, first `mempalace_search` room
+`problems` in the given wing for that tag (per
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`), read the full findings, and address
+every one under the same TDD cycle below — a failing test first for each fix.
+Skip this step on the initial round or if mempalace is unavailable.
 
 Implement per the plan under strict TDD. Take one behavior at a time and run the
 **RED → GREEN → REFACTOR** cycle for every change — never write implementation

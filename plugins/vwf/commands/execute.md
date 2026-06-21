@@ -59,6 +59,12 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
 - **Loop on findings** — if review or security finds issues, loop back to `code`
   to fix (then re-commit via `git-workflow`) before advancing.
 - **Never silently edit the spec** — flag drift and offer; do not rewrite it.
+- **Memory via mempalace** — follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`:
+  resolve the project **wing** and recall prior decisions/findings before the
+  first stage; the review/security subagents file their own findings to
+  mempalace and the coder recalls them on loop-backs (rich detail bypasses your
+  context); persist the cycle's durable decisions at reconcile. Pass the wing to
+  every subagent you dispatch.
 
 ## Mode
 
@@ -69,6 +75,14 @@ Read the run mode from `$ARGUMENTS`:
   complete, then jump to it.
 
 ---
+
+## Recall (mempalace)
+
+Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, resolve the project **wing** and
+recall prior decisions and findings for this slice (rooms `decisions`,
+`problems`) before the first stage. Pass the wing to every subagent you
+dispatch, plus any relevant recall hits. Skip silently if mempalace is
+unavailable.
 
 ## Stage: code (`execute-coder`, sonnet)
 
@@ -88,32 +102,37 @@ If a language's LSP server is missing, ask and **wait**:
 - **Yes** → proceed. **No** → halt; install via `/plugin` (Discover) then retry.
 
 **Setup & dispatch.** Invoke `/vwf:git-workflow` for an isolated local worktree.
-Then dispatch `execute-coder` with the plan and the registry stack. It
-implements per the plan under strict TDD — following RED → GREEN → REFACTOR for
-every change — and runs the suite to the coverage gate. It returns the coverage
-report.
+Then dispatch `execute-coder` with the plan, the registry stack, and the project
+wing. It implements per the plan under strict TDD — following RED → GREEN →
+REFACTOR for every change — and runs the suite to the coverage gate. It returns
+the coverage report. On a fix loop-back, also pass the review findings **tag**
+(not the text) — the coder recalls the findings from mempalace before fixing.
 
 **Commit & gate.** Commit the implementation via `/vwf:git-workflow`. Show the
 coverage report and wait for explicit approval before `review`.
 
 ## Stage: review (`execute-code-reviewer`, opus)
 
-Dispatch `execute-code-reviewer`. It reviews the code adversarially against the
-**plan, the spec, conventions, and the registry stack**, using `/code-review` as
-its engine. It returns findings only.
+Dispatch `execute-code-reviewer` (pass the project wing). It reviews the code
+adversarially against the **plan, the spec, conventions, and the registry
+stack**, using `/code-review` as its engine. It files its full findings to
+mempalace (room `problems`) and returns the terse findings block plus a recall
+tag.
 
-**Gate.** Present findings. Issues → loop back to `code` to fix, then re-commit
-via `/vwf:git-workflow` and re-review. Wait for approval before `security`.
+**Gate.** Present the findings block. Issues → loop back to `code` with the
+**tag** (the coder recalls the detail and fixes), then re-commit via
+`/vwf:git-workflow` and re-review. Wait for approval before `security`.
 
 ## Stage: security (`execute-security-reviewer`, opus)
 
-Dispatch `execute-security-reviewer`. It threat-models the changes against the
-project's declared **capabilities** in the registry, using `/security-review` as
-its engine, rating findings by exploitability and impact. It returns findings
-only.
+Dispatch `execute-security-reviewer` (pass the project wing). It threat-models
+the changes against the project's declared **capabilities** in the registry,
+using `/security-review` as its engine, rating findings by exploitability and
+impact. It files its full findings to mempalace (room `problems`) and returns
+the terse findings block plus a recall tag.
 
-**Gate.** Present findings. Issues → loop back to `code`, re-commit, re-review.
-Wait for approval before reconciliation.
+**Gate.** Present the findings block. Issues → loop back to `code` with the
+**tag**, re-commit, re-review. Wait for approval before reconciliation.
 
 ---
 
@@ -127,6 +146,10 @@ Wait for approval before reconciliation.
 2. **Spec drift.** If implementation revealed a spec gap, **flag it to the
    user** and offer to update the spec via `/vwf:spec`. Do not silently rewrite
    the spec.
+3. **Persist to memory.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store
+   the cycle's durable outcomes to mempalace — decisions and their rationale,
+   findings and how they were resolved, any drift flagged (rooms `decisions`,
+   `problems`). Skip anything a doc already captures verbatim.
 
 ## Merge (git-workflow)
 
