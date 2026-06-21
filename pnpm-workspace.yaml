@@ -6,7 +6,7 @@
 # and unpublished within a few days, so this cooldown keeps fresh, malicious
 # versions out of installs and out of the monthly `pnpm update`.
 # https://pnpm.io/settings#minimumreleaseage
-minimumReleaseAge: 10080 # 7 days
+minimumReleaseAge: 600 # 10 hours
 
 # Versions that must bypass the cooldown (e.g. a critical security hotfix):
 # minimumReleaseAgeExclude:

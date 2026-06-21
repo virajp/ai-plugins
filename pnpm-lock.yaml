@@ -9,13 +9,13 @@ importers:
   .:
     dependencies:
       '@oclif/core':
-        specifier: ^4
-        version: 4.11.7
+        specifier: latest
+        version: 4.11.8
 
 packages:
 
-  '@oclif/core@4.11.7':
-    resolution: {integrity: sha512-LHii7kSaLvv5bpbS09I7BlI1AQa3Kak/QDyyZOik79ET8tQyt1U5O38al+sYkMxi139105w5gS+aWe+5BlJ0yQ==}
+  '@oclif/core@4.11.8':
+    resolution: {integrity: sha512-61cTnKgGyMvGdErqiChXru3MwniokcshUjQKzahYjjcD0qPGDalQ+FUtm0QBDduHPtt591mC2YN3RM+P0teG+w==}
     engines: {node: '>=18.0.0'}
 
   ansi-escapes@4.3.2:
@@ -189,7 +189,7 @@ packages:
 
 snapshots:
 
-  '@oclif/core@4.11.7':
+  '@oclif/core@4.11.8':
     dependencies:
       ansi-escapes: 4.3.2
       ansis: 3.17.0
