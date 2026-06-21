@@ -15,8 +15,9 @@ npm.package_manager = "pnpm"
 # mise.ci.toml (MISE_ENV=ci, the GitHub workflows). Only the common runtime that
 # both need (node, pnpm) lives here, to avoid duplicating it across both.
 [tools]
-node = { version = "latest" }
-pnpm = { version = "latest" }
+node        = { version = "latest" }
+osv-scanner = { version = "latest" }
+pnpm        = { version = "latest" }
 
 [env]
 DISABLE_TELEMETRY = 1
