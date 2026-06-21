@@ -79,6 +79,11 @@ const PLUGINS = [
 const PROJECT_SCOPED = new Set(["dart-lsp"]);
 const scopeFor = name => (PROJECT_SCOPED.has(name) ? "project" : "user");
 
+// The bulk flags (--all / --plugins) only act on user-scoped plugins. A
+// project-scoped plugin is a deliberate per-project choice, so it is never
+// installed in bulk — it must be named explicitly with --plugin <name>.
+const USER_SCOPED = PLUGINS.filter(name => !PROJECT_SCOPED.has(name));
+
 // How to install each external tool we depend on (matches this toolchain:
 // brew + mise drive the rest; rtk ships as a brew formula).
 const DEP_HINTS = {
@@ -115,6 +120,21 @@ class Installer extends Command {
     const hasSelection = plan.plugins.length
       || plan.statusLine
       || plan.subagentStatusLine;
+
+    // --all / --plugins act on user-scoped plugins only; flag the project-scoped
+    // ones they skip so it's clear how to act on them.
+    if (flags.all || flags.plugins) {
+      const projectScoped = PLUGINS.filter(name => PROJECT_SCOPED.has(name));
+      if (projectScoped.length) {
+        this.log(
+          yellow(
+            `Note: project-scoped plugins (${
+              projectScoped.join(", ")
+            }) are excluded from --all/--plugins — pass --plugin <name> to include them.`,
+          ),
+        );
+      }
+    }
 
     // Uninstall mode reuses the same selection flags but removes instead.
     if (flags.uninstall) {
@@ -312,8 +332,9 @@ class Installer extends Command {
         ? plan.statusLine
         : plan.subagentStatusLine;
       if (want && settings[key] !== undefined) {
-        delete settings[key];
-        this.log(yellow(`Removed ${key} from ${SETTINGS_PATH}`));
+        await this.step(`Removing ${key}`, () => {
+          delete settings[key];
+        });
         changed = true;
       }
     }
@@ -326,8 +347,9 @@ class Installer extends Command {
       && settings.subagentStatusLine === undefined
       && existsSync(INSTALLED_SCRIPT)
     ) {
-      await rm(INSTALLED_SCRIPT, { force: true });
-      this.log(yellow(`Removed script → ${INSTALLED_SCRIPT}`));
+      await this.step("Removing statusline script", async () => {
+        await rm(INSTALLED_SCRIPT, { force: true });
+      });
       this.log(
         `Left ${USER_CONFIG_PATH} in place — delete it manually for a full reset.`,
       );
@@ -335,12 +357,14 @@ class Installer extends Command {
   }
 
   // Turn the parsed flags into a concrete plan: which plugins to install and
-  // which statusline keys to set. --all is the superset of everything.
+  // which statusline keys to set. --all / --plugins cover the user-scoped plugins
+  // (and, for --all, both statusline keys); project-scoped plugins are reached
+  // only via an explicit --plugin <name>.
   resolvePlan(flags) {
     const all = flags.all;
     let plugins;
     if (all || flags.plugins) {
-      plugins = [...PLUGINS];
+      plugins = [...USER_SCOPED];
     }
     else if (flags.plugin?.length) {
       // This CLI installs ONLY from the virajp-plugins marketplace, so plugin
@@ -442,6 +466,21 @@ class Installer extends Command {
     return false;
   }
 
+  // Run a local (file/config) step under the same one-line status as runClaude:
+  // "<label> … ✅ OK" on success, or "<label> … ❌" on failure, letting the thrown
+  // error propagate so oclif prints it. `fn` may be sync or async.
+  async step(label, fn) {
+    process.stdout.write(`${label} ... `);
+    try {
+      await fn();
+      this.log(green("✅ OK"));
+    }
+    catch (e) {
+      this.log(red("❌ FAILED"));
+      throw e;
+    }
+  }
+
   // Copy the script, seed the user config, and set the requested statusline keys.
   async installStatusline(plan, yes) {
     await this.installScript();
@@ -464,42 +503,46 @@ class Installer extends Command {
 
   // Copy the statusline script into ~/.claude/scripts/ and make it executable.
   async installScript() {
-    await mkdir(SCRIPTS_DIR, { recursive: true });
-    await copyFile(join(ASSETS_DIR, "statusline"), INSTALLED_SCRIPT);
-    await chmod(INSTALLED_SCRIPT, 0o755);
-    this.log(green(`Installed script → ${INSTALLED_SCRIPT}`));
+    await this.step("Installing statusline script", async () => {
+      await mkdir(SCRIPTS_DIR, { recursive: true });
+      await copyFile(join(ASSETS_DIR, "statusline"), INSTALLED_SCRIPT);
+      await chmod(INSTALLED_SCRIPT, 0o755);
+    });
   }
 
   // Seed ~/.config/statusline.json with the bundled defaults, or deep-merge any
   // missing settings into an existing file (existing user values are preserved).
   async seedUserConfig() {
-    const defaults = JSON.parse(
-      await readFile(join(ASSETS_DIR, "statusline.json"), "utf8"),
-    );
-    await mkdir(dirname(USER_CONFIG_PATH), { recursive: true });
+    await this.step("Seeding statusline config", async () => {
+      const defaults = JSON.parse(
+        await readFile(join(ASSETS_DIR, "statusline.json"), "utf8"),
+      );
+      await mkdir(dirname(USER_CONFIG_PATH), { recursive: true });
 
-    if (existsSync(USER_CONFIG_PATH)) {
-      const raw = await readFile(USER_CONFIG_PATH, "utf8");
-      if (raw.trim()) {
-        let existing;
-        try {
-          existing = JSON.parse(raw);
-        }
-        catch {
-          this.error(
-            `${USER_CONFIG_PATH} is not valid JSON. Fix or remove it, then retry.`,
+      if (existsSync(USER_CONFIG_PATH)) {
+        const raw = await readFile(USER_CONFIG_PATH, "utf8");
+        if (raw.trim()) {
+          let existing;
+          try {
+            existing = JSON.parse(raw);
+          }
+          catch {
+            this.error(
+              `${USER_CONFIG_PATH} is not valid JSON. Fix or remove it, then retry.`,
+            );
+          }
+          await writeFile(
+            USER_CONFIG_PATH,
+            `${JSON.stringify(deepMerge(defaults, existing), null, 2)}\n`,
           );
+          return;
         }
-        await writeFile(
-          USER_CONFIG_PATH,
-          `${JSON.stringify(deepMerge(defaults, existing), null, 2)}\n`,
-        );
-        this.log(green(`Filled missing settings → ${USER_CONFIG_PATH}`));
-        return;
       }
-    }
-    await writeFile(USER_CONFIG_PATH, `${JSON.stringify(defaults, null, 2)}\n`);
-    this.log(green(`Seeded defaults → ${USER_CONFIG_PATH}`));
+      await writeFile(
+        USER_CONFIG_PATH,
+        `${JSON.stringify(defaults, null, 2)}\n`,
+      );
+    });
   }
 
   async readSettings() {
@@ -530,14 +573,16 @@ class Installer extends Command {
         return;
       }
     }
-    settings[key] = value;
-    this.log(green(`Set ${key}.`));
+    await this.step(`Setting ${key}`, () => {
+      settings[key] = value;
+    });
   }
 
   async writeSettings(settings) {
-    await mkdir(dirname(SETTINGS_PATH), { recursive: true });
-    await writeFile(SETTINGS_PATH, `${JSON.stringify(settings, null, 2)}\n`);
-    this.log(green(`Updated ${SETTINGS_PATH}`));
+    await this.step("Writing settings.json", async () => {
+      await mkdir(dirname(SETTINGS_PATH), { recursive: true });
+      await writeFile(SETTINGS_PATH, `${JSON.stringify(settings, null, 2)}\n`);
+    });
   }
 }
 
@@ -574,17 +619,27 @@ Installer.flags = {
       "Remove instead of install: pair with --all / --plugins / --plugin <name> / --statusline / --subagentstatusline to uninstall those plugins or statusline keys",
   }),
   all: Flags.boolean({
-    description:
-      "Install everything: every marketplace plugin plus both statusline keys",
+    description: `Install everything user-scoped: every user-scoped plugin (${
+      USER_SCOPED.join(", ")
+    }) plus both statusline keys. Project-scoped plugins (${
+      [...PROJECT_SCOPED].join(", ")
+    }) are excluded — add them with --plugin`,
   }),
   plugins: Flags.boolean({
-    description: `Install all marketplace plugins (${PLUGINS.join(", ")})`,
+    description: `Install all user-scoped marketplace plugins (${
+      USER_SCOPED.join(", ")
+    }); `
+      + `project-scoped plugins (${
+        [...PROJECT_SCOPED]
+          .join(", ")
+      }) need an explicit --plugin`,
   }),
   plugin: Flags.string({
     multiple: true,
-    description: `Install a specific plugin by name (repeatable). One of: ${
-      PLUGINS.join(", ")
-    }`,
+    description:
+      `Install a specific plugin by name (repeatable, any scope). One of: ${
+        PLUGINS.join(", ")
+      }`,
   }),
   statusline: Flags.boolean({
     description:

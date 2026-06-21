@@ -136,33 +136,37 @@ Layout:
   `package.json`; `settings.enableAutoTranspile = false` keeps oclif from
   hunting for TypeScript).
 
-The command does several jobs. **Plugins:** `--all` (everything), `--plugins`
-(all marketplace plugins), or `--plugin <name>` (repeatable) drive the `claude`
-CLI to add the `virajp-plugins` marketplace (user scope) and install each plugin
-at its default scope — `dart-lsp` is project-scoped, every other plugin is
-user-scoped (see `PROJECT_SCOPED` in `bin/installer.js`). Plugin names are
-**bare and allowlisted** (`PLUGINS`); an `@marketplace` or path qualifier is
-rejected outright so the CLI can only ever install from `virajp-plugins`.
-**Statusline:** `--statusline` and/or `--subagentstatusline` (both implied by
-`--all`) copy the script into `~/.claude/scripts/` (chmod 755), seed the bundled
-defaults into `~/.config/statusline.json` (deep-merging missing settings if it
-already exists, preserving user edits), and write the chosen key(s) into
-`~/.claude/settings.json` (preserving other keys; prompting before overwrite
-unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version (vs the
-latest on npm), the bundled statusline version, and each plugin's installed
-version (from `claude plugin list`) vs the latest in the **remote** marketplace
-manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:**
-`--upgrade` runs **after** any install phase — it `claude plugin update`s every
-installed virajp-plugins plugin that's outdated, refreshes the statusline, and
-notes a newer CLI; combine with `--all` for an idempotent install+upgrade fit
-for a setup script. `--version`/`--upgrade` need the network and `claude`, and
-error out (non-zero) if either is unavailable. **Uninstall:** `--uninstall`
-reuses the same selection flags but removes — `claude plugin uninstall`s the
-selected plugins (matching their install scope) and/or strips the chosen
-statusline key(s) from `settings.json`, deleting the installed script once no
-statusline key remains. It leaves the seeded `~/.config/statusline.json` (it may
-hold user edits) and never touches external tools (the CLI never installed
-those).
+The command does several jobs. **Plugins:** `--all` (every user-scoped plugin +
+both statusline keys), `--plugins` (all user-scoped plugins), or
+`--plugin
+<name>` (repeatable) drive the `claude` CLI to add the
+`virajp-plugins` marketplace (user scope) and install each plugin at its default
+scope. The bulk flags (`--all`/`--plugins`) install **user-scoped plugins only**
+(`USER_SCOPED`); **project-scoped** plugins (`dart-lsp` — `PROJECT_SCOPED` in
+`bin/installer.js`) are a deliberate per-project choice and are reached **only
+via an explicit `--plugin <name>`** (which installs at the plugin's own scope).
+Plugin names are **bare and allowlisted** (`PLUGINS`); an `@marketplace` or path
+qualifier is rejected outright so the CLI can only ever install from
+`virajp-plugins`. **Statusline:** `--statusline` and/or `--subagentstatusline`
+(both implied by `--all`) copy the script into `~/.claude/scripts/` (chmod 755),
+seed the bundled defaults into `~/.config/statusline.json` (deep-merging missing
+settings if it already exists, preserving user edits), and write the chosen
+key(s) into `~/.claude/settings.json` (preserving other keys; prompting before
+overwrite unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version
+(vs the latest on npm), the bundled statusline version, and each plugin's
+installed version (from `claude plugin list`) vs the latest in the **remote**
+marketplace manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates.
+**Upgrade:** `--upgrade` runs **after** any install phase — it
+`claude plugin update`s every installed virajp-plugins plugin that's outdated,
+refreshes the statusline, and notes a newer CLI; combine with `--all` for an
+idempotent install+upgrade fit for a setup script. `--version`/`--upgrade` need
+the network and `claude`, and error out (non-zero) if either is unavailable.
+**Uninstall:** `--uninstall` reuses the same selection flags but removes —
+`claude plugin uninstall`s the selected plugins (matching their install scope)
+and/or strips the chosen statusline key(s) from `settings.json`, deleting the
+installed script once no statusline key remains. It leaves the seeded
+`~/.config/statusline.json` (it may hold user edits) and never touches external
+tools (the CLI never installed those).
 
 Before any install, the CLI **checks required external tools** for the resolved
 plan (`CORE_DEPS` brew/mise/claude for any plugin install, `PLUGIN_EXTRA_DEPS`

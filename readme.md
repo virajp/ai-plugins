@@ -23,30 +23,32 @@ opinionated `markdown` documentation skill, and a config-driven powerline
 Everything installs through one CLI —
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins). It
 adds the `virajp-plugins` marketplace (user-scoped) and drives the Claude Code
-CLI for you, installing each plugin at its default scope (`dart-lsp` is
-project-scoped, every other plugin user-scoped).
+CLI for you. The bulk flags (`--all` / `--plugins`) install the **user-scoped**
+plugins only; `dart-lsp` is **project-scoped**, so install it explicitly with
+`--plugin dart-lsp` from within the project that needs it.
 
 > The examples below use `pnpx`; if you don't use `pnpm`, swap in `npx` — the
 > commands are otherwise identical.
 
-**Install everything — all plugins + statusline:**
+**Install everything (user-scoped plugins + statusline):**
 
 ```sh
 pnpx @askviraj/ai-plugins --all
 ```
 
-**Install all plugins (no statusline):**
+**Install all user-scoped plugins (no statusline):**
 
 ```sh
 pnpx @askviraj/ai-plugins --plugins
 ```
 
-**Install specific plugins (`--plugin` is repeatable):**
+**Install specific plugins (`--plugin` is repeatable, any scope):**
 
 ```sh
 pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp
 ```
 
+This is the only way to install a project-scoped plugin like `dart-lsp`.
 Available plugin names: `vwf`, `markdown`, `mempalace`, `context7`,
 `typescript-lsp`, `dart-lsp`.
 
