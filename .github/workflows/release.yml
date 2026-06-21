@@ -9,6 +9,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch: {}
 
 # id-token: write is required for OIDC trusted publishing.
 permissions:

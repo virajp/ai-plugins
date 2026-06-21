@@ -6,7 +6,7 @@ name: Monthly dependency update
 # lockfile is committed straight to main.
 on:
   schedule:
-    - cron: "0 6 1 * *" # 06:00 UTC on the 1st of each month
+    - cron: "0 2 1 * *" # 02:00 UTC on the 1st of each month
   workflow_dispatch: {}
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
