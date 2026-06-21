@@ -3,4 +3,13 @@
 # mise.toml, so no extra tools are required today. Add CI-specific tools here as
 # the pipelines grow — they will NOT leak into the dev environment.
 
+[settings]
+# mise's bundled Node release-key import (gpg --import) fails on the Ubuntu CI
+# runner's gpg with "no valid OpenPGP data found", aborting `mise install`. The
+# same mise version verifies fine on macOS, so it is a mise-on-Linux bug, not a
+# version issue — pinning does not help. Disable only the gpg signature check in
+# CI; the Node tarball is still SHA256-checksum verified (node.verify). Local dev
+# (mise.toml) keeps full gpg verification.
+node.gpg_verify = false
+
 [tools]
