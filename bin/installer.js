@@ -22,6 +22,15 @@ const { homedir } = require("node:os");
 const { delimiter, dirname, join } = require("node:path");
 const readline = require("node:readline/promises");
 
+// Semantic ANSI colors for human-facing output: green = success/up-to-date,
+// yellow = notices/updates-available/skips, red = failures. Disabled when stdout
+// is not a TTY (piped/CI) or NO_COLOR is set, so logs stay clean there.
+const COLOR = process.stdout.isTTY && !process.env.NO_COLOR;
+const paint = code => s => (COLOR ? `\x1b[${code}m${s}\x1b[0m` : `${s}`);
+const green = paint("32");
+const yellow = paint("33");
+const red = paint("31");
+
 const SCRIPTS_DIR = join(homedir(), ".claude", "scripts");
 const SETTINGS_PATH = join(homedir(), ".claude", "settings.json");
 const INSTALLED_SCRIPT = join(SCRIPTS_DIR, "statusline");
@@ -163,12 +172,14 @@ class Installer extends Command {
     const ours = PLUGINS.filter(name => installed[name]);
 
     this.log(
-      `\nUpgrading installed plugins (marketplace ${MARKETPLACE_NAME})…`,
+      green(`\nUpgrading installed plugins (marketplace ${MARKETPLACE_NAME})…`),
     );
     this.runClaude(["plugin", "marketplace", "update", MARKETPLACE_NAME]);
 
     if (!ours.length) {
-      this.log("No virajp-plugins plugins are installed — nothing to upgrade.");
+      this.log(
+        yellow("No virajp-plugins plugins are installed — nothing to upgrade."),
+      );
     }
     else {
       let updated = 0;
@@ -176,35 +187,41 @@ class Installer extends Command {
         const have = installed[name];
         const want = latest[name];
         if (want && cmpVer(want, have) > 0) {
-          this.log(`\nUpdating ${name} (${have} → ${want})…`);
+          this.log(yellow(`\nUpdating ${name} (${have} → ${want})…`));
           this.runClaude(["plugin", "update", `${name}@${MARKETPLACE_NAME}`]);
           updated++;
         }
         else {
           this.log(
-            `${name} is up to date (${have}${want ? "" : ", external"}).`,
+            green(
+              `${name} is up to date (${have}${want ? "" : ", external"}).`,
+            ),
           );
         }
       }
       if (updated) {
         this.log(
-          "\nPlugin updates applied — restart Claude Code to load them.",
+          green("\nPlugin updates applied — restart Claude Code to load them."),
         );
       }
     }
 
     // Refresh the installed statusline script + config (no settings.json change).
     if (existsSync(INSTALLED_SCRIPT)) {
-      this.log("\nRefreshing statusline…");
+      this.log(green("\nRefreshing statusline…"));
       await this.installScript();
       await this.seedUserConfig();
     }
 
     if (cmpVer(cliLatest, this.config.version) > 0) {
       this.log(
-        `\nA newer CLI is available: ${this.config.version} → ${cliLatest}`,
+        yellow(
+          `\nA newer CLI is available: ${this.config.version} → ${cliLatest}`,
+        ),
       );
-      this.log("Re-run with: pnpx @askviraj/ai-plugins@latest --upgrade");
+      this.log(
+        yellow("Re-run with: pnpx @askviraj/ai-plugins@latest --upgrade"),
+      );
     }
   }
 
@@ -245,9 +262,11 @@ class Installer extends Command {
     if (!missing.length) {
       return;
     }
-    this.log("\nMissing required dependencies — install these, then re-run:\n");
+    this.log(
+      red("\nMissing required dependencies — install these, then re-run:\n"),
+    );
     for (const t of missing) {
-      this.log(`  ${t}`);
+      this.log(`  ${yellow(t)}`);
       this.log(`    ${DEP_HINTS[t] || "see project docs"}`);
     }
     this.exit(1);
@@ -255,7 +274,7 @@ class Installer extends Command {
 
   // Add the marketplace (user scope), then install each plugin at its scope.
   installPlugins(plugins) {
-    this.log(`\nAdding marketplace ${MARKETPLACE_NAME} (user scope)…`);
+    this.log(green(`\nAdding marketplace ${MARKETPLACE_NAME} (user scope)…`));
     if (
       !this.runClaude([
         "plugin",
@@ -267,12 +286,14 @@ class Installer extends Command {
       ])
     ) {
       this.log(
-        "Marketplace add returned non-zero (may already exist) — continuing.",
+        yellow(
+          "Marketplace add returned non-zero (may already exist) — continuing.",
+        ),
       );
     }
     for (const name of plugins) {
       const scope = scopeFor(name);
-      this.log(`\nInstalling ${name} (${scope} scope)…`);
+      this.log(green(`\nInstalling ${name} (${scope} scope)…`));
       if (
         !this.runClaude([
           "plugin",
@@ -282,7 +303,7 @@ class Installer extends Command {
           `${name}@${MARKETPLACE_NAME}`,
         ])
       ) {
-        this.log(`Failed to install ${name}.`);
+        this.log(red(`Failed to install ${name}.`));
       }
     }
   }
@@ -322,7 +343,7 @@ class Installer extends Command {
     await mkdir(SCRIPTS_DIR, { recursive: true });
     await copyFile(join(ASSETS_DIR, "statusline"), INSTALLED_SCRIPT);
     await chmod(INSTALLED_SCRIPT, 0o755);
-    this.log(`Installed script → ${INSTALLED_SCRIPT}`);
+    this.log(green(`Installed script → ${INSTALLED_SCRIPT}`));
   }
 
   // Seed ~/.config/statusline.json with the bundled defaults, or deep-merge any
@@ -349,12 +370,12 @@ class Installer extends Command {
           USER_CONFIG_PATH,
           `${JSON.stringify(deepMerge(defaults, existing), null, 2)}\n`,
         );
-        this.log(`Filled missing settings → ${USER_CONFIG_PATH}`);
+        this.log(green(`Filled missing settings → ${USER_CONFIG_PATH}`));
         return;
       }
     }
     await writeFile(USER_CONFIG_PATH, `${JSON.stringify(defaults, null, 2)}\n`);
-    this.log(`Seeded defaults → ${USER_CONFIG_PATH}`);
+    this.log(green(`Seeded defaults → ${USER_CONFIG_PATH}`));
   }
 
   async readSettings() {
@@ -378,21 +399,21 @@ class Installer extends Command {
   // Set `key`, prompting before overwriting an existing value unless `yes`.
   async applyKey(settings, key, value, yes) {
     if (!yes && settings[key] !== undefined) {
-      this.log(`\nExisting ${key} in ${SETTINGS_PATH}:`);
+      this.log(yellow(`\nExisting ${key} in ${SETTINGS_PATH}:`));
       this.log(JSON.stringify(settings[key], null, 2));
       if (!(await confirm(`Overwrite ${key}?`))) {
-        this.log(`Skipped ${key}.`);
+        this.log(yellow(`Skipped ${key}.`));
         return;
       }
     }
     settings[key] = value;
-    this.log(`Set ${key}.`);
+    this.log(green(`Set ${key}.`));
   }
 
   async writeSettings(settings) {
     await mkdir(dirname(SETTINGS_PATH), { recursive: true });
     await writeFile(SETTINGS_PATH, `${JSON.stringify(settings, null, 2)}\n`);
-    this.log(`Updated ${SETTINGS_PATH}`);
+    this.log(green(`Updated ${SETTINGS_PATH}`));
   }
 }
 
@@ -524,22 +545,23 @@ function cmpVer(a, b) {
   return 0;
 }
 
-// " → X (update available)" when latest beats current, else " (latest)".
+// " → X (update available)" (yellow) when latest beats current, else
+// " (latest)" (green).
 function updateNote(current, latest) {
   return latest && cmpVer(latest, current) > 0
-    ? `  →  ${latest}  (update available)`
-    : "  (latest)";
+    ? yellow(`  →  ${latest}  (update available)`)
+    : green("  (latest)");
 }
 
 // The version column for one plugin given its installed and latest versions.
 function pluginVersionLine(installed, latest) {
   if (!latest) {
     return installed
-      ? `${installed}  (external; not tracked here)`
-      : "not installed  (external)";
+      ? `${installed}  ${yellow("(external; not tracked here)")}`
+      : yellow("not installed  (external)");
   }
   if (!installed) {
-    return `not installed  (latest ${latest})`;
+    return yellow(`not installed  (latest ${latest})`);
   }
   return `${installed}${updateNote(installed, latest)}`;
 }
