@@ -29,6 +29,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # mise GPG-verifies the Node tarball (settings.node.gpg_verify). On a fresh
+      # runner the gpg keyring isn't initialized, so seed it with Node's official
+      # release signing keys before mise runs — otherwise `mise install` aborts
+      # with "gpg failed / no valid OpenPGP data found".
+      - name: Import Node.js release signing keys (mise gpg verification)
+        run: |
+          tmp="$(mktemp -d)"
+          git clone --depth 1 https://github.com/nodejs/release-keys.git "$tmp"
+          gpg --batch --import "$tmp"/keys/*.asc
+
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
 
