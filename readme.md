@@ -6,37 +6,48 @@ a config-driven powerline `statusline` — for use with the Claude Code CLI.
 
 ## Prerequisites
 
-[Claude Code CLI](https://claude.ai/code) & [Mise](https://mise.jdx.dev/)
-installed.
+- [Node.js](https://nodejs.org/) — runs the installer via `npx`.
+- [Claude Code CLI](https://claude.ai/code) — the installer drives it to add the
+  marketplace and install plugins.
+- [Mise](https://mise.jdx.dev/) — the LSP plugins and the `vwf` npm→pnpm hook
+  resolve their tools through it.
 
-> NOTE: `mise` is required — the LSP plugins and the `vwf` npm→pnpm hook resolve
-> their tools through it.
-
-> NOTE: `vwf` also ships an `rtk hook claude` hook — install `rtk` first:
->
-> ```sh
-> brew install --formulae rtk
-> ```
+> The installer **checks every required tool** for what you're installing
+> (including `rtk` and `pnpm` for `vwf`) and prints the exact install command
+> for anything missing — it never installs a dependency for you. Run it first to
+> see what you need.
 
 ## Installation
 
-**Step 1 — Add the marketplace (once, user-scoped):**
+Everything installs through one CLI —
+[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins). It
+adds the `virajp-plugins` marketplace (user-scoped) and drives the Claude Code
+CLI for you, installing each plugin at its default scope (`dart-lsp` is
+project-scoped, every other plugin user-scoped).
+
+**Install everything — all plugins + statusline:**
 
 ```sh
-claude plugin marketplace add --scope user virajp/ai-plugins
+npx @askviraj/ai-plugins --all
 ```
 
-**Step 2 — Install a plugin into your project:**
+**Install all plugins (no statusline):**
 
 ```sh
-claude plugin install --scope project <plugin-name>@virajp-plugins
+npx @askviraj/ai-plugins --plugins
+```
+
+**Install specific plugins (`--plugin` is repeatable):**
+
+```sh
+npx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp
 ```
 
 Available plugin names: `vwf`, `mempalace`, `context7`, `typescript-lsp`,
 `dart-lsp`.
 
-> The **statusline** is not a plugin — it installs via a small CLI
-> (`npx @askviraj/ai-plugins …`). See [Statusline](#statusline) below.
+> The **statusline** also installs through this CLI — see
+> [Statusline](#statusline) below.
 
 ## Plugins
 
@@ -49,7 +60,7 @@ commands to `pnpm`, and an `rtk hook claude` hook (requires `rtk` — see
 Prerequisites).
 
 ```sh
-claude plugin install --scope project vwf@virajp-plugins
+npx @askviraj/ai-plugins --plugin vwf
 ```
 
 **Slash commands** (`/vwf:<name>`):
@@ -77,8 +88,7 @@ All of vwf's dependencies live in the **same `virajp-plugins` marketplace**
 registered:
 
 ```sh
-claude plugin marketplace add --scope user virajp/ai-plugins
-claude plugin install --scope project vwf@virajp-plugins   # pulls + enables deps
+npx @askviraj/ai-plugins --plugin vwf   # adds the marketplace, installs vwf + deps
 ```
 
 > Auto-enable is **event-driven** — it fires when you enable `vwf`, not
@@ -122,7 +132,7 @@ here; it is also a `vwf` dependency.
 > you only need these steps to install `mempalace` on its own.
 
 ```sh
-claude plugin install --scope user mempalace@virajp-plugins
+npx @askviraj/ai-plugins --plugin mempalace
 ```
 
 ### context7
@@ -130,7 +140,7 @@ claude plugin install --scope user mempalace@virajp-plugins
 Context7 MCP server — fetches up-to-date library/framework documentation.
 
 ```sh
-claude plugin install --scope user context7@virajp-plugins
+npx @askviraj/ai-plugins --plugin context7
 ```
 
 ### typescript-lsp
@@ -138,7 +148,7 @@ claude plugin install --scope user context7@virajp-plugins
 TypeScript/JavaScript language server (via `typescript-language-server`).
 
 ```sh
-claude plugin install --scope project typescript-lsp@virajp-plugins
+npx @askviraj/ai-plugins --plugin typescript-lsp
 ```
 
 ### dart-lsp
@@ -146,5 +156,5 @@ claude plugin install --scope project typescript-lsp@virajp-plugins
 Dart language server.
 
 ```sh
-claude plugin install --scope project dart-lsp@virajp-plugins
+npx @askviraj/ai-plugins --plugin dart-lsp
 ```
