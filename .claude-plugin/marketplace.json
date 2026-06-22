@@ -41,23 +41,6 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "TypeScript/JavaScript language server",
-      "name": "typescript-lsp",
-      "source": "./plugins/typescript-lsp",
-      "strict": true,
-      "tags": [
-        "typescript",
-        "javascript",
-        "language-server",
-        "lsp"
-      ],
-      "version": "1.0.5"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
       "description": "Dart language server",
       "name": "dart-lsp",
       "source": "./plugins/dart-lsp",
@@ -131,6 +114,29 @@
         "skills"
       ],
       "version": "0.2.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Opinionated TypeScript plugin — Effect-TS skills (effect, package-json, pnpm, tsconfig, build) plus the TypeScript/JavaScript language server.",
+      "name": "typescript",
+      "source": "./plugins/typescript",
+      "strict": true,
+      "tags": [
+        "typescript",
+        "javascript",
+        "effect",
+        "pnpm",
+        "tsconfig",
+        "monorepo",
+        "build",
+        "skills",
+        "language-server",
+        "lsp"
+      ],
+      "version": "0.1.0"
     }
   ]
 }

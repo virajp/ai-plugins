@@ -1,5 +1,6 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "typescript",
   "lspServers": {
     "typescript": {
       "args": [
@@ -19,6 +20,5 @@
       },
       "startupTimeout": 60000
     }
-  },
-  "name": "typescript-lsp"
+  }
 }

@@ -51,8 +51,8 @@ pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp
 ```
 
 This is the only way to install a project-scoped plugin like `dart-lsp`.
-Available plugin names: `vwf`, `markdown`, `mempalace`, `context7`,
-`typescript-lsp`, `dart-lsp`.
+Available plugin names: `vwf`, `markdown`, `typescript`, `mempalace`,
+`context7`, `dart-lsp`.
 
 > The **statusline** also installs through this CLI — see
 > [Statusline](#statusline) below.
@@ -185,12 +185,16 @@ Context7 MCP server — fetches up-to-date library/framework documentation.
 pnpx @askviraj/ai-plugins --plugin context7
 ```
 
-### typescript-lsp
+### typescript
 
-TypeScript/JavaScript language server (via `typescript-language-server`).
+Opinionated TypeScript plugin for Effect-TS pnpm monorepos. Bundles five
+**path-scoped skills** — `effect` (Effect.gen/Schema/Service coding standards),
+`package-json`, `pnpm`, `tsconfig`, and `build` — plus the TypeScript/JavaScript
+language server (via `typescript-language-server`). The skills auto-apply when
+you edit the matching files; `build` is invocable from the `/` menu.
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin typescript-lsp
+pnpx @askviraj/ai-plugins --plugin typescript
 ```
 
 ### dart-lsp

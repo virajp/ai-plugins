@@ -38,14 +38,14 @@ design (a plugin may hold skills versioned on their own cadence).
 
 ## Plugins
 
-| Plugin           | Source                     | What it provides                                                 |
-| ---------------- | -------------------------- | ---------------------------------------------------------------- |
-| `vwf`            | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook                |
-| `markdown`       | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` |
-| `context7`       | `./plugins/context7`       | Context7 MCP docs server                                         |
-| `typescript-lsp` | `./plugins/typescript-lsp` | TypeScript/JavaScript language server                            |
-| `dart-lsp`       | `./plugins/dart-lsp`       | Dart language server                                             |
-| `mempalace`      | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)        |
+| Plugin       | Source                 | What it provides                                                                                                       |
+| ------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `vwf`        | `./plugins/vwf`        | Commands, subagents, skills, and an npm→pnpm hook                                                                      |
+| `markdown`   | `./plugins/markdown`   | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md`                                                       |
+| `typescript` | `./plugins/typescript` | Opinionated Effect-TS skills (effect, package-json, pnpm, tsconfig, build) + the TypeScript/JavaScript language server |
+| `context7`   | `./plugins/context7`   | Context7 MCP docs server                                                                                               |
+| `dart-lsp`   | `./plugins/dart-lsp`   | Dart language server                                                                                                   |
+| `mempalace`  | external (url)         | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                              |
 
 ## Plugin Structure
 
@@ -340,8 +340,8 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `markdown`, `mempalace`, `context7`,
-`typescript-lsp`, `dart-lsp`. (The statusline is not a plugin — install it via
+Available plugin names: `vwf`, `markdown`, `typescript`, `mempalace`,
+`context7`, `dart-lsp`. (The statusline is not a plugin — install it via
 `npx @askviraj/ai-plugins …`; see The statusline CLI.)
 
 Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`)

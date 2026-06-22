@@ -73,7 +73,7 @@ const NPM_LATEST_URL = "https://registry.npmjs.org/@askviraj/ai-plugins/latest";
 const PLUGINS = [
   "vwf",
   "markdown",
-  "typescript-lsp",
+  "typescript",
   "dart-lsp",
   "context7",
   "mempalace",
