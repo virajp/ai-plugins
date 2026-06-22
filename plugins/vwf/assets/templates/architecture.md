@@ -14,7 +14,9 @@ which projects are cloud-hosted and share the common packages, and which run on
 the client device and ship through the app stores. State the shared-package
 strategy in one or two sentences. -->
 
-<!-- Draw a simple diagram if it helps. Use mermaid diagrams only. -->
+<!-- Draw a simple diagram if it helps. Use mermaid only — for system topology a
+`flowchart`/`graph`. Follow the documentation-standards diagram conventions
+(type-by-purpose, quoted labels, GitHub/GitLab-renderable, no init directives). -->
 
 ## Projects
 
