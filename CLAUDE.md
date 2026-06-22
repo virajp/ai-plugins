@@ -147,9 +147,13 @@ scope. The bulk flags (`--all`/`--plugins`) install **user-scoped plugins only**
 via an explicit `--plugin <name>`** (which installs at the plugin's own scope).
 Plugin names are **bare and allowlisted** (`PLUGINS`); an `@marketplace` or path
 qualifier is rejected outright so the CLI can only ever install from
-`virajp-plugins`. **Statusline:** `--statusline` and/or `--subagentstatusline`
-(both implied by `--all`) copy the script into `~/.claude/scripts/` (chmod 755),
-seed the bundled defaults into `~/.config/statusline.json` (deep-merging missing
+`virajp-plugins`. Every install/upgrade also **best-effort refreshes Anthropic's
+official marketplace** (`claude-plugins-official`, `OFFICIAL_MARKETPLACE_NAME`)
+so its plugins resolve to the latest versions — soft-skipped (a yellow
+`skipped`, not a failure) when it isn't registered, since the CLI doesn't manage
+or add it. **Statusline:** `--statusline` and/or `--subagentstatusline` (both
+implied by `--all`) copy the script into `~/.claude/scripts/` (chmod 755), seed
+the bundled defaults into `~/.config/statusline.json` (deep-merging missing
 settings if it already exists, preserving user edits), and write the chosen
 key(s) into `~/.claude/settings.json` (preserving other keys; prompting before
 overwrite unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version

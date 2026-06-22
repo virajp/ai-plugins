@@ -25,7 +25,9 @@ Everything installs through one CLI —
 adds the `virajp-plugins` marketplace (user-scoped) and drives the Claude Code
 CLI for you. The bulk flags (`--all` / `--plugins`) install the **user-scoped**
 plugins only; `dart-lsp` is **project-scoped**, so install it explicitly with
-`--plugin dart-lsp` from within the project that needs it.
+`--plugin dart-lsp` from within the project that needs it. Every install and
+upgrade also refreshes Anthropic's official marketplace
+(`claude-plugins-official`) when it's present, so its plugins stay current.
 
 > The examples below use `pnpx`; if you don't use `pnpm`, swap in `npx` — the
 > commands are otherwise identical.

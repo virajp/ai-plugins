@@ -58,6 +58,11 @@ const SUBAGENT_STATUS_LINE = {
 const MARKETPLACE_REF = "virajp/ai-plugins";
 const MARKETPLACE_NAME = "virajp-plugins";
 
+// Anthropic's official plugin marketplace. We don't manage plugins from it, but
+// every install/upgrade best-effort refreshes it so its plugins resolve to their
+// latest versions. Soft-skipped when it isn't registered (it's not ours to add).
+const OFFICIAL_MARKETPLACE_NAME = "claude-plugins-official";
+
 // Sources for the latest versions (used by --version and --upgrade): the
 // marketplace manifest on the repo's main branch, and the published CLI on npm.
 const REMOTE_MARKETPLACE_URL =
@@ -230,16 +235,14 @@ class Installer extends Command {
     }
     const ours = PLUGINS.filter(name => installed[name]);
 
-    this.log(
-      green(`\nUpgrading installed plugins (marketplace ${MARKETPLACE_NAME})…`),
-    );
-    // The install phase already refreshed the marketplace, so only refresh it
+    // The install phase already refreshed both marketplaces, so only refresh them
     // here when this run skipped the install phase.
     if (!marketplaceRefreshed) {
       this.runClaude(
-        `Refreshing marketplace ${MARKETPLACE_NAME}`,
+        `Upgrading marketplace ${MARKETPLACE_NAME}`,
         ["plugin", "marketplace", "update", MARKETPLACE_NAME],
       );
+      this.refreshOfficialMarketplace("Upgrading");
     }
 
     if (!ours.length) {
@@ -433,6 +436,7 @@ class Installer extends Command {
       `Refreshing marketplace ${MARKETPLACE_NAME}`,
       ["plugin", "marketplace", "update", MARKETPLACE_NAME],
     );
+    this.refreshOfficialMarketplace();
     for (const name of plugins) {
       const scope = scopeFor(name);
       this.runClaude(
@@ -443,11 +447,28 @@ class Installer extends Command {
     return true;
   }
 
+  // Best-effort refresh of Anthropic's official marketplace so its plugins
+  // resolve to the latest versions. Soft so a user who hasn't registered it (the
+  // only common failure) sees a "skipped" note, not a failure — it is not a
+  // marketplace this CLI manages. `verb` matches the calling phase's wording
+  // ("Refreshing" on install, "Upgrading" on upgrade).
+  refreshOfficialMarketplace(verb = "Refreshing") {
+    this.runClaude(
+      `${verb} marketplace ${OFFICIAL_MARKETPLACE_NAME}`,
+      ["plugin", "marketplace", "update", OFFICIAL_MARKETPLACE_NAME],
+      { soft: true },
+    );
+  }
+
   // Run a `claude` subcommand quietly under a one-line status: prints
   // "<label> … ✅" on success, or "<label> … ❌" followed by the captured command
   // output on failure. Output is surfaced ONLY on error — success stays a single
   // tidy line. Returns true on exit 0.
-  runClaude(label, args) {
+  //
+  // With `soft: true` a non-zero exit is treated as a skip (yellow note), not a
+  // failure — for best-effort steps like refreshing a marketplace we don't own,
+  // whose only common failure is "not registered".
+  runClaude(label, args, { soft = false } = {}) {
     process.stdout.write(`${label} ... `);
     const res = spawnSync("claude", args, { encoding: "utf8" });
     if (res.error) {
@@ -458,8 +479,12 @@ class Installer extends Command {
       this.log(green("✅ OK"));
       return true;
     }
-    this.log(red("❌ FAILED"));
     const out = `${res.stdout || ""}${res.stderr || ""}`.trim();
+    if (soft) {
+      this.log(yellow("skipped"));
+      return false;
+    }
+    this.log(red("❌ FAILED"));
     if (out) {
       this.log(out);
     }
