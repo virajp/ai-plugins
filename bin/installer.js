@@ -588,8 +588,16 @@ class Installer extends Command {
     }
   }
 
-  // Set `key`, prompting before overwriting an existing value unless `yes`.
+  // Set `key`. If the existing value is already our statusline (same `type` +
+  // `command` — the statusline's identity, ignoring user-tuned fields like
+  // padding/refreshInterval), leave it untouched. Otherwise prompt before
+  // overwriting a different existing value, unless `yes`.
   async applyKey(settings, key, value, yes) {
+    if (statuslineMatches(settings[key], value)) {
+      process.stdout.write(`Setting ${key} ... `);
+      this.log(yellow("skipped (already configured)"));
+      return;
+    }
     if (!yes && settings[key] !== undefined) {
       this.log(yellow(`\nExisting ${key} in ${SETTINGS_PATH}:`));
       this.log(JSON.stringify(settings[key], null, 2));
@@ -851,6 +859,16 @@ function requiredTools({ plugins, statusLine, subagentStatusLine }) {
 }
 
 const isObject = v => v != null && typeof v === "object" && !Array.isArray(v);
+
+// True when an existing statusline setting already points at our script. Compares
+// only `type` and `command` — the statusline's identity — so user-tuned fields
+// (padding, refreshInterval) don't count as a mismatch and an already-installed
+// statusline is left untouched instead of prompting to overwrite.
+function statuslineMatches(existing, value) {
+  return isObject(existing)
+    && existing.type === value.type
+    && existing.command === value.command;
+}
 
 // Keys that must never be merged from user-controlled JSON — assigning them
 // (e.g. out["__proto__"] = …) would tamper with the prototype chain.
