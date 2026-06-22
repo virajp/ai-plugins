@@ -1,5 +1,6 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "flutter",
   "lspServers": {
     "dart": {
       "args": [
@@ -18,5 +19,14 @@
       "startupTimeout": 60000
     }
   },
-  "name": "dart-lsp"
+  "dependencies": [
+    {
+      "marketplace": "claude-plugins-official",
+      "name": "swift-lsp"
+    },
+    {
+      "marketplace": "claude-plugins-official",
+      "name": "kotlin-lsp"
+    }
+  ]
 }

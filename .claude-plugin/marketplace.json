@@ -41,16 +41,33 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Dart language server",
-      "name": "dart-lsp",
-      "source": "./plugins/dart-lsp",
+      "dependencies": [
+        {
+          "marketplace": "claude-plugins-official",
+          "name": "swift-lsp"
+        },
+        {
+          "marketplace": "claude-plugins-official",
+          "name": "kotlin-lsp"
+        }
+      ],
+      "description": "Opinionated Flutter plugin — Dart/GetX, pubspec, build, i18n, and Swift/Kotlin native skills, plus the Dart language server. Pulls in swift-lsp & kotlin-lsp for native code.",
+      "name": "flutter",
+      "source": "./plugins/flutter",
       "strict": true,
       "tags": [
+        "flutter",
         "dart",
+        "getx",
+        "swift",
+        "kotlin",
+        "i18n",
+        "mobile",
+        "skills",
         "language-server",
         "lsp"
       ],
-      "version": "1.0.2"
+      "version": "0.1.0"
     },
     {
       "author": {

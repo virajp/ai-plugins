@@ -74,7 +74,7 @@ const PLUGINS = [
   "vwf",
   "markdown",
   "typescript",
-  "dart-lsp",
+  "flutter",
   "context7",
   "mempalace",
 ];
@@ -82,7 +82,7 @@ const PLUGINS = [
 // Plugins that install at project scope by default; everything else is
 // user-scoped. The marketplace itself is always user-scoped. An explicit
 // --scope (`override`) wins over the per-plugin default.
-const PROJECT_SCOPED = new Set(["dart-lsp"]);
+const PROJECT_SCOPED = new Set(["flutter"]);
 const scopeFor = (name, override) =>
   override || (PROJECT_SCOPED.has(name) ? "project" : "user");
 
@@ -679,7 +679,7 @@ Installer.summary =
 Installer.examples = [
   "pnpx @askviraj/ai-plugins --all",
   "pnpx @askviraj/ai-plugins --plugins",
-  "pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp",
+  "pnpx @askviraj/ai-plugins --plugin vwf --plugin flutter",
   "pnpx @askviraj/ai-plugins --plugin vwf --scope project",
   "pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes",
   "pnpx @askviraj/ai-plugins --all --upgrade",

@@ -24,8 +24,8 @@ Everything installs through one CLI —
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins). It
 adds the `virajp-plugins` marketplace (user-scoped) and drives the Claude Code
 CLI for you. The bulk flags (`--all` / `--plugins`) install the **user-scoped**
-plugins only; `dart-lsp` is **project-scoped**, so install it explicitly with
-`--plugin dart-lsp` from within the project that needs it. Every install and
+plugins only; `flutter` is **project-scoped**, so install it explicitly with
+`--plugin flutter` from within the project that needs it. Every install and
 upgrade also refreshes Anthropic's official marketplace
 (`claude-plugins-official`) when it's present, so its plugins stay current.
 
@@ -47,12 +47,12 @@ pnpx @askviraj/ai-plugins --plugins
 **Install specific plugins (`--plugin` is repeatable, any scope):**
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp
+pnpx @askviraj/ai-plugins --plugin vwf --plugin flutter
 ```
 
-This is the only way to install a project-scoped plugin like `dart-lsp`.
-Available plugin names: `vwf`, `markdown`, `typescript`, `mempalace`,
-`context7`, `dart-lsp`.
+This is the only way to install a project-scoped plugin like `flutter`.
+Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
+`context7`.
 
 > The **statusline** also installs through this CLI — see
 > [Statusline](#statusline) below.
@@ -197,12 +197,18 @@ you edit the matching files; `build` is invocable from the `/` menu.
 pnpx @askviraj/ai-plugins --plugin typescript
 ```
 
-### dart-lsp
+### flutter
 
-Dart language server.
+Opinionated Flutter plugin for Dart/GetX apps. Bundles six **path-scoped
+skills** — `dart` (coding standards, GetX, widgets, errors), `pubspec`, `build`,
+`internationalization`, `swift`, and `kotlin` (native platform-channel code for
+features Flutter can't reach) — plus the Dart language server. Declares
+`swift-lsp` and `kotlin-lsp` from `claude-plugins-official` as dependencies, so
+the native iOS/Android files get real diagnostics. **Project-scoped** — install
+it from the Flutter project that needs it.
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin dart-lsp
+pnpx @askviraj/ai-plugins --plugin flutter
 ```
 
 ## Credits & acknowledgements

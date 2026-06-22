@@ -38,14 +38,14 @@ design (a plugin may hold skills versioned on their own cadence).
 
 ## Plugins
 
-| Plugin       | Source                 | What it provides                                                                                                       |
-| ------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `vwf`        | `./plugins/vwf`        | Commands, subagents, skills, and an npm→pnpm hook                                                                      |
-| `markdown`   | `./plugins/markdown`   | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md`                                                       |
-| `typescript` | `./plugins/typescript` | Opinionated Effect-TS skills (effect, package-json, pnpm, tsconfig, build) + the TypeScript/JavaScript language server |
-| `context7`   | `./plugins/context7`   | Context7 MCP docs server                                                                                               |
-| `dart-lsp`   | `./plugins/dart-lsp`   | Dart language server                                                                                                   |
-| `mempalace`  | external (url)         | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                              |
+| Plugin       | Source                 | What it provides                                                                                                                                                                      |
+| ------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`        | `./plugins/vwf`        | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                     |
+| `markdown`   | `./plugins/markdown`   | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md`                                                                                                                      |
+| `typescript` | `./plugins/typescript` | Opinionated Effect-TS skills (effect, package-json, pnpm, tsconfig, build) + the TypeScript/JavaScript language server                                                                |
+| `context7`   | `./plugins/context7`   | Context7 MCP docs server                                                                                                                                                              |
+| `flutter`    | `./plugins/flutter`    | Opinionated Flutter skills (dart, pubspec, build, internationalization, swift, kotlin) + the Dart language server; depends on `swift-lsp`/`kotlin-lsp` from `claude-plugins-official` |
+| `mempalace`  | external (url)         | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                             |
 
 ## Plugin Structure
 
@@ -63,11 +63,16 @@ Plugins may declare any combination of:
 
 - **`lspServers`** — LSP server definitions keyed by language ID. Each entry
   needs `command`, `args`, `extensionToLanguage`, and optionally
-  `startupTimeout`. See `plugins/dart-lsp/.claude-plugin/plugin.json` for a
+  `startupTimeout`. See `plugins/flutter/.claude-plugin/plugin.json` for a
   working example using `mise`.
 - **`mcpServers`** — MCP server definitions. See
   `plugins/context7/.claude-plugin/plugin.json`.
-- **`dependencies`** — other plugins this plugin requires (see below).
+- **`dependencies`** — other plugins this plugin requires (see below). A
+  dependency may live in **another marketplace** — `flutter` depends on
+  `swift-lsp`/`kotlin-lsp` from `claude-plugins-official` (each entry carries
+  its own `marketplace`). `plugins:check` only enforces that the `plugin.json`
+  and marketplace-entry dependency lists are **identical**, not where they
+  resolve.
 
 Skills, commands, agents, and hooks are **auto-discovered by directory
 convention** — they do not need to be listed in `plugin.json`:
@@ -166,7 +171,7 @@ both statusline keys), `--plugins` (all user-scoped plugins), or
 <name>` (repeatable) drive the `claude` CLI to add the
 `virajp-plugins` marketplace (user scope) and install each plugin at its default
 scope. The bulk flags (`--all`/`--plugins`) install **user-scoped plugins only**
-(`USER_SCOPED`); **project-scoped** plugins (`dart-lsp` — `PROJECT_SCOPED` in
+(`USER_SCOPED`); **project-scoped** plugins (`flutter` — `PROJECT_SCOPED` in
 `bin/installer.js`) are a deliberate per-project choice and are reached **only
 via an explicit `--plugin <name>`** (which installs at the plugin's own scope).
 `--scope user|project` **overrides** each selected plugin's default scope
@@ -340,8 +345,8 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `markdown`, `typescript`, `mempalace`,
-`context7`, `dart-lsp`. (The statusline is not a plugin — install it via
+Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
+`context7`. (The statusline is not a plugin — install it via
 `npx @askviraj/ai-plugins …`; see The statusline CLI.)
 
 Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`)
