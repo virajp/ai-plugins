@@ -58,13 +58,21 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
   chain stages automatically.
 - **Loop on findings** — if review or security finds issues, loop back to `code`
   to fix (then re-commit via `git-workflow`) before advancing.
+- **Capture spec/plan gaps as they surface** — a *gap* (a hole in the spec or
+  plan, distinct from a code finding) reported by any stage is never silently
+  worked around. The subagent files the full gap to mempalace room `gaps` and
+  returns a terse pointer; you **mirror that terse line into the plan doc's
+  "Gaps surfaced during execution" section** (the durable, mempalace-independent
+  copy) the moment it surfaces. Gaps do **not** block the pipeline — they are
+  reconciled at cycle end.
 - **Never silently edit the spec** — flag drift and offer; do not rewrite it.
 - **Memory via mempalace** — follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`:
-  resolve the project **wing** and recall prior decisions/findings before the
-  first stage; the review/security subagents file their own findings to
-  mempalace and the coder recalls them on loop-backs (rich detail bypasses your
-  context); persist the cycle's durable decisions at reconcile. Pass the wing to
-  every subagent you dispatch.
+  resolve the project **wing** and recall prior decisions/findings/gaps before
+  the first stage; the coder and review/security subagents file their own
+  findings and **spec/plan gaps** to mempalace and the coder recalls findings on
+  loop-backs (rich detail bypasses your context); persist the cycle's durable
+  decisions and gap resolutions at reconcile. Pass the wing to every subagent
+  you dispatch.
 
 ## Mode
 
@@ -79,10 +87,10 @@ Read the run mode from `$ARGUMENTS`:
 ## Recall (mempalace)
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, resolve the project **wing** and
-recall prior decisions and findings for this slice (rooms `decisions`,
-`problems`) before the first stage. Pass the wing to every subagent you
-dispatch, plus any relevant recall hits. Skip silently if mempalace is
-unavailable.
+recall prior decisions, findings, and unreconciled gaps for this slice (rooms
+`decisions`, `problems`, `gaps`) before the first stage. Pass the wing to every
+subagent you dispatch, plus any relevant recall hits. Skip silently if mempalace
+is unavailable.
 
 ## Stage: code (`execute-coder`, sonnet)
 
@@ -108,6 +116,10 @@ REFACTOR for every change — and runs the suite to the coverage gate. It return
 the coverage report. On a fix loop-back, also pass the review findings **tag**
 (not the text) — the coder recalls the findings from mempalace before fixing.
 
+**Capture any gap.** If the coder's `GAPS:` line points to a tag (not "none"),
+mirror its terse gist into the plan doc's "Gaps surfaced during execution"
+section before committing — per the gap-capture rule above.
+
 **Commit & gate.** Commit the implementation via `/vwf:git-workflow`. Show the
 coverage report and wait for explicit approval before `review`.
 
@@ -119,9 +131,11 @@ stack**, using `/code-review` as its engine. It files its full findings to
 mempalace (room `problems`) and returns the terse findings block plus a recall
 tag.
 
-**Gate.** Present the findings block. Issues → loop back to `code` with the
-**tag** (the coder recalls the detail and fixes), then re-commit via
-`/vwf:git-workflow` and re-review. Wait for approval before `security`.
+**Gate.** Present the findings block. If `SPEC/PLAN GAPS` is not "none", mirror
+each into the plan doc's "Gaps surfaced during execution" section (per the
+gap-capture rule). Issues → loop back to `code` with the **tag** (the coder
+recalls the detail and fixes), then re-commit via `/vwf:git-workflow` and
+re-review. Wait for approval before `security`.
 
 ## Stage: security (`execute-security-reviewer`, opus)
 
@@ -131,8 +145,10 @@ using `/security-review` as its engine, rating findings by exploitability and
 impact. It files its full findings to mempalace (room `problems`) and returns
 the terse findings block plus a recall tag.
 
-**Gate.** Present the findings block. Issues → loop back to `code` with the
-**tag**, re-commit, re-review. Wait for approval before reconciliation.
+**Gate.** Present the findings block. If `SPEC/PLAN GAPS` is not "none", mirror
+each into the plan doc's "Gaps surfaced during execution" section (per the
+gap-capture rule). Issues → loop back to `code` with the **tag**, re-commit,
+re-review. Wait for approval before reconciliation.
 
 ---
 
@@ -143,13 +159,21 @@ the terse findings block plus a recall tag.
    block** in `docs/specs/architecture.md` to match what was actually built —
    via `/vwf:architecture` for non-trivial changes. Edit the registry precisely;
    do not rewrite prose unless topology genuinely changed.
-2. **Spec drift.** If implementation revealed a spec gap, **flag it to the
-   user** and offer to update the spec via `/vwf:spec`. Do not silently rewrite
-   the spec.
+2. **Reconcile spec/plan gaps.** Collect the cycle's gaps: read the plan doc's
+   "Gaps surfaced during execution" section (the durable copy) and recall room
+   `gaps` for the full detail. Present the consolidated list to the user and
+   offer to close them — **do not silently rewrite either doc**:
+   - **Spec holes** (a behaviour/requirement the spec never pinned down) → offer
+     to update the spec via `/vwf:spec`.
+   - **Plan holes** (a step the plan under-/mis-specified) → offer to re-derive
+     the slice via `/vwf:plan` against the now-updated spec. Drive both behind
+     the user's approval. When a gap is reconciled, note its resolution back
+     into the `gaps` room (step 3) so a later cycle's recall sees it as closed.
 3. **Persist to memory.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store
    the cycle's durable outcomes to mempalace — decisions and their rationale,
-   findings and how they were resolved, any drift flagged (rooms `decisions`,
-   `problems`). Skip anything a doc already captures verbatim.
+   findings and how they were resolved, and each gap's resolution (rooms
+   `decisions`, `problems`, `gaps`). Skip anything a doc already captures
+   verbatim.
 
 ## Merge (git-workflow)
 

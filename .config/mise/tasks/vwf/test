@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#MISE description="Unit-test the vwf npm→pnpm hook (table-driven)"
+#MISE dir="{{ config_root }}"
+
+# Feeds crafted PreToolUse payloads through plugins/vwf/hooks/npm-to-pnpm.sh and
+# asserts the rewritten command. Runs under the system sed (BSD sed on macOS),
+# which is the portability guarantee CLAUDE.md requires of this hook.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+HOOK="plugins/vwf/hooks/npm-to-pnpm.sh"
+
+command -v jq >/dev/null 2>&1 || { print_error "jq is required to run the hook tests"; exit 1; }
+[[ -f "$HOOK" ]] || { print_error "Hook not found: $HOOK"; exit 1; }
+
+# Each case is "input command :: expected command". When expected == input the
+# hook must no-op (emit {}); otherwise it must rewrite to exactly expected.
+cases=(
+  'npx create-vite app :: pnpm dlx create-vite app'
+  'npx -y cowsay hi :: pnpm dlx -y cowsay hi'
+  'npm install :: pnpm install'
+  'npm ci :: pnpm install --frozen-lockfile'
+  'npm run build :: pnpm run build'
+  'npm install && npm run test :: pnpm install && pnpm run test'
+  'echo hi; npm test :: echo hi; pnpm test'
+  'npm ci && npx -y prettier . :: pnpm install --frozen-lockfile && pnpm dlx -y prettier .'
+  'echo $(npm config get registry) :: echo $(pnpm config get registry)'
+  'ls -la :: ls -la'
+  'echo deploy-npm-pkg :: echo deploy-npm-pkg'
+)
+
+print_header "Testing $HOOK ..."
+
+fail=0
+for case in "${cases[@]}"; do
+  input="${case%% :: *}"
+  expected="${case##* :: }"
+
+  payload=$(jq -n --arg c "$input" '{tool_input: {command: $c}}')
+  result=$(printf '%s' "$payload" | bash "$HOOK")
+  updated=$(printf '%s' "$result" | jq -r '.hookSpecificOutput.updatedInput.command // empty')
+  actual="${updated:-$input}"
+
+  if [[ "$actual" == "$expected" ]]; then
+    print_yellow "  ok   $input"
+  else
+    print_error "  FAIL $input"
+    print_warn  "       expected: $expected"
+    print_warn  "       actual:   $actual"
+    fail=1
+  fi
+done
+
+if [[ "$fail" -ne 0 ]]; then
+  print_error "vwf hook tests failed"
+  exit 1
+fi
+
+print_header "All vwf hook tests passed (${#cases[@]} cases)!"

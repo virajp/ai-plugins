@@ -14,9 +14,18 @@ MCP server, and `vwf` — a full Spec → Plan → Execute workflow plugin. The 
 The repo also ships a **statusline**, installed via a small `oclif` CLI
 (`@askviraj/ai-plugins`) rather than the marketplace — see The statusline CLI.
 
-Plugins are pure JSON/markdown configuration plus shell scripts (no build/test
-step). The one addition is the statusline CLI: a small plain-JS `oclif` package
-at the repo root — also no build step.
+Plugins are pure JSON/markdown configuration plus shell scripts (no build step).
+The one addition is the statusline CLI: a small plain-JS `oclif` package at the
+repo root — also no build step.
+
+`vwf` is the one plugin with tests, run **locally via pre-commit** (never in
+`release.yml`, which is the installer's): `vwf:test` table-tests the
+`npm-to-pnpm.sh` hook through the system sed (the BSD-sed portability
+guarantee), and `vwf:check` statically validates the plugin tree — manifest
+JSON, plugin.json↔marketplace.json dependency sync, `${CLAUDE_PLUGIN_ROOT}`
+asset-ref resolution, and agent `name:`↔filename. Both are scoped in
+`.config/pre-commit-config.yaml` to fire only when `plugins/vwf/` (or the
+marketplace manifest) changes.
 
 ## Plugins
 
@@ -78,12 +87,16 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `spec`, `plan`, and `architecture`
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
-  persist durable decisions, findings memory for loop-backs) referenced by
-  `spec` and `execute`. The orchestrator resolves the project wing and persists
+  persist durable decisions, findings memory for loop-backs, and **gap memory**:
+  spec/plan holes surfaced during execution, room `gaps`) referenced by `spec`,
+  `plan`, and `execute`. The orchestrator resolves the project wing and persists
   decisions; the execute reviewers/coder file and recall findings **directly** —
   they are granted scoped mempalace MCP tools in their agent frontmatter
   (`mcp__plugin_mempalace_mempalace__mempalace_search` / `…_add_drawer`), so
-  rich review detail lives in mempalace instead of the orchestrator's context
+  rich review detail lives in mempalace instead of the orchestrator's context.
+  Gaps are also mirrored to a durable "Gaps surfaced during execution" section
+  in the plan doc, so they survive a mempalace outage and feed the spec/plan
+  fixes
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
 
 Docs the commands maintain live under `docs/specs/` (registry `architecture.md`,

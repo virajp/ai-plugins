@@ -65,6 +65,14 @@ If the spec implies a surface the registry/code lacks (e.g. a background job
 with no worker project), **surface it** under Risks / drift rather than silently
 resolving it.
 
+**Consume execution-surfaced gaps.** If a prior plan for this slice exists, read
+its "Gaps surfaced during execution" section, and per
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md` recall room `gaps` for the slice. When
+this plan is a reconcile loop-back from `/vwf:execute`, closing those plan holes
+is the point of the pass — fold each into the ordered steps (against the
+now-updated spec) rather than re-deriving blind. Skip the recall silently if
+mempalace is unavailable.
+
 ### 6. Elicit open decisions
 
 The plan is a diff — most of it is mechanical. But where the spec

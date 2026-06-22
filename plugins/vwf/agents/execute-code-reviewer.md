@@ -45,6 +45,13 @@ findings** — `file:line`, why each is wrong, and the fix — with
 `<slice>/review/<round>`. This rich detail is what the fix round recalls; your
 inline reply stays terse. Skip silently if mempalace is unavailable.
 
+**Spec/plan gaps are not findings.** If you spot a hole in the *spec or plan
+itself* — a behaviour neither pins down, a plan step the code can't satisfy as
+written, a requirement the spec never stated — that is a **gap**, not a code
+finding. File it separately to room `gaps`, tagged `<slice>/gap/<round>` (what
+is under-/mis-specified and where), and report it on its own contract line, not
+under FINDINGS.
+
 ## Return contract
 
 Your entire reply is read verbatim into the orchestrator's context window.
@@ -56,9 +63,11 @@ terse. Report only real findings. Output **only** the block below:
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [severity] file:line — what's wrong and why   # (or the single line "none")
-SPEC COMPLIANCE: met   # or "gaps: <terse list>"
+SPEC COMPLIANCE: met   # code-vs-plan: "met" or "unmet: <terse list>" (plan steps missing/extra)
+SPEC/PLAN GAPS: none   # holes in the spec/plan itself: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
-RECALL: <slice>/review/<round>   # mempalace tag holding the full detail (omit if not filed)
+RECALL: <slice>/review/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
+GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
 Nothing before or after the block. If `changes-required`, the orchestrator loops

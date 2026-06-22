@@ -67,9 +67,10 @@ If a type is absent from the registry, **omit** that section for this entity.
 ### 3. Interactive elicitation (orchestrator)
 
 **Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
-decisions and drift for this entity (rooms `decisions`, `problems`) before
-eliciting — build on them and don't re-ask resolved questions. Skip silently if
-mempalace is unavailable.
+decisions, drift, and unreconciled gaps for this entity (rooms `decisions`,
+`problems`, `gaps`) before eliciting — build on them and don't re-ask resolved
+questions. When execution surfaced a spec gap (room `gaps`), treat closing it as
+a first-class goal of this pass. Skip silently if mempalace is unavailable.
 
 Adopt the authoring persona and elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` (explore → scope-check → one

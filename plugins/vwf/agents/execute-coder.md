@@ -6,7 +6,8 @@ description: Code-stage implementer for the /vwf:execute command. Invoked only
   plan under strict TDD and verifies the coverage gate before handoff to code
   review. Returns the coverage report.
 tools: Read, Write, Edit, Bash, Grep, Glob,
-  mcp__plugin_mempalace_mempalace__mempalace_search
+  mcp__plugin_mempalace_mempalace__mempalace_search,
+  mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: sonnet
 effort: high
 ---
@@ -30,6 +31,16 @@ findings **recall tag** (e.g. `order/review/2`) instead of the findings text.
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`), read the full findings, and address
 every one under the same TDD cycle below — a failing test first for each fix.
 Skip this step on the initial round or if mempalace is unavailable.
+
+**Spec/plan gaps.** The plan is authoritative, but where it (or the spec it
+implements) leaves a behaviour underspecified or is contradicted by the real
+code, do **not** silently invent — proceed on the most idiomatic assumption to
+keep moving, but **capture the gap**. Per
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full gap to room `gaps` in
+the given wing with `mempalace_add_drawer`, tagged `<slice>/gap/<round>` (what
+the spec/plan under-/mis-specified, where, and the assumption you proceeded on),
+and surface a terse one-liner in your return block. Skip the mempalace write
+silently if it is unavailable — still report the gap inline.
 
 Implement per the plan under strict TDD. Take one behavior at a time and run the
 **RED → GREEN → REFACTOR** cycle for every change — never write implementation
@@ -68,6 +79,7 @@ IMPLEMENTED:
 - <one terse line per plan step satisfied>   # ≤ 8 lines total
 TESTS: <suite command> — <N passed / M failed>
 COVERAGE: <overall %>   # if < 100%, append "— uncovered: file:line, file:line …"
+GAPS: <slice>/gap/<round>   # mempalace tag for spec/plan holes hit; "none" if the plan fully determined the work
 ```
 
 Nothing before or after the block. If a gate failed and you stopped, say so in

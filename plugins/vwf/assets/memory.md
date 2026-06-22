@@ -18,7 +18,8 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
   wing themselves — they use the wing they were given.
 - **room** — `decisions` (design/architecture decisions + the *why*), `problems`
   (review/security findings + how they were resolved), `planning` (plan
-  rationale and deferred options).
+  rationale and deferred options), `gaps` (spec/plan holes surfaced **during
+  execution** + how they were reconciled).
 
 ## Recall — before work
 
@@ -52,3 +53,21 @@ the gate and, on a fix loop-back, hands the coder just the **tag** — not the
 findings text. The coder recalls the tagged findings from mempalace, fixes them,
 and the detail never enters the orchestrator's context. This is the core context
 optimization: rich review detail lives in mempalace, not in the conversation.
+
+## Gap memory — spec/plan holes surfaced during execution
+
+A **gap** is distinct from a finding: a finding is wrong *code*; a gap is a hole
+in the *spec or plan* that execution exposed — an underspecified behaviour the
+coder had to guess, a plan step contradicted by the real code, a requirement the
+spec never stated that review/security found missing. Gaps are captured **as
+they surface**, never silently worked around.
+
+Each stage subagent that hits a gap files its **full** gap detail to room
+`gaps`, tagged `<slice>/gap/<round>` — what is under/mis-specified, where, and
+the assumption it proceeded on — and surfaces only a terse one-line pointer in
+its return block. The orchestrator mirrors that terse line into a durable
+**"Gaps surfaced during execution"** section in the plan doc (the on-disk copy
+that survives a mempalace outage), and at reconcile recalls the `gaps` room to
+drive the spec/plan fixes. Because mempalace is skip-if-unavailable, the
+plan-doc line is the source of truth when recall is empty; the `gaps` room
+carries the rich detail when it is up.

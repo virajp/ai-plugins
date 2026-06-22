@@ -29,3 +29,13 @@ Any mismatch between spec, registry, and code surfaced during diffing.
 ## Out of scope for this cycle
 
 - ...
+
+## Gaps surfaced during execution
+
+<!-- Appended by `execute` as spec/plan holes surface — do not fill at plan time.
+     One terse line per gap: stage that found it · what the spec/plan
+     under/mis-specified · the assumption execution proceeded on. The durable,
+     mempalace-independent copy; full detail lives in the mempalace `gaps` room.
+     Reconciled into the spec (/vwf:spec) and a re-plan (/vwf:plan) at cycle end. -->
+
+- ...
