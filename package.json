@@ -40,7 +40,7 @@
     }
   },
   "dependencies": {
-    "@oclif/core": "latest"
+    "@oclif/core": "4.11.8"
   },
   "engines": {
     "node": ">=18"
