@@ -167,26 +167,32 @@ or path qualifier is rejected outright so the CLI can only ever install from
 official marketplace** (`claude-plugins-official`, `OFFICIAL_MARKETPLACE_NAME`)
 so its plugins resolve to the latest versions — soft-skipped (a yellow
 `skipped`, not a failure) when it isn't registered, since the CLI doesn't manage
-or add it. **Statusline:** `--statusline` and/or `--subagentstatusline` (both
-implied by `--all`) copy the script into `~/.claude/scripts/` (chmod 755), seed
-the bundled defaults into `~/.config/statusline.json` (deep-merging missing
-settings if it already exists, preserving user edits), and write the chosen
-key(s) into `~/.claude/settings.json` (preserving other keys; prompting before
-overwrite unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version
-(vs the latest on npm), the bundled statusline version, and each plugin's
-installed version (from `claude plugin list`) vs the latest in the **remote**
-marketplace manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates.
-**Upgrade:** `--upgrade` runs **after** any install phase — it
-`claude plugin update`s every installed virajp-plugins plugin that's outdated,
-refreshes the statusline, and notes a newer CLI; combine with `--all` for an
-idempotent install+upgrade fit for a setup script. `--version`/`--upgrade` need
-the network and `claude`, and error out (non-zero) if either is unavailable.
-**Uninstall:** `--uninstall` reuses the same selection flags but removes —
-`claude plugin uninstall`s the selected plugins (matching their install scope)
-and/or strips the chosen statusline key(s) from `settings.json`, deleting the
-installed script once no statusline key remains. It leaves the seeded
-`~/.config/statusline.json` (it may hold user edits) and never touches external
-tools (the CLI never installed those).
+or add it. Installing or upgrading **`vwf`** additionally runs `setupGraphify` —
+`graphify install --platform claude` plus `graphify hook install` — since vwf's
+commands depend on graphify's knowledge graph. Both graphify commands are
+idempotent (so an upgrade self-heals the setup); the step is soft-skipped when
+`graphify` isn't on `PATH` (the `checkDeps` gate guarantees it for installs, but
+the upgrade-only path does not run that gate). **Statusline:** `--statusline`
+and/or `--subagentstatusline` (both implied by `--all`) copy the script into
+`~/.claude/scripts/` (chmod 755), seed the bundled defaults into
+`~/.config/statusline.json` (deep-merging missing settings if it already exists,
+preserving user edits), and write the chosen key(s) into
+`~/.claude/settings.json` (preserving other keys; prompting before overwrite
+unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version (vs the
+latest on npm), the bundled statusline version, and each plugin's installed
+version (from `claude plugin list`) vs the latest in the **remote** marketplace
+manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:**
+`--upgrade` runs **after** any install phase — it `claude plugin update`s every
+installed virajp-plugins plugin that's outdated, refreshes the statusline, and
+notes a newer CLI; combine with `--all` for an idempotent install+upgrade fit
+for a setup script. `--version`/`--upgrade` need the network and `claude`, and
+error out (non-zero) if either is unavailable. **Uninstall:** `--uninstall`
+reuses the same selection flags but removes — `claude plugin uninstall`s the
+selected plugins (matching their install scope) and/or strips the chosen
+statusline key(s) from `settings.json`, deleting the installed script once no
+statusline key remains. It leaves the seeded `~/.config/statusline.json` (it may
+hold user edits) and never touches external tools (the CLI never installed
+those).
 
 Before any install, the CLI **checks required external tools** for the resolved
 plan (`CORE_DEPS` brew/mise/claude for any plugin install, `PLUGIN_EXTRA_DEPS`

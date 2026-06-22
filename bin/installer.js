@@ -162,10 +162,12 @@ class Installer extends Command {
 
     // Install first — so a fresh machine ends up with the requested plugins…
     let marketplaceRefreshed = false;
+    let graphifyConfigured = false;
     if (hasSelection) {
       this.checkDeps(plan);
       if (plan.plugins.length) {
         marketplaceRefreshed = this.installPlugins(plan.plugins, plan.scope);
+        graphifyConfigured = plan.plugins.includes("vwf");
       }
       if (plan.statusLine || plan.subagentStatusLine) {
         await this.installStatusline(plan, flags.yes);
@@ -173,9 +175,9 @@ class Installer extends Command {
     }
 
     // …then upgrade everything that is installed to the latest versions. Skip the
-    // marketplace refresh if the install phase already refreshed it.
+    // marketplace refresh and graphify setup if the install phase already did them.
     if (flags.upgrade) {
-      await this.upgrade(marketplaceRefreshed);
+      await this.upgrade(marketplaceRefreshed, graphifyConfigured);
     }
   }
 
@@ -213,13 +215,14 @@ class Installer extends Command {
     }
   }
 
-  // Upgrade every installed virajp-plugins plugin to its latest version, refresh
-  // the statusline (if installed) to this CLI's bundled version, and note a newer
-  // CLI. Runs after the install phase, so newly installed plugins are already
+  // Upgrade every installed virajp-plugins plugin to its latest version, re-assert
+  // graphify's setup (when vwf is installed), refresh the statusline (if installed)
+  // to this CLI's bundled version, and note a newer CLI. Runs after the install
+  // phase, so newly installed plugins are already
   // latest and only pre-existing ones get bumped. Installing missing plugins is
   // the install flags' job — this only upgrades what is present. Errors out if
   // the network or the claude CLI is unavailable.
-  async upgrade(marketplaceRefreshed = false) {
+  async upgrade(marketplaceRefreshed = false, graphifyConfigured = false) {
     if (!hasBin("claude")) {
       this.error("claude CLI not found. Install it first, then re-run.");
     }
@@ -277,6 +280,13 @@ class Installer extends Command {
           green("\nPlugin updates applied — restart Claude Code to load them."),
         );
       }
+    }
+
+    // Re-assert graphify's Claude Code integration + post-commit hook (idempotent)
+    // whenever vwf is installed, so an upgrade self-heals the setup — unless the
+    // install phase already did it this run.
+    if (!graphifyConfigured && ours.includes("vwf")) {
+      this.setupGraphify();
     }
 
     // Refresh the installed statusline script + config (no settings.json change).
@@ -449,6 +459,9 @@ class Installer extends Command {
         ["plugin", "install", "--scope", scope, `${name}@${MARKETPLACE_NAME}`],
       );
     }
+    if (plugins.includes("vwf")) {
+      this.setupGraphify();
+    }
     return true;
   }
 
@@ -465,7 +478,12 @@ class Installer extends Command {
     );
   }
 
-  // Run a `claude` subcommand quietly under a one-line status: prints
+  // Run a `claude` subcommand under a one-line status (see runCommand).
+  runClaude(label, args, opts = {}) {
+    return this.runCommand(label, "claude", args, opts);
+  }
+
+  // Run an external command quietly under a one-line status: prints
   // "<label> … ✅" on success, or "<label> … ❌" followed by the captured command
   // output on failure. Output is surfaced ONLY on error — success stays a single
   // tidy line. Returns true on exit 0.
@@ -473,12 +491,12 @@ class Installer extends Command {
   // With `soft: true` a non-zero exit is treated as a skip (yellow note), not a
   // failure — for best-effort steps like refreshing a marketplace we don't own,
   // whose only common failure is "not registered".
-  runClaude(label, args, { soft = false } = {}) {
+  runCommand(label, cmd, args, { soft = false } = {}) {
     process.stdout.write(`${label} ... `);
-    const res = spawnSync("claude", args, { encoding: "utf8" });
+    const res = spawnSync(cmd, args, { encoding: "utf8" });
     if (res.error) {
       this.log(red("❌"));
-      this.error(`Failed to run claude: ${res.error.message}`);
+      this.error(`Failed to run ${cmd}: ${res.error.message}`);
     }
     if (res.status === 0) {
       this.log(green("✅ OK"));
@@ -494,6 +512,33 @@ class Installer extends Command {
       this.log(out);
     }
     return false;
+  }
+
+  // vwf's commands rely on graphify's knowledge graph, so wiring graphify into
+  // Claude Code and installing its post-commit hook is part of a vwf install or
+  // upgrade. Both commands are idempotent, so it is safe to re-run on every
+  // upgrade. Skipped (not failed) when graphify isn't on PATH — checkDeps
+  // guarantees it for installs, but the upgrade-only path does not run that gate.
+  setupGraphify() {
+    if (!hasBin("graphify")) {
+      process.stdout.write("Setting up graphify ... ");
+      this.log(
+        yellow(
+          `skipped (graphify not on PATH — install: ${DEP_HINTS.graphify})`,
+        ),
+      );
+      return;
+    }
+    this.runCommand(
+      "Installing graphify for Claude Code",
+      "graphify",
+      ["install", "--platform", "claude"],
+    );
+    this.runCommand(
+      "Installing graphify post-commit hook",
+      "graphify",
+      ["hook", "install"],
+    );
   }
 
   // Run a local (file/config) step under the same one-line status as runClaude:
