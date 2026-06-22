@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+#MISE description="Static validation of every plugin (manifests, deps, asset refs, agent names, marketplace sync)"
+#MISE dir="{{ config_root }}"
+
+# Deterministic invariants across all local plugins under plugins/*:
+#  - plugin.json is valid JSON and its "name" matches the directory name.
+#  - the plugin is registered in marketplace.json with source ./plugins/<name>.
+#  - dependency lists are identical in plugin.json and the marketplace entry.
+#  - every ${CLAUDE_PLUGIN_ROOT}/... reference resolves to a real file.
+#  - each agent's `name:` frontmatter matches its filename (plugins with agents/).
+#  - every ./plugins-sourced marketplace entry has a matching local directory.
+# url-sourced marketplace entries (e.g. mempalace) are not authored here, so only
+# their JSON validity is covered. Skill/plugin version numbers are intentionally
+# not cross-checked — they are independent by design.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+command -v python3 >/dev/null 2>&1 || { print_error "python3 is required for plugins:check"; exit 1; }
+
+python3 - <<'PY'
+import glob, json, os, re, sys
+
+GREEN, YELLOW, RED, BOLD, OFF = "\033[0;32m", "\033[0;33m", "\033[0;31m", "\033[1m", "\033[0m"
+def header(m): print(f"{GREEN}{BOLD}{m}{OFF}")
+def ok(m):     print(f"{YELLOW}  ok   {m}{OFF}")
+def bad(m):    print(f"{RED}{BOLD}  FAIL {m}{OFF}")
+
+MARKET = ".claude-plugin/marketplace.json"
+REF_RE = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
+failed = False
+
+header("Validating marketplace.json ...")
+try:
+    market = json.load(open(MARKET))
+    ok(MARKET)
+except Exception as e:
+    bad(f"{MARKET} is not valid JSON: {e}")
+    sys.exit(1)
+
+entries = {p.get("name"): p for p in market.get("plugins", [])}
+norm = lambda deps: sorted((d.get("marketplace"), d.get("name")) for d in deps or [])
+
+def asset_refs(plugin_dir):
+    """All distinct ${CLAUDE_PLUGIN_ROOT}/... reference paths under a plugin dir."""
+    found = set()
+    for base, _, files in os.walk(plugin_dir):
+        for fn in files:
+            path = os.path.join(base, fn)
+            try:
+                text = open(path, encoding="utf-8").read()
+            except (UnicodeDecodeError, OSError):
+                continue  # skip binaries / unreadable
+            found.update(REF_RE.findall(text))
+    return sorted(found)
+
+header("Checking local plugins ...")
+plugin_dirs = sorted(glob.glob("plugins/*/"))
+if not plugin_dirs:
+    bad("no plugins found under plugins/")
+    failed = True
+
+for pdir in plugin_dirs:
+    name_dir = pdir.rstrip("/").split("/")[-1]
+    errs = []
+
+    # 1. plugin.json valid + name matches dir
+    pj_path = os.path.join(pdir, ".claude-plugin", "plugin.json")
+    pj = None
+    if not os.path.isfile(pj_path):
+        errs.append(f"missing {pj_path}")
+    else:
+        try:
+            pj = json.load(open(pj_path))
+        except Exception as e:
+            errs.append(f"invalid JSON in {pj_path}: {e}")
+    if pj is not None and pj.get("name") != name_dir:
+        errs.append(f"plugin.json name '{pj.get('name')}' != dir '{name_dir}'")
+
+    # 2. registered in marketplace with the right local source
+    entry = entries.get(name_dir)
+    if entry is None:
+        errs.append(f"not registered in {MARKET}")
+    elif entry.get("source") != f"./{pdir.rstrip('/')}":
+        errs.append(f"marketplace source '{entry.get('source')}' != './{pdir.rstrip('/')}'")
+
+    # 3. dependency lists in sync
+    if pj is not None and entry is not None:
+        if norm(pj.get("dependencies")) != norm(entry.get("dependencies")):
+            errs.append(f"deps differ: plugin.json={norm(pj.get('dependencies'))} marketplace={norm(entry.get('dependencies'))}")
+
+    # 4. asset refs resolve
+    refs = asset_refs(pdir)
+    for rel in refs:
+        if not os.path.isfile(os.path.join(pdir, rel)):
+            errs.append(f"unresolved asset ref ${{CLAUDE_PLUGIN_ROOT}}/{rel}")
+
+    # 5. agent name <-> filename
+    agent_files = sorted(glob.glob(os.path.join(pdir, "agents", "*.md")))
+    for af in agent_files:
+        m = re.search(r"(?m)^name:\s*(.+?)\s*$", open(af, encoding="utf-8").read())
+        declared = m.group(1) if m else None
+        expected = os.path.basename(af)[:-3]
+        if declared != expected:
+            errs.append(f"agent {af} declares name '{declared}' (expected '{expected}')")
+
+    if errs:
+        failed = True
+        bad(name_dir)
+        for e in errs:
+            print(f"{RED}         - {e}{OFF}")
+    else:
+        ok(f"{name_dir} — manifest, name, registered, deps, refs({len(refs)}), agents({len(agent_files)})")
+
+header("Cross-checking marketplace local sources resolve ...")
+for name, entry in entries.items():
+    src = entry.get("source")
+    if not (isinstance(src, str) and src.startswith("./plugins/")):
+        continue  # url-sourced / external entries are not authored here
+    if os.path.isfile(os.path.join(src, ".claude-plugin", "plugin.json")):
+        ok(f"{name} -> {src}")
+    else:
+        failed = True
+        bad(f"{name} marketplace source {src} has no plugin.json")
+
+if failed:
+    print(f"{RED}{BOLD}plugins:check failed{OFF}")
+    sys.exit(1)
+print(f"{GREEN}{BOLD}All plugin checks passed!{OFF}")
+PY

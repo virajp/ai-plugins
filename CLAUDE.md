@@ -18,14 +18,23 @@ Plugins are pure JSON/markdown configuration plus shell scripts (no build step).
 The one addition is the statusline CLI: a small plain-JS `oclif` package at the
 repo root — also no build step.
 
-`vwf` is the one plugin with tests, run **locally via pre-commit** (never in
-`release.yml`, which is the installer's): `vwf:test` table-tests the
-`npm-to-pnpm.sh` hook through the system sed (the BSD-sed portability
-guarantee), and `vwf:check` statically validates the plugin tree — manifest
-JSON, plugin.json↔marketplace.json dependency sync, `${CLAUDE_PLUGIN_ROOT}`
-asset-ref resolution, and agent `name:`↔filename. Both are scoped in
-`.config/pre-commit-config.yaml` to fire only when `plugins/vwf/` (or the
-marketplace manifest) changes.
+The plugins have two test tasks, run **locally via pre-commit** (never in
+`release.yml`, which is the installer's):
+
+- **`plugins:check`** — static validation of **every** local plugin under
+  `plugins/*`: manifest JSON validity, `plugin.json` `name`↔dir, registration in
+  `marketplace.json` with the right `./plugins/<name>` source (both directions),
+  `plugin.json`↔marketplace dependency sync, `${CLAUDE_PLUGIN_ROOT}` asset-ref
+  resolution, and agent `name:`↔filename (for plugins with an `agents/` dir).
+  url-sourced entries (e.g. `mempalace`) are covered only for JSON validity.
+  Scoped to fire when anything under `plugins/` or the marketplace manifest
+  changes.
+- **`vwf:test`** — table-tests the `vwf` `npm-to-pnpm.sh` hook through the
+  system sed (the BSD-sed portability guarantee); vwf-specific since it is the
+  only plugin shipping a hook. Scoped to `plugins/vwf/hooks/`.
+
+Plugin/skill version numbers are **not** cross-checked — they are independent by
+design (a plugin may hold skills versioned on their own cadence).
 
 ## Plugins
 

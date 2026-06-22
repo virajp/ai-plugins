@@ -24,12 +24,12 @@ repos:
         pass_filenames: false
         files: ^plugins/vwf/hooks/
         stages: [ pre-commit ]
-      - id: vwf-check
-        name: vwf plugin static validation
-        entry: mise x -- mise run vwf:check
+      - id: plugins-check
+        name: plugin tree static validation
+        entry: mise x -- mise run plugins:check
         language: system
         pass_filenames: false
-        files: ^(plugins/vwf/|\.claude-plugin/marketplace\.json$)
+        files: ^(plugins/|\.claude-plugin/marketplace\.json$)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
