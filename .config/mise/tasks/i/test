@@ -35,6 +35,12 @@ if "${CLI[@]}" --plugin bogus >/dev/null 2>&1; then
   exit 1
 fi
 
+print_header "Asserting an invalid --scope is rejected ..."
+if "${CLI[@]}" --plugin vwf --scope global >/dev/null 2>&1; then
+  print_error "Expected non-zero exit for an invalid --scope"
+  exit 1
+fi
+
 print_header "Asserting the missing-dependency check fires ..."
 # With only node on PATH the required tools report as missing, so the CLI prints
 # install hints and exits non-zero before touching claude or the filesystem.

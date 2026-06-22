@@ -145,8 +145,11 @@ scope. The bulk flags (`--all`/`--plugins`) install **user-scoped plugins only**
 (`USER_SCOPED`); **project-scoped** plugins (`dart-lsp` — `PROJECT_SCOPED` in
 `bin/installer.js`) are a deliberate per-project choice and are reached **only
 via an explicit `--plugin <name>`** (which installs at the plugin's own scope).
-Plugin names are **bare and allowlisted** (`PLUGINS`); an `@marketplace` or path
-qualifier is rejected outright so the CLI can only ever install from
+`--scope user|project` **overrides** each selected plugin's default scope
+(`scopeFor`'s `override` arg); absent, the per-plugin default applies. It
+governs both install and uninstall, but never the marketplace add (always user
+scope). Plugin names are **bare and allowlisted** (`PLUGINS`); an `@marketplace`
+or path qualifier is rejected outright so the CLI can only ever install from
 `virajp-plugins`. Every install/upgrade also **best-effort refreshes Anthropic's
 official marketplace** (`claude-plugins-official`, `OFFICIAL_MARKETPLACE_NAME`)
 so its plugins resolve to the latest versions — soft-skipped (a yellow

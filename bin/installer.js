@@ -80,9 +80,11 @@ const PLUGINS = [
 ];
 
 // Plugins that install at project scope by default; everything else is
-// user-scoped. The marketplace itself is always user-scoped.
+// user-scoped. The marketplace itself is always user-scoped. An explicit
+// --scope (`override`) wins over the per-plugin default.
 const PROJECT_SCOPED = new Set(["dart-lsp"]);
-const scopeFor = name => (PROJECT_SCOPED.has(name) ? "project" : "user");
+const scopeFor = (name, override) =>
+  override || (PROJECT_SCOPED.has(name) ? "project" : "user");
 
 // The bulk flags (--all / --plugins) only act on user-scoped plugins. A
 // project-scoped plugin is a deliberate per-project choice, so it is never
@@ -163,7 +165,7 @@ class Installer extends Command {
     if (hasSelection) {
       this.checkDeps(plan);
       if (plan.plugins.length) {
-        marketplaceRefreshed = this.installPlugins(plan.plugins);
+        marketplaceRefreshed = this.installPlugins(plan.plugins, plan.scope);
       }
       if (plan.statusLine || plan.subagentStatusLine) {
         await this.installStatusline(plan, flags.yes);
@@ -305,7 +307,7 @@ class Installer extends Command {
         this.error("claude CLI not found. Install it first, then re-run.");
       }
       for (const name of plan.plugins) {
-        const scope = scopeFor(name);
+        const scope = scopeFor(name, plan.scope);
         this.runClaude(
           `Uninstalling ${name} (${scope} scope)`,
           [
@@ -362,7 +364,8 @@ class Installer extends Command {
   // Turn the parsed flags into a concrete plan: which plugins to install and
   // which statusline keys to set. --all / --plugins cover the user-scoped plugins
   // (and, for --all, both statusline keys); project-scoped plugins are reached
-  // only via an explicit --plugin <name>.
+  // only via an explicit --plugin <name>. An explicit --scope overrides each
+  // plugin's default scope; absent, the per-plugin default applies.
   resolvePlan(flags) {
     const all = flags.all;
     let plugins;
@@ -397,6 +400,7 @@ class Installer extends Command {
     return {
       all,
       plugins,
+      scope: flags.scope,
       statusLine: all || flags.statusline,
       subagentStatusLine: all || flags.subagentstatusline,
     };
@@ -424,8 +428,9 @@ class Installer extends Command {
   // disk — it does NOT pull the latest manifest — so a newly published plugin
   // would 404 against the stale local copy; always `marketplace update` after.
   // Returns true (the marketplace is now refreshed) so a following --upgrade can
-  // skip its redundant refresh.
-  installPlugins(plugins) {
+  // skip its redundant refresh. `scopeOverride` (from --scope) wins over each
+  // plugin's default scope; the marketplace itself is always added user-scoped.
+  installPlugins(plugins, scopeOverride) {
     this.runClaude(
       `Adding marketplace ${MARKETPLACE_NAME} (user scope)`,
       ["plugin", "marketplace", "add", "--scope", "user", MARKETPLACE_REF],
@@ -438,7 +443,7 @@ class Installer extends Command {
     );
     this.refreshOfficialMarketplace();
     for (const name of plugins) {
-      const scope = scopeFor(name);
+      const scope = scopeFor(name, scopeOverride);
       this.runClaude(
         `Installing ${name} (${scope} scope)`,
         ["plugin", "install", "--scope", scope, `${name}@${MARKETPLACE_NAME}`],
@@ -630,6 +635,7 @@ Installer.examples = [
   "pnpx @askviraj/ai-plugins --all",
   "pnpx @askviraj/ai-plugins --plugins",
   "pnpx @askviraj/ai-plugins --plugin vwf --plugin dart-lsp",
+  "pnpx @askviraj/ai-plugins --plugin vwf --scope project",
   "pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes",
   "pnpx @askviraj/ai-plugins --all --upgrade",
   "pnpx @askviraj/ai-plugins --uninstall --plugin vwf",
@@ -669,10 +675,16 @@ Installer.flags = {
   }),
   plugin: Flags.string({
     multiple: true,
+    description: `Install a specific plugin by name (repeatable). One of: ${
+      PLUGINS.join(", ")
+    }`,
+  }),
+  scope: Flags.string({
+    options: ["user", "project"],
     description:
-      `Install a specific plugin by name (repeatable, any scope). One of: ${
-        PLUGINS.join(", ")
-      }`,
+      `Install/uninstall scope for the selected plugins, overriding the per-plugin default (project for ${
+        [...PROJECT_SCOPED].join(", ")
+      }, user otherwise)`,
   }),
   statusline: Flags.boolean({
     description:
