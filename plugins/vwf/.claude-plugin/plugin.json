@@ -7,6 +7,10 @@
     },
     {
       "marketplace": "virajp-plugins",
+      "name": "markdown"
+    },
+    {
+      "marketplace": "virajp-plugins",
       "name": "mempalace"
     }
   ],

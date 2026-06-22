@@ -115,17 +115,19 @@ templates from the prior model are archived under `archived/vwf-2026-06-19/`.
 
 ### Dependencies
 
-`vwf` depends on `context7` and `mempalace` — **both resolved from the
-`virajp-plugins` marketplace itself**, so installing `vwf` needs no other
-marketplace registered. `mempalace` is not authored here; it is **re-listed** in
-`.claude-plugin/marketplace.json` via a `url` source (pointing at its upstream
-repo) so it lives under `virajp-plugins`.
+`vwf` depends on `context7`, `markdown`, and `mempalace` — **all resolved from
+the `virajp-plugins` marketplace itself**, so installing `vwf` needs no other
+marketplace registered. `context7` and `markdown` are authored here; `mempalace`
+is not — it is **re-listed** in `.claude-plugin/marketplace.json` via a `url`
+source (pointing at its upstream repo) so it lives under `virajp-plugins`.
 
 The dependency list is declared in **two** places, which must stay in sync —
-both reference `@virajp-plugins` for every entry:
+both reference `@virajp-plugins` for every entry (the `plugins:check` task
+enforces this):
 
-- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `mempalace`
-- `.claude-plugin/marketplace.json` (vwf entry) → `context7`, `mempalace`
+- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `markdown`, `mempalace`
+- `.claude-plugin/marketplace.json` (vwf entry) → `context7`, `markdown`,
+  `mempalace`
 
 When `vwf` is enabled, Claude Code (≥ 2.1.143) **auto-installs and
 auto-enables** these dependencies at the same scope. Key rules:
@@ -342,6 +344,6 @@ Available plugin names: `vwf`, `markdown`, `mempalace`, `context7`,
 `typescript-lsp`, `dart-lsp`. (The statusline is not a plugin — install it via
 `npx @askviraj/ai-plugins …`; see The statusline CLI.)
 
-Installing `vwf` pulls in its dependencies (`context7`, `mempalace`)
+Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`)
 automatically from the same `virajp-plugins` marketplace — no other marketplace
 needs to be registered. See the Dependencies section above.
