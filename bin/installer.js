@@ -124,6 +124,9 @@ class Installer extends Command {
     }
 
     const plan = this.resolvePlan(flags);
+    // Gates setupGraphify() at every call site (install + upgrade). graphify
+    // operates on a git repo, so this lets installs run outside one.
+    this.skipGraphify = plan.skipGraphify;
     const hasSelection = plan.plugins.length
       || plan.statusLine
       || plan.subagentStatusLine;
@@ -411,6 +414,7 @@ class Installer extends Command {
       all,
       plugins,
       scope: flags.scope,
+      skipGraphify: flags["skip-graphify"],
       statusLine: all || flags.statusline,
       subagentStatusLine: all || flags.subagentstatusline,
     };
@@ -517,9 +521,15 @@ class Installer extends Command {
   // vwf's commands rely on graphify's knowledge graph, so wiring graphify into
   // Claude Code and installing its post-commit hook is part of a vwf install or
   // upgrade. Both commands are idempotent, so it is safe to re-run on every
-  // upgrade. Skipped (not failed) when graphify isn't on PATH — checkDeps
-  // guarantees it for installs, but the upgrade-only path does not run that gate.
+  // upgrade. Skipped (not failed) when `--skip-graphify` is set (graphify needs a
+  // git repo) or graphify isn't on PATH — checkDeps guarantees it for installs
+  // unless skipped, but the upgrade-only path does not run that gate.
   setupGraphify() {
+    if (this.skipGraphify) {
+      process.stdout.write("Setting up graphify ... ");
+      this.log(yellow("skipped (--skip-graphify)"));
+      return;
+    }
     if (!hasBin("graphify")) {
       process.stdout.write("Setting up graphify ... ");
       this.log(
@@ -681,6 +691,7 @@ Installer.examples = [
   "pnpx @askviraj/ai-plugins --plugins",
   "pnpx @askviraj/ai-plugins --plugin vwf --plugin flutter",
   "pnpx @askviraj/ai-plugins --plugin vwf --scope project",
+  "pnpx @askviraj/ai-plugins --plugin vwf --skip-graphify",
   "pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes",
   "pnpx @askviraj/ai-plugins --all --upgrade",
   "pnpx @askviraj/ai-plugins --uninstall --plugin vwf",
@@ -730,6 +741,10 @@ Installer.flags = {
       `Install/uninstall scope for the selected plugins, overriding the per-plugin default (project for ${
         [...PROJECT_SCOPED].join(", ")
       }, user otherwise)`,
+  }),
+  "skip-graphify": Flags.boolean({
+    description:
+      "Skip the graphify setup (graphify install + hook install) that a vwf install/upgrade normally runs, and drop graphify from the dependency check. Use when installing outside a git repo, where graphify's commands don't apply",
   }),
   statusline: Flags.boolean({
     description:
@@ -897,7 +912,9 @@ function hasBin(bin) {
 }
 
 // The tools that must be present for the resolved install plan.
-function requiredTools({ plugins, statusLine, subagentStatusLine }) {
+function requiredTools(
+  { plugins, statusLine, subagentStatusLine, skipGraphify },
+) {
   const tools = new Set();
   if (plugins.length) {
     for (const d of CORE_DEPS) {
@@ -908,6 +925,10 @@ function requiredTools({ plugins, statusLine, subagentStatusLine }) {
     for (const d of PLUGIN_EXTRA_DEPS[p] || []) {
       tools.add(d);
     }
+  }
+  // --skip-graphify bypasses setupGraphify, so graphify need not be present.
+  if (skipGraphify) {
+    tools.delete("graphify");
   }
   if (statusLine || subagentStatusLine) {
     tools.add("node");

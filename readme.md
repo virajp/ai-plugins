@@ -54,6 +54,15 @@ This is the only way to install a project-scoped plugin like `flutter`.
 Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
 `context7`.
 
+Installing `vwf` also wires up
+[graphify](https://github.com/safishamsi/graphify) (a git-repo tool). When
+installing **outside a git repo**, add `--skip-graphify` to bypass that setup
+and drop graphify from the dependency check:
+
+```sh
+pnpx @askviraj/ai-plugins --plugin vwf --skip-graphify
+```
+
 > The **statusline** also installs through this CLI — see
 > [Statusline](#statusline) below.
 
