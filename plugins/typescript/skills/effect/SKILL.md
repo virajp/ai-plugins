@@ -1,11 +1,11 @@
 ---
 name: effect
-version: 0.1.0
+version: 0.2.0
 category: development
-description: Opinionated Effect-TS coding standards — Effect.gen,
-  Effect.Schema,
+description: Opinionated Effect-TS patterns — Effect.gen, Effect.Schema,
   Effect.Service, a single error class, telemetry spans, structured logging, and
-  Effect Config. Auto-applies when editing any TypeScript file.
+  Effect Config. Auto-applies when editing any TypeScript file. General language
+  standards live in the `typescript` skill.
 license: MIT
 user-invocable: false
 paths:
@@ -14,33 +14,23 @@ paths:
 
 # Effect-TS Coding Standards
 
-All async work is an `Effect`, never a `Promise`. Sequential logic lives in
-`Effect.gen`; data shapes are `Effect.Schema`; capabilities are
-`Effect.Service`.
+**Effect is mandatory.** Every async operation is an `Effect`, never a `Promise`
+— no bare `async`/`await`, `.then()`, or returned `Promise` in application code.
+Sequential logic lives in `Effect.gen`; data shapes are `Effect.Schema`;
+capabilities are `Effect.Service`. Code that does async work with raw promises
+is non-conforming and must be migrated to Effect (the only exception is the thin
+boundary where Effect meets a non-Effect runtime — see **HTTP boundary**).
 
-## Naming
-
-- `camelCase`: variables, functions, directories.
-- `PascalCase`: classes, interfaces, types, and schemas (suffix `Schema`).
-- Singular module names: `user`, `ride`, `route`, `place`.
-- Files follow `module.responsibility.ts`: `user.service.ts`, `user.routes.ts`,
-  `user.schema.ts`.
-- Private/internal directories use an underscore prefix: `_shared`, `_server`,
-  `_testUtils`.
-- Boolean variables use auxiliary verbs: `isLoading`, `hasError`, `canAccess`.
+> General TypeScript standards — naming, import ordering, strict type safety —
+> live in the **typescript** skill. This skill covers the Effect layer on top.
 
 ## Imports
 
 Import Effect and shared helpers from the project's **barrel** (`@/effect`), not
 from `effect` directly — the barrel re-exports `Effect`, `Schema`, `Layer`,
 `Context`, `Config`, etc. plus internal helpers (`withSpan`, schema parsers), so
-imports stay one line and helpers travel with the framework.
-
-Order, alphabetised within each group:
-
-1. External dependencies (`hono`, `firebase-admin`, …).
-2. Internal modules via the `@/` path alias.
-3. `import type` for type-only imports (always `import type`, never inline).
+imports stay one line and helpers travel with the framework. (General import
+ordering is in the **typescript** skill.)
 
 ```typescript
 /**
@@ -61,13 +51,6 @@ import { getAuth } from "firebase-admin/auth";
 
 import type { UserRecord } from "@/user/user.schema";
 ```
-
-## TypeScript usage
-
-- Strict mode always; explicit return types on **all** exported functions.
-- Named `function` declarations over arrow functions — better stack traces.
-- All async operations return `Effect.Effect<A, E, R>` — never `Promise`.
-- `import type` for anything not used at runtime (`verbatimModuleSyntax` on).
 
 ## Effect.Schema
 

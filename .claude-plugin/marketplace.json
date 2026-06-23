@@ -140,7 +140,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated TypeScript plugin — Effect-TS skills (effect, package-json, pnpm, tsconfig, build) plus the TypeScript/JavaScript language server.",
+      "description": "Opinionated TypeScript plugin where Effect is mandatory — coding-standards & Effect-TS skills (typescript, effect, package-json, pnpm, tsconfig, build, vitest) plus the TypeScript/JavaScript language server.",
       "name": "typescript",
       "source": "./plugins/typescript",
       "strict": true,
@@ -152,11 +152,13 @@
         "tsconfig",
         "monorepo",
         "build",
+        "vitest",
+        "testing",
         "skills",
         "language-server",
         "lsp"
       ],
-      "version": "0.2.0"
+      "version": "0.3.0"
     }
   ]
 }

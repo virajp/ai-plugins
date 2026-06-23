@@ -82,3 +82,17 @@ and `pnpm-workspace.yaml`'s `requiredScripts` line up:
   `pnpm run --filter '<pkg>' <script>`; keep cross-workspace fan-out there.
 - Dev runs use `tsx`; never commit a script that runs `vitest run` directly when
   it needs emulators or secrets — wrap it in the relevant runner.
+
+The `@/` alias needs two **devDependencies** in every package that uses it (the
+alias itself is declared in `tsconfig.json` — see the **tsconfig** skill):
+
+```jsonc
+{
+  "devDependencies": {
+    "tsc-alias": "latest", // build:alias — rewrites @/ → relative paths in dist
+    "vite-tsconfig-paths": "latest", // resolves @/ in Vitest (see the vitest skill)
+  },
+}
+```
+
+`tsx` resolves `@/` from the tsconfig directly, so dev runs need nothing extra.
