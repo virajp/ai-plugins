@@ -1,11 +1,11 @@
 ---
 name: pnpm
-version: 0.1.0
+version: 0.2.0
 category: development
 description: Opinionated pnpm workspace configuration — pnpm-workspace.yaml
-  globs,
-  supply-chain safety (minimumReleaseAge, trustPolicy), workspace linking, build
-  allowlists, and .npmrc. Auto-applies when editing pnpm-workspace.yaml or .npmrc.
+  globs, catalogs, supply-chain safety (minimumReleaseAge, trustPolicy),
+  workspace linking, build allowlists, peer-dependency rules, and .npmrc.
+  Auto-applies when editing pnpm-workspace.yaml or .npmrc.
 license: MIT
 user-invocable: false
 paths:
@@ -33,6 +33,41 @@ injectWorkspacePackages: true
 # Install the package manager version pinned in package.json
 managePackageManagerVersions: true
 ```
+
+## Catalogs
+
+When several workspace packages share a dependency, pin its version **once** in
+a catalog so they can never drift apart. Define a default catalog (and optional
+named catalogs for staged migrations); packages then reference `catalog:`
+instead of a literal range.
+
+```yaml
+# pnpm-workspace.yaml
+catalog:
+  react: ^18.2.0
+  react-dom: ^18.2.0
+
+catalogs:
+  # referenced as "catalog:react17"
+  react17:
+    react: ^17.0.2
+    react-dom: ^17.0.2
+```
+
+```json
+// a package's package.json
+{
+  "dependencies": {
+    "react": "catalog:", // default catalog
+    "react-dom": "catalog:react17" // a named catalog
+  }
+}
+```
+
+`catalog:` resolves to the default catalog; `catalog:<name>` to a named one.
+Bump the version in the catalog and every package follows — a single source of
+truth that the lockfile then pins. Use catalogs for cross-package shared deps;
+leave single-package deps as-is.
 
 ## Supply-chain safety
 
@@ -86,6 +121,29 @@ overrides:
   "yaml": ">=2.8.3"
   "uuid": ">=11.1.1"
 ```
+
+## Peer dependencies
+
+pnpm auto-installs missing peers by default (`autoInstallPeers: true`). When a
+peer warning is a genuine version mismatch, fix the real version — don't mute
+it. For warnings you've verified are safe, silence them narrowly with
+`peerDependencyRules`:
+
+```yaml
+peerDependencyRules:
+  # Suppress unmet-peer warnings only for a specific parent>peer pairing
+  allowedVersions:
+    "react-dom>react": "18"
+  # Don't warn about missing peers matching these patterns
+  ignoreMissing:
+    - "@babel/*"
+  # Accept any peer version for these patterns (broadest — use sparingly)
+  allowAny:
+    - "eslint"
+```
+
+Prefer `allowedVersions` (scoped to one pairing) over `ignoreMissing`, and reach
+for `allowAny` last — each one widens what you stop being warned about.
 
 ## .npmrc
 
