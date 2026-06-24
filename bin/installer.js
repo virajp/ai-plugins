@@ -207,7 +207,10 @@ class Installer extends Command {
     for (const name of PLUGINS) {
       this.log(
         `  ${name.padEnd(16)} ${
-          pluginVersionLine(installed[name], latest[name])
+          pluginVersionLine(
+            installed[name] && installed[name].version,
+            latest[name],
+          )
         }`,
       );
     }
@@ -255,12 +258,22 @@ class Installer extends Command {
     else {
       let updated = 0;
       for (const name of ours) {
-        const have = installed[name];
+        const have = installed[name].version;
         const want = latest[name];
         if (want && cmpVer(want, have) > 0) {
+          // Update at the scope the plugin is actually installed at (project for
+          // flutter, user for the rest) — `plugin update` defaults to user scope
+          // and fails otherwise. Fall back to the per-plugin default scope.
+          const scope = installed[name].scope || scopeFor(name);
           this.runClaude(
-            `Updating ${name} (${have} → ${want})`,
-            ["plugin", "update", `${name}@${MARKETPLACE_NAME}`],
+            `Updating ${name} (${have} → ${want}, ${scope} scope)`,
+            [
+              "plugin",
+              "update",
+              `${name}@${MARKETPLACE_NAME}`,
+              "--scope",
+              scope,
+            ],
           );
           updated++;
         }
@@ -802,7 +815,7 @@ function installedPlugins() {
       continue;
     }
     if (id.slice(at + 1) === MARKETPLACE_NAME) {
-      out[id.slice(0, at)] = entry.version;
+      out[id.slice(0, at)] = { version: entry.version, scope: entry.scope };
     }
   }
   return out;
