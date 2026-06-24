@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Clean Flutter build artifacts"
+#MISE hide=true
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+print_header "Running flutter clean ..."
+flutter clean
+
+print_header "Deleting pubspec.lock ..."
+find . -type f -name "pubspec.lock" -exec rm -f {} + || true

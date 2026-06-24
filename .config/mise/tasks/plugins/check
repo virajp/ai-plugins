@@ -6,7 +6,7 @@
 #  - plugin.json is valid JSON and its "name" matches the directory name.
 #  - the plugin is registered in marketplace.json with source ./plugins/<name>.
 #  - dependency lists are identical in plugin.json and the marketplace entry.
-#  - every ${CLAUDE_PLUGIN_ROOT}/... reference resolves to a real file.
+#  - every ${CLAUDE_PLUGIN_ROOT}/... reference resolves to a real path (file or dir).
 #  - each agent's `name:` frontmatter matches its filename (plugins with agents/).
 #  - every ./plugins-sourced marketplace entry has a matching local directory.
 # url-sourced marketplace entries (e.g. mempalace) are not authored here, so only
@@ -91,10 +91,10 @@ for pdir in plugin_dirs:
         if norm(pj.get("dependencies")) != norm(entry.get("dependencies")):
             errs.append(f"deps differ: plugin.json={norm(pj.get('dependencies'))} marketplace={norm(entry.get('dependencies'))}")
 
-    # 4. asset refs resolve
+    # 4. asset refs resolve (file or directory — templates are copied as trees)
     refs = asset_refs(pdir)
     for rel in refs:
-        if not os.path.isfile(os.path.join(pdir, rel)):
+        if not os.path.exists(os.path.join(pdir, rel)):
             errs.append(f"unresolved asset ref ${{CLAUDE_PLUGIN_ROOT}}/{rel}")
 
     # 5. agent name <-> filename

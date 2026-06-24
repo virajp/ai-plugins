@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#MISE description="Lint files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "${MISE_PROJECT_ROOT}"
+
+print_header "Linting files ..."
+[[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="--debug" || LOG_LEVEL=""
+[[ "${usage_fix:-false}" == "true" ]] && FIX="--fix"           || FIX=""
+
+pnpm dlx @askviraj/linter ${LOG_LEVEL} ${FIX}
+
+print_header "Linting done"

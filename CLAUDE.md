@@ -46,6 +46,7 @@ design (a plugin may hold skills versioned on their own cadence).
 | `context7`   | `./plugins/context7`   | Context7 MCP docs server                                                                                                                                                              |
 | `flutter`    | `./plugins/flutter`    | Opinionated Flutter skills (dart, pubspec, build, internationalization, swift, kotlin) + the Dart language server; depends on `swift-lsp`/`kotlin-lsp` from `claude-plugins-official` |
 | `mempalace`  | external (url)         | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                             |
+| `mise`       | `./plugins/mise`       | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                        |
 
 ## Plugin Structure
 

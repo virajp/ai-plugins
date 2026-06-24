@@ -140,6 +140,26 @@
         "name": "Viraj Patel"
       },
       "category": "development",
+      "description": "Opinionated mise plugin — the .config/ three-file split (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, tool/env placement, file-based tasks, and the CI node-gpg workaround. Skill auto-applies to mise configs; /mise:scaffold sets up a repo.",
+      "name": "mise",
+      "source": "./plugins/mise",
+      "strict": true,
+      "tags": [
+        "mise",
+        "toolchain",
+        "tasks",
+        "ci",
+        "devtools",
+        "skills",
+        "command"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
       "description": "Opinionated TypeScript plugin where Effect is mandatory — coding-standards & Effect-TS skills (typescript, effect, package-json, pnpm, tsconfig, build, vitest) plus the TypeScript/JavaScript language server.",
       "name": "typescript",
       "source": "./plugins/typescript",
