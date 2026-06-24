@@ -96,13 +96,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 - `commands/` — `/vwf:` slash commands: the Spec → Plan → Execute model —
   `spec`, `plan`, `execute`, `archive`, `architecture`, plus internal
-  `git-workflow`
+  `git-workflow`, and `handoff`/`recall` (mempalace-backed session handoff —
+  wing=`<project>`, room=`handoff`, drawer=`<name>`)
 - `agents/` — subagents the commands delegate to: `spec-reviewer`,
   `execute-coder`, `execute-code-reviewer`, `execute-security-reviewer`,
   `architecture-writer`
 - `skills/` — `karpathy-guidelines`, `rest-api-design`
-- `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`
-  (stack-agnostic; section→project mapping resolved from the registry)
+- `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
+  `handoff` (stack-agnostic; section→project mapping resolved from the registry)
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `spec`, `plan`, and `architecture`
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
