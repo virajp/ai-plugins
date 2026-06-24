@@ -205,12 +205,12 @@ class Installer extends Command {
 
     this.log(`\nPlugins (${MARKETPLACE_NAME}):`);
     for (const name of PLUGINS) {
+      const inst = installed[name];
+      // Tag installed plugins with the scope they live at (e.g. "flutter (project)").
+      const label = inst && inst.scope ? `${name} (${inst.scope})` : name;
       this.log(
-        `  ${name.padEnd(16)} ${
-          pluginVersionLine(
-            installed[name] && installed[name].version,
-            latest[name],
-          )
+        `  ${label.padEnd(20)} ${
+          pluginVersionLine(inst && inst.version, latest[name])
         }`,
       );
     }
@@ -260,13 +260,13 @@ class Installer extends Command {
       for (const name of ours) {
         const have = installed[name].version;
         const want = latest[name];
+        // Act at (and show) the scope the plugin is actually installed at —
+        // project for flutter, user for the rest. `plugin update` defaults to user
+        // scope and fails otherwise. Fall back to the per-plugin default scope.
+        const scope = installed[name].scope || scopeFor(name);
         if (want && cmpVer(want, have) > 0) {
-          // Update at the scope the plugin is actually installed at (project for
-          // flutter, user for the rest) — `plugin update` defaults to user scope
-          // and fails otherwise. Fall back to the per-plugin default scope.
-          const scope = installed[name].scope || scopeFor(name);
           this.runClaude(
-            `Updating ${name} (${have} → ${want}, ${scope} scope)`,
+            `Updating ${name} (${scope}, ${have} → ${want})`,
             [
               "plugin",
               "update",
@@ -280,7 +280,9 @@ class Installer extends Command {
         else {
           this.log(
             green(
-              `${name} is up to date (${have}${want ? "" : ", external"}).`,
+              `${name} (${scope}) is up to date (${have}${
+                want ? "" : ", external"
+              }).`,
             ),
           );
         }
