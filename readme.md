@@ -25,9 +25,8 @@ Everything installs through one CLI —
 adds the `virajp-plugins` marketplace (user-scoped) and drives the Claude Code
 CLI for you. The bulk flags (`--all` / `--plugins`) install the **user-scoped**
 plugins only; `flutter` is **project-scoped**, so install it explicitly with
-`--plugin flutter` from within the project that needs it. Every install and
-upgrade also refreshes Anthropic's official marketplace
-(`claude-plugins-official`) when it's present, so its plugins stay current.
+`--plugin flutter` from within the project that needs it. The CLI only ever
+registers and refreshes `virajp-plugins` — every plugin resolves from it alone.
 
 > The examples below use `pnpx`; if you don't use `pnpm`, swap in `npx` — the
 > commands are otherwise identical.
@@ -208,13 +207,15 @@ pnpx @askviraj/ai-plugins --plugin typescript
 
 ### flutter
 
-Opinionated Flutter plugin for Dart/GetX apps. Bundles six **path-scoped
-skills** — `dart` (coding standards, GetX, widgets, errors), `pubspec`, `build`,
-`internationalization`, `swift`, and `kotlin` (native platform-channel code for
-features Flutter can't reach) — plus the Dart language server. Declares
-`swift-lsp` and `kotlin-lsp` from `claude-plugins-official` as dependencies, so
-the native iOS/Android files get real diagnostics. **Project-scoped** — install
-it from the Flutter project that needs it.
+Opinionated Flutter plugin for Dart/GetX apps. Bundles eight **skills** — `dart`
+(coding standards, GetX, widgets, errors), `pubspec`, `build`, `testing`,
+`analysis-options`, `internationalization`, `swift`, and `kotlin` (native
+platform-channel code for features Flutter can't reach) — plus **bundled Dart,
+Kotlin, and Swift (SourceKit) language servers** for real diagnostics across
+Dart and the native iOS/Android files. Self-contained — no cross-marketplace
+dependencies (the Kotlin/Swift servers use the `kotlin-lsp` and `sourcekit-lsp`
+binaries on your `PATH`). **Project-scoped** — install it from the Flutter
+project that needs it.
 
 ```sh
 pnpx @askviraj/ai-plugins --plugin flutter

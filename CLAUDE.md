@@ -38,15 +38,15 @@ design (a plugin may hold skills versioned on their own cadence).
 
 ## Plugins
 
-| Plugin       | Source                 | What it provides                                                                                                                                                                      |
-| ------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`        | `./plugins/vwf`        | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                     |
-| `markdown`   | `./plugins/markdown`   | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md`                                                                                                                      |
-| `typescript` | `./plugins/typescript` | Opinionated Effect-TS skills (effect, package-json, pnpm, tsconfig, build) + the TypeScript/JavaScript language server                                                                |
-| `context7`   | `./plugins/context7`   | Context7 MCP docs server                                                                                                                                                              |
-| `flutter`    | `./plugins/flutter`    | Opinionated Flutter skills (dart, pubspec, build, internationalization, swift, kotlin) + the Dart language server; depends on `swift-lsp`/`kotlin-lsp` from `claude-plugins-official` |
-| `mempalace`  | external (url)         | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                             |
-| `mise`       | `./plugins/mise`       | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                        |
+| Plugin       | Source                 | What it provides                                                                                                                                                                                                          |
+| ------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`        | `./plugins/vwf`        | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                         |
+| `markdown`   | `./plugins/markdown`   | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md`                                                                                                                                                          |
+| `typescript` | `./plugins/typescript` | Opinionated Effect-TS skills (effect, package-json, pnpm, tsconfig, build) + the TypeScript/JavaScript language server                                                                                                    |
+| `context7`   | `./plugins/context7`   | Context7 MCP docs server                                                                                                                                                                                                  |
+| `flutter`    | `./plugins/flutter`    | Opinionated Flutter skills (dart, pubspec, build, testing, analysis-options, internationalization, swift, kotlin) + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps) |
+| `mempalace`  | external (url)         | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                 |
+| `mise`       | `./plugins/mise`       | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                            |
 
 ## Plugin Structure
 
@@ -64,20 +64,22 @@ Plugins may declare any combination of:
 
 - **`lspServers`** — LSP server definitions keyed by language ID. Each entry
   needs `command`, `args`, `extensionToLanguage`, and optionally
-  `startupTimeout`. See `plugins/flutter/.claude-plugin/plugin.json` for a
-  working example using `mise`.
+  `startupTimeout`. `plugins/flutter` bundles three — `dart` (run via `mise`)
+  plus `kotlin-lsp` and `sourcekit-lsp` (Swift), which invoke system-installed
+  binaries on `PATH`.
 - **`mcpServers`** — MCP server definitions. See
   `plugins/context7/.claude-plugin/plugin.json`.
-- **`dependencies`** — other plugins this plugin requires (see below). A
-  dependency may live in **another marketplace** — `flutter` depends on
-  `swift-lsp`/`kotlin-lsp` from `claude-plugins-official` (each entry carries
-  its own `marketplace`). `plugins:check` only enforces that the `plugin.json`
-  and marketplace-entry dependency lists are **identical**, not where they
-  resolve. Cross-marketplace deps are **blocked at install time** unless the
-  ROOT `marketplace.json` (the one being installed from) allowlists the foreign
-  marketplace via top-level `allowCrossMarketplaceDependenciesOn` — we list
-  `claude-plugins-official` there so `flutter` resolves. The allowlist is not
-  transitive; only the installing marketplace's allowlist applies.
+- **`dependencies`** — other plugins this plugin requires (see below); `vwf` is
+  the only one that declares them, all resolved within `virajp-plugins` itself.
+  `plugins:check` enforces that the `plugin.json` and marketplace-entry
+  dependency lists are **identical**. A dependency *may* point at **another
+  marketplace** (each entry carries its own `marketplace`), but
+  cross-marketplace deps are **blocked at install time** unless the ROOT
+  `marketplace.json` allowlists that foreign marketplace via top-level
+  `allowCrossMarketplaceDependenciesOn` (not transitive — only the installing
+  marketplace's allowlist applies). No plugin here currently uses one, so that
+  allowlist is absent; re-add it if a cross-marketplace dependency is
+  introduced.
 
 Skills, commands, agents, and hooks are **auto-discovered by directory
 convention** — they do not need to be listed in `plugin.json`:
@@ -185,20 +187,20 @@ via an explicit `--plugin <name>`** (which installs at the plugin's own scope).
 governs both install and uninstall, but never the marketplace add (always user
 scope). Plugin names are **bare and allowlisted** (`PLUGINS`); an `@marketplace`
 or path qualifier is rejected outright so the CLI can only ever install from
-`virajp-plugins`. Every install/upgrade also **best-effort refreshes Anthropic's
-official marketplace** (`claude-plugins-official`, `OFFICIAL_MARKETPLACE_NAME`)
-so its plugins resolve to the latest versions — soft-skipped (a yellow
-`skipped`, not a failure) when it isn't registered, since the CLI doesn't manage
-or add it. Installing or upgrading **`vwf`** additionally runs `setupGraphify` —
-`graphify install --platform claude` plus `graphify hook install` — since vwf's
-commands depend on graphify's knowledge graph. Both graphify commands are
-idempotent (so an upgrade self-heals the setup); the step is soft-skipped when
-`graphify` isn't on `PATH` (the `checkDeps` gate guarantees it for installs, but
-the upgrade-only path does not run that gate). **`--skip-graphify`** bypasses
-this step at every call site (install and upgrade) and drops `graphify` from the
-dependency check — for installing the plugins **outside a git repo**, where
-graphify's repo-scoped commands don't apply. **Statusline:** `--statusline`
-and/or `--subagentstatusline` (both implied by `--all`) copy the script into
+`virajp-plugins`. The CLI installs and refreshes **only** `virajp-plugins`;
+every plugin (including the bundled Dart/Kotlin/Swift language servers, which
+ship inside `flutter`) resolves from it alone — no other marketplace is
+registered or refreshed. Installing or upgrading **`vwf`** additionally runs
+`setupGraphify` — `graphify install --platform claude` plus
+`graphify hook install` — since vwf's commands depend on graphify's knowledge
+graph. Both graphify commands are idempotent (so an upgrade self-heals the
+setup); the step is soft-skipped when `graphify` isn't on `PATH` (the
+`checkDeps` gate guarantees it for installs, but the upgrade-only path does not
+run that gate). **`--skip-graphify`** bypasses this step at every call site
+(install and upgrade) and drops `graphify` from the dependency check — for
+installing the plugins **outside a git repo**, where graphify's repo-scoped
+commands don't apply. **Statusline:** `--statusline` and/or
+`--subagentstatusline` (both implied by `--all`) copy the script into
 `~/.claude/scripts/` (chmod 755), seed the bundled defaults into
 `~/.config/statusline.json` (deep-merging missing settings if it already exists,
 preserving user edits), and write the chosen key(s) into

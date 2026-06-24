@@ -58,11 +58,6 @@ const SUBAGENT_STATUS_LINE = {
 const MARKETPLACE_REF = "virajp/ai-plugins";
 const MARKETPLACE_NAME = "virajp-plugins";
 
-// Anthropic's official plugin marketplace. We don't manage plugins from it, but
-// every install/upgrade best-effort refreshes it so its plugins resolve to their
-// latest versions. Soft-skipped when it isn't registered (it's not ours to add).
-const OFFICIAL_MARKETPLACE_NAME = "claude-plugins-official";
-
 // Sources for the latest versions (used by --version and --upgrade): the
 // marketplace manifest on the repo's main branch, and the published CLI on npm.
 const REMOTE_MARKETPLACE_URL =
@@ -243,14 +238,13 @@ class Installer extends Command {
     }
     const ours = PLUGINS.filter(name => installed[name]);
 
-    // The install phase already refreshed both marketplaces, so only refresh them
+    // The install phase already refreshed the marketplace, so only refresh it
     // here when this run skipped the install phase.
     if (!marketplaceRefreshed) {
       this.runClaude(
         `Upgrading marketplace ${MARKETPLACE_NAME}`,
         ["plugin", "marketplace", "update", MARKETPLACE_NAME],
       );
-      this.refreshOfficialMarketplace("Upgrading");
     }
 
     if (!ours.length) {
@@ -455,7 +449,6 @@ class Installer extends Command {
       `Refreshing marketplace ${MARKETPLACE_NAME}`,
       ["plugin", "marketplace", "update", MARKETPLACE_NAME],
     );
-    this.refreshOfficialMarketplace();
     for (const name of plugins) {
       const scope = scopeFor(name, scopeOverride);
       this.runClaude(
@@ -467,19 +460,6 @@ class Installer extends Command {
       this.setupGraphify();
     }
     return true;
-  }
-
-  // Best-effort refresh of Anthropic's official marketplace so its plugins
-  // resolve to the latest versions. Soft so a user who hasn't registered it (the
-  // only common failure) sees a "skipped" note, not a failure — it is not a
-  // marketplace this CLI manages. `verb` matches the calling phase's wording
-  // ("Refreshing" on install, "Upgrading" on upgrade).
-  refreshOfficialMarketplace(verb = "Refreshing") {
-    this.runClaude(
-      `${verb} marketplace ${OFFICIAL_MARKETPLACE_NAME}`,
-      ["plugin", "marketplace", "update", OFFICIAL_MARKETPLACE_NAME],
-      { soft: true },
-    );
   }
 
   // Run a `claude` subcommand under a one-line status (see runCommand).

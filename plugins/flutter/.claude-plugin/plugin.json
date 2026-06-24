@@ -17,16 +17,23 @@
         ".dart": "dart"
       },
       "startupTimeout": 60000
-    }
-  },
-  "dependencies": [
-    {
-      "marketplace": "claude-plugins-official",
-      "name": "swift-lsp"
     },
-    {
-      "marketplace": "claude-plugins-official",
-      "name": "kotlin-lsp"
+    "kotlin-lsp": {
+      "args": [
+        "--stdio"
+      ],
+      "command": "kotlin-lsp",
+      "extensionToLanguage": {
+        ".kt": "kotlin",
+        ".kts": "kotlin"
+      },
+      "startupTimeout": 120000
+    },
+    "sourcekit-lsp": {
+      "command": "sourcekit-lsp",
+      "extensionToLanguage": {
+        ".swift": "swift"
+      }
     }
-  ]
+  }
 }
