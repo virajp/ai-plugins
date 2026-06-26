@@ -18,6 +18,50 @@ The same marketplace also ships a handful of
 servers) and a **[statusline](#statusline)** — all installable through one CLI,
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins).
 
+## Caveats
+
+`vwf` is deliberately heavyweight. Know what you're signing up for before
+adopting it.
+
+**Model & cost**
+
+- **Built for Opus with the 1M context window.** Every command runs on `opus`,
+  and the orchestrator holds a lot at once — the spec, the plan, the registry,
+  and each subagent's output. Run Claude Code on Opus with the
+  **1-million-token** context (`claude-opus-4-8[1m]`); a smaller model or the
+  standard window will degrade or overflow on a real cycle.
+- **High token cost.** opus everywhere, and each `execute` cycle spawns several
+  subagents (coder, code review, security review) with fix loop-backs. Expect a
+  meaningful spend per slice — this is not a cheap workflow.
+
+**Dependencies**
+
+- **Hard external prerequisites.** `rtk` and `graphify` must be on your `PATH` —
+  the `rtk hook claude` Bash hook fails without `rtk`. Dependency
+  auto-install/enable needs Claude Code ≥ 2.1.143. See
+  [Prerequisites](#prerequisites).
+- **Memory degrades silently.** `vwf` recalls and persists through `mempalace`.
+  If it's unavailable, every memory step is skipped by design — no error, but
+  cross-cycle recall is lost (surfaced gaps still survive in the plan doc).
+- **Leans on review engines.** `execute`'s code- and security-review stages run
+  on the `/code-review` and `/security-review` engines.
+
+**Fit**
+
+- **High-touch, not autonomous.** It asks one question at a time and stops at a
+  mandatory approval gate at every stage. It never runs end to end on its own —
+  plan for an interactive session.
+- **Requires a testable project.** `execute` enforces non-negotiable TDD and a
+  coverage gate. A project without a test runner and coverage tooling won't fit
+  the execute stage.
+- **Assumes a registry-described workspace.** `plan` and `execute` map each
+  slice to a project in the architecture registry and read its code (submodules
+  included). You model the codebase with `/vwf:architecture` first; it won't
+  operate on an ad-hoc folder.
+- **Solo / small-team focus.** It is highly opinionated — one workflow, one set
+  of conventions. Great for a solo dev or small team; not a configurable
+  framework for a large org.
+
 ## Prerequisites
 
 `vwf` shells out to a few external tools. Install them first — the installer
