@@ -101,6 +101,9 @@ Prerequisites).
 pnpx @askviraj/ai-plugins --plugin vwf
 ```
 
+See **[docs/vwf.md](./docs/vwf.md)** for the full usage guide — the mental
+model, every command, and an end-to-end walkthrough.
+
 **Slash commands** (`/vwf:<name>`):
 
 | Command        | Description                                                                                    |
