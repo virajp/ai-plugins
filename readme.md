@@ -69,9 +69,9 @@ checks for each and prints the exact command for anything missing.
 
 | Tool            | Why                                      | Install                               |
 | --------------- | ---------------------------------------- | ------------------------------------- |
-| Claude Code CLI | hosts the commands                       | `mise use -g claude-code@latest`      |
 | mise            | resolves the toolchain                   | `brew install mise`                   |
 | node + pnpm     | `context7` MCP server; the npm→pnpm hook | `mise use -g node@latest pnpm@latest` |
+| Claude Code CLI | hosts the commands                       | `mise use -g claude-code@latest`      |
 | rtk             | the `rtk hook claude` Bash hook          | `brew install --formulae rtk`         |
 | graphify        | knowledge graph the commands rely on     | `mise use -g pipx:graphifyy@latest`   |
 
