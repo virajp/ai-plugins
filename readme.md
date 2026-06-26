@@ -261,10 +261,13 @@ capture the session so a fresh one can continue:
 /vwf:handoff auth-refactor      # write a handoff, file it to memory
 ```
 
-`handoff` writes a structured handoff document — goal, current state, key
-decisions, open next steps, and (when there's a clear next action) a
-ready-to-paste **next prompt** — and stores it in mempalace under your project.
-In a new session:
+`handoff` first **tidies the tree** — it checkpoints pending work everywhere
+(the outer repo and any submodules) as `wip:` commits, updates any submodule
+pointers in the outer repo, and removes only fully-merged worktrees (never one
+with unmerged work). It does not push. Then it writes a structured handoff
+document — goal, current state, key decisions, open next steps, and (when
+there's a clear next action) a ready-to-paste **next prompt** — and stores it in
+mempalace under your project. In a new session:
 
 ```text
 /vwf:recall auth-refactor       # rebuild context, then optionally run the next prompt
@@ -278,9 +281,12 @@ reads it from there.
 ### /vwf:git-workflow
 
 Internal — you rarely invoke it directly. The other commands route **all** git
-actions through it: it isolates work in a git worktree (never the main
-checkout), commits with conventional messages, and merges. It never pushes
-without your explicit request.
+actions through it: it isolates work in a git worktree (always the outermost
+superproject, never a submodule), initializes it with the repo's `worktree:init`
+(or `setup:all`) mise task, commits with conventional messages, and ends a
+worktree with full coverage — landing the branch (plus any submodule work and
+pointer updates), then removing it. It never pushes without your explicit
+request.
 
 ## How it asks questions
 

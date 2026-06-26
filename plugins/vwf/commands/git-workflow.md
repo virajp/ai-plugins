@@ -14,6 +14,11 @@ effort: medium
 
 - Use a worktree for all substantive changes — never work directly in the main
   worktree
+- Worktrees are always created for the **outermost superproject**, never a
+  submodule (Step 1 resolves this)
+- **Initialize** every new worktree with its mise init task (Step 2d), and
+  **end** every worktree with full coverage — land the branch (plus any
+  submodule work and pointer updates), then remove it (Step 4)
 - Use `merge` (not PRs) to land changes: `mise x -- mise run merge:develop` or
   `mise x -- mise run merge:main`
 - Never push without explicit user request — always ask after a successful
@@ -164,6 +169,26 @@ is equivalent.
 If a submodule fails to fetch (e.g. no network or auth), report it and ask the
 user how to proceed — do not leave a partially-initialized worktree silently.
 
+### 2d. Initialize the Worktree (mise task)
+
+A fresh worktree has no installed dependencies. After submodules are populated,
+bootstrap it so it can build and run — prefer a dedicated `worktree:init` task,
+falling back to the bootstrap entrypoint `setup:all`:
+
+```bash
+have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
+
+if have_task worktree:init; then
+  mise run worktree:init
+elif have_task setup:all; then
+  mise run setup:all
+fi
+```
+
+Run it from the worktree root. **Skip silently** if neither task exists. If the
+task fails, report it and ask the user how to proceed rather than working in a
+half-initialized worktree.
+
 ---
 
 ## Step 3 — Commit Workflow
@@ -214,25 +239,44 @@ available.
 
 ### Merge, push & clean up
 
-```bash
-mise x -- mise run merge:develop   # or merge:main — ask if ambiguous
-git push
-```
+End the worktree with **full coverage** — nothing left uncommitted, submodule
+pointers current — then remove it. Order matters:
 
-Then clean up the worktree:
+1. **Land each changed submodule.** For every submodule with work on this
+   branch, run its own merge task from the submodule directory (this commits and
+   pushes the submodule's branch). Repeat per changed submodule:
 
-- **Native tool:** use its own teardown (e.g. `ExitWorktree` or equivalent) if
-  available.
-- **Git fallback:** `git worktree remove <path>`
+   ```bash
+   mise x --cd <submodule> -- mise run merge:develop   # or merge:main
+   ```
+
+2. **Update the outer repo's submodule pointers.** Back in the outer worktree,
+   stage the moved gitlinks and commit them so the superproject records the new
+   submodule commits:
+
+   ```bash
+   git add <submodule-paths>            # the gitlinks that moved
+   git commit -m "ops: update submodule pointers"
+   ```
+
+3. **Land the outer repo.** Merge this branch to the destination — its own
+   `merge:` task if the outer repo defines one, else merge the branch in the
+   main worktree — then `git push`.
+
+4. **Remove the worktree.**
+   - **Native tool:** use its teardown (e.g. `ExitWorktree` or equivalent).
+   - **Git fallback:** `git worktree remove <path>`.
+
+For a repo with **no submodules**, skip steps 1–2: land the branch (its `merge:`
+task if defined, else merge it in the main worktree), `git push`, then remove
+the worktree.
 
 ### Merge, push & keep worktree
 
-```bash
-mise x -- mise run merge:develop   # or merge:main — ask if ambiguous
-git push
-```
-
-Leave the worktree open. Inform the user which branch and path it is on.
+Run the same land sequence — any submodule work, then the outer repo +
+`git
+push` — but **do not remove** the worktree. Inform the user which branch
+and path it is on.
 
 ---
 

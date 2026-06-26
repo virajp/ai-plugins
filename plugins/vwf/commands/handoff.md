@@ -22,7 +22,7 @@ session still reasons clearly — is worth far more than one squeezed out at 95%
 | Input       | Source                                                         |
 | ----------- | -------------------------------------------------------------- |
 | `<name>`    | `$ARGUMENTS` — the drawer name for this handoff. **Required.** |
-| `<project>` | the **wing**, resolved from the repo (see step 2)              |
+| `<project>` | the **wing**, resolved from the repo (see step 3)              |
 
 If `$ARGUMENTS` is empty, ask the user for a short `<name>` (kebab-case, e.g.
 `auth-refactor`) and wait. Do not invent one.
@@ -39,7 +39,28 @@ Restate, in one line, what work this handoff covers, so the captured state
 matches the user's intent. If the session spans several unrelated threads, ask
 which one to hand off (one handoff = one coherent thread).
 
-### 2. Resolve the project (wing)
+### 2. Tidy & checkpoint the working state
+
+Leave the repo clean and resumable before capturing, so the handoff describes
+**committed** state, not a dirty tree. This runs on the **outer (superproject)**
+repo and its submodules — never a submodule in isolation (the same outer-repo
+rule as `/vwf:git-workflow`). **Do not push** — commit only, honoring the
+never-push rule.
+
+1. **Commit pending work, everywhere.** In the current worktree and in each
+   submodule with uncommitted or untracked changes, stage and commit it as a
+   checkpoint — `wip: handoff checkpoint — <name>` — without prompting. Respect
+   pre-commit hooks (on failure, fix and make a **new** commit; never
+   `--no-verify`).
+2. **Update submodule pointers (outer repo).** If a submodule's recorded commit
+   moved, stage the gitlinks and commit them in the outer repo
+   (`ops: update submodule pointers`).
+3. **Clean up worktrees — safely.** Remove only linked worktrees that are
+   **fully merged and clean**. **Never remove a worktree with unmerged work** —
+   keep it and list it under the handoff's Open items. Report what was removed
+   and kept.
+
+### 3. Resolve the project (wing)
 
 Determine the project name from the **repo identity**, deterministically:
 
@@ -54,7 +75,7 @@ its **exact** existing name. Otherwise the derived name is the wing (the first
 handoff creates it). This is the same wing concept as
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
 
-### 3. Write the handoff document
+### 4. Write the handoff document
 
 Fill the template at `${CLAUDE_PLUGIN_ROOT}/assets/templates/handoff.md` from
 the **current session**. Capture state, not narration — a reader with zero
@@ -65,14 +86,14 @@ exactly (it is the retrieval key).
 If decisions/findings already live in mempalace or `docs/`, **reference** them
 rather than copying — keep the handoff tight.
 
-### 4. Add the next prompt (if there is one)
+### 5. Add the next prompt (if there is one)
 
 If a clear single next action exists, fill the **Next prompt** section with a
 **self-contained** instruction the user can paste into a fresh session — it must
 not rely on this session's context. If there is no obvious next step, delete
 that section entirely (don't pad it).
 
-### 5. File it to mempalace
+### 6. File it to mempalace
 
 Store the completed document verbatim:
 
@@ -96,7 +117,7 @@ skip, the document is the whole point): write the handoff to
 `docs/handoffs/<name>.md` instead, tell the user it went to disk because
 mempalace was unreachable, and that `/vwf:recall` will read the disk copy.
 
-### 6. Report
+### 7. Report
 
 Confirm where it was filed (wing / room / `<name>`, or the disk path), and state
 in one line that a fresh session can resume with `/vwf:recall <name>`. Mention
