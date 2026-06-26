@@ -172,6 +172,8 @@ Layout:
   the bootstrap that runs it (single-command `strategy`/`target` in
   `package.json`; `settings.enableAutoTranspile = false` keeps oclif from
   hunting for TypeScript).
+- `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
+  hook, bundled with the main `statusLine` install (see Statusline below).
 
 The command does several jobs. **Plugins:** `--all` (every user-scoped plugin +
 both statusline keys), `--plugins` (all user-scoped plugins), or
@@ -205,21 +207,36 @@ commands don't apply. **Statusline:** `--statusline` and/or
 `~/.config/statusline.json` (deep-merging missing settings if it already exists,
 preserving user edits), and write the chosen key(s) into
 `~/.claude/settings.json` (preserving other keys; prompting before overwrite
-unless `--yes`). **Versions:** `--version`/`-v` prints the CLI version (vs the
-latest on npm), the bundled statusline version, and each plugin's installed
-version (from `claude plugin list`) vs the latest in the **remote** marketplace
-manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:**
-`--upgrade` runs **after** any install phase — it `claude plugin update`s every
-installed virajp-plugins plugin that's outdated, refreshes the statusline, and
-notes a newer CLI; combine with `--all` for an idempotent install+upgrade fit
-for a setup script. `--version`/`--upgrade` need the network and `claude`, and
-error out (non-zero) if either is unavailable. **Uninstall:** `--uninstall`
-reuses the same selection flags but removes — `claude plugin uninstall`s the
-selected plugins (matching their install scope) and/or strips the chosen
-statusline key(s) from `settings.json`, deleting the installed script once no
-statusline key remains. It leaves the seeded `~/.config/statusline.json` (it may
-hold user edits) and never touches external tools (the CLI never installed
-those).
+unless `--yes`). Installing the **main** `statusLine` (so also `--all`)
+additionally wires the **context/rate-limit caps** `PostToolUse` hook
+(`installContextCaps`): it copies `tools/statusline/context-caps.js` into
+`~/.claude/hooks/`, sets `env.AI_PLUGINS_USAGE_DIR` (`${HOME}/.claude/usage`),
+and appends the hook entry (idempotently, preserving other env keys /
+PostToolUse hooks). The statusline's `writeUsageFile` mirrors each session's
+`context_window`/`rate_limits` to that dir — the only surface those numbers
+appear on — and the hook reads them and, at the caps (context > 65%, 5-hour
+
+> 90%, 7-day > 80%), tells the agent to `/vwf:handoff` then halt. It is bundled
+> with `statusLine` (not the subagent panel) because that main-bar writer is its
+> sensor, and is inert until the bar runs. **Versions:** `--version`/`-v` prints
+> the CLI version (vs the latest on npm), the bundled statusline version, and
+> each plugin's installed version (from `claude plugin list`) vs the latest in
+> the **remote** marketplace manifest on GitHub (`REMOTE_MARKETPLACE_URL`),
+> flagging updates. **Upgrade:** `--upgrade` runs **after** any install phase —
+> it `claude plugin update`s every installed virajp-plugins plugin that's
+> outdated, refreshes the statusline, and notes a newer CLI; combine with
+> `--all` for an idempotent install+upgrade fit for a setup script.
+> `--version`/`--upgrade` need the network and `claude`, and error out
+> (non-zero) if either is unavailable. **Uninstall:** `--uninstall` reuses the
+> same selection flags but removes — `claude plugin uninstall`s the selected
+> plugins (matching their install scope) and/or strips the chosen statusline
+> key(s) from `settings.json`, deleting the installed script once no statusline
+> key remains. Uninstalling the **main** `statusLine` also runs
+> `uninstallContextCaps` — it strips the caps hook entry and
+> `AI_PLUGINS_USAGE_DIR` from `settings.json` and deletes
+> `~/.claude/hooks/context-caps.js` (leaving other hooks/env keys intact). It
+> leaves the seeded `~/.config/statusline.json` (it may hold user edits) and
+> never touches external tools (the CLI never installed those).
 
 Before any install, the CLI **checks required external tools** for the resolved
 plan (`CORE_DEPS` brew/mise/claude for any plugin install, `PLUGIN_EXTRA_DEPS`

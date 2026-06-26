@@ -53,6 +53,20 @@ const SUBAGENT_STATUS_LINE = {
   command: COMMAND,
 };
 
+// Context-caps PostToolUse hook — bundled with the main `statusLine`. The
+// statusline mirrors context_window / rate_limits to a per-session file under
+// AI_PLUGINS_USAGE_DIR; this hook reads it and halts work (via vwf:handoff) when
+// a context or rate-limit cap is hit. Its sensor is the main status bar's
+// writer, so it only installs with `statusLine` (not the subagent panel), and is
+// inert until that statusline is running.
+const HOOKS_DIR = join(homedir(), ".claude", "hooks");
+const INSTALLED_HOOK = join(HOOKS_DIR, "context-caps.js");
+const USAGE_ENV_KEY = "AI_PLUGINS_USAGE_DIR";
+// ${HOME} is expanded by Claude Code (env + command), and again defensively
+// node-side by both the statusline writer and the hook.
+const USAGE_DIR = "${HOME}/.claude/usage";
+const HOOK_COMMAND = "node ${HOME}/.claude/hooks/context-caps.js";
+
 // GitHub shorthand passed to `claude plugin marketplace add`, and the marketplace
 // name it resolves to (used as `<plugin>@<name>` when installing).
 const MARKETPLACE_REF = "virajp/ai-plugins";
@@ -365,6 +379,10 @@ class Installer extends Command {
         changed = true;
       }
     }
+    // Context-caps is bundled with the main statusLine — remove it alongside.
+    if (plan.statusLine && (await this.uninstallContextCaps(settings))) {
+      changed = true;
+    }
     if (changed) {
       await this.writeSettings(settings);
     }
@@ -578,7 +596,81 @@ class Installer extends Command {
         yes,
       );
     }
+    // The caps hook's sensor is the main status bar's writer, so bundle it with
+    // `statusLine` only (not the subagent panel).
+    if (plan.statusLine) {
+      await this.installContextCaps(settings);
+    }
     await this.writeSettings(settings);
+  }
+
+  // Install the context-caps hook (bundled with the main statusLine): copy the
+  // hook script, set the usage-dir env var, and add the PostToolUse entry —
+  // idempotent, preserving any other env keys / PostToolUse hooks.
+  async installContextCaps(settings) {
+    await this.step("Installing context-caps hook", async () => {
+      await mkdir(HOOKS_DIR, { recursive: true });
+      await copyFile(join(ASSETS_DIR, "context-caps.js"), INSTALLED_HOOK);
+      await chmod(INSTALLED_HOOK, 0o755);
+    });
+
+    settings.env = isObject(settings.env) ? settings.env : {};
+    settings.env[USAGE_ENV_KEY] = USAGE_DIR;
+
+    settings.hooks = isObject(settings.hooks) ? settings.hooks : {};
+    const post = Array.isArray(settings.hooks.PostToolUse)
+      ? settings.hooks.PostToolUse
+      : (settings.hooks.PostToolUse = []);
+    const present = post.some(
+      e =>
+        Array.isArray(e?.hooks)
+        && e.hooks.some(h => h?.command === HOOK_COMMAND),
+    );
+    if (!present) {
+      post.push({ hooks: [{ type: "command", command: HOOK_COMMAND }] });
+    }
+  }
+
+  // Remove the context-caps hook: strip our PostToolUse entry + env var from
+  // `settings` (returns true if it changed anything) and delete the installed
+  // hook script. Leaves other hooks / env keys intact.
+  async uninstallContextCaps(settings) {
+    let changed = false;
+
+    if (isObject(settings.hooks) && Array.isArray(settings.hooks.PostToolUse)) {
+      const kept = settings.hooks.PostToolUse.filter(
+        e =>
+          !(Array.isArray(e?.hooks)
+            && e.hooks.some(h => h?.command === HOOK_COMMAND)),
+      );
+      if (kept.length !== settings.hooks.PostToolUse.length) {
+        changed = true;
+        if (kept.length) {
+          settings.hooks.PostToolUse = kept;
+        }
+        else {
+          delete settings.hooks.PostToolUse;
+          if (!Object.keys(settings.hooks).length) {
+            delete settings.hooks;
+          }
+        }
+      }
+    }
+
+    if (isObject(settings.env) && settings.env[USAGE_ENV_KEY] !== undefined) {
+      delete settings.env[USAGE_ENV_KEY];
+      if (!Object.keys(settings.env).length) {
+        delete settings.env;
+      }
+      changed = true;
+    }
+
+    if (existsSync(INSTALLED_HOOK)) {
+      await this.step("Removing context-caps hook", async () => {
+        await rm(INSTALLED_HOOK, { force: true });
+      });
+    }
+    return changed;
   }
 
   // Copy the statusline script into ~/.claude/scripts/ and make it executable.

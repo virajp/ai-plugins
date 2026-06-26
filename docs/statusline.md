@@ -10,6 +10,8 @@ is data-driven from JSON, so you can restyle it per repo without touching code.
 - Defaults:
   [`tools/statusline/statusline.json`](../tools/statusline/statusline.json)
 - Schema: [`schemas/statusline.schema.json`](../schemas/statusline.schema.json)
+- Caps hook:
+  [`tools/statusline/context-caps.js`](../tools/statusline/context-caps.js)
 
 > **Requires a [Nerd Font](https://www.nerdfonts.com/).** The separators and
 > most symbols are private-use glyphs; without a patched font they render as
@@ -37,9 +39,11 @@ The CLI:
 - copies the statusline script into `~/.claude/scripts/` (made executable),
 - seeds `~/.config/statusline.json` with the bundled defaults — or, if it
   already exists, deep-merges any missing settings into it (your edits are
-  preserved), and
+  preserved),
 - writes the requested key(s) into `~/.claude/settings.json`, leaving any other
-  settings untouched.
+  settings untouched, and
+- with `--statusline`, installs the
+  [context & rate-limit caps hook](#context--rate-limit-caps-vwf).
 
 If a target key already exists, the CLI prints the current value and asks before
 overwriting. Pass `--yes` (`-y`) to overwrite without prompting.
@@ -64,6 +68,33 @@ The blocks it writes:
 The script reads the Claude Code payload on stdin and detects the surface: a
 payload with a `tasks` array renders the subagent panel, anything else renders
 the main bar. Errors go to stderr so they never corrupt the line.
+
+## Context & rate-limit caps (vwf)
+
+Installing the **main** status bar (`--statusline`, or `--all`) also wires a
+`PostToolUse` hook —
+[`tools/statusline/context-caps.js`](../tools/statusline/context-caps.js) — that
+pauses long autonomous `vwf` runs before they exhaust a budget. It is **bundled
+with `statusLine`** because it relies on that script as its sensor.
+
+How it works: the main bar already receives `context_window` and `rate_limits`
+on its stdin payload — numbers a hook never sees. The script mirrors them, per
+session, to `$AI_PLUGINS_USAGE_DIR/<session_id>.json` (the installer sets
+`AI_PLUGINS_USAGE_DIR` to `${HOME}/.claude/usage`). After each tool call the
+hook reads that file and, when a cap is breached, tells the agent to snapshot
+via `/vwf:handoff` and halt:
+
+| Cap            | Threshold | Action                                                     |
+| -------------- | --------- | ---------------------------------------------------------- |
+| Context window | > 65%     | handoff, then `/clear` (or `/compact`) + `/vwf:recall`     |
+| 5-hour limit   | > 90%     | handoff, then pause until reset; resume with `/vwf:recall` |
+| 7-day limit    | > 80%     | handoff, then stop with the reset time                     |
+
+A hook can't clear context or invoke slash commands, so resuming is one
+keystroke from you. The hook is **inert** until the main bar runs (no usage file
+is written otherwise) and its directives reference `vwf` commands, so it's only
+useful with the `vwf` plugin installed. `--uninstall --statusline` removes the
+hook, its env var, and the script.
 
 ## Configuration
 

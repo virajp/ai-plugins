@@ -366,6 +366,27 @@ function buildSegment(entry, c) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Usage mirror — best-effort sidecar for hooks.
+// The context-window and rate-limit figures arrive ONLY on the statusline
+// payload, never on hook stdin. When AI_PLUGINS_USAGE_DIR is set, mirror them to
+// a session-keyed JSON file (atomic temp+rename) so a PostToolUse hook can read
+// them as a source of truth. Inert (writes nothing) when the env var is unset;
+// a write failure must never break the rendered line.
+// ─────────────────────────────────────────────────────────────────────────────
+function writeUsageFile(sessionId, vals) {
+  let dir = process.env.AI_PLUGINS_USAGE_DIR;
+  if (!dir || !sessionId) return;
+  dir = dir.replace(/^~(?=\/|$)/, os.homedir()).replace(/^\$\{?HOME\}?(?=\/|$)/, os.homedir());
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, `${sessionId}.json`);
+    const tmp = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify({ sessionId, ts: Date.now(), ...vals }));
+    fs.renameSync(tmp, file);
+  } catch (_) { /* best-effort */ }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main status bar.
 // ─────────────────────────────────────────────────────────────────────────────
 function renderMain(d) {
@@ -386,6 +407,14 @@ function renderMain(d) {
 
   const rl     = d.rate_limits || {};
   const weekly = rl.seven_day || rl.weekly || {};
+
+  writeUsageFile(d.session_id, {
+    ctxPct, ctxUsed, ctxSize,
+    fiveHourPct: rl.five_hour?.used_percentage ?? null,
+    fiveHourResetsAt: rl.five_hour?.resets_at ?? null,
+    sevenDayPct: weekly.used_percentage ?? null,
+    sevenDayResetsAt: weekly.resets_at ?? null,
+  });
 
   const c = {
     model: modelName(d.model) || "Claude",
