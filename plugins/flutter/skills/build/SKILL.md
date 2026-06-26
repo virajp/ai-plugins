@@ -1,11 +1,12 @@
 ---
 name: build
-version: 0.1.0
+version: 0.2.0
 category: development
 description: How a Flutter app's generated code and quality gates fit together —
   build_runner codegen, import_sorter, flutter gen-l10n, launcher icons & splash,
-  the analyzer/formatter, dependency_validator, and the edit→pub get→gen→sort→
-  analyze pipeline. Invoke when setting up or debugging the build.
+  the analyzer/formatter, dependency_validator, app-size analysis, and the
+  edit→pub get→gen→sort→analyze pipeline. Invoke when setting up or debugging the
+  build.
 license: MIT
 user-invocable: true
 ---
@@ -73,6 +74,32 @@ lints made concrete.
 in `pubspec.yaml` (or declares one it never imports). Whitelist legitimate
 exceptions — code-gen-only or transitively-needed packages — in
 `dart_dependency_validator.yaml` under `ignore:`.
+
+## App size
+
+Measure on a **release** build — debug builds carry VM overhead and skip AOT
+tree-shaking, so their size is meaningless. Pass `--analyze-size` to any build
+target; it writes a `*-code-size-analysis_*.json` under `build/`:
+
+```sh
+flutter build appbundle --analyze-size      # or apk / ios / macos / …
+```
+
+Open the JSON in DevTools (`dart devtools` → **App Size** tool) to drill the
+treemap into the heaviest packages, libraries, and assets; its **Diff** tab
+compares two builds to confirm a reduction. **Asset/media weight and unused
+dependencies dominate** — audit `assets/` and `pubspec.yaml`, drop anything
+unreferenced, and compress images (WebP/`pngquant`) before shrinking code.
+
+Strip debug symbols into separate files (and optionally obfuscate) to shave the
+binary:
+
+```sh
+flutter build apk --obfuscate --split-debug-info=build/symbols
+```
+
+Keep the emitted symbol directory — it is required to de-obfuscate later stack
+traces.
 
 ## Native features
 

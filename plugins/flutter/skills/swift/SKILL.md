@@ -1,11 +1,13 @@
 ---
 name: swift
-version: 0.1.0
+version: 0.3.0
 category: development
 description: Writing the iOS-native (Swift) side of a Flutter app for features
   Flutter can't reach — MethodChannel handlers registered from AppDelegate,
-  main-thread dispatch, FlutterError codes, and Native↔Flutter invocation.
-  Auto-applies when editing any Swift file.
+  main-thread dispatch, FlutterError codes, and Native↔Flutter invocation, plus
+  the Swift baseline that keeps a dispatcher safe: optional handling, typed
+  errors, and concurrency (@MainActor / actors / Sendable). Auto-applies when
+  editing any Swift file.
 license: MIT
 user-invocable: false
 paths:
@@ -110,6 +112,101 @@ func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBri
   }
 }
 ```
+
+## Optionals & defensive casts
+
+A dispatcher receives untrusted, dynamically-typed `call.arguments` from Dart,
+so optional handling is where it crashes the host app or stays robust.
+
+- **Never force-unwrap** (`!`) a channel argument — a single bad cast brings
+  down the whole iOS app, not just the feature. Cast with `as?` and supply a
+  fallback.
+- Prefer `guard let … else { result(...); return }` over `if let` so the failure
+  path still calls `result(...)` exactly once and bails early.
+- Reach for `??` defaults on every extracted value, as in
+  `args["rideId"] as? String ?? ""`.
+
+```swift
+guard let args = call.arguments as? [String: Any] else {
+  result(FlutterError(code: "BAD_ARGS", message: "Expected a map", details: nil))
+  return
+}
+let rideId = args["rideId"] as? String ?? ""
+```
+
+## Typed errors
+
+Model native failures as a `LocalizedError` enum and map each case to a **stable
+`FlutterError` code** the Dart side switches on — the codes are part of the
+channel contract, so keep them in sync with the **dart** skill's handlers.
+
+```swift
+enum CarExtensionError: LocalizedError {
+  case engineNotReady
+  case rideNotFound(id: String)
+
+  var channelCode: String {
+    switch self {
+    case .engineNotReady:  "ENGINE_NOT_READY"
+    case .rideNotFound:    "RIDE_NOT_FOUND"
+    }
+  }
+  var errorDescription: String? {
+    switch self {
+    case .engineNotReady:        "Flutter engine not yet initialized"
+    case .rideNotFound(let id):  "No ride for id \(id)"
+    }
+  }
+}
+
+// At the boundary, collapse the typed error into a FlutterError:
+result(FlutterError(code: err.channelCode, message: err.errorDescription, details: nil))
+```
+
+## Concurrency
+
+UIKit/CarPlay calls must land on the main thread. The wrapper above does this
+with `DispatchQueue.main.async`; the modern idiom is to annotate the type
+`@MainActor` so the compiler enforces it instead of every call site remembering:
+
+```swift
+@MainActor
+final class CarPlayChannel {
+  static let shared = CarPlayChannel()  // main-actor isolated
+  // handler bodies are already on main — no manual dispatch needed
+}
+```
+
+- Do **async native work** with `async`/`await`, then call `result(...)` once it
+  resolves — never block the channel handler.
+- Guard genuinely shared native state behind an `actor` (e.g. a snapshot cache
+  feeding the channel) rather than a lock.
+- **Swift 6 strict concurrency:** values crossing the channel are codec types
+  and already `Sendable`; the failure points are your own singletons and
+  captured state. Isolate them (`@MainActor` / `actor`) or conform to `Sendable`
+  — don't silence the warning.
+
+## Beyond MethodChannel
+
+The hand-written dispatcher above is the default and stays so. A few cases call
+for a different native entry point — reach for these instead of forcing a
+channel:
+
+- **Pigeon** — a type-safe codegen alternative to hand-written channels. Define
+  the messaging contract once in a Dart schema; Pigeon generates a Swift
+  `protocol` (the host API) plus the Dart client, and you implement that
+  generated `protocol` instead of switching on `call.method` strings. Pick it
+  when the channel surface grows and the string method names get error-prone —
+  the generated protocol makes a missing or misnamed method a compile error.
+- **Platform Views** — to embed a native `UIView` in the Flutter widget tree,
+  the native side implements a `FlutterPlatformViewFactory` (vending a
+  `FlutterPlatformView`) and registers it through the plugin registrar's
+  `register(_:withId:)`, from where you already bind channels in `AppDelegate`.
+  That factory registration is the native-side piece this skill owns; the Dart
+  side hosts it with `UiKitView`.
+- **dart:ffi** — for a pure C/C++ library, `dart:ffi` binds Dart straight to the
+  native symbols with no platform channel and no Swift layer at all. Don't stand
+  up a `FlutterMethodChannel` to wrap C — there's no Swift to write.
 
 ## Conventions
 

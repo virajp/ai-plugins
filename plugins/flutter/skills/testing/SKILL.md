@@ -1,13 +1,14 @@
 ---
 name: testing
-version: 0.1.0
+version: 0.2.0
 category: development
 description: Opinionated Flutter testing standards — flutter_test unit &
   widget
   tests mirroring lib/, the test/helpers GetX harness (registerCommonServices,
   putMockService, pumpWithGetX, resetGetX), mockito @GenerateNiceMocks, the
   TestFixtures factories, integration_test aggregation, and the
-  flutter test --coverage flow. Auto-applies when editing Dart test files.
+  flutter test --coverage flow with lcov/genhtml HTML reporting.
+  Auto-applies when editing Dart test files.
 license: MIT
 user-invocable: false
 paths:
@@ -114,3 +115,28 @@ is reported on **product code only** — generated files (`*.g.dart`,
 `*.freezed.dart`, `*.gen.dart`) and non-product layers (`_shared/`,
 `components/`, `themes/`) are excluded from the gate. A clean run with every new
 service/controller/screen covered is the merge bar.
+
+## Reading the report (lcov + genhtml)
+
+`lcov.info` is a raw trace — turn it into a browsable HTML report with the
+`lcov`/`genhtml` tools (`brew install --formulae lcov`). **Filter generated
+output first** so codegen doesn't inflate the numbers, then render:
+
+```sh
+lcov --remove coverage/lcov.info \
+  '*.g.dart' '*.freezed.dart' '*.gen.dart' '*.mocks.dart' '*/test/*' \
+  --output-file coverage/lcov_filtered.info
+genhtml coverage/lcov_filtered.info --output-directory coverage/html
+open coverage/html/index.html
+```
+
+- `*.mocks.dart` (mockito), `*.g.dart`/`*.freezed.dart`/`*.gen.dart`
+  (build_runner) and `*/test/*` are noise — `--remove` strips them.
+- `genhtml` writes `coverage/html/index.html`; green lines ran, red lines
+  didn't. Run it from the project root so source paths resolve.
+- **`.gitignore` the whole `coverage/` dir** — both the trace files and the
+  generated `html/` are throwaway:
+
+```sh
+coverage/
+```

@@ -1,6 +1,6 @@
 ---
 name: kotlin
-version: 0.1.0
+version: 0.2.0
 category: development
 description: Writing the Android-native (Kotlin) side of a Flutter app for
   features Flutter can't reach — a MethodChannel handler registry, main-looper
@@ -110,6 +110,28 @@ class MainActivity : FlutterActivity() {
 
 Call `CarAppChannel.initialize()` once from the `Application` / `MainActivity`
 after the engine is created.
+
+## Beyond MethodChannel
+
+The hand-written dispatcher above is the default and stays so. A few cases call
+for a different native entry point — reach for these instead of forcing a
+channel:
+
+- **Pigeon** — a type-safe codegen alternative to hand-written channels. Define
+  the messaging contract once in a Dart schema; Pigeon generates a Kotlin
+  `interface` (the host API) plus the Dart client, and you implement that
+  generated `interface` instead of switching on `call.method` strings. Pick it
+  when the channel surface grows and the string method names get error-prone —
+  the generated interface makes a missing or misnamed method a compile error.
+- **Platform Views** — to embed a native Android `View` in the Flutter widget
+  tree, the native side registers a `PlatformViewFactory` (returning a
+  `PlatformView`) with the engine's `PlatformViewRegistry`, from your
+  `FlutterPlugin`'s `onAttachedToEngine` / `configureFlutterEngine`. That
+  factory registration is the native-side piece this skill owns; the Dart side
+  hosts it with `AndroidView`.
+- **dart:ffi** — for a pure C/C++ library, `dart:ffi` binds Dart straight to the
+  native symbols with no platform channel and no Kotlin layer at all. Don't
+  stand up a `MethodChannel` to wrap C — there's no Kotlin to write.
 
 ## Conventions
 
