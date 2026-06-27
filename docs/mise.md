@@ -12,7 +12,7 @@ under `**/.config/`, and any file under `**/.config/mise/tasks/**`.
 ## Install
 
 ```bash
-pnpx @askviraj/ai-plugins --plugin mise
+pnpx @askviraj/ai-plugins --user mise
 ```
 
 ## The three-file split

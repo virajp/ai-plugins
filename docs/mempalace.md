@@ -12,7 +12,7 @@ rest. It is also a dependency of `vwf`.
 ## Install
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin mempalace
+pnpx @askviraj/ai-plugins --user mempalace
 ```
 
 When you install `vwf`, `mempalace` is pulled in and enabled automatically — you

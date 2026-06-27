@@ -30,14 +30,20 @@ if "${CLI[@]}" >/dev/null 2>&1; then
 fi
 
 print_header "Asserting unknown plugin is rejected ..."
-if "${CLI[@]}" --plugin bogus >/dev/null 2>&1; then
+if "${CLI[@]}" --user bogus >/dev/null 2>&1; then
   print_error "Expected non-zero exit for an unknown plugin"
   exit 1
 fi
 
-print_header "Asserting an invalid --scope is rejected ..."
-if "${CLI[@]}" --plugin vwf --scope global >/dev/null 2>&1; then
-  print_error "Expected non-zero exit for an invalid --scope"
+print_header "Asserting same plugin at both scopes is rejected ..."
+if "${CLI[@]}" --user vwf --project vwf >/dev/null 2>&1; then
+  print_error "Expected non-zero exit for a plugin at both --user and --project"
+  exit 1
+fi
+
+print_header "Asserting mutually exclusive flags are rejected ..."
+if "${CLI[@]}" --all --user vwf >/dev/null 2>&1; then
+  print_error "Expected non-zero exit for --all combined with --user"
   exit 1
 fi
 
@@ -45,8 +51,22 @@ print_header "Asserting the missing-dependency check fires ..."
 # With only node on PATH the required tools report as missing, so the CLI prints
 # install hints and exits non-zero before touching claude or the filesystem.
 NODE_DIR="$(dirname "$(command -v node)")"
-if env PATH="$NODE_DIR" "${CLI[@]}" --plugin vwf >/dev/null 2>&1; then
+if env PATH="$NODE_DIR" "${CLI[@]}" --user vwf >/dev/null 2>&1; then
   print_error "Expected non-zero exit when dependencies are missing"
+  exit 1
+fi
+
+# Dependency checks are per-plugin: a tool is required only when a plugin that
+# needs it is selected (the missing list above is computed under PATH=node-only).
+print_header "Asserting per-plugin deps: markdown needs no mise ..."
+if env PATH="$NODE_DIR" "${CLI[@]}" --user markdown 2>&1 | grep -qE '^  mise$'; then
+  print_error "markdown should not require mise"
+  exit 1
+fi
+
+print_header "Asserting per-plugin deps: the mise plugin needs mise ..."
+if ! env PATH="$NODE_DIR" "${CLI[@]}" --user mise 2>&1 | grep -qE '^  mise$'; then
+  print_error "the mise plugin should require mise"
   exit 1
 fi
 

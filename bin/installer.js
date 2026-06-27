@@ -5,7 +5,7 @@
  * @askviraj/ai-plugins — installs the powerline statusline into Claude Code.
  *
  * Single-command oclif CLI, plain JS (no build step). Run via:
- *   npx @askviraj/ai-plugins --statusline --subagentstatusline [--yes]
+ *   npx @askviraj/ai-plugins --all --statusline [--yes]
  */
 
 const { Command, Flags, execute, settings } = require("@oclif/core");
@@ -86,22 +86,22 @@ const PLUGINS = [
   "flutter",
   "context7",
   "mempalace",
+  "mise",
 ];
 
 // Plugins that install at project scope by default; everything else is
-// user-scoped. The marketplace itself is always user-scoped. An explicit
-// --scope (`override`) wins over the per-plugin default.
+// user-scoped. The marketplace itself is always user-scoped. --all installs
+// only the user-scoped set; project-scoped plugins are reached via --project.
 const PROJECT_SCOPED = new Set(["flutter"]);
-const scopeFor = (name, override) =>
-  override || (PROJECT_SCOPED.has(name) ? "project" : "user");
+const scopeFor = name => (PROJECT_SCOPED.has(name) ? "project" : "user");
 
-// The bulk flags (--all / --plugins) only act on user-scoped plugins. A
-// project-scoped plugin is a deliberate per-project choice, so it is never
-// installed in bulk — it must be named explicitly with --plugin <name>.
+// --all only acts on user-scoped plugins. A project-scoped plugin is a
+// deliberate per-project choice, so it is never installed in bulk — it must be
+// named explicitly with --project <name>.
 const USER_SCOPED = PLUGINS.filter(name => !PROJECT_SCOPED.has(name));
 
-// How to install each external tool we depend on (matches this toolchain:
-// brew + mise drive the rest; rtk ships as a brew formula).
+// How to install each external tool we depend on (matches this toolchain: mise
+// drives runtime tools; rtk ships as a brew formula).
 const DEP_HINTS = {
   brew:
     "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
@@ -111,16 +111,28 @@ const DEP_HINTS = {
   pnpm: "mise use -g pnpm@latest",
   node: "mise use -g node@latest",
   graphify: "mise use -g pipx:graphifyy@latest",
+  uv: "mise use -g uv@latest",
+  "kotlin-lsp":
+    "install a kotlin-lsp binary on PATH — https://github.com/Kotlin/kotlin-lsp",
+  "sourcekit-lsp":
+    "ships with Xcode or a swift.org toolchain — https://www.swift.org/install",
 };
 
-// Tools required whenever any plugin/marketplace install runs.
-const CORE_DEPS = ["brew", "mise", "claude"];
+// The only tool required for ANY plugin/marketplace install: `claude` is the
+// install mechanism itself. Everything else is per-plugin (PLUGIN_EXTRA_DEPS).
+const CORE_DEPS = ["claude"];
 
-// Extra tools specific plugins need: vwf ships an `rtk hook claude` Bash hook,
-// uses graphify, and pulls in context7, which runs its MCP server via pnpx (pnpm).
+// The external runtime tools each plugin needs — checked ONLY when that plugin
+// is in the install set. A plugin with no external tool (markdown) is absent. A
+// plugin that pulls others in rolls up their tools too: vwf → context7's pnpm,
+// mempalace's uv, and the mise plugin's mise.
 const PLUGIN_EXTRA_DEPS = {
-  vwf: ["rtk", "pnpm", "graphify"],
+  vwf: ["rtk", "graphify", "mise", "pnpm", "uv"],
+  typescript: ["mise"],
   context7: ["pnpm"],
+  flutter: ["mise", "kotlin-lsp", "sourcekit-lsp"],
+  mempalace: ["uv"],
+  mise: ["mise"],
 };
 
 class Installer extends Command {
@@ -133,23 +145,22 @@ class Installer extends Command {
     }
 
     const plan = this.resolvePlan(flags);
-    // Gates setupGraphify() at every call site (install + upgrade). graphify
-    // operates on a git repo, so this lets installs run outside one.
-    this.skipGraphify = plan.skipGraphify;
     const hasSelection = plan.plugins.length
       || plan.statusLine
       || plan.subagentStatusLine;
 
-    // --all / --plugins act on user-scoped plugins only; flag the project-scoped
-    // ones they skip so it's clear how to act on them.
-    if (flags.all || flags.plugins) {
+    // --all acts on user-scoped plugins only; flag the project-scoped ones it
+    // skips so it's clear how to act on them.
+    if (flags.all) {
       const projectScoped = PLUGINS.filter(name => PROJECT_SCOPED.has(name));
       if (projectScoped.length) {
         this.log(
           yellow(
             `Note: project-scoped plugins (${
               projectScoped.join(", ")
-            }) are excluded from --all/--plugins — pass --plugin <name> to include them.`,
+            }) are excluded from --all — install them with --project ${
+              projectScoped.join(" ")
+            }.`,
           ),
         );
       }
@@ -159,7 +170,7 @@ class Installer extends Command {
     if (flags.uninstall) {
       if (!hasSelection) {
         this.error(
-          "Nothing to uninstall. Pass --all, --plugins, --plugin <name>, --statusline, and/or --subagentstatusline with --uninstall.",
+          "Nothing to uninstall. Pass --all, --user <name>, --project <name>, and/or --statusline with --uninstall.",
         );
       }
       await this.uninstall(plan);
@@ -168,7 +179,7 @@ class Installer extends Command {
 
     if (!hasSelection && !flags.upgrade) {
       this.error(
-        "Nothing to do. Pass --all, --plugins, --plugin <name>, --statusline, --subagentstatusline, --upgrade, --uninstall, or --version.",
+        "Nothing to do. Pass --all, --user <name>, --project <name>, --statusline, --upgrade, --uninstall, or --version.",
       );
     }
 
@@ -178,8 +189,8 @@ class Installer extends Command {
     if (hasSelection) {
       this.checkDeps(plan);
       if (plan.plugins.length) {
-        marketplaceRefreshed = this.installPlugins(plan.plugins, plan.scope);
-        graphifyConfigured = plan.plugins.includes("vwf");
+        marketplaceRefreshed = this.installPlugins(plan.plugins);
+        graphifyConfigured = plan.plugins.some(p => p.name === "vwf");
       }
       if (plan.statusLine || plan.subagentStatusLine) {
         await this.installStatusline(plan, flags.yes);
@@ -342,8 +353,7 @@ class Installer extends Command {
       if (!hasBin("claude")) {
         this.error("claude CLI not found. Install it first, then re-run.");
       }
-      for (const name of plan.plugins) {
-        const scope = scopeFor(name, plan.scope);
+      for (const { name, scope } of plan.plugins) {
         this.runClaude(
           `Uninstalling ${name} (${scope} scope)`,
           [
@@ -401,22 +411,23 @@ class Installer extends Command {
     }
   }
 
-  // Turn the parsed flags into a concrete plan: which plugins to install and
-  // which statusline keys to set. --all / --plugins cover the user-scoped plugins
-  // (and, for --all, both statusline keys); project-scoped plugins are reached
-  // only via an explicit --plugin <name>. An explicit --scope overrides each
-  // plugin's default scope; absent, the per-plugin default applies.
+  // Turn the parsed flags into a concrete plan: the plugins to act on (each with
+  // its scope) and whether to touch the statusline. --all selects every
+  // user-scoped plugin (at user scope); --user/--project name plugins at the
+  // matching scope. --statusline drives both statusline keys (one merged flag).
   resolvePlan(flags) {
-    const all = flags.all;
     let plugins;
-    if (all || flags.plugins) {
-      plugins = [...USER_SCOPED];
+    if (flags.all) {
+      plugins = USER_SCOPED.map(name => ({ name, scope: "user" }));
     }
-    else if (flags.plugin?.length) {
-      // This CLI installs ONLY from the virajp-plugins marketplace, so plugin
-      // names must be bare — reject any `@marketplace` / path qualifier outright
-      // rather than let it reach the claude CLI.
-      const qualified = flags.plugin.filter(n => /[@/]/.test(n));
+    else {
+      const named = [
+        ...(flags.user ?? []).map(name => ({ name, scope: "user" })),
+        ...(flags.project ?? []).map(name => ({ name, scope: "project" })),
+      ];
+      // This CLI installs ONLY from the virajp-plugins marketplace, so names must
+      // be bare — reject any `@marketplace` / path qualifier outright.
+      const qualified = named.filter(p => /[@/]/.test(p.name)).map(p => p.name);
       if (qualified.length) {
         this.error(
           `Plugin names must be bare (e.g. "vwf") — this CLI installs only from `
@@ -424,26 +435,35 @@ class Installer extends Command {
             + `Drop the qualifier from: ${qualified.join(", ")}`,
         );
       }
-      const invalid = flags.plugin.filter(n => !PLUGINS.includes(n));
+      const invalid = named.filter(p => !PLUGINS.includes(p.name)).map(p =>
+        p.name
+      );
       if (invalid.length) {
         this.error(
-          `Unknown plugin(s): ${invalid.join(", ")}. Valid: ${
+          `Unknown plugin(s): ${[...new Set(invalid)].join(", ")}. Valid: ${
             PLUGINS.join(", ")
           }`,
         );
       }
-      plugins = [...new Set(flags.plugin)];
-    }
-    else {
-      plugins = [];
+      // A name can't be requested at both scopes.
+      const both = (flags.user ?? []).filter(n =>
+        (flags.project ?? []).includes(n)
+      );
+      if (both.length) {
+        this.error(
+          `Cannot install at both --user and --project: ${
+            [...new Set(both)].join(", ")
+          }`,
+        );
+      }
+      // Dedupe a name repeated within one scope.
+      const seen = new Set();
+      plugins = named.filter(p => !seen.has(p.name) && seen.add(p.name));
     }
     return {
-      all,
       plugins,
-      scope: flags.scope,
-      skipGraphify: flags["skip-graphify"],
-      statusLine: all || flags.statusline,
-      subagentStatusLine: all || flags.subagentstatusline,
+      statusLine: flags.statusline,
+      subagentStatusLine: flags.statusline,
     };
   }
 
@@ -469,9 +489,9 @@ class Installer extends Command {
   // disk — it does NOT pull the latest manifest — so a newly published plugin
   // would 404 against the stale local copy; always `marketplace update` after.
   // Returns true (the marketplace is now refreshed) so a following --upgrade can
-  // skip its redundant refresh. `scopeOverride` (from --scope) wins over each
-  // plugin's default scope; the marketplace itself is always added user-scoped.
-  installPlugins(plugins, scopeOverride) {
+  // skip its redundant refresh. `plugins` is a list of `{name, scope}`; the
+  // marketplace itself is always added user-scoped.
+  installPlugins(plugins) {
     this.runClaude(
       `Adding marketplace ${MARKETPLACE_NAME} (user scope)`,
       ["plugin", "marketplace", "add", "--scope", "user", MARKETPLACE_REF],
@@ -482,14 +502,13 @@ class Installer extends Command {
       `Refreshing marketplace ${MARKETPLACE_NAME}`,
       ["plugin", "marketplace", "update", MARKETPLACE_NAME],
     );
-    for (const name of plugins) {
-      const scope = scopeFor(name, scopeOverride);
+    for (const { name, scope } of plugins) {
       this.runClaude(
         `Installing ${name} (${scope} scope)`,
         ["plugin", "install", "--scope", scope, `${name}@${MARKETPLACE_NAME}`],
       );
     }
-    if (plugins.includes("vwf")) {
+    if (plugins.some(p => p.name === "vwf")) {
       this.setupGraphify();
     }
     return true;
@@ -531,18 +550,14 @@ class Installer extends Command {
     return false;
   }
 
-  // vwf's commands rely on graphify's knowledge graph, so wiring graphify into
-  // Claude Code and installing its post-commit hook is part of a vwf install or
-  // upgrade. Both commands are idempotent, so it is safe to re-run on every
-  // upgrade. Skipped (not failed) when `--skip-graphify` is set (graphify needs a
-  // git repo) or graphify isn't on PATH — checkDeps guarantees it for installs
-  // unless skipped, but the upgrade-only path does not run that gate.
+  // vwf's commands rely on graphify's knowledge graph, so a vwf install or
+  // upgrade wires graphify into Claude Code. `graphify install` works anywhere
+  // and always runs; `graphify hook install` attaches a git post-commit hook, so
+  // it runs only inside a git repo and is skipped (with a note) otherwise. Both
+  // commands are idempotent, so re-running on every upgrade self-heals the setup.
+  // Soft-skips entirely when graphify isn't on PATH — checkDeps guarantees it for
+  // installs, but the upgrade-only path does not run that gate.
   setupGraphify() {
-    if (this.skipGraphify) {
-      process.stdout.write("Setting up graphify ... ");
-      this.log(yellow("skipped (--skip-graphify)"));
-      return;
-    }
     if (!hasBin("graphify")) {
       process.stdout.write("Setting up graphify ... ");
       this.log(
@@ -557,11 +572,17 @@ class Installer extends Command {
       "graphify",
       ["install", "--platform", "claude"],
     );
-    this.runCommand(
-      "Installing graphify post-commit hook",
-      "graphify",
-      ["hook", "install"],
-    );
+    if (inGitRepo()) {
+      this.runCommand(
+        "Installing graphify post-commit hook",
+        "graphify",
+        ["hook", "install"],
+      );
+    }
+    else {
+      process.stdout.write("Installing graphify post-commit hook ... ");
+      this.log(yellow("skipped (not a git repo)"));
+    }
   }
 
   // Run a local (file/config) step under the same one-line status as runClaude:
@@ -774,15 +795,15 @@ Installer.summary =
 // Users invoke this via pnpx (npx works too), never the bare `ai-plugins` bin,
 // so spell the runnable command out rather than using <%= config.bin %>.
 Installer.examples = [
+  "pnpx @askviraj/ai-plugins --all --statusline",
   "pnpx @askviraj/ai-plugins --all",
-  "pnpx @askviraj/ai-plugins --plugins",
-  "pnpx @askviraj/ai-plugins --plugin vwf --plugin flutter",
-  "pnpx @askviraj/ai-plugins --plugin vwf --scope project",
-  "pnpx @askviraj/ai-plugins --plugin vwf --skip-graphify",
-  "pnpx @askviraj/ai-plugins --statusline --subagentstatusline --yes",
+  "pnpx @askviraj/ai-plugins --user vwf --user markdown",
+  "pnpx @askviraj/ai-plugins --project flutter",
+  "pnpx @askviraj/ai-plugins --user vwf --project flutter",
+  "pnpx @askviraj/ai-plugins --statusline --yes",
   "pnpx @askviraj/ai-plugins --all --upgrade",
-  "pnpx @askviraj/ai-plugins --uninstall --plugin vwf",
-  "pnpx @askviraj/ai-plugins --uninstall --all",
+  "pnpx @askviraj/ai-plugins --uninstall --user vwf",
+  "pnpx @askviraj/ai-plugins --uninstall --all --statusline",
   "pnpx @askviraj/ai-plugins --version",
 ];
 
@@ -791,55 +812,42 @@ Installer.flags = {
     char: "v",
     description:
       "Show CLI, statusline, and plugin versions (installed vs latest)",
+    exclusive: ["upgrade", "uninstall", "all", "user", "project", "statusline"],
   }),
   upgrade: Flags.boolean({
     description:
-      "After any install, upgrade installed plugins to latest + refresh the statusline + check for a CLI update. Combine with --all for an idempotent install+upgrade (safe in setup scripts)",
+      "After any install, upgrade installed plugins to latest + refresh the statusline + check for a CLI update. Combine with a selection (e.g. --all) for an idempotent install+upgrade (safe in setup scripts)",
+    exclusive: ["uninstall"],
   }),
   uninstall: Flags.boolean({
     description:
-      "Remove instead of install: pair with --all / --plugins / --plugin <name> / --statusline / --subagentstatusline to uninstall those plugins or statusline keys",
+      "Remove instead of install: pair with --all / --user <name> / --project <name> / --statusline to uninstall those",
   }),
   all: Flags.boolean({
-    description: `Install everything user-scoped: every user-scoped plugin (${
+    description: `Install every user-scoped plugin (${
       USER_SCOPED.join(", ")
-    }) plus both statusline keys. Project-scoped plugins (${
+    }) at user scope; add --statusline for the status bar. Project-scoped plugins (${
       [...PROJECT_SCOPED].join(", ")
-    }) are excluded — add them with --plugin`,
+    }) are excluded — install them with --project`,
+    exclusive: ["user", "project"],
   }),
-  plugins: Flags.boolean({
-    description: `Install all user-scoped marketplace plugins (${
-      USER_SCOPED.join(", ")
-    }); `
-      + `project-scoped plugins (${
-        [...PROJECT_SCOPED]
-          .join(", ")
-      }) need an explicit --plugin`,
-  }),
-  plugin: Flags.string({
+  user: Flags.string({
     multiple: true,
-    description: `Install a specific plugin by name (repeatable). One of: ${
-      PLUGINS.join(", ")
-    }`,
-  }),
-  scope: Flags.string({
-    options: ["user", "project"],
     description:
-      `Install/uninstall scope for the selected plugins, overriding the per-plugin default (project for ${
-        [...PROJECT_SCOPED].join(", ")
-      }, user otherwise)`,
+      `Install the named plugin(s) at USER scope (repeatable). One of: ${
+        PLUGINS.join(", ")
+      }`,
   }),
-  "skip-graphify": Flags.boolean({
+  project: Flags.string({
+    multiple: true,
     description:
-      "Skip the graphify setup (graphify install + hook install) that a vwf install/upgrade normally runs, and drop graphify from the dependency check. Use when installing outside a git repo, where graphify's commands don't apply",
+      `Install the named plugin(s) at PROJECT scope (repeatable). One of: ${
+        PLUGINS.join(", ")
+      }`,
   }),
   statusline: Flags.boolean({
     description:
-      "Install `statusLine` (the main status bar) in ~/.claude/settings.json",
-  }),
-  subagentstatusline: Flags.boolean({
-    description:
-      "Install `subagentStatusLine` (the subagent panel) in ~/.claude/settings.json",
+      "Install the statusline — both the main bar (`statusLine`) and the subagent panel (`subagentStatusLine`) — in ~/.claude/settings.json",
   }),
   yes: Flags.boolean({
     char: "y",
@@ -998,10 +1006,18 @@ function hasBin(bin) {
     .some(dir => dir && existsSync(join(dir, bin)));
 }
 
+// True when the current directory is inside a git work tree. Gates
+// `graphify hook install`, which attaches a git post-commit hook.
+function inGitRepo() {
+  const res = spawnSync("git", ["rev-parse", "--is-inside-work-tree"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+  return res.status === 0 && res.stdout.trim() === "true";
+}
+
 // The tools that must be present for the resolved install plan.
-function requiredTools(
-  { plugins, statusLine, subagentStatusLine, skipGraphify },
-) {
+function requiredTools({ plugins, statusLine, subagentStatusLine }) {
   const tools = new Set();
   if (plugins.length) {
     for (const d of CORE_DEPS) {
@@ -1009,13 +1025,9 @@ function requiredTools(
     }
   }
   for (const p of plugins) {
-    for (const d of PLUGIN_EXTRA_DEPS[p] || []) {
+    for (const d of PLUGIN_EXTRA_DEPS[p.name] || []) {
       tools.add(d);
     }
-  }
-  // --skip-graphify bypasses setupGraphify, so graphify need not be present.
-  if (skipGraphify) {
-    tools.delete("graphify");
   }
   if (statusLine || subagentStatusLine) {
     tools.add("node");

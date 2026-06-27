@@ -136,19 +136,21 @@ templates from the prior model are archived under `archived/vwf-2026-06-19/`.
 
 ### Dependencies
 
-`vwf` depends on `context7`, `markdown`, and `mempalace` — **all resolved from
-the `virajp-plugins` marketplace itself**, so installing `vwf` needs no other
-marketplace registered. `context7` and `markdown` are authored here; `mempalace`
-is not — it is **re-listed** in `.claude-plugin/marketplace.json` via a `url`
-source (pointing at its upstream repo) so it lives under `virajp-plugins`.
+`vwf` depends on `context7`, `markdown`, `mempalace`, and `mise` — **all
+resolved from the `virajp-plugins` marketplace itself**, so installing `vwf`
+needs no other marketplace registered. `context7`, `markdown`, and `mise` are
+authored here; `mempalace` is not — it is **re-listed** in
+`.claude-plugin/marketplace.json` via a `url` source (pointing at its upstream
+repo) so it lives under `virajp-plugins`.
 
 The dependency list is declared in **two** places, which must stay in sync —
 both reference `@virajp-plugins` for every entry (the `plugins:check` task
 enforces this):
 
-- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `markdown`, `mempalace`
+- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `markdown`,
+  `mempalace`, `mise`
 - `.claude-plugin/marketplace.json` (vwf entry) → `context7`, `markdown`,
-  `mempalace`
+  `mempalace`, `mise`
 
 When `vwf` is enabled, Claude Code (≥ 2.1.143) **auto-installs and
 auto-enables** these dependencies at the same scope. Key rules:
@@ -183,76 +185,77 @@ Layout:
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
 
-The command does several jobs. **Plugins:** `--all` (every user-scoped plugin +
-both statusline keys), `--plugins` (all user-scoped plugins), or
-`--plugin
-<name>` (repeatable) drive the `claude` CLI to add the
-`virajp-plugins` marketplace (user scope) and install each plugin at its default
-scope. The bulk flags (`--all`/`--plugins`) install **user-scoped plugins only**
-(`USER_SCOPED`); **project-scoped** plugins (`flutter` — `PROJECT_SCOPED` in
-`bin/installer.js`) are a deliberate per-project choice and are reached **only
-via an explicit `--plugin <name>`** (which installs at the plugin's own scope).
-`--scope user|project` **overrides** each selected plugin's default scope
-(`scopeFor`'s `override` arg); absent, the per-plugin default applies. It
-governs both install and uninstall, but never the marketplace add (always user
-scope). Plugin names are **bare and allowlisted** (`PLUGINS`); an `@marketplace`
-or path qualifier is rejected outright so the CLI can only ever install from
-`virajp-plugins`. The CLI installs and refreshes **only** `virajp-plugins`;
-every plugin (including the bundled Dart/Kotlin/Swift language servers, which
-ship inside `flutter`) resolves from it alone — no other marketplace is
-registered or refreshed. Installing or upgrading **`vwf`** additionally runs
-`setupGraphify` — `graphify install --platform claude` plus
-`graphify hook install` — since vwf's commands depend on graphify's knowledge
-graph. Both graphify commands are idempotent (so an upgrade self-heals the
-setup); the step is soft-skipped when `graphify` isn't on `PATH` (the
+The command does several jobs. **Plugins:** `--all` (every user-scoped plugin,
+at user scope) or `--user <name>` / `--project <name>` (repeatable; name plugins
+at user or project scope) drive the `claude` CLI to add the `virajp-plugins`
+marketplace (user scope) and install each plugin. `--all` installs **user-scoped
+plugins only** (`USER_SCOPED`); **project-scoped** plugins (`flutter` —
+`PROJECT_SCOPED` in `bin/installer.js`) are excluded from `--all` and reached
+via `--project <name>`. Scope is carried by the flag itself — `--user` installs
+at user scope, `--project` at project scope, and the two compose in one run (a
+name cannot appear in both). This governs install and uninstall alike, but never
+the marketplace add (always user scope). Plugin names are **bare and
+allowlisted** (`PLUGINS`); an `@marketplace` or path qualifier is rejected
+outright so the CLI can only ever install from `virajp-plugins`. The CLI
+installs and refreshes **only** `virajp-plugins`; every plugin (including the
+bundled Dart/Kotlin/Swift language servers, which ship inside `flutter`)
+resolves from it alone — no other marketplace is registered or refreshed.
+Installing or upgrading **`vwf`** additionally runs `setupGraphify` —
+`graphify install --platform claude` plus `graphify hook install` — since vwf's
+commands depend on graphify's knowledge graph. `graphify install` works anywhere
+and always runs; `graphify hook
+install` attaches a git post-commit hook, so it
+runs **only inside a git repo** (detected via
+`git rev-parse --is-inside-work-tree`) and is soft-skipped with a note
+otherwise. Both commands are idempotent (so an upgrade self-heals the setup),
+and the whole step is soft-skipped when `graphify` isn't on `PATH` (the
 `checkDeps` gate guarantees it for installs, but the upgrade-only path does not
-run that gate). **`--skip-graphify`** bypasses this step at every call site
-(install and upgrade) and drops `graphify` from the dependency check — for
-installing the plugins **outside a git repo**, where graphify's repo-scoped
-commands don't apply. **Statusline:** `--statusline` and/or
-`--subagentstatusline` (both implied by `--all`) copy the script into
-`~/.claude/scripts/` (chmod 755), seed the bundled defaults into
-`~/.config/statusline.json` (deep-merging missing settings if it already exists,
-preserving user edits), and write the chosen key(s) into
+run that gate). **Statusline:** `--statusline` — one merged flag that installs
+**both** the main bar `statusLine` and the subagent panel `subagentStatusLine` —
+copies the script into `~/.claude/scripts/` (chmod 755), seeds the bundled
+defaults into `~/.config/statusline.json` (deep-merging missing settings if it
+already exists, preserving user edits), and writes both keys into
 `~/.claude/settings.json` (preserving other keys; prompting before overwrite
-unless `--yes`). Installing the **main** `statusLine` (so also `--all`)
-additionally wires the **context/rate-limit caps** `PostToolUse` hook
-(`installContextCaps`): it copies `tools/statusline/context-caps.js` into
-`~/.claude/hooks/`, sets `env.AI_PLUGINS_USAGE_DIR` (`${HOME}/.claude/usage`),
-and appends the hook entry (idempotently, preserving other env keys /
-PostToolUse hooks). The statusline's `writeUsageFile` mirrors each session's
-`context_window`/`rate_limits` to that dir — the only surface those numbers
-appear on — and the hook reads them and, at the caps (context > 65%, 5-hour
-
-> 90%, 7-day > 80%), tells the agent to `/vwf:handoff` then halt. It is bundled
-> with `statusLine` (not the subagent panel) because that main-bar writer is its
-> sensor, and is inert until the bar runs. **Versions:** `--version`/`-v` prints
-> the CLI version (vs the latest on npm), the bundled statusline version, and
-> each plugin's installed version (from `claude plugin list`) vs the latest in
-> the **remote** marketplace manifest on GitHub (`REMOTE_MARKETPLACE_URL`),
-> flagging updates. **Upgrade:** `--upgrade` runs **after** any install phase —
-> it `claude plugin update`s every installed virajp-plugins plugin that's
-> outdated, refreshes the statusline, and notes a newer CLI; combine with
-> `--all` for an idempotent install+upgrade fit for a setup script.
-> `--version`/`--upgrade` need the network and `claude`, and error out
-> (non-zero) if either is unavailable. **Uninstall:** `--uninstall` reuses the
-> same selection flags but removes — `claude plugin uninstall`s the selected
-> plugins (matching their install scope) and/or strips the chosen statusline
-> key(s) from `settings.json`, deleting the installed script once no statusline
-> key remains. Uninstalling the **main** `statusLine` also runs
-> `uninstallContextCaps` — it strips the caps hook entry and
-> `AI_PLUGINS_USAGE_DIR` from `settings.json` and deletes
-> `~/.claude/hooks/context-caps.js` (leaving other hooks/env keys intact). It
-> leaves the seeded `~/.config/statusline.json` (it may hold user edits) and
-> never touches external tools (the CLI never installed those).
+unless `--yes`). `--all` installs plugins only — pair it with `--statusline` for
+the bar. Installing the statusline additionally wires the **context/rate-limit
+caps** `PostToolUse` hook (`installContextCaps`): it copies
+`tools/statusline/context-caps.js` into `~/.claude/hooks/`, sets
+`env.AI_PLUGINS_USAGE_DIR` (`${HOME}/.claude/usage`), and appends the hook entry
+(idempotently, preserving other env keys / PostToolUse hooks). The statusline's
+`writeUsageFile` mirrors each session's `context_window`/`rate_limits` to that
+dir — the only surface those numbers appear on — and the hook reads them and, at
+the caps (context over 65%, 5-hour over 90%, 7-day over 80%), tells the agent to
+`/vwf:handoff` then halt. It is bundled with the `statusLine` key (not the
+subagent panel) because that main-bar writer is its sensor, and is inert until
+the bar runs. **Versions:** `--version`/`-v` prints the CLI version (vs the
+latest on npm), the bundled statusline version, and each plugin's installed
+version (from `claude plugin list`) vs the latest in the **remote** marketplace
+manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:**
+`--upgrade` runs **after** any install phase — it `claude plugin update`s every
+installed virajp-plugins plugin that's outdated, refreshes the statusline, and
+notes a newer CLI; combine with `--all --statusline` for an idempotent
+install+upgrade fit for a setup script. `--version`/`--upgrade` need the network
+and `claude`, and error out (non-zero) if either is unavailable. **Uninstall:**
+`--uninstall` reuses the same selection flags but removes —
+`claude plugin uninstall`s the selected plugins (matching their install scope)
+and/or strips the statusline keys from `settings.json`, deleting the installed
+script once no statusline key remains. Uninstalling the statusline also runs
+`uninstallContextCaps` — it strips the caps hook entry and
+`AI_PLUGINS_USAGE_DIR` from `settings.json` and deletes
+`~/.claude/hooks/context-caps.js` (leaving other hooks/env keys intact). It
+leaves the seeded `~/.config/statusline.json` (it may hold user edits) and never
+touches external tools (the CLI never installed those).
 
 Before any install, the CLI **checks required external tools** for the resolved
-plan (`CORE_DEPS` brew/mise/claude for any plugin install, `PLUGIN_EXTRA_DEPS`
-like vwf→rtk+pnpm+graphify, `node` for the statusline). If any are missing it
-prints the install command for each (`DEP_HINTS`) and exits non-zero — it never
-auto-installs a dependency. Keep `PLUGINS`, `PROJECT_SCOPED`, `DEP_HINTS`,
-`CORE_DEPS`, and `PLUGIN_EXTRA_DEPS` in sync with the marketplace and the
-plugins' actual runtime needs. Users run it via `npx @askviraj/ai-plugins …`.
+plan: `CORE_DEPS` (just `claude` — the install mechanism) for any plugin
+install, plus each selected plugin's `PLUGIN_EXTRA_DEPS` runtime tools
+(vwf→rtk+graphify+ mise+pnpm+uv, context7→pnpm, typescript/mise→mise,
+flutter→mise+kotlin-lsp+ sourcekit-lsp, mempalace→uv) and `node` for the
+statusline. If any are missing it prints the install command for each
+(`DEP_HINTS`) and exits non-zero — it never auto-installs a dependency. Keep
+`PLUGINS`, `PROJECT_SCOPED`, `DEP_HINTS`, `CORE_DEPS`, and `PLUGIN_EXTRA_DEPS`
+in sync with the marketplace and the plugins' actual runtime needs. Users run it
+via `npx @askviraj/ai-plugins …`.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):
@@ -382,9 +385,9 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
-`context7`. (The statusline is not a plugin — install it via
+`context7`, `mise`. (The statusline is not a plugin — install it via
 `npx @askviraj/ai-plugins …`; see The statusline CLI.)
 
-Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`)
-automatically from the same `virajp-plugins` marketplace — no other marketplace
-needs to be registered. See the Dependencies section above.
+Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
+`mise`) automatically from the same `virajp-plugins` marketplace — no other
+marketplace needs to be registered. See the Dependencies section above.

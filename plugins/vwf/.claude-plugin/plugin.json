@@ -12,6 +12,10 @@
     {
       "marketplace": "virajp-plugins",
       "name": "mempalace"
+    },
+    {
+      "marketplace": "virajp-plugins",
+      "name": "mise"
     }
   ],
   "name": "vwf"

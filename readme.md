@@ -79,9 +79,10 @@ checks for each and prints the exact command for anything missing.
 | Claude Code CLI | hosts the commands                       | `mise use -g claude-code@latest`      |
 | rtk             | the `rtk hook claude` Bash hook          | `brew install --formulae rtk`         |
 | graphify        | knowledge graph the commands rely on     | `mise use -g pipx:graphifyy@latest`   |
+| uv              | runs the `mempalace` memory server       | `mise use -g uv@latest`               |
 
-`vwf` also depends on three plugins — `context7`, `markdown`, and `mempalace` —
-all resolved from the same `virajp-plugins` marketplace. Claude Code
+`vwf` also depends on four plugins — `context7`, `markdown`, `mempalace`, and
+`mise` — all resolved from the same `virajp-plugins` marketplace. Claude Code
 **auto-installs and auto-enables** them when you enable `vwf` (requires Claude
 Code ≥ 2.1.143).
 
@@ -89,15 +90,11 @@ Code ≥ 2.1.143).
 
 ```sh
 # Installs vwf + its plugin dependencies, and wires up graphify
-pnpx @askviraj/ai-plugins --plugin vwf
+pnpx @askviraj/ai-plugins --user vwf
 ```
 
-Installing outside a git repo? Add `--skip-graphify` to bypass graphify's
-repo-scoped setup:
-
-```sh
-pnpx @askviraj/ai-plugins --plugin vwf --skip-graphify
-```
+Installing outside a git repo works too: `graphify install` still runs, and its
+repo-scoped post-commit hook is skipped automatically (with a note).
 
 Restart Claude Code afterward so the commands, hooks, and dependencies load.
 (The examples here use `pnpx`; if you don't use `pnpm`, swap in `npx`.)
@@ -438,17 +435,17 @@ The marketplace ships additional plugins — opinionated coding-standard skills
 and language servers. Most auto-apply by file path; install only the ones for
 your stack. Each has a dedicated guide:
 
-| Plugin                                 | What it provides                                                                                          | Install               |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------- |
-| **[markdown](./docs/markdown.md)**     | Always-on Markdown/documentation standards (auto-applies to `**/*.md`)                                    | `--plugin markdown`   |
-| **[typescript](./docs/typescript.md)** | Effect-TS coding standards (7 skills) + the TypeScript/JavaScript language server                         | `--plugin typescript` |
-| **[flutter](./docs/flutter.md)**       | Flutter/Dart (GetX) standards (8 skills) + bundled Dart/Kotlin/Swift language servers; **project-scoped** | `--plugin flutter`    |
-| **[mise](./docs/mise.md)**             | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command              | `--plugin mise`       |
-| **[context7](./docs/context7.md)**     | The Context7 MCP server — up-to-date library docs on demand                                               | `--plugin context7`   |
-| **[mempalace](./docs/mempalace.md)**   | AI memory system (external; also a `vwf` dependency)                                                      | `--plugin mempalace`  |
+| Plugin                                 | What it provides                                                                                          | Install             |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------- |
+| **[markdown](./docs/markdown.md)**     | Always-on Markdown/documentation standards (auto-applies to `**/*.md`)                                    | `--user markdown`   |
+| **[typescript](./docs/typescript.md)** | Effect-TS coding standards (7 skills) + the TypeScript/JavaScript language server                         | `--user typescript` |
+| **[flutter](./docs/flutter.md)**       | Flutter/Dart (GetX) standards (8 skills) + bundled Dart/Kotlin/Swift language servers; **project-scoped** | `--project flutter` |
+| **[mise](./docs/mise.md)**             | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command              | `--user mise`       |
+| **[context7](./docs/context7.md)**     | The Context7 MCP server — up-to-date library docs on demand                                               | `--user context7`   |
+| **[mempalace](./docs/mempalace.md)**   | AI memory system (external; also a `vwf` dependency)                                                      | `--user mempalace`  |
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin typescript --plugin markdown
+pnpx @askviraj/ai-plugins --user typescript --user markdown
 ```
 
 ## Statusline
@@ -461,11 +458,11 @@ to `~/.claude/scripts/` and writing the chosen key(s) into
 `~/.claude/settings.json`. Requires a [Nerd Font](https://www.nerdfonts.com/).
 
 ```sh
-# install both surfaces (or use --statusline / --subagentstatusline individually)
-pnpx @askviraj/ai-plugins --statusline --subagentstatusline
+# install the statusline (both the main bar and the subagent panel)
+pnpx @askviraj/ai-plugins --statusline
 ```
 
-Installing the main bar (`--statusline`) also wires a **context & rate-limit
+Installing the statusline (`--statusline`) also wires a **context & rate-limit
 caps hook** — it pauses long `/vwf:autopilot` runs at budget thresholds (context
 over 65%, 5-hour over 90%, 7-day over 80%) by triggering a handoff.
 
@@ -480,14 +477,14 @@ drives the Claude Code CLI: it adds the `virajp-plugins` marketplace
 refreshes `virajp-plugins` — every plugin resolves from it alone.
 
 ```sh
-# Everything (user-scoped plugins + statusline)
+# Everything: all user-scoped plugins + the statusline
+pnpx @askviraj/ai-plugins --all --statusline
+
+# Just the user-scoped plugins (no statusline)
 pnpx @askviraj/ai-plugins --all
 
-# All user-scoped plugins, no statusline
-pnpx @askviraj/ai-plugins --plugins
-
-# Specific plugins (repeatable; the only way to install a project-scoped one)
-pnpx @askviraj/ai-plugins --plugin vwf --plugin flutter
+# Named plugins, at user or project scope (flutter is project-scoped)
+pnpx @askviraj/ai-plugins --user vwf --project flutter
 
 # Versions: CLI, statusline, and each plugin's installed-vs-latest (with scope)
 pnpx @askviraj/ai-plugins --version
@@ -496,20 +493,21 @@ pnpx @askviraj/ai-plugins --version
 pnpx @askviraj/ai-plugins --upgrade
 
 # Idempotent install + upgrade — safe to drop in a setup script
-pnpx @askviraj/ai-plugins --all --upgrade
+pnpx @askviraj/ai-plugins --all --statusline --upgrade
 
 # Uninstall (mirrors the install flags)
-pnpx @askviraj/ai-plugins --uninstall --plugin vwf
-pnpx @askviraj/ai-plugins --uninstall --all
+pnpx @askviraj/ai-plugins --uninstall --user vwf
+pnpx @askviraj/ai-plugins --uninstall --all --statusline
 ```
 
 Notes:
 
-- The bulk flags (`--all` / `--plugins`) act on **user-scoped** plugins only.
-  `flutter` is **project-scoped** — install it explicitly with
-  `--plugin flutter` from within the project that needs it.
-- `--scope user|project` overrides a plugin's default scope; the marketplace add
-  is always user-scoped.
+- `--all` acts on **user-scoped** plugins only. `flutter` is **project-scoped**
+  — install it explicitly with `--project flutter` from within the project that
+  needs it.
+- Scope is chosen by the flag: `--user <name>` installs at user scope,
+  `--project <name>` at project scope (you can mix both in one run). The
+  marketplace add is always user-scoped.
 - The installer **checks every required external tool** for what you're
   installing and prints the install command for anything missing — it never
   installs a dependency for you.

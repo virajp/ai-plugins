@@ -11,7 +11,7 @@ TypeScript file you edit.
 ## Install
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin typescript
+pnpx @askviraj/ai-plugins --user typescript
 ```
 
 ## Skills

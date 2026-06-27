@@ -8,7 +8,7 @@ behaves like an always-on documentation rule that shapes every Markdown change.
 ## Install
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin markdown
+pnpx @askviraj/ai-plugins --user markdown
 ```
 
 ## What it standardizes

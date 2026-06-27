@@ -26,12 +26,8 @@ is data-driven from JSON, so you can restyle it per repo without touching code.
 Run the installer with `npx` (or `pnpm dlx`) — no global install needed:
 
 ```sh
-# install both surfaces
-npx @askviraj/ai-plugins --statusline --subagentstatusline
-
-# or just one
+# install the statusline — both the main bar and the subagent panel
 npx @askviraj/ai-plugins --statusline
-npx @askviraj/ai-plugins --subagentstatusline
 ```
 
 The CLI:

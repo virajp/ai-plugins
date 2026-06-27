@@ -77,6 +77,10 @@
         {
           "marketplace": "virajp-plugins",
           "name": "mempalace"
+        },
+        {
+          "marketplace": "virajp-plugins",
+          "name": "mise"
         }
       ],
       "description": "Highly opinionated Claude Code Plugin for solo developers or small team",
@@ -102,7 +106,7 @@
         "lsp",
         "git-workflow"
       ],
-      "version": "1.9.0"
+      "version": "1.10.0"
     },
     {
       "author": {

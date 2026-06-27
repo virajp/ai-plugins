@@ -12,10 +12,10 @@ install it from inside the Flutter project it should govern.
 Run this from the root of your Flutter project:
 
 ```bash
-pnpx @askviraj/ai-plugins --plugin flutter
+pnpx @askviraj/ai-plugins --project flutter
 ```
 
-`--plugin flutter` installs at the plugin's own (project) scope.
+`--project flutter` installs at the plugin's own (project) scope.
 
 ## Skills
 

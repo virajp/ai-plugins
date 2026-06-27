@@ -8,7 +8,7 @@ current library docs instead of relying on training knowledge.
 ## Install
 
 ```sh
-pnpx @askviraj/ai-plugins --plugin context7
+pnpx @askviraj/ai-plugins --user context7
 ```
 
 `context7` is also a dependency of `vwf`, so installing `vwf` pulls it in
