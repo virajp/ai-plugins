@@ -97,9 +97,17 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
 - `commands/` — `/vwf:` slash commands: the Spec → Plan → Execute model —
-  `spec`, `plan`, `execute`, `archive`, `architecture`, plus internal
-  `git-workflow`, and `handoff`/`recall` (mempalace-backed session handoff —
-  wing=`<project>`, room=`handoff`, drawer=`<name>`)
+  `spec`, `plan`, `execute`, `archive`, `architecture`, plus `autopilot` (the
+  autonomous variant of `execute`), internal `git-workflow`, and
+  `handoff`/`recall` (mempalace-backed session handoff — wing=`<project>`,
+  room=`handoff`, drawer=`<name>`). `autopilot` runs one approved plan to
+  completion **without per-stage human gates** in a dedicated worktree:
+  dependency-ordered steps, `code→review→security` per step (security findings
+  always fixed; review findings loop ≤4 rounds then become documented gaps),
+  gaps written to `docs/plans/<plan>.gap-report.md` + mempalace room `gaps`,
+  **never merges/pushes or archives**, and pauses only on hard halts, the
+  statusline resource caps, an all-blocking gap, or an uncovered irreversible
+  decision. Reuses execute's three subagents.
 - `agents/` — subagents the commands delegate to: `spec-reviewer`,
   `execute-coder`, `execute-code-reviewer`, `execute-security-reviewer`,
   `architecture-writer`

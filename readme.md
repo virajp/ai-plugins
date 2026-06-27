@@ -48,9 +48,14 @@ adopting it.
 
 **Fit**
 
-- **High-touch, not autonomous.** It asks one question at a time and stops at a
-  mandatory approval gate at every stage. It never runs end to end on its own —
-  plan for an interactive session.
+- **High-touch by default — autonomy is opt-in.** The default flow asks one
+  question at a time and stops at a mandatory approval gate at every stage; plan
+  for an interactive session. `/vwf:autopilot` trades those gates for an
+  unattended end-to-end run of a single plan — it still runs code, code review,
+  and security review per step, but takes the decisions itself and stops only on
+  a hard halt, a resource cap, an all-blocking gap, or an irreversible decision.
+  Reach for it only when the plan is solid and you're ready to review a finished
+  worktree.
 - **Requires a testable project.** `execute` enforces non-negotiable TDD and a
   coverage gate. A project without a test runner and coverage tooling won't fit
   the execute stage.
@@ -111,17 +116,28 @@ The three phases map to three questions:
 flowchart TD
     A["1 · /vwf:architecture"] --> B["2 · /vwf:spec"]
     B --> C["3 · /vwf:plan"]
-    C --> D["4 · /vwf:execute"]
+    C --> D["4 · /vwf:execute<br/>(gated)"]
+    C e1@-. "autonomous alternative" .-> F["4 · /vwf:autopilot<br/>(one worktree)"]
     D --> E["5 · /vwf:archive"]
-    D -. "spec/plan gaps" .-> B
-    D -. "spec/plan gaps" .-> C
+    F e2@-. "you review & land" .-> E
+    D e3@-. "spec/plan gaps" .-> B
+    D e4@-. "spec/plan gaps" .-> C
+    F e5@-. "spec/plan gaps" .-> B
+    F e6@-. "spec/plan gaps" .-> C
+    e1@{ animate: true }
+    e2@{ animate: true }
+    e3@{ animate: true }
+    e4@{ animate: true }
+    e5@{ animate: true }
+    e6@{ animate: true }
 ```
 
 `architecture` runs once to bootstrap; then you loop
-`spec → plan → execute →
-archive` per slice. When execution exposes a hole in
-the spec or plan, `vwf` captures it and loops back to fix the source — never
-silently working around it.
+`spec → plan → execute → archive` per slice — or swap `execute` for `autopilot`
+to run the approved plan unattended (it commits into a dedicated worktree for
+you to review and land, and never archives). Either way, when execution exposes
+a hole in the spec or plan, `vwf` captures it and loops back to fix the source —
+never silently working around it.
 
 ## The documents it maintains
 
@@ -147,16 +163,17 @@ that `spec` and `plan` parse to map an entity's sections to the right project by
 
 ## Commands
 
-| Command               | Model  | What it does                                              |
-| --------------------- | ------ | --------------------------------------------------------- |
-| `/vwf:architecture`   | opus   | Bootstrap or update the system shape + Project Registry   |
-| `/vwf:spec [entity]`  | opus   | Maintain the full-product blueprint, one doc per entity   |
-| `/vwf:plan [slice]`   | opus   | Write a reviewable cycle plan — a diff of spec vs code    |
-| `/vwf:execute [mode]` | opus   | Implement the plan under TDD, then code + security review |
-| `/vwf:archive [plan]` | sonnet | Retire a completed plan into `docs/plans/archived/`       |
-| `/vwf:handoff <name>` | opus   | Capture the session so work resumes in a fresh one        |
-| `/vwf:recall <name>`  | sonnet | Resume from a handoff in a fresh session                  |
-| `/vwf:git-workflow`   | —      | Internal — worktree isolation, commits, merges            |
+| Command                 | Model  | What it does                                              |
+| ----------------------- | ------ | --------------------------------------------------------- |
+| `/vwf:architecture`     | opus   | Bootstrap or update the system shape + Project Registry   |
+| `/vwf:spec [entity]`    | opus   | Maintain the full-product blueprint, one doc per entity   |
+| `/vwf:plan [slice]`     | opus   | Write a reviewable cycle plan — a diff of spec vs code    |
+| `/vwf:execute [mode]`   | opus   | Implement the plan under TDD, then code + security review |
+| `/vwf:autopilot [plan]` | opus   | Autonomously run one plan end to end — no per-stage gates |
+| `/vwf:archive [plan]`   | sonnet | Retire a completed plan into `docs/plans/archived/`       |
+| `/vwf:handoff <name>`   | opus   | Capture the session so work resumes in a fresh one        |
+| `/vwf:recall <name>`    | sonnet | Resume from a handoff in a fresh session                  |
+| `/vwf:git-workflow`     | —      | Internal — worktree isolation, commits, merges            |
 
 ### /vwf:architecture
 
@@ -242,6 +259,46 @@ it's recorded — to the plan doc and to memory — and reconciled at the end of
 cycle, where `vwf` offers to fix the spec (`/vwf:spec`) or re-derive the plan
 (`/vwf:plan`). It then reconciles the architecture registry and offers to
 archive the plan.
+
+### /vwf:autopilot
+
+The **autonomous** counterpart to `/vwf:execute`. It runs one approved plan to
+completion without the per-stage approval gates — taking those decisions from a
+fixed rule set and stopping only at a few defined pause points.
+
+```text
+/vwf:autopilot                       # the single active plan
+/vwf:autopilot 2026-06-26-1430-order.md
+```
+
+What it does, by rule:
+
+- **One plan, one worktree.** Isolates all work in a dedicated git worktree and
+  commits every step itself. It **never merges, pushes, or archives** — you get
+  a finished worktree to review and land.
+- **Whole plan, dependencies first.** Implements every step, ordered so
+  prerequisites land before dependents.
+- **Full pipeline each step.** `code → review → security`, looping findings back
+  to code. **Security findings are always fixed**; **code-review findings loop
+  up to 4 rounds**, after which any residual is recorded as a gap — the
+  spec/plan wasn't thorough enough.
+- **Gaps don't stop it.** Each gap is written to
+  `docs/plans/<plan>.gap-report.md` and to memory, and the run continues.
+
+It **pauses** only on: a hard halt (no plan/spec, a test harness that can't run,
+an unresolvable git conflict); a **resource cap** — context > 65%, 5-hour > 90%,
+or 7-day > 80% — where it hands off and stops (resume with `/vwf:recall`); a gap
+that blocks *all* remaining work; or a decision the rules don't cover that is
+irreversible. At the end, if any gaps remain it asks you to resolve them — and
+never suggests archiving.
+
+The resource-cap pause is delivered by the
+**[statusline caps hook](#statusline)** — a command can't measure its own
+context window, so install the statusline (`--statusline`) before an autonomous
+run or that pause won't fire.
+
+> Autopilot is the sharp tool: point it at a plan you trust, and review the
+> worktree before you merge.
 
 ### /vwf:archive
 
@@ -407,6 +464,10 @@ to `~/.claude/scripts/` and writing the chosen key(s) into
 # install both surfaces (or use --statusline / --subagentstatusline individually)
 pnpx @askviraj/ai-plugins --statusline --subagentstatusline
 ```
+
+Installing the main bar (`--statusline`) also wires a **context & rate-limit
+caps hook** — it pauses long `/vwf:autopilot` runs at budget thresholds (context
+over 65%, 5-hour over 90%, 7-day over 80%) by triggering a handoff.
 
 See **[docs/statusline.md](./docs/statusline.md)** for setup and the full
 configuration reference.

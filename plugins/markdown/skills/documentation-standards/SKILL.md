@@ -1,6 +1,6 @@
 ---
 name: documentation-standards
-version: 0.2.0
+version: 0.3.0
 category: development
 description: Opinionated standards for writing and maintaining Markdown
   documentation — writing style, code blocks, tables, CHANGELOGs, and diagrams.
@@ -37,6 +37,16 @@ paths:
 - Always use `mermaid`; no external images. Must render on GitHub and GitLab —
   no `%%{init}%%` config directives or custom themes (portability is not
   guaranteed across both).
+- **Animate every dotted/dashed link.** A dotted link (`-. text .->`) marks a
+  loop-back, an alternative, or a deferred edge — make it move: give the edge an
+  id and turn animation on. Uses the Mermaid ≥ 11.3 edge-id syntax; renderers
+  that sanitize CSS fall back to a static dotted link.
+
+  ```mermaid
+  flowchart LR
+    A e1@-. text .-> B
+    e1@{ animate: true }
+  ```
 - Pick the type by purpose — don't default everything to a flowchart:
   - process / topology / dependencies → `flowchart` (`graph`)
   - interactions over time, API/message flows → `sequenceDiagram`
