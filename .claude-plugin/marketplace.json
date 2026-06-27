@@ -41,7 +41,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated Flutter plugin — Dart/GetX, pubspec, build, testing, analysis-options, i18n, and Swift/Kotlin native skills, plus bundled Dart, Kotlin & Swift (SourceKit) language servers. Self-contained — no cross-marketplace dependencies.",
+      "description": "Opinionated Flutter plugin — Dart/GetX, pubspec, build, testing, analysis-options, i18n, Swift/Kotlin native skills, a Firebase suite (auth, analytics, app-check, crashlytics, messaging, storage), and feature skills (architecture, state, navigation, theming, layouts, animations, maps, webview, webrtc, revenuecat, flavors, image handling, http/json, concurrency, caching, app-size, coverage), plus SwiftUI/Xcode and bundled Dart, Kotlin & Swift (SourceKit) language servers. Self-contained — no cross-marketplace dependencies.",
       "name": "flutter",
       "source": "./plugins/flutter",
       "strict": true,
@@ -49,7 +49,10 @@
         "flutter",
         "dart",
         "getx",
+        "firebase",
         "swift",
+        "swiftui",
+        "xcode",
         "kotlin",
         "i18n",
         "testing",
@@ -58,7 +61,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.2.0"
+      "version": "0.3.0"
     },
     {
       "author": {
