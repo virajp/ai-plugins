@@ -220,7 +220,12 @@ Common types: `feat`, `fix`, `refactor`, `wip`, `spec`, `test`, `ops`, `docs`,
 
 ## Step 4 — Post-Commit Action
 
-After a successful commit, ask the user to choose what to do next via
+**Caller-declared preference.** If the invoker declared a post-commit action
+(e.g. `/vwf:autopilot`: "commit only — do not prompt, never merge or push"),
+honor it without asking: take that action and skip the prompt below. This is the
+only way the prompt is bypassed.
+
+Otherwise, after a successful commit, ask the user to choose what to do next via
 `AskUserQuestion` with these three options:
 
 - **Commit only** — stop here; leave the worktree as-is for continued work.

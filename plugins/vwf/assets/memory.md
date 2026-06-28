@@ -19,7 +19,9 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
 - **room** — `decisions` (design/architecture decisions + the *why*), `problems`
   (review/security findings + how they were resolved), `planning` (plan
   rationale and deferred options), `gaps` (spec/plan holes surfaced **during
-  execution** + how they were reconciled).
+  execution** + how they were reconciled), and `runs` (the **autopilot** run
+  journal — dependency order and per-step progress, for resuming a paused run;
+  see below).
 
 ## Recall — before work
 
@@ -71,3 +73,17 @@ that survives a mempalace outage), and at reconcile recalls the `gaps` room to
 drive the spec/plan fixes. Because mempalace is skip-if-unavailable, the
 plan-doc line is the source of truth when recall is empty; the `gaps` room
 carries the rich detail when it is up.
+
+## Run journal — autopilot resumability (autopilot only)
+
+`/vwf:autopilot` keeps a single drawer per plan in room `runs` (drawer =
+`<plan>`): the dependency-ordered step sequence and, per step, its status
+(pending/done), commit ref, review/security round counts, and gap tags. The
+orchestrator writes it when it derives the order and updates it as each step
+completes (`mempalace_add_drawer` then `mempalace_update_drawer`). Because
+autopilot's primary pause is a resource cap (`/vwf:handoff` → later
+`/vwf:recall`), a resumed run reads this journal to skip finished steps and pick
+up at the current one — without it, resume would re-implement completed work.
+Skip silently if mempalace is unavailable; the worktree's commits are the
+fallback record. This room is autopilot-specific; spec/plan/execute do not use
+it.

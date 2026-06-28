@@ -76,14 +76,24 @@ list them and ask which single plan to run (one plan per autopilot run).
   other steps can) → skip that step **and its dependents**, document, continue.
 - **Never archive.** Autopilot never runs `/vwf:archive` and never suggests it.
 - **All git via `/vwf:git-workflow`** (worktree + per-step commits only — no
-  merge/push). Never run raw git.
+  merge/push). Never run raw git. On **every** invocation, pass git-workflow
+  these declared preferences so it never prompts: **isolate without asking**
+  (its Step 1) and **commit only — do not prompt, never merge/push** (its Step
+  4). Without these, git-workflow's post-commit gate fires on every step commit
+  and stalls the run.
 - **Model enforcement** — dispatch each subagent on its model above.
 - **Terse subagent output** — subagents return their fixed contract blocks; any
   other agent you spawn returns only conclusions and `file:line` pointers.
-- **Memory via mempalace** — follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`:
-  resolve the project **wing**, recall prior decisions/findings/gaps before the
-  first step, pass the wing to every subagent, and persist durable outcomes at
-  reconcile.
+- **Memory via mempalace (lean on it)** — follow
+  `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`. mempalace is autopilot's working
+  memory, not just an end-of-run sink: resolve the project **wing** once;
+  **recall per step** (decisions/problems/gaps/runs for that slice) before
+  dispatching the coder, not only before step 1; pass the wing **and** the
+  recall hits to every subagent; **persist incrementally** — store each step's
+  durable decisions and update the **run journal** (room `runs`, drawer
+  `<plan>`) as each step completes, not only at reconcile. The run journal is
+  what a resumed run reads after a resource-cap pause. Skip silently if
+  mempalace is down — the worktree commits and gap-report are the fallback.
 
 ## Pause Conditions
 
@@ -122,7 +132,17 @@ not create) are **refused**, never paused on.
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, resolve the project **wing** and
 recall prior decisions, findings, and unreconciled gaps for this slice (rooms
 `decisions`, `problems`, `gaps`) before the first step. Pass the wing to every
-subagent. Skip silently if mempalace is unavailable.
+subagent.
+
+**Resume check.** Also recall the **run journal** (room `runs`, drawer
+`<plan>`). If a prior run for this plan is recorded, read which steps are
+already done and their commits, reconcile against the worktree, and **resume at
+the current step** — do not re-implement finished steps. This is how a run
+paused at a resource cap (`/vwf:handoff` → `/vwf:recall`) picks up where it left
+off.
+
+Per-step recall continues inside the Execute loop below. Skip every memory step
+silently if mempalace is unavailable.
 
 ## Setup
 
@@ -132,28 +152,45 @@ subagent. Skip silently if mempalace is unavailable.
    project`). If one is missing, note it as a
    gap (degraded type-safety) and continue — do not pause; autopilot favors
    progress, and missing LSP is a documented risk, not a blocker.
-2. **Worktree.** Invoke `/vwf:git-workflow` to create the dedicated worktree
-   (declared preference: isolate, no prompt). All subsequent work and commits
-   happen here.
+2. **Worktree.** Invoke `/vwf:git-workflow` to create the dedicated worktree,
+   passing the declared preferences (isolate without prompting; commit-only, no
+   post-commit prompt; never merge/push). All subsequent work and commits happen
+   here.
 3. **Dependency order.** Read the plan's "Delta — ordered steps", build the
-   dependency order, and record the sequence you will execute.
+   dependency order, and record the sequence you will execute. **Write the run
+   journal** to mempalace (room `runs`, drawer `<plan>`): the ordered sequence
+   with every step marked pending. This is the resumable record the loop updates
+   as it goes.
 
 ## Execute (loop over steps, no human gates)
 
-For each step in dependency order:
+For each step in dependency order (skip any already marked done in the run
+journal):
 
-1. **code** — dispatch `execute-coder` (sonnet) with the plan step, registry
-   stack, and wing. Strict TDD (RED → GREEN → REFACTOR) to the coverage gate.
-2. **review** — dispatch `execute-code-reviewer` (opus). Issues → loop back to
+1. **recall** — before dispatching, `mempalace_search` the wing scoped to this
+   step's slice across rooms `decisions`, `problems`, `gaps`, and `runs` (limit
+   3-5). Pass the relevant hits (with the wing) to the coder so it builds on
+   prior decisions instead of re-deriving them. Skip silently if mempalace is
+   down.
+2. **code** — dispatch `execute-coder` (sonnet) with the plan step, registry
+   stack, wing, and recall hits. Strict TDD (RED → GREEN → REFACTOR) to the
+   coverage gate.
+3. **review** — dispatch `execute-code-reviewer` (opus). Issues → loop back to
    `code` with the findings **tag** (the coder recalls detail from mempalace),
    re-commit, re-review. Cap at **4 rounds**; document residual review findings
    as gaps and move on.
-3. **security** — dispatch `execute-security-reviewer` (opus). **Every** finding
+4. **security** — dispatch `execute-security-reviewer` (opus). **Every** finding
    → loop back to `code`, re-commit, re-review until security is clean. Never
    defer a security finding.
-4. **gaps** — any stage's gap pointer → append to the gap-report and file to
+5. **gaps** — any stage's gap pointer → append to the gap-report and file to
    mempalace room `gaps`. Decide blocking vs non-blocking and act per the rules.
-5. **commit** — commit the step's work via `/vwf:git-workflow`.
+6. **commit** — commit the step's work via `/vwf:git-workflow` (declared:
+   commit-only, no prompt).
+7. **persist & journal** — store the step's durable decisions to room
+   `decisions`, then update the run journal (room `runs`, drawer `<plan>`): mark
+   this step **done** with its commit ref, the review/security round counts, and
+   any gap tags. This incremental write is what a resumed run reads to skip
+   completed steps.
 
 ## Gap-report
 
@@ -180,7 +217,10 @@ are recorded here as gaps too, tagged as plan/spec under-specification.
    changes. Edit precisely; do not rewrite prose unless topology changed.
 2. **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's
    durable decisions, resolved findings, and each gap to mempalace (rooms
-   `decisions`, `problems`, `gaps`). Skip anything a doc already captures.
+   `decisions`, `problems`, `gaps`). Skip anything a doc already captures. Most
+   per-step decisions were already persisted in the loop — here, fill only what
+   is missing. Then mark the run journal (room `runs`, drawer `<plan>`)
+   **complete**.
 
 ## Finish
 
