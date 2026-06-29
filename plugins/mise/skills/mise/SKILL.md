@@ -1,6 +1,6 @@
 ---
 name: mise
-version: 0.1.1
+version: 0.1.2
 category: development
 description: Opinionated mise configuration — the .config/ three-file split
   (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, the shared
@@ -10,6 +10,7 @@ description: Opinionated mise configuration — the .config/ three-file split
   mise config or task file.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/mise.toml"
   - "**/mise.dev.toml"

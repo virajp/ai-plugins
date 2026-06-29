@@ -1,6 +1,6 @@
 ---
 name: pubspec
-version: 0.1.0
+version: 0.1.1
 category: development
 description: Opinionated pubspec.yaml standards for Flutter apps —
   unconstrained
@@ -9,6 +9,7 @@ description: Opinionated pubspec.yaml standards for Flutter apps —
   Auto-applies when editing pubspec.yaml or pubspec.lock.
 license: MIT
 user-invocable: false
+allowed-tools: Read Edit Write Bash
 paths:
   - "**/pubspec.yaml"
   - "**/pubspec.lock"

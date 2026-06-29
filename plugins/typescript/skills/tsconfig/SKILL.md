@@ -1,6 +1,6 @@
 ---
 name: tsconfig
-version: 0.1.0
+version: 0.1.1
 category: development
 description: Opinionated TypeScript config layout for pnpm monorepos — a
   strict
@@ -9,6 +9,7 @@ description: Opinionated TypeScript config layout for pnpm monorepos — a
   editing any tsconfig file.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write
 paths:
   - "**/tsconfig.json"
   - "**/tsconfig.*.json"

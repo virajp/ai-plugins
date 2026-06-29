@@ -1,12 +1,13 @@
 ---
 name: documentation-standards
-version: 0.3.0
+version: 0.3.1
 category: development
 description: Opinionated standards for writing and maintaining Markdown
   documentation — writing style, code blocks, tables, CHANGELOGs, and diagrams.
   Auto-applies when editing any Markdown file.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write
 paths:
   - "**/*.md"
 ---

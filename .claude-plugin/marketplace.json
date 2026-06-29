@@ -61,7 +61,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.4.0"
+      "version": "0.4.1"
     },
     {
       "author": {
@@ -109,7 +109,7 @@
         "lsp",
         "git-workflow"
       ],
-      "version": "1.10.0"
+      "version": "1.10.1"
     },
     {
       "author": {
@@ -128,7 +128,7 @@
         "mermaid",
         "skills"
       ],
-      "version": "0.3.0"
+      "version": "0.3.1"
     },
     {
       "author": {
@@ -148,7 +148,7 @@
         "skills",
         "command"
       ],
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "author": {
@@ -173,7 +173,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.4.0"
+      "version": "0.4.1"
     }
   ]
 }

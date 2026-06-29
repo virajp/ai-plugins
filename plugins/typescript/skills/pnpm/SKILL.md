@@ -1,6 +1,6 @@
 ---
 name: pnpm
-version: 0.2.0
+version: 0.2.1
 category: development
 description: Opinionated pnpm workspace configuration — pnpm-workspace.yaml
   globs, catalogs, supply-chain safety (minimumReleaseAge, trustPolicy),
@@ -8,6 +8,7 @@ description: Opinionated pnpm workspace configuration — pnpm-workspace.yaml
   Auto-applies when editing pnpm-workspace.yaml or .npmrc.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/pnpm-workspace.yaml"
   - "**/.npmrc"

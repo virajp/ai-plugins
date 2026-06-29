@@ -1,6 +1,6 @@
 ---
 name: kotlin
-version: 0.2.0
+version: 0.2.1
 category: development
 description: Writing the Android-native (Kotlin) side of a Flutter app for
   features Flutter can't reach — a MethodChannel handler registry, main-looper
@@ -8,6 +8,7 @@ description: Writing the Android-native (Kotlin) side of a Flutter app for
   when editing any Kotlin file.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write
 paths:
   - "**/*.kt"
 ---

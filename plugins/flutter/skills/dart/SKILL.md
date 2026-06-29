@@ -1,6 +1,6 @@
 ---
 name: dart
-version: 0.4.0
+version: 0.4.1
 category: development
 description: Flutter & Dart development — the always-on coding baseline plus
   deep
@@ -10,6 +10,7 @@ description: Flutter & Dart development — the always-on coding baseline plus
   any Flutter/Dart code; read the reference matching your task.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/*.dart"
 ---

@@ -1,6 +1,6 @@
 ---
 name: package-json
-version: 0.1.0
+version: 0.1.1
 category: development
 description: Opinionated package.json standards for pnpm monorepos — pnpm as
   the
@@ -9,6 +9,7 @@ description: Opinionated package.json standards for pnpm monorepos — pnpm as
   editing any package.json.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/package.json"
 ---

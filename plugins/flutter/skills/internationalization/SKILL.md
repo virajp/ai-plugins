@@ -1,6 +1,6 @@
 ---
 name: internationalization
-version: 0.1.0
+version: 0.1.1
 category: development
 description: How the Flutter app localizes — ARB files with English as the
   template, l10n.yaml config, the genarb → arb_translate → gen-l10n pipeline,
@@ -8,6 +8,7 @@ description: How the Flutter app localizes — ARB files with English as the
   editing ARB files or l10n.yaml.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/l10n.yaml"
   - "**/*.arb"

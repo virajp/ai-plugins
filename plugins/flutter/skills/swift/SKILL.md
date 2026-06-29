@@ -1,6 +1,6 @@
 ---
 name: swift
-version: 0.4.0
+version: 0.4.1
 category: development
 description: The iOS-native (Swift) side of a Flutter app — the Swift/SwiftUI
   coding baseline, MethodChannel bridging from AppDelegate, and Xcode
@@ -9,6 +9,7 @@ description: The iOS-native (Swift) side of a Flutter app — the Swift/SwiftUI
   matching your task.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/*.swift"
 ---

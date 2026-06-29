@@ -1,6 +1,6 @@
 ---
 name: typescript
-version: 0.2.0
+version: 0.2.1
 category: development
 description: TypeScript development — the always-on coding baseline plus deep
   references for Effect-TS patterns, Vitest testing, and the monorepo build
@@ -8,6 +8,7 @@ description: TypeScript development — the always-on coding baseline plus deep
   reviewing any TypeScript code; read the reference matching your task.
 license: MIT
 user-invocable: false
+allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/*.ts"
 ---

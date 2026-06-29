@@ -1,6 +1,6 @@
 ---
 name: analysis-options
-version: 0.1.0
+version: 0.1.1
 category: development
 description: Opinionated analysis_options.yaml for Flutter — extends
   flutter_lints
@@ -10,6 +10,7 @@ description: Opinionated analysis_options.yaml for Flutter — extends
   `flutter analyze` is the merge gate. Auto-applies when editing analysis_options.yaml.
 license: MIT
 user-invocable: false
+allowed-tools: Read Edit Write Bash
 paths:
   - "**/analysis_options.yaml"
 ---
