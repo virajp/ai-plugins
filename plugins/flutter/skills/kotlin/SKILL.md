@@ -140,5 +140,6 @@ channel:
   never pass a native object across.
 - All channel work runs on the main looper — `MethodChannel` is not thread-safe.
 - Keep parity with the Dart `MethodChannel`: method names and channel string
-  must match exactly on both sides — see the **dart** and **build** skills.
-  `kotlin-lsp` (this plugin's dependency) provides diagnostics for these files.
+  must match exactly on both sides — see the **dart** skill and its **build**
+  reference. `kotlin-lsp` (this plugin's dependency) provides diagnostics for
+  these files.

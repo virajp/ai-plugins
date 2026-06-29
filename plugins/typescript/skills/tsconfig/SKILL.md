@@ -80,8 +80,8 @@ packages by their **build** config:
 }
 ```
 
-- `@/*` → `./src/*` is the in-package alias (see the **build** skill for how it
-  survives compilation).
+- `@/*` → `./src/*` is the in-package alias (see the **build** reference for how
+  it survives compilation).
 - Reference each workspace dependency's `tsconfig.build.json` so `tsc --build`
   orders the graph correctly.
 

@@ -59,7 +59,7 @@ git add pubspec.yaml pubspec.lock   # commit: "deps: add <package>"
 ## Code-generation packages
 
 Packages that drive `build_runner` (`json_serializable`, `mockito`, etc.) go in
-`dev_dependencies`. After adding one, regenerate (see the **build** skill):
+`dev_dependencies`. After adding one, regenerate (see the **build** reference):
 
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs

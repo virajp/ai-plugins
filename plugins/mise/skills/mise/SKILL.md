@@ -1,10 +1,10 @@
 ---
 name: mise
-version: 0.1.0
+version: 0.1.1
 category: development
 description: Opinionated mise configuration — the .config/ three-file split
   (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, the shared
-  [settings] block, runtime-vs-dev-vs-ci tool placement, the env-value split,
+  settings block, runtime-vs-dev-vs-ci tool placement, the env-value split,
   the CI node-gpg workaround, and the mandatory file-based task library
   (init,_scripts/_helpers, code/*, setup/*). Auto-applies when editing any
   mise config or task file.
@@ -45,8 +45,8 @@ top — so the variant only ever holds **deltas**, not a copy of the base.
 
 - **Developers** export `MISE_ENV=dev` in their shell so the dev toolchain and
   local env values load automatically.
-- **CI/CD pipelines and production runtimes** set `MISE_ENV=ci` (in the workflow
-  env or the container) so the CI/prod overrides apply.
+- **CI/CD pipelines** set `MISE_ENV=ci` (in the workflow env) so the CI/prod
+  overrides apply.
 - With `MISE_ENV` unset, only `mise.toml` loads — the minimal, portable base.
 
 A repo with **no CI/CD and no deploy target** needs only `mise.toml`; add the
@@ -61,7 +61,7 @@ variant is loaded.
 activate_aggressive  = true     # let mise shims win on PATH
 env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see CI exception below)
-raw                  = true
+raw                  = true     # streams output
 status.missing_tools = "always"
 
 # Node settings — only when the project uses Node

@@ -1,12 +1,12 @@
 # typescript plugin
 
 The `typescript` plugin packs opinionated Effect-TS standards for pnpm monorepos
-plus the TypeScript/JavaScript language server. Seven skills encode how to name,
+plus the TypeScript/JavaScript language server. Four skills encode how to name,
 type, structure, build, and test code; the language server gives Claude Code
 in-editor diagnostics, hovers, and navigation. Effect is mandatory — the
 standards assume Effect-TS throughout (`Effect.gen`, `Effect.Schema`,
-`Effect.Service`, Effect Config), and the `effect` skill auto-applies to every
-TypeScript file you edit.
+`Effect.Service`, Effect Config), and the `typescript` skill — with its Effect
+reference — auto-applies to every TypeScript file you edit.
 
 ## Install
 
@@ -16,19 +16,23 @@ pnpx @askviraj/ai-plugins --user typescript
 
 ## Skills
 
-Six skills auto-apply by file path — they load whenever you edit a matching
-file, no action needed. One skill (`build`) is user-invocable from the `/` menu.
-None of the path-scoped skills appear in the `/` menu.
+Four skills auto-apply by file path — they load whenever you edit a matching
+file, no action needed. `typescript` is a **router**: a lean `SKILL.md` that
+loads the always-on baseline and points to a library of references read on
+demand, so editing a file never pulls the whole corpus into context.
 
-| Skill          | Standardizes                                                                                                                                                                      | Activation                                                  |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `typescript`   | Stack-neutral coding standards: naming, import ordering, strict type safety, named functions, parameter conventions.                                                              | Auto-applies on `**/*.ts`                                   |
-| `effect`       | Effect-TS patterns: `Effect.gen`, `Effect.Schema`, `Effect.Service`, a single error class, telemetry spans, structured logging, Effect Config, the HTTP boundary.                 | Auto-applies on `**/*.ts`                                   |
-| `package-json` | package.json for pnpm monorepos: pnpm-only, `"latest"` versions, ESM, the exports map, `workspace:*` links, standard build/check/clean/test scripts.                              | Auto-applies on `**/package.json`                           |
-| `pnpm`         | Workspace config: `pnpm-workspace.yaml` globs, catalogs, supply-chain safety (`minimumReleaseAge`, `trustPolicy`), build allowlists, peer-dependency rules, `.npmrc`.             | Auto-applies on `**/pnpm-workspace.yaml` and `**/.npmrc`    |
-| `tsconfig`     | Config layout: a strict shared `tsconfig.base.json`, per-project `tsconfig.json` with the `@/` path alias, a `tsconfig.build.json` emit variant, project references.              | Auto-applies on `**/tsconfig.json` and `**/tsconfig.*.json` |
-| `build`        | How the build stitches together: the `@/` alias and `tsc-alias` rewriting, barrel `index.ts` exports, the clean→check→build:ts→build:alias pipeline, project references, turbo.   | User-invocable from the `/` menu                            |
-| `vitest`       | Vitest + `@effect/vitest` testing: the shared config (`vite-tsconfig-paths`, v8 coverage to 100%), `it.effect` tests, the `_testUtils/` layout, running via package.json scripts. | Auto-applies on `**/vitest.config.ts` and `**/*.test.ts`    |
+| Skill          | Standardizes                                                                                                                                                                                                                                                                                                                       | Activation                                                  |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `typescript`   | The TypeScript entry point. Always-on baseline (naming, import ordering, strict type safety, named functions, parameter conventions) plus routed references: Effect-TS patterns (`Effect.gen`, `Effect.Schema`, `Effect.Service`, telemetry, logging, config, the HTTP boundary), Vitest testing, and the monorepo build pipeline. | Auto-applies on `**/*.ts`                                   |
+| `package-json` | package.json for pnpm monorepos: pnpm-only, `"latest"` versions, ESM, the exports map, `workspace:*` links, standard build/check/clean/test scripts.                                                                                                                                                                               | Auto-applies on `**/package.json`                           |
+| `pnpm`         | Workspace config: `pnpm-workspace.yaml` globs, catalogs, supply-chain safety (`minimumReleaseAge`, `trustPolicy`), build allowlists, peer-dependency rules, `.npmrc`.                                                                                                                                                              | Auto-applies on `**/pnpm-workspace.yaml` and `**/.npmrc`    |
+| `tsconfig`     | Config layout: a strict shared `tsconfig.base.json`, per-project `tsconfig.json` with the `@/` path alias, a `tsconfig.build.json` emit variant, project references.                                                                                                                                                               | Auto-applies on `**/tsconfig.json` and `**/tsconfig.*.json` |
+
+The `typescript` skill's reference library covers the former standalone skills:
+**Effect-TS** patterns, **Vitest** testing, and the **build** pipeline (the `@/`
+alias and `tsc-alias` rewriting, barrels, the clean→check→build:ts→build:alias
+order, project references, turbo). Each loads only when the routed topic is
+relevant.
 
 ## Language server
 

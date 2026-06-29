@@ -1,183 +1,93 @@
 ---
 name: dart
-version: 0.3.0
+version: 0.4.0
 category: development
-description: Opinionated Dart/Flutter coding standards — naming, type safety,
-  formatting, the Equatable entity pattern, the GetX baseline, the My-prefixed
-  widget wrappers, MyApi repositories, and MyException/Logger error handling.
-  The always-on baseline; deeper GetX, HTTP/JSON, and isolate guidance lives in
-  the getx, http-and-json, json-serializable, and concurrency skills.
-  Auto-applies when editing any Dart file.
+description: Flutter & Dart development — the always-on coding baseline plus
+  deep
+  references for state management, architecture, navigation, UI/theming/animation,
+  data & networking, Firebase, media, monetization, native interop, and build
+  tooling. Auto-applies when editing any Dart file. Use when writing or reviewing
+  any Flutter/Dart code; read the reference matching your task.
 license: MIT
 user-invocable: false
 paths:
   - "**/*.dart"
 ---
 
-# Dart & Flutter Coding Standards
+# Flutter & Dart
 
-State lives in GetX (`GetxService`/`GetxController`); UI uses project
-`My`-prefixed wrappers; data flows through static repositories; nothing throws
-raw exceptions.
+The single entry point for Flutter/Dart work. Each topic lives in its own
+reference file — **read the one matching your task**. Start every change from
+the always-on baseline.
 
-## Naming
+## Baseline (read first)
 
-- `PascalCase` for classes, enums, typedefs, type params. Prefix
-  project-specific classes with `My` (`MyUser`, `MyScaffold`).
-- `camelCase` for variables, functions, methods, parameters.
-- `UPPER_SNAKE_CASE` for compile-time constants: `const int MAX_RETRIES = 3`.
-- `snake_case` for file and directory names.
-- Booleans start with `is`, `has`, `can`, or `should`.
-- File suffixes: `*_controller.dart`, `*_service.dart`, `*_repo.dart`,
-  `*_entity.dart`, `*_page.dart`, `*_widget.dart`, `*_enum.dart`.
-- Private members: leading underscore `_`.
+| Topic                                                                         | When to read                                                                                                                                        |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Coding standards](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/standards.md) | The always-on baseline: naming, type safety, formatting, the Equatable entity pattern, My-prefixed wrappers, MyApi repositories, MyException/Logger |
+| [Testing](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/testing.md)            | Writing/running tests, the GetX test harness, mocks, fixtures, coverage                                                                             |
 
-## Imports
+## Architecture & State
 
-Use `import_sorter` with emoji section headers; run it before committing. Always
-package imports (`package:app/...`) — never relative paths. Alphabetise within
-each section.
+| Topic                                                                                          | When to read                                                                  |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [App architecture](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/architecting-apps.md)          | Layered architecture — separating UI, logic, and data                         |
+| [Managing state](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/managing-state.md)               | Choosing and implementing app vs ephemeral state                              |
+| [Navigation & routing](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/navigation-and-routing.md) | Routing, navigation, and deep linking                                         |
+| [GetX](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/getx/index.md)                             | Reactive state, dependency injection/bindings, named routes, UI helpers, i18n |
 
-```dart
-// 🎯 Dart imports:
-import 'dart:async';
+## UI
 
-// 🐦 Flutter imports:
-import 'package:flutter/material.dart';
+| Topic                                                                                | When to read                                                   |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| [Building layouts](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/building-layouts.md) | Building layouts with the constraint system and layout widgets |
+| [Theming](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/theming.md)                   | Material 3 theming, component themes, adaptive design          |
+| [Animation](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/animate/index.md)           | Declarative widget animations with flutter_animate             |
 
-// 📦 Package imports:
-import 'package:get/get.dart';
+## Data & Networking
 
-// 🌎 Project imports:
-import 'package:app/_shared/logger.dart';
-```
+| Topic                                                                                         | When to read                                          |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [HTTP & JSON](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/http-and-json.md)                  | Making HTTP requests and handling JSON                |
+| [JSON serialization](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/json-serializable/index.md) | Code-gen models with json_serializable + build_runner |
+| [Caching & offline](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/caching-data.md)             | Caching and offline-first data strategies             |
+| [Concurrency](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/concurrency.md)                    | Running long tasks in background isolates             |
 
-## Type safety & formatting
+## Media & Web
 
-- Explicitly declare every type — never `var` or implicit types.
-- Non-nullable by default; `?` only when null is a valid state.
-- `final` for runtime values that won't be reassigned; `const` for compile-time.
-- Single quotes always; interpolation over concatenation: `'Hello, $name!'`.
-- Null-aware operators: `user?.name ?? 'Unknown'`.
-- `async`/`await` always — never `.then()`; declare the `Future<T>` return type.
-- Max line length **120**; **2-space** indent; **always trailing commas** in
-  args, constructor params, collection literals, and widget trees.
-- Method chains: one call per line.
-- `final` on all parameters; named parameters when 2+ args, `required` for
-  mandatory ones.
+| Topic                                                                                      | When to read                                        |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| [Image handling](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/image-handling/index.md)     | Picking, cropping, and compressing images and video |
+| [Maps & location](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/maps-and-location/index.md) | Google Maps widget and device geolocation           |
+| [WebView](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/webview/index.md)                   | Embedding and controlling web content               |
+| [WebRTC](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/webrtc/index.md)                     | Real-time audio/video calling with flutter_webrtc   |
 
-```dart
-Future<void> saveUser({
-  required final String id,
-  required final String name,
-  final String? email,
-}) async {}
-```
+## Firebase
 
-- Functions ≤ 20 lines. Member order: static constants → static methods → public
-  fields → private fields → constructors → getters/setters → public methods →
-  private methods → overrides.
+| Topic                                                                                     | When to read                                         |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [App Check](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/firebase-app-check.md)           | Attesting app integrity to protect backend resources |
+| [Analytics](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/firebase-analytics/index.md)     | Tracking events and screen views                     |
+| [Auth](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/firebase-auth/index.md)               | Sign-in flows, auth state, MFA, user management      |
+| [Crashlytics](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/firebase-crashlytics/index.md) | Crash and non-fatal error reporting                  |
+| [Messaging](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/firebase-messaging/index.md)     | Push notifications (FCM)                             |
+| [Storage](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/firebase-storage/index.md)         | Uploading/downloading files in Cloud Storage         |
 
-## Entity pattern
+## Monetization
 
-Immutable `Equatable` with a private const constructor and named factories
-(`empty`, `copyWith`, `fromJson`) + `toJson`:
+| Topic                                                                          | When to read                       |
+| ------------------------------------------------------------------------------ | ---------------------------------- |
+| [RevenueCat](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/revenuecat/index.md) | In-app subscriptions and purchases |
 
-```dart
-class MyEntity extends Equatable {
-  const MyEntity._({required this.id, required this.name, this.email});
+## Native & Build Tooling
 
-  factory MyEntity.empty() => const MyEntity._(id: '', name: '');
+| Topic                                                                              | When to read                                       |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------- |
+| [Native interop](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/native-interop.md)   | FFI, platform channels, platform views, Pigeon     |
+| [Flavors](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/flavors/index.md)           | Build flavors for dev/staging/prod environments    |
+| [Build pipeline](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/build.md)            | Codegen and quality gates (build_runner, analyzer) |
+| [App size](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/app-size.md)               | Measuring and reducing the app bundle size         |
+| [Coverage report](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/coverage-report.md) | Generating an HTML coverage report from lcov       |
 
-  factory MyEntity.copyWith(final MyEntity original, {final String? name}) =>
-      MyEntity._(id: original.id, name: name ?? original.name, email: original.email);
-
-  factory MyEntity.fromJson(final Map<String, dynamic> json) =>
-      MyEntity._(id: json['id'] as String, name: json['name'] as String, email: json['email'] as String?);
-
-  final String id;
-  final String name;
-  final String? email;
-
-  @override
-  List<Object?> get props => [id, name, email];
-
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, if (email != null) 'email': email};
-}
-```
-
-## GetX
-
-State lives in GetX, never Dart singletons. **Services** extend `GetxService`
-(static `get` accessor, `init()` returns `Future<T>`); **controllers** extend
-`GetxController` and drive targeted rebuilds via `update(['id'])`; **pages**
-extend `GetView<Controller>`. Use `GetBuilder` + `update(['id'])` for
-single-page state and `.obs` + `Obx` for cross-widget reactive state. Register
-services in bootstrap (`Get.putAsync(..., permanent: true)`) — `permanent: true`
-is for services only, never controllers. Never call `Get.to()` / `Get.back()` /
-`Get.toNamed()` directly — always go through `MyNavigator`.
-
-For services/controllers/pages in depth, reactive workers (`ever`/`once`/
-`debounce`/`interval`), route Bindings, `SmartManagement`, route parameters,
-context-free overlays, and the DI anti-patterns, see the **getx** skill.
-
-## Widgets
-
-- Always the project `My`-prefixed wrappers, never Flutter defaults:
-  `MyScaffold`, `MyText`, `MyButton`, `MyTextField`, `MyIconButton`.
-- Never hardcode user-facing strings — `MyText(L10n.of(context).welcomeMessage)`
-  (see the **internationalization** skill).
-- Colors/platform via the `My` accessors: `MyColors.get.primary(context)`,
-  `MyPlatform.get.isIOS`.
-- Never store `BuildContext` in fields or globals — pass it as a parameter and
-  use it immediately.
-
-## API & repositories
-
-- All HTTP through `MyApi.to` (never `http.Client` directly) — it injects auth,
-  app-check, and platform headers and returns a `MyApiResponse`
-  (`{body,
-  statusCode, message}`) with the body already JSON-decoded.
-- `MyApi` never throws (transport errors come back as `statusCode` 418) — branch
-  on `statusCode`, don't wrap calls in `try`/`catch`.
-- Repositories are **static methods**: no state, no DI, pure data access. Log
-  failures with `MyException` and return `null` / `false`.
-
-For the full `MyApiResponse` contract, path/query encoding, large-list
-`compute()` offloading, and model `fromJson`/`toJson` codegen, see the
-**http-and-json** and **json-serializable** skills.
-
-## Concurrency
-
-Dart runs single-threaded per isolate; blocking the main isolate janks the UI.
-Keep I/O-bound work on `async`/`await` (no isolate), and offload CPU-bound work
-(decoding a huge JSON blob, image/crypto) to an isolate via
-`Isolate.run(() => work())` / `compute()`. Isolate callbacks must be top-level
-or static functions passing only sendable values.
-
-For one-off vs long-lived isolates, the `Isolate.spawn` `ReceivePort`/`SendPort`
-handshake, and lifecycle cleanup, see the **concurrency** skill.
-
-## Errors & logging
-
-- Never bare `throw Exception(...)` or empty `catch` blocks — wrap in
-  `MyException` with an `ExceptionCodes` code, the `stackTrace`, and a `ctx`
-  map.
-- `ExceptionCodes`: `apiFailure`, `authError`, `networkError`,
-  `validationError`, `unexpectedException`. Set `fatal: true` for unrecoverable
-  state.
-- `Logger.debug/info/warning/error` routes to crash reporting in production.
-  Always include context (user IDs, operation, params); never log tokens or PII.
-- Catch at the right level: log with context, surface to the user via
-  `MySnackbar.error(L10n.of(context).…)`, and `rethrow` only if the caller
-  handles it.
-
-## Testing
-
-- Unit-test every new service and controller; coverage is enforced.
-- Import the shared GetX helpers (`test/helpers/`): `registerCommonServices()`,
-  `putMockService<T>(mock)`, `pumpWithGetX(tester, child: …)`, and `resetGetX`
-  in `tearDown`.
-- Mocks are mockito `@GenerateNiceMocks` — add a `MockSpec<MyNewService>()` then
-  regenerate via `build_runner` (see the **build** skill).
-- Repositories are static — test them by mocking the network layer (`MyApi`).
+For the iOS-native (Swift/SwiftUI/Xcode) side, see the **swift** skill; for the
+Android-native side, see **kotlin**.

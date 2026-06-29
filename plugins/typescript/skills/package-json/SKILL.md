@@ -77,7 +77,7 @@ and `pnpm-workspace.yaml`'s `requiredScripts` line up:
 ```
 
 - `build` always runs `clean → check → build:ts → build:alias` in order — type
-  check before emit, rewrite `@/` aliases after (see the **build** skill).
+  check before emit, rewrite `@/` aliases after (see the **build** reference).
 - The root `package.json` orchestrates workspaces via `turbo run build` and
   `pnpm run --filter '<pkg>' <script>`; keep cross-workspace fan-out there.
 - Dev runs use `tsx`; never commit a script that runs `vitest run` directly when
@@ -90,7 +90,7 @@ alias itself is declared in `tsconfig.json` — see the **tsconfig** skill):
 {
   "devDependencies": {
     "tsc-alias": "latest", // build:alias — rewrites @/ → relative paths in dist
-    "vite-tsconfig-paths": "latest", // resolves @/ in Vitest (see the vitest skill)
+    "vite-tsconfig-paths": "latest", // resolves @/ in Vitest (see the vitest reference)
   },
 }
 ```

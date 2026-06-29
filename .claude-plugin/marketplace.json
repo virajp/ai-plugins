@@ -41,7 +41,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated Flutter plugin — Dart/GetX, pubspec, build, testing, analysis-options, i18n, Swift/Kotlin native skills, a Firebase suite (auth, analytics, app-check, crashlytics, messaging, storage), and feature skills (architecture, state, navigation, theming, layouts, animations, maps, webview, webrtc, revenuecat, flavors, image handling, http/json, concurrency, caching, app-size, coverage), plus SwiftUI/Xcode and bundled Dart, Kotlin & Swift (SourceKit) language servers. Self-contained — no cross-marketplace dependencies.",
+      "description": "Opinionated Flutter plugin — a `dart` router skill (lean SKILL.md routing to on-demand references: GetX, a Firebase suite of auth/analytics/app-check/crashlytics/messaging/storage, and feature areas of architecture, state, navigation, theming, layouts, animations, maps, webview, webrtc, revenuecat, image handling, http/json, concurrency, caching, testing, flavors, app-size, coverage, build) and a `swift` router skill (Swift, SwiftUI, Xcode), plus `kotlin`, `pubspec`, `analysis-options`, and `internationalization`, and bundled Dart, Kotlin & Swift (SourceKit) language servers. Self-contained — no cross-marketplace dependencies.",
       "name": "flutter",
       "source": "./plugins/flutter",
       "strict": true,
@@ -61,7 +61,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.3.0"
+      "version": "0.4.0"
     },
     {
       "author": {
@@ -155,7 +155,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated TypeScript plugin where Effect is mandatory — coding-standards & Effect-TS skills (typescript, effect, package-json, pnpm, tsconfig, build, vitest) plus the TypeScript/JavaScript language server.",
+      "description": "Opinionated TypeScript plugin where Effect is mandatory — a `typescript` router skill (lean SKILL.md routing to on-demand references: Effect-TS patterns, Vitest testing, the monorepo build pipeline) plus `package-json`, `pnpm`, and `tsconfig`, and the TypeScript/JavaScript language server.",
       "name": "typescript",
       "source": "./plugins/typescript",
       "strict": true,
@@ -173,7 +173,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.3.0"
+      "version": "0.4.0"
     }
   ]
 }
