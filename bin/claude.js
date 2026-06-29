@@ -102,6 +102,7 @@ const PLUGINS = [
   "context7",
   "mempalace",
   "mise",
+  "github-actions",
 ];
 
 // Plugins that install at project scope by default; everything else is
@@ -148,6 +149,7 @@ const PLUGIN_EXTRA_DEPS = {
   flutter: ["mise", "kotlin-lsp", "sourcekit-lsp"],
   mempalace: ["uv"],
   mise: ["mise"],
+  "github-actions": ["mise"],
 };
 
 // Map of plugin name → latest version from the remote marketplace manifest

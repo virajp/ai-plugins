@@ -38,15 +38,16 @@ design (a plugin may hold skills versioned on their own cadence).
 
 ## Plugins
 
-| Plugin       | Source                 | What it provides                                                                                                                                                                                                                                                                      |
-| ------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`        | `./plugins/vwf`        | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                                                                                     |
-| `markdown`   | `./plugins/markdown`   | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md`                                                                                                                                                                                                                      |
-| `typescript` | `./plugins/typescript` | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/vitest/build references) plus `package-json`, `pnpm`, `tsconfig` + the TypeScript/JavaScript language server                                                                             |
-| `context7`   | `./plugins/context7`   | Context7 MCP docs server                                                                                                                                                                                                                                                              |
-| `flutter`    | `./plugins/flutter`    | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps) |
-| `mempalace`  | external (url)         | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                             |
-| `mise`       | `./plugins/mise`       | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                                                                                        |
+| Plugin           | Source                     | What it provides                                                                                                                                                                                                                                                                      |
+| ---------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`            | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                                                                                     |
+| `markdown`       | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md`                                                                                                                                                                                                                      |
+| `typescript`     | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/vitest/build references) plus `package-json`, `pnpm`, `tsconfig` + the TypeScript/JavaScript language server                                                                             |
+| `context7`       | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                              |
+| `flutter`        | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps) |
+| `mempalace`      | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                             |
+| `mise`           | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                                                                                        |
+| `github-actions` | `./plugins/github-actions` | A `/github-actions:workflow` command that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy)                                                                                  |
 
 ## Plugin Structure
 
@@ -250,12 +251,12 @@ Before any install, the CLI **checks required external tools** for the resolved
 plan: `CORE_DEPS` (just `claude` — the install mechanism) for any plugin
 install, plus each selected plugin's `PLUGIN_EXTRA_DEPS` runtime tools
 (vwf→rtk+graphify+ mise+pnpm+uv, context7→pnpm, typescript/mise→mise,
-flutter→mise+kotlin-lsp+ sourcekit-lsp, mempalace→uv) and `node` for the
-statusline. If any are missing it prints the install command for each
-(`DEP_HINTS`) and exits non-zero — it never auto-installs a dependency. Keep
-`PLUGINS`, `PROJECT_SCOPED`, `DEP_HINTS`, `CORE_DEPS`, and `PLUGIN_EXTRA_DEPS`
-in sync with the marketplace and the plugins' actual runtime needs. Users run it
-via `npx @askviraj/ai-plugins …`.
+flutter→mise+kotlin-lsp+ sourcekit-lsp, mempalace→uv, github-actions→mise) and
+`node` for the statusline. If any are missing it prints the install command for
+each (`DEP_HINTS`) and exits non-zero — it never auto-installs a dependency.
+Keep `PLUGINS`, `PROJECT_SCOPED`, `DEP_HINTS`, `CORE_DEPS`, and
+`PLUGIN_EXTRA_DEPS` in sync with the marketplace and the plugins' actual runtime
+needs. Users run it via `npx @askviraj/ai-plugins …`.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):
@@ -385,8 +386,8 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
-`context7`, `mise`. (The statusline is not a plugin — install it via
-`npx @askviraj/ai-plugins …`; see The statusline CLI.)
+`context7`, `mise`, `github-actions`. (The statusline is not a plugin — install
+it via `npx @askviraj/ai-plugins …`; see The statusline CLI.)
 
 Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
 `mise`) automatically from the same `virajp-plugins` marketplace — no other

@@ -435,14 +435,15 @@ The marketplace ships additional plugins — opinionated coding-standard skills
 and language servers. Most auto-apply by file path; install only the ones for
 your stack. Each has a dedicated guide:
 
-| Plugin                                 | What it provides                                                                                          | Install             |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------- |
-| **[markdown](./docs/markdown.md)**     | Always-on Markdown/documentation standards (auto-applies to `**/*.md`)                                    | `--user markdown`   |
-| **[typescript](./docs/typescript.md)** | Effect-TS coding standards (7 skills) + the TypeScript/JavaScript language server                         | `--user typescript` |
-| **[flutter](./docs/flutter.md)**       | Flutter/Dart (GetX) standards (8 skills) + bundled Dart/Kotlin/Swift language servers; **project-scoped** | `--project flutter` |
-| **[mise](./docs/mise.md)**             | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command              | `--user mise`       |
-| **[context7](./docs/context7.md)**     | The Context7 MCP server — up-to-date library docs on demand                                               | `--user context7`   |
-| **[mempalace](./docs/mempalace.md)**   | AI memory system (external; also a `vwf` dependency)                                                      | `--user mempalace`  |
+| Plugin                                         | What it provides                                                                                                                                                          | Install                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **[markdown](./docs/markdown.md)**             | Always-on Markdown/documentation standards (auto-applies to `**/*.md`)                                                                                                    | `--user markdown`       |
+| **[typescript](./docs/typescript.md)**         | Effect-TS coding standards — a `typescript` router skill (+ effect/vitest/build references) plus package-json/pnpm/tsconfig + the TypeScript/JavaScript language server   | `--user typescript`     |
+| **[flutter](./docs/flutter.md)**               | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped** | `--project flutter`     |
+| **[mise](./docs/mise.md)**                     | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command                                                                              | `--user mise`           |
+| **[github-actions](./docs/github-actions.md)** | A `/github-actions:workflow` command — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                          | `--user github-actions` |
+| **[context7](./docs/context7.md)**             | The Context7 MCP server — up-to-date library docs on demand                                                                                                               | `--user context7`       |
+| **[mempalace](./docs/mempalace.md)**           | AI memory system (external; also a `vwf` dependency)                                                                                                                      | `--user mempalace`      |
 
 ```sh
 pnpx @askviraj/ai-plugins --user typescript --user markdown
