@@ -57,7 +57,7 @@ stop — don't guess the prior state.
 ### 3. Rebuild context
 
 Read the handoff, then **read the files and docs it points to** (relevant files,
-`docs/specs/…`, referenced mempalace rooms) so the work is grounded in the
+`docs/blueprint/…`, referenced mempalace rooms) so the work is grounded in the
 current code, not just the handoff's snapshot. Summarize back to the user in a
 few lines: the goal, current state, and the open next steps.
 
@@ -67,7 +67,7 @@ If the handoff has a **Next prompt** section, show it and **ask the user whether
 to run it now**:
 
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
-  command — `spec` / `plan` / `execute` — when it names one).
+  command — `blueprint` / `plan` / `execute` — when it names one).
 - **No** → stop after the summary; the user drives from here.
 
 If there is no next prompt, end with the summary and the open items, and wait

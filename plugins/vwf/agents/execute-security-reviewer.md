@@ -39,12 +39,13 @@ with `mempalace_add_drawer` (that wing, room `problems`), tagged
 `<slice>/security/<round>`. This rich detail is what the fix round recalls; your
 inline reply stays terse. Skip silently if mempalace is unavailable.
 
-**Spec/plan gaps are not findings.** If a security issue traces to the *spec or
-plan itself* — an authz/validation/secret-handling requirement the spec never
-stated for this surface — that is a **gap**, not just a code finding. File it
-separately to room `gaps`, tagged `<slice>/gap/<round>` (what the spec/plan
-should have required and where), and report it on its own contract line. Still
-rate and report any concrete exploitable code issue under FINDINGS as usual.
+**Blueprint/plan gaps are not findings.** If a security issue traces to the
+*blueprint or plan itself* — an authz/validation/secret-handling requirement the
+blueprint never stated for this surface — that is a **gap**, not just a code
+finding. File it separately to room `gaps`, tagged `<slice>/gap/<round>` (what
+the blueprint/plan should have required and where), and report it on its own
+contract line. Still rate and report any concrete exploitable code issue under
+FINDINGS as usual.
 
 ## Return contract
 
@@ -57,7 +58,7 @@ findings. Output **only** the block below:
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [critical/high/medium/low] file:line — surface · exploitability · impact   # (or "none")
-SPEC/PLAN GAPS: none   # security requirements the spec/plan never stated: one terse line each, or "none"
+SPEC/PLAN GAPS: none   # security requirements the blueprint/plan never stated: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
 RECALL: <slice>/security/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
 GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)

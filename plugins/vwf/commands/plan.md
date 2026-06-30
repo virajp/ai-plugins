@@ -1,21 +1,22 @@
 ---
-description: Produce a reviewable cycle plan as a diff for one slice of the spec
-  (an entity or a section). Reads desired (spec) vs actual (code), writes only
-  the delta to docs/plans/<date>-<time>-<slice>.md. Requires a spec to exist.
+description: Produce a reviewable cycle plan as a diff for one slice of the
+  blueprint
+  (an entity or a section). Reads desired (blueprint) vs actual (code), writes only
+  the delta to docs/plans/<date>-<time>-<slice>.md. Requires a blueprint to exist.
 argument-hint: "[entity | entity/section]"
 model: opus
 effort: high
 ---
 
-# plan — Cycle Plan (a Diff, not a re-Spec)
+# plan — Cycle Plan (a Diff, not a re-Blueprint)
 
-Produce a reviewable cycle plan for a chosen slice of the spec. A plan is a
-**diff**: it reads the spec (desired state) and the actual code (actual state)
-for the slice and writes only the delta — what exists, what is missing, what
-changes, and in what order — as a reviewable artifact ordered for TDD.
+Produce a reviewable cycle plan for a chosen slice of the blueprint. A plan is a
+**diff**: it reads the blueprint (desired state) and the actual code (actual
+state) for the slice and writes only the delta — what exists, what is missing,
+what changes, and in what order — as a reviewable artifact ordered for TDD.
 
 You own the user conversation and the approval gate. Do **not** restate the
-spec; reference it.
+blueprint; reference it.
 
 Adopt the **Senior Developer & Architect** persona: read code before forming
 opinions; order steps test-first; surface drift rather than silently resolving
@@ -24,13 +25,13 @@ it. When a planning decision is genuinely open, elicit it following the
 
 ## Doc Paths
 
-| Doc           | Path                                               |
-| ------------- | -------------------------------------------------- |
-| Registry      | `docs/specs/architecture.md`                       |
-| Conventions   | `docs/specs/conventions.md`                        |
-| Spec (slice)  | `docs/specs/<entity>.md` or `docs/specs/<entity>/` |
-| Plan          | `docs/plans/<date>-<time>-<slice>.md`              |
-| Plan template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan.md`   |
+| Doc               | Path                                                       |
+| ----------------- | ---------------------------------------------------------- |
+| Registry          | `docs/blueprint/architecture.md`                           |
+| Conventions       | `docs/blueprint/conventions.md`                            |
+| Blueprint (slice) | `docs/blueprint/<entity>.md` or `docs/blueprint/<entity>/` |
+| Plan              | `docs/plans/<date>-<time>-<slice>.md`                      |
+| Plan template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan.md`           |
 
 ---
 
@@ -39,7 +40,8 @@ it. When a planning decision is genuinely open, elicit it following the
 ### 1. Resolve the slice
 
 The slice is an entity (or a section of one) from `$ARGUMENTS`. **Halt if no
-spec exists** for it: "No spec found for `<slice>`. Run `/vwf:spec` first."
+blueprint exists** for it: "No blueprint found for `<slice>`. Run
+`/vwf:blueprint` first."
 
 ### 2. Setup (git-workflow)
 
@@ -49,47 +51,47 @@ the worktree **local** — never push remotely here.
 
 ### 3. Read desired vs actual
 
-- **Desired:** the spec part for the slice, plus `conventions.md` and the
+- **Desired:** the blueprint part for the slice, plus `conventions.md` and the
   registry.
 - **Actual:** the real code in the submodule(s) the registry maps this slice to
-  (resolve section→project by `type`, as in `spec`).
+  (resolve section→project by `type`, as in `blueprint`).
 
 ### 4. Compute the delta only
 
 Determine what already exists, what is missing, what must change, and the order
-to do it in. Reference spec sections; do not restate them.
+to do it in. Reference blueprint sections; do not restate them.
 
 Apply the **minimalism decision ladder** in
 `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` as you size each step: include a
-step only if a spec requirement needs it (rung 1), and prefer reusing existing
-code, the stdlib, a native platform feature, or an installed dependency over new
-code or a new dependency (rungs 2–5). The plan carries no speculative steps and
-no unrequested abstraction or configurability — never at the cost of a safety
-guardrail.
+step only if a blueprint requirement needs it (rung 1), and prefer reusing
+existing code, the stdlib, a native platform feature, or an installed dependency
+over new code or a new dependency (rungs 2–5). The plan carries no speculative
+steps and no unrequested abstraction or configurability — never at the cost of a
+safety guardrail.
 
 ### 5. Flag drift
 
-If the spec implies a surface the registry/code lacks (e.g. a background job
-with no worker project), **surface it** under Risks / drift rather than silently
-resolving it.
+If the blueprint implies a surface the registry/code lacks (e.g. a background
+job with no worker project), **surface it** under Risks / drift rather than
+silently resolving it.
 
 **Consume execution-surfaced gaps.** If a prior plan for this slice exists, read
 its "Gaps surfaced during execution" section, and per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` recall room `gaps` for the slice. When
 this plan is a reconcile loop-back from `/vwf:execute`, closing those plan holes
 is the point of the pass — fold each into the ordered steps (against the
-now-updated spec) rather than re-deriving blind. Skip the recall silently if
-mempalace is unavailable.
+now-updated blueprint) rather than re-deriving blind. Skip the recall silently
+if mempalace is unavailable.
 
 ### 6. Elicit open decisions
 
-The plan is a diff — most of it is mechanical. But where the spec
+The plan is a diff — most of it is mechanical. But where the blueprint
 underdetermines **how** to land a change (step ordering with competing valid
 sequences, how to resolve a drift the §5 step surfaced, an ambiguous delta with
 more than one reasonable implementation path), elicit it per the protocol — one
 question at a time, MCQ + "Other", proposing 2-3 approaches with a
 recommendation. Apply the decisions-vs-mechanics filter: if exactly one
-idiomatic path exists given the spec, conventions, and code, don't ask —
+idiomatic path exists given the blueprint, conventions, and code, don't ask —
 proceed. Never guess; record a genuinely open item under Risks / drift.
 
 ### 7. Write the plan
@@ -103,5 +105,6 @@ Present the plan and wait for explicit approval before `/vwf:execute`.
 
 ### 9. Commit (git-workflow)
 
-After approval, commit the plan via `/vwf:git-workflow`. Use a `spec(plan):` or
-`docs(plan):` message. Keep the worktree **local**. Do not run raw git here.
+After approval, commit the plan via `/vwf:git-workflow`. Use a
+`blueprint(plan):` or `docs(plan):` message. Keep the worktree **local**. Do not
+run raw git here.

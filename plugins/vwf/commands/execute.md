@@ -1,7 +1,7 @@
 ---
 description: Execute an approved cycle plan under TDD, then code review and
   security review via fresh subagents. Reconciles the architecture registry and
-  flags spec drift. Requires an approved plan in docs/plans/.
+  flags blueprint drift. Requires an approved plan in docs/plans/.
 argument-hint: "[full | code | review | security]"
 model: opus
 effort: high
@@ -26,12 +26,12 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
 
 ## Doc Paths
 
-| Doc         | Path                         |
-| ----------- | ---------------------------- |
-| Plan        | `docs/plans/<plan>.md`       |
-| Registry    | `docs/specs/architecture.md` |
-| Spec        | `docs/specs/<entity>.md`     |
-| Conventions | `docs/specs/conventions.md`  |
+| Doc         | Path                             |
+| ----------- | -------------------------------- |
+| Plan        | `docs/plans/<plan>.md`           |
+| Registry    | `docs/blueprint/architecture.md` |
+| Blueprint   | `docs/blueprint/<entity>.md`     |
+| Conventions | `docs/blueprint/conventions.md`  |
 
 ## Pipeline
 
@@ -58,21 +58,22 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
   chain stages automatically.
 - **Loop on findings** — if review or security finds issues, loop back to `code`
   to fix (then re-commit via `git-workflow`) before advancing.
-- **Capture spec/plan gaps as they surface** — a *gap* (a hole in the spec or
-  plan, distinct from a code finding) reported by any stage is never silently
-  worked around. The subagent files the full gap to mempalace room `gaps` and
-  returns a terse pointer; you **mirror that terse line into the plan doc's
-  "Gaps surfaced during execution" section** (the durable, mempalace-independent
-  copy) the moment it surfaces. Gaps do **not** block the pipeline — they are
-  reconciled at cycle end.
-- **Never silently edit the spec** — flag drift and offer; do not rewrite it.
+- **Capture blueprint/plan gaps as they surface** — a *gap* (a hole in the
+  blueprint or plan, distinct from a code finding) reported by any stage is
+  never silently worked around. The subagent files the full gap to mempalace
+  room `gaps` and returns a terse pointer; you **mirror that terse line into the
+  plan doc's "Gaps surfaced during execution" section** (the durable,
+  mempalace-independent copy) the moment it surfaces. Gaps do **not** block the
+  pipeline — they are reconciled at cycle end.
+- **Never silently edit the blueprint** — flag drift and offer; do not rewrite
+  it.
 - **Memory via mempalace** — follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`:
   resolve the project **wing** and recall prior decisions/findings/gaps before
   the first stage; the coder and review/security subagents file their own
-  findings and **spec/plan gaps** to mempalace and the coder recalls findings on
-  loop-backs (rich detail bypasses your context); persist the cycle's durable
-  decisions and gap resolutions at reconcile. Pass the wing to every subagent
-  you dispatch.
+  findings and **blueprint/plan gaps** to mempalace and the coder recalls
+  findings on loop-backs (rich detail bypasses your context); persist the
+  cycle's durable decisions and gap resolutions at reconcile. Pass the wing to
+  every subagent you dispatch.
 
 ## Mode
 
@@ -126,7 +127,7 @@ coverage report and wait for explicit approval before `review`.
 ## Stage: review (`execute-code-reviewer`, opus)
 
 Dispatch `execute-code-reviewer` (pass the project wing). It reviews the code
-adversarially against the **plan, the spec, conventions, and the registry
+adversarially against the **plan, the blueprint, conventions, and the registry
 stack**, using `/code-review` as its engine. It files its full findings to
 mempalace (room `problems`) and returns the terse findings block plus a recall
 tag.
@@ -156,19 +157,20 @@ re-review. Wait for approval before reconciliation.
 
 1. **Reconcile architecture.** If the implementation introduced a topology
    change (new project, dependency, or capability), update the **registry
-   block** in `docs/specs/architecture.md` to match what was actually built —
-   via `/vwf:architecture` for non-trivial changes. Edit the registry precisely;
-   do not rewrite prose unless topology genuinely changed.
-2. **Reconcile spec/plan gaps.** Collect the cycle's gaps: read the plan doc's
-   "Gaps surfaced during execution" section (the durable copy) and recall room
-   `gaps` for the full detail. Present the consolidated list to the user and
-   offer to close them — **do not silently rewrite either doc**:
-   - **Spec holes** (a behaviour/requirement the spec never pinned down) → offer
-     to update the spec via `/vwf:spec`.
+   block** in `docs/blueprint/architecture.md` to match what was actually built
+   — via `/vwf:architecture` for non-trivial changes. Edit the registry
+   precisely; do not rewrite prose unless topology genuinely changed.
+2. **Reconcile blueprint/plan gaps.** Collect the cycle's gaps: read the plan
+   doc's "Gaps surfaced during execution" section (the durable copy) and recall
+   room `gaps` for the full detail. Present the consolidated list to the user
+   and offer to close them — **do not silently rewrite either doc**:
+   - **Blueprint holes** (a behaviour/requirement the blueprint never pinned
+     down) → offer to update the blueprint via `/vwf:blueprint`.
    - **Plan holes** (a step the plan under-/mis-specified) → offer to re-derive
-     the slice via `/vwf:plan` against the now-updated spec. Drive both behind
-     the user's approval. When a gap is reconciled, note its resolution back
-     into the `gaps` room (step 3) so a later cycle's recall sees it as closed.
+     the slice via `/vwf:plan` against the now-updated blueprint. Drive both
+     behind the user's approval. When a gap is reconciled, note its resolution
+     back into the `gaps` room (step 3) so a later cycle's recall sees it as
+     closed.
 3. **Persist to memory.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store
    the cycle's durable outcomes to mempalace — decisions and their rationale,
    findings and how they were resolved, and each gap's resolution (rooms

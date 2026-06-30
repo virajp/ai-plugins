@@ -52,8 +52,8 @@ Gather the facts before writing:
   Record each project's path, name, language/stack, and purpose.
 - **Architecture.** How the projects relate — workspace/import dependencies
   between packages, service boundaries (api / worker / web / db), entry points,
-  and any existing `docs/specs/architecture.md` (e.g. a vwf Project Registry) —
-  to draw the diagram and capture the key decisions.
+  and any existing `docs/blueprint/architecture.md` (e.g. a vwf Project
+  Registry) — to draw the diagram and capture the key decisions.
 - **Infrastructure (cloud tools).** Scan for: IaC (`*.tf`, Pulumi, CDK,
   CloudFormation), containers/orchestration (`Dockerfile`, `docker-compose*`,
   k8s manifests, Helm), CI/CD (`.github/workflows`, `.gitlab-ci.yml`), deploy

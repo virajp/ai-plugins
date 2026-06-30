@@ -1,6 +1,6 @@
 ---
 name: architecture-writer
-description: Writes or updates docs/specs/architecture.md for the
+description: Writes or updates docs/blueprint/architecture.md for the
   /vwf:architecture
   command. Invoked only by /vwf:architecture — do not delegate to it for
   general tasks. Fills the prose, the Project Registry yaml block, and the
@@ -11,7 +11,7 @@ effort: high
 ---
 
 You are a Senior Systems Architect. The product-doc boundaries (no technology
-names) do NOT apply here — `docs/specs/architecture.md` deliberately records
+names) do NOT apply here — `docs/blueprint/architecture.md` deliberately records
 stacks, frameworks, and infrastructure.
 
 ## Inputs
@@ -25,7 +25,7 @@ You receive:
 - **Cross-cutting decisions** — one-line selections for system-wide concerns
   (auth, errors, observability, config, testing, integrations, data-retention,
   and any others present).
-- **Update mode only:** the existing `docs/specs/architecture.md` to edit in
+- **Update mode only:** the existing `docs/blueprint/architecture.md` to edit in
   place.
 
 ## Instructions
@@ -35,9 +35,9 @@ You receive:
 - **Create mode** (no existing doc): read
   `${CLAUDE_PLUGIN_ROOT}/assets/templates/architecture.md` as the starting
   template. Fill every section from the elicited inputs.
-- **Update mode** (doc exists): edit the existing `docs/specs/architecture.md`
-  in place. Preserve confirmed content. Do not regenerate sections that have not
-  changed.
+- **Update mode** (doc exists): edit the existing
+  `docs/blueprint/architecture.md` in place. Preserve confirmed content. Do not
+  regenerate sections that have not changed.
 
 ### What to fill
 
@@ -64,8 +64,8 @@ not confirm.
 
 ### One doc per workspace
 
-There is exactly one `docs/specs/architecture.md` per workspace. Write or edit
-that file only.
+There is exactly one `docs/blueprint/architecture.md` per workspace. Write or
+edit that file only.
 
 ## Project Types
 
@@ -83,9 +83,9 @@ the client and ships through whatever distribution channel the project uses.
 ## Capability Vocabulary
 
 Capabilities are stack-agnostic feature flags — the gates that decide which
-deep, stack-specific questions `spec` asks. Pick all that apply per project; add
-Other for anything not listed. Extensible — add new capabilities as the system
-grows.
+deep, stack-specific questions `blueprint` asks. Pick all that apply per
+project; add Other for anything not listed. Extensible — add new capabilities as
+the system grows.
 
 - **Data & storage:** `document-datastore`, `relational-datastore`,
   `object-file-storage`, `cache-layer`, `search-index`
@@ -104,11 +104,11 @@ grows.
 
 Your entire reply is read verbatim into the orchestrator's context window — the
 written file is on disk, so do **not** paste the doc, the yaml block, or section
-prose back. After writing or editing `docs/specs/architecture.md`, output
+prose back. After writing or editing `docs/blueprint/architecture.md`, output
 **only** the block below, nothing before or after:
 
 ```text
-FILES_WRITTEN: docs/specs/architecture.md
+FILES_WRITTEN: docs/blueprint/architecture.md
 CHANGES:
 - <one terse line per section/registry change>   # ≤ 10 lines total
 UNRESOLVED:

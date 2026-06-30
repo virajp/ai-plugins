@@ -1,14 +1,17 @@
 # Entity: <Name>
 
 <!-- One file per entity. Stack-agnostic: section headings below map to projects
-     via the Project Registry in docs/specs/architecture.md (by project `type`),
+     via the Project Registry in docs/blueprint/architecture.md (by project `type`),
      never by literal technology. Omit any engineering section whose project type
      is absent from the registry.
 
      Decisions vs mechanics: if a choice has more than one reasonable answer, it
-     belongs here (in the spec). If it has exactly one idiomatic answer given
+     belongs here (in the blueprint). If it has exactly one idiomatic answer given
      architecture.md + conventions.md, leave it to `execute` at codegen time.
-     Spend the precision budget on Data Model and API Surface. -->
+     Spend the precision budget on Data Model and API Surface.
+
+     See the blueprint-authoring skill for the contract-vs-realization line and
+     the per-surface completeness bars. -->
 
 ## Purpose
 
@@ -43,6 +46,22 @@ One paragraph. What it is and why it exists. No implementation detail.
 <!-- Enumerate every enum member; state optionality/nullability explicitly;
      note id/format conventions so the schema is fully determined. -->
 
+## Relationships
+
+| Related entity | Cardinality | Ownership | On delete | Required |
+| -------------- | ----------- | --------- | --------- | -------- |
+
+<!-- Ownership: composition (child can't exist without the parent) vs reference.
+     On delete: cascade / restrict / nullify. Multi-entity flows belong in
+     docs/blueprint/integration.md, not here. -->
+
+## Concurrency & Consistency
+
+- Concurrent-write resolution (optimistic version / last-write-wins / merge /
+  conflict error):
+- Uniqueness guarantees under races:
+- Idempotency of each mutating action:
+
 ## API Surface → <service project(s), from registry>
 
 | Method | Path | Auth (role) | Request | Response | Errors | Idempotent |
@@ -60,10 +79,16 @@ One paragraph. What it is and why it exists. No implementation detail.
 | Screen | Route | Reads (API) | States (loading/error/empty) | Actions | Form validation |
 | ------ | ----- | ----------- | ---------------------------- | ------- | --------------- |
 
+<!-- Visual language (tokens, type, spacing, motion, component behavior) comes
+     from docs/blueprint/design-system.md — reference it; record only deviations.
+     Per-screen interaction/state/form decisions: blueprint-authoring skill
+     (ui-ux-contract). -->
+
 ## References
 
 - conventions.md#auth, conventions.md#errors, conventions.md#ids (only the
   cross-cutting sections this entity relies on)
+- design-system.md — for any entity with Screens (tokens, type, components)
 
 ## Open Questions
 

@@ -17,8 +17,8 @@ not a narration of the conversation.>
 ## Key context & decisions
 
 <Constraints, decisions made and the *why*, and gotchas discovered this session.
-One fact per bullet. Reference `docs/specs/…` or mempalace `decisions` where the
-detail already lives, rather than restating it.>
+One fact per bullet. Reference `docs/blueprint/…` or mempalace `decisions` where
+the detail already lives, rather than restating it.>
 
 ## Relevant files
 

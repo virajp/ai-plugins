@@ -39,14 +39,14 @@ code, that code stays.
 
 ## By role
 
-- **Authoring (spec)** — apply rung 1 to *requirements*: specify only fields,
-  endpoints, states, and features a stated product goal needs. Do not invent
-  unstated requirements or speculative configurability.
+- **Authoring (blueprint)** — apply rung 1 to *requirements*: specify only
+  fields, endpoints, states, and features a stated product goal needs. Do not
+  invent unstated requirements or speculative configurability.
 - **Building (plan, coder)** — run the full ladder before writing each unit of
   work. The plan prefers reuse/stdlib/native/existing-deps over new code and
   carries no speculative steps; the coder writes the minimum that satisfies the
   failing test, nothing the plan does not call for.
-- **Reviewing (spec-reviewer, code-reviewer)** — flag the inverse: anything
+- **Reviewing (blueprint-reviewer, code-reviewer)** — flag the inverse: anything
   present that no requirement, plan step, or rung justifies (speculative
   features, premature abstraction, a rewrite of something reusable, a needless
   dependency), while never penalizing code a safety guardrail requires.

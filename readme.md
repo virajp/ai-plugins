@@ -1,12 +1,12 @@
-# vwf — Spec → Plan → Execute for Claude Code
+# vwf — Blueprint → Plan → Execute for Claude Code
 
 `vwf` is the flagship plugin of the `virajp-plugins` marketplace — an
 opinionated workflow that turns a vague feature request into shipped, reviewed
 code through three disciplined phases:
 
-1. **Spec** — keep an always-current blueprint of the *whole product*.
-2. **Plan** — diff the spec against the real code for one slice, and write the
-   delta to apply.
+1. **Blueprint** — keep an always-current blueprint of the *whole product*.
+2. **Plan** — diff the blueprint against the real code for one slice, and write
+   the delta to apply.
 3. **Execute** — implement the plan under strict TDD, then run code review and
    security review behind approval gates.
 
@@ -26,8 +26,8 @@ adopting it.
 **Model & cost**
 
 - **Built for Opus with the 1M context window.** Every command runs on `opus`,
-  and the orchestrator holds a lot at once — the spec, the plan, the registry,
-  and each subagent's output. Run Claude Code on Opus with the
+  and the orchestrator holds a lot at once — the blueprint, the plan, the
+  registry, and each subagent's output. Run Claude Code on Opus with the
   **1-million-token** context (`claude-opus-4-8[1m]`); a smaller model or the
   standard window will degrade or overflow on a real cycle.
 - **High token cost.** opus everywhere, and each `execute` cycle spawns several
@@ -103,24 +103,26 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
 The three phases map to three questions:
 
-- **Spec** answers *what should the whole product be?* — permanent,
+- **Blueprint** answers *what should the whole product be?* — permanent,
   product-wide, organized by entity.
 - **Plan** answers *what changes for this one slice, and in what order?* — a
-  diff, not a re-spec, scoped to a single entity or section.
+  diff, not a re-blueprint, scoped to a single entity or section.
 - **Execute** answers *is it built, correct, and safe?* — TDD, then review.
 
 ```mermaid
 flowchart TD
-    A["1 · /vwf:architecture"] --> B["2 · /vwf:spec"]
-    B --> C["3 · /vwf:plan"]
-    C --> D["4 · /vwf:execute<br/>(gated)"]
-    C e1@-. "autonomous alternative" .-> F["4 · /vwf:autopilot<br/>(one worktree)"]
-    D --> E["5 · /vwf:archive"]
+    Z["0 · /vwf:init<br/>(onboard / migrate)"] --> A["1 · /vwf:architecture"]
+    A --> DS["2 · /vwf:design-system<br/>(if UI)"]
+    DS --> B["3 · /vwf:blueprint"]
+    B --> C["4 · /vwf:plan"]
+    C --> D["5 · /vwf:execute<br/>(gated)"]
+    C e1@-. "autonomous alternative" .-> F["5 · /vwf:autopilot<br/>(one worktree)"]
+    D --> E["6 · /vwf:archive"]
     F e2@-. "you review & land" .-> E
-    D e3@-. "spec/plan gaps" .-> B
-    D e4@-. "spec/plan gaps" .-> C
-    F e5@-. "spec/plan gaps" .-> B
-    F e6@-. "spec/plan gaps" .-> C
+    D e3@-. "blueprint/plan gaps" .-> B
+    D e4@-. "blueprint/plan gaps" .-> C
+    F e5@-. "blueprint/plan gaps" .-> B
+    F e6@-. "blueprint/plan gaps" .-> C
     e1@{ animate: true }
     e2@{ animate: true }
     e3@{ animate: true }
@@ -130,22 +132,24 @@ flowchart TD
 ```
 
 `architecture` runs once to bootstrap; then you loop
-`spec → plan → execute → archive` per slice — or swap `execute` for `autopilot`
-to run the approved plan unattended (it commits into a dedicated worktree for
-you to review and land, and never archives). Either way, when execution exposes
-a hole in the spec or plan, `vwf` captures it and loops back to fix the source —
-never silently working around it.
+`blueprint → plan → execute → archive` per slice — or swap `execute` for
+`autopilot` to run the approved plan unattended (it commits into a dedicated
+worktree for you to review and land, and never archives). Either way, when
+execution exposes a hole in the blueprint or plan, `vwf` captures it and loops
+back to fix the source — never silently working around it.
 
 ## The documents it maintains
 
-`vwf` keeps everything in version-controlled Markdown under `docs/`. The spec is
-the desired state; the plans are the changes you apply to reach it.
+`vwf` keeps everything in version-controlled Markdown under `docs/`. The
+blueprint is the desired state; the plans are the changes you apply to reach it.
 
 ```text
 docs/
-├── specs/                       # the always-current blueprint (desired state)
+├── blueprint/                       # the always-current blueprint (desired state)
 │   ├── architecture.md          # system shape + machine-readable Project Registry
+│   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
+│   ├── integration.md           # cross-entity flows + inter-service contracts
 │   └── <entity>.md              # one doc per entity (or an <entity>/ folder)
 └── plans/                       # per-cycle plans (the diff to apply)
     ├── <date>-<time>-<slice>.md
@@ -155,68 +159,95 @@ docs/
 Each entity doc holds the full-stack picture for that entity — stable product
 intent at the top, volatile engineering detail (data model, API, jobs, screens)
 below a marker. The **Project Registry** in `architecture.md` is a yaml block
-that `spec` and `plan` parse to map an entity's sections to the right project by
-`type` — so the workflow stays stack-agnostic.
+that `blueprint` and `plan` parse to map an entity's sections to the right
+project by `type` — so the workflow stays stack-agnostic.
 
 ## Commands
 
-| Command                 | Model  | What it does                                              |
-| ----------------------- | ------ | --------------------------------------------------------- |
-| `/vwf:architecture`     | opus   | Bootstrap or update the system shape + Project Registry   |
-| `/vwf:spec [entity]`    | opus   | Maintain the full-product blueprint, one doc per entity   |
-| `/vwf:plan [slice]`     | opus   | Write a reviewable cycle plan — a diff of spec vs code    |
-| `/vwf:execute [mode]`   | opus   | Implement the plan under TDD, then code + security review |
-| `/vwf:autopilot [plan]` | opus   | Autonomously run one plan end to end — no per-stage gates |
-| `/vwf:archive [plan]`   | sonnet | Retire a completed plan into `docs/plans/archived/`       |
-| `/vwf:handoff <name>`   | opus   | Capture the session so work resumes in a fresh one        |
-| `/vwf:recall <name>`    | sonnet | Resume from a handoff in a fresh session                  |
-| `/vwf:git-workflow`     | —      | Internal — worktree isolation, commits, merges            |
+| Command                   | Model  | What it does                                                |
+| ------------------------- | ------ | ----------------------------------------------------------- |
+| `/vwf:init`               | opus   | Onboard/migrate a repo into vwf's format (re-runnable)      |
+| `/vwf:architecture`       | opus   | Bootstrap or update the system shape + Project Registry     |
+| `/vwf:design-system`      | opus   | Product-wide UX/visual contract (mandatory once UI exists)  |
+| `/vwf:blueprint [entity]` | opus   | Maintain the full-product blueprint, one doc per entity     |
+| `/vwf:plan [slice]`       | opus   | Write a reviewable cycle plan — a diff of blueprint vs code |
+| `/vwf:execute [mode]`     | opus   | Implement the plan under TDD, then code + security review   |
+| `/vwf:autopilot [plan]`   | opus   | Autonomously run one plan end to end — no per-stage gates   |
+| `/vwf:archive [plan]`     | sonnet | Retire a completed plan into `docs/plans/archived/`         |
+| `/vwf:handoff <name>`     | opus   | Capture the session so work resumes in a fresh one          |
+| `/vwf:recall <name>`      | sonnet | Resume from a handoff in a fresh session                    |
+| `/vwf:git-workflow`       | —      | Internal — worktree isolation, commits, merges              |
+
+### /vwf:init
+
+Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
+it after upgrading vwf to migrate to the latest format. It detects your topology
+(monorepo vs polyrepo, project types, stacks) and confirms it with you via MCQ,
+then produces a **dry-run migration plan** — every doc to scaffold and every
+source move to make. Nothing is written until you approve; it works in a
+worktree, restructures code only with per-batch consent, and never deletes. It
+orchestrates the rest (mise, `architecture`, and `design-system` if you have a
+UI), merges a vwf section into your `CLAUDE.md`, writes the README, and stamps
+the blueprint format version in `docs/blueprint/.vwf.yml` so a later run can
+detect drift and migrate the delta.
 
 ### /vwf:architecture
 
-Run this **first**. It elicits your system's shape — projects, their types and
-stacks, how they interconnect, where they deploy — and writes
-`docs/specs/architecture.md`, including the machine-readable Project Registry
-the other commands depend on. Re-run it any time the topology changes; it asks
-only about genuine deltas, never re-eliciting what's confirmed.
+Run this **after `init`** (or first, on a fresh repo). It elicits your system's
+shape — projects, their types and stacks, how they interconnect, where they
+deploy — and writes `docs/blueprint/architecture.md`, including the
+machine-readable Project Registry the other commands depend on. Re-run it any
+time the topology changes; it asks only about genuine deltas, never re-eliciting
+what's confirmed.
 
-This is the one doc that *does* name technologies and infrastructure — the spec
-deliberately doesn't.
+This is the one doc that *does* name technologies and infrastructure — the
+blueprint deliberately doesn't.
 
-### /vwf:spec
+### /vwf:design-system
+
+A second foundation, **mandatory once the registry has a frontend/app project**.
+It elicits the product-wide UX/visual language — semantic color tokens,
+typography, spacing, motion, the accessibility standard, and global component
+behaviors — and writes `docs/blueprint/design-system.md`, self-gated by a
+pre-delivery checklist. Like the blueprint, it stays code-independent: it
+records token *values* and *scales*, never the component library, CSS framework,
+or design file. Every entity's Screens reference it instead of re-deciding
+visual language. `blueprint` halts on a UI entity until it exists.
+
+### /vwf:blueprint
 
 Maintain the desired end state of the **whole product**, one entity at a time:
 
 ```text
-/vwf:spec order
+/vwf:blueprint order
 ```
 
-`spec` reads the registry, works out which engineering surfaces apply to the
-entity (data model, API, jobs, screens), and elicits the gaps with you. It then
-writes `docs/specs/order.md` and updates `conventions.md` for any cross-cutting
-decision raised.
+`blueprint` reads the registry, works out which engineering surfaces apply to
+the entity (data model, API, jobs, screens), and elicits the gaps with you. It
+then writes `docs/blueprint/order.md` and updates `conventions.md` for any
+cross-cutting decision raised.
 
 A fresh **reviewer subagent** then checks the doc against a completeness
 checklist and returns `NO GAPS` or a numbered list. Gaps loop back to you for
-the specific open decisions, then re-review — until the doc passes. The spec is
-permanent and product-wide; it is never feature-scoped.
+the specific open decisions, then re-review — until the doc passes. The
+blueprint is permanent and product-wide; it is never feature-scoped.
 
 ### /vwf:plan
 
-Produce a reviewable plan for one slice of the spec:
+Produce a reviewable plan for one slice of the blueprint:
 
 ```text
 /vwf:plan order
 /vwf:plan order/api      # just one section of the entity
 ```
 
-A plan is a **diff**. `plan` reads the desired state (the spec slice +
+A plan is a **diff**. `plan` reads the desired state (the blueprint slice +
 conventions + registry) and the actual state (the real code the registry maps
 the slice to), then writes only the delta — what exists, what's missing, what
 changes, and the order to do it in — to `docs/plans/<date>-<time>-<slice>.md`.
 Steps are ordered for TDD: each names the failing test that defines "done". If
-the spec implies a surface the code lacks, `plan` flags it as drift rather than
-quietly resolving it. You approve the plan before any code is written.
+the blueprint implies a surface the code lacks, `plan` flags it as drift rather
+than quietly resolving it. You approve the plan before any code is written.
 
 ### /vwf:execute
 
@@ -233,7 +264,7 @@ It runs three stages, each in a fresh purpose-built subagent, each behind a
 | Stage    | Model  | What happens                                                                |
 | -------- | ------ | --------------------------------------------------------------------------- |
 | code     | sonnet | Implements the plan under TDD (RED → GREEN → REFACTOR) to the coverage gate |
-| review   | opus   | Adversarial code review against the plan, spec, conventions, and stack      |
+| review   | opus   | Adversarial code review against the plan, blueprint, conventions, and stack |
 | security | opus   | Threat-models the change against the project's declared capabilities        |
 
 ```mermaid
@@ -251,11 +282,11 @@ flowchart TD
 
 `vwf` never chains stages automatically — it pauses for your approval at every
 gate. Review and security findings loop back to `code` to fix, then re-review.
-When a stage exposes a **gap** (a hole in the spec or plan, not a code bug),
-it's recorded — to the plan doc and to memory — and reconciled at the end of the
-cycle, where `vwf` offers to fix the spec (`/vwf:spec`) or re-derive the plan
-(`/vwf:plan`). It then reconciles the architecture registry and offers to
-archive the plan.
+When a stage exposes a **gap** (a hole in the blueprint or plan, not a code
+bug), it's recorded — to the plan doc and to memory — and reconciled at the end
+of the cycle, where `vwf` offers to fix the blueprint (`/vwf:blueprint`) or
+re-derive the plan (`/vwf:plan`). It then reconciles the architecture registry
+and offers to archive the plan.
 
 ### /vwf:autopilot
 
@@ -278,16 +309,16 @@ What it does, by rule:
 - **Full pipeline each step.** `code → review → security`, looping findings back
   to code. **Security findings are always fixed**; **code-review findings loop
   up to 4 rounds**, after which any residual is recorded as a gap — the
-  spec/plan wasn't thorough enough.
+  blueprint/plan wasn't thorough enough.
 - **Gaps don't stop it.** Each gap is written to
   `docs/plans/<plan>.gap-report.md` and to memory, and the run continues.
 
-It **pauses** only on: a hard halt (no plan/spec, a test harness that can't run,
-an unresolvable git conflict); a **resource cap** — context > 65%, 5-hour > 90%,
-or 7-day > 80% — where it hands off and stops (resume with `/vwf:recall`); a gap
-that blocks *all* remaining work; or a decision the rules don't cover that is
-irreversible. At the end, if any gaps remain it asks you to resolve them — and
-never suggests archiving.
+It **pauses** only on: a hard halt (no plan/blueprint, a test harness that can't
+run, an unresolvable git conflict); a **resource cap** — context > 65%, 5-hour >
+90%, or 7-day > 80% — where it hands off and stops (resume with `/vwf:recall`);
+a gap that blocks *all* remaining work; or a decision the rules don't cover that
+is irreversible. At the end, if any gaps remain it asks you to resolve them —
+and never suggests archiving.
 
 The resource-cap pause is delivered by the
 **[statusline caps hook](#statusline)** — a command can't measure its own
@@ -344,8 +375,8 @@ request.
 
 ## How it asks questions
 
-`vwf` is deliberately conversational. `architecture`, `spec`, and `plan` share
-one **elicitation protocol**:
+`vwf` is deliberately conversational. `architecture`, `blueprint`, and `plan`
+share one **elicitation protocol**:
 
 - **Explore first** — read the docs, code, and recent commits before asking
   anything; never ask what the registry or code already answers.
@@ -365,13 +396,13 @@ on the last instead of re-deriving it. It recalls prior decisions and findings
 before working, and persists durable outcomes after. Memory is keyed by your
 project (the **wing**) and split into rooms:
 
-| Room        | Holds                                                      |
-| ----------- | ---------------------------------------------------------- |
-| `decisions` | design/architecture decisions and the *why*                |
-| `problems`  | review and security findings and how they were resolved    |
-| `planning`  | plan rationale and deferred options                        |
-| `gaps`      | spec/plan holes surfaced during execution, and their fixes |
-| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`      |
+| Room        | Holds                                                           |
+| ----------- | --------------------------------------------------------------- |
+| `decisions` | design/architecture decisions and the *why*                     |
+| `problems`  | review and security findings and how they were resolved         |
+| `planning`  | plan rationale and deferred options                             |
+| `gaps`      | blueprint/plan holes surfaced during execution, and their fixes |
+| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`           |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds. Gaps are also mirrored into the plan doc, so they survive a
@@ -386,8 +417,8 @@ A first slice, end to end. Assume a backend service with an `order` entity.
 /vwf:architecture
 
 # 2. Specify the order entity — answer the questions, approve the doc
-/vwf:spec order
-#    → writes docs/specs/order.md, gated by the completeness reviewer
+/vwf:blueprint order
+#    → writes docs/blueprint/order.md, gated by the completeness reviewer
 
 # 3. Plan the first slice — review the diff, approve it
 /vwf:plan order
@@ -402,8 +433,8 @@ A first slice, end to end. Assume a backend service with an `order` entity.
 /vwf:archive
 ```
 
-From here, loop steps 2–5 per slice. Update the spec when the product changes;
-re-run `architecture` only when the system's *shape* changes.
+From here, loop steps 2–5 per slice. Update the blueprint when the product
+changes; re-run `architecture` only when the system's *shape* changes.
 
 ## vwf skills
 
@@ -411,8 +442,8 @@ A skill backs the workflow's quality. You don't invoke it directly — it inform
 how Claude writes and reviews:
 
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
-  error formats, pagination, auth, OpenAPI), applied whenever the spec or plan
-  touches an API surface.
+  error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
+  plan touches an API surface.
 
 The minimal-code behaviors that a "karpathy guidelines" skill would cover are
 already enforced structurally across the workflow — elicitation (think before
@@ -424,7 +455,7 @@ plugin (see Supporting plugins).
 
 ## Tips
 
-- **Run `architecture` first.** `spec` and `plan` halt without a registry.
+- **Run `architecture` first.** `blueprint` and `plan` halt without a registry.
 - **Keep slices small.** One entity or one section per plan/execute cycle keeps
   reviews sharp and the diff reviewable.
 - **Trust the gates.** Read what each stage reports before approving — the

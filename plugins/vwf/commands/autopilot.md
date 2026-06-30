@@ -35,9 +35,9 @@ list them and ask which single plan to run (one plan per autopilot run).
 | ----------- | --------------------------------- |
 | Plan        | `docs/plans/<plan>.md`            |
 | Gap-report  | `docs/plans/<plan>.gap-report.md` |
-| Registry    | `docs/specs/architecture.md`      |
-| Spec        | `docs/specs/<entity>.md`          |
-| Conventions | `docs/specs/conventions.md`       |
+| Registry    | `docs/blueprint/architecture.md`  |
+| Blueprint   | `docs/blueprint/<entity>.md`      |
+| Conventions | `docs/blueprint/conventions.md`   |
 
 ## Pipeline (per step)
 
@@ -67,9 +67,9 @@ list them and ask which single plan to run (one plan per autopilot run).
   downgraded to a gap or deferred.
 - **Review findings: cap at 4 rounds.** For `review` (non-security) findings,
   loop `code → review` up to **4 rounds**. Any review finding still unresolved
-  after the 4th round is **documented as a gap** ("spec/plan was not thorough
-  enough") and execution continues — it does not block.
-- **Gaps: document and continue.** Every gap (a spec/plan hole, not a code
+  after the 4th round is **documented as a gap** ("blueprint/plan was not
+  thorough enough") and execution continues — it does not block.
+- **Gaps: document and continue.** Every gap (a blueprint/plan hole, not a code
   finding) is written to the **gap-report** file and filed to mempalace room
   `gaps`, then execution continues. A *non-blocking* gap never stops the run. An
   *isolated blocking* gap (the step can't proceed without a human decision, but
@@ -103,7 +103,7 @@ past it.
 
 **Always on**
 
-- **Hard halts** — no approved plan or missing spec for a needed slice; the
+- **Hard halts** — no approved plan or missing blueprint for a needed slice; the
   test/coverage/build harness cannot run at all (TDD can't be verified); a git
   or merge **conflict** that cannot be safely resolved.
 - **Resource caps** — context > 65%, 5-hour > 90%, or 7-day > 80%. A command
@@ -207,13 +207,13 @@ mempalace-independent record. One row per gap:
 
 Mirror each row's full detail into mempalace room `gaps` (the subagents file
 their own; you consolidate the report). Residual review findings after 4 rounds
-are recorded here as gaps too, tagged as plan/spec under-specification.
+are recorded here as gaps too, tagged as plan/blueprint under-specification.
 
 ## Reconcile
 
 1. **Architecture.** If the implementation changed topology (new project,
    dependency, or capability), update the registry block in
-   `docs/specs/architecture.md` — via `/vwf:architecture` for non-trivial
+   `docs/blueprint/architecture.md` — via `/vwf:architecture` for non-trivial
    changes. Edit precisely; do not rewrite prose unless topology changed.
 2. **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's
    durable decisions, resolved findings, and each gap to mempalace (rooms
@@ -229,7 +229,7 @@ path** — it is committed and ready for the user to review and merge (autopilot
 does not merge or push).
 
 - **If any gaps remain:** present the gap-report and ask the user to take care
-  of the gaps — the spec/plan needs them resolved (via `/vwf:spec` /
+  of the gaps — the blueprint/plan needs them resolved (via `/vwf:blueprint` /
   `/vwf:plan`). **Do not** suggest archiving.
 - **If no gaps:** report completion. Still do **not** archive — `/vwf:archive`
   runs only on the user's explicit request.

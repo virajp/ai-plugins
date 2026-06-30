@@ -104,7 +104,7 @@
       "tags": [
         "agents",
         "skills",
-        "spec",
+        "blueprint",
         "plan",
         "execute",
         "archive",
@@ -112,6 +112,8 @@
         "review",
         "security",
         "architecture",
+        "design-system",
+        "onboarding",
         "dart",
         "typescript",
         "javascript",
@@ -119,7 +121,7 @@
         "lsp",
         "git-workflow"
       ],
-      "version": "1.11.0"
+      "version": "2.0.0"
     },
     {
       "author": {

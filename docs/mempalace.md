@@ -25,13 +25,13 @@ before working and persists durable outcomes after, so detail doesn't pile up in
 the conversation. Memory is keyed by your project (the **wing**) and split into
 rooms:
 
-| Room        | Holds                                                      |
-| ----------- | ---------------------------------------------------------- |
-| `decisions` | design/architecture decisions and the *why*                |
-| `problems`  | review and security findings, and how they were resolved   |
-| `planning`  | plan rationale and deferred options                        |
-| `gaps`      | spec/plan holes surfaced during execution, and their fixes |
-| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`      |
+| Room        | Holds                                                           |
+| ----------- | --------------------------------------------------------------- |
+| `decisions` | design/architecture decisions and the *why*                     |
+| `problems`  | review and security findings, and how they were resolved        |
+| `planning`  | plan rationale and deferred options                             |
+| `gaps`      | blueprint/plan holes surfaced during execution, and their fixes |
+| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`           |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds.
@@ -39,7 +39,7 @@ step and proceeds.
 ## See also
 
 - [../readme.md](../readme.md) — the marketplace overview and full plugin list.
-- [vwf guide](../readme.md) — how the Spec → Plan → Execute workflow uses
+- [vwf guide](../readme.md) — how the Blueprint → Plan → Execute workflow uses
   memory.
 - [MemPalace upstream](https://github.com/MemPalace/mempalace) — full feature
   and tool documentation.

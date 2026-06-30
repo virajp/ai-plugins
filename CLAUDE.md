@@ -7,9 +7,9 @@
 ## What This Repo Is
 
 A Claude Code plugin marketplace (`virajp-plugins`) containing LSP servers, an
-MCP server, and `vwf` — a full Spec → Plan → Execute workflow plugin. The root
-`.claude-plugin/marketplace.json` defines the marketplace; each plugin lives in
-`plugins/<name>/.claude-plugin/plugin.json`.
+MCP server, and `vwf` — a full Blueprint → Plan → Execute workflow plugin. The
+root `.claude-plugin/marketplace.json` defines the marketplace; each plugin
+lives in `plugins/<name>/.claude-plugin/plugin.json`.
 
 The repo also ships a **statusline**, installed via a small `oclif` CLI
 (`@askviraj/ai-plugins`) rather than the marketplace — see The statusline CLI.
@@ -98,9 +98,10 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
-- `commands/` — `/vwf:` slash commands: the Spec → Plan → Execute model —
-  `spec`, `plan`, `execute`, `archive`, `architecture`, plus `autopilot` (the
-  autonomous variant of `execute`), internal `git-workflow`, and
+- `commands/` — `/vwf:` slash commands: the Blueprint → Plan → Execute model —
+  `init` (Phase-0 onboarding/migration bootstrapper), `architecture`,
+  `design-system`, `blueprint`, `plan`, `execute`, `archive`, plus `autopilot`
+  (the autonomous variant of `execute`), internal `git-workflow`, and
   `handoff`/`recall` (mempalace-backed session handoff — wing=`<project>`,
   room=`handoff`, drawer=`<name>`). `autopilot` runs one approved plan to
   completion **without per-stage human gates** in a dedicated worktree:
@@ -110,31 +111,60 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   **never merges/pushes or archives**, and pauses only on hard halts, the
   statusline resource caps, an all-blocking gap, or an uncovered irreversible
   decision. Reuses execute's three subagents.
-- `agents/` — subagents the commands delegate to: `spec-reviewer`,
+- `agents/` — subagents the commands delegate to: `blueprint-reviewer`,
   `execute-coder`, `execute-code-reviewer`, `execute-security-reviewer`,
   `architecture-writer`
-- `skills/` — `rest-api-design`
+- `skills/` — `rest-api-design`; `blueprint-authoring` (the
+  contract-vs-realization doctrine + per-surface completeness bars, auto-applies
+  on `docs/blueprint/**`); `design-system` (the UX/visual-contract doctrine —
+  tokens, typography, spacing, motion, accessibility, components/anti-patterns —
+  auto-applies on `docs/blueprint/design-system`); `project-init`
+  (onboarding/migration doctrine — topology detection, consent-gated dry-run
+  migration, the blueprint format-version + drift map; used by `/vwf:init`)
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
-  `handoff` (stack-agnostic; section→project mapping resolved from the registry)
+  `design-system`, `integration`, `handoff` (stack-agnostic; section→project
+  mapping resolved from the registry)
 - `assets/elicitation.md` — the shared questioning protocol referenced by
-  `spec`, `plan`, and `architecture`
+  `blueprint`, `plan`, `architecture`, and `design-system`
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
   persist durable decisions, findings memory for loop-backs, and **gap memory**:
-  spec/plan holes surfaced during execution, room `gaps`) referenced by `spec`,
-  `plan`, and `execute`. The orchestrator resolves the project wing and persists
-  decisions; the execute reviewers/coder file and recall findings **directly** —
-  they are granted scoped mempalace MCP tools in their agent frontmatter
-  (`mcp__plugin_mempalace_mempalace__mempalace_search` / `…_add_drawer`), so
-  rich review detail lives in mempalace instead of the orchestrator's context.
-  Gaps are also mirrored to a durable "Gaps surfaced during execution" section
-  in the plan doc, so they survive a mempalace outage and feed the spec/plan
-  fixes
+  blueprint/plan holes surfaced during execution, room `gaps`) referenced by
+  `blueprint`, `plan`, and `execute`. The orchestrator resolves the project wing
+  and persists decisions; the execute reviewers/coder file and recall findings
+  **directly** — they are granted scoped mempalace MCP tools in their agent
+  frontmatter (`mcp__plugin_mempalace_mempalace__mempalace_search` /
+  `…_add_drawer`), so rich review detail lives in mempalace instead of the
+  orchestrator's context. Gaps are also mirrored to a durable "Gaps surfaced
+  during execution" section in the plan doc, so they survive a mempalace outage
+  and feed the blueprint/plan fixes
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
 
-Docs the commands maintain live under `docs/specs/` (registry `architecture.md`,
-`conventions.md`, one `<entity>.md` per entity) and `docs/plans/`
-(`<date>-<time>-<slice>.md`, with `archived/`). Superseded commands/agents/
-templates from the prior model are archived under `archived/vwf-2026-06-19/`.
+Docs the commands maintain live under `docs/blueprint/` (registry
+`architecture.md`, `conventions.md`, the product-wide `design-system.md`, the
+cross-entity `integration.md`, and one `<entity>.md` per entity) and
+`docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
+commands/agents/templates from the prior model are archived under
+`archived/vwf-2026-06-19/`.
+
+**Foundations & ordering.** The workflow is
+`init → architecture → design-system
+→ blueprint → plan → execute`. `init` is
+the Phase-0 bootstrapper — it onboards a repo (detect-or-ask topology via MCQ,
+consent-gated migration into the `docs/blueprint/` format, orchestrates
+mise/architecture/design-system, authors CLAUDE.md + README) and is
+**re-runnable**: it stamps the blueprint format version in
+`docs/blueprint/.vwf.yml` and, on a later run, detects drift against the format
+the installed vwf ships and migrates the delta. `architecture` (the registry) is
+unconditionally required before `blueprint`. `design-system` is a second
+foundation, **required once the registry has a frontend/app project** (a UI
+surface): `blueprint` halts on an entity with a Screens surface if
+`docs/blueprint/design-system.md` is missing. The blueprint is a
+**code-independent technical contract** — it records only decisions that have
+more than one reasonable answer *and* are true regardless of how the code is
+written today; reuse/placement/ordering/library choices are `plan`'s job. The
+`blueprint-reviewer` gate enforces both the completeness bars (data,
+relationships, concurrency, API, UI/UX, flows) and the code-independence
+guardrail (no file/class/library/CSS/pixel leakage).
 
 ### Dependencies
 
