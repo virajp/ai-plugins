@@ -29,6 +29,14 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
 `/vwf:plan` first." If `$ARGUMENTS` names no plan and more than one is active,
 list them and ask which single plan to run (one plan per autopilot run).
 
+## Format Check
+
+Before the first step, run the preflight in
+`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`. Since autopilot is autonomous:
+if the format drift is **non-blocking**, log it and continue; if it is
+**blocking** (the run needs an artifact the old format lacks), **pause** for
+`/vwf:init` per the pause rules — never migrate autonomously.
+
 ## Doc Paths
 
 | Doc         | Path                              |

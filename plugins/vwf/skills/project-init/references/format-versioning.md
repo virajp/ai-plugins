@@ -12,6 +12,13 @@ projects: [ api, web, worker ] # by registry name
 ui: true # design-system required
 ```
 
+**Source of truth (shipped).** The format the installed vwf ships is the integer
+in `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`. The workflow commands
+self-check the repo stamp against it via
+`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` and nudge `/vwf:init` on drift —
+this is what reaches each repo, since vwf is installed once at user level and an
+upgrade does not re-run per repo.
+
 **Current format = 1.** A format-1 repo has:
 
 - `docs/blueprint/architecture.md` (registry) and `conventions.md`
@@ -30,4 +37,6 @@ the current format and apply the delta:
   change, so a re-run is a mechanical, reviewable migration.
 
 Bump `blueprint_format` whenever a vwf change requires restructuring an existing
-repo, and document the delta here so `init` can carry it out.
+repo: increment `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, add the `N→N+1`
+delta here so `init` can carry it out, and the workflow commands will start
+nudging stale repos automatically.

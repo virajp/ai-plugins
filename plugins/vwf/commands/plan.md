@@ -43,6 +43,11 @@ The slice is an entity (or a section of one) from `$ARGUMENTS`. **Halt if no
 blueprint exists** for it: "No blueprint found for `<slice>`. Run
 `/vwf:blueprint` first."
 
+**Format check.** Run the preflight in
+`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
+is behind what vwf ships, nudge `/vwf:init` (proceed unless a needed artifact is
+missing).
+
 ### 2. Setup (git-workflow)
 
 Invoke `/vwf:git-workflow` to ensure an isolated worktree before

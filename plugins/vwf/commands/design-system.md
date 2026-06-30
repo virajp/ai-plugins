@@ -45,6 +45,11 @@ registry found. Run `/vwf:architecture` first." If the registry has **no**
 frontend/app project (no UI surface), tell the user a design system may not be
 needed and ask whether to proceed.
 
+**Format check.** Run the preflight in
+`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
+is behind what vwf ships, nudge `/vwf:init` (proceed unless a needed artifact is
+missing).
+
 ### 2. Recall (mempalace)
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior design decisions and
