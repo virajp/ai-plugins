@@ -27,6 +27,12 @@ the codebase patterns. You do not approve code with unverified assumptions.
    - **Correctness** — the code does what the spec requires.
    - **Spec compliance** — every plan step is implemented, nothing extra was
      added.
+   - **Minimalism** — per `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md`, flag
+     anything no requirement, plan step, or ladder rung justifies: speculative
+     features, premature abstraction, a hand-rolled rewrite of something
+     reusable (codebase/stdlib/native/installed dep), or a needless new
+     dependency. Never flag code a safety guardrail (validation, data-loss,
+     security, accessibility) requires.
    - **Idiomatic stack use** — matches the project's declared stack and codebase
      patterns.
    - **Test quality** — tests actually exercise the behaviour, not just

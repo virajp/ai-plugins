@@ -103,6 +103,7 @@ const PLUGINS = [
   "mempalace",
   "mise",
   "github-actions",
+  "andrej-karpathy-skills",
 ];
 
 // Plugins that install at project scope by default; everything else is
@@ -111,10 +112,19 @@ const PLUGINS = [
 const PROJECT_SCOPED = new Set(["flutter"]);
 const scopeFor = name => (PROJECT_SCOPED.has(name) ? "project" : "user");
 
-// --all only acts on user-scoped plugins. A project-scoped plugin is a
-// deliberate per-project choice, so it is never installed in bulk — it must be
-// named explicitly with --project <name>.
-const USER_SCOPED = PLUGINS.filter(name => !PROJECT_SCOPED.has(name));
+// Opt-in plugins: excluded from --all and installed only when named explicitly
+// via --user or --project (scope is the user's choice — unlike PROJECT_SCOPED
+// they carry no forced default scope). Used for external, re-listed plugins that
+// shouldn't ride along with a bulk install (e.g. andrej-karpathy-skills).
+const OPT_IN = new Set(["andrej-karpathy-skills"]);
+
+// --all only acts on the user-scoped set: every plugin that is neither
+// project-scoped nor opt-in. Project-scoped and opt-in plugins are deliberate
+// choices, so they are never installed in bulk — they must be named explicitly
+// (--project <name> for project-scoped; --user/--project <name> for opt-in).
+const USER_SCOPED = PLUGINS.filter(
+  name => !PROJECT_SCOPED.has(name) && !OPT_IN.has(name),
+);
 
 // How to install each external tool we depend on (matches this toolchain: mise
 // drives runtime tools; rtk ships as a brew formula).

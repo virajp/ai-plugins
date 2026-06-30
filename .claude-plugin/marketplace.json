@@ -20,6 +20,16 @@
       }
     },
     {
+      "category": "development",
+      "description": "Behavioral guidelines to reduce common LLM coding mistakes, derived from Andrej Karpathy's observations — Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution. External; opt-in (not installed by --all).",
+      "homepage": "https://github.com/multica-ai/andrej-karpathy-skills",
+      "name": "andrej-karpathy-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/multica-ai/andrej-karpathy-skills.git"
+      }
+    },
+    {
       "author": {
         "name": "Viraj Patel"
       },
@@ -109,7 +119,7 @@
         "lsp",
         "git-workflow"
       ],
-      "version": "1.10.1"
+      "version": "1.11.0"
     },
     {
       "author": {

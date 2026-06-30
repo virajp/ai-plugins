@@ -38,16 +38,17 @@ design (a plugin may hold skills versioned on their own cadence).
 
 ## Plugins
 
-| Plugin           | Source                     | What it provides                                                                                                                                                                                                                                                                      |
-| ---------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`            | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                                                                                     |
-| `markdown`       | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` command that scans a repo and writes/updates its README                                                                                                                                       |
-| `typescript`     | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/vitest/build references) plus `package-json`, `pnpm`, `tsconfig` + the TypeScript/JavaScript language server                                                                             |
-| `context7`       | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                              |
-| `flutter`        | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps) |
-| `mempalace`      | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                             |
-| `mise`           | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                                                                                        |
-| `github-actions` | `./plugins/github-actions` | A `/github-actions:workflow` command that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy)                                                                                  |
+| Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                      |
+| ------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`                    | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                                                                                     |
+| `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` command that scans a repo and writes/updates its README                                                                                                                                       |
+| `typescript`             | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/vitest/build references) plus `package-json`, `pnpm`, `tsconfig` + the TypeScript/JavaScript language server                                                                             |
+| `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                              |
+| `flutter`                | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps) |
+| `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                             |
+| `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                               |
+| `mise`                   | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                                                                                        |
+| `github-actions`         | `./plugins/github-actions` | A `/github-actions:workflow` command that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy)                                                                                  |
 
 ## Plugin Structure
 
@@ -112,7 +113,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `agents/` — subagents the commands delegate to: `spec-reviewer`,
   `execute-coder`, `execute-code-reviewer`, `execute-security-reviewer`,
   `architecture-writer`
-- `skills/` — `karpathy-guidelines`, `rest-api-design`
+- `skills/` — `rest-api-design`
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
   `handoff` (stack-agnostic; section→project mapping resolved from the registry)
 - `assets/elicitation.md` — the shared questioning protocol referenced by
@@ -191,35 +192,38 @@ at user scope) or `--user <name>` / `--project <name>` (repeatable; name plugins
 at user or project scope) drive the `claude` CLI to add the `virajp-plugins`
 marketplace (user scope) and install each plugin. `--all` installs **user-scoped
 plugins only** (`USER_SCOPED`); **project-scoped** plugins (`flutter` —
-`PROJECT_SCOPED` in `bin/installer.js`) are excluded from `--all` and reached
-via `--project <name>`. Scope is carried by the flag itself — `--user` installs
-at user scope, `--project` at project scope, and the two compose in one run (a
-name cannot appear in both). This governs install and uninstall alike, but never
-the marketplace add (always user scope). Plugin names are **bare and
-allowlisted** (`PLUGINS`); an `@marketplace` or path qualifier is rejected
-outright so the CLI can only ever install from `virajp-plugins`. The CLI
-installs and refreshes **only** `virajp-plugins`; every plugin (including the
-bundled Dart/Kotlin/Swift language servers, which ship inside `flutter`)
-resolves from it alone — no other marketplace is registered or refreshed.
-Installing or upgrading **`vwf`** additionally runs `setupGraphify` —
-`graphify install --platform claude` plus `graphify hook install` — since vwf's
-commands depend on graphify's knowledge graph. `graphify install` works anywhere
-and always runs; `graphify hook
-install` attaches a git post-commit hook, so it
-runs **only inside a git repo** (detected via
-`git rev-parse --is-inside-work-tree`) and is soft-skipped with a note
-otherwise. Both commands are idempotent (so an upgrade self-heals the setup),
-and the whole step is soft-skipped when `graphify` isn't on `PATH` (the
-`checkDeps` gate guarantees it for installs, but the upgrade-only path does not
-run that gate). **Statusline:** `--statusline` — one merged flag that installs
-**both** the main bar `statusLine` and the subagent panel `subagentStatusLine` —
-copies the script into `~/.claude/scripts/` (chmod 755), seeds the bundled
-defaults into `~/.config/statusline.json` (deep-merging missing settings if it
-already exists, preserving user edits), and writes both keys into
-`~/.claude/settings.json` (preserving other keys; prompting before overwrite
-unless `--yes`). `--all` installs plugins only — pair it with `--statusline` for
-the bar. Installing the statusline additionally wires the **context/rate-limit
-caps** `PostToolUse` hook (`installContextCaps`): it copies
+`PROJECT_SCOPED`) and **opt-in** plugins (`andrej-karpathy-skills` — `OPT_IN`,
+an external re-listed plugin) are both excluded from `--all`. Project-scoped
+plugins are reached via `--project <name>`; opt-in plugins via
+`--user`/`--project
+<name>` at whichever scope you choose (they carry no forced
+default). Scope is carried by the flag itself — `--user` installs at user scope,
+`--project` at project scope, and the two compose in one run (a name cannot
+appear in both). This governs install and uninstall alike, but never the
+marketplace add (always user scope). Plugin names are **bare and allowlisted**
+(`PLUGINS`); an `@marketplace` or path qualifier is rejected outright so the CLI
+can only ever install from `virajp-plugins`. The CLI installs and refreshes
+**only** `virajp-plugins`; every plugin (including the bundled Dart/Kotlin/Swift
+language servers, which ship inside `flutter`) resolves from it alone — no other
+marketplace is registered or refreshed. Installing or upgrading **`vwf`**
+additionally runs `setupGraphify` — `graphify install --platform claude` plus
+`graphify hook install` — since vwf's commands depend on graphify's knowledge
+graph. `graphify install` works anywhere and always runs;
+`graphify hook
+install` attaches a git post-commit hook, so it runs **only
+inside a git repo** (detected via `git rev-parse --is-inside-work-tree`) and is
+soft-skipped with a note otherwise. Both commands are idempotent (so an upgrade
+self-heals the setup), and the whole step is soft-skipped when `graphify` isn't
+on `PATH` (the `checkDeps` gate guarantees it for installs, but the upgrade-only
+path does not run that gate). **Statusline:** `--statusline` — one merged flag
+that installs **both** the main bar `statusLine` and the subagent panel
+`subagentStatusLine` — copies the script into `~/.claude/scripts/` (chmod 755),
+seeds the bundled defaults into `~/.config/statusline.json` (deep-merging
+missing settings if it already exists, preserving user edits), and writes both
+keys into `~/.claude/settings.json` (preserving other keys; prompting before
+overwrite unless `--yes`). `--all` installs plugins only — pair it with
+`--statusline` for the bar. Installing the statusline additionally wires the
+**context/rate-limit caps** `PostToolUse` hook (`installContextCaps`): it copies
 `tools/statusline/context-caps.js` into `~/.claude/hooks/`, sets
 `env.AI_PLUGINS_USAGE_DIR` (`${HOME}/.claude/usage`), and appends the hook entry
 (idempotently, preserving other env keys / PostToolUse hooks). The statusline's
@@ -254,7 +258,7 @@ install, plus each selected plugin's `PLUGIN_EXTRA_DEPS` runtime tools
 flutter→mise+kotlin-lsp+ sourcekit-lsp, mempalace→uv, github-actions→mise) and
 `node` for the statusline. If any are missing it prints the install command for
 each (`DEP_HINTS`) and exits non-zero — it never auto-installs a dependency.
-Keep `PLUGINS`, `PROJECT_SCOPED`, `DEP_HINTS`, `CORE_DEPS`, and
+Keep `PLUGINS`, `PROJECT_SCOPED`, `OPT_IN`, `DEP_HINTS`, `CORE_DEPS`, and
 `PLUGIN_EXTRA_DEPS` in sync with the marketplace and the plugins' actual runtime
 needs. Users run it via `npx @askviraj/ai-plugins …`.
 
@@ -386,8 +390,9 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
-`context7`, `mise`, `github-actions`. (The statusline is not a plugin — install
-it via `npx @askviraj/ai-plugins …`; see The statusline CLI.)
+`context7`, `mise`, `github-actions`, `andrej-karpathy-skills` (external,
+opt-in). (The statusline is not a plugin — install it via
+`npx @askviraj/ai-plugins …`; see The statusline CLI.)
 
 Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
 `mise`) automatically from the same `virajp-plugins` marketplace — no other

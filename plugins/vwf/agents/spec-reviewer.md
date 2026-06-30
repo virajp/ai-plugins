@@ -37,6 +37,11 @@ Verify, for the entity doc under review:
 - [ ] No placeholder text remains except under Open Questions.
 - [ ] Section-to-project mappings match the registry; no hardcoded stack names
       leaked into a generic template.
+- [ ] No speculative surface (minimalism rung 1): every field, endpoint, state,
+      and screen traces to a stated product goal or invariant — flag anything
+      added "just in case" or for unrequested configurability. Never flag a
+      surface a safety guardrail requires (validation, data-loss, security,
+      accessibility).
 
 **Conditional items are skipped when the corresponding surface/project is
 absent** — do not flag a missing section for a project type that is not in the

@@ -407,15 +407,20 @@ re-run `architecture` only when the system's *shape* changes.
 
 ## vwf skills
 
-Two skills back the workflow's quality. You don't invoke them directly — they
-inform how Claude writes and reviews:
+A skill backs the workflow's quality. You don't invoke it directly — it informs
+how Claude writes and reviews:
 
-- **`karpathy-guidelines`** — behavioral rules that reduce common LLM coding
-  mistakes: think before coding, keep changes surgical, surface assumptions,
-  define verifiable success criteria.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the spec or plan
   touches an API surface.
+
+The minimal-code behaviors that a "karpathy guidelines" skill would cover are
+already enforced structurally across the workflow — elicitation (think before
+coding), the plan-as-a-diff and the coder's "nothing not in the plan" (surgical
+changes, YAGNI/the minimalism ladder), and TDD with a coverage gate (goal-driven
+execution). For ad-hoc, off-pipeline work you can install the external
+**[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
+plugin (see Supporting plugins).
 
 ## Tips
 
@@ -435,15 +440,16 @@ The marketplace ships additional plugins — opinionated coding-standard skills
 and language servers. Most auto-apply by file path; install only the ones for
 your stack. Each has a dedicated guide:
 
-| Plugin                                         | What it provides                                                                                                                                                          | Install                 |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| **[markdown](./docs/markdown.md)**             | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` command that documents a repo's README                                      | `--user markdown`       |
-| **[typescript](./docs/typescript.md)**         | Effect-TS coding standards — a `typescript` router skill (+ effect/vitest/build references) plus package-json/pnpm/tsconfig + the TypeScript/JavaScript language server   | `--user typescript`     |
-| **[flutter](./docs/flutter.md)**               | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped** | `--project flutter`     |
-| **[mise](./docs/mise.md)**                     | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command                                                                              | `--user mise`           |
-| **[github-actions](./docs/github-actions.md)** | A `/github-actions:workflow` command — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                          | `--user github-actions` |
-| **[context7](./docs/context7.md)**             | The Context7 MCP server — up-to-date library docs on demand                                                                                                               | `--user context7`       |
-| **[mempalace](./docs/mempalace.md)**           | AI memory system (external; also a `vwf` dependency)                                                                                                                      | `--user mempalace`      |
+| Plugin                                                                             | What it provides                                                                                                                                                          | Install                                     |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` command that documents a repo's README                                      | `--user markdown`                           |
+| **[typescript](./docs/typescript.md)**                                             | Effect-TS coding standards — a `typescript` router skill (+ effect/vitest/build references) plus package-json/pnpm/tsconfig + the TypeScript/JavaScript language server   | `--user typescript`                         |
+| **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped** | `--project flutter`                         |
+| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command                                                                              | `--user mise`                               |
+| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` command — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                          | `--user github-actions`                     |
+| **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                               | `--user context7`                           |
+| **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                      | `--user mempalace`                          |
+| **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                    | `--user`/`--project andrej-karpathy-skills` |
 
 ```sh
 pnpx @askviraj/ai-plugins --user typescript --user markdown
@@ -505,7 +511,8 @@ Notes:
 
 - `--all` acts on **user-scoped** plugins only. `flutter` is **project-scoped**
   — install it explicitly with `--project flutter` from within the project that
-  needs it.
+  needs it. `andrej-karpathy-skills` is **opt-in** (external) — also excluded
+  from `--all`; install it with `--user`/`--project andrej-karpathy-skills`.
 - Scope is chosen by the flag: `--user <name>` installs at user scope,
   `--project <name>` at project scope (you can mix both in one run). The
   marketplace add is always user-scoped.
@@ -524,6 +531,9 @@ maintainers. 🙏
   statusline plug into.
 - **[MemPalace](https://github.com/MemPalace/mempalace)** — the AI memory system
   that powers `vwf`'s cross-session recall (re-listed here as a dependency).
+- **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
+  — behavioral coding guidelines derived from Andrej Karpathy's observations,
+  re-listed here as an opt-in plugin.
 - **[Context7](https://github.com/upstash/context7)** by
   [Upstash](https://upstash.com) — the MCP docs server behind the `context7`
   plugin.

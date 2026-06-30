@@ -49,8 +49,13 @@ code before a failing test exists:
 1. **RED** — write one failing test for the next small behavior the plan calls
    for. Run it and confirm it fails for the **expected reason** (the assertion,
    not a typo or setup error).
-2. **GREEN** — write the **minimum** code to make that test pass. Nothing
-   speculative; nothing not in the plan.
+2. **GREEN** — write the **minimum** code to make that test pass, walking the
+   decision ladder in `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` first: reuse
+   existing code, the stdlib, a native platform feature, or an installed
+   dependency before writing new code or adding a dependency; prefer one line
+   where it reads clearly. Nothing speculative; nothing not in the plan — but
+   never trade away a safety guardrail (validation, data-loss, security,
+   accessibility) for brevity.
 3. **REFACTOR** — with the suite green, clean up. Do not add behavior during
    refactor; tests stay green throughout.
 4. Repeat for each behavior in the plan, in plan order. Do not implement

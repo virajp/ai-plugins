@@ -59,6 +59,14 @@ the worktree **local** — never push remotely here.
 Determine what already exists, what is missing, what must change, and the order
 to do it in. Reference spec sections; do not restate them.
 
+Apply the **minimalism decision ladder** in
+`${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` as you size each step: include a
+step only if a spec requirement needs it (rung 1), and prefer reusing existing
+code, the stdlib, a native platform feature, or an installed dependency over new
+code or a new dependency (rungs 2–5). The plan carries no speculative steps and
+no unrequested abstraction or configurability — never at the cost of a safety
+guardrail.
+
 ### 5. Flag drift
 
 If the spec implies a surface the registry/code lacks (e.g. a background job

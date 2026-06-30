@@ -80,6 +80,11 @@ decision surfaces, the conventions skeleton.
 
 Spec-specific notes layered on the protocol:
 
+- **Minimalism (rung 1):** per `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md`,
+  specify only the fields, endpoints, states, and features a stated product goal
+  needs. Do not invent unstated requirements or speculative configurability — if
+  a surface isn't traceable to an elicited goal, leave it out (or raise it as an
+  Open Question), don't gold-plate the blueprint.
 - **Scope check (protocol §2):** if `$ARGUMENTS` names more than one entity, or
   the entity clearly spans several, decompose and author one entity per pass.
 - **Decisions-vs-mechanics (protocol §4):** spend the precision budget on **Data
