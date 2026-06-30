@@ -8,6 +8,7 @@ description: Onboarding and migration discipline for bringing a repo into vwf's
   section. Used by /vwf:init; trigger when onboarding a repo to vwf or migrating
   an existing one to the latest blueprint format.
 license: MIT
+user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 ---
 
