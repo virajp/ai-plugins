@@ -122,7 +122,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (onboarding/migration doctrine — topology detection, consent-gated dry-run
   migration, the blueprint format-version + drift map; used by `/vwf:init`)
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
-  `design-system`, `integration`, `handoff` (stack-agnostic; section→project
+  `design-system`, `integration`, `project-claude` (the vwf section `/vwf:init`
+  merges into a repo's CLAUDE.md), `handoff` (stack-agnostic; section→project
   mapping resolved from the registry)
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `blueprint`, `plan`, `architecture`, and `design-system`
@@ -137,6 +138,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   orchestrator's context. Gaps are also mirrored to a durable "Gaps surfaced
   during execution" section in the plan doc, so they survive a mempalace outage
   and feed the blueprint/plan fixes
+- `assets/format-check.md` + `assets/blueprint-format` — the **format-drift
+  preflight**: `blueprint`, `plan`, `execute`, `autopilot`, and `design-system`
+  compare a repo's `docs/blueprint/.vwf.yml` stamp to the format integer vwf
+  ships (`blueprint-format`) and nudge `/vwf:init` when behind (halting only if
+  a needed artifact is missing). Since vwf is user-scoped — upgraded once
+  globally, with no per-repo install event — this usage-time check is what
+  reaches each repo, self-healing on next use
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
 
 Docs the commands maintain live under `docs/blueprint/` (registry

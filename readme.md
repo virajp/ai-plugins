@@ -104,7 +104,12 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 The three phases map to three questions:
 
 - **Blueprint** answers *what should the whole product be?* — permanent,
-  product-wide, organized by entity.
+  product-wide, organized by entity. It is a **code-independent technical
+  contract**: it pins every decision that has more than one reasonable answer
+  *and* is true regardless of how the code is written — data, API,
+  relationships, concurrency, integration flows, and UI/UX — so `plan` and
+  `execute` never have to ask or assume. Reuse-vs-build, file placement,
+  ordering, and library choices are `plan`'s job, not the blueprint's.
 - **Plan** answers *what changes for this one slice, and in what order?* — a
   diff, not a re-blueprint, scoped to a single entity or section.
 - **Execute** answers *is it built, correct, and safe?* — TDD, then review.
@@ -189,7 +194,9 @@ worktree, restructures code only with per-batch consent, and never deletes. It
 orchestrates the rest (mise, `architecture`, and `design-system` if you have a
 UI), merges a vwf section into your `CLAUDE.md`, writes the README, and stamps
 the blueprint format version in `docs/blueprint/.vwf.yml` so a later run can
-detect drift and migrate the delta.
+detect drift and migrate the delta. Every workflow command also runs a quick
+format check against that stamp and nudges you to re-run `/vwf:init` when a repo
+falls behind — so a single user-level vwf upgrade reaches each repo on next use.
 
 ### /vwf:architecture
 
@@ -223,14 +230,18 @@ Maintain the desired end state of the **whole product**, one entity at a time:
 ```
 
 `blueprint` reads the registry, works out which engineering surfaces apply to
-the entity (data model, API, jobs, screens), and elicits the gaps with you. It
-then writes `docs/blueprint/order.md` and updates `conventions.md` for any
-cross-cutting decision raised.
+the entity (data model, API, relationships, concurrency, jobs, screens), and
+elicits the gaps with you under the **`blueprint-authoring`** doctrine. It
+writes `docs/blueprint/order.md`, records any cross-entity flow or inter-service
+contract in `integration.md`, points each screen at the design system, and
+updates `conventions.md` for any cross-cutting decision raised.
 
 A fresh **reviewer subagent** then checks the doc against a completeness
-checklist and returns `NO GAPS` or a numbered list. Gaps loop back to you for
-the specific open decisions, then re-review — until the doc passes. The
-blueprint is permanent and product-wide; it is never feature-scoped.
+checklist — data, relationships, concurrency, API, and UI/UX, plus a
+**code-independence guardrail** that flags any file/class/library/CSS leakage —
+and returns `NO GAPS` or a numbered list. Gaps loop back to you for the specific
+open decisions, then re-review — until the doc passes. The blueprint is
+permanent and product-wide; it is never feature-scoped.
 
 ### /vwf:plan
 
@@ -438,9 +449,19 @@ changes; re-run `architecture` only when the system's *shape* changes.
 
 ## vwf skills
 
-A skill backs the workflow's quality. You don't invoke it directly — it informs
-how Claude writes and reviews:
+Several skills back the workflow's quality. You don't invoke them directly —
+they inform how Claude writes and reviews:
 
+- **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
+  the blueprint vs `plan`) plus the per-surface completeness bars: data,
+  relationships, concurrency, integration flows, and UI/UX. Auto-applies
+  whenever a `docs/blueprint/` doc is edited.
+- **`design-system`** — the UX/visual-contract doctrine (semantic tokens,
+  typography, spacing, motion, accessibility, component behaviors,
+  anti-patterns) behind `/vwf:design-system`.
+- **`project-init`** — the onboarding/migration doctrine behind `/vwf:init`:
+  topology detection, consent-gated dry-run migration, and the blueprint
+  format-version + drift map.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
   plan touches an API surface.
