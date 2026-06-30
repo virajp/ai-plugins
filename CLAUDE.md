@@ -362,14 +362,14 @@ environment-specific tools in the matching env file.
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
   (bounded by the cooldown below); if anything changed, `osv-scanner` gates on
   any known-vulnerable package, then it cuts a **patch release**
-  (`mise run i:release` → tests + bump + commit + tag) and pushes the refresh +
-  bump + tag to `main`. It then **delegates the npm publish to `release.yml` via
-  `workflow_call`** (passing the new tag as `ref`) rather than publishing
-  inline: npm allows only **one Trusted Publisher per package**, and OIDC's
-  `job_workflow_ref` resolves to `release.yml` even when called — so the single
-  `release.yml` Trusted Publisher authorizes this path too. (A tag pushed with
-  the workflow's `GITHUB_TOKEN` would not trigger `release.yml` on its own, so
-  it is called directly.)
+  (`mise run i:release --ci` → tests + bump + commit + tag, no push/watch) and
+  pushes the refresh + bump + tag to `main`. It then **delegates the npm publish
+  to `release.yml` via `workflow_call`** (passing the new tag as `ref`) rather
+  than publishing inline: npm allows only **one Trusted Publisher per package**,
+  and OIDC's `job_workflow_ref` resolves to `release.yml` even when called — so
+  the single `release.yml` Trusted Publisher authorizes this path too. (A tag
+  pushed with the workflow's `GITHUB_TOKEN` would not trigger `release.yml` on
+  its own, so it is called directly.)
 
 ### Supply-chain settings
 
@@ -387,10 +387,14 @@ potentially compromised — releases.
   time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
 - To cut a release: run **`mise run i:release`** (`--minor`/`--major` to choose
   the bump) — it requires a clean tree, runs the tests, bumps the version,
-  commits, and creates the `vX.Y.Z` tag. Then
-  `git push && git push origin vX.Y.Z` to trigger `release.yml`. Prefer
-  releasing via CI over local `i:publish` so every version keeps the strongest
-  npm trust level (trusted publisher).
+  commits, and creates the `vX.Y.Z` tag, then (interactively) **pushes the
+  commit and tag and watches the `release.yml` run to completion**
+  (`gh run watch
+  --exit-status`), so the task only succeeds if the npm-publish
+  pipeline does (needs `gh` installed + authenticated). **Passing `--ci` stops
+  after the tag** (no push/watch) — `deps-update.yml` passes it and does its own
+  push + `workflow_call` publish. Prefer releasing via CI over local `i:publish`
+  so every version keeps the strongest npm trust level (trusted publisher).
 
 ## Hooks
 

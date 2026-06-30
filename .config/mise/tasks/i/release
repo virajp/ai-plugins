@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-#MISE description="Cut a release: run tests, bump the version, commit, and tag"
+#MISE description="Cut a release: run tests, bump+commit+tag, push, and watch the publish pipeline"
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--minor" help="bump the minor version (default: patch)"
 #USAGE flag "--major" help="bump the major version (default: patch)"
+#USAGE flag "--ci" help="CI mode: stop after creating the tag (the caller pushes + publishes); skips the interactive push and pipeline watch"
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
@@ -38,5 +39,56 @@ git commit -m "ops: release ${TAG}"
 git tag -a "${TAG}" -m "${TAG}"
 
 print_header "Created ${TAG}."
-print_yellow "Push to trigger the release workflow (OIDC publish to npm):"
-print_yellow "  git push && git push origin ${TAG}"
+
+# 5. With --ci (e.g. from deps-update.yml) i:release stops here — bump/commit/tag
+#    only. The calling workflow pushes the tag and delegates publishing to
+#    release.yml, so it must NOT also push/watch from here.
+if [[ "${usage_ci:-false}" == "true" ]]; then
+  print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + publish."
+  exit 0
+fi
+
+# 6. Interactive release: push the tag and watch the publish pipeline. `gh` must
+#    be present and authenticated — we never push a tag we cannot then watch.
+if ! command -v gh >/dev/null 2>&1; then
+  print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
+  exit 1
+fi
+if ! gh auth status >/dev/null 2>&1; then
+  print_error "gh is not authenticated. Run: gh auth login"
+  exit 1
+fi
+
+# The tag push (v*) triggers release.yml, which publishes to npm via OIDC trusted
+# publishing. (A branch push triggers nothing — release.yml is tags-only.)
+print_header "Pushing ${TAG} ..."
+git push origin HEAD
+git push origin "${TAG}"
+
+# 7. Watch the publish pipeline to completion so this task's exit status reflects
+#    the release result. Poll until the tag's run appears (it is the release.yml
+#    run whose head commit is this release commit), then follow it.
+RELEASE_SHA="$(git rev-parse HEAD)"
+print_header "Waiting for the release workflow to start ..."
+RUN_ID=""
+for _ in $(seq 1 30); do
+  RUN_ID="$(gh run list --workflow=release.yml --limit 20 \
+    --json databaseId,headSha \
+    --jq "[.[] | select(.headSha==\"${RELEASE_SHA}\")][0].databaseId" 2>/dev/null || true)"
+  if [[ -n "${RUN_ID}" && "${RUN_ID}" != "null" ]]; then
+    break
+  fi
+  sleep 4
+done
+
+if [[ -z "${RUN_ID}" || "${RUN_ID}" == "null" ]]; then
+  print_error "Release workflow run did not appear. Check manually: gh run list --workflow=release.yml"
+  exit 1
+fi
+
+# --exit-status makes `gh run watch` exit non-zero if the run fails, so `set -e`
+# fails this task — i.e. completing i:release means the pipeline succeeded.
+print_header "Watching release run ${RUN_ID} ..."
+gh run watch "${RUN_ID}" --exit-status
+
+print_header "Release pipeline succeeded — @askviraj/ai-plugins@${VERSION} published to npm."
