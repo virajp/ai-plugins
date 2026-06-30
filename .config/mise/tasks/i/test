@@ -13,10 +13,10 @@ if [[ ! -d node_modules/@oclif/core ]]; then
   pnpm install
 fi
 
-CLI=(node bin/installer.js)
+CLI=(node bin/installer.mjs)
 
 print_header "Checking syntax ..."
-node --check bin/installer.js
+node --check bin/installer.mjs
 
 print_header "Rendering --help ..."
 "${CLI[@]}" --help >/dev/null

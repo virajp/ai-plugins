@@ -209,11 +209,19 @@ Layout:
   layout, subagent panel). The installer seeds this into
   `~/.config/statusline.json`.
 - `package.json` (root) — the npm package: oclif single-command CLI, `bin`
-  `ai-plugins`, sole runtime dep `@oclif/core`. Plain JS — no build step.
-- `bin/installer.js` — the whole CLI in one file: the oclif command class plus
-  the bootstrap that runs it (single-command `strategy`/`target` in
-  `package.json`; `settings.enableAutoTranspile = false` keeps oclif from
-  hunting for TypeScript).
+  `ai-plugins`, sole runtime dep `@oclif/core`. Plain JS (ESM) — no build step.
+  The package `type` stays `commonjs`: the `bin/` modules are ESM by their
+  `.mjs` extension, while the standalone `tools/statusline/` scripts (run
+  outside this package, with no package.json beside them) must remain CommonJS —
+  so the ESM/CJS split is carried per-file, not by a package-wide
+  `type: module`.
+- `bin/installer.mjs` — the CLI entrypoint: the oclif command class plus the
+  bootstrap that runs it (single-command `strategy`/`target` in `package.json`;
+  `settings.enableAutoTranspile = false` keeps oclif from hunting for
+  TypeScript). It imports `bin/claude.mjs` (the `ClaudeCode` tool) and
+  `bin/utils.mjs` (shared helpers). The run-directly guard uses
+  `realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)` (the ESM
+  equivalent of `require.main === module`, symlink-safe for the npm bin).
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
 

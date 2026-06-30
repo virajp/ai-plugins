@@ -1,16 +1,17 @@
-"use strict";
-
 /**
  * Tool-agnostic utilities shared across the CLI: colored output, an HTTP-JSON
  * fetch, semver comparison, PATH/git probes, a deep merge, an interactive
  * confirm, and the labeled command/step runners. Nothing here knows about any
- * particular AI coding tool — that lives in the per-tool modules (e.g. claude.js).
+ * particular AI coding tool — that lives in the per-tool modules (e.g. claude.mjs).
  */
 
-const { existsSync } = require("node:fs");
-const { spawnSync } = require("node:child_process");
-const { delimiter, join } = require("node:path");
-const readline = require("node:readline/promises");
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import {
+  delimiter,
+  join,
+} from "node:path";
+import * as readline from "node:readline/promises";
 
 // Semantic ANSI colors for human-facing output: green = success/up-to-date,
 // yellow = notices/updates-available/skips, red = failures. Disabled when stdout
@@ -211,19 +212,19 @@ async function step(io, label, fn) {
   }
 }
 
-module.exports = {
-  green,
-  yellow,
-  red,
-  fetchJson,
-  cmpVer,
+export {
   cmpPre,
-  updateNote,
+  cmpVer,
+  confirm,
+  deepMerge,
+  fetchJson,
+  green,
   hasBin,
   inGitRepo,
   isObject,
-  deepMerge,
-  confirm,
+  red,
   runCommand,
   step,
+  updateNote,
+  yellow,
 };

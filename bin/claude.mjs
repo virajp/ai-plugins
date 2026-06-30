@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * Claude Code support for the CLI: marketplace + plugin install/upgrade/uninstall
  * and the powerline statusline (script, config, settings.json keys, context-caps
@@ -8,7 +6,7 @@
  * The class is written as one concrete implementation of a generic "AI coding
  * tool" shape, so other tools (e.g. another editor's plugin system) can be added
  * later as sibling modules exposing the same surface. The CLI entrypoint
- * (installer.js) only ever talks to a tool through these methods:
+ * (installer.mjs) only ever talks to a tool through these methods:
  *
  *   resolvePlan(flags)      → a plan {plugins, statusLine, subagentStatusLine}
  *   hasSelection(plan)      → was anything selected to act on?
@@ -22,29 +20,41 @@
  * command machinery while reusing its output + exit handling.
  */
 
-const { existsSync } = require("node:fs");
-const { chmod, copyFile, mkdir, readFile, rm, writeFile } = require(
-  "node:fs/promises",
-);
-const { spawnSync } = require("node:child_process");
-const { homedir } = require("node:os");
-const { dirname, join } = require("node:path");
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import {
+  chmod,
+  copyFile,
+  mkdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import { homedir } from "node:os";
+import {
+  dirname,
+  join,
+} from "node:path";
+import { fileURLToPath } from "node:url";
 
-const {
-  green,
-  yellow,
-  red,
-  fetchJson,
+import {
   cmpVer,
-  updateNote,
+  confirm,
+  deepMerge,
+  fetchJson,
+  green,
   hasBin,
   inGitRepo,
   isObject,
-  deepMerge,
-  confirm,
+  red,
   runCommand,
   step,
-} = require("./utils");
+  updateNote,
+  yellow,
+} from "./utils.mjs";
+
+// ESM has no __dirname; derive it from this module's URL.
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const SCRIPTS_DIR = join(homedir(), ".claude", "scripts");
 const SETTINGS_PATH = join(homedir(), ".claude", "settings.json");
@@ -820,4 +830,9 @@ class ClaudeCode {
   }
 }
 
-module.exports = { ClaudeCode, PLUGINS, USER_SCOPED, PROJECT_SCOPED };
+export {
+  ClaudeCode,
+  PLUGINS,
+  PROJECT_SCOPED,
+  USER_SCOPED,
+};

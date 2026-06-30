@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * @askviraj/ai-plugins — installs Viraj Patel's Claude Code toolkit (marketplace
  * plugins + the powerline statusline).
@@ -8,21 +6,30 @@
  *   npx @askviraj/ai-plugins --all --statusline [--yes]
  *
  * This file is only the CLI entrypoint: it parses flags and dispatches to a tool.
- * All Claude-specific behavior lives in ./claude.js (the ClaudeCode tool), and
- * tool-agnostic helpers in ./utils.js — so other AI coding tools can be added
+ * All Claude-specific behavior lives in ./claude.mjs (the ClaudeCode tool), and
+ * tool-agnostic helpers in ./utils.mjs — so other AI coding tools can be added
  * later as sibling modules exposing the same surface.
  */
 
-const { Command, Flags, execute, settings } = require("@oclif/core");
+import {
+  Command,
+  execute,
+  Flags,
+  settings,
+} from "@oclif/core";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import {
+  ClaudeCode,
+  PLUGINS,
+  PROJECT_SCOPED,
+  USER_SCOPED,
+} from "./claude.mjs";
+import { yellow } from "./utils.mjs";
 
 // This is a plain-JS CLI (no TypeScript / ts-node). Tell oclif so it never tries
 // to auto-transpile, which otherwise warns "Could not find typescript".
 settings.enableAutoTranspile = false;
-
-const { yellow } = require("./utils");
-const { ClaudeCode, PLUGINS, USER_SCOPED, PROJECT_SCOPED } = require(
-  "./claude",
-);
 
 class Installer extends Command {
   async run() {
@@ -153,10 +160,18 @@ Installer.flags = {
   }),
 };
 
-module.exports = Installer;
+export default Installer;
 
 // oclif loads this file as the single command (see `oclif.commands` in
-// package.json); when invoked directly it also bootstraps the CLI.
-if (require.main === module) {
-  execute({ dir: __dirname });
+// package.json); when invoked directly (the bin entry, possibly via a symlink)
+// it also bootstraps the CLI. realpathSync resolves the bin symlink so this
+// matches the module's own path — the ESM equivalent of `require.main === module`.
+// Not awaited: oclif's execute() owns the process lifecycle (it calls
+// process.exit), and a pending top-level await would trip Node's
+// "unsettled top-level await" exit. This mirrors the original CJS bootstrap.
+if (
+  process.argv[1]
+  && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  execute({ dir: import.meta.url });
 }

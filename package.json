@@ -26,7 +26,7 @@
   "author": "Viraj Patel",
   "type": "commonjs",
   "bin": {
-    "ai-plugins": "./bin/installer.js"
+    "ai-plugins": "./bin/installer.mjs"
   },
   "files": [
     "bin",
@@ -36,7 +36,7 @@
     "bin": "ai-plugins",
     "commands": {
       "strategy": "single",
-      "target": "./bin/installer.js"
+      "target": "./bin/installer.mjs"
     }
   },
   "dependencies": {
