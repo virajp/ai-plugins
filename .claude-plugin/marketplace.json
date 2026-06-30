@@ -116,7 +116,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file.",
+      "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file, plus a /markdown:readme command that scans the repo and writes/updates its README.",
       "name": "markdown",
       "source": "./plugins/markdown",
       "strict": true,
@@ -126,9 +126,10 @@
         "writing",
         "changelog",
         "mermaid",
-        "skills"
+        "skills",
+        "command"
       ],
-      "version": "0.3.1"
+      "version": "0.4.0"
     },
     {
       "author": {

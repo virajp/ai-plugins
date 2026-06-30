@@ -1,9 +1,11 @@
 # markdown
 
-An opinionated Markdown and documentation-standards skill for Claude Code. It
-auto-applies whenever Claude edits a file matching `**/*.md`, and it is hidden
-from the `/` menu (`user-invocable: false`). You never invoke it by hand — it
-behaves like an always-on documentation rule that shapes every Markdown change.
+An opinionated Markdown plugin for Claude Code. It ships the always-on
+`documentation-standards` skill — which auto-applies whenever Claude edits a
+file matching `**/*.md` and shapes every Markdown change — plus a
+`/markdown:readme` command you invoke on demand to document a whole repo. The
+command writes through the same skill, so a generated README follows the
+standards below.
 
 ## Install
 
@@ -61,6 +63,34 @@ rules:
 - Use `%%` comments to explain complex parts.
 - Exception: things mermaid can't express, such as directory structures, may be
   ASCII inside a fenced block.
+
+## /markdown:readme
+
+`/markdown:readme [target-dir]` scans the repository and writes — or updates —
+its README, applying the standards above. It defaults to the current repo root;
+pass a directory to document another repo. An existing readme is updated in
+place (its filename and casing preserved); otherwise it creates `README.md`.
+
+The generated README always carries these eight sections, in order:
+
+| Section              | What it documents                                                         |
+| -------------------- | ------------------------------------------------------------------------- |
+| Title                | The project name as the H1                                                |
+| Short description    | One or two sentences on what the project is                               |
+| List of projects     | Every package (a table for a monorepo; one entry for a polyrepo)          |
+| Architecture         | A `mermaid` diagram of how the projects/services fit together, plus notes |
+| Infrastructure       | Every cloud tool/service the repo uses                                    |
+| Local Development    | A step-by-step setup guide to run the repo locally                        |
+| Projects             | One detailed section per project (monorepo) or a single one (polyrepo)    |
+| Important mise tasks | The `mise tasks` a developer runs day to day                              |
+
+The command follows a **detect → ask → write → report** flow: it scans for the
+layout (monorepo vs polyrepo), the projects, the architecture, the cloud tooling
+(IaC, containers, CI/CD, deploy configs, cloud SDKs), and the mise setup; asks
+only what it can't infer (a missing tagline, which cloud services are actually
+in use); then writes the README and reports what it created or updated. When
+updating, it refreshes those eight sections and leaves any others (License,
+Contributing, badges) untouched.
 
 ## See also
 
