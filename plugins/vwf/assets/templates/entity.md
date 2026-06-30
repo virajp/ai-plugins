@@ -1,6 +1,14 @@
 # Entity: <Name>
 
-<!-- One file per entity. Stack-agnostic: section headings below map to projects
+<!-- One entity per doc. This template is the single-file form
+     (docs/blueprint/<entity>.md). For a large entity, use the folder form
+     (docs/blueprint/<entity>/) instead: the same sections split across files —
+     index.md holds Purpose…Invariants + References + Open Questions (above the
+     marker); data.md holds Data Model + Relationships + Concurrency; api.md the
+     API Surface; jobs.md Background Jobs; screens.md Screens. Both forms are
+     first-class; pick by size.
+
+     Stack-agnostic: section headings below map to projects
      via the Project Registry in docs/blueprint/architecture.md (by project `type`),
      never by literal technology. Omit any engineering section whose project type
      is absent from the registry.

@@ -39,13 +39,13 @@ if the format drift is **non-blocking**, log it and continue; if it is
 
 ## Doc Paths
 
-| Doc         | Path                              |
-| ----------- | --------------------------------- |
-| Plan        | `docs/plans/<plan>.md`            |
-| Gap-report  | `docs/plans/<plan>.gap-report.md` |
-| Registry    | `docs/blueprint/architecture.md`  |
-| Blueprint   | `docs/blueprint/<entity>.md`      |
-| Conventions | `docs/blueprint/conventions.md`   |
+| Doc         | Path                                                       |
+| ----------- | ---------------------------------------------------------- |
+| Plan        | `docs/plans/<plan>.md`                                     |
+| Gap-report  | `docs/plans/<plan>.gap-report.md`                          |
+| Registry    | `docs/blueprint/architecture.md`                           |
+| Blueprint   | `docs/blueprint/<entity>.md` or `docs/blueprint/<entity>/` |
+| Conventions | `docs/blueprint/conventions.md`                            |
 
 ## Pipeline (per step)
 

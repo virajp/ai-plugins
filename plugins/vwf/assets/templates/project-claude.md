@@ -24,6 +24,7 @@ choices are `plan`'s job — not the blueprint's.
   ids…).
 - `docs/blueprint/integration.md` — cross-entity flows + inter-service
   contracts.
-- `docs/blueprint/<entity>.md` — one contract per entity.
+- `docs/blueprint/<entity>.md` (or `docs/blueprint/<entity>/` for a large
+  entity) — one contract per entity.
 
 Re-run `/vwf:init` after upgrading vwf to migrate the docs to the latest format.

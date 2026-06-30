@@ -25,7 +25,11 @@ upgrade does not re-run per repo.
 - `design-system.md` **if** `ui: true`
 - `integration.md` once cross-entity flows exist
 - entity docs with **Relationships**, **Concurrency & Consistency**, and
-  **Screens** that reference `design-system.md`
+  **Screens** that reference `design-system.md`. Each entity is **either** a
+  single file `docs/blueprint/<entity>.md` **or** a folder
+  `docs/blueprint/<entity>/` (`index.md` + `data.md` / `api.md` / `jobs.md` /
+  `screens.md`) — both conform; the folder form is **not** drift and must not be
+  collapsed to a single file on migration.
 - `docs/plans/` with `archived/`
 
 **Drift → migration map.** On re-run, compare the stamp's `blueprint_format` to

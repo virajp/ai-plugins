@@ -149,7 +149,9 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 Docs the commands maintain live under `docs/blueprint/` (registry
 `architecture.md`, `conventions.md`, the product-wide `design-system.md`, the
-cross-entity `integration.md`, and one `<entity>.md` per entity) and
+cross-entity `integration.md`, and one entity doc per entity — either
+`<entity>.md` or, for a large entity, a folder `<entity>/` splitting the same
+sections across `index.md` + `data.md`/`api.md`/`jobs.md`/`screens.md`) and
 `docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
 commands/agents/templates from the prior model are archived under
 `archived/vwf-2026-06-19/`.

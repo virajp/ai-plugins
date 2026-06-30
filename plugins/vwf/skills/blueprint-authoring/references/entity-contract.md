@@ -1,8 +1,11 @@
 # Entity Contract
 
-One file per entity (`docs/blueprint/<entity>.md`). Fill every applicable
-section to the **no-two-reasonable-answers** bar. Spend the precision budget on
-Data Model and API Surface.
+One entity, documented as **either** a single file `docs/blueprint/<entity>.md`
+**or** a folder `docs/blueprint/<entity>/` (`index.md` + `data.md` / `api.md` /
+`jobs.md` / `screens.md`) when it's too large for one file. Both are equally
+valid; the sections below are the same either way. Fill every applicable section
+to the **no-two-reasonable-answers** bar. Spend the precision budget on Data
+Model and API Surface.
 
 - **Data Model** — every field: type, optional/nullable, default,
   validation/format. Enumerate **every** enum member; no open-ended types. State

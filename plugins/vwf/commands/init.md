@@ -72,6 +72,10 @@ format and the format this vwf ships — a legacy `docs/specs/` tree to upgrade,
 missing `design-system.md` / `integration.md`, or entity docs lacking
 Relationships / Concurrency. Fold in any old or partial structure.
 
+An entity already in the **folder form** (`docs/blueprint/<entity>/` with
+`index.md` + surface files) is a conforming format-1 layout, not drift — leave
+it as a folder; never collapse it into a single file.
+
 ### 4. Build the migration plan (dry-run)
 
 Enumerate every action: `docs/blueprint` scaffolding, code-restructuring moves

@@ -33,12 +33,12 @@ missing).
 
 ## Doc Paths
 
-| Doc         | Path                             |
-| ----------- | -------------------------------- |
-| Plan        | `docs/plans/<plan>.md`           |
-| Registry    | `docs/blueprint/architecture.md` |
-| Blueprint   | `docs/blueprint/<entity>.md`     |
-| Conventions | `docs/blueprint/conventions.md`  |
+| Doc         | Path                                                       |
+| ----------- | ---------------------------------------------------------- |
+| Plan        | `docs/plans/<plan>.md`                                     |
+| Registry    | `docs/blueprint/architecture.md`                           |
+| Blueprint   | `docs/blueprint/<entity>.md` or `docs/blueprint/<entity>/` |
+| Conventions | `docs/blueprint/conventions.md`                            |
 
 ## Pipeline
 

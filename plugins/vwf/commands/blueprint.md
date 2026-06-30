@@ -12,9 +12,14 @@ effort: high
 
 Maintain the **whole product's** desired end state under `docs/blueprint/`. The
 blueprint is product-wide and permanent — not feature-specific. It is organized
-by **entity**: one entity doc holds the full-stack picture (data model, API,
+by **entity**: one entity holds the full-stack picture (data model, API,
 background jobs, screens), with stable product intent at the top and volatile
 engineering detail at the bottom, separated by a marker.
+
+An entity is documented as **either form, both first-class**: a single file
+`docs/blueprint/<entity>.md`, or a folder `docs/blueprint/<entity>/` that splits
+the same sections across files when the entity is too large to read in one
+sitting (see §4). Neither is a downgrade of the other; pick by size.
 
 You own the user conversation. Elicitation is **interactive and stays with you**
 — do not spawn a subagent for it (a subagent cannot pause to ask a question).
@@ -31,7 +36,7 @@ without ambiguity. Surface open decisions rather than guessing.
 | Registry        | `docs/blueprint/architecture.md`                        |
 | Conventions     | `docs/blueprint/conventions.md`                         |
 | Entity (file)   | `docs/blueprint/<entity>.md`                            |
-| Entity (folder) | `docs/blueprint/<entity>/` (promoted form)              |
+| Entity (folder) | `docs/blueprint/<entity>/` (split form, see §4)         |
 | Design system   | `docs/blueprint/design-system.md`                       |
 | Integration     | `docs/blueprint/integration.md`                         |
 | Entity template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/entity.md`      |
@@ -120,27 +125,39 @@ Blueprint-specific notes layered on the protocol:
 
 ### 4. Write the entity doc
 
-Write `docs/blueprint/<entity>.md` as a **single file by default**. Stable
-product sections (Purpose … Invariants) above the marker; volatile engineering
-sections below. Update `docs/blueprint/conventions.md` for any cross-cutting
-decisions raised.
+Write the entity in **one of two equal forms** — same sections, same content,
+only the file boundary differs:
+
+- **Single file** — `docs/blueprint/<entity>.md`. Stable product sections
+  (Purpose … Invariants) above the marker; volatile engineering sections below.
+  The default for an entity that reads comfortably in one file.
+- **Folder** — `docs/blueprint/<entity>/`, the sections split across files:
+  `index.md` (Purpose … Invariants, References, Open Questions — the stable
+  product half) + `data.md` (Data Model, Relationships, Concurrency &
+  Consistency) + `api.md` (API Surface) + `jobs.md` (Background Jobs) +
+  `screens.md` (Screens). Omit any surface file whose project type is absent
+  from the registry. Use this when the entity is too large to read in one
+  sitting — a rough cue is **~400 lines, or all engineering surfaces present
+  with more than one job/screen each** — but it is a judgement call, not a
+  forced migration: either form is a valid blueprint at rest.
+
+Choose the form per entity; an existing entity may already be a folder — keep it
+a folder. Update `docs/blueprint/conventions.md` for any cross-cutting decisions
+raised.
 
 **Cross-entity.** Record each relation in the entity's **Relationships**
 section. Capture any multi-entity flow or inter-service contract in
 `docs/blueprint/integration.md` (from the integration template) — not inside a
 single entity doc.
 
-**Promotion:** promote to the folder form `docs/blueprint/<entity>/` (index.md +
-data.md + api.md + jobs.md + screens.md) once the file crosses **~400 lines, or
-has all four engineering surfaces with more than one job/screen each**.
-
 ### 5. Reviewer loop (fresh subagent)
 
 Loop until the doc passes:
 
 1. Dispatch a **fresh** `blueprint-reviewer` subagent (stateless) with **only**
-   the written entity doc (and the relevant `conventions.md` anchors and
-   registry block it references) — no conversation context. It checks the doc
+   the written entity doc — the single file, or **all files** of the folder form
+   (`index.md` + each surface file) — plus the relevant `conventions.md` anchors
+   and registry block it references — no conversation context. It checks the doc
    against the §5 completeness checklist and returns `NO GAPS` or a numbered gap
    list.
 2. **Gaps** → present them, re-elicit the specific open decisions with the user
