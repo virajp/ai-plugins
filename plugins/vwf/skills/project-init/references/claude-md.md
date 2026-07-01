@@ -9,8 +9,8 @@ The section states, briefly:
 - The workflow and order:
   `init → architecture → design-system → blueprint → plan → execute`.
 - The doc tree under `docs/blueprint/` and what each doc is.
-- The two foundations: architecture (always) and design-system (once a UI
-  exists).
+- The foundations: architecture (always), design-system (once a UI exists), and
+  environment (once an external integration or secret exists).
 - The **contract-vs-realization** rule: the blueprint records only decisions
   that have more than one reasonable answer *and* are true regardless of how the
   code is written; reuse / placement / ordering / library choices are `plan`'s

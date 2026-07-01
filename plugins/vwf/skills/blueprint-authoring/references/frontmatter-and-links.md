@@ -48,6 +48,7 @@ status: draft                                      # required — draft | review
 | `vwf-architecture`  | `architecture.md`                               |
 | `vwf-conventions`   | `conventions.md`                                |
 | `vwf-design-system` | `design-system.md`                              |
+| `vwf-environment`   | `environment.md`                                |
 | `vwf-integration`   | `integration.md`                                |
 | `vwf-entity`        | an entity doc (single file, or the folder form) |
 | `vwf-plan`          | a `docs/plans/` cycle plan                      |
@@ -71,6 +72,8 @@ graph is machine-traversable and every edge can be verified to resolve:
   `[design-system](./design-system.md)`.
 - `integration.md` flows link each entity/service they touch:
   `[Order](./order.md)`.
+- `environment.md` links the injection mechanism it defers to:
+  `[config](./conventions.md#config)`.
 
 **Every link must resolve to an existing blueprint doc/anchor.** A dangling edge
 is a gap the reviewer flags — the graph analogue of the code-independence and
@@ -83,7 +86,8 @@ A small, format-valid bundle lives at
 where every edge resolves. Read
 [`order.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/order.md) as the
 entry point; it links `customer.md`, `conventions.md` (auth/errors/ids anchors),
-and `design-system.md`. Use it as the concrete reference for what a conforming
-format-2 entity doc looks like — frontmatter filled, relationships and
-references as resolving links, Screens deferring visual language to the design
-system.
+and `design-system.md`. The bundle also carries `environment.md` (type
+`vwf-environment`), linking `conventions.md#config`. Use it as the concrete
+reference for what a conforming entity doc looks like — frontmatter filled,
+relationships and references as resolving links, Screens deferring visual
+language to the design system.

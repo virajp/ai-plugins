@@ -20,8 +20,10 @@ choices are `plan`'s job — not the blueprint's.
 - `docs/blueprint/architecture.md` — system shape + machine-readable Project
   Registry.
 - `docs/blueprint/design-system.md` — product-wide UX/visual contract (if UI).
-- `docs/blueprint/conventions.md` — cross-cutting decisions (auth, errors,
-  ids…).
+- `docs/blueprint/conventions.md` — cross-cutting decisions (auth, errors, ids,
+  config…).
+- `docs/blueprint/environment.md` — per-project inventory of env vars + secrets,
+  no values (if the system has an external integration/secret).
 - `docs/blueprint/integration.md` — cross-entity flows + inter-service
   contracts.
 - `docs/blueprint/<entity>.md` (or `docs/blueprint/<entity>/` for a large

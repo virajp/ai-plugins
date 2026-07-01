@@ -56,8 +56,9 @@ the worktree **local** — never push remotely here.
 
 ### 3. Read desired vs actual
 
-- **Desired:** the blueprint part for the slice, plus `conventions.md` and the
-  registry.
+- **Desired:** the blueprint part for the slice, plus `conventions.md`, the
+  registry, and — when the slice consumes external credentials/env vars —
+  `docs/blueprint/environment.md` (the variables it must read).
 - **Actual:** the real code in the submodule(s) the registry maps this slice to
   (resolve section→project by `type`, as in `blueprint`).
 

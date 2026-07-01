@@ -122,15 +122,16 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (onboarding/migration doctrine — topology detection, consent-gated dry-run
   migration, the blueprint format-version + drift map; used by `/vwf:init`)
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
-  `design-system`, `integration`, `project-claude` (the vwf section `/vwf:init`
-  merges into a repo's CLAUDE.md), `handoff` (stack-agnostic; section→project
-  mapping resolved from the registry). All blueprint templates open with the OKF
-  frontmatter block (format 2)
-- `assets/examples/blueprint/` — a **format-2 conformance bundle** (`order.md`,
-  `customer.md`, `conventions.md`, `design-system.md`): a worked, format-valid
-  entity slice where every relationship/reference link resolves. Referenced from
-  the blueprint-authoring skill as the concrete "what good looks like"; its
-  asset-refs are covered by `plugins:check`
+  `design-system`, `environment` (the per-project env-var/secret catalog),
+  `integration`, `project-claude` (the vwf section `/vwf:init` merges into a
+  repo's CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved
+  from the registry). All blueprint templates open with the OKF frontmatter
+  block (format 2)
+- `assets/examples/blueprint/` — a **format-3 conformance bundle** (`order.md`,
+  `customer.md`, `conventions.md`, `design-system.md`, `environment.md`): a
+  worked, format-valid entity slice where every relationship/reference link
+  resolves. Referenced from the blueprint-authoring skill as the concrete "what
+  good looks like"; its asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `blueprint`, `plan`, `architecture`, and `design-system`
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
@@ -155,10 +156,11 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 Docs the commands maintain live under `docs/blueprint/` (registry
 `architecture.md`, `conventions.md`, the product-wide `design-system.md`, the
-cross-entity `integration.md`, and one entity doc per entity — either
-`<entity>.md` or, for a large entity, a folder `<entity>/` splitting the same
-sections across `index.md` + `data.md`/`api.md`/`jobs.md`/`screens.md`) and
-`docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
+per-project env-var/secret catalog `environment.md`, the cross-entity
+`integration.md`, and one entity doc per entity — either `<entity>.md` or, for a
+large entity, a folder `<entity>/` splitting the same sections across
+`index.md` + `data.md`/`api.md`/`jobs.md`/`screens.md`) and `docs/plans/`
+(`<date>-<time>-<slice>.md`, with `archived/`). Superseded
 commands/agents/templates from the prior model are archived under
 `archived/vwf-2026-06-19/`.
 
@@ -166,7 +168,7 @@ The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
 2**, every doc is a typed OKF concept: it opens with mandatory YAML frontmatter
 (`type` from a fixed vocabulary —
-`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/
+`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/`vwf-environment`/
 `vwf-integration`/`vwf-entity`/`vwf-plan`/`vwf-gap-report` — plus `title`,
 `description`, `status`; optional `timestamp`/`owner`/`resource`/`tags`), and
 cross-doc relationships are typed markdown links (the OKF edge) rather than
@@ -174,9 +176,10 @@ prose. This makes a blueprint portable to any OKF-aware tool (e.g. the OKF
 static-HTML visualizer) and ingestable by graphify, and lets the
 `blueprint-reviewer` verify frontmatter + that every edge resolves. The doctrine
 lives in the blueprint-authoring skill's `frontmatter-and-links` reference; the
-format is carried by `blueprint-format` + the `1 → 2` delta in the project-init
-skill's `format-versioning` reference, so `/vwf:init` migrates stale repos on
-next use.
+format is carried by `blueprint-format` + the `1 → 2` and `2 → 3` deltas in the
+project-init skill's `format-versioning` reference, so `/vwf:init` migrates
+stale repos on next use. **Format 3** added the `vwf-environment` type and the
+`environment.md` catalog (see Foundations below).
 
 **Foundations & ordering.** The workflow is
 `init → architecture → design-system
@@ -190,10 +193,16 @@ the installed vwf ships and migrates the delta. `architecture` (the registry) is
 unconditionally required before `blueprint`. `design-system` is a second
 foundation, **required once the registry has a frontend/app project** (a UI
 surface): `blueprint` halts on an entity with a Screens surface if
-`docs/blueprint/design-system.md` is missing. The blueprint is a
-**code-independent technical contract** — it records only decisions that have
-more than one reasonable answer *and* are true regardless of how the code is
-written today; reuse/placement/ordering/library choices are `plan`'s job. The
+`docs/blueprint/design-system.md` is missing. `environment.md` (the per-project
+env-var/secret catalog, type `vwf-environment`) is a third foundation,
+**required once the registry declares an external integration or a
+secrets-manager `config`** — `init` bootstraps it from the repo's existing
+env-var/secret usage (names only, never values) and `blueprint` maintains it as
+entities add integrations, with `conventions.md#config` holding only the
+injection mechanism. The blueprint is a **code-independent technical contract**
+— it records only decisions that have more than one reasonable answer *and* are
+true regardless of how the code is written today;
+reuse/placement/ordering/library choices are `plan`'s job. The
 `blueprint-reviewer` gate enforces both the completeness bars (data,
 relationships, concurrency, API, UI/UX, flows) and the code-independence
 guardrail (no file/class/library/CSS/pixel leakage).

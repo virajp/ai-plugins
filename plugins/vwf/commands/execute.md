@@ -39,6 +39,7 @@ missing).
 | Registry    | `docs/blueprint/architecture.md`                           |
 | Blueprint   | `docs/blueprint/<entity>.md` or `docs/blueprint/<entity>/` |
 | Conventions | `docs/blueprint/conventions.md`                            |
+| Environment | `docs/blueprint/environment.md`                            |
 
 ## Pipeline
 
@@ -166,7 +167,14 @@ re-review. Wait for approval before reconciliation.
    change (new project, dependency, or capability), update the **registry
    block** in `docs/blueprint/architecture.md` to match what was actually built
    — via `/vwf:architecture` for non-trivial changes. Edit the registry
-   precisely; do not rewrite prose unless topology genuinely changed.
+   precisely; do not rewrite prose unless topology genuinely changed. If the
+   change also introduced a **new secret or env var** (an integration key,
+   credential, or operational variable a project now reads), reconcile
+   `docs/blueprint/environment.md` — add the variable's catalog row (name /
+   purpose / issuer / used-by / required / classification, **no value**),
+   creating the doc from the environment template if it did not exist. A
+   committed secret value or an undocumented credential is a finding, not a
+   reconciliation.
 2. **Reconcile blueprint/plan gaps.** Collect the cycle's gaps: read the plan
    doc's "Gaps surfaced during execution" section (the durable copy) and recall
    room `gaps` for the full detail. Present the consolidated list to the user

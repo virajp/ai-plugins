@@ -8,7 +8,7 @@ tags: [ identity, commerce ]
 
 # Entity: Customer
 
-<!-- Conformance example (blueprint-format 2). See order.md for the bundle note. -->
+<!-- Conformance example (blueprint-format 3). See order.md for the bundle note. -->
 
 ## Purpose
 

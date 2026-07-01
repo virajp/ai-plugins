@@ -46,6 +46,7 @@ if the format drift is **non-blocking**, log it and continue; if it is
 | Registry    | `docs/blueprint/architecture.md`                           |
 | Blueprint   | `docs/blueprint/<entity>.md` or `docs/blueprint/<entity>/` |
 | Conventions | `docs/blueprint/conventions.md`                            |
+| Environment | `docs/blueprint/environment.md`                            |
 
 ## Pipeline (per step)
 
@@ -230,7 +231,12 @@ are recorded here as gaps too, tagged as plan/blueprint under-specification.
 1. **Architecture.** If the implementation changed topology (new project,
    dependency, or capability), update the registry block in
    `docs/blueprint/architecture.md` — via `/vwf:architecture` for non-trivial
-   changes. Edit precisely; do not rewrite prose unless topology changed.
+   changes. Edit precisely; do not rewrite prose unless topology changed. If it
+   introduced a **new secret or env var**, also reconcile
+   `docs/blueprint/environment.md` — add the variable's catalog row (name /
+   purpose / issuer / used-by / required / classification, **no value**),
+   creating it from the environment template if absent. A committed secret value
+   is a security finding, never a reconciliation.
 2. **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's
    durable decisions, resolved findings, and each gap to mempalace (rooms
    `decisions`, `problems`, `gaps`). Skip anything a doc already captures. Most

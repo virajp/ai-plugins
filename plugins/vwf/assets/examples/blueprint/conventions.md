@@ -10,7 +10,7 @@ status: reviewed
 Cross-cutting decisions referenced by entity docs. Defined once; entity docs
 link to the relevant anchors rather than repeating.
 
-<!-- Conformance example (blueprint-format 2). Only the anchors the example
+<!-- Conformance example (blueprint-format 3). Only the anchors the example
      entities reference are filled; a real conventions.md carries every
      system-wide concern the architecture registry declares. -->
 
@@ -33,3 +33,11 @@ class (4xx client, 5xx server).
 Identifiers are UUIDv7, string-encoded, with a per-entity prefix (`ord_`,
 `cus_`). They are globally unique, sortable by creation time, and opaque to
 clients.
+
+## Config {#config}
+
+Configuration is injected as environment variables — non-secret operational
+values from the deployment env, secrets from the org secrets manager — never
+committed to the repo. This anchor records the *mechanism* (the decision); the
+per-project inventory of the variables themselves lives in
+[environment.md](./environment.md).

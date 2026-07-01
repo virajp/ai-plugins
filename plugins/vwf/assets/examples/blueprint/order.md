@@ -9,7 +9,7 @@ tags: [ sales, commerce ]
 
 # Entity: Order
 
-<!-- Conformance example (blueprint-format 2). A worked, format-valid entity doc:
+<!-- Conformance example (blueprint-format 3). A worked, format-valid entity doc:
      mandatory frontmatter, Relationships/References/Screens as resolving links.
      This bundle omits architecture.md for brevity, so the "→ <project>" section
      targets (api, web) are illustrative registry names, not live links. -->

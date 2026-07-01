@@ -38,16 +38,19 @@ without ambiguity. Surface open decisions rather than guessing.
 | Entity (file)   | `docs/blueprint/<entity>.md`                            |
 | Entity (folder) | `docs/blueprint/<entity>/` (split form, see §4)         |
 | Design system   | `docs/blueprint/design-system.md`                       |
+| Environment     | `docs/blueprint/environment.md`                         |
 | Integration     | `docs/blueprint/integration.md`                         |
 | Entity template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/entity.md`      |
 | Conv. template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/conventions.md` |
+| Env. template   | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md` |
 | Integ. template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/integration.md` |
 
 Doctrine: the **blueprint-authoring** skill (contract-vs-realization,
-entity-contract, integration-and-flows, ui-ux-contract, quick-reference).
+entity-contract, integration-and-flows, ui-ux-contract, environment-catalog,
+quick-reference).
 
 Reserved entity names: `architecture`, `conventions`, `design-system`,
-`integration` (flat namespace in `blueprint/`).
+`environment`, `integration` (flat namespace in `blueprint/`).
 
 ---
 
@@ -150,6 +153,18 @@ only the file boundary differs:
 Choose the form per entity; an existing entity may already be a folder — keep it
 a folder. Update `docs/blueprint/conventions.md` for any cross-cutting decisions
 raised.
+
+**Environment & secrets.** If this entity introduces an external integration or
+a credential/env var a project must consume (a third-party API key, signing key,
+service-account credential, webhook secret, or new operational env var),
+maintain `docs/blueprint/environment.md` — create it from the environment
+template if it does not yet exist, then add/update a row per variable under its
+consuming project (name, purpose, issuer, used-by, required, classification),
+**never the value**. Apply the blueprint-authoring **environment-catalog**
+reference (the catalog-not-wiring line, the classification, and its self-gate
+checklist); `environment.md` defers the injection mechanism to
+`conventions.md#config`. Secrets are project/integration-scoped — they live
+here, not in the entity doc.
 
 **Cross-entity.** Record each relation in the entity's **Relationships**
 section. Capture any multi-entity flow or inter-service contract in

@@ -25,6 +25,8 @@ throughout.
 | Doc               | Path                                                       |
 | ----------------- | ---------------------------------------------------------- |
 | Registry          | `docs/blueprint/architecture.md`                           |
+| Environment       | `docs/blueprint/environment.md`                            |
+| Env. template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`    |
 | Format stamp      | `docs/blueprint/.vwf.yml`                                  |
 | CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` |
 
@@ -69,10 +71,12 @@ mandatory). Never assume UI — confirm it.
 Read `docs/blueprint/.vwf.yml` if present. Per the project-init skill
 (format-versioning), compute the **migration delta** between the repo's current
 format and the format this vwf ships — a legacy `docs/specs/` tree to upgrade, a
-missing `design-system.md` / `integration.md`, entity docs lacking Relationships
-/ Concurrency, or (the **`1 → 2`** delta) docs missing OKF frontmatter and
-relationships/references not yet written as markdown links. Fold in any old or
-partial structure.
+missing `design-system.md` / `environment.md` / `integration.md`, entity docs
+lacking Relationships / Concurrency, the **`1 → 2`** delta (docs missing OKF
+frontmatter and relationships/references not yet written as markdown links), or
+the **`2 → 3`** delta (a missing `environment.md` when the registry declares
+integrations or a secrets-manager `config`). Fold in any old or partial
+structure.
 
 An entity already in the **folder form** (`docs/blueprint/<entity>/` with
 `index.md` + surface files) is a conforming layout, not drift — leave it as a
@@ -94,9 +98,20 @@ other runtimes the detected stacks need — do not install them.
 ### 6. Migrate (consent-gated)
 
 Scaffold the `docs/blueprint` tree (architecture, conventions, design-system,
-integration skeletons from templates) plus `docs/plans/` and
+environment, integration skeletons from templates) plus `docs/plans/` and
 `docs/plans/archived/`. Restructure source per the approved plan, **one batch at
 a time with approval** — move with `git mv` (preserve history), never delete.
+
+**Bootstrap the environment catalog.** When the registry declares integrations
+or a secrets-manager `config` (the `2 → 3` trigger), scaffold
+`docs/blueprint/environment.md` from the environment template and **populate it
+from the repo's existing usage** — scan config schemas, `.env`/`.env.example`,
+mise env values, and CI secrets/variables for the variable *names* and infer
+purpose/issuer/consumer/required/classification per the blueprint-authoring
+**environment-catalog** reference. Record names only — **never copy a value**.
+If a secrets/env-var catalog already lived in `conventions.md#config` (or
+elsewhere), move those rows here and leave `#config` with the injection
+mechanism alone.
 
 ### 7. Orchestrate foundations
 
@@ -113,18 +128,21 @@ Merge the vwf section (from the project-claude template) into the repo's
 ### 9. Stamp the format version
 
 Write `docs/blueprint/.vwf.yml` with the `blueprint_format` version and a
-topology summary, per format-versioning — the thing a future `init` run diffs
-against.
+topology summary (`ui` if a UI surface exists, `integrations` if the registry
+declares integrations or a secrets-manager `config` — i.e. `environment.md` is
+required), per format-versioning — the thing a future `init` run diffs against.
 
 ### 10. Validate
 
 Confirm the registry parses and the required foundations exist for the detected
-topology (design-system present if UI). Confirm the migration produced a
-well-formed **OKF bundle**: every `docs/blueprint/` doc opens with valid
-frontmatter (mandatory `type` from the vocabulary, `title`, `description`,
+topology (design-system present if UI; `environment.md` present if the registry
+declares integrations or a secrets-manager `config`). Confirm the migration
+produced a well-formed **OKF bundle**: every `docs/blueprint/` doc opens with
+valid frontmatter (mandatory `type` from the vocabulary, `title`, `description`,
 `status`) and every relationship/reference link resolves to an existing
 doc/anchor — per the project-init skill (format-versioning) and the
-blueprint-authoring frontmatter-and-links reference. Report anything still open.
+blueprint-authoring frontmatter-and-links reference. Confirm `environment.md`
+carries **no secret values**. Report anything still open.
 
 ### 11. Approval gate & commit
 

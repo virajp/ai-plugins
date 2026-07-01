@@ -20,6 +20,10 @@ Questions.
 - **Inter-service** — event/call contracts with delivery and failure semantics.
 - **UI / UX** — navigation, interaction pattern, all states, form UX; visual
   language referenced from the design system, not re-decided.
+- **Environment & secrets** — (`environment.md`, once integrations/secrets
+  exist) every env var/secret catalogued per consuming project, classified
+  (secret/non-secret/client-id), **no values**; the injection mechanism linked
+  from `conventions.md#config`, not restated.
 - **Limits / NFRs** — stated where they constrain observable behavior.
 - **No realization leaked** — no file/class/library names, no pixels.
 - **Minimalism** — every surface traces to a stated goal or a safety guardrail.
