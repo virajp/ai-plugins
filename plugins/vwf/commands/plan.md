@@ -101,8 +101,11 @@ proceed. Never guess; record a genuinely open item under Risks / drift.
 
 ### 7. Write the plan
 
-Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, steps
-ordered for TDD — each step names the failing test that defines "done".
+Write `docs/plans/<date>-<time>-<slice>.md` from the plan template — including
+its **OKF frontmatter** (`type: vwf-plan`, `title`, `description`, `status`;
+optional `timestamp`) and a markdown link to the blueprint slice in the Slice
+section — steps ordered for TDD, each naming the failing test that defines
+"done".
 
 ### 8. Approval gate
 

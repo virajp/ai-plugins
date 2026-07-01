@@ -124,7 +124,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
   `design-system`, `integration`, `project-claude` (the vwf section `/vwf:init`
   merges into a repo's CLAUDE.md), `handoff` (stack-agnostic; section→project
-  mapping resolved from the registry)
+  mapping resolved from the registry). All blueprint templates open with the OKF
+  frontmatter block (format 2)
+- `assets/examples/blueprint/` — a **format-2 conformance bundle** (`order.md`,
+  `customer.md`, `conventions.md`, `design-system.md`): a worked, format-valid
+  entity slice where every relationship/reference link resolves. Referenced from
+  the blueprint-authoring skill as the concrete "what good looks like"; its
+  asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `blueprint`, `plan`, `architecture`, and `design-system`
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
@@ -155,6 +161,22 @@ sections across `index.md` + `data.md`/`api.md`/`jobs.md`/`screens.md`) and
 `docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
 commands/agents/templates from the prior model are archived under
 `archived/vwf-2026-06-19/`.
+
+The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
+*profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
+2**, every doc is a typed OKF concept: it opens with mandatory YAML frontmatter
+(`type` from a fixed vocabulary —
+`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/
+`vwf-integration`/`vwf-entity`/`vwf-plan`/`vwf-gap-report` — plus `title`,
+`description`, `status`; optional `timestamp`/`owner`/`resource`/`tags`), and
+cross-doc relationships are typed markdown links (the OKF edge) rather than
+prose. This makes a blueprint portable to any OKF-aware tool (e.g. the OKF
+static-HTML visualizer) and ingestable by graphify, and lets the
+`blueprint-reviewer` verify frontmatter + that every edge resolves. The doctrine
+lives in the blueprint-authoring skill's `frontmatter-and-links` reference; the
+format is carried by `blueprint-format` + the `1 → 2` delta in the project-init
+skill's `format-versioning` reference, so `/vwf:init` migrates stale repos on
+next use.
 
 **Foundations & ordering.** The workflow is
 `init → architecture → design-system

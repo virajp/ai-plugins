@@ -23,3 +23,8 @@ Questions.
 - **Limits / NFRs** — stated where they constrain observable behavior.
 - **No realization leaked** — no file/class/library names, no pixels.
 - **Minimalism** — every surface traces to a stated goal or a safety guardrail.
+- **Frontmatter (OKF profile)** — mandatory `type` (valid vocabulary) / `title`
+  / `description` / `status` on every doc (`timestamp`/`owner`/`resource`/`tags`
+  optional).
+- **Links resolve** — Relationships/References/flows use markdown links to
+  target docs, and every edge resolves to an existing blueprint doc/anchor.

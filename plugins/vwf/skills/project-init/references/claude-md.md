@@ -16,5 +16,8 @@ The section states, briefly:
   code is written; reuse / placement / ordering / library choices are `plan`'s
   job.
 - How to run a cycle and where plans live.
+- That `docs/blueprint/` is an **OKF v0.1 bundle** (typed frontmatter + linked
+  edges), so it is portable to any OKF tool (visualizer, graphify ingestion) —
+  not a vwf-only format.
 
 Keep it short — a pointer into the workflow, not a copy of vwf's own docs.

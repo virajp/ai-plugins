@@ -27,4 +27,10 @@ choices are `plan`'s job — not the blueprint's.
 - `docs/blueprint/<entity>.md` (or `docs/blueprint/<entity>/` for a large
   entity) — one contract per entity.
 
+**The blueprint is an OKF bundle.** `docs/blueprint/` is an Open Knowledge
+Format (OKF) v0.1 bundle — every doc is a typed concept (YAML frontmatter) and
+relationships are markdown links. So it is portable: any OKF-aware tool (e.g.
+the OKF static-HTML graph visualizer) can render it, and it can be ingested by a
+knowledge-graph tool like graphify — no vwf-specific reader required.
+
 Re-run `/vwf:init` after upgrading vwf to migrate the docs to the latest format.

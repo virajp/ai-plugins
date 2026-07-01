@@ -69,12 +69,15 @@ mandatory). Never assume UI — confirm it.
 Read `docs/blueprint/.vwf.yml` if present. Per the project-init skill
 (format-versioning), compute the **migration delta** between the repo's current
 format and the format this vwf ships — a legacy `docs/specs/` tree to upgrade, a
-missing `design-system.md` / `integration.md`, or entity docs lacking
-Relationships / Concurrency. Fold in any old or partial structure.
+missing `design-system.md` / `integration.md`, entity docs lacking Relationships
+/ Concurrency, or (the **`1 → 2`** delta) docs missing OKF frontmatter and
+relationships/references not yet written as markdown links. Fold in any old or
+partial structure.
 
 An entity already in the **folder form** (`docs/blueprint/<entity>/` with
-`index.md` + surface files) is a conforming format-1 layout, not drift — leave
-it as a folder; never collapse it into a single file.
+`index.md` + surface files) is a conforming layout, not drift — leave it as a
+folder; never collapse it into a single file. Each surface file still gets its
+own frontmatter under the `1 → 2` delta.
 
 ### 4. Build the migration plan (dry-run)
 
@@ -116,7 +119,12 @@ against.
 ### 10. Validate
 
 Confirm the registry parses and the required foundations exist for the detected
-topology (design-system present if UI). Report anything still open.
+topology (design-system present if UI). Confirm the migration produced a
+well-formed **OKF bundle**: every `docs/blueprint/` doc opens with valid
+frontmatter (mandatory `type` from the vocabulary, `title`, `description`,
+`status`) and every relationship/reference link resolves to an existing
+doc/anchor — per the project-init skill (format-versioning) and the
+blueprint-authoring frontmatter-and-links reference. Report anything still open.
 
 ### 11. Approval gate & commit
 

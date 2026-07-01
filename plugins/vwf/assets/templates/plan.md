@@ -1,3 +1,11 @@
+---
+type: vwf-plan
+title: <slice> — <date>
+description: Cycle plan (a diff) for the <slice> blueprint slice.
+status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
+---
+
 # Plan: <slice> — <date>
 
 <!-- A cycle plan is a DIFF, not a re-blueprint. Reference the blueprint sections; do not

@@ -6,13 +6,8 @@ version: 1
 
 ignores:
   - "**/archived/**"
-
-# overrides:
-#   typescript:
-#     rules:
-#       "@typescript-eslint/no-explicit-any": "error"
-#
-# configs:
-#   - name: "custom"
-#     files: ["**/*.ts"]
-#     rules: {}
+  # vwf blueprint templates + example bundle carry OKF frontmatter (a `title`)
+  # alongside a body H1; the linter counts the frontmatter title as an H1, so
+  # exclude these template/example docs from markdown linting.
+  - "plugins/vwf/assets/templates/**"
+  - "plugins/vwf/assets/examples/**"

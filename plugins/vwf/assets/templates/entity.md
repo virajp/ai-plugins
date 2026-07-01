@@ -1,4 +1,19 @@
+---
+type: vwf-entity
+title: <Name>
+description: <one-line purpose of this entity>
+status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
+---
+
 # Entity: <Name>
+
+<!-- OKF frontmatter above: type/title/description/status are mandatory;
+     timestamp/owner/resource/tags are optional (see frontmatter-and-links).
+     For the folder form, index.md carries type: vwf-entity for the whole entity;
+     each surface file (data/api/jobs/screens) also opens with frontmatter, its
+     title naming the surface (e.g. "<Name> — Data"). See the blueprint-authoring
+     skill's frontmatter-and-links reference. -->
 
 <!-- One entity per doc. This template is the single-file form
      (docs/blueprint/<entity>.md). For a large entity, use the folder form
@@ -56,10 +71,15 @@ One paragraph. What it is and why it exists. No implementation detail.
 
 ## Relationships
 
-| Related entity | Cardinality | Ownership | On delete | Required |
-| -------------- | ----------- | --------- | --------- | -------- |
+| Related entity          | Cardinality | Ownership | On delete | Required |
+| ----------------------- | ----------- | --------- | --------- | -------- |
+| [<Other>](./<other>.md) |             |           |           |          |
 
-<!-- Ownership: composition (child can't exist without the parent) vs reference.
+<!-- "Related entity" MUST be a markdown link to the other entity's blueprint doc
+     (the OKF edge): [Customer](./customer.md), or ../customer/index.md from a
+     folder surface file. This makes the relationship graph machine-traversable
+     and lets the reviewer verify every edge resolves.
+     Ownership: composition (child can't exist without the parent) vs reference.
      On delete: cascade / restrict / nullify. Multi-entity flows belong in
      docs/blueprint/integration.md, not here. -->
 
@@ -94,9 +114,13 @@ One paragraph. What it is and why it exists. No implementation detail.
 
 ## References
 
-- conventions.md#auth, conventions.md#errors, conventions.md#ids (only the
-  cross-cutting sections this entity relies on)
-- design-system.md — for any entity with Screens (tokens, type, components)
+<!-- Markdown links (OKF edges), not bare text — each must resolve. -->
+
+- [auth](./conventions.md#auth), [errors](./conventions.md#errors),
+  [ids](./conventions.md#ids) (only the cross-cutting sections this entity
+  relies on)
+- [design-system](./design-system.md) — for any entity with Screens (tokens,
+  type, components)
 
 ## Open Questions
 

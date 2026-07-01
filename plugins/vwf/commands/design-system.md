@@ -73,8 +73,11 @@ anti-patterns.
 
 ### 4. Write the doc
 
-Write `docs/blueprint/design-system.md` from the template. Promote to the folder
-form `docs/blueprint/design-system/` once it grows large.
+Write `docs/blueprint/design-system.md` from the template — including its **OKF
+frontmatter** (`type: vwf-design-system`, `title`, `description`, `status`;
+optional `timestamp`/`owner`/`resource`/`tags`), per the blueprint-authoring
+frontmatter-and-links reference. Promote to the folder form
+`docs/blueprint/design-system/` once it grows large.
 
 ### 5. Self-gate (checklist)
 

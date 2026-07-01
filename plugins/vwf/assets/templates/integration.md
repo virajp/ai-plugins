@@ -1,3 +1,11 @@
+---
+type: vwf-integration
+title: Integration & Flows
+description: System-level cross-entity flows and inter-service contracts.
+status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
+---
+
 # Integration & Flows
 
 <!-- System-level cross-entity contracts. Per-entity relationships live in each
@@ -5,7 +13,9 @@
      and consistency boundaries. See the blueprint-authoring skill
      (integration-and-flows). Code-independent: name what integrates and with
      what guarantees, never the queue/library/transport. Promote to
-     docs/blueprint/flows/ when this grows past a handful of flows. -->
+     docs/blueprint/flows/ when this grows past a handful of flows.
+     Name each entity/service a flow touches as a markdown link to its blueprint
+     doc (the OKF edge), e.g. [Order](./order.md) — so the flow graph resolves. -->
 
 ## Flows
 

@@ -36,13 +36,22 @@ Verify, for the entity doc under review:
 - [ ] Every state transition has a trigger, guard, and side effect; none implied
       but unlisted.
 - [ ] Every endpoint lists its error cases and idempotency.
-- [ ] Every relationship lists cardinality, ownership, on-delete, and required.
+- [ ] Every relationship lists cardinality, ownership, on-delete, and required,
+      and its "Related entity" cell is a **markdown link** to the other entity's
+      blueprint doc that **resolves** (verify the target exists with Read/Glob).
 - [ ] Concurrency & consistency states concurrent-write resolution and the
       idempotency of each mutating action.
 - [ ] Every screen lists its states and form validation where it has a form, and
       defers visual language to `design-system.md` — no tokens, type, or
       component behavior re-decided in the entity doc.
-- [ ] Every cross-cutting reference resolves to a real `conventions.md` anchor.
+- [ ] Every cross-cutting reference resolves to a real `conventions.md` anchor,
+      written as a markdown link (References are links, not bare text).
+- [ ] **OKF frontmatter** present and complete: the doc opens with YAML
+      frontmatter carrying the mandatory `type` (from the vwf vocabulary — for
+      an entity, `vwf-entity`), `title`, `description`, and `status`
+      (`draft`/`reviewed`/`stable`); `timestamp`/`owner`/`resource`/`tags` are
+      optional. In the folder form, `index.md` and every surface file each carry
+      it. Flag any missing/invalid mandatory field.
 - [ ] Data Model and API sections contain no unresolved ambiguity (apply the
       "two reasonable answers" test per row).
 - [ ] No placeholder text remains except under Open Questions.

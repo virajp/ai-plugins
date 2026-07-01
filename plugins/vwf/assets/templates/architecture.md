@@ -1,3 +1,11 @@
+---
+type: vwf-architecture
+title: <System Name> — Architecture
+description: System shape and the machine-readable Project Registry.
+status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
+---
+
 # <System Name> — Architecture
 
 > **Source of truth for system structure.** Lives at

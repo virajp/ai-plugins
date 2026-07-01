@@ -206,6 +206,14 @@ Maintain `docs/plans/<plan>.gap-report.md` — the consolidated, human-facing,
 mempalace-independent record. One row per gap:
 
 ```markdown
+---
+type: vwf-gap-report
+title: Gap report — <plan>
+description: Blueprint/plan gaps surfaced during autopilot execution of <plan>.
+status: draft # draft | reviewed | stable
+timestamp: <ISO 8601>
+---
+
 # Gap report: <plan>
 
 | Step / stage | What's under/mis-specified | Assumption proceeded on | Blocking?  | Status |

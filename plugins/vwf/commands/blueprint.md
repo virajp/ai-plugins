@@ -125,6 +125,12 @@ Blueprint-specific notes layered on the protocol:
 
 ### 4. Write the entity doc
 
+Open every doc with the **OKF frontmatter** block (`type: vwf-entity`, `title`,
+`description`, `status`; optional `timestamp`/`owner`/`resource`/`tags`) and
+write Relationships/References as resolving markdown links — per the
+blueprint-authoring **frontmatter-and-links** reference. Set `status: draft`
+until the reviewer loop (§5) returns `NO GAPS`, then `reviewed`.
+
 Write the entity in **one of two equal forms** — same sections, same content,
 only the file boundary differs:
 

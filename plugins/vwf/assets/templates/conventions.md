@@ -1,3 +1,11 @@
+---
+type: vwf-conventions
+title: Conventions
+description: Cross-cutting decisions referenced by entity docs.
+status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
+---
+
 # Conventions
 
 Cross-cutting decisions referenced by entity docs. Define once; entity docs link

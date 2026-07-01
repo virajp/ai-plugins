@@ -1,3 +1,11 @@
+---
+type: vwf-design-system
+title: Design System
+description: Product-wide UX/visual contract every blueprint screen references.
+status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
+---
+
 # Design System
 
 <!-- The product-wide UX/visual contract. A vwf foundation, peer of

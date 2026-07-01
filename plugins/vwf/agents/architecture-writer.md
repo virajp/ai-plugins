@@ -41,6 +41,11 @@ You receive:
 
 ### What to fill
 
+0. **OKF frontmatter** — open the doc with the mandatory YAML block:
+   `type: vwf-architecture`, `title` (`<System Name> — Architecture`),
+   `description`, `status` (`draft` on first author, else preserve/advance).
+   Keep this block on every write. `timestamp`/`owner`/`resource`/`tags` are
+   optional — include `timestamp` only if the doc is shipped outside git.
 1. **Prose sections** — System Overview, Projects (one subsection per project),
    Domain Modules, How Projects Interconnect, Hosting & Deployment,
    Infrastructure, Local Development, Package Management, Cross-cutting
