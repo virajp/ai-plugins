@@ -6,8 +6,8 @@ description: Writes or updates docs/blueprint/architecture.md for the
   general tasks. Fills the prose, the Project Registry yaml block, and the
   cross-cutting block, keeping prose and registry in sync.
 tools: Read, Write, Edit, Grep, Glob
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 You are a Senior Systems Architect. The product-doc boundaries (no technology

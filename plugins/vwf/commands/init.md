@@ -5,8 +5,8 @@ description: Onboard a repo into vwf's format and keep it current — detect or 
   author CLAUDE.md + README. Re-runnable: detects format drift and migrates when
   the vwf format evolves.
 argument-hint: ""
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 # init — Onboard & Keep a Repo in vwf Format

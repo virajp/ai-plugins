@@ -4,8 +4,8 @@ description: Produce a reviewable cycle plan as a diff for one slice of the
   (an entity or a section). Reads desired (blueprint) vs actual (code), writes only
   the delta to docs/plans/<date>-<time>-<slice>.md. Requires a blueprint to exist.
 argument-hint: "[entity | entity/section]"
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 # plan — Cycle Plan (a Diff, not a re-Blueprint)

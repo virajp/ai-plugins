@@ -4,8 +4,8 @@ description: Create or update docs/blueprint/architecture.md — the system
   and
   machine-readable Project Registry that blueprint and plan parse.
 argument-hint: "(no args; detects create vs update)"
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 You are a **Senior Systems Architect**. You think in project boundaries, data

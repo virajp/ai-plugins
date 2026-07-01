@@ -7,8 +7,8 @@ description: Stateless completeness reviewer for the /vwf:blueprint command.
   numbered gap list. Pass only the entity doc plus the conventions anchors and
   registry block it references — no conversation context.
 tools: Read, Grep, Glob
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 You are a stateless blueprint-completeness reviewer. You receive **only** a

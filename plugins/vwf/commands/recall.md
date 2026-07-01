@@ -4,7 +4,7 @@ description: Retrieve a handoff document from mempalace (wing=<project>,
   run its next prompt. Use to continue after a session that exceeded ~60% context.
 argument-hint: "<name>"
 model: sonnet
-effort: high
+effort: medium
 ---
 
 # recall — Resume Work from a Handoff

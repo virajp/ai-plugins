@@ -4,8 +4,8 @@ description: Maintain the always-current, full-product blueprint under
   resolves section→project mapping from the architecture registry. Gated by a
   fresh-subagent completeness reviewer loop.
 argument-hint: "[entity]"
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 # blueprint — Full-Product Blueprint

@@ -9,7 +9,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob,
   mcp__plugin_mempalace_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: sonnet
-effort: high
+effort: xhigh
 ---
 
 You are a Senior Developer working under strict TDD. You write the failing test

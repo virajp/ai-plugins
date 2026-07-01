@@ -5,8 +5,8 @@ description: Create or update docs/blueprint/design-system.md — the
   standard, component behaviors) that every blueprint screen references. A vwf
   foundation, mandatory once the product has a UI surface.
 argument-hint: ""
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 # design-system — Product-Wide UX/Visual Contract

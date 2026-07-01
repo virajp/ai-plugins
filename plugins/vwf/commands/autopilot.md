@@ -6,8 +6,8 @@ description: Autonomously execute an approved cycle plan end-to-end in a
   hard halts, resource caps, an all-blocking gap, or an uncovered irreversible
   decision.
 argument-hint: "[plan-file]"
-model: opus
-effort: high
+model: sonnet
+effort: xhigh
 ---
 
 # autopilot — Autonomously Execute an Approved Plan
