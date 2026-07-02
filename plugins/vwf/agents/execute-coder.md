@@ -21,7 +21,8 @@ to adopt the project's actual stack vocabulary.
 
 You are given the approved plan (in `docs/plans/`), the blueprint slice it
 implements (in `docs/blueprint/`), the project's stack from the architecture
-registry, and the project's mempalace **wing**. On a **fix loop-back** you are
+registry, the project's mempalace **wing**, and the **slice name** and **round
+number** for your gap tags (never invent them). On a **fix loop-back** you are
 also given a findings **recall tag** (e.g. `order/review/2`) instead of the
 findings text.
 
@@ -69,9 +70,17 @@ code before a failing test exists:
    inherits the shell's stdout and keeps the call open **forever even after the
    tests finish** — redirecting to a file lets the call return regardless. If
    such a helper is left running after the suite, tear it down before
-   continuing. Then verify **100% coverage**. If lines remain uncovered after a
-   bounded number of attempts, **stop and report them** as `file:line` — do not
-   loop indefinitely chasing coverage.
+   continuing.
+6. **Coverage gate.** Discover the coverage command from `mise tasks` — prefer a
+   dedicated mise task (`code:coverage`, `test:coverage`) or the suite's own
+   coverage flag — and run it with the **same** non-interactive redirect-to-file
+   discipline as the suite above (a background helper can hang the call the same
+   way; tear down any left running). If the project has **no coverage tooling**,
+   report `COVERAGE: n/a — no coverage tooling` and do **not** block. Otherwise
+   aim for **100%**; if lines remain uncovered after at most **3** fix attempts,
+   **stop** and hand off the uncovered lines as `file:line` — do not loop
+   indefinitely chasing coverage. You never block on a sub-100% result; the
+   orchestrator's gate decides.
 
 ## Return contract
 
@@ -84,7 +93,7 @@ diffs, or file contents.
 IMPLEMENTED:
 - <one terse line per plan step satisfied>   # ≤ 8 lines total
 TESTS: <suite command> — <N passed / M failed>
-COVERAGE: <overall %>   # if < 100%, append "— uncovered: file:line, file:line …"
+COVERAGE: <overall % | n/a — no coverage tooling>   # if < 100%, append "— uncovered: file:line, file:line …"
 GAPS: <slice>/gap/<round>   # mempalace tag for blueprint/plan holes hit; "none" if the plan fully determined the work
 ```
 

@@ -50,11 +50,12 @@ if the format drift is **non-blocking**, log it and continue; if it is
 
 ## Pipeline (per step)
 
-| Stage    | What             | Model  | Subagent                    |
-| -------- | ---------------- | ------ | --------------------------- |
-| code     | Write Code (TDD) | sonnet | `execute-coder`             |
-| review   | Code Review      | opus   | `execute-code-reviewer`     |
-| security | Security Review  | opus   | `execute-security-reviewer` |
+`code` → `review` → `security` per step. The stage table, per-stage subagent
+contracts, and shared stage rules (model enforcement, terse subagent output,
+loop-on-findings, gap capture, never silently editing the blueprint) are defined
+in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` (shared with `/vwf:execute`)
+— follow them throughout. For `autopilot`, the durable gap record is the
+**gap-report** file.
 
 ## Autonomous Rules
 
@@ -63,7 +64,10 @@ if the format drift is **non-blocking**, log it and continue; if it is
 - **Dependencies first.** Before executing, derive a dependency order over the
   steps (what a step needs to already exist) and run prerequisites before
   dependents. The plan's TDD order is the starting point; reorder only to honor
-  a real dependency.
+  a real dependency. If the derivation finds a **cycle or genuine ambiguity**,
+  fall back to the plan's **written TDD order** as-is; if even that is not
+  executable, treat it as an **uncovered decision** and pause (per the Pause
+  Conditions) — never invent an order.
 - **One plan, one worktree.** Via `/vwf:git-workflow`, create a dedicated
   isolated worktree for this plan — declared preference: **yes, isolate; do not
   prompt**. Implement everything there and **commit each step autonomously** (no
@@ -90,9 +94,6 @@ if the format drift is **non-blocking**, log it and continue; if it is
   (its Step 1) and **commit only — do not prompt, never merge/push** (its Step
   4). Without these, git-workflow's post-commit gate fires on every step commit
   and stalls the run.
-- **Model enforcement** — dispatch each subagent on its model above.
-- **Terse subagent output** — subagents return their fixed contract blocks; any
-  other agent you spawn returns only conclusions and `file:line` pointers.
 - **Memory via mempalace (lean on it)** — follow
   `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`. mempalace is autopilot's working
   memory, not just an end-of-run sink: resolve the project **wing** once;
@@ -107,14 +108,21 @@ if the format drift is **non-blocking**, log it and continue; if it is
 ## Pause Conditions
 
 These are the **only** stops. On any pause: ensure the worktree is committed,
-update the gap-report, state precisely what is needed, and stop — do not guess
-past it.
+update the gap-report, state precisely what is needed, **emit the exact resume
+command**, and stop — do not guess past it. The resume command is
+`/vwf:recall <handoff-name>` after a **resource-cap** pause (which ran
+`/vwf:handoff` first), and `/vwf:autopilot <plan>` for every other pause (it
+resumes from the run journal per the Resume check).
 
 **Always on**
 
 - **Hard halts** — no approved plan or missing blueprint for a needed slice; the
   test/coverage/build harness cannot run at all (TDD can't be verified); a git
   or merge **conflict** that cannot be safely resolved.
+- **Subagent death** — a stage subagent erroring twice in a row (after one
+  re-dispatch) on the **same step**. Commit what is safe, journal the step as
+  **blocked** (run journal + gap-report), and pause — never proceed on a dead
+  stage.
 - **Resource caps** — context > 65%, 5-hour > 90%, or 7-day > 80%. A command
   cannot measure its own context window, so this signal is **delivered by the
   statusline caps hook** (install via `@askviraj/ai-plugins --statusline`); for
@@ -139,9 +147,9 @@ not create) are **refused**, never paused on.
 ## Recall (mempalace)
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, resolve the project **wing** and
-recall prior decisions, findings, and unreconciled gaps for this slice (rooms
-`decisions`, `problems`, `gaps`) before the first step. Pass the wing to every
-subagent.
+recall prior decisions, plan rationale, findings, and unreconciled gaps for this
+slice (rooms `decisions`, `planning`, `problems`, `gaps`) before the first step.
+Pass the wing to every subagent.
 
 **Resume check.** Also recall the **run journal** (room `runs`, drawer
 `<plan>`). If a prior run for this plan is recorded, read which steps are
@@ -149,6 +157,11 @@ already done and their commits, reconcile against the worktree, and **resume at
 the current step** — do not re-implement finished steps. This is how a run
 paused at a resource cap (`/vwf:handoff` → `/vwf:recall`) picks up where it left
 off.
+
+**Tie-break — the worktree is authoritative.** If the journal marks a step
+**done** but its commit is **absent** from the worktree, trust the worktree and
+**re-run that step**. The journal is skip-if-mempalace-down, so it can be stale
+or ahead of what actually landed; the committed code is ground truth.
 
 Per-step recall continues inside the Execute loop below. Skip every memory step
 silently if mempalace is unavailable.
@@ -181,20 +194,18 @@ journal):
    3-5). Pass the relevant hits (with the wing) to the coder so it builds on
    prior decisions instead of re-deriving them. Skip silently if mempalace is
    down.
-2. **code** — dispatch `execute-coder` (sonnet) with the plan step, registry
-   stack, wing, and recall hits. Strict TDD (RED → GREEN → REFACTOR) to the
-   coverage gate.
-3. **review** — dispatch `execute-code-reviewer` (opus). Issues → loop back to
-   `code` with the findings **tag** (the coder recalls detail from mempalace),
-   re-commit, re-review. Cap at **4 rounds**; document residual review findings
-   as gaps and move on.
-4. **security** — dispatch `execute-security-reviewer` (opus). **Every** finding
-   → loop back to `code`, re-commit, re-review until security is clean. Never
-   defer a security finding.
+2. **code** — dispatch `execute-coder` per the stage contract in
+   `execute-stages.md` (plan step, registry stack, wing, recall hits).
+3. **review** — dispatch `execute-code-reviewer` per the stage contract. Issues
+   → loop back to `code` with the findings **tag**, re-commit, re-review, **per
+   the round-cap rule** (residuals after the cap → documented as gaps).
+4. **security** — dispatch `execute-security-reviewer` per the stage contract.
+   Loop every finding back to `code`, re-commit, re-review **per the
+   security-always-fix rule**.
 5. **gaps** — any stage's gap pointer → append to the gap-report and file to
    mempalace room `gaps`. Decide blocking vs non-blocking and act per the rules.
-6. **commit** — commit the step's work via `/vwf:git-workflow` (declared:
-   commit-only, no prompt).
+6. **commit** — commit the step's work via `/vwf:git-workflow`, **per the
+   commit-only preference**.
 7. **persist & journal** — store the step's durable decisions to room
    `decisions`, then update the run journal (room `runs`, drawer `<plan>`): mark
    this step **done** with its commit ref, the review/security round counts, and
@@ -228,15 +239,9 @@ are recorded here as gaps too, tagged as plan/blueprint under-specification.
 
 ## Reconcile
 
-1. **Architecture.** If the implementation changed topology (new project,
-   dependency, or capability), update the registry block in
-   `docs/blueprint/architecture.md` — via `/vwf:architecture` for non-trivial
-   changes. Edit precisely; do not rewrite prose unless topology changed. If it
-   introduced a **new secret or env var**, also reconcile
-   `docs/blueprint/environment.md` — add the variable's catalog row (name /
-   purpose / issuer / used-by / required / classification, **no value**),
-   creating it from the environment template if absent. A committed secret value
-   is a security finding, never a reconciliation.
+1. **Architecture & environment.** Reconcile per the Reconcile section of
+   `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry block for any
+   topology change, `environment.md` for any new secret/env var.
 2. **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's
    durable decisions, resolved findings, and each gap to mempalace (rooms
    `decisions`, `problems`, `gaps`). Skip anything a doc already captures. Most
@@ -248,7 +253,9 @@ are recorded here as gaps too, tagged as plan/blueprint under-specification.
 
 Report: steps completed, per-step commits, final coverage, and the **worktree
 path** — it is committed and ready for the user to review and merge (autopilot
-does not merge or push).
+does not merge or push). If the run stopped short of the full plan, also emit
+the **resume command** (`/vwf:autopilot <plan>`, or `/vwf:recall <handoff-name>`
+after a resource-cap pause) so the user can pick it back up.
 
 - **If any gaps remain:** present the gap-report and ask the user to take care
   of the gaps — the blueprint/plan needs them resolved (via `/vwf:blueprint` /

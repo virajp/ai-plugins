@@ -43,11 +43,12 @@ missing).
 
 ## Pipeline
 
-| Stage    | What             | Model  | Subagent                    |
-| -------- | ---------------- | ------ | --------------------------- |
-| code     | Write Code (TDD) | sonnet | `execute-coder`             |
-| review   | Code Review      | opus   | `execute-code-reviewer`     |
-| security | Security Review  | opus   | `execute-security-reviewer` |
+`code` → `review` → `security`. The stage table, per-stage subagent contracts,
+and shared stage rules (model enforcement, terse subagent output,
+loop-on-findings, gap capture, never silently editing the blueprint) are defined
+in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` (shared with
+`/vwf:autopilot`) — follow them throughout. For `execute`, the durable gap
+record is the **plan doc's "Gaps surfaced during execution" section**.
 
 ## Hard Rules
 
@@ -55,33 +56,17 @@ missing).
   push — goes through `/vwf:git-workflow`. `execute` invokes it **multiple
   times**: worktree at the start, a commit after each stage's work lands, and a
   final merge/push behind the approval gate. Never run raw git.
-- **Model enforcement** — dispatch each subagent on the model specified above.
-- **Terse subagent output** — a subagent's full reply lands in this
-  orchestrator's context. The pipeline agents already return fixed contract
-  blocks; for any *other* agent you spawn (e.g. `Explore` for research),
-  instruct it to return only conclusions and `file:line` pointers — never code
-  excerpts, diffs, or full file/dir dumps. Read files yourself when you need
-  their contents.
 - **Approval gates** — pause for explicit user approval before advancing. Never
   chain stages automatically.
-- **Loop on findings** — if review or security finds issues, loop back to `code`
-  to fix (then re-commit via `git-workflow`) before advancing.
-- **Capture blueprint/plan gaps as they surface** — a *gap* (a hole in the
-  blueprint or plan, distinct from a code finding) reported by any stage is
-  never silently worked around. The subagent files the full gap to mempalace
-  room `gaps` and returns a terse pointer; you **mirror that terse line into the
-  plan doc's "Gaps surfaced during execution" section** (the durable,
-  mempalace-independent copy) the moment it surfaces. Gaps do **not** block the
-  pipeline — they are reconciled at cycle end.
-- **Never silently edit the blueprint** — flag drift and offer; do not rewrite
-  it.
-- **Memory via mempalace** — follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`:
-  resolve the project **wing** and recall prior decisions/findings/gaps before
-  the first stage; the coder and review/security subagents file their own
-  findings and **blueprint/plan gaps** to mempalace and the coder recalls
-  findings on loop-backs (rich detail bypasses your context); persist the
-  cycle's durable decisions and gap resolutions at reconcile. Pass the wing to
-  every subagent you dispatch.
+- **Subagent failure** — if a dispatched subagent errors or returns a malformed
+  contract block (missing the fixed fields the stage expects), **re-dispatch it
+  once**. On a second failure, **halt the stage and report** — never advance on
+  a missing or unparseable contract.
+- **Memory via mempalace** — see the **Recall (mempalace)** section below and
+  `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`. Unique to execute's subagents: they
+  file their own findings and blueprint/plan gaps (rich detail bypasses your
+  context) and recall them on fix loop-backs; **pass the wing to every subagent
+  you dispatch**.
 
 ## Mode
 
@@ -89,17 +74,20 @@ Read the run mode from `$ARGUMENTS`:
 
 - **`full` or no args** → start at `code` and gate through each stage.
 - **A specific stage (`review`, etc.)** → verify the preceding stage is
-  complete, then jump to it.
+  complete, then jump to it. **Complete** means its commit exists in the
+  worktree (`git log` shows the stage's commit) and, when the preceding stage is
+  `code`, its coverage report was produced. If completeness can't be determined,
+  **ask the user** rather than guessing.
 
 ---
 
 ## Recall (mempalace)
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, resolve the project **wing** and
-recall prior decisions, findings, and unreconciled gaps for this slice (rooms
-`decisions`, `problems`, `gaps`) before the first stage. Pass the wing to every
-subagent you dispatch, plus any relevant recall hits. Skip silently if mempalace
-is unavailable.
+recall prior decisions, plan rationale, findings, and unreconciled gaps for this
+slice (rooms `decisions`, `planning`, `problems`, `gaps`) before the first
+stage. Pass the wing to every subagent you dispatch, plus any relevant recall
+hits. Skip silently if mempalace is unavailable.
 
 ## Stage: code (`execute-coder`, sonnet)
 
@@ -118,27 +106,20 @@ If a language's LSP server is missing, ask and **wait**:
 
 - **Yes** → proceed. **No** → halt; install via `/plugin` (Discover) then retry.
 
-**Setup & dispatch.** Invoke `/vwf:git-workflow` for an isolated local worktree.
-Then dispatch `execute-coder` with the plan, the registry stack, and the project
-wing. It implements per the plan under strict TDD — following RED → GREEN →
-REFACTOR for every change — and runs the suite to the coverage gate. It returns
-the coverage report. On a fix loop-back, also pass the review findings **tag**
-(not the text) — the coder recalls the findings from mempalace before fixing.
+**Setup & dispatch.** Invoke `/vwf:git-workflow` for an isolated local worktree,
+then dispatch `execute-coder` per the stage contract in `execute-stages.md`
+(plan, registry stack, wing; the findings **tag** on a fix loop-back).
 
 **Capture any gap.** If the coder's `GAPS:` line points to a tag (not "none"),
 mirror its terse gist into the plan doc's "Gaps surfaced during execution"
-section before committing — per the gap-capture rule above.
+section before committing — per the gap-capture rule.
 
 **Commit & gate.** Commit the implementation via `/vwf:git-workflow`. Show the
 coverage report and wait for explicit approval before `review`.
 
 ## Stage: review (`execute-code-reviewer`, opus)
 
-Dispatch `execute-code-reviewer` (pass the project wing). It reviews the code
-adversarially against the **plan, the blueprint, conventions, and the registry
-stack**, using `/code-review` as its engine. It files its full findings to
-mempalace (room `problems`) and returns the terse findings block plus a recall
-tag.
+Dispatch `execute-code-reviewer` per the stage contract in `execute-stages.md`.
 
 **Gate.** Present the findings block. If `SPEC/PLAN GAPS` is not "none", mirror
 each into the plan doc's "Gaps surfaced during execution" section (per the
@@ -146,13 +127,18 @@ gap-capture rule). Issues → loop back to `code` with the **tag** (the coder
 recalls the detail and fixes), then re-commit via `/vwf:git-workflow` and
 re-review. Wait for approval before `security`.
 
+**Loop policy.** The review→code loop is intentionally **unbounded** — a human
+gates every round, so it can run as long as the findings keep shrinking (heed
+the convergence guard). But when the **4th round** still leaves findings open,
+stop looping blind and suggest the autopilot-style resolution: document the
+residuals as gaps in the plan doc's "Gaps surfaced during execution" section and
+reconcile them (blueprint/plan holes → `/vwf:blueprint` / `/vwf:plan`) rather
+than churning further rounds.
+
 ## Stage: security (`execute-security-reviewer`, opus)
 
-Dispatch `execute-security-reviewer` (pass the project wing). It threat-models
-the changes against the project's declared **capabilities** in the registry,
-using `/security-review` as its engine, rating findings by exploitability and
-impact. It files its full findings to mempalace (room `problems`) and returns
-the terse findings block plus a recall tag.
+Dispatch `execute-security-reviewer` per the stage contract in
+`execute-stages.md`.
 
 **Gate.** Present the findings block. If `SPEC/PLAN GAPS` is not "none", mirror
 each into the plan doc's "Gaps surfaced during execution" section (per the
@@ -163,18 +149,9 @@ re-review. Wait for approval before reconciliation.
 
 ## Reconcile & drift
 
-1. **Reconcile architecture.** If the implementation introduced a topology
-   change (new project, dependency, or capability), update the **registry
-   block** in `docs/blueprint/architecture.md` to match what was actually built
-   — via `/vwf:architecture` for non-trivial changes. Edit the registry
-   precisely; do not rewrite prose unless topology genuinely changed. If the
-   change also introduced a **new secret or env var** (an integration key,
-   credential, or operational variable a project now reads), reconcile
-   `docs/blueprint/environment.md` — add the variable's catalog row (name /
-   purpose / issuer / used-by / required / classification, **no value**),
-   creating the doc from the environment template if it did not exist. A
-   committed secret value or an undocumented credential is a finding, not a
-   reconciliation.
+1. **Reconcile architecture & environment** per the Reconcile section of
+   `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry block for any
+   topology change, `environment.md` for any new secret/env var.
 2. **Reconcile blueprint/plan gaps.** Collect the cycle's gaps: read the plan
    doc's "Gaps surfaced during execution" section (the durable copy) and recall
    room `gaps` for the full detail. Present the consolidated list to the user
