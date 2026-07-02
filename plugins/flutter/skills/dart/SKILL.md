@@ -39,11 +39,11 @@ the always-on baseline.
 
 ## UI
 
-| Topic                                                                                | When to read                                                   |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| [Building layouts](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/building-layouts.md) | Building layouts with the constraint system and layout widgets |
-| [Theming](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/theming.md)                   | Material 3 theming, component themes, adaptive design          |
-| [Animation](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/animate/index.md)           | Declarative widget animations with flutter_animate             |
+| Topic                                                                                | When to read                                                               |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| [Building layouts](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/building-layouts.md) | Building layouts with the constraint system and layout widgets             |
+| [Theming](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/theming.md)                   | The MyColors token system, the Material 3 bootstrap theme, adaptive design |
+| [Animation](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/animate/index.md)           | Declarative widget animations with flutter_animate                         |
 
 ## Data & Networking
 

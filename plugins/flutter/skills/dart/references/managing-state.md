@@ -1,242 +1,106 @@
-# Managing State in Flutter
+# Managing State
 
-## Contents
+State lives in GetX. Distinguish two kinds of state and pick the holder for each
+— never reach for `provider`, `ChangeNotifier`, or a raw Dart singleton.
 
-- [Core Concepts](#core-concepts)
-- [Architecture and Data Flow](#architecture-and-data-flow)
-- [Workflow: Selecting a State Management Approach](#workflow-selecting-a-state-management-approach)
-- [Workflow: Implementing MVVM with Provider](#workflow-implementing-mvvm-with-provider)
-- [Examples](#examples)
+## Ephemeral vs shared state
 
-## Core Concepts
+- **Ephemeral (widget-local):** State that never leaves one widget and does not
+  survive it — an `AnimationController`, a `PageView`'s current page, a hover
+  flag. Keep it in a `StatefulWidget` with `setState()`. Reaching for GetX here
+  is over-engineering.
+- **Shared / app state:** Anything read or mutated from more than one widget, or
+  that must outlive a screen (the signed-in user, a cart, a fetched list). This
+  lives in a GetX **controller** (screen-scoped) or **service** (app-wide),
+  never in the widget tree.
 
-Flutter's UI is declarative; it is built to reflect the current state of the app
-(`UI = f(state)`). When state changes, trigger a rebuild of the UI that depends
-on that state.
+## Choosing the holder
 
-Distinguish between two primary types of state to determine your management
-strategy:
+| State scope                                 | Holder                                          |
+| ------------------------------------------- | ----------------------------------------------- |
+| One screen, disposed when the screen leaves | `GetxController` (via a route `Binding`)        |
+| App-wide, alive for the whole session       | `GetxService` (`Get.putAsync(permanent: true)`) |
+| Pure widget-local UI                        | `StatefulWidget` + `setState()`                 |
 
-- **Ephemeral State (Local State):** State contained neatly within a single
-  widget (e.g., current page in a `PageView`, current selected tab, animation
-  progress). Manage this using a `StatefulWidget` and `setState()`.
-- **App State (Shared State):** State shared across multiple parts of the app
-  and maintained between user sessions (e.g., user preferences, login info,
-  shopping cart contents). Manage this using advanced approaches like
-  `InheritedWidget`, the `provider` package, and the MVVM architecture.
+Controllers own the **UI state** for a screen (loading flags, form values, the
+list being shown) and expose commands for user actions. Services own the
+**source-of-truth data** that outlives any one screen and pull it through static
+repositories. A page reads its controller via `GetView<Controller>`;
+cross-screen data is read through the service's static `get` accessor.
 
-## Architecture and Data Flow
+## Reactive vs manual rebuilds
 
-Implement the **Model-View-ViewModel (MVVM)** design pattern combined with
-**Unidirectional Data Flow (UDF)** for scalable app state management.
+Within a controller, choose how the UI observes state:
 
-- **Unidirectional Data Flow (UDF):** Enforce a strict flow where state flows
-  *down* from the data layer, through the logic layer, to the UI layer. Events
-  from user interactions flow *up* from the UI layer, to the logic layer, to the
-  data layer.
-- **Single Source of Truth (SSOT):** Ensure data changes always happen in the
-  data layer (Repositories). The SSOT class must be the only class capable of
-  modifying its respective data.
-- **Model (Data Layer):** Handle low-level tasks like HTTP requests, data
-  caching, and system resources using Repository classes.
-- **ViewModel (Logic Layer):** Manage the UI state. Convert app data from the
-  Model into UI State. Extend `ChangeNotifier` and call `notifyListeners()` to
-  trigger UI rebuilds when data changes.
-- **View (UI Layer):** Display the state provided by the ViewModel. Keep views
-  lean; they should contain minimal logic (only routing, animations, or simple
-  UI conditionals).
+- **`.obs` + `Obx`** — a single value drives a widget; the wrap rebuilds only
+  when the value changes. Use for cross-widget reactive state.
+- **`GetBuilder` + `update(['id'])`** — several values change together and one
+  explicit `update()` is cleaner; lighter than reactive state. Use for
+  single-page state.
 
-## Workflow: Selecting a State Management Approach
+For the reactive operators, workers (`ever`/`debounce`/`interval`), and the
+controller lifecycle, see the **getx** reference.
 
-Evaluate the scope of the state to determine the correct implementation
-strategy.
+## Example
 
-- **If managing Ephemeral State (single widget scope):**
-  1. Subclass `StatefulWidget` and `State`.
-  2. Store mutable state as private fields within the `State` class.
-  3. Mutate state exclusively inside a `setState()` callback to mark the widget
-     as dirty and schedule a rebuild.
-- **If managing App State (shared across widgets):**
-  1. Implement the MVVM pattern.
-  2. Use the `provider` package (a wrapper around `InheritedWidget`) to inject
-     state into the widget tree.
-  3. Use `ChangeNotifier` to emit state updates.
-
-## Workflow: Implementing MVVM with Provider
-
-Follow this sequential workflow to implement app-level state management using
-MVVM and `provider`.
-
-**Task Progress:**
-
--
-  1. [ ] Define the Model (Repository).
--
-  2. [ ] Create the ViewModel (`ChangeNotifier`).
--
-  3. [ ] Inject the ViewModel into the Widget Tree.
--
-  4. [ ] Consume the State in the View.
--
-  5. [ ] Validate the implementation.
-
-### 1. Define the Model (Repository)
-
-Create a repository class to act as the Single Source of Truth (SSOT) for the
-specific data domain. Handle all external API calls or database queries here.
-
-### 2. Create the ViewModel (`ChangeNotifier`)
-
-Create a ViewModel class that extends `ChangeNotifier`.
-
-- Pass the Repository into the ViewModel via dependency injection.
-- Define properties for the UI state (e.g., `isLoading`, `data`,
-  `errorMessage`).
-- Implement methods to handle UI events. Inside these methods, mutate the state
-  and call `notifyListeners()` to trigger UI rebuilds.
-
-### 3. Inject the ViewModel into the Widget Tree
-
-Use `ChangeNotifierProvider` from the `provider` package to provide the
-ViewModel to the widget subtree that requires it. Place the provider as low in
-the widget tree as possible to avoid polluting the scope.
-
-### 4. Consume the State in the View
-
-Access the ViewModel in your `StatelessWidget` or `StatefulWidget`.
-
-- Use `Consumer<MyViewModel>` to rebuild specific parts of the UI when
-  `notifyListeners()` is called.
-- Use `context.read<MyViewModel>()` (or
-  `Provider.of<MyViewModel>(context, listen: false)`) inside event handlers
-  (like `onPressed`) to call ViewModel methods without triggering a rebuild of
-  the calling widget.
-
-### 5. Validate the implementation
-
-Run the following feedback loop to ensure data flows correctly:
-
-1. Trigger a user action in the View.
-2. Verify the ViewModel receives the event and calls the Repository.
-3. Verify the Repository updates the SSOT and returns data.
-4. Verify the ViewModel updates its state and calls `notifyListeners()`.
-5. Verify the View rebuilds with the new state. *Run validator -> review errors
-   -> fix missing `notifyListeners()` calls or incorrect `Provider` scopes.*
-
-## Examples
-
-### Ephemeral State Implementation (`setState`)
-
-Use this pattern strictly for local, UI-only state.
+Screen state in a controller, reactive UI, data pulled from a service:
 
 ```dart
-class EphemeralCounter extends StatefulWidget {
-  const EphemeralCounter({super.key});
+class CartController extends GetxController {
+  static CartController get to => Get.find();
 
-  @override
-  State<EphemeralCounter> createState() => _EphemeralCounterState();
+  final RxList<MyItem> items = <MyItem>[].obs;
+  final RxBool isSaving = false.obs;
+
+  Future<void> addItem(final MyItem item) async {
+    isSaving.value = true;
+    final bool ok = await CartRepo.save(item);
+    if (ok) items.add(item);
+    isSaving.value = false;
+  }
 }
 
-class _EphemeralCounterState extends State<EphemeralCounter> {
-  int _counter = 0; // Local state
-
-  void _increment() {
-    setState(() {
-      _counter++; // Mutate state and schedule rebuild
-    });
-  }
+class CartScreen extends GetView<CartController> {
+  const CartScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: _increment,
-      child: Text('Count: $_counter'),
+  Widget build(final BuildContext context) {
+    return MyScaffold(
+      body: Obx(() {
+        if (controller.isSaving.value) {
+          return const CircularProgressIndicator();
+        }
+        return ListView(
+          children: controller.items
+              .map((final MyItem item) => MyText(item.title))
+              .toList(),
+        );
+      }),
     );
   }
 }
 ```
 
-### App State Implementation (MVVM + Provider)
-
-Use this pattern for shared data and complex business logic.
+The repository (`CartRepo`) is a static, stateless method that goes through
+`MyApi.to` and returns `false` on failure — see the **http-and-json** reference.
+Ephemeral state stays in `setState`:
 
 ```dart
-// 1. Model (Repository)
-class CartRepository {
-  Future<void> saveItemToCart(String item) async {
-    // Simulate network/database call
-    await Future.delayed(const Duration(milliseconds: 500));
-  }
-}
-
-// 2. ViewModel (ChangeNotifier)
-class CartViewModel extends ChangeNotifier {
-  final CartRepository repository;
-
-  CartViewModel({required this.repository});
-
-  final List<String> _items = [];
-  bool isLoading = false;
-  String? errorMessage;
-
-  List<String> get items => List.unmodifiable(_items);
-
-  Future<void> addItem(String item) async {
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners(); // Trigger loading UI
-
-    try {
-      await repository.saveItemToCart(item);
-      _items.add(item);
-    } catch (e) {
-      errorMessage = 'Failed to add item';
-    } finally {
-      isLoading = false;
-      notifyListeners(); // Trigger success/error UI
-    }
-  }
-}
-
-// 3. Injection & 4. View (UI)
-class CartApp extends StatelessWidget {
-  const CartApp({super.key});
+class ExpandingCard extends StatefulWidget {
+  const ExpandingCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Inject ViewModel
-    return ChangeNotifierProvider(
-      create: (_) => CartViewModel(repository: CartRepository()),
-      child: const CartScreen(),
-    );
-  }
+  State<ExpandingCard> createState() => _ExpandingCardState();
 }
 
-class CartScreen extends StatelessWidget {
-  const CartScreen({super.key});
+class _ExpandingCardState extends State<ExpandingCard> {
+  bool _isExpanded = false;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Consumer<CartViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading) {
-            return const CircularProgressIndicator();
-          }
-          if (viewModel.errorMessage != null) {
-            return Text(viewModel.errorMessage!);
-          }
-          return ListView.builder(
-            itemCount: viewModel.items.length,
-            itemBuilder: (_, index) => Text(viewModel.items[index]),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        // Use read() to access methods without listening for rebuilds
-        onPressed: () => context.read<CartViewModel>().addItem('New Item'),
-        child: const Icon(Icons.add),
-      ),
+  Widget build(final BuildContext context) {
+    return MyButton(
+      text: _isExpanded ? 'Collapse' : 'Expand',
+      onPressed: () => setState(() => _isExpanded = !_isExpanded),
     );
   }
 }

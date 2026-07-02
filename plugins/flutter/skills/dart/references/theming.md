@@ -1,211 +1,95 @@
-# Implementing Flutter Theming and Adaptive Design
+# Theming & Adaptive Design
 
-## Contents
+Widgets never hardcode a `Color` or read `Theme.of(context)` directly. Color
+comes from the semantic `MyColors.get` accessors and type comes from `MyText`;
+both resolve light/dark automatically. Raw `ThemeData` lives in exactly one
+place — the app bootstrap that feeds `GetMaterialApp` — and `MyColors` reads
+from it.
 
-- [Core Theming Concepts](#core-theming-concepts)
-- [Material 3 Guidelines](#material-3-guidelines)
-- [Component Theme Normalization](#component-theme-normalization)
-- [Button Styling](#button-styling)
-- [Platform Idioms & Adaptive Design](#platform-idioms--adaptive-design)
-- [Workflows](#workflows)
-- [Examples](#examples)
+## The token system (use this in widgets)
 
-## Core Theming Concepts
-
-Flutter applies styling in a strict hierarchy: styles applied to the specific
-widget -> themes that override the immediate parent theme -> the main app theme.
-
-- Define app-wide themes using the `theme` property of `MaterialApp` with a
-  `ThemeData` instance.
-- Override themes for specific widget subtrees by wrapping them in a `Theme`
-  widget and using `Theme.of(context).copyWith(...)`.
-- **Do not** use deprecated `ThemeData` properties:
-  - Replace `accentColor` with `colorScheme.secondary`.
-  - Replace `accentTextTheme` with `textTheme` (using `colorScheme.onSecondary`
-    for contrast).
-  - Replace `AppBarTheme.color` with `AppBarTheme.backgroundColor`.
-
-## Material 3 Guidelines
-
-Material 3 is the default theme as of Flutter 3.16.
-
-- **Colors:** Generate color schemes using
-  `ColorScheme.fromSeed(seedColor: Colors.blue)`. This ensures accessible
-  contrast ratios.
-- **Elevation:** Material 3 uses `ColorScheme.surfaceTint` to indicate elevation
-  instead of just drop shadows. To revert to M2 shadow behavior, set
-  `surfaceTint: Colors.transparent` and define a `shadowColor`.
-- **Typography:** Material 3 updates font sizes, weights, and line heights. If
-  text wrapping breaks legacy layouts, adjust `letterSpacing` on the specific
-  `TextStyle`.
-- **Modern Components:**
-  - Replace `BottomNavigationBar` with `NavigationBar`.
-  - Replace `Drawer` with `NavigationDrawer`.
-  - Replace `ToggleButtons` with `SegmentedButton`.
-  - Use `FilledButton` for a high-emphasis button without the elevation of
-    `ElevatedButton`.
-
-## Component Theme Normalization
-
-Component themes in `ThemeData` have been normalized to use `*ThemeData` classes
-rather than `*Theme` widgets.
-
-When defining `ThemeData`, strictly use the `*ThemeData` suffix for the
-following properties:
-
-- `cardTheme`: Use `CardThemeData` (Not `CardTheme`)
-- `dialogTheme`: Use `DialogThemeData` (Not `DialogTheme`)
-- `tabBarTheme`: Use `TabBarThemeData` (Not `TabBarTheme`)
-- `appBarTheme`: Use `AppBarThemeData` (Not `AppBarTheme`)
-- `bottomAppBarTheme`: Use `BottomAppBarThemeData` (Not `BottomAppBarTheme`)
-- `inputDecorationTheme`: Use `InputDecorationThemeData` (Not
-  `InputDecorationTheme`)
-
-## Button Styling
-
-Legacy button classes (`FlatButton`, `RaisedButton`, `OutlineButton`) are
-obsolete.
-
-- Use `TextButton`, `ElevatedButton`, and `OutlinedButton`.
-- Configure button appearance using a `ButtonStyle` object.
-- For simple overrides based on the theme's color scheme, use the static utility
-  method: `TextButton.styleFrom(foregroundColor: Colors.blue)`.
-- For state-dependent styling (hovered, focused, pressed, disabled), use
-  `MaterialStateProperty.resolveWith`.
-
-## Platform Idioms & Adaptive Design
-
-When building adaptive apps, respect platform-specific norms to reduce cognitive
-load and build user trust.
-
-- **Scrollbars:** Desktop users expect omnipresent scrollbars; mobile users
-  expect them only during scrolling. Toggle `thumbVisibility` on the `Scrollbar`
-  widget based on the platform.
-- **Selectable Text:** Web and desktop users expect text to be selectable. Wrap
-  text in `SelectableText` or `SelectableText.rich`.
-- **Horizontal Button Order:** Windows places confirmation buttons on the left;
-  macOS/Linux place them on the right. Use a `Row` with `TextDirection.rtl` for
-  Windows and `TextDirection.ltr` for others.
-- **Context Menus & Tooltips:** Desktop users expect hover and right-click
-  interactions. Implement `Tooltip` for hover states and use context menu
-  packages for right-click actions.
-
-## Workflows
-
-### Workflow: Migrating Legacy Themes to Material 3
-
-Use this workflow when updating an older Flutter codebase.
-
-**Task Progress:**
-
--
-  1. [ ] Remove `useMaterial3: false` from `ThemeData` (it is true by default).
--
-  2. [ ] Replace manual `ColorScheme` definitions with `ColorScheme.fromSeed()`.
--
-  3. [ ] Run validator -> review errors -> fix: Search for and replace
-         deprecated `accentColor`, `accentColorBrightness`, `accentIconTheme`,
-         and `accentTextTheme`.
--
-  4. [ ] Run validator -> review errors -> fix: Search for
-         `AppBarTheme(color: ...)` and replace with `backgroundColor`.
--
-  5. [ ] Update `ThemeData` component properties to use `*ThemeData` classes
-         (e.g., `cardTheme: CardThemeData()`).
--
-  6. [ ] Replace legacy buttons (`FlatButton` -> `TextButton`, `RaisedButton` ->
-         `ElevatedButton`, `OutlineButton` -> `OutlinedButton`).
--
-  7. [ ] Replace legacy navigation components (`BottomNavigationBar` ->
-         `NavigationBar`, `Drawer` -> `NavigationDrawer`).
-
-### Workflow: Implementing Adaptive UI Components
-
-Use this workflow when building a widget intended for both mobile and
-desktop/web.
-
-**Task Progress:**
-
--
-  1. [ ] If displaying a list/grid, wrap it in a `Scrollbar` and set
-         `thumbVisibility: DeviceType.isDesktop`.
--
-  2. [ ] If displaying read-only data, use `SelectableText` instead of `Text`.
--
-  3. [ ] If implementing a dialog with action buttons, check the platform. If
-         Windows, set `TextDirection.rtl` on the button `Row`.
--
-  4. [ ] If implementing interactive elements, wrap them in `Tooltip` widgets to
-         support mouse hover states.
-
-## Examples
-
-### Example: Modern Material 3 ThemeData Setup
+`MyColors.get` exposes **semantic** accessors keyed by role, each taking the
+`BuildContext` so it can return the right value for the active brightness:
 
 ```dart
-MaterialApp(
-  title: 'Adaptive App',
-  theme: ThemeData(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.deepPurple,
-      brightness: Brightness.light,
-    ),
-    // Use *ThemeData classes for component normalization
-    appBarTheme: const AppBarThemeData(
-      backgroundColor: Colors.deepPurple, // Do not use 'color'
-      elevation: 0,
-    ),
-    cardTheme: const CardThemeData(
-      elevation: 2,
-    ),
-    textTheme: const TextTheme(
-      bodyMedium: TextStyle(letterSpacing: 0.2),
-    ),
+Container(
+  color: MyColors.get.surface(context),
+  child: MyText(
+    L10n.of(context).welcome,
+    color: MyColors.get.onSurface(context),
   ),
-  home: const MyHomePage(),
-);
-```
-
-### Example: State-Dependent ButtonStyle
-
-```dart
-TextButton(
-  style: ButtonStyle(
-    // Default color
-    foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-    // State-dependent overlay color
-    overlayColor: MaterialStateProperty.resolveWith<Color?>(
-      (Set<MaterialState> states) {
-        if (states.contains(MaterialState.hovered)) {
-          return Colors.blue.withOpacity(0.04);
-        }
-        if (states.contains(MaterialState.focused) || states.contains(MaterialState.pressed)) {
-          return Colors.blue.withOpacity(0.12);
-        }
-        return null; // Defer to the widget's default.
-      },
-    ),
-  ),
-  onPressed: () {},
-  child: const Text('Adaptive Button'),
 )
 ```
 
-### Example: Adaptive Dialog Button Order
+- Reach for a role (`primary`, `onPrimary`, `surface`, `onSurface`, `error`),
+  never a literal (`Colors.blue`, `Color(0xFF...)`), inside a widget.
+- To introduce a new color, add a token accessor to `MyColors` that maps to the
+  theme's `ColorScheme` — do not scatter raw colors through the widget tree.
+- `MyText` already pulls its size/weight from the app text theme; pass a role
+  color when you need to override the default.
+
+## The bootstrap theme (the one place raw ThemeData is allowed)
+
+Build a light and a dark `ThemeData` once and hand them to `GetMaterialApp`;
+`MyColors` and `MyText` resolve against whichever is active.
+
+```dart
+GetMaterialApp(
+  theme: buildTheme(Brightness.light),
+  darkTheme: buildTheme(Brightness.dark),
+  home: const MyHomePage(),
+);
+
+ThemeData buildTheme(final Brightness brightness) => ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: MyColors.seed,
+        brightness: brightness,
+      ),
+      appBarTheme: const AppBarThemeData(elevation: 0),
+      cardTheme: const CardThemeData(elevation: 2),
+    );
+```
+
+Material 3 is the default. Inside this bootstrap `ThemeData`, follow the modern
+conventions:
+
+- **Colors** come from `ColorScheme.fromSeed(...)` for accessible contrast; do
+  not hand-build a `ColorScheme` or use deprecated `accentColor`.
+- **Component themes** use the `*ThemeData` suffix — `CardThemeData`,
+  `AppBarThemeData`, `DialogThemeData`, `TabBarThemeData`,
+  `InputDecorationThemeData` — never the `*Theme` widget classes.
+- **Modern components:** `NavigationBar` over `BottomNavigationBar`,
+  `NavigationDrawer` over `Drawer`, `SegmentedButton` over `ToggleButtons`,
+  `FilledButton` for a high-emphasis flat button.
+- **Buttons** are styled with a `ButtonStyle`; use
+  `WidgetStateProperty.resolveWith` for hover/focus/pressed/disabled states.
+
+## Adaptive design
+
+Respect platform norms; branch on the `MyPlatform.get` accessor rather than
+`Platform.isX` directly.
+
+- **Scrollbars:** desktop expects always-visible scrollbars, mobile only during
+  scroll — toggle `thumbVisibility` on `Scrollbar`.
+- **Selectable text:** on web/desktop, use `SelectableText` for read-only copy.
+- **Button order:** Windows places the confirm button on the left — reverse a
+  dialog's button `Row` with `TextDirection.rtl` there, `ltr` elsewhere.
+- **Hover & right-click:** wrap interactive elements in `Tooltip` for hover
+  states and use a context-menu package for right-click.
 
 ```dart
 Row(
-  // Windows expects confirmation on the left (RTL reverses the standard LTR Row)
-  textDirection: Platform.isWindows ? TextDirection.rtl : TextDirection.ltr,
+  textDirection:
+      MyPlatform.get.isWindows ? TextDirection.rtl : TextDirection.ltr,
   mainAxisAlignment: MainAxisAlignment.end,
   children: [
-    TextButton(
-      onPressed: () => Navigator.pop(context, false),
-      child: const Text('Cancel'),
+    MyButton(
+      text: L10n.of(context).cancel,
+      onPressed: () => MyNavigator.back(result: false),
     ),
-    FilledButton(
-      onPressed: () => Navigator.pop(context, true),
-      child: const Text('Confirm'),
+    MyButton(
+      text: L10n.of(context).confirm,
+      onPressed: () => MyNavigator.back(result: true),
     ),
   ],
 )

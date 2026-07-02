@@ -1,11 +1,10 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "flutter",
   "lspServers": {
     "dart": {
       "args": [
         "x",
-        "dart@latest",
+        "flutter@latest",
         "--",
         "dart",
         "language-server",
@@ -33,7 +32,9 @@
       "command": "sourcekit-lsp",
       "extensionToLanguage": {
         ".swift": "swift"
-      }
+      },
+      "startupTimeout": 120000
     }
-  }
+  },
+  "name": "flutter"
 }

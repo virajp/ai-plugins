@@ -1,195 +1,119 @@
 # Architecting Flutter Applications
 
-## Contents
+Build to scale by separating UI from logic from data, with a single source of
+truth for each data domain and state flowing one way. The stack is opinionated:
+GetX holds state, `My`-prefixed widgets render it, and static repositories reach
+the network.
 
-- [Core Architectural Principles](#core-architectural-principles)
-- [Structuring the Layers](#structuring-the-layers)
-- [Implementing the Data Layer](#implementing-the-data-layer)
-- [Feature Implementation Workflow](#feature-implementation-workflow)
-- [Examples](#examples)
+## Principles
 
-## Core Architectural Principles
+- **Separation of concerns.** Strip business and data-fetching logic out of the
+  widget tree; widgets do layout, animation, and routing only.
+- **Single source of truth (SSOT).** Each data domain is owned by exactly one
+  holder — a `GetxService` for app-wide data, a repository for the network read.
+  Nothing else mutates it.
+- **Unidirectional data flow.** State flows down from services/controllers to
+  the UI; user events flow up from the UI into controller commands.
+- **UI as a function of state.** Drive widgets from observable state (`.obs` /
+  `GetBuilder`) and let them rebuild reactively.
 
-Design Flutter applications to scale by strictly adhering to the following
-principles:
+## Layers
 
-- **Enforce Separation of Concerns:** Decouple UI rendering from business logic
-  and data fetching. Organize the codebase into distinct layers (UI, Logic,
-  Data) and further separate by feature within those layers.
-- **Maintain a Single Source of Truth (SSOT):** Centralize application state and
-  data in the Data layer. Ensure the SSOT is the only component authorized to
-  mutate its respective data.
-- **Implement Unidirectional Data Flow (UDF):** Flow state downwards from the
-  Data layer to the UI layer. Flow events upwards from the UI layer to the Data
-  layer.
-- **Treat UI as a Function of State:** Drive the UI entirely via immutable state
-  objects. Rebuild widgets reactively when the underlying state changes.
+Communication is adjacent-only: a page talks to its controller, a controller
+talks to services and repositories, a repository talks to `MyApi`.
 
-## Structuring the Layers
+### UI layer
 
-Separate the application into 2 to 3 distinct layers depending on complexity.
-Restrict communication so that a layer only interacts with the layer directly
-adjacent to it.
+- **Pages** extend `GetView<Controller>` and read their controller through
+  `controller`. Keep them lean.
+- **Widgets** are the `My`-prefixed wrappers (`MyScaffold`, `MyText`,
+  `MyButton`), each with `super.key` and `final` params, `const` where possible.
+- **Controllers** (`GetxController`) hold the screen's UI state and expose
+  commands for user actions. Wire them to a route via a `Binding`.
 
-### 1. UI Layer (Presentation)
+### Logic / data layer
 
-- **Views (Widgets):** Build reusable, lean widgets. Strip all business and
-  data-fetching logic from the widget tree. Restrict widget logic to UI-specific
-  concerns (e.g., animations, routing, layout constraints).
-- **ViewModels:** Manage the UI state. Consume domain models from the Data/Logic
-  layers and transform them into presentation-friendly formats. Expose state to
-  the Views and handle user interaction events.
+- **Services** (`GetxService`) are the app-wide SSOT — the signed-in user, a
+  cart, cached lookups. Register them in bootstrap with
+  `Get.putAsync(..., permanent: true)` and expose a static `get` accessor.
+- **Repositories** are **static methods**: no state, no DI, pure data access.
+  They call `MyApi.to`, branch on `statusCode` (never `try`/`catch` around the
+  call), log failures with `MyException`, and return `null` / `false`. See the
+  **http-and-json** reference.
 
-### 2. Logic Layer (Domain) - *Conditional*
+Whether you need a distinct logic layer is conditional: a standard CRUD screen
+lets its controller call repositories directly; only reach for a separate
+service to orchestrate across multiple repositories or hold cross-screen data.
 
-- **If the application requires complex client-side business logic:** Implement
-  a Logic layer containing Use Cases or Interactors. Use this layer to
-  orchestrate interactions between multiple repositories before passing data to
-  the UI layer.
-- **If the application is a standard CRUD app:** Omit this layer. Allow
-  ViewModels to interact directly with Repositories.
+## Adding a feature
 
-### 3. Data Layer (Model)
+1. **Entity** — an immutable `Equatable` with `fromJson`/`toJson` (see the
+   entity pattern in **standards**).
+2. **Repository** — static methods over `MyApi.to` returning the entity or
+   `null`.
+3. **Service** — only if the data is app-wide; otherwise skip.
+4. **Controller** — screen UI state (`.obs` flags, the list) plus commands.
+5. **Page** — a `GetView` binding to the controller through `Obx`/`GetBuilder`.
+6. **Tests** — unit-test the controller and service; test repositories by
+   mocking `MyApi` (see the **testing** reference).
 
-- **Responsibilities:** Act as the SSOT for all application data. Handle
-  business data, external API consumption, event processing, and data
-  synchronization.
-- **Components:** Divide the Data layer strictly into **Repositories** and
-  **Services**.
-
-## Implementing the Data Layer
-
-### Services
-
-- **Role:** Wrap external APIs (HTTP servers, local databases, platform
-  plugins).
-- **Implementation:** Write Services as stateless Dart classes. Do not store
-  application state here.
-- **Mapping:** Create exactly one Service class per external data source.
-
-### Repositories
-
-- **Role:** Act as the SSOT for domain data.
-- **Implementation:** Consume raw data from Services. Handle caching, offline
-  synchronization, and retry logic.
-- **Transformation:** Transform raw API/Service data into clean Domain Models
-  formatted for consumption by ViewModels.
-
-## Feature Implementation Workflow
-
-Follow this sequential workflow when adding a new feature to the application.
-
-**Task Progress:**
-
-- [ ] **Step 1: Define Domain Models.** Create immutable Dart classes
-      representing the core data structures required by the feature.
-- [ ] **Step 2: Implement Services.** Create stateless Service classes to handle
-      raw data fetching (e.g., HTTP GET/POST).
-- [ ] **Step 3: Implement Repositories.** Create Repository classes that consume
-      the Services, handle caching, and return Domain Models.
-- [ ] **Step 4: Implement ViewModels.** Create ViewModels that consume the
-      Repositories. Expose immutable state and define methods (commands) for
-      user actions.
-- [ ] **Step 5: Implement Views.** Create Flutter Widgets that bind to the
-      ViewModel state and trigger ViewModel methods on user interaction.
-- [ ] **Step 6: Run Validator.** Execute unit tests for Services, Repositories,
-      and ViewModels. Execute widget tests for Views.
-  - *Feedback Loop:* Review test failures -> Fix logic/mocking errors -> Re-run
-    tests until passing.
-
-## Examples
-
-### Data Layer: Service and Repository
+## Example
 
 ```dart
-// 1. Service (Stateless API Wrapper)
-class UserApiService {
-  final HttpClient _client;
+// 1. Entity
+class MyUser extends Equatable {
+  const MyUser._({required this.id, required this.name});
 
-  UserApiService(this._client);
+  factory MyUser.fromJson(final Map<String, dynamic> json) =>
+      MyUser._(id: json['id'] as String, name: json['name'] as String);
 
-  Future<Map<String, dynamic>> fetchUserRaw(String userId) async {
-    final response = await _client.get('/users/$userId');
-    return response.data;
-  }
-}
-
-// 2. Domain Model (Immutable)
-class User {
   final String id;
   final String name;
 
-  const User({required this.id, required this.name});
+  @override
+  List<Object?> get props => [id, name];
 }
 
-// 3. Repository (SSOT & Data Transformer)
-class UserRepository {
-  final UserApiService _apiService;
-  User? _cachedUser;
-
-  UserRepository(this._apiService);
-
-  Future<User> getUser(String userId) async {
-    if (_cachedUser != null && _cachedUser!.id == userId) {
-      return _cachedUser!;
-    }
-
-    final rawData = await _apiService.fetchUserRaw(userId);
-    final user = User(id: rawData['id'], name: rawData['name']);
-
-    _cachedUser = user; // Cache data
-    return user;
-  }
-}
-```
-
-### UI Layer: ViewModel and View
-
-```dart
-// 4. ViewModel (State Management)
-class UserViewModel extends ChangeNotifier {
-  final UserRepository _userRepository;
-
-  User? user;
-  bool isLoading = false;
-  String? error;
-
-  UserViewModel(this._userRepository);
-
-  Future<void> loadUser(String userId) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
-
-    try {
-      user = await _userRepository.getUser(userId);
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+// 2. Repository (static, no state)
+class UserRepo {
+  static Future<MyUser?> fetch(final String id) async {
+    final MyApiResponse res = await MyApi.to.get('/users/$id');
+    if (res.statusCode != 200) return null;
+    return MyUser.fromJson(res.body as Map<String, dynamic>);
   }
 }
 
-// 5. View (Lean UI)
-class UserProfileView extends StatelessWidget {
-  final UserViewModel viewModel;
+// 3. Controller (screen state + command)
+class ProfileController extends GetxController {
+  final Rxn<MyUser> user = Rxn<MyUser>();
+  final RxBool isLoading = false.obs;
 
-  const UserProfileView({Key? key, required this.viewModel}) : super(key: key);
+  Future<void> load(final String id) async {
+    isLoading.value = true;
+    user.value = await UserRepo.fetch(id);
+    isLoading.value = false;
+  }
+}
+
+// 4. Page (lean, reactive)
+class ProfilePage extends GetView<ProfileController> {
+  const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: viewModel,
-      builder: (context, child) {
-        if (viewModel.isLoading) return const CircularProgressIndicator();
-        if (viewModel.error != null) return Text('Error: ${viewModel.error}');
-        if (viewModel.user == null) return const Text('No user data.');
-
-        return Text('Hello, ${viewModel.user!.name}');
-      },
+  Widget build(final BuildContext context) {
+    return MyScaffold(
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const CircularProgressIndicator();
+        }
+        final MyUser? user = controller.user.value;
+        if (user == null) return MyText(L10n.of(context).noUser);
+        return MyText(user.name);
+      }),
     );
   }
 }
 ```
+
+For binding a controller to a route, see the **getx** reference; for the entity
+and repository contracts, see **standards** and **http-and-json**.

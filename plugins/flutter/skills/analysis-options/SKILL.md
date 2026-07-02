@@ -105,5 +105,5 @@ analyzer:
   don't hand-edit. Don't exclude product code to dodge a lint; fix the code.
 - **Single source of truth.** In a monorepo, keep one root
   `analysis_options.yaml` and have member packages `include:` it rather than
-  drifting per-package (see the **workspace** skill). Every rule here should
-  match a rule the **dart** skill describes in prose — the two stay in lockstep.
+  drifting per-package. Every rule here should match a rule the **dart** skill
+  describes in prose — the two stay in lockstep.

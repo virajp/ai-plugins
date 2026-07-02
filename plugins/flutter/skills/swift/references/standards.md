@@ -200,5 +200,5 @@ channel:
 - Keep parity with the Dart `MethodChannel`: method names and channel string
   must match exactly on both sides.
 - The Dart side defines the same channel and invokes/handles the mirror methods
-  — see the **dart** skill and its **build** reference. `swift-lsp` (this
+  — see the **dart** skill and its **build** reference. `sourcekit-lsp` (this
   plugin's dependency) provides diagnostics for these files.

@@ -1,155 +1,96 @@
-# Architecting Flutter Layouts
+# Building Layouts
 
-## Contents
+Master the one layout rule — **constraints go down, sizes go up, the parent sets
+position** — then compose with the structural widgets. Render user-facing text
+through `MyText`, and extract nested sections into `My`-prefixed widgets with
+`super.key` and `final` params.
 
-- [Core Layout Principles](#core-layout-principles)
-- [Structural Widgets](#structural-widgets)
-- [Adaptive and Responsive Design](#adaptive-and-responsive-design)
-- [Workflow: Implementing a Complex Layout](#workflow-implementing-a-complex-layout)
-- [Examples](#examples)
+## Core principles
 
-## Core Layout Principles
+- **Constraints go down.** A parent passes min/max width and height to each
+  child; a widget cannot pick a size independent of its parent's constraints.
+- **Sizes go up.** The child chooses its size within those constraints and
+  reports it back.
+- **Parent sets position.** A child's `x`/`y` is decided by the parent —
+  children do not know their own screen position.
+- **Avoid unbounded constraints.** Never pass an unbounded constraint (e.g.
+  `double.infinity`) on the cross-axis of a `Row`/`Column` or inside a
+  scrollable — it throws a render exception.
 
-Master the fundamental Flutter layout rule: **Constraints go down. Sizes go up.
-Parent sets position.**
+## Structural widgets
 
-- **Pass Constraints Down:** Always pass constraints (minimum/maximum width and
-  height) from the parent Widget to its children. A Widget cannot choose its own
-  size independently of its parent's constraints.
-- **Pass Sizes Up:** Calculate the child Widget's desired size within the given
-  constraints and pass this size back up to the parent.
-- **Set Position via Parent:** Define the `x` and `y` coordinates of a child
-  Widget exclusively within the parent Widget. Children do not know their own
-  position on the screen.
-- **Avoid Unbounded Constraints:** Never pass unbounded constraints (e.g.,
-  `double.infinity`) in the cross-axis of a flex box (`Row` or `Column`) or
-  within scrollable regions (`ListView`). This causes render exceptions.
-
-## Structural Widgets
-
-Select the appropriate structural Widget based on the required spatial
-arrangement.
-
-- **Use `Row` and `Column`:** Implement `Row` for horizontal linear layouts and
-  `Column` for vertical linear layouts. Control child alignment using
+- **`Row` / `Column`** — horizontal / vertical linear layout; align with
   `mainAxisAlignment` and `crossAxisAlignment`.
-- **Use `Expanded` and `Flexible`:** Wrap children of `Row` or `Column` in
-  `Expanded` to force them to fill available space, or `Flexible` to allow them
-  to size themselves up to the available space.
-- **Use `Container`:** Wrap Widgets in a `Container` when you need to apply
-  padding, margins, borders, or background colors.
-- **Use `Stack`:** Implement `Stack` when Widgets must overlap on the Z-axis.
-  Use `Positioned` to anchor children to specific edges of the `Stack`.
-- **Use `SizedBox`:** Enforce strict, tight constraints on a child Widget by
-  wrapping it in a `SizedBox` with explicit `width` and `height` values.
+- **`Expanded` / `Flexible`** — wrap flex children to fill (`Expanded`) or size
+  up to (`Flexible`) the available space.
+- **`Container`** — apply padding, margin, borders, or a background.
+- **`Stack` / `Positioned`** — overlap widgets on the Z-axis and anchor them.
+- **`SizedBox`** — impose tight width/height constraints on a child.
 
-## Adaptive and Responsive Design
+## Adaptive & responsive
 
-Apply conditional logic to handle varying screen sizes and form factors.
+- **Responsive (fit into available space):** use `LayoutBuilder`, `Expanded`,
+  and `Flexible` to adjust size and placement from the parent's constraints.
+- **Adaptive (change the layout per form factor):** conditionally swap whole
+  structures — a bottom nav bar on mobile, a side rail on tablet/desktop.
 
-- **If fitting UI into available space (Responsive):** Use `LayoutBuilder`,
-  `Expanded`, and `Flexible` to dynamically adjust the size and placement of
-  elements based on the parent's constraints.
-- **If adjusting UI usability for a specific form factor (Adaptive):** Use
-  conditional rendering to swap entire layout structures. For example, render a
-  bottom navigation bar on mobile, but a side navigation rail on
-  tablets/desktop.
+## Resolving unbounded constraints
 
-## Workflow: Implementing a Complex Layout
-
-Follow this sequential workflow to architect and implement robust Flutter
-layouts.
-
-### Task Progress
-
-- [ ] **Phase 1: Visual Deconstruction**
-  - [ ] Break down the target UI into a hierarchy of rows, columns, and grids.
-  - [ ] Identify overlapping elements (requiring `Stack`).
-  - [ ] Identify scrolling regions (requiring `ListView` or
-        `SingleChildScrollView`).
-- [ ] **Phase 2: Constraint Planning**
-  - [ ] Determine which Widgets require tight constraints (fixed size) vs. loose
-        constraints (flexible size).
-  - [ ] Identify potential unbounded constraint risks (e.g., a `ListView` inside
-        a `Column`).
-- [ ] **Phase 3: Implementation**
-  - [ ] Build the layout from the outside in, starting with the `Scaffold` and
-        primary structural Widgets.
-  - [ ] Extract deeply nested layout sections into separate, stateless Widgets
-        to maintain readability.
-- [ ] **Phase 4: Validation and Feedback Loop**
-  - [ ] Run the application on target devices/simulators.
-  - [ ] **Run validator -> review errors -> fix:** Open the Flutter Inspector.
-        Enable "Debug Paint" to visualize render boxes.
-  - [ ] Check for yellow/black striped overflow warnings.
-  - [ ] If overflow occurs: Wrap the overflowing Widget in `Expanded` (if inside
-        a flex box) or wrap the parent in a scrollable Widget.
-
-## Examples
-
-### Example: Resolving Unbounded Constraints in Flex Boxes
-
-**Anti-pattern:** Placing a `ListView` directly inside a `Column` causes an
-unbounded height exception because the `Column` provides infinite vertical space
-to the `ListView`.
+A `ListView` directly inside a `Column` throws — the `Column` hands it infinite
+height. Bound it with `Expanded`:
 
 ```dart
-// BAD: Throws unbounded height exception
+// BAD — unbounded height exception
 Column(
   children: [
-    Text('Header'),
-    ListView(
-      children: [/* items */],
-    ),
+    MyText('Header'),
+    ListView(children: const [/* items */]),
   ],
 )
-```
 
-**Implementation:** Wrap the `ListView` in an `Expanded` Widget to bound its
-height to the remaining space in the `Column`.
-
-```dart
-// GOOD: ListView is constrained to remaining space
+// GOOD — ListView constrained to the remaining space
 Column(
   children: [
-    Text('Header'),
+    MyText('Header'),
     Expanded(
-      child: ListView(
-        children: [/* items */],
-      ),
+      child: ListView(children: const [/* items */]),
     ),
   ],
 )
 ```
 
-### Example: Responsive Layout with LayoutBuilder
+## Responsive layout with LayoutBuilder
 
-Implement `LayoutBuilder` to conditionally render different structural Widgets
-based on available width.
+Swap structures on available width, extracting each branch into its own widget:
 
 ```dart
-Widget buildAdaptiveLayout(BuildContext context) {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      // Conditional logic based on screen width
-      if (constraints.maxWidth > 600) {
-        // Tablet/Desktop: Side-by-side layout
-        return Row(
+class AdaptiveHome extends StatelessWidget {
+  const AdaptiveHome({super.key});
+
+  @override
+  Widget build(final BuildContext context) {
+    return LayoutBuilder(
+      builder: (final BuildContext context, final BoxConstraints constraints) {
+        if (constraints.maxWidth > 600) {
+          return const Row(
+            children: [
+              SizedBox(width: 250, child: MySidebar()),
+              Expanded(child: MyContent()),
+            ],
+          );
+        }
+        return const Column(
           children: [
-            SizedBox(width: 250, child: SidebarWidget()),
-            Expanded(child: MainContentWidget()),
+            Expanded(child: MyContent()),
+            MyBottomNav(),
           ],
         );
-      } else {
-        // Mobile: Stacked layout with navigation
-        return Column(
-          children: [
-            Expanded(child: MainContentWidget()),
-            BottomNavigationBarWidget(),
-          ],
-        );
-      }
-    },
-  );
+      },
+    );
+  }
 }
 ```
+
+When a `Row`/`Column` overflows (the yellow-and-black stripes), wrap the
+offending child in `Expanded` if it is in a flex box, or wrap the parent in a
+scrollable widget.

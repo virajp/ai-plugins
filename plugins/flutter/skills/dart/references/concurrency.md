@@ -1,192 +1,104 @@
-# Managing Dart Concurrency and Isolates
+# Concurrency & Isolates
 
-## Contents
+Dart runs single-threaded per isolate on an event loop; blocking the main
+isolate janks the UI. Keep I/O-bound work on `async`/`await`, and offload
+CPU-bound work to a worker isolate.
 
-- [Core Concepts](#core-concepts)
-- [Decision Matrix: Async vs. Isolates](#decision-matrix-async-vs-isolates)
-- [Workflows](#workflows)
-  - [Implementing Standard Asynchronous UI](#implementing-standard-asynchronous-ui)
-  - [Offloading Short-Lived Heavy Computation](#offloading-short-lived-heavy-computation)
-  - [Establishing Long-Lived Worker Isolates](#establishing-long-lived-worker-isolates)
-- [Examples](#examples)
+## Core concepts
 
-## Core Concepts
+- **`async`/`await`** — for non-blocking I/O (network, file access). The event
+  loop keeps running while the `Future` is pending. Always `await`; never
+  `.then()`.
+- **Isolates** — Dart's lightweight threads. They share no memory and
+  communicate only by message passing.
+- **Main isolate** — where UI rendering and event handling run. Blocking it
+  freezes the UI.
+- **Worker isolate** — a spawned isolate for CPU-bound work (decoding a large
+  JSON blob, image/crypto) that would otherwise jank the frame.
 
-Dart utilizes a single-threaded execution model driven by an Event Loop
-(comparable to the iOS main loop). By default, all Flutter application code runs
-on the Main Isolate.
+## Choosing an approach
 
-- **Asynchronous Operations (`async`/`await`):** Use for non-blocking I/O tasks
-  (network requests, file access). The Event Loop continues processing other
-  events while waiting for the `Future` to complete.
-- **Isolates:** Dart's implementation of lightweight threads. Isolates possess
-  their own isolated memory and do not share state. They communicate exclusively
-  via message passing.
-- **Main Isolate:** The default thread where UI rendering and event handling
-  occur. Blocking this isolate causes UI freezing (jank).
-- **Worker Isolate:** A spawned isolate used to offload CPU-bound tasks (e.g.,
-  decoding large JSON blobs) to prevent Main Isolate blockage.
+| Task                                                      | Use                                 |
+| --------------------------------------------------------- | ----------------------------------- |
+| I/O-bound (HTTP, database read)                           | `async`/`await` on the main isolate |
+| CPU-bound but quick (< 16ms)                              | `async`/`await` on the main isolate |
+| CPU-bound, significant, runs once (parse a huge payload)  | `Isolate.run()` / `compute()`       |
+| Continuous background processing, many messages over time | `Isolate.spawn()` with ports        |
 
-## Decision Matrix: Async vs. Isolates
+Isolate callbacks must be top-level or static functions passing only sendable
+values.
 
-Apply the following conditional logic to determine the correct concurrency
-approach:
+## Asynchronous UI
 
-- **If** the task is I/O bound (e.g., HTTP request, database read) -> **Use
-  `async`/`await`** on the Main Isolate.
-- **If** the task is CPU-bound but executes quickly (< 16ms) -> **Use
-  `async`/`await`** on the Main Isolate.
-- **If** the task is CPU-bound, takes significant time, and runs once (e.g.,
-  parsing a massive JSON payload) -> **Use `Isolate.run()`**.
-- **If** the task requires continuous or repeated background processing with
-  multiple messages passed over time -> **Use `Isolate.spawn()` with
-  `ReceivePort` and `SendPort`**.
-
-## Workflows
-
-### Implementing Standard Asynchronous UI
-
-Use this workflow to fetch and display non-blocking asynchronous data.
-
-**Task Progress:**
-
-- [ ] Mark the data-fetching function with the `async` keyword.
-- [ ] Return a `Future<T>` from the function.
-- [ ] Use the `await` keyword to yield execution until the operation completes.
-- [ ] Wrap the UI component in a `FutureBuilder<T>` (or `StreamBuilder` for
-      streams).
-- [ ] Handle `ConnectionState.waiting`, `hasError`, and `hasData` states within
-      the builder.
-- [ ] Run validator -> review UI for loading indicators -> fix missing states.
-
-### Offloading Short-Lived Heavy Computation
-
-Use this workflow for one-off, CPU-intensive tasks using Dart 2.19+.
-
-**Task Progress:**
-
-- [ ] Identify the CPU-bound operation blocking the Main Isolate.
-- [ ] Extract the computation into a standalone callback function.
-- [ ] Ensure the callback function signature accepts exactly one required,
-      unnamed argument (as per specific architectural constraints).
-- [ ] Invoke `Isolate.run()` passing the callback.
-- [ ] `await` the result of `Isolate.run()` in the Main Isolate.
-- [ ] Assign the returned value to the application state.
-
-### Establishing Long-Lived Worker Isolates
-
-Use this workflow for persistent background processes requiring continuous
-bidirectional communication.
-
-**Task Progress:**
-
-- [ ] Instantiate a `ReceivePort` on the Main Isolate to listen for messages.
-- [ ] Spawn the worker isolate using `Isolate.spawn()`, passing the
-      `ReceivePort.sendPort` as the initial message.
-- [ ] In the worker isolate, instantiate its own `ReceivePort`.
-- [ ] Send the worker's `SendPort` back to the Main Isolate via the initial
-      port.
-- [ ] Store the worker's `SendPort` in the Main Isolate for future message
-      dispatching.
-- [ ] Implement listeners on both `ReceivePort` instances to handle incoming
-      messages.
-- [ ] Run validator -> review memory leaks -> ensure ports are closed when the
-      isolate is no longer needed.
-
-## Examples
-
-### Example 1: Asynchronous UI with FutureBuilder
+Hold the in-flight state in a controller and drive the UI reactively rather than
+rebuilding from a bare `Future`:
 
 ```dart
-// 1. Define the async operation
-Future<String> fetchUserData() async {
-  await Future.delayed(const Duration(seconds: 2)); // Simulate network I/O
-  return "User Data Loaded";
+class RideController extends GetxController {
+  final Rxn<MyRide> ride = Rxn<MyRide>();
+  final RxBool isLoading = false.obs;
+
+  Future<void> load(final String id) async {
+    isLoading.value = true;
+    ride.value = await RideRepo.fetch(id);
+    isLoading.value = false;
+  }
 }
 
-// 2. Consume in the UI
-Widget build(BuildContext context) {
-  return FutureBuilder<String>(
-    future: fetchUserData(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const CircularProgressIndicator();
-      } else if (snapshot.hasError) {
-        return Text('Error: ${snapshot.error}');
-      } else {
-        return Text('Result: ${snapshot.data}');
-      }
-    },
-  );
+// In the view
+Obx(() {
+  if (controller.isLoading.value) return const CircularProgressIndicator();
+  final MyRide? ride = controller.ride.value;
+  return ride == null ? MyText(L10n.of(context).noRide) : MyText(ride.title);
+})
+```
+
+## Short-lived heavy computation
+
+Extract the CPU-bound work into a standalone function taking one argument, then
+`Isolate.run()` it and `await` the result. `compute()` is the Flutter-flavoured
+wrapper (see the **http-and-json** reference for the large-payload case).
+
+```dart
+List<dynamic> _decodeHeavyJson(final String jsonString) =>
+    jsonDecode(jsonString) as List<dynamic>;
+
+Future<List<dynamic>> processInBackground(final String rawJson) async {
+  // Isolate.run spawns the isolate, runs the callback, returns the value, exits.
+  return Isolate.run(() => _decodeHeavyJson(rawJson));
 }
 ```
 
-### Example 2: Short-Lived Isolate (`Isolate.run`)
+## Long-lived worker isolates
+
+For a persistent worker with continuous two-way traffic, do the port handshake:
+the main isolate spawns the worker passing its `SendPort`; the worker replies
+with its own `SendPort`; both sides then message freely. Close the ports and
+kill the isolate when done to avoid leaks.
 
 ```dart
-import 'dart:isolate';
-import 'dart:convert';
-
-// 1. Define the heavy computation callback
-// Note: Adhering to the strict single-argument signature requirement.
-List<dynamic> decodeHeavyJson(String jsonString) {
-  return jsonDecode(jsonString) as List<dynamic>;
-}
-
-// 2. Offload to a worker isolate
-Future<List<dynamic>> processDataInBackground(String rawJson) async {
-  // Isolate.run spawns the isolate, runs the computation, returns the value, and exits.
-  final result = await Isolate.run(() => decodeHeavyJson(rawJson));
-  return result;
-}
-```
-
-### Example 3: Long-Lived Isolate (`ReceivePort` / `SendPort`)
-
-```dart
-import 'dart:isolate';
-
 class WorkerManager {
-  late SendPort _workerSendPort;
   final ReceivePort _mainReceivePort = ReceivePort();
+  late final SendPort _workerSendPort;
   Isolate? _isolate;
 
   Future<void> initialize() async {
-    // 1. Spawn isolate and pass the Main Isolate's SendPort
     _isolate = await Isolate.spawn(_workerEntry, _mainReceivePort.sendPort);
-
-    // 2. Listen for messages from the Worker Isolate
-    _mainReceivePort.listen((message) {
+    _mainReceivePort.listen((final dynamic message) {
       if (message is SendPort) {
-        // First message is the Worker's SendPort
         _workerSendPort = message;
-        _startCommunication();
+        _workerSendPort.send('Process this data');
       } else {
-        // Subsequent messages are data payloads
-        print('Main Isolate received: $message');
+        Logger.debug('Main isolate received: $message');
       }
     });
   }
 
-  void _startCommunication() {
-    // Send data to the worker
-    _workerSendPort.send("Process this data");
-  }
-
-  // 3. Worker Isolate Entry Point
-  static void _workerEntry(SendPort mainSendPort) {
-    final workerReceivePort = ReceivePort();
-
-    // Send the Worker's SendPort back to the Main Isolate
+  static void _workerEntry(final SendPort mainSendPort) {
+    final ReceivePort workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
-
-    // Listen for incoming tasks
-    workerReceivePort.listen((message) {
-      print('Worker Isolate received: $message');
-
-      // Perform work and send result back
-      final result = "Processed: $message";
-      mainSendPort.send(result);
+    workerReceivePort.listen((final dynamic message) {
+      mainSendPort.send('Processed: $message');
     });
   }
 
