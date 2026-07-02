@@ -38,12 +38,12 @@ only *what* a doc pins down differs:
 
 - **entity** — one business entity (`docs/blueprint/<entity>.md`, or the folder
   form). The default; everything above reads entity-first.
-- **page** — a page or user journey, typically a `site` project. The unit is a
-  screen/journey rather than a data entity.
+- **page** — a page or user journey, typically a `site` or `console` project.
+  The unit is a screen/journey rather than a data entity.
 - **module** — a module boundary, typically a `packages` project: its public
   contract, invariants, and consumers.
 
-Pick the unit from the project `type`: `site` → page, `packages` → module,
-otherwise entity. A surface a unit genuinely lacks (Data Model for a static
-page, Screens for a library) is written `N/A — <reason>`, never silently omitted
-— a bare `N/A` with no reason is a gap.
+Pick the unit from the project `type`: `site` or `console` → page, `packages` →
+module, otherwise entity. A surface a unit genuinely lacks (Data Model for a
+static page, Screens for a library) is written `N/A — <reason>`, never silently
+omitted — a bare `N/A` with no reason is a gap.

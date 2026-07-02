@@ -53,10 +53,17 @@ pre-selected, per-project-overridable defaults:
 | ---------- | ---------- | --------------------------------- |
 | `service`  | `service`  | TypeScript · Hono · Effect-TS     |
 | `worker`   | `worker`   | TypeScript · Temporal · Effect-TS |
-| `web`      | `site`     | Astro                             |
-| `console`  | `console`  | elicit (no reference default)     |
+| `web`      | `site`     | TypeScript · Astro (SSR) · React  |
+| `console`  | `console`  | TypeScript · Astro (SSR) · React  |
 | `common`   | `packages` | TypeScript · Effect-TS            |
 | `frontend` | `frontend` | Dart · Flutter                    |
+
+`console` is the **operator/back-office control panel** — the internal,
+privileged counterpart to `web`: operators authenticate with the product's auth
+and are authorized via a dedicated operator role; its server endpoints perform
+privileged operations through the shared package and hand long-running actions
+to the `worker`. It therefore typically carries `depends_on: [common, worker]`
+and richer capabilities (auth, datastore, RBAC) than `web`.
 
 Infrastructure defaults to offer alongside: Firebase (auth, data, messaging),
 mise (tool manager), Docker-run local emulators. The stacks are **defaults** —

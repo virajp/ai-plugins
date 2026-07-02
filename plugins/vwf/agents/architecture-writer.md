@@ -79,7 +79,7 @@ edit that file only.
 | `worker`   | Background-task processor                  | `entity`           | cloud     |
 | `packages` | Shared libraries used by others            | `module`           | n/a (lib) |
 | `site`     | Website                                    | `page`             | cloud     |
-| `console`  | Admin/back-office web UI                   | `entity`           | cloud     |
+| `console`  | Operator/back-office web UI                | `page`             | cloud     |
 | `frontend` | Client-side application (mobile apps only) | `entity`           | device    |
 
 `service`, `worker`, `packages`, `site`, and `console` are cloud-hosted;

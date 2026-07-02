@@ -92,9 +92,9 @@ other units are first-class and use the **same doc structure, sections, and
 completeness bars**:
 
 - `entity` → `docs/blueprint/<entity>.md` (or folder form), unchanged.
-- `page` (typically a `site`) → the doc's unit is a page or user journey; an
-  engineering surface the unit genuinely lacks (e.g. Data Model for a static
-  page) is written as `N/A — <reason>`, never silently omitted.
+- `page` (typically a `site` or `console`) → the doc's unit is a page or user
+  journey; an engineering surface the unit genuinely lacks (e.g. Data Model for
+  a static page) is written as `N/A — <reason>`, never silently omitted.
 - `module` (typically `packages`) → the doc's unit is a module boundary — its
   public contract, invariants, and consumers; the same `N/A — <reason>` rule
   applies to surfaces a library doesn't have.

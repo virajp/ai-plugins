@@ -98,7 +98,7 @@ a time, gathering for each:
 
 Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
 `entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`,
-`console` → `entity`.
+`console` → `page`.
 
 ### 3c — Cross-cutting decisions
 
