@@ -25,14 +25,15 @@ adopting it.
 
 **Model & cost**
 
-- **Built for Opus with the 1M context window.** Every command runs on `opus`,
-  and the orchestrator holds a lot at once — the blueprint, the plan, the
-  registry, and each subagent's output. Run Claude Code on Opus with the
-  **1-million-token** context (`claude-opus-4-8[1m]`); a smaller model or the
-  standard window will degrade or overflow on a real cycle.
-- **High token cost.** opus everywhere, and each `execute` cycle spawns several
-  subagents (coder, code review, security review) with fix loop-backs. Expect a
-  meaningful spend per slice — this is not a cheap workflow.
+- **Built for a large context window.** The commands run on `sonnet` at high
+  reasoning effort, with the code- and security-review subagents on `opus` — and
+  the orchestrator holds a lot at once: the blueprint, the plan, the registry,
+  and each subagent's output. Run Claude Code with the **1-million-token**
+  context; the standard window will degrade or overflow on a real cycle.
+- **High token cost.** High-effort reasoning throughout, opus reviewers, and
+  each `execute` cycle spawns several subagents (coder, code review, security
+  review) with fix loop-backs. Expect a meaningful spend per slice — this is not
+  a cheap workflow.
 
 **Dependencies**
 
@@ -44,7 +45,8 @@ adopting it.
   If it's unavailable, every memory step is skipped by design — no error, but
   cross-cycle recall is lost (surfaced gaps still survive in the plan doc).
 - **Leans on review engines.** `execute`'s code- and security-review stages run
-  on the `/code-review` and `/security-review` engines.
+  on the `/code-review` and `/security-review` engines, falling back to their
+  own manual review dimensions when an engine is unavailable.
 
 **Fit**
 
@@ -57,8 +59,9 @@ adopting it.
   Reach for it only when the plan is solid and you're ready to review a finished
   worktree.
 - **Requires a testable project.** `execute` enforces non-negotiable TDD and a
-  coverage gate. A project without a test runner and coverage tooling won't fit
-  the execute stage.
+  coverage gate. A project without a test runner won't fit the execute stage;
+  missing coverage tooling is tolerated (the coder reports `coverage: n/a` and
+  the gate decides).
 - **Assumes a registry-described workspace.** `plan` and `execute` map each
   slice to a project in the architecture registry and read its code (submodules
   included). You model the codebase with `/vwf:architecture` first; it won't
@@ -150,14 +153,17 @@ blueprint is the desired state; the plans are the changes you apply to reach it.
 
 ```text
 docs/
-├── blueprint/                       # the always-current blueprint (desired state)
+├── blueprint/                   # the always-current blueprint (desired state)
+│   ├── .vwf.yml                 # blueprint format-version stamp (written by init)
 │   ├── architecture.md          # system shape + machine-readable Project Registry
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
+│   ├── environment.md           # per-project env-var/secret catalog (names, never values)
 │   ├── integration.md           # cross-entity flows + inter-service contracts
 │   └── <entity>.md              # one doc per entity (or an <entity>/ folder)
 └── plans/                       # per-cycle plans (the diff to apply)
     ├── <date>-<time>-<slice>.md
+    ├── <plan>.gap-report.md     # autopilot's gap record (when it ran)
     └── archived/                # retired, completed plans
 ```
 
@@ -169,19 +175,22 @@ project by `type` — so the workflow stays stack-agnostic.
 
 ## Commands
 
-| Command                   | Model  | What it does                                                |
-| ------------------------- | ------ | ----------------------------------------------------------- |
-| `/vwf:init`               | opus   | Onboard/migrate a repo into vwf's format (re-runnable)      |
-| `/vwf:architecture`       | opus   | Bootstrap or update the system shape + Project Registry     |
-| `/vwf:design-system`      | opus   | Product-wide UX/visual contract (mandatory once UI exists)  |
-| `/vwf:blueprint [entity]` | opus   | Maintain the full-product blueprint, one doc per entity     |
-| `/vwf:plan [slice]`       | opus   | Write a reviewable cycle plan — a diff of blueprint vs code |
-| `/vwf:execute [mode]`     | opus   | Implement the plan under TDD, then code + security review   |
-| `/vwf:autopilot [plan]`   | opus   | Autonomously run one plan end to end — no per-stage gates   |
-| `/vwf:archive [plan]`     | sonnet | Retire a completed plan into `docs/plans/archived/`         |
-| `/vwf:handoff <name>`     | opus   | Capture the session so work resumes in a fresh one          |
-| `/vwf:recall <name>`      | sonnet | Resume from a handoff in a fresh session                    |
-| `/vwf:git-workflow`       | —      | Internal — worktree isolation, commits, merges              |
+| Command                   | What it does                                                |
+| ------------------------- | ----------------------------------------------------------- |
+| `/vwf:init`               | Onboard/migrate a repo into vwf's format (re-runnable)      |
+| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry     |
+| `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)  |
+| `/vwf:blueprint [entity]` | Maintain the full-product blueprint, one doc per entity     |
+| `/vwf:plan [slice]`       | Write a reviewable cycle plan — a diff of blueprint vs code |
+| `/vwf:execute [mode]`     | Implement the plan under TDD, then code + security review   |
+| `/vwf:autopilot [plan]`   | Autonomously run one plan end to end — no per-stage gates   |
+| `/vwf:archive [plan]`     | Retire a completed plan into `docs/plans/archived/`         |
+| `/vwf:handoff <name>`     | Capture the session so work resumes in a fresh one          |
+| `/vwf:recall <name>`      | Resume from a handoff in a fresh session                    |
+| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges              |
+
+Every command runs on `sonnet` at high reasoning effort; inside `execute` and
+`autopilot`, the code- and security-review subagents run on `opus`.
 
 ### /vwf:init
 
@@ -212,14 +221,16 @@ blueprint deliberately doesn't.
 
 ### /vwf:design-system
 
-A second foundation, **mandatory once the registry has a frontend/app project**.
-It elicits the product-wide UX/visual language — semantic color tokens,
-typography, spacing, motion, the accessibility standard, and global component
-behaviors — and writes `docs/blueprint/design-system.md`, self-gated by a
-pre-delivery checklist. Like the blueprint, it stays code-independent: it
-records token *values* and *scales*, never the component library, CSS framework,
-or design file. Every entity's Screens reference it instead of re-deciding
-visual language. `blueprint` halts on a UI entity until it exists.
+A second foundation, **mandatory once the registry has a UI project** (type
+`site` or `frontend`). It elicits the product-wide UX/visual language — semantic
+color tokens, typography, spacing, motion, the accessibility standard, and
+global component behaviors — and writes `docs/blueprint/design-system.md`, gated
+by a fresh **reviewer subagent** (like the blueprint's) that checks it against
+the design-system checklist until it passes. Like the blueprint, it stays
+code-independent: it records token *values* and *scales*, never the component
+library, CSS framework, or design file. Every entity's Screens reference it
+instead of re-deciding visual language. `blueprint` halts on a UI entity until
+it exists.
 
 ### /vwf:blueprint
 
@@ -241,7 +252,9 @@ checklist — data, relationships, concurrency, API, and UI/UX, plus a
 **code-independence guardrail** that flags any file/class/library/CSS leakage —
 and returns `NO GAPS` or a numbered list. Gaps loop back to you for the specific
 open decisions, then re-review — until the doc passes. The blueprint is
-permanent and product-wide; it is never feature-scoped.
+permanent and product-wide; it is never feature-scoped. Renaming or deleting an
+entity triggers an inbound-link reconcile, so no other doc is left pointing at a
+doc that moved.
 
 ### /vwf:plan
 
@@ -250,6 +263,7 @@ Produce a reviewable plan for one slice of the blueprint:
 ```text
 /vwf:plan order
 /vwf:plan order/api      # just one section of the entity
+/vwf:plan integration    # the cross-entity integration doc
 ```
 
 A plan is a **diff**. `plan` reads the desired state (the blueprint slice +
@@ -386,8 +400,8 @@ request.
 
 ## How it asks questions
 
-`vwf` is deliberately conversational. `architecture`, `blueprint`, and `plan`
-share one **elicitation protocol**:
+`vwf` is deliberately conversational. `init`, `architecture`, `design-system`,
+`blueprint`, and `plan` share one **elicitation protocol**:
 
 - **Explore first** — read the docs, code, and recent commits before asking
   anything; never ask what the registry or code already answers.
@@ -413,11 +427,14 @@ project (the **wing**) and split into rooms:
 | `problems`  | review and security findings and how they were resolved         |
 | `planning`  | plan rationale and deferred options                             |
 | `gaps`      | blueprint/plan holes surfaced during execution, and their fixes |
+| `runs`      | autopilot's per-plan run journal (what a resumed run reads)     |
 | `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`           |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
-step and proceeds. Gaps are also mirrored into the plan doc, so they survive a
-memory outage. See **[docs/mempalace.md](./docs/mempalace.md)**.
+step and proceeds — except `handoff`/`recall`, which fall back to
+`docs/handoffs/<name>.md` (the handoff *is* the deliverable). Gaps are also
+mirrored into the plan doc, so they survive a memory outage. See
+**[docs/mempalace.md](./docs/mempalace.md)**.
 
 ## A worked walkthrough
 
@@ -454,8 +471,10 @@ they inform how Claude writes and reviews:
 
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`) plus the per-surface completeness bars: data,
-  relationships, concurrency, integration flows, and UI/UX. Auto-applies
-  whenever a `docs/blueprint/` doc is edited.
+  relationships, concurrency, integration flows, and UI/UX — including the
+  doc-unit doctrine (entity / page / module). Auto-applies whenever a
+  `docs/blueprint/` doc is edited (and on `docs/plans/` for frontmatter/link
+  hygiene only).
 - **`design-system`** — the UX/visual-contract doctrine (semantic tokens,
   typography, spacing, motion, accessibility, component behaviors,
   anti-patterns) behind `/vwf:design-system`.
@@ -492,16 +511,16 @@ The marketplace ships additional plugins — opinionated coding-standard skills
 and language servers. Most auto-apply by file path; install only the ones for
 your stack. Each has a dedicated guide:
 
-| Plugin                                                                             | What it provides                                                                                                                                                          | Install                                     |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` command that documents a repo's README                                      | `--user markdown`                           |
-| **[typescript](./docs/typescript.md)**                                             | Effect-TS coding standards — a `typescript` router skill (+ effect/vitest/build references) plus package-json/pnpm/tsconfig + the TypeScript/JavaScript language server   | `--user typescript`                         |
-| **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped** | `--project flutter`                         |
-| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command                                                                              | `--user mise`                               |
-| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` command — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                          | `--user github-actions`                     |
-| **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                               | `--user context7`                           |
-| **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                      | `--user mempalace`                          |
-| **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                    | `--user`/`--project andrej-karpathy-skills` |
+| Plugin                                                                             | What it provides                                                                                                                                                                                   | Install                                     |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` command that documents a repo's README                                                               | `--user markdown`                           |
+| **[typescript](./docs/typescript.md)**                                             | Effect-TS coding standards — a `typescript` router skill (+ effect/effect-runtime/vitest/build references) plus package-json/pnpm/tsconfig/lint-format + the TypeScript/JavaScript language server | `--user typescript`                         |
+| **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped**                          | `--project flutter`                         |
+| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command                                                                                                       | `--user mise`                               |
+| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` command — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                   | `--user github-actions`                     |
+| **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                        | `--user context7`                           |
+| **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                               | `--user mempalace`                          |
+| **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                             | `--user`/`--project andrej-karpathy-skills` |
 
 ```sh
 pnpx @askviraj/ai-plugins --user typescript --user markdown

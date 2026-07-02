@@ -17,18 +17,27 @@ automatically.
 ## How it runs
 
 The plugin declares one MCP server in its manifest. Claude Code launches it via
-`pnpx`, so it always runs the latest published server:
+`pnpm dlx`, so it always runs the latest published server. The manifest passes
+through a `CONTEXT7_API_KEY` env var (defaulting to empty), so you can
+authenticate past Upstash's anonymous rate limits by exporting one:
 
 ```json
 {
   "mcpServers": {
-    "context7": { "command": "pnpx", "args": ["@upstash/context7-mcp"] }
+    "context7": {
+      "command": "pnpm",
+      "args": ["dlx", "@upstash/context7-mcp"],
+      "env": { "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}" }
+    }
   }
 }
 ```
 
-**Prerequisite:** `pnpm` (which provides `pnpx`) on your `PATH` — install it
+**Prerequisite:** `pnpm` (which provides `pnpm dlx`) on your `PATH` — install it
 with `mise use -g pnpm@latest`.
+
+**Optional:** set `CONTEXT7_API_KEY` in your environment to raise the rate
+limit; without it the server runs anonymously.
 
 ## Usage
 

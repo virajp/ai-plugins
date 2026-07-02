@@ -47,17 +47,18 @@ Xcode. Each reference loads only when the routed topic is relevant.
 The plugin bundles three LSP servers in its manifest, so editing Dart, Kotlin,
 and Swift files all get real diagnostics from one plugin.
 
-| Server          | Languages              | How it runs                                  | Prerequisite                                           |
-| --------------- | ---------------------- | -------------------------------------------- | ------------------------------------------------------ |
-| `dart`          | Dart (`.dart`)         | `mise x dart@latest -- dart language-server` | `mise` on `PATH`; it fetches the Dart SDK on demand.   |
-| `kotlin-lsp`    | Kotlin (`.kt`, `.kts`) | `kotlin-lsp --stdio`                         | A `kotlin-lsp` binary on `PATH`.                       |
-| `sourcekit-lsp` | Swift (`.swift`)       | `sourcekit-lsp`                              | A `sourcekit-lsp` binary on `PATH` (ships with Xcode). |
+| Server          | Languages              | How it runs                                     | Prerequisite                                                 |
+| --------------- | ---------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| `dart`          | Dart (`.dart`)         | `mise x flutter@latest -- dart language-server` | `mise` on `PATH`; it fetches the Flutter/Dart SDK on demand. |
+| `kotlin-lsp`    | Kotlin (`.kt`, `.kts`) | `kotlin-lsp --stdio`                            | A `kotlin-lsp` binary on `PATH`.                             |
+| `sourcekit-lsp` | Swift (`.swift`)       | `sourcekit-lsp`                                 | A `sourcekit-lsp` binary on `PATH` (ships with Xcode).       |
 
-The Dart server runs through `mise`, so it needs no separate Dart install — only
-`mise` on your `PATH`. The Kotlin and Swift servers invoke **system-installed**
-binaries: install `kotlin-lsp` yourself, and get `sourcekit-lsp` from a Swift
-toolchain or Xcode. If a binary is absent, that language's diagnostics are
-simply unavailable; the rest of the plugin still works.
+The Dart server runs through `mise` (via `flutter@latest`), so it needs no
+separate Dart or Flutter install — only `mise` on your `PATH`. The Kotlin and
+Swift servers invoke **system-installed** binaries: install `kotlin-lsp`
+yourself, and get `sourcekit-lsp` from a Swift toolchain or Xcode. If a binary
+is absent, that language's diagnostics are simply unavailable; the rest of the
+plugin still works.
 
 ## See also
 

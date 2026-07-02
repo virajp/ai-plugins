@@ -63,11 +63,11 @@ Every workflow the command writes obeys these, without exception:
 When it detects a monorepo, the command lists the packages it found and asks
 which approach to generate:
 
-| Strategy                         | What it does                                                                                                                                         |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Path-filtered dynamic matrix** | A `changes` job emits the affected-package list (from `git diff` or `dorny/paths-filter`); the build job fans out a matrix over only those packages. |
-| **Static matrix**                | A matrix job over every package, every run.                                                                                                          |
-| **Root aggregator**              | One job running a root fan-out task (`turbo run` / `melos run` / `nx affected`).                                                                     |
+| Strategy                         | What it does                                                                                                                                                                                                                |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Path-filtered dynamic matrix** | A `changes` job runs `dorny/paths-filter@v4` with one filter per package dir (shared/root paths folded into every filter); its `changes` output is the matrix the build job fans out over, so only affected packages build. |
+| **Static matrix**                | A matrix job over every package, every run.                                                                                                                                                                                 |
+| **Root aggregator**              | One job running a root fan-out task (`turbo run` / `melos run` / `nx affected`).                                                                                                                                            |
 
 A polyrepo is the simple single-job case: checkout → `jdx/mise-action` → the
 phase steps at the repo root.

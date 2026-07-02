@@ -24,6 +24,23 @@ The `documentation-standards` skill carries one ruleset, grouped by concern.
 - Code blocks always use a language identifier for syntax highlighting.
 - Tables for structured comparisons.
 
+### Heading hierarchy
+
+- One `#` H1 per file (the title); everything else is `##` and deeper.
+- Never skip a level, and use sentence case with no trailing punctuation.
+
+### Links
+
+- Descriptive link text — never "click here" or a bare URL in prose.
+- Relative links within a repo, absolute only for external targets;
+  reference-style only when a target repeats or the URL hurts readability.
+
+### Front matter
+
+- Add YAML front matter only when a tool consumes it (static-site generators,
+  skill/command manifests), never on a plain README — and keep it to the keys
+  that consumer reads.
+
 ### CHANGELOGs
 
 | Rule           | Standard                                                   |
@@ -71,25 +88,29 @@ its README, applying the standards above. It defaults to the current repo root;
 pass a directory to document another repo. An existing readme is updated in
 place (its filename and casing preserved); otherwise it creates `README.md`.
 
-The generated README always carries these eight sections, in order:
+The generated README always carries these sections, in order (the tasks section
+is omitted when the repo has no task runner):
 
-| Section              | What it documents                                                         |
-| -------------------- | ------------------------------------------------------------------------- |
-| Title                | The project name as the H1                                                |
-| Short description    | One or two sentences on what the project is                               |
-| List of projects     | Every package (a table for a monorepo; one entry for a polyrepo)          |
-| Architecture         | A `mermaid` diagram of how the projects/services fit together, plus notes |
-| Infrastructure       | Every cloud tool/service the repo uses                                    |
-| Local Development    | A step-by-step setup guide to run the repo locally                        |
-| Projects             | One detailed section per project (monorepo) or a single one (polyrepo)    |
-| Important mise tasks | The `mise tasks` a developer runs day to day                              |
+| Section           | What it documents                                                         |
+| ----------------- | ------------------------------------------------------------------------- |
+| Title             | The project name as the H1                                                |
+| Short description | One or two sentences on what the project is                               |
+| List of projects  | Every package (a table for a monorepo; one entry for a polyrepo)          |
+| Architecture      | A `mermaid` diagram of how the projects/services fit together, plus notes |
+| Infrastructure    | Every cloud tool/service the repo uses                                    |
+| Local Development | A step-by-step setup guide to run the repo locally                        |
+| Projects          | One detailed section per project (monorepo) or a single one (polyrepo)    |
+| Important tasks   | The task-runner commands a developer runs day to day                      |
 
 The command follows a **detect → ask → write → report** flow: it scans for the
 layout (monorepo vs polyrepo), the projects, the architecture, the cloud tooling
-(IaC, containers, CI/CD, deploy configs, cloud SDKs), and the mise setup; asks
-only what it can't infer (a missing tagline, which cloud services are actually
-in use); then writes the README and reports what it created or updated. When
-updating, it refreshes those eight sections and leaves any others (License,
+(IaC, containers, CI/CD, deploy configs, cloud SDKs), and the task runner — mise
+(`mise.toml`), `package.json` `scripts`, a `Makefile`, or a `justfile`,
+preferring mise when more than one is present; asks only what it can't infer (a
+missing tagline, which cloud services are actually in use); then writes the
+README and reports what it created or updated. The tasks section lists real
+commands from the detected runner and is omitted when the repo has none. When
+updating, it refreshes those sections and leaves any others (License,
 Contributing, badges) untouched.
 
 ## See also

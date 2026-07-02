@@ -80,7 +80,8 @@ inside `code/*` and `setup/*` change with the tech stack.
   gitleaks), `code/precommit`, `code/git-config`, and the `code/all` aggregator
   (`format` → `lint` → `sec`). `code:all` is the one-command gate; `precommit`
   and `git-config` are wired into the pre-commit hooks and `setup`, not into
-  `code:all`.
+  `code:all`. `code:sec` (and so `code:all`) invokes grype and gitleaks, which
+  live in `mise.dev.toml` — run it under the dev toolchain (`MISE_ENV=dev`).
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync. It directly invokes every setup sub-task (`setup:mise`,
   the stack's install steps, `setup:precommit`) and stays idempotent. `--clean`
@@ -111,6 +112,10 @@ The command:
 3. **Writes the config files** per the three-file split, including the Node gpg
    workaround when the runtime is Node.
 4. **Copies the shipped task templates** rather than hand-writing them.
+
+For a Node repo, the shipped `code/lint` runs `pnpm dlx @askviraj/linter` — the
+author's personal default. Scaffold flags this and offers to swap in the repo's
+own linter (e.g. `eslint`, `biome`) instead.
 
 The templates live as a **common base plus one stack overlay**. `common/` is
 identical everywhere — `_scripts/_helpers`, the `code/*` quality gates,

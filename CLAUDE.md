@@ -119,12 +119,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `design-system-reviewer`, `execute-coder`, `execute-code-reviewer`,
   `execute-security-reviewer`, `architecture-writer`
 - `skills/` — `rest-api-design`; `blueprint-authoring` (the
-  contract-vs-realization doctrine + per-surface completeness bars, auto-applies
-  on `docs/blueprint/**`); `design-system` (the UX/visual-contract doctrine —
-  tokens, typography, spacing, motion, accessibility, components/anti-patterns —
-  auto-applies on `docs/blueprint/design-system`); `project-init`
-  (onboarding/migration doctrine — topology detection, consent-gated dry-run
-  migration, the blueprint format-version + drift map; used by `/vwf:init`)
+  contract-vs-realization doctrine + per-surface completeness bars + the
+  doc-unit doctrine, auto-applies on `docs/blueprint/**` and — for
+  frontmatter/link hygiene only — `docs/plans/**`); `design-system` (the
+  UX/visual-contract doctrine — tokens, typography, spacing, motion,
+  accessibility, components/anti-patterns — auto-applies on
+  `docs/blueprint/design-system`); `project-init` (onboarding/migration doctrine
+  — topology detection, consent-gated dry-run migration, the blueprint
+  format-version + drift map; used by `/vwf:init`)
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
   `design-system`, `environment` (the per-project env-var/secret catalog),
   `integration`, `project-claude` (the vwf section `/vwf:init` merges into a
@@ -155,7 +157,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `…_add_drawer`), so rich review detail lives in mempalace instead of the
   orchestrator's context. Gaps are also mirrored to a durable "Gaps surfaced
   during execution" section in the plan doc, so they survive a mempalace outage
-  and feed the blueprint/plan fixes
+  and feed the blueprint/plan fixes. The skip-silently-when-down rule carves out
+  `handoff`/`recall`, which fall back to `docs/handoffs/<name>.md` instead
 - `assets/format-check.md` + `assets/blueprint-format` — the **format-drift
   preflight**: `blueprint`, `plan`, `execute`, `autopilot`, and `design-system`
   compare a repo's `docs/blueprint/.vwf.yml` stamp to the format integer vwf
@@ -202,8 +205,8 @@ mise/architecture/design-system, authors CLAUDE.md + README) and is
 `docs/blueprint/.vwf.yml` and, on a later run, detects drift against the format
 the installed vwf ships and migrates the delta. `architecture` (the registry) is
 unconditionally required before `blueprint`. `design-system` is a second
-foundation, **required once the registry has a frontend/app project** (a UI
-surface): `blueprint` halts on an entity with a Screens surface if
+foundation, **required once the registry has a UI project** (type `site` or
+`frontend`): `blueprint` halts on an entity with a Screens surface if
 `docs/blueprint/design-system.md` is missing. `environment.md` (the per-project
 env-var/secret catalog, type `vwf-environment`) is a third foundation,
 **required once the registry declares an external integration or a
@@ -276,6 +279,11 @@ Layout:
   equivalent of `require.main === module`, symlink-safe for the npm bin).
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
+- `test/` — `node --test` suites run by `i:test` (and thus in `release.yml`):
+  `utils.test.mjs` (cmpVer/cmpPre/deepMerge incl. prototype-pollution keys) and
+  `statusline.test.mjs` (hermetic smoke tests for both render surfaces + the
+  usage-file contract `context-caps.js` reads). Not shipped in the npm package
+  (`files` is `bin` + `tools`).
 
 The command does several jobs. **Plugins:** `--all` (every user-scoped plugin,
 at user scope) or `--user <name>` / `--project <name>` (repeatable; name plugins
