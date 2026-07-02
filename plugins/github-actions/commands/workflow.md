@@ -118,24 +118,26 @@ steps:
 ### Monorepo — path-filtered dynamic matrix
 
 A `changes` job emits the affected-package list; the build job fans out over it.
-Derive the list from `git diff --name-only` against the base ref mapped to
-package dirs (no extra tool — `git` is always present), or use
-`dorny/paths-filter@v3` (a CI action, not a tool install — allowed).
+Use `dorny/paths-filter@v4` (a CI action, not a tool install — allowed): name
+each filter after its package dir and match on that dir's paths, then its
+`changes` output is already the JSON array of affected package dirs.
 
 ```yaml
 jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      packages: ${{ steps.set.outputs.packages }}
+      packages: ${{ steps.filter.outputs.changes }}
     steps:
       - uses: actions/checkout@v7
-        with: { fetch-depth: 0 }
-      - id: set
-        run: |
-          base="${{ github.event.pull_request.base.sha || github.event.before }}"
-          # map changed paths -> package dirs -> compact JSON array
-          echo "packages=$(git diff --name-only "$base" HEAD | ...)" >> "$GITHUB_OUTPUT"
+      - id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          # one filter per detected package, named by its dir
+          filters: |
+            packages/a: packages/a/**
+            packages/b: packages/b/**
+            apps/web: apps/web/**
   build:
     needs: changes
     if: needs.changes.outputs.packages != '[]'
@@ -149,6 +151,11 @@ jobs:
       - run: mise run test
         working-directory: ${{ matrix.package }}
 ```
+
+Include the shared/root paths (the mise config, lockfiles, shared libs) in
+**every** package's filter so a toolchain edit re-tests the whole repo —
+generate those globs from what you detected and confirm the mapping with the
+user.
 
 Keep the YAML minimal — only the jobs/steps the chosen workflow needs.
 
