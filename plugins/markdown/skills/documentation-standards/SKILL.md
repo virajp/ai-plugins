@@ -21,6 +21,26 @@ paths:
 - Code blocks use language identifiers for syntax highlighting.
 - Tables for structured comparisons.
 
+## Heading Hierarchy
+
+- One `#` H1 per file — the title. Everything else is `##` and deeper.
+- Never skip a level (no `##` → `####`). Nest by one.
+- Sentence case, not Title Case. No trailing punctuation, no numbering unless
+  the order is load-bearing.
+
+## Links
+
+- Descriptive link text — never "click here" or a bare URL for prose.
+- Relative links within a repo (`../api/auth.md`), absolute only for external.
+- Inline by default; reference-style (`[text][ref]`) only when the same target
+  repeats or the URL is long enough to hurt readability.
+
+## Front Matter
+
+- Add YAML front matter only when a tool consumes it (static-site generators,
+  skill/command manifests) — not on a plain README or doc.
+- Keep it minimal: only keys the consumer reads. No speculative metadata.
+
 ## CHANGELOGs
 
 - One `## vMAJOR.MINOR.PATCH` heading per version.

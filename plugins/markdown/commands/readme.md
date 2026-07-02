@@ -3,7 +3,7 @@ description: Create or update the repository's README — scan the codebase and
   document it with a title, short description, a project list, an architecture
   mermaid diagram with notes, an infrastructure (cloud tools) section, a
   local-development setup guide, per-project sections (monorepo or polyrepo), and
-  the important mise tasks. Follows the documentation-standards skill.
+  the important task-runner commands. Follows the documentation-standards skill.
 argument-hint: "[target-dir]"
 model: sonnet
 effort: high
@@ -34,7 +34,8 @@ The README must contain these, top to bottom:
 6. **Local Development** — a step-by-step guide to run the repo locally.
 7. **Projects** — one detailed section per project (monorepo) or a single
    project section (polyrepo).
-8. **Important mise tasks** — the tasks a developer actually runs.
+8. **Important tasks** — the commands a developer runs day to day, from the
+   repo's task runner (omit if the repo has none).
 
 When updating, **refresh these eight in place and keep every other section** an
 existing README has (License, Contributing, badges, …) — never delete them.
@@ -63,8 +64,12 @@ Gather the facts before writing:
 - **Local development.** The toolchain manager (this marketplace standardizes on
   **mise** — prefer `mise install` plus the `setup:*` tasks), env setup
   (`.env.example`, doppler, mise `[env]`), and prerequisites.
-- **mise tasks.** Run `mise tasks` and pick the ones used day to day (setup, the
-  `code:*` gates, test, build, dev/run, release).
+- **Task runner.** Detect the repo's runner — mise (`mise.toml` /
+  `.config/mise*.toml` → `mise tasks`), `package.json` `scripts`, a `Makefile`,
+  or a `justfile` — preferring mise when more than one is present. Read the
+  tasks from whichever exists and pick the ones used day to day (setup, the
+  lint/test/build gates, dev/run, release). If none exists, there is no
+  section 8.
 
 ## 2. Ask (one batched round — only what you cannot infer)
 
@@ -92,8 +97,10 @@ Write/update the README with the eight sections above, per the
   `mise install`, env setup, the `setup:*` task, and how to run it.
 - **Projects** — per project: what it is, its stack, how to run/test it, and its
   key tasks.
-- **Important mise tasks** as a table: `| Task | What it does |` — use real task
-  names from `mise tasks`, never invented ones.
+- **Important tasks** as a table: `| Task | What it does |` — use real names
+  from the detected runner (`mise tasks`, `package.json` scripts, the `Makefile`
+  targets, or the `justfile` recipes), never invented ones. Omit the section
+  when the repo has no task runner.
 
 ## 4. Report
 
