@@ -12,9 +12,10 @@ input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // ""')
 
 # --- npx → pnpm dlx ---
+# One generic pattern: any flags after npx (-y/--yes/--) survive verbatim in
+# command-argument position, e.g. `npx -y cowsay` → `pnpm dlx -y cowsay`.
 rewritten=$(echo "$command" | sed -E \
-  's/(^|[;&|][[:space:]]*|\$\([[:space:]]*)npx([[:space:]]+(-y|--yes)[[:space:]]+|[[:space:]]+--[[:space:]]+|[[:space:]]+)/\1pnpm dlx\2/g
-   s/(^|[;&|][[:space:]]*|\$\([[:space:]]*)npx[[:space:]]+/\1pnpm dlx /g')
+  's/(^|[;&|][[:space:]]*|\$\([[:space:]]*)npx[[:space:]]+/\1pnpm dlx /g')
 
 # --- npm ci → pnpm install --frozen-lockfile ---
 rewritten=$(echo "$rewritten" | sed -E \

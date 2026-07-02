@@ -3,7 +3,7 @@ description: Produce a reviewable cycle plan as a diff for one slice of the
   blueprint
   (an entity or a section). Reads desired (blueprint) vs actual (code), writes only
   the delta to docs/plans/<date>-<time>-<slice>.md. Requires a blueprint to exist.
-argument-hint: "[entity | entity/section]"
+argument-hint: "[entity | entity/section | integration]"
 model: sonnet
 effort: xhigh
 ---
@@ -39,30 +39,34 @@ it. When a planning decision is genuinely open, elicit it following the
 
 ### 1. Resolve the slice
 
-The slice is an entity (or a section of one) from `$ARGUMENTS`. **Halt if no
-blueprint exists** for it: "No blueprint found for `<slice>`. Run
-`/vwf:blueprint` first."
+The slice is a single unit from `$ARGUMENTS`: an entity, a section of one, or
+`integration` (the cross-entity `docs/blueprint/integration.md` doc). **Halt if
+no blueprint exists** for it: "No blueprint found for `<slice>`. Run
+`/vwf:blueprint` first." A request that spans **several entities** is not one
+slice — apply the scope check (§2 of
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`): decompose it into independent
+pieces, agree on order, and produce a **sequential plan per piece** (one plan
+per slice), starting with the first.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
 is behind what vwf ships, nudge `/vwf:init` (proceed unless a needed artifact is
 missing).
 
-### 2. Setup (git-workflow)
+### 2. Read desired vs actual
 
-Invoke `/vwf:git-workflow` to ensure an isolated worktree before
-reading/writing. All git actions in this command go through `git-workflow`. Keep
-the worktree **local** — never push remotely here.
-
-### 3. Read desired vs actual
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
+decisions and plan rationale for this slice (rooms `decisions`, `planning`)
+before computing anything — build on them, don't re-derive resolved choices.
+Skip silently if mempalace is unavailable.
 
 - **Desired:** the blueprint part for the slice, plus `conventions.md`, the
   registry, and — when the slice consumes external credentials/env vars —
   `docs/blueprint/environment.md` (the variables it must read).
 - **Actual:** the real code in the submodule(s) the registry maps this slice to
-  (resolve section→project by `type`, as in `blueprint`).
+  (resolve section→project by `type` and `doc_unit`, as in `blueprint` §2).
 
-### 4. Compute the delta only
+### 3. Compute the delta only
 
 Determine what already exists, what is missing, what must change, and the order
 to do it in. Reference blueprint sections; do not restate them.
@@ -75,21 +79,23 @@ over new code or a new dependency (rungs 2–5). The plan carries no speculative
 steps and no unrequested abstraction or configurability — never at the cost of a
 safety guardrail.
 
-### 5. Flag drift
+### 4. Flag drift
 
 If the blueprint implies a surface the registry/code lacks (e.g. a background
 job with no worker project), **surface it** under Risks / drift rather than
 silently resolving it.
 
-**Consume execution-surfaced gaps.** If a prior plan for this slice exists, read
-its "Gaps surfaced during execution" section, and per
+**Consume execution-surfaced gaps.** If a prior plan for this slice exists —
+**the most recent un-archived plan for the slice** (filenames are timestamped,
+so several may share a slice; take the latest one still under `docs/plans/`, not
+`archived/`) — read its "Gaps surfaced during execution" section, and per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` recall room `gaps` for the slice. When
 this plan is a reconcile loop-back from `/vwf:execute`, closing those plan holes
 is the point of the pass — fold each into the ordered steps (against the
 now-updated blueprint) rather than re-deriving blind. Skip the recall silently
 if mempalace is unavailable.
 
-### 6. Elicit open decisions
+### 5. Elicit open decisions
 
 The plan is a diff — most of it is mechanical. But where the blueprint
 underdetermines **how** to land a change (step ordering with competing valid
@@ -99,6 +105,14 @@ question at a time, MCQ + "Other", proposing 2-3 approaches with a
 recommendation. Apply the decisions-vs-mechanics filter: if exactly one
 idiomatic path exists given the blueprint, conventions, and code, don't ask —
 proceed. Never guess; record a genuinely open item under Risks / drift.
+
+### 6. Setup (git-workflow)
+
+Everything above (§§2–5) reads the blueprint and code from the **current
+checkout** and is read-only — no worktree needed yet. Now, just before the only
+write, invoke `/vwf:git-workflow` to ensure an isolated worktree. All git
+actions in this command go through `git-workflow`. Keep the worktree **local** —
+never push remotely here.
 
 ### 7. Write the plan
 
@@ -111,6 +125,20 @@ section — steps ordered for TDD, each naming the failing test that defines
 ### 8. Approval gate
 
 Present the plan and wait for explicit approval before `/vwf:execute`.
+
+**If rejected at the gate**, take one of two paths — never let the plan doc
+silently linger:
+
+- **Revise** — the user gives feedback → apply it (re-reading code as needed)
+  and re-present, looping until approved or abandoned.
+- **Abandon** — the user drops the slice → leave the plan doc **uncommitted**,
+  state its exact path, and offer (via `/vwf:git-workflow`) to remove it and the
+  worktree. Do not commit an abandoned plan.
+
+**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the approved
+plan's durable "how to land it" decisions and any deliberately deferred options
+to mempalace (room `planning`) — skip what the plan doc captures verbatim, and
+skip silently if mempalace is unavailable.
 
 ### 9. Commit (git-workflow)
 

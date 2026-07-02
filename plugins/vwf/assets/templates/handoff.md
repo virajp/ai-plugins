@@ -4,6 +4,14 @@
 - **Date:** <ISO date>
 - **Status:** <in-progress | blocked | in-review>
 
+## Workspace
+
+<Where the work lives, so a fresh session can re-enter it.>
+
+- **Worktree path:** <absolute path of the worktree holding the work, or the
+  main checkout if not isolated>
+- **Branch:** <branch name the work is on>
+
 ## Goal
 
 <What this work is trying to achieve, and why — 1-3 sentences. The outcome a

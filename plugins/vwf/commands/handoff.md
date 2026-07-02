@@ -23,11 +23,10 @@ session still reasons clearly — is worth far more than one squeezed out at 95%
 | ----------- | -------------------------------------------------------------- |
 | `<name>`    | `$ARGUMENTS` — the drawer name for this handoff. **Required.** |
 | `<project>` | the **wing**, resolved from the repo (see step 3)              |
+| Template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/handoff.md`            |
 
 If `$ARGUMENTS` is empty, ask the user for a short `<name>` (kebab-case, e.g.
 `auth-refactor`) and wait. Do not invent one.
-
-| Template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/handoff.md` |
 
 ---
 
@@ -52,6 +51,11 @@ never-push rule.
    checkpoint — `wip: handoff checkpoint — <name>` — without prompting. Respect
    pre-commit hooks (on failure, fix and make a **new** commit; never
    `--no-verify`).
+
+   **Dirty-state escape.** If the tree still cannot be committed cleanly (an
+   unfixable hook keeps failing), do **not** loop — write the handoff
+   **anyway**, recording the **dirty state** and the blocking hook output in the
+   doc so the next session knows what is uncommitted and why.
 2. **Update submodule pointers (outer repo).** If a submodule's recorded commit
    moved, stage the gitlinks and commit them in the outer repo
    (`ops: update submodule pointers`).
@@ -82,6 +86,11 @@ the **current session**. Capture state, not narration — a reader with zero
 context must be able to resume. Be concrete: real file paths, real commands, the
 actual decisions and their *why*. Set the first line to `# Handoff: <name>`
 exactly (it is the retrieval key).
+
+Fill the **Workspace** section from git: the worktree path
+(`git rev-parse --show-toplevel`, or the main checkout if not isolated) and the
+branch (`git branch --show-current`). `/vwf:recall` reads these to re-enter the
+work — a stale or missing path is how it detects the worktree is gone.
 
 If decisions/findings already live in mempalace or `docs/`, **reference** them
 rather than copying — keep the handoff tight.

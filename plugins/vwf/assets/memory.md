@@ -9,6 +9,11 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
 
 > mempalace is a hard dependency of vwf. If its tools are unavailable, skip
 > every memory step silently and proceed — never block on it.
+>
+> **Exception: `/vwf:handoff` and `/vwf:recall`.** The handoff *is* the
+> deliverable, not a side memory — so when mempalace is unavailable they do
+> **not** skip; they fall back to `docs/handoffs/<name>.md` on disk (write on
+> handoff, read on recall).
 
 ## Scope (wing + room)
 

@@ -3,7 +3,7 @@ description: Manage git workflows — worktree isolation, commits, merges, and
   pushes. Use for all substantive changes; never work directly in the main
   worktree.
 argument-hint: "(no args)"
-allowed-tools: Bash(git:*) Bash(mise:*) Read
+allowed-tools: Bash Read
 model: sonnet
 effort: medium
 ---
@@ -25,6 +25,16 @@ effort: medium
   commit
 - Check `no-commit-to-branch` hook in `.config/pre-commit-config.yaml` before
   committing to any branch
+
+## Caller Preferences
+
+This command takes **no arguments** — callers parameterize its behavior through
+**declared preferences in the invocation text** (e.g. `/vwf:autopilot`: "isolate
+without asking; commit only — never merge/push"). Honor any such declared
+preference: it drives the **Step 1** consent (skip the worktree prompt when
+isolation is pre-declared) and the **Step 4** post-commit choice (take the
+declared action, skip the prompt). Absent a declared preference, ask as each
+step specifies.
 
 ## Safety Rules
 
@@ -195,7 +205,11 @@ half-initialized worktree.
 
 Work from the **repository root**.
 
-1. `mise x -- mise run code:precommit` — auto-fix lint/format, re-stage
+1. `code:precommit` — auto-fix lint/format, re-stage. Guard it with the same
+   `have_task` check Step 2d uses; **skip silently** when the task is absent:
+   ```bash
+   have_task code:precommit && mise x -- mise run code:precommit
+   ```
 2. `git status` → `git add <files>` (never `git add -A`)
 3. `git diff --cached` — review staged changes
 4. Read `.config/git-conventional-commits.yaml` for authoritative types and
@@ -242,6 +256,12 @@ Execute the chosen action:
 Nothing further. Inform the user the commit is done and the worktree remains
 available.
 
+**On a merge conflict (either land sequence).** If a merge — the outer repo's or
+a submodule merge task — **conflicts**, do **not** resolve it autonomously.
+Abort the merge cleanly (`git merge --abort`, or the task's equivalent), leave
+the worktree **intact**, and report the conflicting files to the caller. Callers
+treat this as a **hard halt**.
+
 ### Merge, push & clean up
 
 End the worktree with **full coverage** — nothing left uncommitted, submodule
@@ -271,6 +291,11 @@ pointers current — then remove it. Order matters:
 4. **Remove the worktree.**
    - **Native tool:** use its teardown (e.g. `ExitWorktree` or equivalent).
    - **Git fallback:** `git worktree remove <path>`.
+
+5. **Sweep stale worktrees.** After this one lands, list the other worktrees
+   under the worktree dir (`git worktree list`) whose branches are **fully
+   merged** into the destination (`git branch --merged`), and offer to remove
+   them. Never remove a worktree with unmerged work.
 
 For a repo with **no submodules**, skip steps 1–2: land the branch (its `merge:`
 task if defined, else merge it in the main worktree), `git push`, then remove
