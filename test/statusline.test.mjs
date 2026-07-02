@@ -6,6 +6,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -21,23 +23,36 @@ import {
 } from "node:test";
 import { fileURLToPath } from "node:url";
 
-const SCRIPT = join(
-  dirname(fileURLToPath(import.meta.url)),
+const HERE = dirname(fileURLToPath(import.meta.url));
+const SCRIPT = join(HERE, "..", "tools", "statusline", "statusline");
+const BUNDLED_CONFIG = join(
+  HERE,
   "..",
   "tools",
   "statusline",
-  "statusline",
+  "statusline.json",
 );
 
 const tmp = mkdtempSync(join(tmpdir(), "statusline-test-"));
 after(() => rmSync(tmp, { recursive: true, force: true }));
 
+// Seed a hermetic fake HOME with the bundled default config at
+// ~/.config/statusline.json — the ONLY place the script reads defaults from
+// (never the file beside itself). Without this the render depends on whether
+// the machine happens to have an installed ~/.config/statusline.json, which
+// passes on a dev box but renders an empty main bar on a clean CI runner.
+const fakeHome = join(tmp, "home");
+mkdirSync(join(fakeHome, ".config"), { recursive: true });
+copyFileSync(BUNDLED_CONFIG, join(fakeHome, ".config", "statusline.json"));
+
 // Run the script with `payload` on stdin and `env` merged over the current env.
+// HOME points at the seeded fake home so config resolution is deterministic;
+// override it per call if a test needs a different home.
 function runStatusline(payload, env = {}) {
   return spawnSync(process.execPath, [SCRIPT], {
     input: JSON.stringify(payload),
     encoding: "utf8",
-    env: { ...process.env, ...env },
+    env: { ...process.env, HOME: fakeHome, ...env },
   });
 }
 
