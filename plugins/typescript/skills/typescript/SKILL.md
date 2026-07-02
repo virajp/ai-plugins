@@ -11,6 +11,9 @@ user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.mts"
+  - "**/*.cts"
 ---
 
 # TypeScript
@@ -19,12 +22,14 @@ The single entry point for TypeScript work. Each topic lives in its own
 reference file — **read the one matching your task**. Start every change from
 the always-on baseline.
 
-| Topic                                                                               | When to read                                                                                                |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| [Coding standards](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/standards.md) | The always-on baseline: naming, import ordering, strict type safety, named functions, parameter conventions |
-| [Effect-TS](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/effect.md)           | Effect.gen, Effect.Schema, Effect.Service, error handling, telemetry, logging, config, the HTTP boundary    |
-| [Vitest](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/vitest.md)              | Writing/running tests: it.effect, the shared config, _testUtils, v8 coverage                                |
-| [Build pipeline](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/build.md)       | The @/ path alias, barrels, the clean→check→build pipeline, project references, turbo                       |
+| Topic                                                                                  | When to read                                                                                                        |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [Coding standards](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/standards.md)    | The always-on baseline: naming, import ordering, strict type safety, named functions, parameter conventions         |
+| [Effect-TS](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/effect.md)              | Effect.gen, Effect.Schema, Effect.Service, error handling, telemetry, logging, config, the HTTP boundary            |
+| [Effect runtime](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/effect-runtime.md) | Composing & running Effect: Layer wiring, ManagedRuntime, Scope/acquireRelease, Schedule retries, Stream, TestClock |
+| [Vitest](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/vitest.md)                 | Writing/running tests: it.effect, the shared config, _testUtils, v8 coverage                                        |
+| [Build pipeline](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/build.md)          | The @/ path alias, barrels, the clean→check→build pipeline, and (monorepo) project references + turbo               |
 
 For `package.json`, pnpm workspace, and `tsconfig` standards, see the
-**package-json**, **pnpm**, and **tsconfig** skills.
+**package-json**, **pnpm**, and **tsconfig** skills. For the lint/format gate
+that must pass before commit, see the **lint-format** skill.

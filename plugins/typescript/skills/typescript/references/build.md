@@ -4,6 +4,12 @@ This skill connects the pieces the **tsconfig**, **package-json**, and **pnpm**
 skills define. The goal: write `@/` imports and clean barrels in source, ship
 correct relative ESM in `dist/`.
 
+The **common core** below — the `@/` alias, barrels, and the four-step build
+pipeline — is the same whether the repo is a single package or a workspace. The
+last two sections (**project references** and **turbo**) are workspace-only
+machinery; a single-package repo builds with just the pipeline and can skip
+them.
+
 ## The `@/` path alias
 
 Inside a package, import siblings via `@/*` (mapped to `./src/*` in
@@ -73,14 +79,18 @@ flowchart LR
 `tsc-alias` reads the `tsc-alias` block in `tsconfig.build.json`; keep
 `base-url` replacer disabled so only the explicit `@/*` mapping is rewritten.
 
-## Project references across the monorepo
+## Monorepo: project references
+
+> Workspace-only — skip in a single-package repo.
 
 Each package references its workspace dependencies' `tsconfig.build.json`
 (**tsconfig** skill). That lets `tsc --build` order the graph and rebuild only
 what changed. At the package boundary, code imports the dependency by its
 published name (`@scope/common/utils`) — `@/` never crosses a package edge.
 
-## turbo orchestration
+## Monorepo: turbo orchestration
+
+> Workspace-only — a single-package repo just runs its own `build` script.
 
 The root `package.json` fans builds out with `turbo run build` and
 `pnpm run --filter '<pkg>' <script>`. turbo caches per-package output and honors

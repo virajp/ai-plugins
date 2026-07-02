@@ -2,11 +2,10 @@
 name: tsconfig
 version: 0.1.1
 category: development
-description: Opinionated TypeScript config layout for pnpm monorepos — a
-  strict
-  shared tsconfig.base.json, per-project tsconfig.json with the @/ path alias, a
-  tsconfig.build.json emit variant, and project references. Auto-applies when
-  editing any tsconfig file.
+description: Opinionated TypeScript config layout for single-package repos and
+  pnpm monorepos — a strict shared tsconfig.base.json, per-project tsconfig.json
+  with the @/ path alias, a tsconfig.build.json emit variant, and (in a
+  workspace) project references. Auto-applies when editing any tsconfig file.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write
@@ -19,11 +18,17 @@ paths:
 
 Three layers, each with one job:
 
-1. `tsconfig.base.json` (repo root) — shared strict compiler settings.
-2. `<workspace>/tsconfig.json` — extends base, adds the `@/` alias + references;
-   used for editor/type-checking (`noEmit`).
-3. `<workspace>/tsconfig.build.json` — extends the local config, flips the emit
-   flags on; used by `tsc` and `tsc-alias` to produce `dist/`.
+1. `tsconfig.base.json` — shared strict compiler settings.
+2. `tsconfig.json` — extends base, adds the `@/` alias (+ references in a
+   workspace); used for editor/type-checking (`noEmit`).
+3. `tsconfig.build.json` — extends the local config, flips the emit flags on;
+   used by `tsc` and `tsc-alias` to produce `dist/`.
+
+This split applies to **any repo shape**. In a **single-package** repo all three
+files sit at the root and `tsconfig.json` extends `./tsconfig.base.json`. In a
+**monorepo** `tsconfig.base.json` lives at the repo root and each package's
+`tsconfig.json` extends it via a relative path and adds project `references` —
+the extra machinery is called out in each section below.
 
 ## tsconfig.base.json (root)
 
@@ -59,13 +64,38 @@ Strict, modern, bundler-style resolution, declarations on for project refs:
 
 - Keep **all** strict flags on; add `noUncheckedIndexedAccess` and the
   `noUnused*` pair — they catch real bugs.
-- `composite` + `declaration` are required for project references to work.
-- Register `@effect/language-service` in `plugins` for Effect-aware diagnostics.
+- `composite` + `declaration` are required for project references
+  (**monorepo**); they're harmless in a single-package repo, so keep the base
+  identical rather than forking it.
+- Register `@effect/language-service` in `plugins` for Effect-aware diagnostics
+  (Effect codebases only).
 
 ## Per-project tsconfig.json
 
-Extends the base, declares the `@/*` alias, and `references` upstream workspace
-packages by their **build** config:
+Extends the base and declares the `@/*` alias. In a single-package repo this is
+the whole file:
+
+```jsonc
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "./dist/",
+    "paths": { "@/*": ["./src/*"] },
+  },
+  "include": ["src/**/*.ts", "src/**/*.json"],
+}
+```
+
+- `@/*` → `./src/*` is the in-package alias (see the **build** reference for how
+  it survives compilation).
+
+### Monorepo: extends path + references
+
+In a workspace, each package's `tsconfig.json` extends the **root** base by a
+relative path and adds `references` to each upstream workspace dependency's
+`tsconfig.build.json`, so `tsc --build` orders the graph correctly:
 
 ```jsonc
 {
@@ -80,11 +110,6 @@ packages by their **build** config:
   "references": [{ "path": "../../packages/common/tsconfig.build.json" }],
 }
 ```
-
-- `@/*` → `./src/*` is the in-package alias (see the **build** reference for how
-  it survives compilation).
-- Reference each workspace dependency's `tsconfig.build.json` so `tsc --build`
-  orders the graph correctly.
 
 ## tsconfig.build.json (emit variant)
 

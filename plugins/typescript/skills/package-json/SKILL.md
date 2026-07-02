@@ -2,11 +2,10 @@
 name: package-json
 version: 0.1.1
 category: development
-description: Opinionated package.json standards for pnpm monorepos — pnpm as
-  the
-  only package manager, "latest" versions, ESM, the exports map, workspace:*
-  links, and the standard build/check/clean/test scripts. Auto-applies when
-  editing any package.json.
+description: Opinionated package.json standards for single-package repos and
+  pnpm monorepos — pnpm as the only package manager, "latest" versions, ESM, the
+  exports map, the standard build/check/clean/test scripts, and (in a workspace)
+  workspace:* links. Auto-applies when editing any package.json.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
@@ -17,21 +16,26 @@ paths:
 # package.json Standards
 
 pnpm is the **only** package manager (`packageManager: pnpm@11.x`). Never
-`npm install` or `bun install`. Workspaces are defined in the root
-`pnpm-workspace.yaml`.
+`npm install` or `bun install`. These standards hold for a **single-package**
+repo and a **monorepo** alike; the workspace-only additions (`workspace:*`
+links, the root orchestrator, `requiredScripts`) are marked as such. In a
+monorepo the workspace globs live in the root `pnpm-workspace.yaml` (see the
+**pnpm** skill).
 
 ## Versions
 
 - Use `"latest"` for every dependency version — pinning is the lockfile's job
   (`pnpm-lock.yaml`).
-- Local workspace packages link via the workspace protocol: `"workspace:*"`.
 - After any `package.json` change, run `pnpm install` from the repo root.
 - Commit `pnpm-lock.yaml` changes separately: `ops: update pnpm lockfile`.
+- **Monorepo:** local workspace packages link via the workspace protocol:
+  `"workspace:*"`.
 
 ## Module shape
 
 - `"type": "module"` — ESM everywhere.
-- `"private": true` on the root and any unpublished workspace.
+- `"private": true` on anything unpublished — a single-package app, and (in a
+  monorepo) the root plus any unpublished workspace.
 - Publishable packages declare `"files"` (ship `./dist/` + `package.json`) and a
   multi-entry **exports map** that points each subpath at its built `.js` and
   `.d.ts`:
@@ -59,8 +63,9 @@ Add one `exports` entry per public barrel — consumers import
 
 ## Standard scripts
 
-Every buildable workspace exposes the same script vocabulary so monorepo tasks
-and `pnpm-workspace.yaml`'s `requiredScripts` line up:
+Every buildable package — the lone package in a single-package repo, or each
+workspace in a monorepo — exposes the same script vocabulary (so in a monorepo
+`pnpm-workspace.yaml`'s `requiredScripts` line up):
 
 ```json
 {
@@ -79,8 +84,9 @@ and `pnpm-workspace.yaml`'s `requiredScripts` line up:
 
 - `build` always runs `clean → check → build:ts → build:alias` in order — type
   check before emit, rewrite `@/` aliases after (see the **build** reference).
-- The root `package.json` orchestrates workspaces via `turbo run build` and
-  `pnpm run --filter '<pkg>' <script>`; keep cross-workspace fan-out there.
+- **Monorepo:** the root `package.json` orchestrates workspaces via
+  `turbo run build` and `pnpm run --filter '<pkg>' <script>`; keep
+  cross-workspace fan-out there, per-package scripts stay single-package.
 - Dev runs use `tsx`; never commit a script that runs `vitest run` directly when
   it needs emulators or secrets — wrap it in the relevant runner.
 

@@ -5,7 +5,7 @@
     "typescript": {
       "args": [
         "-c",
-        "mise x node@latest -- npm add -g typescript-language-server typescript >/dev/null 2>&1 && exec mise x node@latest -- typescript-language-server --stdio"
+        "exec mise x node@latest -- pnpm --package=typescript --package=typescript-language-server dlx typescript-language-server --stdio"
       ],
       "command": "sh",
       "extensionToLanguage": {

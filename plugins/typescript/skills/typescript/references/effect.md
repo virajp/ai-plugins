@@ -1,14 +1,24 @@
 # Effect-TS Coding Standards
 
-**Effect is mandatory.** Every async operation is an `Effect`, never a `Promise`
-— no bare `async`/`await`, `.then()`, or returned `Promise` in application code.
-Sequential logic lives in `Effect.gen`; data shapes are `Effect.Schema`;
-capabilities are `Effect.Service`. Code that does async work with raw promises
-is non-conforming and must be migrated to Effect (the only exception is the thin
-boundary where Effect meets a non-Effect runtime — see **HTTP boundary**).
+**This doctrine applies only when the codebase uses Effect** — `effect` in the
+`package.json` dependencies. In a non-Effect codebase, do **not** introduce
+Effect or push a migration to it; follow the local async conventions (promises,
+`async`/`await`) and the general **typescript** standards. The rest of this
+reference assumes an Effect codebase.
+
+**In an Effect codebase, Effect is mandatory.** Every async operation is an
+`Effect`, never a `Promise` — no bare `async`/`await`, `.then()`, or returned
+`Promise` in application code. Sequential logic lives in `Effect.gen`; data
+shapes are `Effect.Schema`; capabilities are `Effect.Service`. Code that does
+async work with raw promises is non-conforming and should be migrated to Effect
+(the only exception is the thin boundary where Effect meets a non-Effect runtime
+— see **HTTP boundary**).
 
 > General TypeScript standards — naming, import ordering, strict type safety —
-> live in the **typescript** skill. This skill covers the Effect layer on top.
+> live in the **typescript** skill. Composing and running Effect programs —
+> Layer wiring, `ManagedRuntime`, `Scope`, `Schedule`, `Stream`, `TestClock` —
+> lives in the **effect-runtime** reference. This skill covers writing the
+> Effect layer.
 
 ## Imports
 

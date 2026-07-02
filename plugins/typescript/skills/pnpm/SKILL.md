@@ -2,10 +2,12 @@
 name: pnpm
 version: 0.2.1
 category: development
-description: Opinionated pnpm workspace configuration — pnpm-workspace.yaml
-  globs, catalogs, supply-chain safety (minimumReleaseAge, trustPolicy),
-  workspace linking, build allowlists, peer-dependency rules, and .npmrc.
-  Auto-applies when editing pnpm-workspace.yaml or .npmrc.
+description: Opinionated pnpm configuration for single-package repos and
+  monorepos — pnpm-workspace.yaml as pnpm's settings file (supply-chain safety
+  via minimumReleaseAge/trustPolicy, build allowlists, overrides, peer-dependency
+  rules, .npmrc) plus the monorepo layout (package globs, workspace linking,
+  catalogs, requiredScripts). Auto-applies when editing pnpm-workspace.yaml or
+  .npmrc.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
@@ -14,13 +16,19 @@ paths:
   - "**/.npmrc"
 ---
 
-# pnpm Workspace Configuration
+# pnpm Configuration
 
-`pnpm-workspace.yaml` at the repo root is the single source of truth for the
-monorepo layout and pnpm's behavior. Group settings by intent and keep a short
-comment (often a `https://pnpm.io/settings#...` link) above any non-obvious key.
+`pnpm-workspace.yaml` at the repo root is where pnpm's behavior is configured —
+**for any repo, single-package or monorepo.** The supply-chain, build-allowlist,
+override, and peer-dependency sections below apply everywhere; a single-package
+repo keeps this file for exactly those settings and simply omits the
+workspace-layout section (`packages`, linking, catalogs, `requiredScripts`),
+which only a monorepo needs. Group settings by intent and keep a short comment
+(often a `https://pnpm.io/settings#...` link) above any non-obvious key.
 
-## Workspace layout & linking
+## Monorepo: workspace layout & linking
+
+> Workspace-only — omit in a single-package repo.
 
 ```yaml
 packages:
@@ -35,7 +43,9 @@ injectWorkspacePackages: true
 managePackageManagerVersions: true
 ```
 
-## Catalogs
+## Monorepo: catalogs
+
+> Workspace-only — a single-package repo has nothing to share, so skip this.
 
 When several workspace packages share a dependency, pin its version **once** in
 a catalog so they can never drift apart. Define a default catalog (and optional
@@ -109,18 +119,21 @@ allowBuilds:
   esbuild: true
 ```
 
-## requiredScripts & overrides
+## overrides & (monorepo) requiredScripts
+
+`overrides` applies to any repo; `requiredScripts` is a monorepo guard that
+every workspace defines the listed scripts — drop it in a single-package repo.
 
 ```yaml
-# Every workspace must define these (keeps monorepo task fan-out honest)
-requiredScripts:
-  - clean
-  - build
-
-# Pin transitive deps up to a safe floor (usually for advisories)
+# Pin transitive deps up to a safe floor (usually for advisories) — any repo
 overrides:
   "yaml": ">=2.8.3"
   "uuid": ">=11.1.1"
+
+# Monorepo-only: every workspace must define these (keeps task fan-out honest)
+requiredScripts:
+  - clean
+  - build
 ```
 
 ## Peer dependencies
