@@ -14,10 +14,10 @@ effort: xhigh
 Maintain `docs/blueprint/design-system.md`: the product's design system as a
 **code-independent contract**. It is a vwf foundation alongside
 `architecture.md`, and `blueprint` requires it once the registry has a
-UI-surface project (type `site` or `frontend`). Author the *decisions* —
-semantic token values, type and spacing scales, motion principles, the
-accessibility standard, and global component behaviors. Never name the component
-library, CSS framework, or design file — that is `plan`.
+UI-surface project (type `site`, `frontend`, or `console`). Author the
+*decisions* — semantic token values, type and spacing scales, motion principles,
+the accessibility standard, and global component behaviors. Never name the
+component library, CSS framework, or design file — that is `plan`.
 
 You own the user conversation. Elicitation is **interactive and stays with
 you**. Apply the **design-system** skill doctrine throughout.
@@ -42,11 +42,11 @@ checklist).
 
 Read `docs/blueprint/architecture.md`. **Halt if it does not exist:** "No
 registry found. Run `/vwf:architecture` first." If the registry has **no**
-UI-surface project (no `site` or `frontend` type), tell the user a design system
-may not be needed and ask whether to (a) **add the UI project to the registry
-first** via `/vwf:architecture` (then return here), or (b) proceed anyway. Do
-not elicit a design system for a registry with no UI surface without one of
-these.
+UI-surface project (no `site`, `frontend`, or `console` type), tell the user a
+design system may not be needed and ask whether to (a) **add the UI project to
+the registry first** via `/vwf:architecture` (then return here), or (b) proceed
+anyway. Do not elicit a design system for a registry with no UI surface without
+one of these.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format

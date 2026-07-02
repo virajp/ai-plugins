@@ -222,15 +222,15 @@ blueprint deliberately doesn't.
 ### /vwf:design-system
 
 A second foundation, **mandatory once the registry has a UI project** (type
-`site` or `frontend`). It elicits the product-wide UX/visual language — semantic
-color tokens, typography, spacing, motion, the accessibility standard, and
-global component behaviors — and writes `docs/blueprint/design-system.md`, gated
-by a fresh **reviewer subagent** (like the blueprint's) that checks it against
-the design-system checklist until it passes. Like the blueprint, it stays
-code-independent: it records token *values* and *scales*, never the component
-library, CSS framework, or design file. Every entity's Screens reference it
-instead of re-deciding visual language. `blueprint` halts on a UI entity until
-it exists.
+`site`, `frontend`, or `console`). It elicits the product-wide UX/visual
+language — semantic color tokens, typography, spacing, motion, the accessibility
+standard, and global component behaviors — and writes
+`docs/blueprint/design-system.md`, gated by a fresh **reviewer subagent** (like
+the blueprint's) that checks it against the design-system checklist until it
+passes. Like the blueprint, it stays code-independent: it records token *values*
+and *scales*, never the component library, CSS framework, or design file. Every
+entity's Screens reference it instead of re-deciding visual language.
+`blueprint` halts on a UI entity until it exists.
 
 ### /vwf:blueprint
 

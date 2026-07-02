@@ -76,12 +76,12 @@ wait.
 From the entity's nature and the registry, determine which engineering sections
 apply. Map **by project `type`, never by literal technology**:
 
-| Entity section  | Resolves to (registry `type`)        |
-| --------------- | ------------------------------------ |
-| Data Model      | the schema/contract package          |
-| API Surface     | service/API project(s)               |
-| Background Jobs | worker project(s)                    |
-| Screens         | UI project(s) (`site` or `frontend`) |
+| Entity section  | Resolves to (registry `type`)                    |
+| --------------- | ------------------------------------------------ |
+| Data Model      | the schema/contract package                      |
+| API Surface     | service/API project(s)                           |
+| Background Jobs | worker project(s)                                |
+| Screens         | UI project(s) (`site`, `frontend`, or `console`) |
 
 If a type is absent from the registry, **omit** that section for this entity.
 
@@ -103,9 +103,9 @@ When a slice spans projects with different doc units, author at the product's
 dominant unit and let each section's target project keep its own vocabulary.
 
 **Design-system gate.** If the doc has a **Screens** surface (the registry has a
-`site` or `frontend` project), `docs/blueprint/design-system.md` must exist.
-**Halt if it does not:** "This entity has UI but no design system. Run
-`/vwf:design-system` first." Screens reference the design system; they never
+`site`, `frontend`, or `console` project), `docs/blueprint/design-system.md`
+must exist. **Halt if it does not:** "This entity has UI but no design system.
+Run `/vwf:design-system` first." Screens reference the design system; they never
 re-decide visual language.
 
 ### 3. Interactive elicitation (orchestrator)

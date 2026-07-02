@@ -125,7 +125,9 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   UX/visual-contract doctrine — tokens, typography, spacing, motion,
   accessibility, components/anti-patterns — auto-applies on
   `docs/blueprint/design-system`); `project-init` (onboarding/migration doctrine
-  — topology detection, consent-gated dry-run migration, the blueprint
+  — topology detection incl. the workspace shape (parent repo + backend/frontend
+  submodules, detected in existing repos and recommended — structure + reference
+  stack — for new/empty ones), consent-gated dry-run migration, the blueprint
   format-version + drift map; used by `/vwf:init`)
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
   `design-system`, `environment` (the per-project env-var/secret catalog),
@@ -205,11 +207,11 @@ mise/architecture/design-system, authors CLAUDE.md + README) and is
 `docs/blueprint/.vwf.yml` and, on a later run, detects drift against the format
 the installed vwf ships and migrates the delta. `architecture` (the registry) is
 unconditionally required before `blueprint`. `design-system` is a second
-foundation, **required once the registry has a UI project** (type `site` or
-`frontend`): `blueprint` halts on an entity with a Screens surface if
-`docs/blueprint/design-system.md` is missing. `environment.md` (the per-project
-env-var/secret catalog, type `vwf-environment`) is a third foundation,
-**required once the registry declares an external integration or a
+foundation, **required once the registry has a UI project** (type `site`,
+`frontend`, or `console`): `blueprint` halts on an entity with a Screens surface
+if `docs/blueprint/design-system.md` is missing. `environment.md` (the
+per-project env-var/secret catalog, type `vwf-environment`) is a third
+foundation, **required once the registry declares an external integration or a
 secrets-manager `config`** — `init` bootstraps it from the repo's existing
 env-var/secret usage (names only, never values) and `blueprint` maintains it as
 entities add integrations, with `conventions.md#config` holding only the

@@ -3,12 +3,17 @@
 Infer the project shape from repo signals **before** asking — then confirm by
 MCQ.
 
-**Monorepo vs polyrepo:**
+**Monorepo vs polyrepo vs workspace:**
 
 - `pnpm-workspace.yaml`, npm/yarn `workspaces`, `turbo.json`, `nx.json`, a Cargo
   workspace, or `go.work` → **monorepo**.
 - a single `package.json` / `pubspec.yaml` / `go.mod` / `Cargo.toml` at the root
   with no workspace globs → **single-package** (a polyrepo member).
+- a `.gitmodules` naming child repos (child dirs carrying their own `.git`) →
+  **workspace**: a parent repo holding the vwf docs, with each child classified
+  on its own signals. See the
+  [workspace structure](${CLAUDE_PLUGIN_ROOT}/skills/project-init/references/workspace-structure.md)
+  reference — the ideal shape, and what to recommend for a new/empty repo.
 
 **Project types** (map to the registry `type`, never literal tech):
 
@@ -17,6 +22,8 @@ MCQ.
 - **worker** — a background / queue / cron processor.
 - **frontend/app** — a web or mobile UI. **Its presence makes the design system
   mandatory** — confirm it explicitly.
+- **console/admin UI** — a web-based back-office/admin app, cloud-hosted beside
+  the service. A UI surface: **it too makes the design system mandatory**.
 
 **Stacks** — read each manifest (`package.json` deps, `pubspec.yaml`, `go.mod`,
 `Cargo.toml`, build files) and record the stack per project for the registry.

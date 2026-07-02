@@ -7,7 +7,7 @@ and, on re-run, migrates the gap.
 
 ```yaml
 blueprint_format: 3
-topology: monorepo # or polyrepo
+topology: monorepo # or polyrepo | workspace
 projects: [ api, web, worker ] # by registry name
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)

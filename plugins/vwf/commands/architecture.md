@@ -89,7 +89,7 @@ a time, gathering for each:
 | Field          | How to elicit                                                                 |
 | -------------- | ----------------------------------------------------------------------------- |
 | `name`         | Free text (short identifier)                                                  |
-| `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend`                  |
+| `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend` / `console`      |
 | `path`         | Free text (repo-relative directory)                                           |
 | `stack`        | MCQ + Other (offer common per-type options)                                   |
 | `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other |
@@ -97,7 +97,8 @@ a time, gathering for each:
 | `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                           |
 
 Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
-`entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`.
+`entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`,
+`console` → `entity`.
 
 ### 3c — Cross-cutting decisions
 
@@ -179,9 +180,11 @@ Check:
 
 - Every `depends_on` entry names a real project in the `projects:` list (no
   dangling reference).
-- Every `type` is from `service | worker | packages | site | frontend`, every
-  `doc_unit` from `entity | page | module`, and every `capabilities` token from
-  the Capability Vocabulary asset (or an explicit user-added "Other").
+- Every `type` is from
+  `service | worker | packages | site | frontend |
+  console`, every `doc_unit`
+  from `entity | page | module`, and every `capabilities` token from the
+  Capability Vocabulary asset (or an explicit user-added "Other").
 - No dependency cycle: the `depends_on` edges form a DAG.
 
 **On a finding:** surface it to the user, ask for the missing information, then

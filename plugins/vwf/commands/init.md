@@ -73,9 +73,11 @@ if mempalace is unavailable.
 
 Per the project-init skill (topology-detection), read repo signals —
 `package.json`, `pnpm-workspace.yaml`, `pubspec.yaml`, `go.mod`, `Cargo.toml`,
-dir layout — plus any existing `docs/blueprint/` or legacy `docs/specs/`. Infer:
-monorepo vs polyrepo, the project types present (schema/contract, service/API,
-worker, frontend/app), and the stack per project.
+`.gitmodules`, dir layout — plus any existing `docs/blueprint/` or legacy
+`docs/specs/`. Infer: monorepo vs polyrepo vs **workspace** (a parent repo with
+submodule children — classify each child on its own signals), the project types
+present (schema/contract, service/API, worker, frontend/app, console/admin UI),
+and the stack per project.
 
 ### 2. Confirm & fill (MCQ)
 
@@ -84,6 +86,13 @@ following `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` — one question at a
 time, options + "Other". Pin down anything detection could not: missing project
 types, stacks, and **whether a UI surface exists** (it makes the design system
 mandatory). Never assume UI — confirm it.
+
+**New/empty repo.** When detection finds no manifests and no source, recommend
+the ideal **workspace structure** and its reference stack per the project-init
+skill (workspace-structure) — the structure as one accept/deny MCQ, the stacks
+as pre-selected defaults overridable per project. It is an optional opinionated
+layer: record a decline and move on; never recommend restructuring an
+**existing** repo toward it.
 
 ### 3. Reconcile format & legacy
 

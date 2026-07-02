@@ -69,7 +69,7 @@ Keep this table in sync with the `cross_cutting` block in the registry below. --
 > entity section's target project, stack vocabulary, and capabilities. Keep it
 > accurate.
 >
-> - `type` ∈ `service` | `worker` | `packages` | `site` | `frontend`
+> - `type` ∈ `service` | `worker` | `packages` | `site` | `frontend` | `console`
 > - `doc_unit` ∈ `entity` | `page` | `module`
 > - `capabilities` — see the Capability Vocabulary in the architecture phase;
 >   extensible.
@@ -79,7 +79,7 @@ Keep this table in sync with the `cross_cutting` block in the registry below. --
 ```yaml
 projects:
   - name: <project-name>
-    type: <service|worker|packages|site|frontend>
+    type: <service|worker|packages|site|frontend|console>
     path: <repo-or-directory>
     stack: [ <language>, <framework>, <...> ]
     capabilities: [ <capability>, <...> ]
