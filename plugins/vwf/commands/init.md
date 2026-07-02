@@ -45,12 +45,31 @@ format-versioning, claude-md).
   `markdown:readme` for the README — orchestrate, don't reimplement.
 - **Idempotent.** A re-run detects what already conforms and migrates only the
   delta; a conforming repo yields an empty plan.
+- **Resumable.** After each completed step, append its id to a transient
+  `init_progress:` list in `docs/blueprint/.vwf.yml`; a re-run reads it and
+  resumes from the first incomplete step. Keep it a plain list, not a journal.
+  **Remove the key on successful completion** (step 11).
+
+**What a batch is.** Code restructuring is approved and applied **one batch at a
+time**. A batch is **one project's moves, or one logical rename group** — small
+enough to review in a single screen. Never bundle unrelated projects or renames
+into one approval.
 
 ---
 
 ## Pipeline
 
 ### 1. Detect topology
+
+**Resume check.** Read `docs/blueprint/.vwf.yml`. If it carries a transient
+`init_progress:` list from an interrupted run, offer to resume from the first
+step **not** in that list rather than restarting; re-confirm anything the user
+wants revisited.
+
+**Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall room
+`decisions` (prior topology / UI / stack confirmations and their rationale)
+before detecting — build on them, don't re-ask resolved questions. Skip silently
+if mempalace is unavailable.
 
 Per the project-init skill (topology-detection), read repo signals —
 `package.json`, `pnpm-workspace.yaml`, `pubspec.yaml`, `go.mod`, `Cargo.toml`,
@@ -86,14 +105,23 @@ own frontmatter under the `1 → 2` delta.
 ### 4. Build the migration plan (dry-run)
 
 Enumerate every action: `docs/blueprint` scaffolding, code-restructuring moves
-to match the registry topology, tooling (mise), CLAUDE.md merge, README. Present
-the plan and **wait for approval**. Then set up an isolated worktree via
-`/vwf:git-workflow`.
+to match the registry topology (grouped into **batches**, see the Hard Rules),
+tooling (mise), CLAUDE.md merge, README. **Write the plan to a scratch artifact
+`docs/blueprint/.vwf-migration-plan.md`** (deleted on completion, step 11) and
+present it **section by section** — do not keep it chat-only. **Wait for
+approval.**
+
+**Dirty-tree guard.** Before creating the worktree, run `git status`. If the
+working tree is dirty, **stop and ask** whether to commit, stash, or proceed —
+never migrate over uncommitted changes silently. Once clean (or the user
+consents), set up an isolated worktree via `/vwf:git-workflow`.
 
 ### 5. Tooling
 
 If mise config is missing or incomplete, invoke **mise:scaffold**. Note any
-other runtimes the detected stacks need — do not install them.
+other runtimes the detected stacks need — do not install them. If
+`mise:scaffold` fails, report the error, offer to continue without it (leaving
+mise config for the user), and record the skip in `init_progress`.
 
 ### 6. Migrate (consent-gated)
 
@@ -101,6 +129,11 @@ Scaffold the `docs/blueprint` tree (architecture, conventions, design-system,
 environment, integration skeletons from templates) plus `docs/plans/` and
 `docs/plans/archived/`. Restructure source per the approved plan, **one batch at
 a time with approval** — move with `git mv` (preserve history), never delete.
+
+**On batch rejection.** If the user rejects a batch, **stop** — apply no further
+batches. Report which batches were applied and which remain pending, leave the
+worktree intact for the user to inspect, and record the stop (applied/pending)
+in `init_progress`.
 
 **Bootstrap the environment catalog.** When the registry declares integrations
 or a secrets-manager `config` (the `2 → 3` trigger), scaffold
@@ -115,15 +148,25 @@ mechanism alone.
 
 ### 7. Orchestrate foundations
 
-Run `/vwf:architecture` to author the registry. If the topology has a
-frontend/app project (UI), run `/vwf:design-system`. These are interactive —
-hand off, then resume.
+Gate each foundation on the **step-3 delta** — a conforming repo runs neither,
+yielding an empty plan (the idempotence Hard Rule):
+
+- Run `/vwf:architecture` only if the registry is **missing** or the delta
+  requires a registry change (a new/changed project, capability, or
+  cross-cutting decision).
+- Run `/vwf:design-system` only if the topology has a **UI surface**
+  (`ui: true`) **and** `docs/blueprint/design-system.md` is missing or stale.
+
+These are interactive — hand off, then resume. If a foundation command fails,
+report the error, offer to continue without it (leaving that foundation for a
+later run), and record the skip in `init_progress`.
 
 ### 8. Author CLAUDE.md & README
 
 Merge the vwf section (from the project-claude template) into the repo's
 `CLAUDE.md`, **preserving existing content**. Generate or update the README via
-**markdown:readme**.
+**markdown:readme**; if it fails, report the error, offer to continue without it
+(leaving the README for the user), and record the skip in `init_progress`.
 
 ### 9. Stamp the format version
 
@@ -131,6 +174,11 @@ Write `docs/blueprint/.vwf.yml` with the `blueprint_format` version and a
 topology summary (`ui` if a UI surface exists, `integrations` if the registry
 declares integrations or a secrets-manager `config` — i.e. `environment.md` is
 required), per format-versioning — the thing a future `init` run diffs against.
+
+**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the durable
+onboarding decisions and their rationale (confirmed topology, UI surface,
+stacks, cross-cutting selections) to mempalace (room `decisions`) — skip what
+the docs capture verbatim. Skip silently if mempalace is unavailable.
 
 ### 10. Validate
 
@@ -146,6 +194,8 @@ carries **no secret values**. Report anything still open.
 
 ### 11. Approval gate & commit
 
-Summarize everything created / moved / updated and wait for approval. Commit via
-`/vwf:git-workflow` with an `init:` or `chore(vwf):` message. Keep the worktree
-local; do not push.
+Summarize everything created / moved / updated and wait for approval. On
+approval, **finalize resumability state**: remove the transient `init_progress:`
+key from `docs/blueprint/.vwf.yml` and delete the scratch
+`docs/blueprint/.vwf-migration-plan.md`. Then commit via `/vwf:git-workflow`
+with an `init:` or `chore(vwf):` message. Keep the worktree local; do not push.

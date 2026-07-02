@@ -30,7 +30,8 @@ frontmatter-and-links reference). Concretely, format 2 = format 1 **plus**:
   `type`, `title`, `description`, `status` (optional standardized `timestamp` /
   `owner` / `resource` / `tags`). `type` is from the vwf vocabulary
   (`vwf-architecture`, `vwf-conventions`, `vwf-design-system`,
-  `vwf-integration`, `vwf-entity`, `vwf-plan`, `vwf-gap-report`).
+  `vwf-environment`, `vwf-integration`, `vwf-entity`, `vwf-plan`,
+  `vwf-gap-report`; `vwf-environment` arrives with format 3 below).
 - Cross-doc relationships are **typed markdown links** (the OKF edge), not
   prose: an entity's **Relationships** rows link the related entity's doc, and
   **References** link `conventions.md` anchors / `design-system.md`.

@@ -14,10 +14,10 @@ effort: xhigh
 Maintain `docs/blueprint/design-system.md`: the product's design system as a
 **code-independent contract**. It is a vwf foundation alongside
 `architecture.md`, and `blueprint` requires it once the registry has a
-frontend/app project. Author the *decisions* — semantic token values, type and
-spacing scales, motion principles, the accessibility standard, and global
-component behaviors. Never name the component library, CSS framework, or design
-file — that is `plan`.
+UI-surface project (type `site` or `frontend`). Author the *decisions* —
+semantic token values, type and spacing scales, motion principles, the
+accessibility standard, and global component behaviors. Never name the component
+library, CSS framework, or design file — that is `plan`.
 
 You own the user conversation. Elicitation is **interactive and stays with
 you**. Apply the **design-system** skill doctrine throughout.
@@ -42,8 +42,11 @@ checklist).
 
 Read `docs/blueprint/architecture.md`. **Halt if it does not exist:** "No
 registry found. Run `/vwf:architecture` first." If the registry has **no**
-frontend/app project (no UI surface), tell the user a design system may not be
-needed and ask whether to proceed.
+UI-surface project (no `site` or `frontend` type), tell the user a design system
+may not be needed and ask whether to (a) **add the UI project to the registry
+first** via `/vwf:architecture` (then return here), or (b) proceed anyway. Do
+not elicit a design system for a registry with no UI surface without one of
+these.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
@@ -73,24 +76,77 @@ anti-patterns.
 
 ### 4. Write the doc
 
-Write `docs/blueprint/design-system.md` from the template — including its **OKF
+Write the design system in **one of two equal forms** — same sections, same
+content, only the file boundary differs. Set `status: draft` until the reviewer
+loop (§5) returns `NO GAPS`, then `reviewed`.
+
+- **Single file** — `docs/blueprint/design-system.md`. The default; use it while
+  the doc reads comfortably in one sitting.
+- **Folder** — `docs/blueprint/design-system/`, the sections split across
+  `index.md` (Brand & Mood, principles, Accessibility Standard) +
+  `foundations.md` (Color Tokens, Typography, Spacing & Layout) + `motion.md` +
+  `components.md` (Component Behaviors + Anti-Patterns). Promote to this form
+  once the doc grows too large to read in one sitting — a judgement call, not a
+  forced migration.
+
+Neither form is a downgrade; either is a valid design system at rest. An
+existing design system already in the folder form stays a folder — never
+collapse it into a single file. Author from the template — including its **OKF
 frontmatter** (`type: vwf-design-system`, `title`, `description`, `status`;
 optional `timestamp`/`owner`/`resource`/`tags`), per the blueprint-authoring
-frontmatter-and-links reference. Promote to the folder form
-`docs/blueprint/design-system/` once it grows large.
+frontmatter-and-links reference; in the folder form, every split file carries
+its own frontmatter.
 
-### 5. Self-gate (checklist)
+### 5. Reviewer loop (fresh subagent)
 
-Check the doc against the design-system skill's **pre-delivery checklist**.
-Resolve every failure (re-eliciting as needed) or record it under Open
-Questions. Do not pass with silent gaps.
+**Self-review first.** Before dispatching, skim the doc against the
+design-system skill's pre-delivery checklist and fix any obvious placeholder or
+empty section — don't burn a review round on gaps you can see yourself.
+
+Then loop until the doc passes:
+
+1. Dispatch a **fresh** `design-system-reviewer` subagent (stateless) with
+   **only** the written doc — the single file, or **all files** of the folder
+   form (`index.md` + each split file) — and no conversation context. It checks
+   the doc against the completeness checklist in its own instructions and
+   returns `NO GAPS` or a numbered gap list.
+2. **Gaps** → present them, re-elicit the specific open decisions with the user
+   (one at a time), update the doc, return to step 1.
+3. **`NO GAPS`** → set `status: reviewed` and exit.
+
+**Convergence guard:** before another round, compare to the prior round. Pause
+and ask the user if the gap count did not strictly decrease, or a resolved gap
+resurfaced. No fixed round cap.
 
 ### 6. Reconcile & persist
 
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store durable design decisions and
-their rationale to mempalace (room `decisions`) — skip what the doc captures
-verbatim. If the design system implies a cross-cutting convention, note it in
-`docs/blueprint/conventions.md`.
+**Impact analysis (update mode).** When this pass **renamed or removed** a token
+or a component behavior, grep `docs/blueprint/` — the entity docs' **Screens**
+and **References** sections — for uses of the old name and report every orphan.
+Offer to fix them via `/vwf:blueprint` (the entity docs are its surface);
+**never silently edit an entity doc from here.**
+
+**Cross-cutting conventions.** A design decision graduates to
+`docs/blueprint/conventions.md` when it becomes a system-wide engineering rule.
+Two concrete triggers:
+
+- A **theming / dark-mode strategy** (how themes are selected and applied
+  product-wide) → record the decision in `conventions.md`.
+- An **i18n / RTL direction** decision (the product supports right-to-left or
+  bidirectional layout) → record it in `conventions.md`.
+
+Otherwise **skip** — a pure token/scale/behavior value stays in the design
+system and does not touch conventions.
+
+**Architecture reconcile.** If eliciting the design system surfaced a
+product-shape change — e.g. a new UI project the registry does not yet list —
+update the **registry** in `docs/blueprint/architecture.md` via
+`/vwf:architecture` (mirror `blueprint`'s reconcile step). Do not edit the
+registry by hand here.
+
+**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store durable design
+decisions and their rationale to mempalace (room `decisions`) — skip what the
+doc captures verbatim. Skip silently if mempalace is unavailable.
 
 ### 7. Approval gate
 

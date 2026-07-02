@@ -2,6 +2,8 @@
 
 The gate for `design-system.md`. The doc passes only when:
 
+- [ ] Brand & Mood states the product's brand personality/mood — the style
+      direction the tokens, type, and motion trace back to.
 - [ ] Color tokens are semantic/role-based; every text/surface pairing meets
       contrast (4.5:1 text, 3:1 large/UI); dark values present if dark mode is
       in scope.

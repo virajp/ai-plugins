@@ -43,9 +43,21 @@ Read `docs/blueprint/architecture.md`.
   cross-cutting decision. Do not re-elicit everything.
 - **Absent → create mode.** Run the full elicitation below.
 
+**Format check.** Run the preflight in
+`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
+is behind what vwf ships, **nudge** `/vwf:init` and **always proceed — never
+halt.** Architecture is a prerequisite of `/vwf:init`'s own migration, so it
+must not depend on it (this is the only foundation command that never blocks on
+the preflight).
+
 ---
 
 ## Step 3 — Elicit (create) / Reconcile (update)
+
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
+topology, stack, and cross-cutting decisions and their rationale (room
+`decisions`) before eliciting — build on them and don't re-ask resolved
+questions. Skip silently if mempalace is unavailable.
 
 Elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`: one decision per
@@ -69,18 +81,20 @@ Hosting and deployment — ask in sequence:
 
 ### 3b — Project Registry
 
-First ask the user to enumerate all projects. Then walk the projects one at a
-time, gathering for each:
+First **read `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md`** — its
+grouped tokens are the multi-select options you offer for the `capabilities`
+field. Then ask the user to enumerate all projects, and walk the projects one at
+a time, gathering for each:
 
-| Field          | How to elicit                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------------ |
-| `name`         | Free text (short identifier)                                                                     |
-| `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend`                                     |
-| `path`         | Free text (repo-relative directory)                                                              |
-| `stack`        | MCQ + Other (offer common per-type options)                                                      |
-| `capabilities` | Multi-select from the Capability Vocabulary (defined in the `architecture-writer` agent) + Other |
-| `depends_on`   | Multi-select from named projects + None                                                          |
-| `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                                              |
+| Field          | How to elicit                                                                 |
+| -------------- | ----------------------------------------------------------------------------- |
+| `name`         | Free text (short identifier)                                                  |
+| `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend`                  |
+| `path`         | Free text (repo-relative directory)                                           |
+| `stack`        | MCQ + Other (offer common per-type options)                                   |
+| `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other |
+| `depends_on`   | Multi-select from named projects + None                                       |
+| `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                           |
 
 Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
 `entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`.
@@ -126,9 +140,10 @@ Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 - All per-project registry rows (name, type, path, stack, capabilities,
   depends_on, doc_unit).
 - All cross-cutting decisions.
-- **Update mode only:** the full text of the existing
-  `docs/blueprint/architecture.md` so the agent edits in place rather than
-  regenerating.
+- **Update mode only:** the **path** `docs/blueprint/architecture.md` plus the
+  **specific changes** elicited (which projects/rows/cross-cutting keys to add,
+  edit, or remove). The writer has Read — it reads the current doc itself and
+  edits in place. Do not paste the existing doc through this session.
 
 The `architecture-writer` agent writes `docs/blueprint/architecture.md` directly
 and returns a change summary. Do not pass the file back through this session.
@@ -137,7 +152,14 @@ and returns a change summary. Do not pass the file back through this session.
 
 ## Step 6 — Sync-Verify (inline)
 
-After the writer returns, read `docs/blueprint/architecture.md` yourself. Check:
+**Guard the writer's return first.** The writer's reply must carry its
+`FILES_WRITTEN: docs/blueprint/architecture.md` contract block. If the return is
+missing, errored, or names no written file, **re-dispatch once** with the same
+inputs; if it still does not confirm the write, **halt** and report the error —
+do not read a file that was never written.
+
+Once the write is confirmed, read `docs/blueprint/architecture.md` yourself.
+Check:
 
 **(a) Prose ↔ registry sync**
 
@@ -153,10 +175,25 @@ After the writer returns, read `docs/blueprint/architecture.md` yourself. Check:
   approved leaving them unresolved.
 - No literal placeholder strings (e.g. `YOUR_PROJECT_NAME`, `TBD`).
 
-**On a finding:** surface it to the user, ask for the missing information,
-re-dispatch `architecture-writer` with the delta, then re-read and re-check.
-Apply a convergence guard: if the same gap appears after two re-dispatches, stop
-and report the unresolved item rather than looping indefinitely.
+**(c) Registry integrity**
+
+- Every `depends_on` entry names a real project in the `projects:` list (no
+  dangling reference).
+- Every `type` is from `service | worker | packages | site | frontend`, every
+  `doc_unit` from `entity | page | module`, and every `capabilities` token from
+  the Capability Vocabulary asset (or an explicit user-added "Other").
+- No dependency cycle: the `depends_on` edges form a DAG.
+
+**On a finding:** surface it to the user, ask for the missing information, then
+fix — re-dispatch `architecture-writer` with the delta (or make a targeted edit
+for a mechanical fix like a stray token), then re-read and re-check. Apply a
+convergence guard: if the same gap appears after two re-dispatches, stop and
+report the unresolved item rather than looping indefinitely.
+
+**Persist.** Once the checks pass, per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`
+store the durable topology, stack, and cross-cutting decisions and their
+rationale to mempalace (room `decisions`) — skip what the doc captures verbatim.
+Skip silently if mempalace is unavailable.
 
 ---
 

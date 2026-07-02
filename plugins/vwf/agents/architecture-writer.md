@@ -47,9 +47,8 @@ You receive:
    Keep this block on every write. `timestamp`/`owner`/`resource`/`tags` are
    optional — include `timestamp` only if the doc is shipped outside git.
 1. **Prose sections** — System Overview, Projects (one subsection per project),
-   Domain Modules, How Projects Interconnect, Hosting & Deployment,
-   Infrastructure, Local Development, Package Management, Cross-cutting
-   Decisions table.
+   How Projects Interconnect, Hosting & Deployment, Cross-cutting Decisions
+   table.
 2. **Project Registry** — the `` ```yaml `` block with a `projects:` list (one
    entry per project) and a `cross_cutting:` block.
 3. **Cross-cutting Decisions** — the prose table and the `cross_cutting:` yaml
@@ -88,22 +87,11 @@ the client and ships through whatever distribution channel the project uses.
 ## Capability Vocabulary
 
 Capabilities are stack-agnostic feature flags — the gates that decide which
-deep, stack-specific questions `blueprint` asks. Pick all that apply per
-project; add Other for anything not listed. Extensible — add new capabilities as
-the system grows.
-
-- **Data & storage:** `document-datastore`, `relational-datastore`,
-  `object-file-storage`, `cache-layer`, `search-index`
-- **Async & messaging:** `durable-workflows`, `message-queue`, `pub-sub`,
-  `scheduled-jobs`
-- **Realtime & comms:** `realtime-sync`, `realtime-location`,
-  `push-notifications`, `voice-audio`
-- **Auth & identity:** `third-party-auth`, `custom-claims-rbac`
-- **Commerce:** `payments-subscriptions`
-- **Geo:** `maps-navigation`
-- **Web rendering:** `ssr`, `ssg`, `cms-content`, `seo`
-- **Mobile:** `offline-first`, `deep-linking`, `device-permissions`
-- **Observability:** `distributed-tracing`
+deep, stack-specific questions `blueprint` asks. The vocabulary is the shared
+asset `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md`; read it and
+record the tokens the orchestrator passes for each project against it. Never
+invent a capability outside that list unless the user explicitly added one as
+"Other".
 
 ## Return Contract
 
