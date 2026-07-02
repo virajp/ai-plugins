@@ -47,7 +47,8 @@ without ambiguity. Surface open decisions rather than guessing.
 
 Doctrine: the **blueprint-authoring** skill (contract-vs-realization,
 entity-contract, integration-and-flows, ui-ux-contract, environment-catalog,
-quick-reference).
+quick-reference). Entities with an **API Surface** also apply the
+**rest-api-design** skill for endpoint contract depth.
 
 Reserved entity names: `architecture`, `conventions`, `design-system`,
 `environment`, `integration` (flat namespace in `blueprint/`).
@@ -75,17 +76,34 @@ wait.
 From the entity's nature and the registry, determine which engineering sections
 apply. Map **by project `type`, never by literal technology**:
 
-| Entity section  | Resolves to (registry `type`) |
-| --------------- | ----------------------------- |
-| Data Model      | the schema/contract package   |
-| API Surface     | service/API project(s)        |
-| Background Jobs | worker project(s)             |
-| Screens         | frontend/app project(s)       |
+| Entity section  | Resolves to (registry `type`)        |
+| --------------- | ------------------------------------ |
+| Data Model      | the schema/contract package          |
+| API Surface     | service/API project(s)               |
+| Background Jobs | worker project(s)                    |
+| Screens         | UI project(s) (`site` or `frontend`) |
 
 If a type is absent from the registry, **omit** that section for this entity.
 
-**Design-system gate.** If the entity has a **Screens** surface (the registry
-has a frontend/app project), `docs/blueprint/design-system.md` must exist.
+**Doc unit.** Each registry project also declares a `doc_unit` (`entity` /
+`page` / `module`) — the unit its slice of the blueprint is documented in.
+`entity` is the default and everything below reads as entity-first, but the
+other units are first-class and use the **same doc structure, sections, and
+completeness bars**:
+
+- `entity` → `docs/blueprint/<entity>.md` (or folder form), unchanged.
+- `page` (typically a `site`) → the doc's unit is a page or user journey; an
+  engineering surface the unit genuinely lacks (e.g. Data Model for a static
+  page) is written as `N/A — <reason>`, never silently omitted.
+- `module` (typically `packages`) → the doc's unit is a module boundary — its
+  public contract, invariants, and consumers; the same `N/A — <reason>` rule
+  applies to surfaces a library doesn't have.
+
+When a slice spans projects with different doc units, author at the product's
+dominant unit and let each section's target project keep its own vocabulary.
+
+**Design-system gate.** If the doc has a **Screens** surface (the registry has a
+`site` or `frontend` project), `docs/blueprint/design-system.md` must exist.
 **Halt if it does not:** "This entity has UI but no design system. Run
 `/vwf:design-system` first." Screens reference the design system; they never
 re-decide visual language.
@@ -113,18 +131,14 @@ Blueprint-specific notes layered on the protocol:
   — **Relationships** (cardinality, ownership, cascade), **Concurrency &
   consistency**, multi-entity **flows**, and per-screen **UI/UX** (referencing
   the design system, not re-deciding it).
-- **Minimalism (rung 1):** per `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md`,
-  specify only the fields, endpoints, states, and features a stated product goal
-  needs. Do not invent unstated requirements or speculative configurability — if
-  a surface isn't traceable to an elicited goal, leave it out (or raise it as an
-  Open Question), don't gold-plate the blueprint.
-- **Scope check (protocol §2):** if `$ARGUMENTS` names more than one entity, or
-  the entity clearly spans several, decompose and author one entity per pass.
 - **Decisions-vs-mechanics (protocol §4):** spend the precision budget on **Data
   Model** and **API Surface**; the product half may stay prose-light.
 - **Approaches (protocol §5):** where a data-model or API shape has competing
   designs (e.g. embed vs reference, sync vs async surface), present the options
   before committing.
+- Minimalism rung 1 (`${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md`, applied to
+  requirements) and the protocol's scope check (§2, one entity per pass) carry
+  over unchanged — no blueprint-specific delta.
 
 ### 4. Write the entity doc
 
@@ -171,6 +185,12 @@ section. Capture any multi-entity flow or inter-service contract in
 `docs/blueprint/integration.md` (from the integration template) — not inside a
 single entity doc.
 
+**Self-review before the reviewer.** Run the elicitation protocol's self-review
+pass (§8) over the written doc — no `TBD`/`TODO`/placeholder outside Open
+Questions, no section contradicting another, no requirement reading two ways,
+frontmatter and links filled — and fix inline before dispatching the reviewer.
+Don't burn a reviewer round on trivia.
+
 ### 5. Reviewer loop (fresh subagent)
 
 Loop until the doc passes:
@@ -178,9 +198,15 @@ Loop until the doc passes:
 1. Dispatch a **fresh** `blueprint-reviewer` subagent (stateless) with **only**
    the written entity doc — the single file, or **all files** of the folder form
    (`index.md` + each surface file) — plus the relevant `conventions.md` anchors
-   and registry block it references — no conversation context. It checks the doc
-   against the §5 completeness checklist and returns `NO GAPS` or a numbered gap
-   list.
+   and registry block it references, and the **current list of entity docs**
+   under `docs/blueprint/` (names only) — no conversation context. It checks the
+   doc against the completeness checklist in its own instructions, **verifies
+   every outbound relationship/reference link resolves on disk**, and returns
+   `NO GAPS` or a numbered gap list. Tell it the doc's `doc_unit` so it accepts
+   an explicit `N/A — <reason>` on unit-inapplicable surfaces (§2). The
+   entity-doc list lets it separate a broken/wrong-path link from a link to a
+   not-yet-authored entity: the latter comes back as a gap of kind "target not
+   yet authored", which you present to the user and may accept.
 2. **Gaps** → present them, re-elicit the specific open decisions with the user
    (one at a time), update the doc, return to step 1.
 3. **`NO GAPS`** → exit.
@@ -197,17 +223,43 @@ capability, or cross-cutting decision implied by this entity), update the
 `/vwf:architecture` if the change is non-trivial. Do not rewrite the prose
 unless the topology genuinely changed.
 
+When this pass added a cross-cutting decision to `conventions.md` (a new
+integration, a `config`/secrets mechanism, an auth or error convention), check
+the registry's `cross_cutting` block covers it and reconcile any mismatch —
+through `/vwf:architecture` for a non-trivial change.
+
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store this entity's
 durable decisions and their rationale, plus any drift flagged, to mempalace
 (rooms `decisions`, `problems`) — skip what the entity doc already captures
 verbatim.
 
-### 7. Approval gate
+### 7. Reconcile inbound links (rename / delete)
 
-Summarize what was written/changed (entity doc, conventions, registry) and wait
-for explicit approval.
+When this pass **renames** or **removes** an entity, no dangling OKF edge may be
+left behind. Grep `docs/blueprint/` (every entity doc, `conventions.md`,
+`integration.md`, `environment.md`) and the active plans under `docs/plans/` for
+inbound markdown links to the old doc — both the file form `./<entity>.md`
+**and** the folder form `./<entity>/index.md`.
 
-### 8. Commit (git-workflow)
+- **Rename** → update every inbound link to the new path in this same pass.
+- **Delete** → list every inbound link and require the user to resolve each
+  (re-point the relationship to another entity, or remove it) before the commit.
+  A relationship pointing at a deleted entity is never left dangling.
+
+If neither happened, skip this step.
+
+### 8. Approval gate
+
+Summarize what was written/changed (entity doc, conventions, registry, any link
+fixups) and wait for explicit approval.
+
+**Multi-entity continuation.** If the original `$ARGUMENTS` named more than one
+entity (decomposed per the scope check), offer to proceed to the next one after
+this entity is approved — one entity per pass. If the session ends with entities
+still unauthored, note the remainder in the approval summary and the commit
+message so a later session can pick them up.
+
+### 9. Commit (git-workflow)
 
 After approval, hand **all** git actions to `/vwf:git-workflow` — it owns
 worktree isolation and the commit. Use a `blueprint(<entity>):` or

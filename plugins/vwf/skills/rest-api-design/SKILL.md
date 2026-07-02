@@ -1,5 +1,7 @@
 ---
 name: rest-api-design
+version: 0.1.0
+category: development
 description:
   Comprehensive, technology-agnostic principles and best practices for designing
   REST APIs. Use this skill whenever designing new REST endpoints, reviewing API
@@ -9,6 +11,8 @@ description:
   authentication schemes, or OpenAPI spec authoring — even if the user doesn't
   say "REST API" explicitly. This skill is the authoritative guide for all API
   design decisions.
+license: MIT
+user-invocable: false
 allowed-tools: Read Grep Glob Edit Write
 ---
 

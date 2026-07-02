@@ -1,10 +1,10 @@
 # Elicitation Protocol
 
-The shared questioning discipline for `/vwf:blueprint`, `/vwf:plan`, and
-`/vwf:architecture`. You own the user conversation — elicitation stays with the
-orchestrator and is never delegated to a subagent (a subagent cannot pause to
-ask a question). Each command names **what** to ask about; this file governs
-**how**.
+The shared questioning discipline for `/vwf:blueprint`, `/vwf:plan`,
+`/vwf:architecture`, `/vwf:design-system`, and `/vwf:init`. You own the user
+conversation — elicitation stays with the orchestrator and is never delegated to
+a subagent (a subagent cannot pause to ask a question). Each command names
+**what** to ask about; this file governs **how**.
 
 ## 1. Explore first
 
