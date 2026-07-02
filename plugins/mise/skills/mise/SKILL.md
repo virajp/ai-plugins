@@ -164,104 +164,16 @@ intact — only Node's release-key check is disabled, and only in CI/prod.
 Once tasks grow past one-liners, drive everything through **executable task
 files** under `.config/mise/tasks/`. mise turns nested directories into
 colon-separated names: `.config/mise/tasks/code/format` →
-`mise run code:format`. Discover them with `mise tasks`; reserve `[tasks.*]`
-toml entries (like `init`) for trivial run-strings and `depends` aggregations.
+`mise run code:format`. Every repo ships the same mandatory set — the
+`code/{format,lint,sec,all,precommit,git-config}` quality gates and the
+`setup/{all,mise,precommit,…}` bootstrap — sharing one **contract** (helpers,
+headers, flags) while the commands *inside* `code/*` and `setup/*` change with
+the stack. They ship as ready-made templates under `assets/tasks/` (a shared
+`common/` set plus a `node/`, `flutter/`, or `python/` overlay);
+**`/mise:scaffold` copies them in** — author from those, not from scratch.
 
-Every repo ships the same mandatory set. The **contract** — helpers, headers,
-flags — is identical across stacks; only the commands *inside* `code/*` and
-`setup/*` change with the tech stack.
+Read the reference for the full spec before writing or editing a task file:
 
-These tasks ship as ready-made templates with this plugin under `assets/tasks/`
-(a shared `common/` set plus a `node/`, `flutter/`, or `python/` overlay).
-**`/mise:scaffold` copies them in** — author from those, not from scratch. The
-snippets below show the shape; the templates are the source of truth.
-
-### Task-file anatomy
-
-```bash
-#!/usr/bin/env bash
-#MISE description="Check or format files"   # shown in `mise tasks`
-#MISE hide=true                             # hide sub-tasks; aggregators stay visible
-#MISE dir="{{ config_root }}"               # run from repo root, not the caller's cwd
-#MISE depends=["init"]                      # ordering / fan-out
-
-#USAGE flag "--fix"   help="apply fixes"    # arrives inside as $usage_fix ("true"/"false")
-#USAGE flag "--debug" help="emit debug logs"
-
-set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
-
-print_header "Doing the thing ..."
-```
-
-- **Every task sources `_helpers`** as its first real line, for uniform output.
-- `#USAGE flag` args arrive as `$usage_<name>` env vars; the conventions are
-  `--fix` (mutate vs check), `--debug` (verbose), `--clean` (delete first).
-- Guard dev-only side effects (docker, emulators) with
-  `[ "$MISE_ENV" != "dev" ]` so the identical task is a no-op in CI.
-
-### `_scripts/_helpers` — sourced by every task
-
-`_scripts/` is underscore-prefixed, so mise treats it as **not a task**. It
-holds the shared shell library — colors plus `print_header` / `print_ok` /
-`print_warn` / `print_error` / `line_sep` — that every task sources for uniform
-output. Add a `_helpers.mjs` sibling for any Node-based (`.mjs`) task.
-
-```bash
-#!/usr/bin/env bash
-#MISE description="Helper functions for mise tasks"
-#MISE hide=true
-
-readonly BOLD='\033[1m' NORMAL='\033[0m' GREEN='\033[0;32m' YELLOW='\033[0;33m' RED='\033[0;31m'
-
-print_header() { echo -e "${GREEN}${BOLD}$1${NORMAL}"; }
-print_warn()   { echo -e "${YELLOW}${BOLD}$1${NORMAL}"; }
-print_error()  { echo -e "${RED}${BOLD}$1${NORMAL}"; }
-line_sep()     { local c; c=$(stty size 2>/dev/null | awk '{print $2}'); printf -v l '%*s' "${c:-80}" ''; printf '%s\n' "${l// /$1}"; }
-```
-
-### `code/*` — quality gates
-
-The same set everywhere; the **commands inside differ by stack**.
-
-| Task              | Does                                                | Stack-specific bits                                                                  |
-| ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `code/format`     | format (`--fix`) or check formatting                | Node: `dprint` + `sort-package-json`; Flutter: `dprint` + `dart format lib/`         |
-| `code/lint`       | lint (`--fix` applies fixes)                        | Flutter adds `dart analyze --fatal-infos` + `dependency_validator`                   |
-| `code/sec`        | security scan — `grype` + `gitleaks`                | identical                                                                            |
-| `code/precommit`  | run pre-commit on changed files (`--all` for all)   | identical                                                                            |
-| `code/git-config` | reject forbidden local git config (`--fix` removes) | identical — identity & gpg keys must stay global, never local                        |
-| `code/all`        | aggregator: `format` → `lint` → `sec`               | compiled stacks (TS monorepo) prepend a typecheck, e.g. `code:check` → `turbo check` |
-
-`code:all` is the one-command gate. `precommit` and `git-config` are wired into
-the pre-commit hooks and `setup` — not into `code:all`.
-
-### `setup/*` — bootstrap & upgrade
-
-`setup:all` is **the entrypoint** — like `code:all`, it directly invokes every
-setup sub-task. Run it on clone and to re-sync. It declares
-`#MISE
-depends=["init"]` and is **stack-specific**, because it names the stack's
-own install tasks; the pieces it calls are partly common, partly per-stack:
-
-```text
-setup:all  (--clean wipes deps/caches first)   #MISE depends=["init"]   STACK-SPECIFIC
-  ├─ setup:mise        # mise reshim · doctor · install · upgrade --local   (common)
-  ├─ <install steps>   # the stack's own sub-tasks — see below
-  └─ setup:precommit   # pre-commit autoupdate + install --install-hooks    (common)
-```
-
-- **Common pieces** (every repo): `setup:mise` and `setup:precommit`. Only these
-  two live in the shared set; `setup:all` lives per-stack since it calls the
-  install tasks by name.
-- **Node**: `setup:pnpm:{upgrade,outdated,audit,cleanup}` (+ a `linter --init`),
-  surfacing outdated/audit and, on `--clean`, wiping
-  `node_modules`/locks/caches.
-- **Flutter**: `setup:flutter` (flutter/dart config), `setup:app:install`
-  (`flutter pub get`), `setup:app:{outdated,cleanup}`.
-- **Python**: `setup:uv:{sync,outdated,upgrade}` (`uv sync`; `--clean` recreates
-  `.venv`).
-- **Local service deps** (e.g. docker compose) added under `setup:*` are guarded
-  by `[ "$MISE_ENV" != "dev" ]` so CI skips them.
-
-Keep it idempotent: re-running `setup:all` must converge, never error.
+| Topic                                                                        | When to read                                                                                                |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [Task library](${CLAUDE_PLUGIN_ROOT}/skills/mise/references/task-library.md) | Task-file anatomy, the `_scripts/_helpers` shared library, and the per-stack `code/*` + `setup/*` task sets |

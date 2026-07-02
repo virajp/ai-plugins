@@ -80,6 +80,10 @@ Then adapt only what the detection in step 1 found:
 
 - **TS monorepo** — uncomment the `code:check` line in `common/code/all` so the
   aggregator runs a typecheck (e.g. `turbo check`) before format/lint/sec.
+- **Node linter** — the shipped `node/code/lint` and `node/setup/all` run
+  `pnpm dlx @askviraj/linter`, the author's personal default. Flag this to the
+  user and offer to swap in the repo's own linter (e.g. `eslint`, `biome`) if
+  one is already configured.
 - **Prerequisite configs** — the tasks expect `dprint.json`,
   `.config/pre-commit-config.yaml`, and (optionally) `.config/grype.yaml` /
   `.config/gitleaks.toml` at the repo root. `code:sec` already no-ops the
