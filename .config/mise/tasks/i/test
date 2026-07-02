@@ -70,4 +70,7 @@ if ! env PATH="$NODE_DIR" "${CLI[@]}" --user mise 2>&1 | grep -qE '^  mise$'; th
   exit 1
 fi
 
+print_header "Running unit + statusline tests (node --test) ..."
+node --test test/*.test.mjs
+
 print_header "All installer smoke tests passed!"

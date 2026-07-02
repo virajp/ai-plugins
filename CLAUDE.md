@@ -25,10 +25,14 @@ The plugins have two test tasks, run **locally via pre-commit** (never in
   `plugins/*`: manifest JSON validity, `plugin.json` `name`↔dir, registration in
   `marketplace.json` with the right `./plugins/<name>` source (both directions),
   `plugin.json`↔marketplace dependency sync, `${CLAUDE_PLUGIN_ROOT}` asset-ref
-  resolution, and agent `name:`↔filename (for plugins with an `agents/` dir).
-  url-sourced entries (e.g. `mempalace`) are covered only for JSON validity.
-  Scoped to fire when anything under `plugins/` or the marketplace manifest
-  changes.
+  resolution, agent `name:`↔filename (for plugins with an `agents/` dir), skill
+  frontmatter (`name:`↔dir + `description:`), command frontmatter
+  (`description:`, plausible `model:`), `hooks.json` validity + script
+  existence/executability, relative links under `assets/examples/**`, and the
+  installer sync assertion (`bin/claude.mjs` `PLUGINS` ≡ marketplace names,
+  `PROJECT_SCOPED`/`OPT_IN` ⊆ `PLUGINS`). url-sourced entries (e.g. `mempalace`)
+  are covered only for JSON validity. Scoped to fire when anything under
+  `plugins/` or the marketplace manifest changes.
 - **`vwf:test`** — table-tests the `vwf` `npm-to-pnpm.sh` hook through the
   system sed (the BSD-sed portability guarantee); vwf-specific since it is the
   only plugin shipping a hook. Scoped to `plugins/vwf/hooks/`.
@@ -38,17 +42,17 @@ design (a plugin may hold skills versioned on their own cadence).
 
 ## Plugins
 
-| Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                      |
-| ------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`                    | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                                                                                     |
-| `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` command that scans a repo and writes/updates its README                                                                                                                                       |
-| `typescript`             | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/vitest/build references) plus `package-json`, `pnpm`, `tsconfig` + the TypeScript/JavaScript language server                                                                             |
-| `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                              |
-| `flutter`                | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps) |
-| `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                             |
-| `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                               |
-| `mise`                   | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                                                                                        |
-| `github-actions`         | `./plugins/github-actions` | A `/github-actions:workflow` command that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy)                                                                                  |
+| Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                               |
+| ------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`                    | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                                                                                              |
+| `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` command that scans a repo and writes/updates its README                                                                                                                                                |
+| `typescript`             | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/effect-runtime/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`) |
+| `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                       |
+| `flutter`                | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)          |
+| `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                                      |
+| `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                        |
+| `mise`                   | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                                                                                                 |
+| `github-actions`         | `./plugins/github-actions` | A `/github-actions:workflow` command that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy)                                                                                           |
 
 ## Plugin Structure
 
@@ -112,8 +116,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   statusline resource caps, an all-blocking gap, or an uncovered irreversible
   decision. Reuses execute's three subagents.
 - `agents/` — subagents the commands delegate to: `blueprint-reviewer`,
-  `execute-coder`, `execute-code-reviewer`, `execute-security-reviewer`,
-  `architecture-writer`
+  `design-system-reviewer`, `execute-coder`, `execute-code-reviewer`,
+  `execute-security-reviewer`, `architecture-writer`
 - `skills/` — `rest-api-design`; `blueprint-authoring` (the
   contract-vs-realization doctrine + per-surface completeness bars, auto-applies
   on `docs/blueprint/**`); `design-system` (the UX/visual-contract doctrine —
@@ -133,7 +137,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   resolves. Referenced from the blueprint-authoring skill as the concrete "what
   good looks like"; its asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
-  `blueprint`, `plan`, `architecture`, and `design-system`
+  `blueprint`, `plan`, `architecture`, `design-system`, and `init`
+- `assets/execute-stages.md` — the stage pipeline shared by `execute` and
+  `autopilot`: the code→review→security table, per-stage subagent contracts
+  (incl. the slice/round tags and the coverage-report policy), shared stage
+  rules (model enforcement, terse output, loop-on-findings with the recall-miss
+  fallback, gap capture), and the end-of-run architecture/environment reconcile
+- `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
+  shared by `/vwf:architecture` elicitation and the `architecture-writer`
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
   persist durable decisions, findings memory for loop-backs, and **gap memory**:
   blueprint/plan holes surfaced during execution, room `gaps`) referenced by
@@ -333,13 +344,14 @@ touches external tools (the CLI never installed those).
 Before any install, the CLI **checks required external tools** for the resolved
 plan: `CORE_DEPS` (just `claude` — the install mechanism) for any plugin
 install, plus each selected plugin's `PLUGIN_EXTRA_DEPS` runtime tools
-(vwf→rtk+graphify+ mise+pnpm+uv, context7→pnpm, typescript/mise→mise,
+(vwf→rtk+graphify+ mise+pnpm+uv, context7→pnpm, typescript→mise+pnpm, mise→mise,
 flutter→mise+kotlin-lsp+ sourcekit-lsp, mempalace→uv, github-actions→mise) and
 `node` for the statusline. If any are missing it prints the install command for
 each (`DEP_HINTS`) and exits non-zero — it never auto-installs a dependency.
 Keep `PLUGINS`, `PROJECT_SCOPED`, `OPT_IN`, `DEP_HINTS`, `CORE_DEPS`, and
 `PLUGIN_EXTRA_DEPS` in sync with the marketplace and the plugins' actual runtime
-needs. Users run it via `npx @askviraj/ai-plugins …`.
+needs (`plugins:check` asserts the `PLUGINS`↔marketplace name sync). Users run
+it via `npx @askviraj/ai-plugins …`.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):

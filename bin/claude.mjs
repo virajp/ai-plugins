@@ -164,7 +164,7 @@ const CORE_DEPS = ["claude"];
 // mempalace's uv, and the mise plugin's mise.
 const PLUGIN_EXTRA_DEPS = {
   vwf: ["rtk", "graphify", "mise", "pnpm", "uv"],
-  typescript: ["mise"],
+  typescript: ["mise", "pnpm"],
   context7: ["pnpm"],
   flutter: ["mise", "kotlin-lsp", "sourcekit-lsp"],
   mempalace: ["uv"],
@@ -832,6 +832,7 @@ class ClaudeCode {
 
 export {
   ClaudeCode,
+  OPT_IN,
   PLUGINS,
   PROJECT_SCOPED,
   USER_SCOPED,

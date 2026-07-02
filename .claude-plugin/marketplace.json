@@ -34,17 +34,18 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Context7 MCP Server",
+      "description": "Context7 MCP docs server — fetches current, version-accurate documentation for libraries, frameworks, SDKs, and CLIs on demand, so code is never written from stale training knowledge.",
       "name": "context7",
       "source": "./plugins/context7",
       "strict": true,
       "tags": [
-        "typescript",
-        "javascript",
-        "language-server",
-        "lsp"
+        "context7",
+        "mcp",
+        "docs",
+        "documentation",
+        "libraries"
       ],
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "author": {
@@ -71,7 +72,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.4.1"
+      "version": "0.5.0"
     },
     {
       "author": {
@@ -96,7 +97,7 @@
           "name": "mise"
         }
       ],
-      "description": "Highly opinionated Claude Code Plugin for solo developers or small team",
+      "description": "Highly opinionated Blueprint → Plan → Execute workflow for solo developers or small teams — stack-agnostic commands, review/security subagents, mempalace-backed memory, and an autonomous autopilot mode.",
       "name": "vwf",
       "repository": "https://github.com/virajp/ai-plugins",
       "source": "./plugins/vwf",
@@ -104,9 +105,11 @@
       "tags": [
         "agents",
         "skills",
+        "workflow",
         "blueprint",
         "plan",
         "execute",
+        "autopilot",
         "archive",
         "coding",
         "review",
@@ -114,14 +117,10 @@
         "architecture",
         "design-system",
         "onboarding",
-        "dart",
-        "typescript",
-        "javascript",
-        "language-server",
-        "lsp",
+        "tdd",
         "git-workflow"
       ],
-      "version": "2.3.0"
+      "version": "2.5.0"
     },
     {
       "author": {
@@ -141,7 +140,7 @@
         "skills",
         "command"
       ],
-      "version": "0.4.0"
+      "version": "0.5.0"
     },
     {
       "author": {
@@ -161,14 +160,14 @@
         "skills",
         "command"
       ],
-      "version": "0.1.1"
+      "version": "0.2.0"
     },
     {
       "author": {
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated TypeScript plugin where Effect is mandatory — a `typescript` router skill (lean SKILL.md routing to on-demand references: Effect-TS patterns, Vitest testing, the monorepo build pipeline) plus `package-json`, `pnpm`, and `tsconfig`, and the TypeScript/JavaScript language server.",
+      "description": "Opinionated TypeScript plugin where Effect is the house standard — a `typescript` router skill (lean SKILL.md routing to on-demand references: Effect-TS patterns, Effect runtime & layers, Vitest testing, the build pipeline for single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, and `lint-format`, and the TypeScript/JavaScript language server.",
       "name": "typescript",
       "source": "./plugins/typescript",
       "strict": true,
@@ -186,7 +185,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.4.1"
+      "version": "0.5.0"
     },
     {
       "author": {
@@ -207,7 +206,7 @@
         "polyrepo",
         "command"
       ],
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }
