@@ -91,7 +91,7 @@ a time, gathering for each:
 | `name`         | Free text (short identifier)                                                  |
 | `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend` / `console`      |
 | `path`         | Free text (repo-relative directory)                                           |
-| `stack`        | MCQ + Other (offer common per-type options)                                   |
+| `stack`        | The reference stack for the type (see below) — stated, not elicited           |
 | `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other |
 | `depends_on`   | Multi-select from named projects + None                                       |
 | `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                           |
@@ -99,6 +99,15 @@ a time, gathering for each:
 Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
 `entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`,
 `console` → `page`.
+
+**Reference stacks are enforced.** Every project type has a reference stack doc
+at `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md` — read it and record that
+stack; do not offer alternatives. The escape hatch: if the user explicitly
+objects, honor the stack they name and add a `deviations:` entry to the registry
+(`scope: stack/<project-name>`, the choice, and their reason). A recorded
+deviation is settled — never re-litigate it on update runs. In update mode, an
+existing project whose stack differs from the reference **without** a recorded
+deviation is a delta to raise: align it or record the deviation.
 
 ### 3c — Cross-cutting decisions
 
@@ -180,6 +189,9 @@ Check:
 
 - Every `depends_on` entry names a real project in the `projects:` list (no
   dangling reference).
+- Every `deviations` entry (if the block exists) has a valid scope —
+  `structure`, `stack/<project>` naming a real project, or `rules/<rule-id>` —
+  plus a choice and a reason.
 - Every `type` is from
   `service | worker | packages | site | frontend |
   console`, every `doc_unit`

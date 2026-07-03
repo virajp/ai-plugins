@@ -28,7 +28,12 @@ high-severity issues.
    specific to them (e.g. auth/RBAC for `custom-claims-rbac`,
    injection/authorization for datastores, signed-URL handling for file storage,
    webhook signing for integrations, entitlement bypass for payments).
-   Threat-model the diff against those surfaces.
+   Threat-model the diff against those surfaces. When the registry declares a
+   `packages` common project or a `console` project (and no `deviations:` entry
+   waives it), treat chokepoint bypasses as surfaces too: third-party or
+   datastore access that skips the common package's layers (dodging their
+   audit/authz wrapping), and privileged/admin capability implemented outside
+   the console project.
 3. Rate every finding by exploitability and impact.
 
 Merge both into one rated findings list. Do not rewrite the code — report only.

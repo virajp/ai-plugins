@@ -75,6 +75,10 @@ Keep this table in sync with the `cross_cutting` block in the registry below. --
 >   extensible.
 > - `cross_cutting` — one-line decision per system-wide concern; the input to
 >   `blueprint`'s conventions.md. Include only the concerns that exist.
+> - `deviations` — optional: explicit, user-approved opt-outs from vwf's
+>   enforced workspace structure, reference stacks, or placement rules (recorded
+>   by `setup`/`architecture`, honored by later runs and the execute reviewers).
+>   Omit the block entirely when there are none.
 
 ```yaml
 projects:
@@ -93,4 +97,9 @@ cross_cutting: # system-wide concerns → blueprint's conventions.md
   config: <selection> # e.g. env-vars, secrets-manager
   testing: <selection> # e.g. vitest-unit-integration, none
   integrations: [ <service-name>, <...> ] # external services, or []
+
+deviations: # optional — user-approved opt-outs from the enforced structure/stacks/rules; omit when none
+  - scope: <structure | stack/<project-name> | rules/<rule-id>>
+    choice: <what was chosen instead>
+    reason: <one line — why the user opted out>
 ```

@@ -66,6 +66,13 @@ adopting it.
   slice to a project in the architecture registry and read its code (submodules
   included). You model the codebase with `/vwf:architecture` first; it won't
   operate on an ad-hoc folder.
+- **Enforced structure & stacks.** `vwf` prescribes a workspace shape (parent
+  repo + backend/frontend submodules) and **one reference stack per project
+  type** — see
+  [The structure & stacks it enforces](#the-structure--stacks-it-enforces). You
+  can opt out of any piece — an explicit objection is recorded as a registry
+  deviation and never re-asked — but if you want to pick a different stack per
+  repo, this is the wrong plugin.
 - **Solo / small-team focus.** It is highly opinionated — one workflow, one set
   of conventions. Great for a solo dev or small team; not a configurable
   framework for a large org.
@@ -171,7 +178,68 @@ Each entity doc holds the full-stack picture for that entity — stable product
 intent at the top, volatile engineering detail (data model, API, jobs, screens)
 below a marker. The **Project Registry** in `architecture.md` is a yaml block
 that `blueprint` and `plan` parse to map an entity's sections to the right
-project by `type` — so the workflow stays stack-agnostic.
+project by `type` — the command mechanics are registry-driven, while the stacks
+themselves come from the enforced reference stacks below (recorded deviations
+aside).
+
+## The structure & stacks it enforces
+
+`vwf` is opinionated about more than process: it enforces a **workspace shape**
+and **one reference stack per project type**, both distilled from a production
+reference implementation.
+
+```text
+workspace/            # parent repo — vwf lives here
+├── .gitmodules       # backend + frontend
+├── docs/blueprint/   # the vwf bundle (one per workspace)
+├── backend/          # submodule — pnpm + Turborepo monorepo
+│   ├── projects/     # service · worker · web · console
+│   └── packages/
+│       └── common/   # the shared kernel
+└── frontend/         # submodule — single-package Flutter app
+```
+
+| Project    | Type       | Reference stack                                |
+| ---------- | ---------- | ---------------------------------------------- |
+| `common`   | `packages` | TypeScript · Effect-TS                         |
+| `service`  | `service`  | TypeScript · Hono · Effect-TS                  |
+| `worker`   | `worker`   | TypeScript · Temporal · Effect-TS              |
+| `web`      | `site`     | TypeScript · Astro (SSR) · React               |
+| `console`  | `console`  | TypeScript · Hono + Effect-TS · React + Refine |
+| `frontend` | `frontend` | Dart · Flutter                                 |
+
+Not every project must exist — a product may have no `console` or `web` yet. How
+enforcement works:
+
+- **New/empty repos** get the shape and stacks applied as the default — one
+  confirmation, no per-project stack menu.
+- **Existing repos** that don't match get a **consent-gated restructure
+  proposal** from `/vwf:setup`: in-repo layout moves as reviewable batches;
+  anything crossing a repo boundary (like a submodule split) only ever as a
+  written recommendation.
+- **The escape hatch.** An explicit objection is always honored — recorded as a
+  `deviations:` entry in the Project Registry (scope, choice, reason) and never
+  re-asked. The stack table grows through vwf updates, not per-repo
+  improvisation.
+
+Two placement rules ride along with the shape — seeded into each repo's
+`conventions.md` and enforced by the execute reviewers:
+
+1. **All shared schemas live in `packages/common`** — Effect Schemas, one export
+   subpath per entity; no other project defines a shared data schema.
+2. **All third-party integrations go via `packages/common`** — Firebase and
+   every other external service are wrapped once as Effect layers; no other
+   project imports a third-party SDK directly (client-side sign-in is the one
+   exception).
+
+`console` deserves a note: it is the internal admin panel — a single Hono +
+Effect app serving both the operator API and an embedded React + Refine UI, and
+the **sole holder of admin capabilities** (the public `service` exposes no admin
+routes).
+
+The full per-type stack docs — patterns, testing, deployment — ship inside the
+plugin under `assets/stacks/` and drive what `/vwf:setup` and
+`/vwf:architecture` record.
 
 ## Commands
 
@@ -196,26 +264,31 @@ Every command runs on `sonnet` at high reasoning effort; inside `execute` and
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
 it after upgrading vwf to migrate to the latest format. It detects your topology
-(monorepo vs polyrepo, project types, stacks) and confirms it with you via MCQ,
-then produces a **dry-run migration plan** — every doc to scaffold and every
-source move to make. Nothing is written until you approve; it works in a
-worktree, restructures code only with per-batch consent, and never deletes. It
-orchestrates the rest (mise, `architecture`, and `design-system` if you have a
-UI), merges a vwf section into your `CLAUDE.md`, writes the README, and stamps
-the blueprint format version in `docs/blueprint/.vwf.yml` so a later run can
-detect drift and migrate the delta. Every workflow command also runs a quick
-format check against that stamp and nudges you to re-run `/vwf:setup` when a
-repo falls behind — so a single user-level vwf upgrade reaches each repo on next
-use.
+(monorepo, polyrepo, or the workspace shape; project types; stacks) and confirms
+it with you via MCQ, then produces a **dry-run migration plan** — every doc to
+scaffold and every source move to make, including a restructure proposal toward
+the [enforced workspace shape](#the-structure--stacks-it-enforces) when the repo
+doesn't match (declining records a deviation, not a fight). On a new/empty repo
+it applies the workspace structure and reference stacks as the default. Nothing
+is written until you approve; it works in a worktree, restructures code only
+with per-batch consent, and never deletes. It orchestrates the rest (mise,
+`architecture`, and `design-system` if you have a UI), merges a vwf section into
+your `CLAUDE.md`, writes the README, and stamps the blueprint format version in
+`docs/blueprint/.vwf.yml` so a later run can detect drift and migrate the delta.
+Every workflow command also runs a quick format check against that stamp and
+nudges you to re-run `/vwf:setup` when a repo falls behind — so a single
+user-level vwf upgrade reaches each repo on next use.
 
 ### /vwf:architecture
 
 Run this **after `setup`** (or first, on a fresh repo). It elicits your system's
-shape — projects, their types and stacks, how they interconnect, where they
-deploy — and writes `docs/blueprint/architecture.md`, including the
-machine-readable Project Registry the other commands depend on. Re-run it any
-time the topology changes; it asks only about genuine deltas, never re-eliciting
-what's confirmed.
+shape — projects, their types, how they interconnect, where they deploy —
+records each project's stack from the
+[enforced reference stacks](#the-structure--stacks-it-enforces) (stated, not
+offered as a menu; an explicit override becomes a registry `deviations:` entry),
+and writes `docs/blueprint/architecture.md`, including the machine-readable
+Project Registry the other commands depend on. Re-run it any time the topology
+changes; it asks only about genuine deltas, never re-eliciting what's confirmed.
 
 This is the one doc that *does* name technologies and infrastructure — the
 blueprint deliberately doesn't.
@@ -480,8 +553,9 @@ they inform how Claude writes and reviews:
   typography, spacing, motion, accessibility, component behaviors,
   anti-patterns) behind `/vwf:design-system`.
 - **`project-setup`** — the onboarding/migration doctrine behind `/vwf:setup`:
-  topology detection, consent-gated dry-run migration, and the blueprint
-  format-version + drift map.
+  topology detection, the enforced workspace structure + reference stacks (and
+  the deviation escape hatch), consent-gated dry-run migration, and the
+  blueprint format-version + drift map.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
   plan touches an API surface.

@@ -13,7 +13,8 @@ MCQ.
   **workspace**: a parent repo holding the vwf docs, with each child classified
   on its own signals. See the
   [workspace structure](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/workspace-structure.md)
-  reference — the ideal shape, and what to recommend for a new/empty repo.
+  reference — the enforced shape, what to apply for a new/empty repo, and the
+  restructure proposal a non-conforming existing repo gets.
 
 **Project types** (map to the registry `type`, never literal tech):
 

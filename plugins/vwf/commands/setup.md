@@ -29,6 +29,7 @@ throughout.
 | Env. template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`    |
 | Format stamp      | `docs/blueprint/.vwf.yml`                                  |
 | CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` |
+| Reference stacks  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`            |
 
 Doctrine: the **project-setup** skill (topology-detection,
 migration-and-consent, format-versioning, claude-md).
@@ -87,12 +88,19 @@ time, options + "Other". Pin down anything detection could not: missing project
 types, stacks, and **whether a UI surface exists** (it makes the design system
 mandatory). Never assume UI — confirm it.
 
-**New/empty repo.** When detection finds no manifests and no source, recommend
-the ideal **workspace structure** and its reference stack per the project-setup
-skill (workspace-structure) — the structure as one accept/deny MCQ, the stacks
-as pre-selected defaults overridable per project. It is an optional opinionated
-layer: record a decline and move on; never recommend restructuring an
-**existing** repo toward it.
+**New/empty repo.** When detection finds no manifests and no source, apply the
+**workspace structure** and its reference stacks per the project-setup skill
+(workspace-structure) — the structure as one confirmation, the stacks stated
+(from the per-type stack docs), not elicited. Both are enforced with an escape
+hatch: an explicit objection is honored, recorded as a `deviations:` entry in
+the registry, and never re-asked.
+
+**Existing non-conforming repo.** When an existing repo does not match the
+workspace shape, fold a consent-gated restructure proposal toward it into the
+step-4 migration plan (batched; moves that are risky or cross repo boundaries —
+e.g. a submodule split — become written recommendations instead, per
+migration-and-consent). A decline is recorded as a structure deviation in the
+registry and not re-proposed on later runs.
 
 ### 3. Reconcile format & legacy
 

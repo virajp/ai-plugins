@@ -25,6 +25,9 @@ You receive:
 - **Cross-cutting decisions** — one-line selections for system-wide concerns
   (auth, errors, observability, config, testing, integrations, data-retention,
   and any others present).
+- **Deviations** (optional) — user-approved opt-outs from the enforced workspace
+  structure / reference stacks / placement rules, each with scope, choice, and
+  reason.
 - **Update mode only:** the existing `docs/blueprint/architecture.md` to edit in
   place.
 
@@ -50,7 +53,9 @@ You receive:
    How Projects Interconnect, Hosting & Deployment, Cross-cutting Decisions
    table.
 2. **Project Registry** — the `` ```yaml `` block with a `projects:` list (one
-   entry per project) and a `cross_cutting:` block.
+   entry per project), a `cross_cutting:` block, and — only when deviations were
+   passed — a `deviations:` block (omit it entirely otherwise; never invent,
+   drop, or reword a deviation).
 3. **Cross-cutting Decisions** — the prose table and the `cross_cutting:` yaml
    block must match each other exactly.
 

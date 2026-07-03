@@ -125,10 +125,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   UX/visual-contract doctrine — tokens, typography, spacing, motion,
   accessibility, components/anti-patterns — auto-applies on
   `docs/blueprint/design-system`); `project-setup` (onboarding/migration
-  doctrine — topology detection incl. the workspace shape (parent repo +
-  backend/frontend submodules, detected in existing repos and recommended —
-  structure + reference stack — for new/empty ones), consent-gated dry-run
-  migration, the blueprint format-version + drift map; used by `/vwf:setup`)
+  doctrine — topology detection incl. the **enforced** workspace shape (parent
+  repo + backend/frontend submodules: applied for new/empty repos, proposed as a
+  consent-gated restructure for non-conforming existing ones) and the **enforced
+  reference stacks** (fixed per project type, one stack doc each under
+  `assets/stacks/`; explicit opt-outs recorded as registry `deviations:`
+  entries, never re-asked), consent-gated dry-run migration, the blueprint
+  format-version + drift map; used by `/vwf:setup`)
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
   `design-system`, `environment` (the per-project env-var/secret catalog),
   `integration`, `project-claude` (the vwf section `/vwf:setup` merges into a
@@ -149,6 +152,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   fallback, gap capture), and the end-of-run architecture/environment reconcile
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
+- `assets/stacks/` — the **enforced reference stack** docs, one per project type
+  (`packages`, `service`, `worker`, `site`, `console`, `frontend`) plus
+  `monorepo.md` (backend monorepo tooling), distilled from the 95octane
+  reference implementation. Read by `/vwf:setup` (onboarding) and
+  `/vwf:architecture` (registry `stack` — stated, not elicited; an override
+  becomes a registry `deviations:` entry). The common-package placement rules
+  (`rules/schemas-in-common`, `rules/integrations-via-common`) are seeded into
+  each repo's `conventions.md#patterns` and enforced by the execute reviewers
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
   persist durable decisions, findings memory for loop-backs, and **gap memory**:
   blueprint/plan holes surfaced during execution, room `gaps`) referenced by

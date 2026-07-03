@@ -97,7 +97,7 @@
           "name": "mise"
         }
       ],
-      "description": "Highly opinionated Blueprint → Plan → Execute workflow for solo developers or small teams — stack-agnostic commands, review/security subagents, mempalace-backed memory, and an autonomous autopilot mode.",
+      "description": "Highly opinionated Blueprint → Plan → Execute workflow for solo developers or small teams — enforced workspace structure and reference stacks, review/security subagents, mempalace-backed memory, and an autonomous autopilot mode.",
       "name": "vwf",
       "repository": "https://github.com/virajp/ai-plugins",
       "source": "./plugins/vwf",
@@ -120,7 +120,7 @@
         "tdd",
         "git-workflow"
       ],
-      "version": "3.0.0"
+      "version": "3.1.0"
     },
     {
       "author": {

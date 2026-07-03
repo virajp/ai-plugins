@@ -36,3 +36,13 @@ to the relevant anchors rather than repeating.
 ## API conventions {#api}
 
 ## Shared patterns {#patterns}
+
+<!-- Workspace repos (registry declares a `packages` common project): seed the
+     placement rules here as canonical contract lines, unless a registry
+     `deviations:` entry waives one —
+     1. All shared schemas live in the common package (under its schema export
+        subpaths); no other project defines a shared data schema.
+     2. All Firebase and other third-party integrations go through the common
+        package's wrappers/layers; no other project imports a third-party SDK
+        directly (client-side sign-in is the one allowed exception).
+     Entity docs link these anchors; the execute reviewers enforce them. -->
