@@ -45,8 +45,8 @@ Read `docs/blueprint/architecture.md`.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
-is behind what vwf ships, **nudge** `/vwf:init` and **always proceed — never
-halt.** Architecture is a prerequisite of `/vwf:init`'s own migration, so it
+is behind what vwf ships, **nudge** `/vwf:setup` and **always proceed — never
+halt.** Architecture is a prerequisite of `/vwf:setup`'s own migration, so it
 must not depend on it (this is the only foundation command that never blocks on
 the preflight).
 

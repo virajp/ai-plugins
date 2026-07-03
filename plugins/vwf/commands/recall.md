@@ -64,7 +64,7 @@ stop — don't guess the prior state.
 
 Before rebuilding context off the blueprint, run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` (as the other consuming commands
-do); if the repo's blueprint format is behind what vwf ships, nudge `/vwf:init`
+do); if the repo's blueprint format is behind what vwf ships, nudge `/vwf:setup`
 (proceed unless a needed artifact is missing).
 
 ### 3. Rebuild context

@@ -50,8 +50,8 @@ one of these.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
-is behind what vwf ships, nudge `/vwf:init` (proceed unless a needed artifact is
-missing).
+is behind what vwf ships, nudge `/vwf:setup` (proceed unless a needed artifact
+is missing).
 
 ### 2. Recall (mempalace)
 

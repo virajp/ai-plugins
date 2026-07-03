@@ -26,7 +26,7 @@ workspace/            # parent repo — vwf lives here
 ```
 
 - The **workspace parent** holds everything product-wide: `docs/blueprint/`,
-  mise config, CI glue, local emulators. `/vwf:init` and the other vwf commands
+  mise config, CI glue, local emulators. `/vwf:setup` and the other vwf commands
   run here.
 - **backend** is a monorepo: deployable projects under `projects/`, shared
   libraries under `packages/`.
@@ -38,7 +38,7 @@ workspace/            # parent repo — vwf lives here
 
 A `.gitmodules` naming child repos (each child dir carrying its own `.git`) →
 **workspace** topology. Classify each child on its own signals per
-[topology detection](${CLAUDE_PLUGIN_ROOT}/skills/project-init/references/topology-detection.md),
+[topology detection](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/topology-detection.md),
 and record the shape in the registry and the `.vwf.yml` stamp
 (`topology: workspace`). **Never propose restructuring an existing repo toward
 this shape** — for existing repos it is a detection target only.

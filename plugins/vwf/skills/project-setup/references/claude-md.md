@@ -1,13 +1,13 @@
 # The Project CLAUDE.md vwf Section
 
-`init` merges a vwf section into the repo's `CLAUDE.md` (from the project-claude
-template), **preserving existing content** — never overwrite the file. If a vwf
-section already exists, update it in place.
+`setup` merges a vwf section into the repo's `CLAUDE.md` (from the
+project-claude template), **preserving existing content** — never overwrite the
+file. If a vwf section already exists, update it in place.
 
 The section states, briefly:
 
 - The workflow and order:
-  `init → architecture → design-system → blueprint → plan → execute`.
+  `setup → architecture → design-system → blueprint → plan → execute`.
 - The doc tree under `docs/blueprint/` and what each doc is.
 - The foundations: architecture (always), design-system (once a UI exists), and
   environment (once an external integration or secret exists).

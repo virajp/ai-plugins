@@ -35,7 +35,7 @@ Before the first step, run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`. Since autopilot is autonomous:
 if the format drift is **non-blocking**, log it and continue; if it is
 **blocking** (the run needs an artifact the old format lacks), **pause** for
-`/vwf:init` per the pause rules — never migrate autonomously.
+`/vwf:setup` per the pause rules — never migrate autonomously.
 
 ## Doc Paths
 

@@ -1,4 +1,4 @@
-<!-- Merged into a project's CLAUDE.md by /vwf:init, preserving existing content.
+<!-- Merged into a project's CLAUDE.md by /vwf:setup, preserving existing content.
      Keep it short — a pointer into the workflow, not a copy of vwf's docs. -->
 
 ## vwf workflow
@@ -6,7 +6,7 @@
 This repo uses the **vwf** Blueprint → Plan → Execute workflow. Docs live under
 `docs/blueprint/` (the desired state) and `docs/plans/` (the diffs to apply).
 
-**Order:** `/vwf:init` → `/vwf:architecture` → `/vwf:design-system` (once a UI
+**Order:** `/vwf:setup` → `/vwf:architecture` → `/vwf:design-system` (once a UI
 exists) → `/vwf:blueprint <entity>` → `/vwf:plan <slice>` → `/vwf:execute` (or
 `/vwf:autopilot`) → `/vwf:archive`.
 
@@ -35,4 +35,5 @@ relationships are markdown links. So it is portable: any OKF-aware tool (e.g.
 the OKF static-HTML graph visualizer) can render it, and it can be ingested by a
 knowledge-graph tool like graphify — no vwf-specific reader required.
 
-Re-run `/vwf:init` after upgrading vwf to migrate the docs to the latest format.
+Re-run `/vwf:setup` after upgrading vwf to migrate the docs to the latest
+format.

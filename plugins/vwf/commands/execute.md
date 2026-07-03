@@ -28,8 +28,8 @@ Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
 
 Before the first stage, run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
-is behind what vwf ships, nudge `/vwf:init` (proceed unless a needed artifact is
-missing).
+is behind what vwf ships, nudge `/vwf:setup` (proceed unless a needed artifact
+is missing).
 
 ## Doc Paths
 

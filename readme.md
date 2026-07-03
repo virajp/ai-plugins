@@ -119,7 +119,7 @@ The three phases map to three questions:
 
 ```mermaid
 flowchart TD
-    Z["0 · /vwf:init<br/>(onboard / migrate)"] --> A["1 · /vwf:architecture"]
+    Z["0 · /vwf:setup<br/>(onboard / migrate)"] --> A["1 · /vwf:architecture"]
     A --> DS["2 · /vwf:design-system<br/>(if UI)"]
     DS --> B["3 · /vwf:blueprint"]
     B --> C["4 · /vwf:plan"]
@@ -154,7 +154,7 @@ blueprint is the desired state; the plans are the changes you apply to reach it.
 ```text
 docs/
 ├── blueprint/                   # the always-current blueprint (desired state)
-│   ├── .vwf.yml                 # blueprint format-version stamp (written by init)
+│   ├── .vwf.yml                 # blueprint format-version stamp (written by setup)
 │   ├── architecture.md          # system shape + machine-readable Project Registry
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
@@ -177,7 +177,7 @@ project by `type` — so the workflow stays stack-agnostic.
 
 | Command                   | What it does                                                |
 | ------------------------- | ----------------------------------------------------------- |
-| `/vwf:init`               | Onboard/migrate a repo into vwf's format (re-runnable)      |
+| `/vwf:setup`              | Onboard/migrate a repo into vwf's format (re-runnable)      |
 | `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry     |
 | `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)  |
 | `/vwf:blueprint [entity]` | Maintain the full-product blueprint, one doc per entity     |
@@ -192,7 +192,7 @@ project by `type` — so the workflow stays stack-agnostic.
 Every command runs on `sonnet` at high reasoning effort; inside `execute` and
 `autopilot`, the code- and security-review subagents run on `opus`.
 
-### /vwf:init
+### /vwf:setup
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
 it after upgrading vwf to migrate to the latest format. It detects your topology
@@ -204,12 +204,13 @@ orchestrates the rest (mise, `architecture`, and `design-system` if you have a
 UI), merges a vwf section into your `CLAUDE.md`, writes the README, and stamps
 the blueprint format version in `docs/blueprint/.vwf.yml` so a later run can
 detect drift and migrate the delta. Every workflow command also runs a quick
-format check against that stamp and nudges you to re-run `/vwf:init` when a repo
-falls behind — so a single user-level vwf upgrade reaches each repo on next use.
+format check against that stamp and nudges you to re-run `/vwf:setup` when a
+repo falls behind — so a single user-level vwf upgrade reaches each repo on next
+use.
 
 ### /vwf:architecture
 
-Run this **after `init`** (or first, on a fresh repo). It elicits your system's
+Run this **after `setup`** (or first, on a fresh repo). It elicits your system's
 shape — projects, their types and stacks, how they interconnect, where they
 deploy — and writes `docs/blueprint/architecture.md`, including the
 machine-readable Project Registry the other commands depend on. Re-run it any
@@ -400,7 +401,7 @@ request.
 
 ## How it asks questions
 
-`vwf` is deliberately conversational. `init`, `architecture`, `design-system`,
+`vwf` is deliberately conversational. `setup`, `architecture`, `design-system`,
 `blueprint`, and `plan` share one **elicitation protocol**:
 
 - **Explore first** — read the docs, code, and recent commits before asking
@@ -478,7 +479,7 @@ they inform how Claude writes and reviews:
 - **`design-system`** — the UX/visual-contract doctrine (semantic tokens,
   typography, spacing, motion, accessibility, component behaviors,
   anti-patterns) behind `/vwf:design-system`.
-- **`project-init`** — the onboarding/migration doctrine behind `/vwf:init`:
+- **`project-setup`** — the onboarding/migration doctrine behind `/vwf:setup`:
   topology detection, consent-gated dry-run migration, and the blueprint
   format-version + drift map.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,

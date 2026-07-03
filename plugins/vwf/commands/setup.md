@@ -9,15 +9,15 @@ model: sonnet
 effort: xhigh
 ---
 
-# init — Onboard & Keep a Repo in vwf Format
+# setup — Onboard & Keep a Repo in vwf Format
 
 Bring any repo — new or existing — into vwf's structure, and re-run any time the
-vwf format evolves to migrate the gap. `init` is the Phase-0 bootstrapper:
-`init → architecture → design-system → blueprint → plan → execute`.
+vwf format evolves to migrate the gap. `setup` is the Phase-0 bootstrapper:
+`setup → architecture → design-system → blueprint → plan → execute`.
 
 You own the user conversation. Every change is **consent-gated and
 worktree-safe** — present a dry-run plan and wait for approval before writing;
-never delete; never overwrite without consent. Apply the **project-init** skill
+never delete; never overwrite without consent. Apply the **project-setup** skill
 throughout.
 
 ## Doc Paths
@@ -30,8 +30,8 @@ throughout.
 | Format stamp      | `docs/blueprint/.vwf.yml`                                  |
 | CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` |
 
-Doctrine: the **project-init** skill (topology-detection, migration-and-consent,
-format-versioning, claude-md).
+Doctrine: the **project-setup** skill (topology-detection,
+migration-and-consent, format-versioning, claude-md).
 
 ## Hard Rules
 
@@ -46,7 +46,7 @@ format-versioning, claude-md).
 - **Idempotent.** A re-run detects what already conforms and migrates only the
   delta; a conforming repo yields an empty plan.
 - **Resumable.** After each completed step, append its id to a transient
-  `init_progress:` list in `docs/blueprint/.vwf.yml`; a re-run reads it and
+  `setup_progress:` list in `docs/blueprint/.vwf.yml`; a re-run reads it and
   resumes from the first incomplete step. Keep it a plain list, not a journal.
   **Remove the key on successful completion** (step 11).
 
@@ -62,7 +62,7 @@ into one approval.
 ### 1. Detect topology
 
 **Resume check.** Read `docs/blueprint/.vwf.yml`. If it carries a transient
-`init_progress:` list from an interrupted run, offer to resume from the first
+`setup_progress:` list from an interrupted run, offer to resume from the first
 step **not** in that list rather than restarting; re-confirm anything the user
 wants revisited.
 
@@ -71,7 +71,7 @@ wants revisited.
 before detecting — build on them, don't re-ask resolved questions. Skip silently
 if mempalace is unavailable.
 
-Per the project-init skill (topology-detection), read repo signals —
+Per the project-setup skill (topology-detection), read repo signals —
 `package.json`, `pnpm-workspace.yaml`, `pubspec.yaml`, `go.mod`, `Cargo.toml`,
 `.gitmodules`, dir layout — plus any existing `docs/blueprint/` or legacy
 `docs/specs/`. Infer: monorepo vs polyrepo vs **workspace** (a parent repo with
@@ -88,7 +88,7 @@ types, stacks, and **whether a UI surface exists** (it makes the design system
 mandatory). Never assume UI — confirm it.
 
 **New/empty repo.** When detection finds no manifests and no source, recommend
-the ideal **workspace structure** and its reference stack per the project-init
+the ideal **workspace structure** and its reference stack per the project-setup
 skill (workspace-structure) — the structure as one accept/deny MCQ, the stacks
 as pre-selected defaults overridable per project. It is an optional opinionated
 layer: record a decline and move on; never recommend restructuring an
@@ -96,7 +96,7 @@ layer: record a decline and move on; never recommend restructuring an
 
 ### 3. Reconcile format & legacy
 
-Read `docs/blueprint/.vwf.yml` if present. Per the project-init skill
+Read `docs/blueprint/.vwf.yml` if present. Per the project-setup skill
 (format-versioning), compute the **migration delta** between the repo's current
 format and the format this vwf ships — a legacy `docs/specs/` tree to upgrade, a
 missing `design-system.md` / `environment.md` / `integration.md`, entity docs
@@ -130,7 +130,7 @@ consents), set up an isolated worktree via `/vwf:git-workflow`.
 If mise config is missing or incomplete, invoke **mise:scaffold**. Note any
 other runtimes the detected stacks need — do not install them. If
 `mise:scaffold` fails, report the error, offer to continue without it (leaving
-mise config for the user), and record the skip in `init_progress`.
+mise config for the user), and record the skip in `setup_progress`.
 
 ### 6. Migrate (consent-gated)
 
@@ -142,7 +142,7 @@ a time with approval** — move with `git mv` (preserve history), never delete.
 **On batch rejection.** If the user rejects a batch, **stop** — apply no further
 batches. Report which batches were applied and which remain pending, leave the
 worktree intact for the user to inspect, and record the stop (applied/pending)
-in `init_progress`.
+in `setup_progress`.
 
 **Bootstrap the environment catalog.** When the registry declares integrations
 or a secrets-manager `config` (the `2 → 3` trigger), scaffold
@@ -168,21 +168,21 @@ yielding an empty plan (the idempotence Hard Rule):
 
 These are interactive — hand off, then resume. If a foundation command fails,
 report the error, offer to continue without it (leaving that foundation for a
-later run), and record the skip in `init_progress`.
+later run), and record the skip in `setup_progress`.
 
 ### 8. Author CLAUDE.md & README
 
 Merge the vwf section (from the project-claude template) into the repo's
 `CLAUDE.md`, **preserving existing content**. Generate or update the README via
 **markdown:readme**; if it fails, report the error, offer to continue without it
-(leaving the README for the user), and record the skip in `init_progress`.
+(leaving the README for the user), and record the skip in `setup_progress`.
 
 ### 9. Stamp the format version
 
 Write `docs/blueprint/.vwf.yml` with the `blueprint_format` version and a
 topology summary (`ui` if a UI surface exists, `integrations` if the registry
 declares integrations or a secrets-manager `config` — i.e. `environment.md` is
-required), per format-versioning — the thing a future `init` run diffs against.
+required), per format-versioning — the thing a future `setup` run diffs against.
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the durable
 onboarding decisions and their rationale (confirmed topology, UI surface,
@@ -197,14 +197,14 @@ declares integrations or a secrets-manager `config`). Confirm the migration
 produced a well-formed **OKF bundle**: every `docs/blueprint/` doc opens with
 valid frontmatter (mandatory `type` from the vocabulary, `title`, `description`,
 `status`) and every relationship/reference link resolves to an existing
-doc/anchor — per the project-init skill (format-versioning) and the
+doc/anchor — per the project-setup skill (format-versioning) and the
 blueprint-authoring frontmatter-and-links reference. Confirm `environment.md`
 carries **no secret values**. Report anything still open.
 
 ### 11. Approval gate & commit
 
 Summarize everything created / moved / updated and wait for approval. On
-approval, **finalize resumability state**: remove the transient `init_progress:`
-key from `docs/blueprint/.vwf.yml` and delete the scratch
+approval, **finalize resumability state**: remove the transient
+`setup_progress:` key from `docs/blueprint/.vwf.yml` and delete the scratch
 `docs/blueprint/.vwf-migration-plan.md`. Then commit via `/vwf:git-workflow`
-with an `init:` or `chore(vwf):` message. Keep the worktree local; do not push.
+with a `chore(vwf):` or `docs:` message. Keep the worktree local; do not push.

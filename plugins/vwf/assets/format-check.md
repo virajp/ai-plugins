@@ -13,15 +13,15 @@ Steps:
 3. Compare:
    - **Stamp present and equal to the shipped value** → silent; proceed.
    - **Stamp behind, OR missing while a `docs/blueprint/` (or legacy
-     `docs/specs/`) tree exists** → tell the user, then offer `/vwf:init`:
+     `docs/specs/`) tree exists** → tell the user, then offer `/vwf:setup`:
      > "This repo is on blueprint format `<N>`; vwf now ships `<M>`. Run
-     > `/vwf:init` to migrate to the latest format."
+     > `/vwf:setup` to migrate to the latest format."
    - **No blueprint tree at all** → not a drift case; the command's own
      bootstrap halt handles it.
 4. **Halt only if blocking.** Proceed with the requested operation when its
    required docs are present; hard-halt only when the operation needs an
    artifact the old format lacks (e.g. a `design-system.md` or section the new
-   format introduced). Never auto-migrate — `/vwf:init` does that behind its own
-   consent gate.
+   format introduced). Never auto-migrate — `/vwf:setup` does that behind its
+   own consent gate.
 
 Skip silently if `.vwf.yml` or the format constant cannot be read.

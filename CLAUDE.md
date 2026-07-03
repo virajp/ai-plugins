@@ -103,7 +103,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
 - `commands/` — `/vwf:` slash commands: the Blueprint → Plan → Execute model —
-  `init` (Phase-0 onboarding/migration bootstrapper), `architecture`,
+  `setup` (Phase-0 onboarding/migration bootstrapper), `architecture`,
   `design-system`, `blueprint`, `plan`, `execute`, `archive`, plus `autopilot`
   (the autonomous variant of `execute`), internal `git-workflow`, and
   `handoff`/`recall` (mempalace-backed session handoff — wing=`<project>`,
@@ -124,14 +124,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   frontmatter/link hygiene only — `docs/plans/**`); `design-system` (the
   UX/visual-contract doctrine — tokens, typography, spacing, motion,
   accessibility, components/anti-patterns — auto-applies on
-  `docs/blueprint/design-system`); `project-init` (onboarding/migration doctrine
-  — topology detection incl. the workspace shape (parent repo + backend/frontend
-  submodules, detected in existing repos and recommended — structure + reference
-  stack — for new/empty ones), consent-gated dry-run migration, the blueprint
-  format-version + drift map; used by `/vwf:init`)
+  `docs/blueprint/design-system`); `project-setup` (onboarding/migration
+  doctrine — topology detection incl. the workspace shape (parent repo +
+  backend/frontend submodules, detected in existing repos and recommended —
+  structure + reference stack — for new/empty ones), consent-gated dry-run
+  migration, the blueprint format-version + drift map; used by `/vwf:setup`)
 - `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
   `design-system`, `environment` (the per-project env-var/secret catalog),
-  `integration`, `project-claude` (the vwf section `/vwf:init` merges into a
+  `integration`, `project-claude` (the vwf section `/vwf:setup` merges into a
   repo's CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved
   from the registry). All blueprint templates open with the OKF frontmatter
   block (format 2)
@@ -141,7 +141,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   resolves. Referenced from the blueprint-authoring skill as the concrete "what
   good looks like"; its asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
-  `blueprint`, `plan`, `architecture`, `design-system`, and `init`
+  `blueprint`, `plan`, `architecture`, `design-system`, and `setup`
 - `assets/execute-stages.md` — the stage pipeline shared by `execute` and
   `autopilot`: the code→review→security table, per-stage subagent contracts
   (incl. the slice/round tags and the coverage-report policy), shared stage
@@ -164,7 +164,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `assets/format-check.md` + `assets/blueprint-format` — the **format-drift
   preflight**: `blueprint`, `plan`, `execute`, `autopilot`, and `design-system`
   compare a repo's `docs/blueprint/.vwf.yml` stamp to the format integer vwf
-  ships (`blueprint-format`) and nudge `/vwf:init` when behind (halting only if
+  ships (`blueprint-format`) and nudge `/vwf:setup` when behind (halting only if
   a needed artifact is missing). Since vwf is user-scoped — upgraded once
   globally, with no per-repo install event — this usage-time check is what
   reaches each repo, self-healing on next use
@@ -193,13 +193,13 @@ static-HTML visualizer) and ingestable by graphify, and lets the
 `blueprint-reviewer` verify frontmatter + that every edge resolves. The doctrine
 lives in the blueprint-authoring skill's `frontmatter-and-links` reference; the
 format is carried by `blueprint-format` + the `1 → 2` and `2 → 3` deltas in the
-project-init skill's `format-versioning` reference, so `/vwf:init` migrates
+project-setup skill's `format-versioning` reference, so `/vwf:setup` migrates
 stale repos on next use. **Format 3** added the `vwf-environment` type and the
 `environment.md` catalog (see Foundations below).
 
 **Foundations & ordering.** The workflow is
-`init → architecture → design-system
-→ blueprint → plan → execute`. `init` is
+`setup → architecture → design-system
+→ blueprint → plan → execute`. `setup` is
 the Phase-0 bootstrapper — it onboards a repo (detect-or-ask topology via MCQ,
 consent-gated migration into the `docs/blueprint/` format, orchestrates
 mise/architecture/design-system, authors CLAUDE.md + README) and is
@@ -212,7 +212,7 @@ foundation, **required once the registry has a UI project** (type `site`,
 if `docs/blueprint/design-system.md` is missing. `environment.md` (the
 per-project env-var/secret catalog, type `vwf-environment`) is a third
 foundation, **required once the registry declares an external integration or a
-secrets-manager `config`** — `init` bootstraps it from the repo's existing
+secrets-manager `config`** — `setup` bootstraps it from the repo's existing
 env-var/secret usage (names only, never values) and `blueprint` maintains it as
 entities add integrations, with `conventions.md#config` holding only the
 injection mechanism. The blueprint is a **code-independent technical contract**

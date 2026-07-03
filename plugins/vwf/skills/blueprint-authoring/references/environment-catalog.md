@@ -6,7 +6,7 @@ names, purpose, issuer, consuming projects, and whether each is required. It is
 a vwf foundation alongside `architecture.md` and `conventions.md`, and it is
 **required once the system has an external integration or credential** (the
 architecture registry's `cross_cutting.integrations` is non-empty, or `config`
-selects a secrets manager). Bootstrapped by `init`, maintained by `blueprint`.
+selects a secrets manager). Bootstrapped by `setup`, maintained by `blueprint`.
 
 ## The line: catalog, not wiring
 

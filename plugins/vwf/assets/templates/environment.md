@@ -17,7 +17,7 @@ status: draft # draft | reviewed | stable
 > they come from*, not the injection tool (which is a decision recorded in
 > [config](./conventions.md#config)).
 
-<!-- Maintained by `blueprint`; bootstrapped and kept current by `init`. One row
+<!-- Maintained by `blueprint`; bootstrapped and kept current by `setup`. One row
      per variable, grouped by the consuming project (names from the architecture
      registry). Record what a variable IS and where it comes from — never how the
      code reads it (which file/parser/loader consumes it is realization → plan).

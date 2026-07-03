@@ -1,6 +1,6 @@
 # Format Versioning
 
-vwf's blueprint format evolves. `init` records the format a repo conforms to
+vwf's blueprint format evolves. `setup` records the format a repo conforms to
 and, on re-run, migrates the gap.
 
 **The stamp** — `docs/blueprint/.vwf.yml`:
@@ -16,7 +16,7 @@ integrations: true # environment.md required (external integration / secret exis
 **Source of truth (shipped).** The format the installed vwf ships is the integer
 in `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`. The workflow commands
 self-check the repo stamp against it via
-`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` and nudge `/vwf:init` on drift —
+`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` and nudge `/vwf:setup` on drift —
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
@@ -92,5 +92,5 @@ the current format and apply the delta:
 
 Bump `blueprint_format` whenever a vwf change requires restructuring an existing
 repo: increment `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, add the `N→N+1`
-delta here so `init` can carry it out, and the workflow commands will start
+delta here so `setup` can carry it out, and the workflow commands will start
 nudging stale repos automatically.

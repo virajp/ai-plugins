@@ -12,7 +12,7 @@ MCQ.
 - a `.gitmodules` naming child repos (child dirs carrying their own `.git`) →
   **workspace**: a parent repo holding the vwf docs, with each child classified
   on its own signals. See the
-  [workspace structure](${CLAUDE_PLUGIN_ROOT}/skills/project-init/references/workspace-structure.md)
+  [workspace structure](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/workspace-structure.md)
   reference — the ideal shape, and what to recommend for a new/empty repo.
 
 **Project types** (map to the registry `type`, never literal tech):
