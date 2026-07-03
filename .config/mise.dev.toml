@@ -6,7 +6,7 @@
 # Only relevant to the python/uv dev tools below.
 pipx.uvx            = true
 python.compile      = false
-python.uv_venv_auto = true
+python.uv_venv_auto = "create|source"
 
 [tools]
 # Development tools

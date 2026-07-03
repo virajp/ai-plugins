@@ -72,7 +72,7 @@ npm.package_manager = "pnpm" # pnpm is the package manager
 # Python settings — only when the project uses Python
 pipx.uvx            = true
 python.compile      = false
-python.uv_venv_auto = true
+python.uv_venv_auto = "create|source"
 
 [env]
 DISABLE_TELEMETRY = 1
