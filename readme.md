@@ -609,6 +609,12 @@ protocol**:
   each answer shapes the next question.
 - **Only real decisions** — if exactly one idiomatic answer exists, it proceeds
   without asking. It never guesses an open decision — it records it instead.
+- **Out-of-scope answers are parked, not lost** — when your answer raises
+  something beyond the current pass (a new feature, another entity, a future
+  concern), it stays out of this pass but is captured durably: filed to memory
+  (room `gaps`) and mirrored into the doc's Open Questions / Out of scope
+  section, so the next relevant session recalls it instead of depending on
+  anyone remembering the conversation.
 - **Propose 2–3 approaches** — with trade-offs and a recommendation, before
   settling a direction.
 - **Hard gate** — it presents the shape and waits for your approval before
@@ -621,14 +627,14 @@ on the last instead of re-deriving it. It recalls prior decisions and findings
 before working, and persists durable outcomes after. Memory is keyed by your
 project (the **wing**) and split into rooms:
 
-| Room        | Holds                                                           |
-| ----------- | --------------------------------------------------------------- |
-| `decisions` | design/architecture decisions and the *why*                     |
-| `problems`  | review and security findings and how they were resolved         |
-| `planning`  | plan rationale and deferred options                             |
-| `gaps`      | blueprint/plan holes surfaced during execution, and their fixes |
-| `runs`      | execute's per-plan run journal (what a resumed run reads)       |
-| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`           |
+| Room        | Holds                                                                          |
+| ----------- | ------------------------------------------------------------------------------ |
+| `decisions` | design/architecture decisions and the *why*                                    |
+| `problems`  | review and security findings and how they were resolved                        |
+| `planning`  | plan rationale and deferred options                                            |
+| `gaps`      | blueprint/plan holes from execution + points parked as out-of-scope during Q&A |
+| `runs`      | execute's per-plan run journal (what a resumed run reads)                      |
+| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                          |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds — except `handoff`/`recall`, which fall back to

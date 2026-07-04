@@ -25,14 +25,14 @@ before working and persists durable outcomes after, so detail doesn't pile up in
 the conversation. Memory is keyed by your project (the **wing**) and split into
 rooms:
 
-| Room        | Holds                                                                                          |
-| ----------- | ---------------------------------------------------------------------------------------------- |
-| `decisions` | design/architecture decisions and the *why*                                                    |
-| `problems`  | review, security, acceptance, and UX findings, and how they were resolved                      |
-| `planning`  | plan rationale and deferred options (written by `/vwf:plan`)                                   |
-| `gaps`      | blueprint/plan holes — surfaced during execution or routed in by `/vwf:verify`/`/vwf:feedback` |
-| `runs`      | the `/vwf:execute` run journal — step order and per-step progress, for resuming a paused run   |
-| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                          |
+| Room        | Holds                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `decisions` | design/architecture decisions and the *why*                                                                                                |
+| `problems`  | review, security, acceptance, and UX findings, and how they were resolved                                                                  |
+| `planning`  | plan rationale and deferred options (written by `/vwf:plan`)                                                                               |
+| `gaps`      | blueprint/plan holes — surfaced during execution, routed in by `/vwf:verify`/`/vwf:feedback`, or parked as out-of-scope during elicitation |
+| `runs`      | the `/vwf:execute` run journal — step order and per-step progress, for resuming a paused run                                               |
+| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                                                                      |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds. The one exception is `/vwf:handoff` and `/vwf:recall` — the

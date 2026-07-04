@@ -56,8 +56,9 @@ the preflight).
 
 **Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
 topology, stack, and cross-cutting decisions and their rationale (room
-`decisions`) before eliciting — build on them and don't re-ask resolved
-questions. Skip silently if mempalace is unavailable.
+`decisions`), plus any parked out-of-scope points touching the system shape
+(room `gaps`, tag `parked`), before eliciting — build on them and don't re-ask
+resolved questions. Skip silently if mempalace is unavailable.
 
 Elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`: one decision per

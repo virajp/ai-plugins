@@ -26,9 +26,10 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
 - **room** — `decisions` (design/architecture decisions + the *why*), `problems`
   (review/security findings + how they were resolved), `planning` (plan
   rationale and deferred options), `gaps` (blueprint/plan holes surfaced
-  **during execution** + how they were reconciled), and `runs` (the **execute**
-  run journal — dependency order and per-step progress, for resuming a paused
-  run; see below).
+  **during execution** + how they were reconciled, and out-of-scope points
+  **parked during elicitation** — see below), and `runs` (the **execute** run
+  journal — dependency order and per-step progress, for resuming a paused run;
+  see below).
 
 ## Recall — before work
 
@@ -80,6 +81,18 @@ that survives a mempalace outage), and at reconcile recalls the `gaps` room to
 drive the blueprint/plan fixes. Because mempalace is skip-if-unavailable, the
 plan-doc line is the source of truth when recall is empty; the `gaps` room
 carries the rich detail when it is up.
+
+**Parked scope — out-of-scope points raised during elicitation.** The same room
+also holds what a Q&A answer surfaces *beyond the current pass's scope* (per the
+elicitation protocol's scope check): the orchestrator files the full point to
+room `gaps`, tagged `<slice>/parked` — what was raised, why it is out of scope
+now, and what pass it belongs to — and mirrors a terse line into the pass's
+durable doc (the entity doc's Open Questions, the plan's "Out of scope for this
+cycle", the product doc's Risks & assumptions). Parked points ride the existing
+recall paths: `blueprint` and `plan` already recall room `gaps` before working
+and treat closing recalled gaps as a first-class goal of the pass — so a scope
+change arriving in a fresh session finds the parked point instead of losing it.
+Same fallback rule: the doc line survives a mempalace outage.
 
 ## Run journal — execute resumability (execute only)
 

@@ -56,8 +56,10 @@ is missing).
 ### 2. Recall (mempalace)
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior design decisions and
-rationale (room `decisions`) before eliciting — build on them, don't re-ask
-resolved questions. Skip silently if mempalace is unavailable.
+rationale (room `decisions`), plus any parked out-of-scope points touching the
+visual/UX language (room `gaps`, tag `parked`), before eliciting — build on
+them, don't re-ask resolved questions. Skip silently if mempalace is
+unavailable.
 
 ### 3. Interactive elicitation (orchestrator)
 

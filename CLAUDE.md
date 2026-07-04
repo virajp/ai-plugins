@@ -178,7 +178,11 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   concrete "what good looks like"; its asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `product`, `blueprint`, `plan`, `architecture`, `design-system`, `setup`, and
-  `feedback`
+  `feedback`; incl. the **parked-scope rule** — an answer that goes beyond the
+  current pass's scope is filed to mempalace room `gaps` (tag `<slice>/parked`)
+  and mirrored into the pass's doc (Open Questions / Out of scope / Risks)
+  before the next question, so a scope change arriving in a new session recalls
+  it
 - `assets/execute-stages.md` — the stage pipeline used by `execute`: the
   code→review→security→acceptance+ux table (acceptance + ux run once per cycle
   after all steps; each conditional and skipped explicitly, stated at the final
@@ -221,16 +225,17 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   each repo's `conventions.md#patterns` and enforced by the execute reviewers
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
   persist durable decisions, findings memory for loop-backs, and **gap memory**:
-  blueprint/plan holes surfaced during execution, room `gaps`) referenced by
-  `product`, `blueprint`, `plan`, `execute`, `verify`, and `feedback`. The
-  orchestrator resolves the project wing and persists decisions; the execute
-  subagents (coder, reviewers, acceptance/ux verifiers) file and recall findings
-  **directly** — they are granted scoped mempalace MCP tools in their agent
-  frontmatter (`mcp__plugin_mempalace_mempalace__mempalace_search` /
-  `…_add_drawer`), so rich review detail lives in mempalace instead of the
-  orchestrator's context. Gaps are also mirrored to a durable "Gaps surfaced
-  during execution" section in the plan doc, so they survive a mempalace outage
-  and feed the blueprint/plan fixes. The skip-silently-when-down rule carves out
+  blueprint/plan holes surfaced during execution + out-of-scope points parked
+  during elicitation, room `gaps`) referenced by `product`, `blueprint`, `plan`,
+  `execute`, `verify`, and `feedback`. The orchestrator resolves the project
+  wing and persists decisions; the execute subagents (coder, reviewers,
+  acceptance/ux verifiers) file and recall findings **directly** — they are
+  granted scoped mempalace MCP tools in their agent frontmatter
+  (`mcp__plugin_mempalace_mempalace__mempalace_search` / `…_add_drawer`), so
+  rich review detail lives in mempalace instead of the orchestrator's context.
+  Gaps are also mirrored to a durable "Gaps surfaced during execution" section
+  in the plan doc, so they survive a mempalace outage and feed the
+  blueprint/plan fixes. The skip-silently-when-down rule carves out
   `handoff`/`recall`, which fall back to `docs/handoffs/<name>.md` instead
 - `assets/docs-sync.md` — the **docs-sync rule** (stale docs are more harmful
   than no docs): every run that changes reality — `execute` (landed code, via

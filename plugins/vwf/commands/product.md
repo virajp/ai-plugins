@@ -52,8 +52,10 @@ prerequisite of setup's own migration).
 ## Step 3 — Elicit (create) / Reconcile (update)
 
 **Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
-product decisions and their rationale (room `decisions`) before eliciting. Skip
-silently if mempalace is unavailable.
+product decisions and their rationale (room `decisions`) and any parked
+out-of-scope points aimed at the product level (room `gaps`, tag `parked`)
+before eliciting — a parked feature/goal idea whose time has come is elicited
+into this pass, not re-discovered. Skip silently if mempalace is unavailable.
 
 Elicit following `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` — one decision
 per round, MCQ + "Other", 2–3 proposed framings with a recommendation where the
