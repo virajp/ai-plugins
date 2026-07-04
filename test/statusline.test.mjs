@@ -126,7 +126,7 @@ test("subagent panel renders a tasks payload", () => {
   assert.ok(row.content.length > 0);
 });
 
-// --- context-caps hook: per-repo autopilot_caps from .config/vwf.yaml ---
+// --- context-caps hook: per-repo execute_caps from .config/vwf.yaml ---
 
 const CAPS_HOOK = join(HERE, "..", "tools", "statusline", "context-caps.js");
 
@@ -158,9 +158,21 @@ test("caps hook: repo config tightens the context cap", () => {
   mkdirSync(join(repo, ".config"), { recursive: true });
   writeFileSync(
     join(repo, ".config", "vwf.yaml"),
-    "pipeline:\n  autopilot_caps:\n    context: 40\n",
+    "pipeline:\n  execute_caps:\n    context: 40\n",
   );
   const res = runCapsHook("caps-c", { ctxPct: 50 }, repo);
+  assert.equal(res.status, 0, res.stderr);
+  assert.ok(res.stdout.includes("cap 40%"), res.stdout);
+});
+
+test("caps hook: legacy autopilot_caps key still tightens", () => {
+  const repo = join(tmp, "repo-legacy");
+  mkdirSync(join(repo, ".config"), { recursive: true });
+  writeFileSync(
+    join(repo, ".config", "vwf.yaml"),
+    "pipeline:\n  autopilot_caps:\n    context: 40\n",
+  );
+  const res = runCapsHook("caps-e", { ctxPct: 50 }, repo);
   assert.equal(res.status, 0, res.stderr);
   assert.ok(res.stdout.includes("cap 40%"), res.stdout);
 });
@@ -170,7 +182,7 @@ test("caps hook: repo config can never loosen a cap", () => {
   mkdirSync(join(repo, ".config"), { recursive: true });
   writeFileSync(
     join(repo, ".config", "vwf.yaml"),
-    "pipeline:\n  autopilot_caps:\n    context: 90\n",
+    "pipeline:\n  execute_caps:\n    context: 90\n",
   );
   const res = runCapsHook("caps-d", { ctxPct: 70 }, repo);
   assert.equal(res.status, 0, res.stderr);

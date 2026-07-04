@@ -2,7 +2,10 @@
 description: Produce a reviewable cycle plan as a diff for one slice of the
   blueprint
   (an entity or a section). Reads desired (blueprint) vs actual (code), writes only
-  the delta to docs/plans/<date>-<time>-<slice>.md. Requires a blueprint to exist.
+  the delta to docs/plans/<date>-<time>-<slice>.md. Pulls unimplemented
+  dependencies of the slice into the plan (transitively) and routes any
+  blueprint gap it uncovers back through /vwf:blueprint before writing — so no
+  cycle builds on a gap. Requires the blueprint coverage stamp to read complete.
 argument-hint: "[entity | entity/section | integration]"
 model: sonnet
 effort: xhigh
@@ -39,6 +42,12 @@ it. When a planning decision is genuinely open, elicit it following the
 
 ### 1. Resolve the slice
 
+**Coverage gate.** Read the `blueprint:` block in `.config/vwf.yaml` (per the
+vwf-config asset). **Halt unless `coverage: complete`:** "The blueprint is not
+complete (`<remaining list, or 'never swept'>`). Run `/vwf:blueprint` to finish
+the sweep — a plan cut from a partial blueprint builds gaps into the code." A
+missing block means no sweep has stamped this repo yet — same halt.
+
 The slice is a single unit from `$ARGUMENTS`: an entity, a section of one, or
 `integration` (the cross-entity `docs/blueprint/integration.md` doc). **Halt if
 no blueprint exists** for it: "No blueprint found for `<slice>`. Run
@@ -73,6 +82,19 @@ Skip silently if mempalace is unavailable.
 Determine what already exists, what is missing, what must change, and the order
 to do it in. Reference blueprint sections; do not restate them.
 
+**Dependency closure.** A slice is planned **in full**, including what it stands
+on: from the slice's blueprint Relationships/References and the `integration.md`
+flows it touches, collect every entity this slice depends on, and compute
+desired-vs-actual for each — **transitively** (a dependency's dependencies too).
+Any dependency with an unimplemented delta is **included in this plan** as
+leading steps, ordered before the steps that need it (planning `operator` while
+`settings` is unbuilt pulls the `settings` delta into the `operator` plan —
+otherwise the cycle ships `operator` with a hole where `settings` should be).
+List each included dependency in the plan's Slice section with a link to its
+blueprint; the approval gate (§8) is where the user vetoes scope. Depended-on
+work that is already implemented is not restated — closure pulls in deltas, not
+history.
+
 Apply the **minimalism decision ladder** in
 `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` as you size each step: include a
 step only if a blueprint requirement needs it (rung 1), and prefer reusing
@@ -93,7 +115,19 @@ pipeline. Harness steps are gate-required guardrails: the minimalism ladder
 never strikes them, and they order **before** the steps whose verification
 depends on them.
 
-### 4. Flag drift
+### 4. Route blueprint gaps back; flag drift
+
+**A blueprint gap goes back to the blueprint — before the plan is written.**
+When diffing or elicitation exposes a hole in the *contract* — a behaviour the
+blueprint never pinned down, a missing relationship, flow, or acceptance
+criterion, a surface the slice needs that no doc specifies — do **not** settle
+it inside the plan and do not park it under Risks: pause, present the gap, and
+offer `/vwf:blueprint <entity>` (or `/vwf:architecture` for a registry hole).
+After that pass lands (and re-stamps coverage), re-derive the affected part of
+the diff (§§2–3) against the updated contract. A plan written over a known
+blueprint gap defeats execute's autonomy: execute would hit the same hole
+mid-run and could only document it as a gap, where the contract should already
+have answered it.
 
 If the blueprint implies a surface the registry/code lacks (e.g. a background
 job with no worker project), **surface it** under Risks / drift rather than
@@ -118,7 +152,11 @@ more than one reasonable implementation path), elicit it per the protocol — on
 question at a time, MCQ + "Other", proposing 2-3 approaches with a
 recommendation. Apply the decisions-vs-mechanics filter: if exactly one
 idiomatic path exists given the blueprint, conventions, and code, don't ask —
-proceed. Never guess; record a genuinely open item under Risks / drift.
+proceed. Never guess — and apply the **what-vs-how test**: a question about what
+the product should *do* (behaviour, contract, data shape, acceptance) is a
+blueprint gap — route it per §4, never settle it here. An approved plan carries
+no unresolved decisions; Risks / drift holds risks and noted drift, not open
+questions execute would trip on.
 
 ### 6. Setup (git-workflow)
 
@@ -133,8 +171,8 @@ never push remotely here.
 Write `docs/plans/<date>-<time>-<slice>.md` from the plan template — including
 its **OKF frontmatter** (`type: vwf-plan`, `title`, `description`, `status`;
 optional `timestamp`) and a markdown link to the blueprint slice in the Slice
-section — steps ordered for TDD, each naming the failing test that defines
-"done".
+section (plus one line per dependency the closure pulled in, each linked) —
+steps ordered for TDD, each naming the failing test that defines "done".
 
 **Acceptance criteria.** Copy the Acceptance blocks of the flows this slice
 touches **verbatim** into the plan's "Acceptance criteria (from blueprint)"
@@ -146,7 +184,9 @@ maps to no flow, write `none — no flow touched`.
 
 ### 8. Approval gate
 
-Present the plan and wait for explicit approval before `/vwf:execute`.
+Present the plan and wait for explicit approval. Offer three paths: **Approve &
+execute** (commit the plan per §9, then hand straight into `/vwf:execute` — the
+common case), **Approve only** (commit and stop), or **Reject**.
 
 **If rejected at the gate**, take one of two paths — never let the plan doc
 silently linger:

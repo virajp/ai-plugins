@@ -7,9 +7,9 @@ file whose path is its identity); cross-doc relationships are **edges**
 own commands — read, visualize, and traverse a blueprint.
 
 **Producer / consumer.** The `architecture`, `design-system`, and `blueprint`
-commands are the *producers*; `execute`/`autopilot`'s reviewers (and any OKF
-tool) are *consumers*. The files on disk are the contract between them — keep
-them well-formed, not just human-readable.
+commands are the *producers*; `execute`'s reviewers (and any OKF tool) are
+*consumers*. The files on disk are the contract between them — keep them
+well-formed, not just human-readable.
 
 ## Frontmatter (mandatory on every blueprint doc)
 
@@ -53,7 +53,7 @@ status: draft                                      # required — draft | review
 | `vwf-integration`   | `integration.md`                                |
 | `vwf-entity`        | an entity doc (single file, or the folder form) |
 | `vwf-plan`          | a `docs/plans/` cycle plan                      |
-| `vwf-gap-report`    | an autopilot `*.gap-report.md`                  |
+| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)  |
 
 For the **folder form**, `index.md` carries `type: vwf-entity` for the whole
 entity; each surface file (`data.md` / `api.md` / `jobs.md` / `screens.md`) also

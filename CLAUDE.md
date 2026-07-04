@@ -107,26 +107,37 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
 - `commands/` — `/vwf:` slash commands: the Product → Blueprint → Plan → Execute
-  model — `setup` (Phase-0 onboarding/migration bootstrapper), `product` (the
-  Phase −1 outcome contract: problem/users/goals with `#goal-<slug>`
-  anchors/slice priority; `blueprint` halts without it), `architecture`,
-  `design-system`, `blueprint`, `plan`, `execute`, `archive`, plus `autopilot`
-  (the autonomous variant of `execute`), `verify` (post-deploy environment
-  check: health pass + the flows' acceptance criteria run against staging/prod
-  via the acceptance verifier's environment mode — vwf never deploys),
-  `feedback` (the production-feedback front door: classifies
+  model — `setup` (Phase-0 onboarding/migration bootstrapper; ends by offering
+  `/vwf:blueprint`), `product` (the Phase −1 outcome contract:
+  problem/users/goals with `#goal-<slug>` anchors/slice priority; `blueprint`
+  halts without it), `architecture`, `design-system`, `blueprint` (a
+  **full-product sweep** — a run works a coverage worklist entity by entity
+  until whole-product coverage holds, then stamps `blueprint.coverage` in
+  `.config/vwf.yaml` and offers `/vwf:plan`), `plan` (halts unless that stamp is
+  `complete`; pulls the slice's **transitive dependency closure** — any
+  depended-on entity's unimplemented delta — into the plan as leading steps;
+  **routes blueprint gaps back through `/vwf:blueprint` before writing** — a
+  *what*-level hole the diff exposes is fixed in the contract, never settled in
+  the plan or parked as a risk, so execute never trips on an open decision; the
+  approval gate offers Approve & execute), `execute`, `archive`, `verify`
+  (post-deploy environment check: health pass + the flows' acceptance criteria
+  run against staging/prod via the acceptance verifier's environment mode — vwf
+  never deploys), `feedback` (the production-feedback front door: classifies
   bug/hole/metric-reading/UX/feature-idea and routes each into the doc+command
   that fixes it, incl. the `product.md` Metric readings appendix), internal
   `git-workflow`, and `handoff`/`recall` (mempalace-backed session handoff —
-  wing=`<project>`, room=`handoff`, drawer=`<name>`). `autopilot` runs one
-  approved plan to completion **without per-stage human gates** in a dedicated
-  worktree: dependency-ordered steps, `code→review→security` per step (security
-  findings always fixed; review findings loop ≤4 rounds then become documented
-  gaps) plus one `acceptance + ux` pass after all steps (same 4-round cap), gaps
-  written to `docs/plans/<plan>.gap-report.md` + mempalace room `gaps`, **never
-  merges/pushes or archives**, and pauses only on hard halts, the statusline
-  resource caps, an all-blocking gap, or an uncovered irreversible decision.
-  Reuses execute's five subagents.
+  wing=`<project>`, room=`handoff`, drawer=`<name>`). `execute` runs one
+  approved plan to completion **autonomously** in a dedicated worktree:
+  dependency-ordered steps, `code→review→security` per step (security findings
+  always fixed; review findings loop ≤4 rounds then become documented gaps) plus
+  one `acceptance + ux` pass after all steps (same 4-round cap), gaps mirrored
+  to the plan doc's "Gaps surfaced during execution" section + mempalace room
+  `gaps`, mid-run pauses only on hard halts, the statusline resource caps, an
+  all-blocking gap, or an uncovered irreversible decision — then **one final
+  human gate** (run report + gap list) behind which the merge/push happens, gap
+  reconciliation is offered (blueprint/plan loop-backs), and archive is offered
+  once no gaps remain. (The former `autopilot` command is merged into this
+  behavior and retired.)
 - `agents/` — subagents the commands delegate to: `blueprint-reviewer`,
   `design-system-reviewer`, `product-reviewer`, `execute-coder`,
   `execute-code-reviewer`, `execute-security-reviewer`,
@@ -168,26 +179,28 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `product`, `blueprint`, `plan`, `architecture`, `design-system`, `setup`, and
   `feedback`
-- `assets/execute-stages.md` — the stage pipeline shared by `execute` and
-  `autopilot`: the code→review→security→acceptance+ux table (acceptance + ux run
-  once per cycle behind one combined gate — after `security` in execute, after
-  all steps in autopilot; each conditional and skipped explicitly), per-stage
-  subagent contracts (incl. the slice/round tags, the coverage-report policy,
-  and the acceptance/ux `n/a` gate-decides policy), shared stage rules (model
-  enforcement, terse output, loop-on-findings with the recall-miss fallback, gap
-  capture), and the end-of-run architecture/environment reconcile
+- `assets/execute-stages.md` — the stage pipeline used by `execute`: the
+  code→review→security→acceptance+ux table (acceptance + ux run once per cycle
+  after all steps; each conditional and skipped explicitly, stated at the final
+  gate), per-stage subagent contracts (incl. the slice/round tags, the
+  coverage-report policy, and the acceptance/ux `n/a` gap policy), shared stage
+  rules (model enforcement, terse output, loop-on-findings with the recall-miss
+  fallback, gap capture), and the end-of-run architecture/environment reconcile
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
 - `assets/vwf-config.md` — the **vwf config** doctrine for `.config/vwf.yaml`
-  (one per workspace, format 6): the stamp keys, `product`/`memory.wing`,
-  per-project nuances (`platforms:` extensions, coverage/health overrides), the
-  `harness:` inventory, the **`enforcement:` block** (structure/stack/rule
-  opt-outs — moved out of the registry, which now purely describes the system),
-  bounded `pipeline` knobs (coverage target, review round cap, stage model tiers
-  — downgrades always reported at the gate — and tighten-only `autopilot_caps`
-  honored by the statusline caps hook), `verify` `environments`, and `docs_sync`
-  scope. Hard floor: config can never disable security review, TDD, the approval
-  gates, or the reviewer bars. Readers fall back to the legacy
+  (one per workspace, config_format 2): the stamp keys, `product`/`memory.wing`,
+  the **`blueprint:` coverage stamp** (written by every blueprint sweep; `plan`
+  halts unless `coverage: complete`), per-project nuances (`platforms:`
+  extensions, coverage/health overrides), the `harness:` inventory, the
+  **`enforcement:` block** (structure/stack/rule opt-outs — moved out of the
+  registry, which now purely describes the system), bounded `pipeline` knobs
+  (coverage target, review round cap, stage model tiers — downgrades always
+  reported at the gate — and tighten-only `execute_caps` honored by the
+  statusline caps hook, which also reads the legacy `autopilot_caps` name; the
+  `1 → 2` config migration is the rename), `verify` `environments`, and
+  `docs_sync` scope. Hard floor: config can never disable security review, TDD,
+  the approval gates, or the reviewer bars. Readers fall back to the legacy
   `docs/blueprint/.vwf.yml` (its presence = pre-6 drift)
 - `assets/harness.md` — the **harness contract**: the verification capabilities
   a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`,
@@ -220,16 +233,16 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   and feed the blueprint/plan fixes. The skip-silently-when-down rule carves out
   `handoff`/`recall`, which fall back to `docs/handoffs/<name>.md` instead
 - `assets/docs-sync.md` — the **docs-sync rule** (stale docs are more harmful
-  than no docs): every run that changes reality — `execute`/`autopilot` (landed
-  code, via the shared Reconcile step 4), `architecture` and `product` in update
-  mode — ends by reconciling the repo's human docs (README, CLAUDE.md, anything
-  the change contradicts) in the same worktree/commit flow, reporting what was
+  than no docs): every run that changes reality — `execute` (landed code, via
+  the shared Reconcile step 4), `architecture` and `product` in update mode —
+  ends by reconciling the repo's human docs (README, CLAUDE.md, anything the
+  change contradicts) in the same worktree/commit flow, reporting what was
   synced or `docs: nothing contradicted`. `blueprint`/`plan` are exempt (their
   output documents intent, not reality); `setup` owns full authoring
 - `assets/format-check.md` + `assets/blueprint-format` — the **format-drift
-  preflight**: `product`, `blueprint`, `plan`, `execute`, `autopilot`,
-  `design-system`, and `verify` compare a repo's `.config/vwf.yaml` stamp
-  (legacy fallback: `docs/blueprint/.vwf.yml`) to the format integer vwf ships
+  preflight**: `product`, `blueprint`, `plan`, `execute`, `design-system`, and
+  `verify` compare a repo's `.config/vwf.yaml` stamp (legacy fallback:
+  `docs/blueprint/.vwf.yml`) to the format integer vwf ships
   (`blueprint-format`) and nudge `/vwf:setup` when behind (halting only if a
   needed artifact is missing). Since vwf is user-scoped — upgraded once
   globally, with no per-repo install event — this usage-time check is what
@@ -245,8 +258,9 @@ Acceptance block — and one entity doc per entity — either `<entity>.md` or, 
 a large entity, a folder `<entity>/` splitting the same sections across
 `index.md` + `data.md`/`api.md`/`jobs.md`/`screens.md`) and `docs/plans/`
 (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
-commands/agents/templates from the prior model are archived under
-`archived/vwf-2026-06-19/`.
+commands/agents/templates are archived under `archived/vwf-<date>/`
+(`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
+`autopilot` command, whose behavior merged into `execute`).
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
@@ -290,10 +304,15 @@ entity with a Screens surface if `docs/blueprint/design-system.md` is missing.
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and
 `blueprint` maintains it as entities add integrations, with
-`conventions.md#config` holding only the injection mechanism. The blueprint is a
-**code-independent technical contract** — it records only decisions that have
-more than one reasonable answer *and* are true regardless of how the code is
-written today; reuse/placement/ordering/library choices are `plan`'s job. The
+`conventions.md#config` holding only the injection mechanism. **Everything up to
+`blueprint` is done in full before planning**: a blueprint run sweeps until
+whole-product coverage holds (every goal served, every referenced entity
+authored + reviewed, every registry surface represented) and stamps it; `plan`
+hard-halts on a partial stamp and dependency-closes its slice, so per-slice
+execution never builds on an unblueprinted or unbuilt dependency. The blueprint
+is a **code-independent technical contract** — it records only decisions that
+have more than one reasonable answer *and* are true regardless of how the code
+is written today; reuse/placement/ordering/library choices are `plan`'s job. The
 `blueprint-reviewer` gate enforces the completeness bars (data, relationships,
 concurrency, API, UI/UX, flows incl. the Acceptance block bar when a pass
 touches `integration.md`), the goal-traceability bar (the `Serves:` line), and

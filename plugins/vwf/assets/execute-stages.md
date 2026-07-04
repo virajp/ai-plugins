@@ -1,9 +1,9 @@
-# Execute Stages (shared by /vwf:execute and /vwf:autopilot)
+# Execute Stages (used by /vwf:execute)
 
 The stage pipeline, per-stage subagent contracts, and shared stage rules used by
-both `/vwf:execute` (gated) and `/vwf:autopilot` (autonomous). The invoking
-command owns the orchestration policy — when to pause, how many rounds, what
-happens at the end; this file defines what the stages **are**.
+`/vwf:execute`. The invoking command owns the orchestration policy — when to
+pause, how many rounds, what happens at the end; this file defines what the
+stages **are**.
 
 ## Stages
 
@@ -15,10 +15,9 @@ happens at the end; this file defines what the stages **are**.
 | acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` |
 | ux         | UX Conformance   | opus   | `execute-ux-reviewer`         |
 
-`acceptance` and `ux` run **once per cycle** (after `security` in `execute`;
-after **all** steps in `autopilot`), back to back so one boot of the local stack
-serves both, behind **one combined gate**. Each is conditional — skipped
-**explicitly at the gate**, never silently:
+`acceptance` and `ux` run **once per cycle**, after **all** steps, back to back
+so one boot of the local stack serves both. Each is conditional — skipped
+**explicitly** (journaled and stated at the final gate), never silently:
 
 - `acceptance` — only when the plan's "Acceptance criteria (from blueprint)"
   section carries criteria (skip on `none — no flow touched`).
@@ -34,11 +33,11 @@ Per-stage dispatch contract:
   It implements under strict TDD — RED → GREEN → REFACTOR for every change — and
   runs the suite to the coverage gate, returning the coverage report: `100%`,
   `<100%` with the uncovered `file:line` list, or `n/a` when the project has no
-  coverage tooling. The coder never blocks on coverage — the **orchestrator's
-  gate decides**: `execute` presents the coverage report at the human gate,
-  `autopilot` documents a sub-100% residual as a gap (never a silent pass). On a
-  fix loop-back, pass the review findings **tag** (not the text) — the coder
-  recalls the detail from mempalace before fixing.
+  coverage tooling. The coder never blocks on coverage — the **orchestrator
+  decides**: a residual below the configured target is documented as a gap and
+  reported at the final gate (never a silent pass). On a fix loop-back, pass the
+  review findings **tag** (not the text) — the coder recalls the detail from
+  mempalace before fixing.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
   **slice** and **round number** for its recall tag). It reviews the code
   adversarially against the **plan, the blueprint, conventions, and the registry
@@ -60,12 +59,12 @@ Per-stage dispatch contract:
   `code` like any finding (the fix is the code **or the missing E2E test**).
   When the repo has **no E2E harness**, it returns `ACCEPTANCE: n/a` naming the
   missing capability in the harness-contract vocabulary
-  (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — the **orchestrator's gate
-  decides** (mirror of the coverage policy): `execute` presents it at the human
-  gate; `autopilot` records it as a gap. Never a silent pass. (With `plan`'s
-  harness preflight this should be rare — the plan injects bootstrap steps for
-  capabilities the gates need, so an `n/a` here usually means the preflight was
-  skipped or the plan predates it.)
+  (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — the **orchestrator decides**
+  (mirror of the coverage policy): it is recorded as a gap and reported at the
+  final gate. Never a silent pass. (With `plan`'s harness preflight this should
+  be rare — the plan injects bootstrap steps for capabilities the gates need, so
+  an `n/a` here usually means the preflight was skipped or the plan predates
+  it.)
 - **ux** — dispatch `execute-ux-reviewer` (pass the changed screens from the
   plan's screen steps, the `design-system.md` path, the entity's Screens
   section(s), the UI project's registry entry, the wing, and the **slice** and
@@ -74,20 +73,20 @@ Per-stage dispatch contract:
   system and the Screens contract, runs an **axe** accessibility scan (WCAG A/AA
   violations are findings), and always adds a code-level token/state pass —
   which is the whole review for a Flutter slice. Findings loop back to `code`
-  like review findings; `RENDERED: n/a` on a web slice goes to the
-  orchestrator's gate.
+  like review findings; `RENDERED: n/a` on a web slice is recorded as a gap and
+  reported at the final gate.
 
 ## Shared stage rules
 
 - **Model enforcement** — dispatch each subagent on the model in the table,
   unless `.config/vwf.yaml` `pipeline.models` overrides that stage's tier (per
-  the vwf-config asset). A downgrade from the shipped default is **stated at
-  that stage's gate/report** — a weakened review is never invisible. The stage
-  itself always runs; config cannot skip it.
+  the vwf-config asset). A downgrade from the shipped default is **stated in
+  that stage's report and at the final gate** — a weakened review is never
+  invisible. The stage itself always runs; config cannot skip it.
 - **Pipeline knobs** — the invoking command reads `.config/vwf.yaml` `pipeline`
   for `coverage_target` (default 100; per-project override under
   `projects.<name>.coverage_target`) and `review_round_cap` (default 4), and
-  reports configured-vs-default at the relevant gate.
+  reports configured-vs-default at the final gate.
 - **Terse subagent output** — a subagent's full reply lands in the
   orchestrator's context. The pipeline agents return fixed contract blocks; any
   *other* agent spawned (e.g. `Explore` for research) must be instructed to
@@ -105,9 +104,8 @@ Per-stage dispatch contract:
   never silently worked around. The subagent files the full gap to mempalace
   room `gaps` and returns a terse pointer; the orchestrator mirrors that terse
   line into the durable, mempalace-independent on-disk record **the moment it
-  surfaces** — the plan doc's "Gaps surfaced during execution" section for
-  `execute`, the gap-report for `autopilot`. Gaps do not block the pipeline;
-  they are reconciled at cycle end.
+  surfaces** — the plan doc's "Gaps surfaced during execution" section. Gaps do
+  not block the pipeline; they are reconciled at cycle end.
 - **Never silently edit the blueprint** — flag drift and offer; do not rewrite
   it.
 

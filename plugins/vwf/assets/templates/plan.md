@@ -15,7 +15,9 @@ status: draft # draft | reviewed | stable
 
 ## Slice
 
-Which entity/section of the blueprint this plan covers, and a link to it.
+Which entity/section of the blueprint this plan covers, and a link to it. One
+line per dependency entity the closure pulled in (unimplemented delta only),
+each linked to its blueprint.
 
 ## Current state (actual)
 

@@ -2,7 +2,9 @@
 description: Maintain the always-current, full-product blueprint under
   docs/blueprint/ — one entity doc per entity plus conventions.md. Stack-agnostic;
   resolves section→project mapping from the architecture registry. Gated by a
-  fresh-subagent completeness reviewer loop.
+  fresh-subagent completeness reviewer loop. A run sweeps entity by entity until
+  whole-product coverage holds, then stamps it in .config/vwf.yaml — /vwf:plan
+  halts without a complete stamp.
 argument-hint: "[entity]"
 model: sonnet
 effort: xhigh
@@ -20,6 +22,15 @@ An entity is documented as **either form, both first-class**: a single file
 `docs/blueprint/<entity>.md`, or a folder `docs/blueprint/<entity>/` that splits
 the same sections across files when the entity is too large to read in one
 sitting (see §4). Neither is a downgrade of the other; pick by size.
+
+**A run is a sweep, not a single entity.** The blueprint must describe the
+**whole product's** as-of state before anything downstream consumes it —
+`/vwf:plan` hard-halts unless the coverage stamp (§9) reads `complete`. A run
+therefore works entity by entity (§§2–8 per entity) but does not end at one
+entity: it continues down the coverage worklist (§1) until whole-product
+coverage holds, or the user stops early — in which case the stamp records
+`partial` with what remains, and planning stays blocked until a later run
+finishes the sweep.
 
 You own the user conversation. Elicitation is **interactive and stays with you**
 — do not spawn a subagent for it (a subagent cannot pause to ask a question).
@@ -75,8 +86,25 @@ registry found. Run `/vwf:architecture` first to bootstrap
 is behind what vwf ships, nudge `/vwf:setup` (proceed unless a needed artifact
 is missing).
 
-If no entity was named in `$ARGUMENTS`, ask which entity to author/update and
-wait.
+**Build the coverage worklist.** Whole-product coverage holds when, all at once:
+
+- every product goal (`#goal-<slug>`) is `Serves:`-linked by at least one
+  entity's Purpose;
+- every entity a relationship, reference, or `integration.md` flow points at
+  exists on disk (no "target not yet authored" holes);
+- every entity doc is `status: reviewed` (it passed the reviewer loop);
+- every registry project's surfaces are represented per its `doc_unit`
+  (`N/A — <reason>` counts as represented).
+
+List every entity that fails a check, ordered by the product doc's slice
+priority — this is the run's worklist. Deciding whether a goal genuinely needs a
+*new* entity (vs. an existing one extended) is elicitation, not inference: when
+a goal is unserved, ask.
+
+If `$ARGUMENTS` named an entity, start there (prepend it to the worklist);
+otherwise start at the top. An empty worklist with a named entity means a
+targeted update — do it, then re-check coverage in §8 (an update can open new
+holes, e.g. a relationship to a not-yet-authored entity).
 
 ### 2. Determine surfaces
 
@@ -270,19 +298,37 @@ inbound markdown links to the old doc — both the file form `./<entity>.md`
 
 If neither happened, skip this step.
 
-### 8. Approval gate
+### 8. Approval gate & sweep continuation
 
 Summarize what was written/changed (entity doc, conventions, registry, any link
 fixups) and wait for explicit approval.
 
-**Multi-entity continuation.** If the original `$ARGUMENTS` named more than one
-entity (decomposed per the scope check), offer to proceed to the next one after
-this entity is approved — one entity per pass. If the session ends with entities
-still unauthored, note the remainder in the approval summary and the commit
-message so a later session can pick them up.
+**Continue the sweep.** After approval, re-derive the coverage worklist (§1) —
+this pass may have closed holes or opened new ones. If entities remain, proceed
+to the next one (back to §2) — one entity per pass, each behind its own
+approval. The user may stop early; note what remains in the approval summary and
+the commit message, and stamp accordingly (§9). Never trim the worklist to end
+sooner — coverage is checked, not negotiated.
 
-### 9. Commit (git-workflow)
+### 9. Stamp coverage
+
+Record the sweep's result in `.config/vwf.yaml` (per the vwf-config asset):
+
+```yaml
+blueprint:
+  coverage: complete # or partial
+  remaining: [] # the unresolved worklist entities when partial
+```
+
+Stamp after **every** run — a targeted update that opened a hole downgrades a
+`complete` stamp to `partial`. This stamp is what `/vwf:plan` gates on.
+
+### 10. Commit (git-workflow)
 
 After approval, hand **all** git actions to `/vwf:git-workflow` — it owns
-worktree isolation and the commit. Use a `blueprint(<entity>):` or
-`docs(blueprint):` message. Do not run raw git here.
+worktree isolation and the commit (the stamp change rides the same commit). Use
+a `blueprint(<entity>):` or `docs(blueprint):` message. Do not run raw git here.
+
+**Chain forward.** When the sweep ends with `coverage: complete`, offer to
+continue straight into `/vwf:plan` for the highest-priority slice (from the
+product doc's slice priority) — the user can decline and plan later.

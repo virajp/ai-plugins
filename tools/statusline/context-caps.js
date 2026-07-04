@@ -33,9 +33,10 @@ const FIVE_H_CAP = 90;
 const SEVEN_D_CAP = 80;
 
 // Tighten-only per-repo caps from <cwd>/.config/vwf.yaml (the vwf config,
-// pipeline.autopilot_caps). Dependency-free: a narrow line scan for the block —
-// keys `context` / `five_hour` / `seven_day`, integers. Values above the
-// shipped defaults are ignored (config may only tighten, never loosen).
+// pipeline.execute_caps; the legacy pipeline.autopilot_caps name is still
+// honored). Dependency-free: a narrow line scan for the block — keys `context`
+// / `five_hour` / `seven_day`, integers. Values above the shipped defaults are
+// ignored (config may only tighten, never loosen).
 function repoCaps(cwd) {
   const caps = {};
   if (!cwd) {
@@ -49,7 +50,9 @@ function repoCaps(cwd) {
     return caps;
   }
   const lines = text.split("\n");
-  const start = lines.findIndex(l => /^\s*autopilot_caps:\s*(#.*)?$/.test(l));
+  const start = lines.findIndex(l =>
+    /^\s*(execute_caps|autopilot_caps):\s*(#.*)?$/.test(l)
+  );
   if (start === -1) {
     return caps;
   }

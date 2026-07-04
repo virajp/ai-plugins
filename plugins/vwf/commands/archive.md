@@ -36,9 +36,9 @@ proceed** (don't hard-halt) when any of these are unfinished:
 
 - the plan doc's "Gaps surfaced during execution" section has **unresolved
   entries**;
-- a companion `docs/plans/<plan>.gap-report.md` exists with **open** rows (an
-  un-reconciled gap-report);
-- an **autopilot run journal** (mempalace room `runs`, drawer `<plan>`) is not
+- a companion `docs/plans/<plan>.gap-report.md` exists with **open** rows (a
+  legacy autopilot gap-report, un-reconciled);
+- an **execute run journal** (mempalace room `runs`, drawer `<plan>`) is not
   marked complete.
 
 Surface what's outstanding and let the user decide whether to archive anyway.

@@ -85,11 +85,12 @@ via `/vwf:handoff` and halt:
 | Context window | > 65%     | handoff, then `/clear` (or `/compact`) + `/vwf:recall` |
 
 A repo may **tighten** (never loosen) these thresholds via its vwf config —
-`.config/vwf.yaml`, keys `pipeline.autopilot_caps.context` / `.five_hour` /
-`.seven_day` — the hook reads the session's working directory and clamps any
-value above the shipped defaults. | 5-hour limit | > 90% | handoff, then pause
-until reset; resume with `/vwf:recall` | | 7-day limit | > 80% | handoff, then
-stop with the reset time |
+`.config/vwf.yaml`, keys `pipeline.execute_caps.context` / `.five_hour` /
+`.seven_day` (the legacy `pipeline.autopilot_caps` name is still honored) — the
+hook reads the session's working directory and clamps any value above the
+shipped defaults. | 5-hour limit | > 90% | handoff, then pause until reset;
+resume with `/vwf:recall` | | 7-day limit | > 80% | handoff, then stop with the
+reset time |
 
 A hook can't clear context or invoke slash commands, so resuming is one
 keystroke from you. The hook is **inert** until the main bar runs (no usage file

@@ -1,7 +1,7 @@
 ---
 name: execute-ux-reviewer
-description: UX-conformance reviewer for the /vwf:execute and /vwf:autopilot
-  commands. Invoked only by those commands, and only for UI slices — do not
+description: UX-conformance reviewer for the /vwf:execute command. Invoked only
+  by /vwf:execute, and only for UI slices — do not
   delegate to it for general tasks. Renders the changed screens (screenshots
   via the repo's own dev server + Playwright), judges them against
   design-system.md and the entity Screens contract, and runs an axe

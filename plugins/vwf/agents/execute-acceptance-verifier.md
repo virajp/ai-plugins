@@ -1,7 +1,8 @@
 ---
 name: execute-acceptance-verifier
-description: Acceptance-stage verifier for the /vwf:execute and /vwf:autopilot
-  commands. Invoked only by those commands — do not delegate to it for general
+description: Acceptance-stage verifier for the /vwf:execute command. Invoked
+  only by /vwf:execute (and /vwf:verify's environment mode) — do not delegate to
+  it for general
   tasks. Independently maps each blueprint acceptance criterion to an E2E test,
   runs the suite against the local stack, and returns per-criterion
   pass/fail/not-covered. Never writes tests or code.

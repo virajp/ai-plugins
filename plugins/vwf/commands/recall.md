@@ -91,8 +91,8 @@ If the handoff has a **Next prompt** section, show it and **ask the user whether
 to run it now**:
 
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
-  command — `blueprint` / `plan` / `execute` / `autopilot` — when it names one).
-  Resuming a cap-paused `/vwf:autopilot` run is the primary use of this command.
+  command — `blueprint` / `plan` / `execute` — when it names one). Resuming a
+  cap-paused `/vwf:execute` run is the primary use of this command.
 - **No** → stop after the summary; the user drives from here.
 
 If there is no next prompt, end with the summary and the open items, and wait

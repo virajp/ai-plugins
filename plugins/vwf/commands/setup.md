@@ -218,7 +218,9 @@ run diffs against, and how every vwf command operates in this repo:
   them.
 
 On the `5 → 6` migration, `git mv` the legacy stamp to the new path first (move,
-never delete), then restructure — per format-versioning.
+never delete), then restructure — per format-versioning. Also migrate any
+`config_format` drift per the vwf-config asset's migration notes (e.g. `1 → 2`
+renames `pipeline.autopilot_caps` → `pipeline.execute_caps`).
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the durable
 onboarding decisions and their rationale (confirmed topology, UI surface,
@@ -245,3 +247,7 @@ approval, **finalize resumability state**: remove the transient
 `setup_progress:` key from `.config/vwf.yaml` and delete the scratch
 `docs/blueprint/.vwf-migration-plan.md`. Then commit via `/vwf:git-workflow`
 with a `chore(vwf):` or `docs:` message. Keep the worktree local; do not push.
+
+**Chain forward.** With the foundations in place, offer to continue straight
+into `/vwf:blueprint` (the full-product sweep — the next step of the pipeline);
+the user can decline and blueprint later.

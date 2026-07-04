@@ -10,7 +10,7 @@ never "updated later".
 
 | Run                          | Reality that changed              | Sync |
 | ---------------------------- | --------------------------------- | ---- |
-| `execute` / `autopilot`      | landed code, new capabilities     | yes  |
+| `execute`                    | landed code, new capabilities     | yes  |
 | `architecture` (update mode) | system shape, projects, stacks    | yes  |
 | `product` (update mode)      | the product's framing/goals       | yes  |
 | `setup`                      | (owns full doc authoring already) | n/a  |

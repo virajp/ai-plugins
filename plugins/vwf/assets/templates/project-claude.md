@@ -8,10 +8,10 @@ live under `docs/blueprint/` (the desired state) and `docs/plans/` (the diffs to
 apply).
 
 **Order:** `/vwf:setup` → `/vwf:product` → `/vwf:architecture` →
-`/vwf:design-system` (once a UI exists) → `/vwf:blueprint <entity>` →
-`/vwf:plan <slice>` → `/vwf:execute` (or `/vwf:autopilot`) → `/vwf:archive` —
-then, after you deploy, `/vwf:verify <env>` and `/vwf:feedback` route what
-production says back into product/blueprint/plan.
+`/vwf:design-system` (once a UI exists) → `/vwf:blueprint` (a full-product sweep
+— `plan` halts until its coverage stamp reads complete) → `/vwf:plan <slice>` →
+`/vwf:execute` → `/vwf:archive` — then, after you deploy, `/vwf:verify <env>`
+and `/vwf:feedback` route what production says back into product/blueprint/plan.
 
 **The blueprint is a code-independent contract.** It records only decisions that
 have more than one reasonable answer *and* are true regardless of how the code

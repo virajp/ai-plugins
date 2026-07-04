@@ -31,7 +31,7 @@ rooms:
 | `problems`  | review, security, acceptance, and UX findings, and how they were resolved                      |
 | `planning`  | plan rationale and deferred options (written by `/vwf:plan`)                                   |
 | `gaps`      | blueprint/plan holes — surfaced during execution or routed in by `/vwf:verify`/`/vwf:feedback` |
-| `runs`      | the `/vwf:autopilot` run journal — step order and per-step progress, for resuming a paused run |
+| `runs`      | the `/vwf:execute` run journal — step order and per-step progress, for resuming a paused run   |
 | `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                          |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory

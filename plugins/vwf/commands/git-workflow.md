@@ -29,7 +29,7 @@ effort: medium
 ## Caller Preferences
 
 This command takes **no arguments** — callers parameterize its behavior through
-**declared preferences in the invocation text** (e.g. `/vwf:autopilot`: "isolate
+**declared preferences in the invocation text** (e.g. `/vwf:execute`: "isolate
 without asking; commit only — never merge/push"). Honor any such declared
 preference: it drives the **Step 1** consent (skip the worktree prompt when
 isolation is pre-declared) and the **Step 4** post-commit choice (take the
@@ -235,9 +235,9 @@ Common types: `feat`, `fix`, `refactor`, `wip`, `blueprint`, `test`, `ops`,
 ## Step 4 — Post-Commit Action
 
 **Caller-declared preference.** If the invoker declared a post-commit action
-(e.g. `/vwf:autopilot`: "commit only — do not prompt, never merge or push"),
-honor it without asking: take that action and skip the prompt below. This is the
-only way the prompt is bypassed.
+(e.g. `/vwf:execute`: "commit only — do not prompt, never merge or push"), honor
+it without asking: take that action and skip the prompt below. This is the only
+way the prompt is bypassed.
 
 Otherwise, after a successful commit, ask the user to choose what to do next via
 `AskUserQuestion` with these three options:
