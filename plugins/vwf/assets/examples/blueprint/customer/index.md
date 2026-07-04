@@ -16,7 +16,7 @@ A Customer is the account that places and owns orders. It holds the minimal
 identity and contact detail needed to attribute purchases and communicate about
 them.
 
-Serves: [Reliable ordering](./product.md#goal-reliable-ordering)
+Serves: [Reliable ordering](../product.md#goal-reliable-ordering)
 
 ## Out of Scope
 
@@ -49,19 +49,19 @@ Serves: [Reliable ordering](./product.md#goal-reliable-ordering)
 
 ## Data Model → api
 
-| Field        | Type      | Optional | Default   | Validation / Format             |
-| ------------ | --------- | -------- | --------- | ------------------------------- |
-| `id`         | string    | no       | generated | See [ids](./conventions.md#ids) |
-| `email`      | string    | no       | —         | RFC 5322; unique; lowercased    |
-| `name`       | string    | no       | —         | 1–120 chars                     |
-| `status`     | enum      | no       | `active`  | one of: `active`, `disabled`    |
-| `created_at` | timestamp | no       | generated | UTC                             |
+| Field        | Type      | Optional | Default   | Validation / Format              |
+| ------------ | --------- | -------- | --------- | -------------------------------- |
+| `id`         | string    | no       | generated | See [ids](../conventions.md#ids) |
+| `email`      | string    | no       | —         | RFC 5322; unique; lowercased     |
+| `name`       | string    | no       | —         | 1–120 chars                      |
+| `status`     | enum      | no       | `active`  | one of: `active`, `disabled`     |
+| `created_at` | timestamp | no       | generated | UTC                              |
 
 ## Relationships
 
-| Related entity      | Cardinality | Ownership | On delete | Required |
-| ------------------- | ----------- | --------- | --------- | -------- |
-| [Order](./order.md) | 1–N         | reference | restrict  | no       |
+| Related entity             | Cardinality | Ownership | On delete | Required |
+| -------------------------- | ----------- | --------- | --------- | -------- |
+| [Order](../order/index.md) | 1–N         | reference | restrict  | no       |
 
 <!-- 1 Customer is referenced by N Orders. restrict mirrors Order's side of the
      relation: a customer with orders cannot be hard-deleted. -->
@@ -83,12 +83,12 @@ Serves: [Reliable ordering](./product.md#goal-reliable-ordering)
 | GET    | /customers/{id} | Owner/staff | —              | Customer | `not_found`, `forbidden`  | yes        |
 | PATCH  | /customers/{id} | Owner       | profile fields | Customer | `validation`, `forbidden` | no         |
 
-<!-- Error envelope: [errors](./conventions.md#errors). Auth: [auth](./conventions.md#auth). -->
+<!-- Error envelope: [errors](../conventions.md#errors). Auth: [auth](../conventions.md#auth). -->
 
 ## References
 
-- [auth](./conventions.md#auth), [errors](./conventions.md#errors),
-  [ids](./conventions.md#ids)
+- [auth](../conventions.md#auth), [errors](../conventions.md#errors),
+  [ids](../conventions.md#ids)
 
 ## Open Questions
 

@@ -8,7 +8,7 @@ and, on re-run, migrates the gap.
 
 ```yaml
 config_format: 2
-blueprint_format: 7
+blueprint_format: 8
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,9 +29,20 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 7.** Format 7 = format 6 **plus** **flow diagrams as contract
-views** — complicated flows must be readable at a glance, not only as tables
-(see the blueprint-authoring **integration-and-flows** and **entity-contract**
+**Current format = 8.** Format 8 = format 7 **plus** **folders-only entities**:
+every entity lives at `docs/blueprint/<entity>/` — `index.md` alone when the
+entity is small (all sections in that one file), `index.md` + the surface files
+(`data.md` / `api.md` / `jobs.md` / `screens.md`) when it is large. The
+`docs/blueprint/` **root holds only the system docs** (`product.md`,
+`architecture.md`, `conventions.md`, `design-system.md`, `environment.md`,
+`integration.md`); a flat `<entity>.md` at the root is drift. Two reasons: the
+root stops mixing entity content with the system docs, and inbound links
+(`<entity>/index.md`) stay stable when an entity later outgrows one file — no
+link rewrite on growth.
+
+Format 7 = format 6 **plus** **flow diagrams as contract views** — complicated
+flows must be readable at a glance, not only as tables (see the
+blueprint-authoring **integration-and-flows** and **entity-contract**
 references):
 
 - `architecture.md` System Overview carries a **mermaid `flowchart`** of the
@@ -104,11 +115,12 @@ A format-5 repo therefore also has (unchanged from formats 1–4):
 - `environment.md` **if** `integrations: true`
 - `integration.md` once cross-entity flows exist
 - entity docs with **Relationships**, **Concurrency & Consistency**, and
-  **Screens** that reference `design-system.md`. Each entity is **either** a
-  single file `docs/blueprint/<entity>.md` **or** a folder
+  **Screens** that reference `design-system.md`. Through format 7 an entity is
+  **either** a single file `docs/blueprint/<entity>.md` **or** a folder
   `docs/blueprint/<entity>/` (`index.md` + `data.md` / `api.md` / `jobs.md` /
-  `screens.md`) — both conform; the folder form is **not** drift and must not be
-  collapsed to a single file on migration.
+  `screens.md`) — the folder form is never drift and must not be collapsed to a
+  single file on migration. **From format 8 the folder is the only form** (see
+  above).
 - `docs/plans/` with `archived/`
 
 **Drift → migration map.** On re-run, compare the stamp's `blueprint_format` to
@@ -167,6 +179,17 @@ the current format and apply the delta:
   contradict anything its table says — the table stays authoritative. No flows /
   no qualifying lifecycles → those parts are no-ops, not drift. Then bump the
   stamp to `7`.
+- **`7 → 8`** → for every flat entity doc `docs/blueprint/<entity>.md`: `git mv`
+  it to `docs/blueprint/<entity>/index.md` (move, never delete; entities already
+  in folder form are untouched), then rewrite links mechanically — content
+  otherwise unchanged: (a) **inbound** — every link to `./<entity>.md` across
+  the bundle and the active `docs/plans/` becomes `./<entity>/index.md` (or
+  `../<entity>/index.md` from inside another entity folder); (b) **outbound** —
+  links inside each moved file gain one level: `./product.md#goal-x` →
+  `../product.md#goal-x`, `./conventions.md#auth` → `../conventions.md#auth`,
+  `./design-system.md` → `../design-system.md`, and a sibling entity →
+  `../<other>/index.md`. Verify every edge resolves after the pass (the OKF
+  bar). No flat entity docs → no-op. Then bump the stamp to `8`.
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.
 

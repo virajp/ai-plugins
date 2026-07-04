@@ -44,13 +44,13 @@ the pause rules — never migrate autonomously.
 
 ## Doc Paths
 
-| Doc         | Path                                                       |
-| ----------- | ---------------------------------------------------------- |
-| Plan        | `docs/plans/<plan>.md`                                     |
-| Registry    | `docs/blueprint/architecture.md`                           |
-| Blueprint   | `docs/blueprint/<entity>.md` or `docs/blueprint/<entity>/` |
-| Conventions | `docs/blueprint/conventions.md`                            |
-| Environment | `docs/blueprint/environment.md`                            |
+| Doc         | Path                                                    |
+| ----------- | ------------------------------------------------------- |
+| Plan        | `docs/plans/<plan>.md`                                  |
+| Registry    | `docs/blueprint/architecture.md`                        |
+| Blueprint   | `docs/blueprint/<entity>/` (`index.md` ± surface files) |
+| Conventions | `docs/blueprint/conventions.md`                         |
+| Environment | `docs/blueprint/environment.md`                         |
 
 ## Pipeline (per step)
 

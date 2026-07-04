@@ -128,7 +128,10 @@ yet written as markdown links), or the **`2 → 3`** delta (a missing
 An entity already in the **folder form** (`docs/blueprint/<entity>/` with
 `index.md` + surface files) is a conforming layout, not drift — leave it as a
 folder; never collapse it into a single file. Each surface file still gets its
-own frontmatter under the `1 → 2` delta.
+own frontmatter under the `1 → 2` delta. Conversely, since format 8 a **flat**
+`<entity>.md` at the blueprint root **is** drift — the `7 → 8` delta `git mv`s
+it to `<entity>/index.md` and mechanically rewrites the inbound/outbound links
+(per format-versioning), leaving the root to the system docs alone.
 
 ### 4. Build the migration plan (dry-run)
 

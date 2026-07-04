@@ -171,8 +171,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `project-claude` (the vwf section `/vwf:setup` merges into a repo's
   CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved from
   the registry). All blueprint templates open with the OKF frontmatter block
-- `assets/examples/blueprint/` — a **format-7 conformance bundle** (`order.md`,
-  `customer.md`, `product.md`, `integration.md`, `conventions.md`,
+- `assets/examples/blueprint/` — a **format-8 conformance bundle** (`order/`,
+  `customer/` entity folders + `product.md`, `integration.md`, `conventions.md`,
   `design-system.md`, `environment.md`): a worked, format-valid entity slice
   where every relationship/reference/goal link resolves, the flow carries a
   worked Acceptance block + sequence diagram, and the order lifecycle its state
@@ -261,9 +261,10 @@ Docs the commands maintain live under `docs/blueprint/` (the outcome contract
 Metric readings appendix — registry `architecture.md`, `conventions.md`, the
 product-wide `design-system.md`, the per-project env-var/secret catalog
 `environment.md`, the cross-entity `integration.md` — every flow carrying an
-Acceptance block — and one entity doc per entity — either `<entity>.md` or, for
-a large entity, a folder `<entity>/` splitting the same sections across
-`index.md` + `data.md`/`api.md`/`jobs.md`/`screens.md`) and `docs/plans/`
+Acceptance block — and one entity **folder** per entity — `<entity>/` holding
+`index.md` alone when small, or `index.md` +
+`data.md`/`api.md`/`jobs.md`/`screens.md` when large; the blueprint root holds
+only the system docs, never a flat entity file) and `docs/plans/`
 (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
 commands/agents/templates are archived under `archived/vwf-<date>/`
 (`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
@@ -293,7 +294,10 @@ flowchart (in sync with the registry), a `sequenceDiagram` per `integration.md`
 flow (incl. the failure branch), and a `stateDiagram-v2` per entity lifecycle
 with ≥3 states or branching — always views of the authoritative tables/steps,
 never additions to them (format 6 is the `.config/vwf.yaml` move, described
-under `assets/vwf-config.md`).
+under `assets/vwf-config.md`); **format 8** folders-only entities — every entity
+at `docs/blueprint/<entity>/` (`index.md` alone when small; + surface files when
+large), the root reserved for the system docs, migrated by `setup` via
+`git mv` + mechanical link rewrite.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,

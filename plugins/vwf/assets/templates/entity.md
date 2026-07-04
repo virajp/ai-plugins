@@ -10,18 +10,18 @@ status: draft # draft | reviewed | stable
 
 <!-- OKF frontmatter above: type/title/description/status are mandatory;
      timestamp/owner/resource/tags are optional (see frontmatter-and-links).
-     For the folder form, index.md carries type: vwf-entity for the whole entity;
-     each surface file (data/api/jobs/screens) also opens with frontmatter, its
-     title naming the surface (e.g. "<Name> — Data"). See the blueprint-authoring
-     skill's frontmatter-and-links reference. -->
+     index.md carries type: vwf-entity for the whole entity; when the entity is
+     split, each surface file (data/api/jobs/screens) also opens with
+     frontmatter, its title naming the surface (e.g. "<Name> — Data"). See the
+     blueprint-authoring skill's frontmatter-and-links reference. -->
 
-<!-- One entity per doc. This template is the single-file form
-     (docs/blueprint/<entity>.md). For a large entity, use the folder form
-     (docs/blueprint/<entity>/) instead: the same sections split across files —
-     index.md holds Purpose…Invariants + References + Open Questions (above the
-     marker); data.md holds Data Model + Relationships + Concurrency; api.md the
-     API Surface; jobs.md Background Jobs; screens.md Screens. Both forms are
-     first-class; pick by size.
+<!-- One entity per FOLDER: docs/blueprint/<entity>/. This template is its
+     index.md. A small entity keeps every section below in this one file. A
+     large entity keeps index.md to Purpose…Invariants + References + Open
+     Questions (above the marker) and splits the engineering surfaces into
+     sibling files — data.md holds Data Model + Relationships + Concurrency;
+     api.md the API Surface; jobs.md Background Jobs; screens.md Screens. The
+     docs/blueprint/ root holds only the system docs — never a flat entity file.
 
      Stack-agnostic: section headings below map to projects
      via the Project Registry in docs/blueprint/architecture.md (by project `type`),
@@ -40,12 +40,12 @@ status: draft # draft | reviewed | stable
 
 One paragraph. What it is and why it exists. No implementation detail.
 
-Serves: [<goal name>](./product.md#goal-<slug>)
+Serves: [<goal name>](../product.md#goal-<slug>)
 
 <!-- Every entity serves at least one product.md goal — the OKF edge the
      blueprint-reviewer verifies. An entity no goal justifies is scope drift:
      either a goal is missing from product.md (run /vwf:product) or the entity
-     shouldn't exist. In the folder form this line lives in index.md. -->
+     shouldn't exist. This line lives in index.md. -->
 
 ## Out of Scope
 
@@ -89,14 +89,14 @@ stateDiagram-v2
 
 ## Relationships
 
-| Related entity          | Cardinality | Ownership | On delete | Required |
-| ----------------------- | ----------- | --------- | --------- | -------- |
-| [<Other>](./<other>.md) |             |           |           |          |
+| Related entity                 | Cardinality | Ownership | On delete | Required |
+| ------------------------------ | ----------- | --------- | --------- | -------- |
+| [<Other>](../<other>/index.md) |             |           |           |          |
 
 <!-- "Related entity" MUST be a markdown link to the other entity's blueprint doc
-     (the OKF edge): [Customer](./customer.md), or ../customer/index.md from a
-     folder surface file. This makes the relationship graph machine-traversable
-     and lets the reviewer verify every edge resolves.
+     (the OKF edge): [Customer](../customer/index.md) — one level up from this
+     entity's folder, into the sibling's. This makes the relationship graph
+     machine-traversable and lets the reviewer verify every edge resolves.
      Ownership: composition (child can't exist without the parent) vs reference.
      On delete: cascade / restrict / nullify. Multi-entity flows belong in
      docs/blueprint/integration.md, not here. -->
@@ -134,10 +134,10 @@ stateDiagram-v2
 
 <!-- Markdown links (OKF edges), not bare text — each must resolve. -->
 
-- [auth](./conventions.md#auth), [errors](./conventions.md#errors),
-  [ids](./conventions.md#ids) (only the cross-cutting sections this entity
+- [auth](../conventions.md#auth), [errors](../conventions.md#errors),
+  [ids](../conventions.md#ids) (only the cross-cutting sections this entity
   relies on)
-- [design-system](./design-system.md) — for any entity with Screens (tokens,
+- [design-system](../design-system.md) — for any entity with Screens (tokens,
   type, components)
 
 ## Open Questions

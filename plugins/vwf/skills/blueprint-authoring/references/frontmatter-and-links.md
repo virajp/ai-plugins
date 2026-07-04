@@ -55,10 +55,11 @@ status: draft                                      # required — draft | review
 | `vwf-plan`          | a `docs/plans/` cycle plan                      |
 | `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)  |
 
-For the **folder form**, `index.md` carries `type: vwf-entity` for the whole
-entity; each surface file (`data.md` / `api.md` / `jobs.md` / `screens.md`) also
-opens with frontmatter, its `title` naming the surface (e.g. `Orders — Data`).
-The reviewer still treats all files of a folder as **one** entity.
+Every entity is a **folder** (`docs/blueprint/<entity>/`): `index.md` carries
+`type: vwf-entity` for the whole entity; when the entity is split, each surface
+file (`data.md` / `api.md` / `jobs.md` / `screens.md`) also opens with
+frontmatter, its `title` naming the surface (e.g. `Orders — Data`). The reviewer
+treats all files of a folder as **one** entity.
 
 ## Links (the edges)
 
@@ -66,13 +67,13 @@ Cross-doc relationships are **typed markdown links**, never bare prose — so th
 graph is machine-traversable and every edge can be verified to resolve:
 
 - An entity's **Relationships** table links the related entity's doc in the
-  "Related entity" cell: `[Customer](./customer.md)` (or `../customer/index.md`
-  from a folder surface file).
+  "Related entity" cell: `[Customer](../customer/index.md)` — one level up from
+  this entity's folder, into the sibling's.
 - An entity's **References** link `conventions.md` anchors and
-  `design-system.md`: `[errors](./conventions.md#errors)`,
-  `[design-system](./design-system.md)`.
+  `design-system.md`: `[errors](../conventions.md#errors)`,
+  `[design-system](../design-system.md)`.
 - `integration.md` flows link each entity/service they touch:
-  `[Order](./order.md)`.
+  `[Order](./order/index.md)` (integration.md sits at the root, so no `../`).
 - `environment.md` links the injection mechanism it defers to:
   `[config](./conventions.md#config)`.
 
@@ -85,10 +86,10 @@ completeness bars.
 A small, format-valid bundle lives at
 `${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/` — a two-entity commerce slice
 where every edge resolves. Read
-[`order.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/order.md) as the
-entry point; it links `customer.md`, `conventions.md` (auth/errors/ids anchors),
-and `design-system.md`. The bundle also carries `environment.md` (type
-`vwf-environment`), linking `conventions.md#config`. Use it as the concrete
-reference for what a conforming entity doc looks like — frontmatter filled,
-relationships and references as resolving links, Screens deferring visual
-language to the design system.
+[`order/index.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/order/index.md)
+as the entry point; it links `customer/index.md`, `conventions.md`
+(auth/errors/ids anchors), and `design-system.md`. The bundle also carries
+`environment.md` (type `vwf-environment`), linking `conventions.md#config`. Use
+it as the concrete reference for what a conforming entity doc looks like —
+frontmatter filled, relationships and references as resolving links, Screens
+deferring visual language to the design system.

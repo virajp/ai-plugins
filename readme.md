@@ -220,7 +220,8 @@ docs/
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
 │   ├── environment.md           # per-project env-var/secret catalog (names, never values)
 │   ├── integration.md           # cross-entity flows + acceptance criteria per flow
-│   └── <entity>.md              # one doc per entity (or an <entity>/ folder)
+│   └── <entity>/                # one folder per entity — index.md alone when
+│       └── index.md             # small; + data/api/jobs/screens.md when large
 └── plans/                       # per-cycle plans (the diff to apply)
     ├── <date>-<time>-<slice>.md # incl. a "Gaps surfaced during execution" section
     └── archived/                # retired, completed plans
@@ -403,9 +404,12 @@ picks it up.
 Per entity, `blueprint` reads the registry, works out which engineering surfaces
 apply (data model, API, relationships, concurrency, jobs, screens), and elicits
 the gaps with you under the **`blueprint-authoring`** doctrine. It writes
-`docs/blueprint/order.md`, records any cross-entity flow or inter-service
-contract in `integration.md`, points each screen at the design system, and
-updates `conventions.md` for any cross-cutting decision raised.
+`docs/blueprint/order/index.md` (every entity is a folder — small entities are
+just `index.md`; large ones split surfaces into sibling files, so the blueprint
+root stays a clean list of system docs + entity folders), records any
+cross-entity flow or inter-service contract in `integration.md`, points each
+screen at the design system, and updates `conventions.md` for any cross-cutting
+decision raised.
 
 Complicated flows are **drawn, not just tabled**: every `integration.md` flow
 carries a mermaid sequence diagram (failure branch included), an entity
@@ -666,7 +670,7 @@ shown standalone here, as you'd run them for later updates.)
 
 # 3. Blueprint — the sweep runs until the whole product is covered
 /vwf:blueprint order
-#    → writes docs/blueprint/order.md (and continues down the coverage
+#    → writes docs/blueprint/order/index.md (and continues down the coverage
 #      worklist), each doc gated by the completeness reviewer; stamps
 #      blueprint.coverage: complete when the sweep finishes
 

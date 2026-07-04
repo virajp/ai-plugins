@@ -1,11 +1,12 @@
 # Entity Contract
 
-One entity, documented as **either** a single file `docs/blueprint/<entity>.md`
-**or** a folder `docs/blueprint/<entity>/` (`index.md` + `data.md` / `api.md` /
-`jobs.md` / `screens.md`) when it's too large for one file. Both are equally
-valid; the sections below are the same either way. Fill every applicable section
-to the **no-two-reasonable-answers** bar. Spend the precision budget on Data
-Model and API Surface.
+One entity, one **folder** `docs/blueprint/<entity>/`: a small entity holds
+every section in `index.md` alone; a large one adds the surface files (`data.md`
+/ `api.md` / `jobs.md` / `screens.md`). The sections below are the same either
+way, and inbound links (`<entity>/index.md`) stay stable when an entity outgrows
+one file. The `docs/blueprint/` root holds only the system docs — never a flat
+entity file. Fill every applicable section to the **no-two-reasonable-answers**
+bar. Spend the precision budget on Data Model and API Surface.
 
 - **Data Model** — every field: type, optional/nullable, default,
   validation/format. Enumerate **every** enum member; no open-ended types. State
@@ -43,8 +44,8 @@ The commands route each registry project onto a **doc unit** — `entity`
 in. All three use the **same sections, structure, and completeness bars** above;
 only *what* a doc pins down differs:
 
-- **entity** — one business entity (`docs/blueprint/<entity>.md`, or the folder
-  form). The default; everything above reads entity-first.
+- **entity** — one business entity (`docs/blueprint/<entity>/`). The default;
+  everything above reads entity-first.
 - **page** — a page or user journey, typically a `site` or `console` project.
   The unit is a screen/journey rather than a data entity.
 - **module** — a module boundary, typically a `packages` project: its public

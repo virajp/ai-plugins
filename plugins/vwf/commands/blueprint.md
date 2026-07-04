@@ -18,10 +18,12 @@ by **entity**: one entity holds the full-stack picture (data model, API,
 background jobs, screens), with stable product intent at the top and volatile
 engineering detail at the bottom, separated by a marker.
 
-An entity is documented as **either form, both first-class**: a single file
-`docs/blueprint/<entity>.md`, or a folder `docs/blueprint/<entity>/` that splits
-the same sections across files when the entity is too large to read in one
-sitting (see §4). Neither is a downgrade of the other; pick by size.
+An entity is always documented as a **folder** `docs/blueprint/<entity>/`: a
+small entity holds every section in a single `index.md`; a large one splits the
+engineering surfaces into sibling files (see §4). The `docs/blueprint/` **root
+holds only the system docs** (product, architecture, conventions, design-system,
+environment, integration) — entity content never sits flat at the root. A flat
+`<entity>.md` is pre-format-8 drift; `/vwf:setup` migrates it.
 
 **A run is a sweep, not a single entity.** The blueprint must describe the
 **whole product's** as-of state before anything downstream consumes it —
@@ -47,8 +49,7 @@ without ambiguity. Surface open decisions rather than guessing.
 | Product         | `docs/blueprint/product.md`                             |
 | Registry        | `docs/blueprint/architecture.md`                        |
 | Conventions     | `docs/blueprint/conventions.md`                         |
-| Entity (file)   | `docs/blueprint/<entity>.md`                            |
-| Entity (folder) | `docs/blueprint/<entity>/` (split form, see §4)         |
+| Entity          | `docs/blueprint/<entity>/` (`index.md` ± surfaces, §4)  |
 | Design system   | `docs/blueprint/design-system.md`                       |
 | Environment     | `docs/blueprint/environment.md`                         |
 | Integration     | `docs/blueprint/integration.md`                         |
@@ -62,8 +63,9 @@ entity-contract, integration-and-flows, ui-ux-contract, environment-catalog,
 quick-reference). Entities with an **API Surface** also apply the
 **rest-api-design** skill for endpoint contract depth.
 
-Reserved entity names: `architecture`, `conventions`, `design-system`,
-`environment`, `integration` (flat namespace in `blueprint/`).
+Reserved entity names: `product`, `architecture`, `conventions`,
+`design-system`, `environment`, `integration` — the root's system docs; an
+entity folder never takes one of these names.
 
 ---
 
@@ -133,7 +135,7 @@ records only the differences, never a per-platform copy of the screen.
 other units are first-class and use the **same doc structure, sections, and
 completeness bars**:
 
-- `entity` → `docs/blueprint/<entity>.md` (or folder form), unchanged.
+- `entity` → `docs/blueprint/<entity>/`, unchanged.
 - `page` (typically a `site` or `console`) → the doc's unit is a page or user
   journey; an engineering surface the unit genuinely lacks (e.g. Data Model for
   a static page) is written as `N/A — <reason>`, never silently omitted.
@@ -190,25 +192,24 @@ write Relationships/References as resolving markdown links — per the
 blueprint-authoring **frontmatter-and-links** reference. Set `status: draft`
 until the reviewer loop (§5) returns `NO GAPS`, then `reviewed`.
 
-Write the entity in **one of two equal forms** — same sections, same content,
-only the file boundary differs:
+Write the entity as a **folder** `docs/blueprint/<entity>/` — same sections
+either way, only the file boundary differs by size:
 
-- **Single file** — `docs/blueprint/<entity>.md`. Stable product sections
-  (Purpose … Invariants) above the marker; volatile engineering sections below.
-  The default for an entity that reads comfortably in one file.
-- **Folder** — `docs/blueprint/<entity>/`, the sections split across files:
-  `index.md` (Purpose … Invariants, References, Open Questions — the stable
-  product half) + `data.md` (Data Model, Relationships, Concurrency &
-  Consistency) + `api.md` (API Surface) + `jobs.md` (Background Jobs) +
-  `screens.md` (Screens). Omit any surface file whose project type is absent
-  from the registry. Use this when the entity is too large to read in one
-  sitting — a rough cue is **~400 lines, or all engineering surfaces present
-  with more than one job/screen each** — but it is a judgement call, not a
-  forced migration: either form is a valid blueprint at rest.
+- **Small entity** — everything in `index.md`: stable product sections (Purpose
+  … Invariants) above the marker; volatile engineering sections below. The
+  default for an entity that reads comfortably in one file.
+- **Large entity** — split across sibling files: `index.md` (Purpose …
+  Invariants, References, Open Questions — the stable product half) + `data.md`
+  (Data Model, Relationships, Concurrency & Consistency) + `api.md` (API
+  Surface) + `jobs.md` (Background Jobs) + `screens.md` (Screens). Omit any
+  surface file whose project type is absent from the registry. Split when the
+  entity is too large to read in one sitting — a rough cue is **~400 lines, or
+  all engineering surfaces present with more than one job/screen each** — a
+  judgement call, not a forced migration.
 
-Choose the form per entity; an existing entity may already be a folder — keep it
-a folder. Update `docs/blueprint/conventions.md` for any cross-cutting decisions
-raised.
+Because the folder is the unit, growing a small entity later just moves sections
+into sibling files — inbound links (`<entity>/index.md`) never break. Update
+`docs/blueprint/conventions.md` for any cross-cutting decisions raised.
 
 **Environment & secrets.** If this entity introduces an external integration or
 a credential/env var a project must consume (a third-party API key, signing key,
@@ -242,10 +243,10 @@ Don't burn a reviewer round on trivia.
 Loop until the doc passes:
 
 1. Dispatch a **fresh** `blueprint-reviewer` subagent (stateless) with **only**
-   the written entity doc — the single file, or **all files** of the folder form
-   (`index.md` + each surface file) — plus the relevant `conventions.md` anchors
-   and registry block it references, and the **current list of entity docs**
-   under `docs/blueprint/` (names only) — no conversation context. Also pass the
+   the written entity doc — **all files** of the entity folder (`index.md` + any
+   surface files) — plus the relevant `conventions.md` anchors and registry
+   block it references, and the **current list of entity docs** under
+   `docs/blueprint/` (names only) — no conversation context. Also pass the
    **product doc's goal-anchor list** (`#goal-<slug>` names only) so it can
    verify the entity's goal links. When this pass **touched `integration.md`**,
    pass that doc too and name the flows added/changed — the reviewer applies its
@@ -286,10 +287,10 @@ verbatim.
 ### 7. Reconcile inbound links (rename / delete)
 
 When this pass **renames** or **removes** an entity, no dangling OKF edge may be
-left behind. Grep `docs/blueprint/` (every entity doc, `conventions.md`,
+left behind. Grep `docs/blueprint/` (every entity folder, `conventions.md`,
 `integration.md`, `environment.md`) and the active plans under `docs/plans/` for
-inbound markdown links to the old doc — both the file form `./<entity>.md`
-**and** the folder form `./<entity>/index.md`.
+inbound markdown links to the old doc — the folder form `./<entity>/index.md`
+(and the legacy flat form `./<entity>.md` in a not-yet-migrated repo).
 
 - **Rename** → update every inbound link to the new path in this same pass.
 - **Delete** → list every inbound link and require the user to resolve each

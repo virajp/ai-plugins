@@ -20,8 +20,8 @@ An Order records a customer's intent to buy a set of items at agreed prices, and
 tracks that purchase from placement through fulfilment. It is the system of
 record for what was bought, by whom, and for how much.
 
-Serves: [Reliable ordering](./product.md#goal-reliable-ordering),
-[Trusted refunds](./product.md#goal-trusted-refunds)
+Serves: [Reliable ordering](../product.md#goal-reliable-ordering),
+[Trusted refunds](../product.md#goal-trusted-refunds)
 
 ## Out of Scope
 
@@ -73,8 +73,8 @@ stateDiagram-v2
 
 | Field          | Type            | Optional | Default   | Validation / Format                                |
 | -------------- | --------------- | -------- | --------- | -------------------------------------------------- |
-| `id`           | string          | no       | generated | See [ids](./conventions.md#ids)                    |
-| `customer_id`  | string          | no       | —         | FK to [Customer](./customer.md)                    |
+| `id`           | string          | no       | generated | See [ids](../conventions.md#ids)                   |
+| `customer_id`  | string          | no       | —         | FK to [Customer](../customer/index.md)             |
 | `status`       | enum            | no       | `placed`  | one of: `placed`, `paid`, `fulfilled`, `cancelled` |
 | `total_amount` | integer (minor) | no       | —         | ≥ 0, in the currency's smallest unit               |
 | `currency`     | enum            | no       | —         | ISO 4217: one of `USD`, `EUR`, `GBP`               |
@@ -83,9 +83,9 @@ stateDiagram-v2
 
 ## Relationships
 
-| Related entity            | Cardinality | Ownership | On delete | Required |
-| ------------------------- | ----------- | --------- | --------- | -------- |
-| [Customer](./customer.md) | N–1         | reference | restrict  | yes      |
+| Related entity                   | Cardinality | Ownership | On delete | Required |
+| -------------------------------- | ----------- | --------- | --------- | -------- |
+| [Customer](../customer/index.md) | N–1         | reference | restrict  | yes      |
 
 <!-- N Orders reference 1 Customer. Reference (not composition): an Order is not a
      child of Customer. restrict: a Customer with orders cannot be hard-deleted. -->
@@ -106,8 +106,8 @@ stateDiagram-v2
 | GET    | /orders/{id}        | Owner / staff | —        | Order    | `not_found`, `forbidden` | yes        |
 | POST   | /orders/{id}/cancel | Owner / staff | —        | Order    | `conflict`, `forbidden`  | yes        |
 
-<!-- Error envelope: see [errors](./conventions.md#errors). Auth: see
-     [auth](./conventions.md#auth). -->
+<!-- Error envelope: see [errors](../conventions.md#errors). Auth: see
+     [auth](../conventions.md#auth). -->
 
 ## Screens → web
 
@@ -117,15 +117,15 @@ stateDiagram-v2
 | Order history | /orders      | GET /orders      | loading · error · empty (first order) | Open detail      | —               |
 
 <!-- Visual language (tokens, type, spacing, motion, component behavior) comes
-     from [design-system](./design-system.md); record only deviations here. -->
+     from [design-system](../design-system.md); record only deviations here. -->
 
 ## References
 
 <!-- Markdown links (OKF edges), not bare text — each resolves. -->
 
-- [auth](./conventions.md#auth), [errors](./conventions.md#errors),
-  [ids](./conventions.md#ids)
-- [design-system](./design-system.md) — Order has Screens
+- [auth](../conventions.md#auth), [errors](../conventions.md#errors),
+  [ids](../conventions.md#ids)
+- [design-system](../design-system.md) — Order has Screens
 
 ## Open Questions
 

@@ -12,13 +12,14 @@ status: reviewed
 
 ### Order cancellation & refund
 
-- Trigger: a customer or staff member cancels an [Order](./order.md) in `paid`.
+- Trigger: a customer or staff member cancels an [Order](./order/index.md) in
+  `paid`.
 - Steps (entity/service each touches):
-  1. The service validates the order is cancellable ([Order](./order.md):
+  1. The service validates the order is cancellable ([Order](./order/index.md):
      `paid`, before fulfilment) and moves it to `cancelled`.
   2. The worker requests the refund from the payment provider and records the
-     outcome on the [Order](./order.md).
-  3. The [Customer](./customer.md) is notified of the refund result.
+     outcome on the [Order](./order/index.md).
+  3. The [Customer](./customer/index.md) is notified of the refund result.
 - Consistency boundary (atomic vs eventual): the state move to `cancelled` is
   atomic; the refund and notification are eventual.
 - Failure handling (compensation / rollback): a failed refund never reverts the

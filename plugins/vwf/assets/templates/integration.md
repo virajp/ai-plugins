@@ -15,7 +15,8 @@ status: draft # draft | reviewed | stable
      what guarantees, never the queue/library/transport. Promote to
      docs/blueprint/flows/ when this grows past a handful of flows.
      Name each entity/service a flow touches as a markdown link to its blueprint
-     doc (the OKF edge), e.g. [Order](./order.md) — so the flow graph resolves. -->
+     doc (the OKF edge), e.g. [Order](./order/index.md) — so the flow graph
+     resolves. -->
 
 ## Flows
 

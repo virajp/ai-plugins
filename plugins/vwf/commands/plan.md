@@ -28,13 +28,13 @@ it. When a planning decision is genuinely open, elicit it following the
 
 ## Doc Paths
 
-| Doc               | Path                                                       |
-| ----------------- | ---------------------------------------------------------- |
-| Registry          | `docs/blueprint/architecture.md`                           |
-| Conventions       | `docs/blueprint/conventions.md`                            |
-| Blueprint (slice) | `docs/blueprint/<entity>.md` or `docs/blueprint/<entity>/` |
-| Plan              | `docs/plans/<date>-<time>-<slice>.md`                      |
-| Plan template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan.md`           |
+| Doc               | Path                                                    |
+| ----------------- | ------------------------------------------------------- |
+| Registry          | `docs/blueprint/architecture.md`                        |
+| Conventions       | `docs/blueprint/conventions.md`                         |
+| Blueprint (slice) | `docs/blueprint/<entity>/` (`index.md` ± surface files) |
+| Plan              | `docs/plans/<date>-<time>-<slice>.md`                   |
+| Plan template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan.md`        |
 
 ---
 

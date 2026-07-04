@@ -37,7 +37,7 @@ else belongs to `plan` (code-aware realization) or `execute` (mechanical). Read
 | [Environment & secrets](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/environment-catalog.md)       | The `environment.md` catalog: env-var/secret inventory, classification, no values, the config-mechanism line             |
 | [Frontmatter & links](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/frontmatter-and-links.md)       | The OKF profile: mandatory frontmatter, the `type` vocabulary, and typed relationship/reference links                    |
 | [Quick reference](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/quick-reference.md)                 | The sort test + per-surface completeness checklist (also the reviewer's bar)                                             |
-| [Worked example](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/order.md)                                        | A format-valid conformance bundle (Order/Customer + conventions + design-system + environment) where every edge resolves |
+| [Worked example](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/order/index.md)                                  | A format-valid conformance bundle (Order/Customer + conventions + design-system + environment) where every edge resolves |
 
 For API contract depth (resources, methods, errors, pagination, idempotency,
 versioning), use the **rest-api-design** skill — do not restate it here.

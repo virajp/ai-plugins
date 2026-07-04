@@ -31,8 +31,9 @@ choices are `plan`'s job — not the blueprint's.
   no values (if the system has an external integration/secret).
 - `docs/blueprint/integration.md` — cross-entity flows (each with acceptance
   criteria) + inter-service contracts.
-- `docs/blueprint/<entity>.md` (or `docs/blueprint/<entity>/` for a large
-  entity) — one contract per entity.
+- `docs/blueprint/<entity>/` — one folder per entity: `index.md` alone when
+  small, plus `data.md`/`api.md`/`jobs.md`/`screens.md` when large. The
+  blueprint root holds only the system docs above.
 
 **The blueprint is an OKF bundle.** `docs/blueprint/` is an Open Knowledge
 Format (OKF) v0.1 bundle — every doc is a typed concept (YAML frontmatter) and
