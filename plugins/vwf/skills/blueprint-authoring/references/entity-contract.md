@@ -13,7 +13,14 @@ Model and API Surface.
 - **Actors & Actions** — every action has an actor, a precondition, an
   **explicit authorization** entry, and an observable outcome.
 - **Lifecycle** — every state transition has a trigger, a guard, and a side
-  effect. No implied-but-unlisted transitions.
+  effect. No implied-but-unlisted transitions. A lifecycle with **three or more
+  states, or any branching**, also carries a mermaid `stateDiagram-v2` beside
+  the transition table — a user lifecycle read row-by-row is exactly where a
+  contract stops being scannable. The diagram shows the same states and
+  transitions as the table (which stays authoritative), nothing more; follow the
+  documentation-standards diagram conventions. The same judgement applies to a
+  **job pipeline** or **screen navigation** a table alone can't show — diagram
+  it (flowchart) when the shape matters.
 - **Invariants** — business rules that must never be violated, stated so they
   can be turned into a test.
 - **Concurrency & consistency** — how concurrent writes resolve (optimistic

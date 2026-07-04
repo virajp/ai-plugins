@@ -10,13 +10,17 @@ Questions.
 - **Data** — every field typed; optionality/default stated; enums fully
   enumerated; no "two reasonable answers".
 - **Actions** — each has actor, precondition, authorization, observable outcome.
-- **Lifecycle** — each transition has trigger, guard, side effect.
+- **Lifecycle** — each transition has trigger, guard, side effect; ≥3 states or
+  branching → a `stateDiagram-v2` beside the table.
 - **Concurrency** — concurrent-write resolution and idempotency stated for
   mutating actions.
 - **API** — see the rest-api-design skill; error cases + idempotency per
   endpoint.
 - **Relationships** — cardinality, ownership, cascade, required — per relation.
-- **Flows** — steps, consistency boundary, failure compensation, idempotency.
+- **Flows** — steps, consistency boundary, failure compensation, idempotency;
+  every flow carries a `sequenceDiagram` (incl. the failure branch).
+- **Diagrams** — views of the tables/steps, never the contract itself: must not
+  add or contradict; entity/service/state names only (code-independent).
 - **Inter-service** — event/call contracts with delivery and failure semantics.
 - **UI / UX** — navigation, interaction pattern, all states, form UX; visual
   language referenced from the design system, not re-decided.

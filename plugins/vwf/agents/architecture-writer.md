@@ -49,18 +49,23 @@ You receive:
 1. **Prose sections** — System Overview, Projects (one subsection per project),
    How Projects Interconnect, Hosting & Deployment, Cross-cutting Decisions
    table.
-2. **Project Registry** — the `` ```yaml `` block with a `projects:` list (one
+2. **System-shape diagram** — the mermaid `flowchart` in System Overview: one
+   node per registry project (labelled `name (type)`), edges from `depends_on`
+   and the elicited interconnects. Regenerate it whenever the registry changes —
+   a stale diagram is a sync violation like any prose/registry mismatch.
+3. **Project Registry** — the `` ```yaml `` block with a `projects:` list (one
    entry per project) and a `cross_cutting:` block. The registry describes the
    system as it is — enforcement opt-outs live in `.config/vwf.yaml`, which the
    orchestrator maintains; never write a `deviations:` block here.
-3. **Cross-cutting Decisions** — the prose table and the `cross_cutting:` yaml
+4. **Cross-cutting Decisions** — the prose table and the `cross_cutting:` yaml
    block must match each other exactly.
 
 ### Sync rule
 
 Every project in the registry must appear in the prose and vice versa. The
-cross-cutting prose table must match the `cross_cutting` yaml block. If
-something is in one place but not the other, add it.
+cross-cutting prose table must match the `cross_cutting` yaml block. The
+system-shape diagram shows exactly the registry's projects — no extra or missing
+nodes. If something is in one place but not the other, add it.
 
 ### Unresolved items
 

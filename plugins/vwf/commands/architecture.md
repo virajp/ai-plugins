@@ -180,6 +180,9 @@ Check:
 - Every project in the prose appears in the `projects:` yaml list.
 - Every key in the `cross_cutting:` yaml block appears in the Cross-cutting
   Decisions prose table, and vice versa.
+- The System Overview carries the **system-shape mermaid flowchart**, and its
+  nodes are exactly the registry's projects — a missing diagram, an extra node,
+  or a project with no node is a sync finding like any other.
 
 **(b) No leftover placeholders**
 

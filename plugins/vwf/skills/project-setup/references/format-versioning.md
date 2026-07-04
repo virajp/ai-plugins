@@ -7,8 +7,8 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 1
-blueprint_format: 6
+config_format: 2
+blueprint_format: 7
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,10 +29,29 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 6.** Format 6 = format 5 **plus** the **vwf config**: the
-stamp moves from `docs/blueprint/.vwf.yml` to `.config/vwf.yaml` and becomes the
-operating config (per the vwf-config asset) — carrying the harness inventory,
-the **`enforcement:` block** (structure/stack/rule opt-outs, moved out of the
+**Current format = 7.** Format 7 = format 6 **plus** **flow diagrams as contract
+views** — complicated flows must be readable at a glance, not only as tables
+(see the blueprint-authoring **integration-and-flows** and **entity-contract**
+references):
+
+- `architecture.md` System Overview carries a **mermaid `flowchart`** of the
+  system shape — one node per registry project, edges for the interconnects —
+  kept in sync with the registry.
+- Every flow in `integration.md` carries a **mermaid `sequenceDiagram`** of its
+  steps (participants = the entities/services the steps name), including the
+  failure/compensation branch.
+- Every entity **Lifecycle** with three or more states, or any branching,
+  carries a **mermaid `stateDiagram-v2`** alongside the transition table.
+
+Diagrams **complement** the tables/steps (which stay the machine-checkable
+contract) and follow the markdown plugin's documentation-standards diagram
+conventions; they are code-independent like everything else — entity, service,
+and state names only.
+
+Format 6 = format 5 **plus** the **vwf config**: the stamp moves from
+`docs/blueprint/.vwf.yml` to `.config/vwf.yaml` and becomes the operating config
+(per the vwf-config asset) — carrying the harness inventory, the
+**`enforcement:` block** (structure/stack/rule opt-outs, moved out of the
 registry, which now purely describes the system), per-project nuances (e.g.
 Flutter `platforms`), pipeline knobs, verify environments, and the explicit
 mempalace wing.
@@ -139,6 +158,15 @@ the current format and apply the delta:
   and remove it from `docs/blueprint/architecture.md`; leave
   `pipeline`/`environments`/`docs_sync` absent (defaults) unless the user pins
   them. Then bump the stamp to `6`.
+- **`6 → 7`** → add the diagrams, **derived from content that already exists**
+  (a mechanical migration — no elicitation): generate the system-shape
+  `flowchart` in `architecture.md` from the registry (`projects` +
+  `depends_on`/interconnect prose); a `sequenceDiagram` per `integration.md`
+  flow from its written steps + failure handling; a `stateDiagram-v2` per entity
+  Lifecycle table with ≥3 states or branching. A diagram must not add or
+  contradict anything its table says — the table stays authoritative. No flows /
+  no qualifying lifecycles → those parts are no-ops, not drift. Then bump the
+  stamp to `7`.
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.
 

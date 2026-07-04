@@ -131,10 +131,10 @@ Each phase answers one question:
   product-wide, organized by entity. It is a **code-independent technical
   contract**: it pins every decision that has more than one reasonable answer
   *and* is true regardless of how the code is written — data, API,
-  relationships, concurrency, integration flows (each with acceptance criteria),
-  and UI/UX — so `plan` and `execute` never have to ask or assume.
-  Reuse-vs-build, file placement, ordering, and library choices are `plan`'s
-  job, not the blueprint's.
+  relationships, concurrency, integration flows (each with acceptance criteria
+  and a sequence diagram), and UI/UX — so `plan` and `execute` never have to ask
+  or assume. Reuse-vs-build, file placement, ordering, and library choices are
+  `plan`'s job, not the blueprint's.
 - **Plan** answers *what changes for this one slice, and in what order?* — a
   diff, not a re-blueprint, scoped to a single entity or section plus any
   unbuilt entities it depends on.
@@ -363,9 +363,10 @@ types, how they interconnect, where they deploy — records each project's stack
 from the [enforced reference stacks](#the-structure--stacks-it-enforces)
 (stated, not offered as a menu; an explicit override becomes an `enforcement:`
 entry in `.config/vwf.yaml`), and writes `docs/blueprint/architecture.md`,
-including the machine-readable Project Registry the other commands depend on.
-Re-run it any time the topology changes; it asks only about genuine deltas,
-never re-eliciting what's confirmed.
+including the machine-readable Project Registry the other commands depend on and
+a system-shape mermaid diagram kept in sync with it. Re-run it any time the
+topology changes; it asks only about genuine deltas, never re-eliciting what's
+confirmed.
 
 This is the one doc that *does* name technologies and infrastructure — the
 blueprint deliberately doesn't.
@@ -405,6 +406,13 @@ the gaps with you under the **`blueprint-authoring`** doctrine. It writes
 `docs/blueprint/order.md`, records any cross-entity flow or inter-service
 contract in `integration.md`, points each screen at the design system, and
 updates `conventions.md` for any cross-cutting decision raised.
+
+Complicated flows are **drawn, not just tabled**: every `integration.md` flow
+carries a mermaid sequence diagram (failure branch included), an entity
+lifecycle with three or more states carries a state diagram beside its
+transition table, and `architecture.md` carries a system-shape flowchart kept in
+sync with the registry. Diagrams are views of the authoritative tables — the
+reviewer flags one that adds, contradicts, or goes missing.
 
 A fresh **reviewer subagent** then checks the doc against a completeness
 checklist — data, relationships, concurrency, API, and UI/UX, plus a

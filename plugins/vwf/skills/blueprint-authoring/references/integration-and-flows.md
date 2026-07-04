@@ -28,6 +28,15 @@ flow too; the cross-project boundary is what makes it one. For each:
   the outcome, never the test file, fixture, or tool. These are the contract
   `plan` turns into E2E test steps and `execute`'s **acceptance stage** verifies
   end-to-end.
+- a **diagram**: every flow carries a mermaid `sequenceDiagram` of its steps —
+  participants are the entities/services the steps name, and the
+  failure/compensation path appears as an `alt`/`else` branch. The diagram is a
+  *view* of the written steps, never a replacement: it must not add or
+  contradict anything the steps say (the steps stay the authoritative,
+  link-resolving contract). Code-independent like the rest — participant names
+  are entities/services, never classes, queues, or endpoints. Follow the
+  markdown plugin's documentation-standards diagram conventions
+  (type-by-purpose, quoted labels, renderable on GitHub, no init directives).
 
 **Inter-service contracts (system doc).** When projects integrate:
 

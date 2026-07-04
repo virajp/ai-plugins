@@ -61,6 +61,17 @@ Serves: [<goal name>](./product.md#goal-<slug>)
 | From | To | Trigger | Guard | Side effect |
 | ---- | -- | ------- | ----- | ----------- |
 
+<!-- With three or more states, or any branching, also draw the lifecycle as a
+     mermaid stateDiagram-v2 below the table — same states and transitions as
+     the table (which stays authoritative), nothing more. Delete the block for
+     a trivial (≤2-state, linear) lifecycle. -->
+
+```mermaid
+stateDiagram-v2
+    [*] --> <state>
+    <state> --> <next>: <trigger>
+```
+
 ## Invariants
 
 - Business rules that must never be violated.

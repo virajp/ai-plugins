@@ -26,6 +26,20 @@ status: draft # draft | reviewed | stable
 - Consistency boundary (atomic vs eventual):
 - Failure handling (compensation / rollback):
 - Idempotency:
+- Diagram:
+  <!-- Every flow carries a mermaid sequenceDiagram of its steps — participants
+       are the entities/services named above; the failure/compensation path is
+       an alt/else branch. A view of the steps, never the contract: it must not
+       add or contradict them. Code-independent participant names. -->
+  ```mermaid
+  sequenceDiagram
+      participant A as <Entity/Service>
+      participant B as <Entity/Service>
+      A->>B: <step>
+      alt <failure>
+          B-->>A: <compensation>
+      end
+  ```
 - Acceptance:
   <!-- Observable Given/When/Then outcomes — what a user or system can verify
        from the outside once the flow ran. At least one success and one failure

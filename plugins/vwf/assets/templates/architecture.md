@@ -22,9 +22,17 @@ which projects are cloud-hosted and share the common packages, and which run on
 the client device and ship through the app stores. State the shared-package
 strategy in one or two sentences. -->
 
-<!-- Draw a simple diagram if it helps. Use mermaid only — for system topology a
-`flowchart`/`graph`. Follow the documentation-standards diagram conventions
-(type-by-purpose, quoted labels, GitHub/GitLab-renderable, no init directives). -->
+<!-- Required: the system shape as a mermaid flowchart — one node per registry
+project, edges for the interconnects (who calls whom / depends_on). A view of
+the registry, kept in sync with it: every registry project appears as a node,
+and no node exists without a registry entry. Follow the documentation-standards
+diagram conventions (type-by-purpose, quoted labels, GitHub/GitLab-renderable,
+no init directives). -->
+
+```mermaid
+flowchart LR
+    A["<project> (<type>)"] --> B["<project> (<type>)"]
+```
 
 ## Projects
 

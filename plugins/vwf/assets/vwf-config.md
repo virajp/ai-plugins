@@ -12,7 +12,7 @@ the old stamp at `docs/blueprint/.vwf.yml`.
 
 ```yaml
 config_format: 2 # this file's own schema version — setup migrates it
-blueprint_format: 6 # the docs/blueprint format stamp
+blueprint_format: 7 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing

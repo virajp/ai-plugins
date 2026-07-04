@@ -148,7 +148,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `architecture-writer`
 - `skills/` — `rest-api-design`; `blueprint-authoring` (the
   contract-vs-realization doctrine + per-surface completeness bars — incl. the
-  per-flow Acceptance block and the entity `Serves:` goal edge — + the doc-unit
+  per-flow Acceptance block **and sequence diagram**, the lifecycle
+  state-diagram bar, and the entity `Serves:` goal edge — + the doc-unit
   doctrine, auto-applies on `docs/blueprint/**` and — for frontmatter/link
   hygiene only — `docs/plans/**`); `design-system` (the UX/visual-contract
   doctrine — tokens, typography, spacing, motion, accessibility,
@@ -170,12 +171,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `project-claude` (the vwf section `/vwf:setup` merges into a repo's
   CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved from
   the registry). All blueprint templates open with the OKF frontmatter block
-- `assets/examples/blueprint/` — a **format-5 conformance bundle** (`order.md`,
+- `assets/examples/blueprint/` — a **format-7 conformance bundle** (`order.md`,
   `customer.md`, `product.md`, `integration.md`, `conventions.md`,
   `design-system.md`, `environment.md`): a worked, format-valid entity slice
-  where every relationship/reference/goal link resolves and the flow carries a
-  worked Acceptance block. Referenced from the blueprint-authoring skill as the
-  concrete "what good looks like"; its asset-refs are covered by `plugins:check`
+  where every relationship/reference/goal link resolves, the flow carries a
+  worked Acceptance block + sequence diagram, and the order lifecycle its state
+  diagram. Referenced from the blueprint-authoring skill as the concrete "what
+  good looks like"; its asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `product`, `blueprint`, `plan`, `architecture`, `design-system`, `setup`, and
   `feedback`; incl. the **parked-scope rule** — an answer that goes beyond the
@@ -285,7 +287,13 @@ so `/vwf:setup` migrates stale repos on next use. **Format 3** added the
 `vwf-environment` type and the `environment.md` catalog; **format 4** the
 Acceptance block on every `integration.md` flow (what the execute acceptance
 stage verifies); **format 5** the `vwf-product` type + `product.md` foundation
-and the entity `Serves:` goal links (see Foundations below).
+and the entity `Serves:` goal links (see Foundations below); **format 7**
+mermaid diagrams as contract views — the `architecture.md` system-shape
+flowchart (in sync with the registry), a `sequenceDiagram` per `integration.md`
+flow (incl. the failure branch), and a `stateDiagram-v2` per entity lifecycle
+with ≥3 states or branching — always views of the authoritative tables/steps,
+never additions to them (format 6 is the `.config/vwf.yaml` move, described
+under `assets/vwf-config.md`).
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,

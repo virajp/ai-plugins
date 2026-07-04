@@ -48,6 +48,17 @@ Serves: [Reliable ordering](./product.md#goal-reliable-ordering),
 | `paid`   | `fulfilled` | Staff fulfil          | All items in stock         | Emit `order.fulfilled` event |
 | `paid`   | `cancelled` | Customer/staff cancel | Before fulfilment          | Trigger refund flow          |
 
+```mermaid
+stateDiagram-v2
+    [*] --> placed: "customer places"
+    placed --> paid: "payment authorized"
+    placed --> cancelled: "customer/staff cancel"
+    paid --> fulfilled: "staff fulfil"
+    paid --> cancelled: "cancel before fulfilment"
+    fulfilled --> [*]
+    cancelled --> [*]
+```
+
 ## Invariants
 
 - An order's `total_amount` equals the sum of its line-item subtotals at

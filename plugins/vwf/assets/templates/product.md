@@ -42,7 +42,9 @@ status: draft # draft | reviewed | stable
 
 <!-- The ordered "build next" list over entities/flows — what /vwf:blueprint
      and /vwf:plan pick up first, and why. Re-rank on each /vwf:product re-run;
-     history lives in git. -->
+     history lives in git. With three or more slices, also draw the build order
+     as a small mermaid flowchart (slice names only) so the roadmap reads at a
+     glance — a view of the table, which stays authoritative. -->
 
 | Rank | Slice (entity / flow) | Serves goal | Why now |
 | ---- | --------------------- | ----------- | ------- |

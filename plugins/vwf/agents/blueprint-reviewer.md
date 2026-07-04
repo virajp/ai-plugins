@@ -45,6 +45,10 @@ Verify, for the entity doc under review:
 - [ ] Every action has an explicit Authorization entry.
 - [ ] Every state transition has a trigger, guard, and side effect; none implied
       but unlisted.
+- [ ] A Lifecycle with **three or more states, or any branching**, also carries
+      a mermaid `stateDiagram-v2`. The diagram shows exactly the table's states
+      and transitions — a state or transition present in one but not the other
+      is a gap (the table is authoritative).
 - [ ] Every endpoint lists its error cases and idempotency.
 - [ ] Every relationship lists cardinality, ownership, on-delete, and required,
       and its "Related entity" cell is a **markdown link** to the other entity's
@@ -97,6 +101,11 @@ flow this pass added or changed** (the orchestrator names them):
       criterion naming a test file, fixture, tool, or internal function is a
       code-independence gap; a criterion that is not observable ("the workflow
       completes") is a gap.
+- [ ] The flow carries a mermaid `sequenceDiagram` whose participants are the
+      entities/services its steps name, including the failure/compensation
+      branch. A missing diagram is a gap; a diagram that adds or contradicts a
+      step is a gap (the written steps are authoritative); a participant named
+      as a class, queue, or endpoint is a code-independence gap.
 
 **Doc unit.** The orchestrator tells you the doc's `doc_unit` (`entity` / `page`
 / `module`). For a `page` or `module` doc, an engineering surface written as

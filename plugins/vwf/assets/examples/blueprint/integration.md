@@ -27,6 +27,28 @@ status: reviewed
 - Idempotency: cancelling an already-`cancelled` order is a no-op; the refund
   request carries the order id as its idempotency key, so a retry never
   double-refunds.
+- Diagram:
+  ```mermaid
+  sequenceDiagram
+      participant C as Customer
+      participant S as Service
+      participant O as Order
+      participant W as Worker
+      participant P as Payment provider
+      C->>S: "cancel order"
+      S->>O: "validate cancellable (paid, before fulfilment)"
+      O-->>S: "state → cancelled (atomic)"
+      S->>W: "request refund (order id as idempotency key)"
+      alt "refund succeeds"
+          W->>P: "refund full amount"
+          P-->>W: "confirmed"
+          W->>O: "record refund outcome"
+          W->>C: "cancellation notice"
+      else "provider unavailable"
+          W->>O: "mark refund failed/pending (order stays cancelled)"
+          W->>C: "refund delayed notice"
+      end
+  ```
 - Acceptance:
   - Given a `paid` order before fulfilment, when its owner cancels it, then the
     order reads `cancelled`, the payment provider records exactly one refund for
