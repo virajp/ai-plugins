@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import {
@@ -123,4 +124,55 @@ test("subagent panel renders a tasks payload", () => {
   const row = JSON.parse(res.stdout.trim());
   assert.equal(row.id, "t1");
   assert.ok(row.content.length > 0);
+});
+
+// --- context-caps hook: per-repo autopilot_caps from .config/vwf.yaml ---
+
+const CAPS_HOOK = join(HERE, "..", "tools", "statusline", "context-caps.js");
+
+// Run the caps hook with a seeded usage file and an optional repo dir (cwd).
+// Distinct session ids per call keep the per-session debounce out of the way.
+function runCapsHook(sessionId, usage, cwd) {
+  const usageDir = join(tmp, "caps-usage");
+  mkdirSync(usageDir, { recursive: true });
+  writeFileSync(join(usageDir, `${sessionId}.json`), JSON.stringify(usage));
+  return spawnSync(process.execPath, [CAPS_HOOK], {
+    input: JSON.stringify({ session_id: sessionId, cwd }),
+    encoding: "utf8",
+    env: { ...process.env, AI_PLUGINS_USAGE_DIR: usageDir },
+  });
+}
+
+test("caps hook: silent under the default cap, fires above it", () => {
+  const quiet = runCapsHook("caps-a", { ctxPct: 50 });
+  assert.equal(quiet.status, 0, quiet.stderr);
+  assert.equal(quiet.stdout, "", "no directive expected under the cap");
+
+  const loud = runCapsHook("caps-b", { ctxPct: 70 });
+  assert.equal(loud.status, 0, loud.stderr);
+  assert.ok(loud.stdout.includes("cap 65%"), loud.stdout);
+});
+
+test("caps hook: repo config tightens the context cap", () => {
+  const repo = join(tmp, "repo-tight");
+  mkdirSync(join(repo, ".config"), { recursive: true });
+  writeFileSync(
+    join(repo, ".config", "vwf.yaml"),
+    "pipeline:\n  autopilot_caps:\n    context: 40\n",
+  );
+  const res = runCapsHook("caps-c", { ctxPct: 50 }, repo);
+  assert.equal(res.status, 0, res.stderr);
+  assert.ok(res.stdout.includes("cap 40%"), res.stdout);
+});
+
+test("caps hook: repo config can never loosen a cap", () => {
+  const repo = join(tmp, "repo-loose");
+  mkdirSync(join(repo, ".config"), { recursive: true });
+  writeFileSync(
+    join(repo, ".config", "vwf.yaml"),
+    "pipeline:\n  autopilot_caps:\n    context: 90\n",
+  );
+  const res = runCapsHook("caps-d", { ctxPct: 70 }, repo);
+  assert.equal(res.status, 0, res.stderr);
+  assert.ok(res.stdout.includes("cap 65%"), res.stdout);
 });

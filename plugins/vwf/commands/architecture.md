@@ -103,11 +103,12 @@ Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
 **Reference stacks are enforced.** Every project type has a reference stack doc
 at `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md` — read it and record that
 stack; do not offer alternatives. The escape hatch: if the user explicitly
-objects, honor the stack they name and add a `deviations:` entry to the registry
-(`scope: stack/<project-name>`, the choice, and their reason). A recorded
-deviation is settled — never re-litigate it on update runs. In update mode, an
-existing project whose stack differs from the reference **without** a recorded
-deviation is a delta to raise: align it or record the deviation.
+objects, honor the stack they name — the registry records the **actual** stack —
+and record the opt-out yourself under `enforcement.stacks` in `.config/vwf.yaml`
+(`<project>: { choice, reason }`, per the vwf-config asset). A recorded
+deviation is settled — never re-litigate it on update runs. In update mode, a
+project whose stack differs from the reference **without** an
+`enforcement.stacks` entry is a delta to raise: align it or record the opt-out.
 
 ### 3c — Cross-cutting decisions
 
@@ -189,14 +190,9 @@ Check:
 
 - Every `depends_on` entry names a real project in the `projects:` list (no
   dangling reference).
-- Every `deviations` entry (if the block exists) has a valid scope —
-  `structure`, `stack/<project>` naming a real project, or `rules/<rule-id>` —
-  plus a choice and a reason.
-- Every `type` is from
-  `service | worker | packages | site | frontend |
-  console`, every `doc_unit`
-  from `entity | page | module`, and every `capabilities` token from the
-  Capability Vocabulary asset (or an explicit user-added "Other").
+- Every `enforcement.stacks`/`enforcement.rules` entry in `.config/vwf.yaml`
+  (when the file exists) names a real project / a known rule and carries a
+  choice and a reason — the registry itself holds no `deviations:` block.
 - No dependency cycle: the `depends_on` edges form a DAG.
 
 **On a finding:** surface it to the user, ask for the missing information, then
@@ -212,7 +208,13 @@ Skip silently if mempalace is unavailable.
 
 ---
 
-## Step 7 — Commit
+## Step 7 — Docs sync & commit
+
+**Docs sync (update mode).** When this run changed the system's shape — a
+project added/removed, a stack or deviation recorded, hosting changed — apply
+`${CLAUDE_PLUGIN_ROOT}/assets/docs-sync.md`: reconcile the repo README's (and
+CLAUDE.md's) claims about the system with the updated registry before
+committing. Report what was synced, or `docs: nothing contradicted`.
 
 **If this command was invoked as a sub-step of `/vwf:blueprint` or
 `/vwf:execute` (registry reconciliation):** return control to the parent run.

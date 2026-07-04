@@ -40,9 +40,14 @@ stop).
 Read the registry (`docs/blueprint/architecture.md`) for the deployed projects
 (cloud types: `service`, `worker`, `site`, `console`) and the flows' Acceptance
 blocks in `integration.md`. Resolve each project's base URL for the named
-environment from the repo's own configuration (deploy manifests, env files by
-**name** via `docs/blueprint/environment.md`, mise tasks) — ask the user for
-anything unresolvable; never guess a hostname.
+environment from the **`environments:` block in `.config/vwf.yaml`** first (per
+the vwf-config asset); fall back to the repo's own configuration (deploy
+manifests, env files by **name** via `docs/blueprint/environment.md`, mise
+tasks) — ask the user for anything unresolvable, never guess a hostname, and
+**offer to pin what was resolved/asked into the config** so the next run asks
+nothing. Health probes honor any per-project override
+(`projects.<name>.harness.health` — a declared `n/a` is reported as such, not
+"unverifiable").
 
 **Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall rooms `gaps`
 and `problems` for still-open items — a criterion already known-failing is
@@ -63,8 +68,8 @@ Acceptance blocks of **every** flow (regressions in untouched flows are the
 point — not just the last plan's), the registry, the target environment's base
 URLs, and the repo's staging-mode E2E mechanism per the harness contract
 (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md` — the canonical `test:e2e:staging`
-task, else the stamped equivalent; the `.vwf.yml` `harness:` block says whether
-`e2e_staging` exists at all) — it runs the suite against the deployed
+task, else the stamped equivalent; the `.config/vwf.yaml` `harness:` block says
+whether `e2e_staging` exists at all) — it runs the suite against the deployed
 environment, never against local emulators, and returns the standard
 per-criterion `PASS` / `FAIL` / `NOT-COVERED` block. `n/a — no staging
 harness`

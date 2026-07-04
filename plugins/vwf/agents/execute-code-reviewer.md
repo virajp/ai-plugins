@@ -39,10 +39,10 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    - **Idiomatic stack use** — matches the project's declared stack and codebase
      patterns.
    - **Workspace placement** — when the registry declares a `packages` common
-     project and no registry `deviations:` entry waives the rule: a shared data
-     schema defined outside that package, or a third-party SDK (e.g.
-     `firebase-admin`, maps/payment clients) imported directly instead of
-     through the common package's wrappers, is a finding.
+     project and no `enforcement.rules` waiver in `.config/vwf.yaml` covers the
+     rule: a shared data schema defined outside that package, or a third-party
+     SDK (e.g. `firebase-admin`, maps/payment clients) imported directly instead
+     of through the common package's wrappers, is a finding.
    - **Test quality** — tests actually exercise the behaviour, not just
      coverage.
    - **Naming consistency** — with the surrounding code and the docs.

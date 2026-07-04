@@ -117,7 +117,9 @@ mirror its terse gist into the plan doc's "Gaps surfaced during execution"
 section before committing — per the gap-capture rule.
 
 **Commit & gate.** Commit the implementation via `/vwf:git-workflow`. Show the
-coverage report and wait for explicit approval before `review`.
+coverage report against the configured target (`.config/vwf.yaml`
+`pipeline.coverage_target`, default 100 — note when configured differs from
+default) and wait for explicit approval before `review`.
 
 ## Stage: review (`execute-code-reviewer`, opus)
 
@@ -131,11 +133,12 @@ re-review. Wait for approval before `security`.
 
 **Loop policy.** The review→code loop is intentionally **unbounded** — a human
 gates every round, so it can run as long as the findings keep shrinking (heed
-the convergence guard). But when the **4th round** still leaves findings open,
-stop looping blind and suggest the autopilot-style resolution: document the
-residuals as gaps in the plan doc's "Gaps surfaced during execution" section and
-reconcile them (blueprint/plan holes → `/vwf:blueprint` / `/vwf:plan`) rather
-than churning further rounds.
+the convergence guard). But when the **capped round** (`.config/vwf.yaml`
+`pipeline.review_round_cap`, default 4) still leaves findings open, stop looping
+blind and suggest the autopilot-style resolution: document the residuals as gaps
+in the plan doc's "Gaps surfaced during execution" section and reconcile them
+(blueprint/plan holes → `/vwf:blueprint` / `/vwf:plan`) rather than churning
+further rounds.
 
 ## Stage: security (`execute-security-reviewer`, opus)
 
@@ -177,9 +180,12 @@ Wait for approval before reconciliation.
 
 ## Reconcile & drift
 
-1. **Reconcile architecture & environment** per the Reconcile section of
-   `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry block for any
-   topology change, `environment.md` for any new secret/env var.
+1. **Reconcile architecture, environment, harness & docs** per the Reconcile
+   section of `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry
+   block for any topology change, `environment.md` for any new secret/env var,
+   the `.config/vwf.yaml` `harness:` block for any capability the cycle added,
+   and the repo's human docs (README/CLAUDE.md) per docs-sync (report what was
+   synced, or `docs: nothing contradicted`).
 2. **Reconcile blueprint/plan gaps.** Collect the cycle's gaps: read the plan
    doc's "Gaps surfaced during execution" section (the durable copy) and recall
    room `gaps` for the full detail. Present the consolidated list to the user

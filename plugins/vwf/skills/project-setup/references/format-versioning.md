@@ -3,28 +3,24 @@
 vwf's blueprint format evolves. `setup` records the format a repo conforms to
 and, on re-run, migrates the gap.
 
-**The stamp** — `docs/blueprint/.vwf.yml`:
+**The stamp** lives inside the **vwf config** — `.config/vwf.yaml` (see
+`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-blueprint_format: 5
+config_format: 1
+blueprint_format: 6
 topology: monorepo # or polyrepo | workspace
-projects: [ api, web, worker ] # by registry name
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
-harness: # verification-harness capabilities (see the harness contract asset)
-  dev: true
-  e2e_local: true
-  local_stack: true
-  e2e_staging: false
-  health: true
-  screenshots: true
+# plus: product, projects (nuances), harness, enforcement, pipeline,
+# environments, memory, docs_sync — per the vwf-config asset
 ```
 
-The `harness:` block is **vwf-internal state, not part of the blueprint format**
-— adding or updating it never requires a format bump. `setup` stamps it from
-detection; `plan` re-verifies the capabilities a slice needs and injects
-bootstrap steps for missing ones; execute's reconcile updates it when a cycle
-adds a capability.
+Pre-format-6 repos carry the legacy stamp at `docs/blueprint/.vwf.yml`; its
+presence is itself drift (the `5 → 6` move below). Everything in the config
+**other than `blueprint_format`** is vwf-internal operating state — adding or
+changing those keys never requires a blueprint-format bump (`config_format`
+versions the file's own schema instead).
 
 **Source of truth (shipped).** The format the installed vwf ships is the integer
 in `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`. The workflow commands
@@ -33,7 +29,15 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 5.** Format 5 = format 4 **plus** the **Product** foundation:
+**Current format = 6.** Format 6 = format 5 **plus** the **vwf config**: the
+stamp moves from `docs/blueprint/.vwf.yml` to `.config/vwf.yaml` and becomes the
+operating config (per the vwf-config asset) — carrying the harness inventory,
+the **`enforcement:` block** (structure/stack/rule opt-outs, moved out of the
+registry, which now purely describes the system), per-project nuances (e.g.
+Flutter `platforms`), pipeline knobs, verify environments, and the explicit
+mempalace wing.
+
+Format 5 = format 4 **plus** the **Product** foundation:
 `docs/blueprint/product.md` (type **`vwf-product`**, authored by `/vwf:product`)
 — problem, target users, goals with stable `#goal-<slug>` anchors and measurable
 metrics, slice priority, non-goals, risks. It is **required unconditionally**
@@ -127,6 +131,14 @@ the current format and apply the delta:
   not retrofit every entity in one pass; a missing Serves line on an untouched
   entity is tolerated drift, a missing `product.md` is not. Then bump the stamp
   to `5`.
+- **`5 → 6`** → `git mv docs/blueprint/.vwf.yml .config/vwf.yaml` (move, never
+  delete) and restructure per the vwf-config asset: add `config_format: 1`; keep
+  the stamp keys and `harness:` block; add `product.name` and `memory.wing`
+  (derive from the repo/registry, confirm with the user); **move the registry's
+  `deviations:` block** into `enforcement:` (`structure`/`stacks`/`rules` form)
+  and remove it from `docs/blueprint/architecture.md`; leave
+  `pipeline`/`environments`/`docs_sync` absent (defaults) unless the user pins
+  them. Then bump the stamp to `6`.
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.
 

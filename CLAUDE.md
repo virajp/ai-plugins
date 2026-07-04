@@ -3,13 +3,17 @@
 ## Rules
 
 - ALWAYS ask user before running `i:release` task
+- **Docs ship with the change.** Any change to plugin behavior must reconcile
+  `readme.md`, this file, and `docs/` in the same commit — stale docs are more
+  harmful than no docs
 
 ## What This Repo Is
 
 A Claude Code plugin marketplace (`virajp-plugins`) containing LSP servers, an
-MCP server, and `vwf` — a full Blueprint → Plan → Execute workflow plugin. The
-root `.claude-plugin/marketplace.json` defines the marketplace; each plugin
-lives in `plugins/<name>/.claude-plugin/plugin.json`.
+MCP server, and `vwf` — a full Product → Blueprint → Plan → Execute workflow
+plugin (with post-deploy verify + production-feedback intake). The root
+`.claude-plugin/marketplace.json` defines the marketplace; each plugin lives in
+`plugins/<name>/.claude-plugin/plugin.json`.
 
 The repo also ships a **statusline**, installed via a small `oclif` CLI
 (`@askviraj/ai-plugins`) rather than the marketplace — see The statusline CLI.
@@ -118,10 +122,11 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   approved plan to completion **without per-stage human gates** in a dedicated
   worktree: dependency-ordered steps, `code→review→security` per step (security
   findings always fixed; review findings loop ≤4 rounds then become documented
-  gaps), gaps written to `docs/plans/<plan>.gap-report.md` + mempalace room
-  `gaps`, **never merges/pushes or archives**, and pauses only on hard halts,
-  the statusline resource caps, an all-blocking gap, or an uncovered
-  irreversible decision. Reuses execute's three subagents.
+  gaps) plus one `acceptance + ux` pass after all steps (same 4-round cap), gaps
+  written to `docs/plans/<plan>.gap-report.md` + mempalace room `gaps`, **never
+  merges/pushes or archives**, and pauses only on hard halts, the statusline
+  resource caps, an all-blocking gap, or an uncovered irreversible decision.
+  Reuses execute's five subagents.
 - `agents/` — subagents the commands delegate to: `blueprint-reviewer`,
   `design-system-reviewer`, `product-reviewer`, `execute-coder`,
   `execute-code-reviewer`, `execute-security-reviewer`,
@@ -131,18 +136,20 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   design-system + Screens contract, axe a11y scan; code-level-only for Flutter),
   `architecture-writer`
 - `skills/` — `rest-api-design`; `blueprint-authoring` (the
-  contract-vs-realization doctrine + per-surface completeness bars + the
-  doc-unit doctrine, auto-applies on `docs/blueprint/**` and — for
-  frontmatter/link hygiene only — `docs/plans/**`); `design-system` (the
-  UX/visual-contract doctrine — tokens, typography, spacing, motion,
-  accessibility, components/anti-patterns — auto-applies on
-  `docs/blueprint/design-system`); `project-setup` (onboarding/migration
-  doctrine — topology detection incl. the **enforced** workspace shape (parent
-  repo + backend/frontend submodules: applied for new/empty repos, proposed as a
-  consent-gated restructure for non-conforming existing ones) and the **enforced
-  reference stacks** (fixed per project type, one stack doc each under
-  `assets/stacks/`; explicit opt-outs recorded as registry `deviations:`
-  entries, never re-asked), consent-gated dry-run migration, the blueprint
+  contract-vs-realization doctrine + per-surface completeness bars — incl. the
+  per-flow Acceptance block and the entity `Serves:` goal edge — + the doc-unit
+  doctrine, auto-applies on `docs/blueprint/**` and — for frontmatter/link
+  hygiene only — `docs/plans/**`); `design-system` (the UX/visual-contract
+  doctrine — tokens, typography, spacing, motion, accessibility,
+  components/anti-patterns — auto-applies on `docs/blueprint/design-system`);
+  `project-setup` (onboarding/migration doctrine — topology detection incl. the
+  **enforced** workspace shape (parent repo + backend/frontend submodules:
+  applied for new/empty repos, proposed as a consent-gated restructure for
+  non-conforming existing ones) and the **enforced reference stacks** (fixed per
+  project type, one stack doc each under `assets/stacks/`; explicit opt-outs
+  recorded under `enforcement:` in `.config/vwf.yaml`, never re-asked),
+  harness-capability detection (per the harness contract, stamped in
+  `.config/vwf.yaml`), consent-gated dry-run migration, the blueprint
   format-version + drift map; used by `/vwf:setup`)
 - `assets/templates/` — `entity` (Purpose carries a `Serves:` goal-link line),
   `conventions`, `plan` (incl. the "Acceptance criteria (from blueprint)"
@@ -159,7 +166,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   worked Acceptance block. Referenced from the blueprint-authoring skill as the
   concrete "what good looks like"; its asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
-  `blueprint`, `plan`, `architecture`, `design-system`, and `setup`
+  `product`, `blueprint`, `plan`, `architecture`, `design-system`, `setup`, and
+  `feedback`
 - `assets/execute-stages.md` — the stage pipeline shared by `execute` and
   `autopilot`: the code→review→security→acceptance+ux table (acceptance + ux run
   once per cycle behind one combined gate — after `security` in execute, after
@@ -170,10 +178,21 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   capture), and the end-of-run architecture/environment reconcile
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
+- `assets/vwf-config.md` — the **vwf config** doctrine for `.config/vwf.yaml`
+  (one per workspace, format 6): the stamp keys, `product`/`memory.wing`,
+  per-project nuances (`platforms:` extensions, coverage/health overrides), the
+  `harness:` inventory, the **`enforcement:` block** (structure/stack/rule
+  opt-outs — moved out of the registry, which now purely describes the system),
+  bounded `pipeline` knobs (coverage target, review round cap, stage model tiers
+  — downgrades always reported at the gate — and tighten-only `autopilot_caps`
+  honored by the statusline caps hook), `verify` `environments`, and `docs_sync`
+  scope. Hard floor: config can never disable security review, TDD, the approval
+  gates, or the reviewer bars. Readers fall back to the legacy
+  `docs/blueprint/.vwf.yml` (its presence = pre-6 drift)
 - `assets/harness.md` — the **harness contract**: the verification capabilities
   a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`,
   `health`, `screenshots`) with canonical task-name conventions. `setup` detects
-  and stamps them (`.vwf.yml` `harness:` block — vwf-internal, never a format
+  and stamps them (the config's `harness:` block — vwf-internal, never a format
   bump), `plan`'s harness preflight re-verifies what a slice's gates need and
   injects bootstrap steps for missing ones (guardrails — exempt from
   minimalism), execute's reconcile updates the stamp, and the
@@ -184,14 +203,15 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `monorepo.md` (backend monorepo tooling), distilled from the 95octane
   reference implementation. Read by `/vwf:setup` (onboarding) and
   `/vwf:architecture` (registry `stack` — stated, not elicited; an override
-  becomes a registry `deviations:` entry). The common-package placement rules
+  becomes a config `enforcement:` entry). The common-package placement rules
   (`rules/schemas-in-common`, `rules/integrations-via-common`) are seeded into
   each repo's `conventions.md#patterns` and enforced by the execute reviewers
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
   persist durable decisions, findings memory for loop-backs, and **gap memory**:
   blueprint/plan holes surfaced during execution, room `gaps`) referenced by
-  `blueprint`, `plan`, and `execute`. The orchestrator resolves the project wing
-  and persists decisions; the execute reviewers/coder file and recall findings
+  `product`, `blueprint`, `plan`, `execute`, `verify`, and `feedback`. The
+  orchestrator resolves the project wing and persists decisions; the execute
+  subagents (coder, reviewers, acceptance/ux verifiers) file and recall findings
   **directly** — they are granted scoped mempalace MCP tools in their agent
   frontmatter (`mcp__plugin_mempalace_mempalace__mempalace_search` /
   `…_add_drawer`), so rich review detail lives in mempalace instead of the
@@ -199,11 +219,19 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   during execution" section in the plan doc, so they survive a mempalace outage
   and feed the blueprint/plan fixes. The skip-silently-when-down rule carves out
   `handoff`/`recall`, which fall back to `docs/handoffs/<name>.md` instead
+- `assets/docs-sync.md` — the **docs-sync rule** (stale docs are more harmful
+  than no docs): every run that changes reality — `execute`/`autopilot` (landed
+  code, via the shared Reconcile step 4), `architecture` and `product` in update
+  mode — ends by reconciling the repo's human docs (README, CLAUDE.md, anything
+  the change contradicts) in the same worktree/commit flow, reporting what was
+  synced or `docs: nothing contradicted`. `blueprint`/`plan` are exempt (their
+  output documents intent, not reality); `setup` owns full authoring
 - `assets/format-check.md` + `assets/blueprint-format` — the **format-drift
-  preflight**: `blueprint`, `plan`, `execute`, `autopilot`, and `design-system`
-  compare a repo's `docs/blueprint/.vwf.yml` stamp to the format integer vwf
-  ships (`blueprint-format`) and nudge `/vwf:setup` when behind (halting only if
-  a needed artifact is missing). Since vwf is user-scoped — upgraded once
+  preflight**: `product`, `blueprint`, `plan`, `execute`, `autopilot`,
+  `design-system`, and `verify` compare a repo's `.config/vwf.yaml` stamp
+  (legacy fallback: `docs/blueprint/.vwf.yml`) to the format integer vwf ships
+  (`blueprint-format`) and nudge `/vwf:setup` when behind (halting only if a
+  needed artifact is missing). Since vwf is user-scoped — upgraded once
   globally, with no per-repo install event — this usage-time check is what
   reaches each repo, self-healing on next use
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
@@ -247,13 +275,13 @@ back into `product`/`blueprint`/`plan`. `setup` is the Phase-0 bootstrapper — 
 onboards a repo (detect-or-ask topology via MCQ, consent-gated migration into
 the `docs/blueprint/` format, orchestrates
 mise/product/architecture/design-system, authors CLAUDE.md + README) and is
-**re-runnable**: it stamps the blueprint format version in
-`docs/blueprint/.vwf.yml` and, on a later run, detects drift against the format
-the installed vwf ships and migrates the delta. `product.md` (the Phase −1
-outcome contract, type `vwf-product`, gated by the `product-reviewer`) and
-`architecture` (the registry) are both unconditionally required before
-`blueprint` — every entity's Purpose must `Serves:`-link a product goal anchor,
-which the `blueprint-reviewer` verifies and the minimalism check traces to.
+**re-runnable**: it stamps the blueprint format version in `.config/vwf.yaml`
+and, on a later run, detects drift against the format the installed vwf ships
+and migrates the delta. `product.md` (the Phase −1 outcome contract, type
+`vwf-product`, gated by the `product-reviewer`) and `architecture` (the
+registry) are both unconditionally required before `blueprint` — every entity's
+Purpose must `Serves:`-link a product goal anchor, which the
+`blueprint-reviewer` verifies and the minimalism check traces to.
 `design-system` is a second foundation, **required once the registry has a UI
 project** (type `site`, `frontend`, or `console`): `blueprint` halts on an
 entity with a Screens surface if `docs/blueprint/design-system.md` is missing.

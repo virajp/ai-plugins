@@ -9,11 +9,15 @@ Steps:
 
 1. Read the **shipped** format: the integer in
    `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`.
-2. Read the **repo** format: `blueprint_format` in `docs/blueprint/.vwf.yml`.
+2. Read the **repo** format: `blueprint_format` in `.config/vwf.yaml` (the vwf
+   config). When that file is absent, fall back to the **legacy stamp**
+   `docs/blueprint/.vwf.yml` — finding the stamp only there is itself
+   pre-format-6 drift.
 3. Compare:
-   - **Stamp present and equal to the shipped value** → silent; proceed.
-   - **Stamp behind, OR missing while a `docs/blueprint/` (or legacy
-     `docs/specs/`) tree exists** → tell the user, then offer `/vwf:setup`:
+   - **Config present and equal to the shipped value** → silent; proceed.
+   - **Stamp behind, only at the legacy location, OR missing while a
+     `docs/blueprint/` (or legacy `docs/specs/`) tree exists** → tell the user,
+     then offer `/vwf:setup`:
      > "This repo is on blueprint format `<N>`; vwf now ships `<M>`. Run
      > `/vwf:setup` to migrate to the latest format."
    - **No blueprint tree at all** → not a drift case; the command's own
@@ -24,4 +28,4 @@ Steps:
    format introduced). Never auto-migrate — `/vwf:setup` does that behind its
    own consent gate.
 
-Skip silently if `.vwf.yml` or the format constant cannot be read.
+Skip silently if neither config/stamp nor the format constant can be read.

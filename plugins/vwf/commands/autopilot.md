@@ -80,10 +80,11 @@ record is the **gap-report** file.
 - **Always fix every security finding.** Security findings gate the step: loop
   back to `code` until security review is clean. A security finding is **never**
   downgraded to a gap or deferred.
-- **Review findings: cap at 4 rounds.** For `review` (non-security) findings,
-  loop `code → review` up to **4 rounds**. Any review finding still unresolved
-  after the 4th round is **documented as a gap** ("blueprint/plan was not
-  thorough enough") and execution continues — it does not block.
+- **Review findings: capped rounds.** For `review` (non-security) findings, loop
+  `code → review` up to the configured cap (`.config/vwf.yaml`
+  `pipeline.review_round_cap`, default **4**). Any review finding still
+  unresolved after the capped round is **documented as a gap** ("blueprint/plan
+  was not thorough enough") and execution continues — it does not block.
 - **Gaps: document and continue.** Every gap (a blueprint/plan hole, not a code
   finding) is written to the **gap-report** file and filed to mempalace room
   `gaps`, then execution continues. A *non-blocking* gap never stops the run. An
@@ -125,7 +126,9 @@ resumes from the run journal per the Resume check).
   re-dispatch) on the **same step**. Commit what is safe, journal the step as
   **blocked** (run journal + gap-report), and pause — never proceed on a dead
   stage.
-- **Resource caps** — context > 65%, 5-hour > 90%, or 7-day > 80%. A command
+- **Resource caps** — context > 65%, 5-hour > 90%, or 7-day > 80% (a repo may
+  **tighten** these — never loosen — via `.config/vwf.yaml`
+  `pipeline.autopilot_caps`; the caps hook honors the lower value). A command
   cannot measure its own context window, so this signal is **delivered by the
   statusline caps hook** (install via `@askviraj/ai-plugins --statusline`); for
   autonomous runs, install it or this pause will not fire. On the injected cap
@@ -263,9 +266,12 @@ are recorded here as gaps too, tagged as plan/blueprint under-specification.
 
 ## Reconcile
 
-1. **Architecture & environment.** Reconcile per the Reconcile section of
-   `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry block for any
-   topology change, `environment.md` for any new secret/env var.
+1. **Architecture, environment, harness & docs.** Reconcile per the Reconcile
+   section of `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry
+   block for any topology change, `environment.md` for any new secret/env var,
+   the `.config/vwf.yaml` `harness:` block for any capability the run added, and
+   the repo's human docs (README/CLAUDE.md) per docs-sync — committed in the
+   worktree like every other step.
 2. **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's
    durable decisions, resolved findings, and each gap to mempalace (rooms
    `decisions`, `problems`, `gaps`). Skip anything a doc already captures. Most

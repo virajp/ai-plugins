@@ -85,12 +85,13 @@ safety guardrail.
 which harness capabilities this slice's gates will need (acceptance criteria →
 `e2e_local` + `local_stack`; changed screens in a web UI → `dev` +
 `screenshots`; a touched cloud project → `health`; flows + a deploy target →
-`e2e_staging`). Read the `.vwf.yml` `harness:` block and **re-verify just
-those** against the repo (the stamp may be stale). For each one missing,
-**inject a bootstrap step** into the ordered steps — the coder builds it under
-the normal pipeline. Harness steps are gate-required guardrails: the minimalism
-ladder never strikes them, and they order **before** the steps whose
-verification depends on them.
+`e2e_staging`). Read the `.config/vwf.yaml` `harness:` block (plus any
+per-project `projects.<name>.harness` override) and **re-verify just those**
+against the repo (the stamp may be stale). For each one missing, **inject a
+bootstrap step** into the ordered steps — the coder builds it under the normal
+pipeline. Harness steps are gate-required guardrails: the minimalism ladder
+never strikes them, and they order **before** the steps whose verification
+depends on them.
 
 ### 4. Flag drift
 

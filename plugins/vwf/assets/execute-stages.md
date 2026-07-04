@@ -79,7 +79,15 @@ Per-stage dispatch contract:
 
 ## Shared stage rules
 
-- **Model enforcement** — dispatch each subagent on the model in the table.
+- **Model enforcement** — dispatch each subagent on the model in the table,
+  unless `.config/vwf.yaml` `pipeline.models` overrides that stage's tier (per
+  the vwf-config asset). A downgrade from the shipped default is **stated at
+  that stage's gate/report** — a weakened review is never invisible. The stage
+  itself always runs; config cannot skip it.
+- **Pipeline knobs** — the invoking command reads `.config/vwf.yaml` `pipeline`
+  for `coverage_target` (default 100; per-project override under
+  `projects.<name>.coverage_target`) and `review_round_cap` (default 4), and
+  reports configured-vs-default at the relevant gate.
 - **Terse subagent output** — a subagent's full reply lands in the
   orchestrator's context. The pipeline agents return fixed contract blocks; any
   *other* agent spawned (e.g. `Explore` for research) must be instructed to
@@ -119,5 +127,10 @@ Per-stage dispatch contract:
    not a reconciliation.
 3. **Harness stamp.** If the cycle added a harness capability (a bootstrap step
    landed — e2e task, dev server, health endpoint, staging mode), update the
-   `harness:` block in `docs/blueprint/.vwf.yml` to match, per
+   `harness:` block in `.config/vwf.yaml` to match, per
    `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`.
+4. **Docs.** Per `${CLAUDE_PLUGIN_ROOT}/assets/docs-sync.md`, reconcile the
+   repo's human docs (README, CLAUDE.md, any doc the change contradicts) with
+   what actually landed — surgical edits in the same worktree/commit flow, and
+   report what was synced (or `docs: nothing contradicted`). Stale docs are more
+   harmful than no docs; this step is never skipped silently.

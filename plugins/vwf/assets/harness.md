@@ -34,7 +34,7 @@ Playwright can run. Record each as `true` / `false` / `n/a` (not required for
 this topology) in the stamp:
 
 ```yaml
-# docs/blueprint/.vwf.yml (vwf-internal — no blueprint-format bump)
+# .config/vwf.yaml — the vwf config (see the vwf-config asset)
 harness:
   dev: true
   e2e_local: true

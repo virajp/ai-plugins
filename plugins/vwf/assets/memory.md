@@ -17,10 +17,12 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
 
 ## Scope (wing + room)
 
-- **wing** — the current project. The orchestrator resolves it once (reuse the
-  project's existing wing from `mempalace_status`, else the first write creates
-  it) and passes it to every subagent it dispatches. Subagents never resolve the
-  wing themselves — they use the wing they were given.
+- **wing** — the current project. The orchestrator resolves it once: use
+  `memory.wing` from `.config/vwf.yaml` when present (falling back to
+  `product.name`); otherwise reuse the project's existing wing from
+  `mempalace_status`, else the first write creates it) and passes it to every
+  subagent it dispatches. Subagents never resolve the wing themselves — they use
+  the wing they were given.
 - **room** — `decisions` (design/architecture decisions + the *why*), `problems`
   (review/security findings + how they were resolved), `planning` (plan
   rationale and deferred options), `gaps` (blueprint/plan holes surfaced

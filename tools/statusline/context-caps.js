@@ -32,6 +32,44 @@ const CTX_CAP = 65;
 const FIVE_H_CAP = 90;
 const SEVEN_D_CAP = 80;
 
+// Tighten-only per-repo caps from <cwd>/.config/vwf.yaml (the vwf config,
+// pipeline.autopilot_caps). Dependency-free: a narrow line scan for the block —
+// keys `context` / `five_hour` / `seven_day`, integers. Values above the
+// shipped defaults are ignored (config may only tighten, never loosen).
+function repoCaps(cwd) {
+  const caps = {};
+  if (!cwd) {
+    return caps;
+  }
+  let text;
+  try {
+    text = fs.readFileSync(path.join(cwd, ".config", "vwf.yaml"), "utf8");
+  }
+  catch {
+    return caps;
+  }
+  const lines = text.split("\n");
+  const start = lines.findIndex(l => /^\s*autopilot_caps:\s*(#.*)?$/.test(l));
+  if (start === -1) {
+    return caps;
+  }
+  const indent = lines[start].match(/^\s*/)[0].length;
+  for (let i = start + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim() || /^\s*#/.test(line)) {
+      continue;
+    }
+    if (line.match(/^\s*/)[0].length <= indent) {
+      break;
+    }
+    const m = line.match(/^\s*(context|five_hour|seven_day):\s*(\d+)/);
+    if (m) {
+      caps[m[1]] = Number(m[2]);
+    }
+  }
+  return caps;
+}
+
 function readStdin() {
   try {
     return JSON.parse(fs.readFileSync(0, "utf8"));
@@ -81,11 +119,17 @@ function emit(text) {
 
 function main() {
   let dir = process.env.AI_PLUGINS_USAGE_DIR;
-  const sid = readStdin().session_id;
+  const input = readStdin();
+  const sid = input.session_id;
   if (!dir || !sid) {
     return;
   }
   dir = expandHome(dir);
+
+  const rc = repoCaps(input.cwd);
+  const ctxCap = Math.min(CTX_CAP, rc.context ?? CTX_CAP);
+  const fiveHCap = Math.min(FIVE_H_CAP, rc.five_hour ?? FIVE_H_CAP);
+  const sevenDCap = Math.min(SEVEN_D_CAP, rc.seven_day ?? SEVEN_D_CAP);
 
   let u;
   try {
@@ -98,20 +142,20 @@ function main() {
   // Highest breached cap: 3=7-day, 2=5-hour, 1=context, 0=none.
   let level = 0;
   let directive = null;
-  if ((u.sevenDayPct ?? 0) > SEVEN_D_CAP) {
+  if ((u.sevenDayPct ?? 0) > sevenDCap) {
     level = 3;
     directive =
-      `⛔ 7-DAY LIMIT CAP — weekly usage at ${u.sevenDayPct}% (cap ${SEVEN_D_CAP}%), resets in `
+      `⛔ 7-DAY LIMIT CAP — weekly usage at ${u.sevenDayPct}% (cap ${sevenDCap}%), resets in `
       + `${
         humanIn(u.sevenDayResetsAt)
       }. Finish ONLY the current step, then: (1) invoke the vwf:handoff `
       + `skill to snapshot state to mempalace; (2) STOP and tell the user the 7-day limit is nearly `
       + `exhausted and work is halted until it resets. Do NOT start a new vwf stage or keep coding.`;
   }
-  else if ((u.fiveHourPct ?? 0) > FIVE_H_CAP) {
+  else if ((u.fiveHourPct ?? 0) > fiveHCap) {
     level = 2;
     directive =
-      `⚠ 5-HOUR LIMIT CAP — 5h usage at ${u.fiveHourPct}% (cap ${FIVE_H_CAP}%), resets in `
+      `⚠ 5-HOUR LIMIT CAP — 5h usage at ${u.fiveHourPct}% (cap ${fiveHCap}%), resets in `
       + `${
         humanIn(u.fiveHourResetsAt)
       }. Finish ONLY the current step, then: (1) invoke the vwf:handoff `
@@ -120,13 +164,13 @@ function main() {
         humanIn(u.fiveHourResetsAt)
       }) — resume with /vwf:recall after reset. Do NOT continue now.`;
   }
-  else if ((u.ctxPct ?? 0) > CTX_CAP) {
+  else if ((u.ctxPct ?? 0) > ctxCap) {
     level = 1;
     directive = `⚠ CONTEXT CAP — context window at ${
       Math.round(
         u.ctxPct,
       )
-    }% (cap ${CTX_CAP}%). Finish ONLY the `
+    }% (cap ${ctxCap}%). Finish ONLY the `
       + `current step, then: (1) invoke the vwf:handoff skill to snapshot state to mempalace; (2) STOP and `
       + `tell the user to run /clear (or /compact) then /vwf:recall in a fresh session to continue — the `
       + `context cannot be cleared from inside this session. Do NOT start a new vwf stage.`;

@@ -3,9 +3,9 @@
 The shape and stacks vwf **enforces** for a multi-project product — applied when
 onboarding a new/empty repo, proposed (consent-gated) as a migration for an
 existing repo that does not match. Structure and stacks each carry one escape
-hatch: an explicit user objection is honored and recorded as a `deviations:`
-entry in the architecture registry (scope, choice, reason). A recorded deviation
-is settled — never re-asked or re-proposed.
+hatch: an explicit user objection is honored and recorded under `enforcement:`
+in `.config/vwf.yaml` (the choice and reason — see the vwf-config asset). A
+recorded deviation is settled — never re-asked or re-proposed.
 
 ## The shape
 
@@ -43,7 +43,7 @@ workspace/            # parent repo — vwf lives here
 A `.gitmodules` naming child repos (each child dir carrying its own `.git`) →
 **workspace** topology. Classify each child on its own signals per
 [topology detection](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/topology-detection.md),
-and record the shape in the registry and the `.vwf.yml` stamp
+and record the shape in the registry and the vwf config (`.config/vwf.yaml`)
 (`topology: workspace`).
 
 A repo that does **not** conform gets a **restructure proposal** folded into the
@@ -52,7 +52,7 @@ project naming) as normal consent-gated batches; anything crossing a repo
 boundary — e.g. splitting a single repo into parent + submodules — only ever as
 a written recommendation, per
 [migration & consent](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/migration-and-consent.md).
-A decline is recorded as a `deviations:` entry (`scope: structure`) and not
+A decline is recorded in `.config/vwf.yaml` (`enforcement.structure`) and not
 re-proposed on later runs.
 
 ## Reference stacks (enforced)
@@ -70,9 +70,9 @@ Each project type has exactly one reference stack, detailed in its stack doc:
 
 The stacks are **fixed, not defaults**: state them (from the stack docs), do not
 elicit alternatives. The escape hatch: an explicit user objection is honored —
-record the stack they name plus a `deviations:` entry
-(`scope: stack/<project>`). The table is what vwf ships today; more options
-arrive by extending vwf, not by per-repo improvisation.
+record the stack they name plus an `enforcement.stacks` entry in
+`.config/vwf.yaml`. The table is what vwf ships today; more options arrive by
+extending vwf, not by per-repo improvisation.
 
 `console` is the **operator/back-office control panel** — the internal,
 privileged counterpart to `web`, and the **sole holder of admin capabilities**
@@ -88,8 +88,8 @@ audit) than `web`.
 
 `packages/common` is the workspace's chokepoint, and two placement rules are
 enforced (seeded into `conventions.md#patterns` on onboarding; the execute
-reviewers flag violations unless a `deviations:` entry — `scope: rules/<rule>` —
-waives one):
+reviewers flag violations unless an `enforcement.rules` waiver in
+`.config/vwf.yaml` covers one):
 
 1. **All shared schemas live in `common`** (`rules/schemas-in-common`) — shared
    data schemas are defined once, under the common package's schema export

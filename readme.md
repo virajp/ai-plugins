@@ -1,15 +1,16 @@
-# vwf — Blueprint → Plan → Execute for Claude Code
+# vwf — Product → Blueprint → Plan → Execute for Claude Code
 
 `vwf` is the flagship plugin of the `virajp-plugins` marketplace — an
-opinionated workflow that turns a vague feature request into shipped, reviewed
-code through three disciplined phases:
+opinionated workflow that turns a vague idea into a shipped, reviewed product
+through four disciplined phases:
 
-1. **Blueprint** — keep an always-current blueprint of the *whole product*,
-   anchored to a product doc (problem, users, measurable goals) every entity
-   must trace to.
-2. **Plan** — diff the blueprint against the real code for one slice, and write
+1. **Product** — pin the outcome contract: the problem, the users, measurable
+   goals, and the order to build in. Everything downstream must trace to it.
+2. **Blueprint** — keep an always-current blueprint of the *whole product*,
+   every entity serving a product goal.
+3. **Plan** — diff the blueprint against the real code for one slice, and write
    the delta to apply.
-3. **Execute** — implement the plan under strict TDD, then code review, security
+4. **Execute** — implement the plan under strict TDD, then code review, security
    review, E2E acceptance, and UX conformance behind approval gates — with
    post-deploy verification and a production-feedback intake closing the loop.
 
@@ -29,14 +30,16 @@ adopting it.
 **Model & cost**
 
 - **Built for a large context window.** The commands run on `sonnet` at high
-  reasoning effort, with the code- and security-review subagents on `opus` — and
-  the orchestrator holds a lot at once: the blueprint, the plan, the registry,
-  and each subagent's output. Run Claude Code with the **1-million-token**
-  context; the standard window will degrade or overflow on a real cycle.
+  reasoning effort, with the code-review, security-review, and ux subagents on
+  `opus` — and the orchestrator holds a lot at once: the blueprint, the plan,
+  the registry, and each subagent's output. Run Claude Code with the
+  **1-million-token** context; the standard window will degrade or overflow on a
+  real cycle.
 - **High token cost.** High-effort reasoning throughout, opus reviewers, and
   each `execute` cycle spawns several subagents (coder, code review, security
-  review) with fix loop-backs. Expect a meaningful spend per slice — this is not
-  a cheap workflow.
+  review, plus E2E acceptance and UX conformance when the slice warrants them)
+  with fix loop-backs. Expect a meaningful spend per slice — this is not a cheap
+  workflow.
 
 **Dependencies**
 
@@ -57,10 +60,10 @@ adopting it.
   question at a time and stops at a mandatory approval gate at every stage; plan
   for an interactive session. `/vwf:autopilot` trades those gates for an
   unattended end-to-end run of a single plan — it still runs code, code review,
-  and security review per step, but takes the decisions itself and stops only on
-  a hard halt, a resource cap, an all-blocking gap, or an irreversible decision.
-  Reach for it only when the plan is solid and you're ready to review a finished
-  worktree.
+  and security review per step (plus one acceptance + ux pass after all steps),
+  but takes the decisions itself and stops only on a hard halt, a resource cap,
+  an all-blocking gap, or an irreversible decision. Reach for it only when the
+  plan is solid and you're ready to review a finished worktree.
 - **Requires a testable project.** `execute` enforces non-negotiable TDD and a
   coverage gate. A project without a test runner won't fit the execute stage;
   missing coverage tooling is tolerated (the coder reports `coverage: n/a` and
@@ -117,18 +120,27 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
 ## The mental model
 
-The three phases map to three questions:
+Each phase answers one question:
 
+- **Product** answers *is this worth building, and what does "good" mean?* — the
+  problem, the users, measurable goals, and the order to build in. Every entity
+  in the blueprint must trace to a goal here.
 - **Blueprint** answers *what should the whole product be?* — permanent,
   product-wide, organized by entity. It is a **code-independent technical
   contract**: it pins every decision that has more than one reasonable answer
   *and* is true regardless of how the code is written — data, API,
-  relationships, concurrency, integration flows, and UI/UX — so `plan` and
-  `execute` never have to ask or assume. Reuse-vs-build, file placement,
-  ordering, and library choices are `plan`'s job, not the blueprint's.
+  relationships, concurrency, integration flows (each with acceptance criteria),
+  and UI/UX — so `plan` and `execute` never have to ask or assume.
+  Reuse-vs-build, file placement, ordering, and library choices are `plan`'s
+  job, not the blueprint's.
 - **Plan** answers *what changes for this one slice, and in what order?* — a
   diff, not a re-blueprint, scoped to a single entity or section.
-- **Execute** answers *is it built, correct, and safe?* — TDD, then review.
+- **Execute** answers *is it built, correct, safe, and does it do what the
+  blueprint promises?* — TDD, then code/security review, then E2E acceptance and
+  rendered-UI conformance.
+- **Verify & feedback** answer *does it hold in production, and what next?* —
+  post-deploy checks against the same acceptance criteria, and a routed intake
+  for what production teaches you.
 
 ```mermaid
 flowchart TD
@@ -158,12 +170,14 @@ flowchart TD
     e8@{ animate: true }
 ```
 
-`architecture` runs once to bootstrap; then you loop
+`product` and `architecture` run once to bootstrap; then you loop
 `blueprint → plan → execute → archive` per slice — or swap `execute` for
 `autopilot` to run the approved plan unattended (it commits into a dedicated
-worktree for you to review and land, and never archives). Either way, when
-execution exposes a hole in the blueprint or plan, `vwf` captures it and loops
-back to fix the source — never silently working around it.
+worktree for you to review and land, and never archives). After you deploy,
+`verify` checks the environment and `feedback` routes what production says back
+into `product`/`blueprint`/`plan`. Either way, when execution exposes a hole in
+the blueprint or plan, `vwf` captures it and loops back to fix the source —
+never silently working around it.
 
 ## The documents it maintains
 
@@ -171,9 +185,11 @@ back to fix the source — never silently working around it.
 blueprint is the desired state; the plans are the changes you apply to reach it.
 
 ```text
+.config/
+└── vwf.yaml                     # the vwf config — how vwf operates here (stamp,
+                                 # harness, enforcement opt-outs, knobs, environments)
 docs/
 ├── blueprint/                   # the always-current blueprint (desired state)
-│   ├── .vwf.yml                 # blueprint format-version stamp (written by setup)
 │   ├── product.md               # problem, users, measurable goals, slice priority
 │   ├── architecture.md          # system shape + machine-readable Project Registry
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
@@ -230,10 +246,11 @@ enforcement works:
   proposal** from `/vwf:setup`: in-repo layout moves as reviewable batches;
   anything crossing a repo boundary (like a submodule split) only ever as a
   written recommendation.
-- **The escape hatch.** An explicit objection is always honored — recorded as a
-  `deviations:` entry in the Project Registry (scope, choice, reason) and never
-  re-asked. The stack table grows through vwf updates, not per-repo
-  improvisation.
+- **The escape hatch.** An explicit objection is always honored — recorded under
+  `enforcement:` in `.config/vwf.yaml` (the vwf config: choice + reason) and
+  never re-asked. The registry keeps describing the system as it *is*; the
+  config records how vwf treats it. The stack table grows through vwf updates,
+  not per-repo improvisation.
 
 Two placement rules ride along with the shape — seeded into each repo's
 `conventions.md` and enforced by the execute reviewers:
@@ -264,7 +281,7 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)                     |
 | `/vwf:blueprint [entity]` | Maintain the full-product blueprint, one doc per entity                        |
 | `/vwf:plan [slice]`       | Write a reviewable cycle plan — a diff of blueprint vs code                    |
-| `/vwf:execute [mode]`     | Implement the plan under TDD, then code + security review                      |
+| `/vwf:execute [mode]`     | Implement under TDD, then code, security, acceptance (E2E) + UX gates          |
 | `/vwf:autopilot [plan]`   | Autonomously run one plan end to end — no per-stage gates                      |
 | `/vwf:archive [plan]`     | Retire a completed plan into `docs/plans/archived/`                            |
 | `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment |
@@ -288,12 +305,17 @@ doesn't match (declining records a deviation, not a fight). On a new/empty repo
 it applies the workspace structure and reference stacks as the default. Nothing
 is written until you approve; it works in a worktree, restructures code only
 with per-batch consent, and never deletes. It orchestrates the rest (mise,
-`architecture`, and `design-system` if you have a UI), merges a vwf section into
-your `CLAUDE.md`, writes the README, and stamps the blueprint format version in
-`docs/blueprint/.vwf.yml` so a later run can detect drift and migrate the delta.
-Every workflow command also runs a quick format check against that stamp and
-nudges you to re-run `/vwf:setup` when a repo falls behind — so a single
-user-level vwf upgrade reaches each repo on next use.
+`product`, `architecture`, and `design-system` if you have a UI), merges a vwf
+section into your `CLAUDE.md`, writes the README, detects the repo's
+verification-harness capabilities (dev server, E2E, staging mode), and stamps
+the **vwf config** at `.config/vwf.yaml` — the blueprint format version, harness
+inventory, enforcement opt-outs, and per-project nuances (e.g. a Flutter app's
+extra `platforms:` like macos/windows) — so a later run can detect drift and
+migrate the delta, and every command knows how vwf operates in this repo
+(pipeline knobs, verify environments, the mempalace wing). Every workflow
+command also runs a quick format check against that stamp and nudges you to
+re-run `/vwf:setup` when a repo falls behind — so a single user-level vwf
+upgrade reaches each repo on next use.
 
 ### /vwf:product
 
@@ -315,11 +337,11 @@ goals reconcile their inbound links, never dangle.
 Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
 from the [enforced reference stacks](#the-structure--stacks-it-enforces)
-(stated, not offered as a menu; an explicit override becomes a registry
-`deviations:` entry), and writes `docs/blueprint/architecture.md`, including the
-machine-readable Project Registry the other commands depend on. Re-run it any
-time the topology changes; it asks only about genuine deltas, never re-eliciting
-what's confirmed.
+(stated, not offered as a menu; an explicit override becomes an `enforcement:`
+entry in `.config/vwf.yaml`), and writes `docs/blueprint/architecture.md`,
+including the machine-readable Project Registry the other commands depend on.
+Re-run it any time the topology changes; it asks only about genuine deltas,
+never re-eliciting what's confirmed.
 
 This is the one doc that *does* name technologies and infrastructure — the
 blueprint deliberately doesn't.
@@ -426,8 +448,10 @@ gate. Review and security findings loop back to `code` to fix, then re-review.
 When a stage exposes a **gap** (a hole in the blueprint or plan, not a code
 bug), it's recorded — to the plan doc and to memory — and reconciled at the end
 of the cycle, where `vwf` offers to fix the blueprint (`/vwf:blueprint`) or
-re-derive the plan (`/vwf:plan`). It then reconciles the architecture registry
-and offers to archive the plan.
+re-derive the plan (`/vwf:plan`). It then reconciles the architecture registry,
+the environment catalog, the harness stamp, **and the repo's human docs** — any
+README/CLAUDE.md claim the landed change falsified is fixed in the same cycle
+(stale docs are more harmful than no docs) — and offers to archive the plan.
 
 ### /vwf:autopilot
 
@@ -552,8 +576,9 @@ request.
 
 ## How it asks questions
 
-`vwf` is deliberately conversational. `setup`, `architecture`, `design-system`,
-`blueprint`, and `plan` share one **elicitation protocol**:
+`vwf` is deliberately conversational. `setup`, `product`, `architecture`,
+`design-system`, `blueprint`, `plan`, and `feedback` share one **elicitation
+protocol**:
 
 - **Explore first** — read the docs, code, and recent commits before asking
   anything; never ask what the registry or code already answers.
@@ -637,17 +662,18 @@ they inform how Claude writes and reviews:
 
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`) plus the per-surface completeness bars: data,
-  relationships, concurrency, integration flows, and UI/UX — including the
-  doc-unit doctrine (entity / page / module). Auto-applies whenever a
-  `docs/blueprint/` doc is edited (and on `docs/plans/` for frontmatter/link
-  hygiene only).
+  relationships, concurrency, integration flows (each with observable acceptance
+  criteria), and UI/UX — including the doc-unit doctrine (entity / page /
+  module) and the goal-traceability edge (every entity `Serves:` a product
+  goal). Auto-applies whenever a `docs/blueprint/` doc is edited (and on
+  `docs/plans/` for frontmatter/link hygiene only).
 - **`design-system`** — the UX/visual-contract doctrine (semantic tokens,
   typography, spacing, motion, accessibility, component behaviors,
   anti-patterns) behind `/vwf:design-system`.
 - **`project-setup`** — the onboarding/migration doctrine behind `/vwf:setup`:
   topology detection, the enforced workspace structure + reference stacks (and
-  the deviation escape hatch), consent-gated dry-run migration, and the
-  blueprint format-version + drift map.
+  the deviation escape hatch), harness-capability detection, consent-gated
+  dry-run migration, and the blueprint format-version + drift map.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
   plan touches an API surface.

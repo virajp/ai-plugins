@@ -92,6 +92,13 @@ apply. Map **by project `type`, never by literal technology**:
 
 If a type is absent from the registry, **omit** that section for this entity.
 
+**Platform extensions.** Read `.config/vwf.yaml` `projects.<name>.platforms`
+(per the vwf-config asset). When a UI project declares targets beyond its
+stack's default (e.g. a Flutter `frontend` also shipping `macos`/`windows`), the
+Screens elicitation covers what genuinely differs per platform —
+navigation/input idiom, window/layout behavior, platform-specific states — and
+records only the differences, never a per-platform copy of the screen.
+
 **Doc unit.** Each registry project also declares a `doc_unit` (`entity` /
 `page` / `module`) — the unit its slice of the blueprint is documented in.
 `entity` is the default and everything below reads as entity-first, but the

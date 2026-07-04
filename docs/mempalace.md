@@ -28,9 +28,9 @@ rooms:
 | Room        | Holds                                                                                          |
 | ----------- | ---------------------------------------------------------------------------------------------- |
 | `decisions` | design/architecture decisions and the *why*                                                    |
-| `problems`  | review and security findings, and how they were resolved                                       |
+| `problems`  | review, security, acceptance, and UX findings, and how they were resolved                      |
 | `planning`  | plan rationale and deferred options (written by `/vwf:plan`)                                   |
-| `gaps`      | blueprint/plan holes surfaced during execution, and their fixes                                |
+| `gaps`      | blueprint/plan holes — surfaced during execution or routed in by `/vwf:verify`/`/vwf:feedback` |
 | `runs`      | the `/vwf:autopilot` run journal — step order and per-step progress, for resuming a paused run |
 | `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                          |
 
@@ -42,7 +42,7 @@ handoff *is* the deliverable, so when mempalace is down they fall back to
 ## See also
 
 - [../readme.md](../readme.md) — the marketplace overview and full plugin list.
-- [vwf guide](../readme.md) — how the Blueprint → Plan → Execute workflow uses
-  memory.
+- [vwf guide](../readme.md) — how the Product → Blueprint → Plan → Execute
+  workflow uses memory.
 - [MemPalace upstream](https://github.com/MemPalace/mempalace) — full feature
   and tool documentation.

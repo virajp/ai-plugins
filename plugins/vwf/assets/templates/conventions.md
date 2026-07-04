@@ -38,8 +38,8 @@ to the relevant anchors rather than repeating.
 ## Shared patterns {#patterns}
 
 <!-- Workspace repos (registry declares a `packages` common project): seed the
-     placement rules here as canonical contract lines, unless a registry
-     `deviations:` entry waives one —
+     placement rules here as canonical contract lines, unless an
+     `enforcement.rules` waiver in `.config/vwf.yaml` covers one —
      1. All shared schemas live in the common package (under its schema export
         subpaths); no other project defines a shared data schema.
      2. All Firebase and other third-party integrations go through the common

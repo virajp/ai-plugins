@@ -111,7 +111,13 @@ be reconciled before commit, per Step 5).
 product decisions and their rationale (room `decisions`) — skip what the doc
 captures verbatim. Skip silently if mempalace is unavailable.
 
-## Step 8 — Commit
+## Step 8 — Docs sync & commit
+
+**Docs sync (update mode).** When this run changed the product's framing — the
+problem, a goal added/retired, a re-ranked priority — apply
+`${CLAUDE_PLUGIN_ROOT}/assets/docs-sync.md`: reconcile the repo README's
+what-this-is claims with the updated product doc before committing. Report what
+was synced, or `docs: nothing contradicted`.
 
 Commit via `/vwf:git-workflow` with a `blueprint(product):` message, e.g.:
 

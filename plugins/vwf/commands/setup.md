@@ -23,15 +23,16 @@ throughout.
 
 ## Doc Paths
 
-| Doc               | Path                                                       |
-| ----------------- | ---------------------------------------------------------- |
-| Registry          | `docs/blueprint/architecture.md`                           |
-| Environment       | `docs/blueprint/environment.md`                            |
-| Env. template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`    |
-| Format stamp      | `docs/blueprint/.vwf.yml`                                  |
-| CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` |
-| Reference stacks  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`            |
-| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                  |
+| Doc               | Path                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| Registry          | `docs/blueprint/architecture.md`                             |
+| Environment       | `docs/blueprint/environment.md`                              |
+| Env. template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`      |
+| vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`) |
+| Config schema     | `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                 |
+| CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md`   |
+| Reference stacks  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`              |
+| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                    |
 
 Doctrine: the **project-setup** skill (topology-detection,
 migration-and-consent, format-versioning, claude-md).
@@ -49,9 +50,9 @@ migration-and-consent, format-versioning, claude-md).
 - **Idempotent.** A re-run detects what already conforms and migrates only the
   delta; a conforming repo yields an empty plan.
 - **Resumable.** After each completed step, append its id to a transient
-  `setup_progress:` list in `docs/blueprint/.vwf.yml`; a re-run reads it and
-  resumes from the first incomplete step. Keep it a plain list, not a journal.
-  **Remove the key on successful completion** (step 11).
+  `setup_progress:` list in `.config/vwf.yaml`; a re-run reads it and resumes
+  from the first incomplete step. Keep it a plain list, not a journal. **Remove
+  the key on successful completion** (step 11).
 
 **What a batch is.** Code restructuring is approved and applied **one batch at a
 time**. A batch is **one project's moves, or one logical rename group** — small
@@ -64,10 +65,10 @@ into one approval.
 
 ### 1. Detect topology
 
-**Resume check.** Read `docs/blueprint/.vwf.yml`. If it carries a transient
-`setup_progress:` list from an interrupted run, offer to resume from the first
-step **not** in that list rather than restarting; re-confirm anything the user
-wants revisited.
+**Resume check.** Read `.config/vwf.yaml` (fall back to the legacy
+`docs/blueprint/.vwf.yml`). If it carries a transient `setup_progress:` list
+from an interrupted run, offer to resume from the first step **not** in that
+list rather than restarting; re-confirm anything the user wants revisited.
 
 **Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall room
 `decisions` (prior topology / UI / stack confirmations and their rationale)
@@ -102,8 +103,8 @@ mandatory). Never assume UI — confirm it.
 **workspace structure** and its reference stacks per the project-setup skill
 (workspace-structure) — the structure as one confirmation, the stacks stated
 (from the per-type stack docs), not elicited. Both are enforced with an escape
-hatch: an explicit objection is honored, recorded as a `deviations:` entry in
-the registry, and never re-asked.
+hatch: an explicit objection is honored, recorded under `enforcement:` in
+`.config/vwf.yaml`, and never re-asked.
 
 **Existing non-conforming repo.** When an existing repo does not match the
 workspace shape, fold a consent-gated restructure proposal toward it into the
@@ -114,15 +115,15 @@ registry and not re-proposed on later runs.
 
 ### 3. Reconcile format & legacy
 
-Read `docs/blueprint/.vwf.yml` if present. Per the project-setup skill
-(format-versioning), compute the **migration delta** between the repo's current
-format and the format this vwf ships — a legacy `docs/specs/` tree to upgrade, a
-missing `design-system.md` / `environment.md` / `integration.md`, entity docs
-lacking Relationships / Concurrency, the **`1 → 2`** delta (docs missing OKF
-frontmatter and relationships/references not yet written as markdown links), or
-the **`2 → 3`** delta (a missing `environment.md` when the registry declares
-integrations or a secrets-manager `config`). Fold in any old or partial
-structure.
+Read `.config/vwf.yaml` (or the legacy `docs/blueprint/.vwf.yml`) if present.
+Per the project-setup skill (format-versioning), compute the **migration delta**
+between the repo's current format and the format this vwf ships — a legacy
+`docs/specs/` tree to upgrade, a missing `design-system.md` / `environment.md` /
+`integration.md`, entity docs lacking Relationships / Concurrency, the
+**`1 → 2`** delta (docs missing OKF frontmatter and relationships/references not
+yet written as markdown links), or the **`2 → 3`** delta (a missing
+`environment.md` when the registry declares integrations or a secrets-manager
+`config`). Fold in any old or partial structure.
 
 An entity already in the **folder form** (`docs/blueprint/<entity>/` with
 `index.md` + surface files) is a conforming layout, not drift — leave it as a
@@ -198,14 +199,26 @@ Merge the vwf section (from the project-claude template) into the repo's
 **markdown:readme**; if it fails, report the error, offer to continue without it
 (leaving the README for the user), and record the skip in `setup_progress`.
 
-### 9. Stamp the format version
+### 9. Write the vwf config
 
-Write `docs/blueprint/.vwf.yml` with the `blueprint_format` version, a topology
-summary (`ui` if a UI surface exists, `integrations` if the registry declares
-integrations or a secrets-manager `config` — i.e. `environment.md` is required),
-and the **`harness:` block** from step-1 detection (per capability:
-`true`/`false`/`n/a`, per the harness contract), per format-versioning — the
-thing a future `setup` run diffs against.
+Write `.config/vwf.yaml` per the vwf-config asset — the thing a future `setup`
+run diffs against, and how every vwf command operates in this repo:
+
+- the stamp keys — `config_format`, `blueprint_format`, `topology`, `ui`,
+  `integrations`;
+- **`product.name` and `memory.wing`** — derive from the repo/registry name and
+  **confirm with the user** (one MCQ);
+- the **`harness:` block** from step-1 detection (per capability:
+  `true`/`false`/`n/a`, plus any non-canonical task-name overrides found);
+- any **`enforcement:`** entries recorded during this run (structure/stack
+  declines, rule waivers);
+- **per-project nuances** the run surfaced (e.g. a Flutter project's
+  `platforms:` beyond ios/android — elicit when ambiguous, never assume);
+- leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
+  them.
+
+On the `5 → 6` migration, `git mv` the legacy stamp to the new path first (move,
+never delete), then restructure — per format-versioning.
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the durable
 onboarding decisions and their rationale (confirmed topology, UI surface,
@@ -229,6 +242,6 @@ values**. Report anything still open.
 
 Summarize everything created / moved / updated and wait for approval. On
 approval, **finalize resumability state**: remove the transient
-`setup_progress:` key from `docs/blueprint/.vwf.yml` and delete the scratch
+`setup_progress:` key from `.config/vwf.yaml` and delete the scratch
 `docs/blueprint/.vwf-migration-plan.md`. Then commit via `/vwf:git-workflow`
 with a `chore(vwf):` or `docs:` message. Keep the worktree local; do not push.

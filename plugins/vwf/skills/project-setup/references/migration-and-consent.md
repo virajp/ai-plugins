@@ -24,9 +24,9 @@ does not match the enforced workspace structure, the dry-run plan **proposes**
 the restructure — in-repo layout moves (`projects/`, `packages/`, project
 naming) as normal batches; anything that crosses a repo boundary (e.g. splitting
 into parent + submodules) only ever as a written recommendation. Consent rules
-above apply unchanged. A decline is a **deviation**: record it in the registry's
-`deviations:` block (scope, choice, reason) and do not re-propose it on later
-runs.
+above apply unchanged. A decline is a **deviation**: record it in
+`.config/vwf.yaml` under `enforcement:` (structure/stacks/rules form, with the
+choice and reason) and do not re-propose it on later runs.
 
 **Idempotent re-run:** detect what already conforms and migrate only the delta;
 a conforming repo produces an empty plan.
