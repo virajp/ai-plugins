@@ -35,6 +35,22 @@ to the relevant anchors rather than repeating.
 
 ## API conventions {#api}
 
+<!-- The foundation anchors below exist only when the registry's cross_cutting
+     block accepted that foundation (product-foundations skill) — omit the
+     rest. Each holds the canonical contract per its skill reference. -->
+
+## Audit {#audit}
+
+## Notifications {#notifications}
+
+## Background processes {#background}
+
+## Rate limiting {#rate-limiting}
+
+## Data retention {#data-retention}
+
+## Release & changelog {#changelog}
+
 ## Shared patterns {#patterns}
 
 <!-- Workspace repos (registry declares a `packages` common project): seed the

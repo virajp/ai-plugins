@@ -30,6 +30,10 @@ nothing else runs long-lived work.
 - **Config**: Effect `Config` + `Schema`, fail-fast; Doppler-injected secrets;
   Temporal address/namespace/task-queue/TLS from env.
 - **Observability**: OpenTelemetry via Effect; `withSpan` on activities.
+- **Retention & deletion** (product-foundations): the durable account-deletion
+  workflow and retention-purge activities live here — the deletion workflow's
+  deliberate preservations are rows in the retention table, purged later by the
+  compliance operator, never silently.
 
 ## Testing
 

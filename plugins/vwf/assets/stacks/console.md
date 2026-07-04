@@ -26,8 +26,14 @@ admin routes; `console` is the sole holder of admin capabilities.
 - **Audit**: every mutation is wrapped by `AuditLogService` in the Effect layer
   — structurally impossible to mutate without an audit event. Read-access
   logging is supported since all reads pass through the server.
-- **Auth**: Firebase Auth (Google SSO) with an `operator` custom claim, verified
-  in Hono middleware on every request.
+- **Auth**: Firebase Auth (Google SSO) verified in Hono middleware on every
+  request; operator authorization is **document-based** — membership in the
+  dedicated `operators` collection, checked per request, with the **compliance
+  sub-role** gating retained-data and purge surfaces (custom claims carry
+  account status only, never roles — per product-foundations users).
+- **Retention surface** (product-foundations): the compliance-only
+  retention-management screens (list records past their retention date, trigger
+  the purge) live here, audit-recorded like every privileged mutation.
 - **Perimeter**:
   [Cloudflare Zero Trust Access](https://www.cloudflare.com/zero-trust/) in
   front of the single console hostname — the admin plane is invisible to
@@ -43,5 +49,5 @@ admin routes; `console` is the sole holder of admin capabilities.
 - Admin isolation: privileged capabilities live only in this private app, never
   in the public `service`.
 - Defense in depth: network-layer identity (Zero Trust) and application-layer
-  authorization (custom claims) are independent gates.
+  authorization (document-based operator RBAC) are independent gates.
 - Effect end to end on the server; React stays idiomatic at the surface.

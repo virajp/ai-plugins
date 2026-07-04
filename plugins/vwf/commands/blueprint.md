@@ -177,6 +177,15 @@ Blueprint-specific notes layered on the protocol:
   the design system, not re-deciding it).
 - **Decisions-vs-mechanics (protocol §4):** spend the precision budget on **Data
   Model** and **API Surface**; the product half may stay prose-light.
+- **Apply the `product-foundations` skill** for every foundation the registry's
+  `cross_cutting` block accepted: expand its contract into `conventions.md`
+  under the anchor its reference names (on first touch), and elicit the
+  per-entity surface as this entity is authored — audit-recorded rows in Actors
+  & Actions (all operator + destructive rows by default), notification triggers,
+  **sync/async classification per mutating action with worker-vs-service
+  placement** (apply the placement rule; MCQ only when both placements are
+  defensible), and the runtime-settings keys the entity reads. Foundations
+  expand into existing sections — never new mandatory structure.
 - **Approaches (protocol §5):** where a data-model or API shape has competing
   designs (e.g. embed vs reference, sync vs async surface), present the options
   before committing.

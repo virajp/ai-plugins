@@ -17,6 +17,10 @@ workspace submodule and shipping through the app stores.
 - **Tooling**: its own mise `.config/`, `analysis_options.yaml` lints,
   `build_runner` codegen, `mockito` + `integration_test` for testing; the
   workspace root formatter config is shared by symlink.
+- **Changelog & store notes** (product-foundations): a `CHANGELOG.md` (Keep a
+  Changelog) as the source of truth — execute's docs-sync appends draft
+  `[Unreleased]` entries for user-visible changes — with per-locale store
+  release notes under `fastlane/metadata/` generated from it at release.
 
 The deep Flutter doctrine (pubspec discipline, analysis options,
 internationalization, platform-channel patterns) lives in the `flutter` plugin's

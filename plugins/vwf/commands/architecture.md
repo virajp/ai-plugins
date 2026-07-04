@@ -125,9 +125,21 @@ concern **not applicable** to omit it from the doc entirely.
 | `testing`       | `emulator-backed`                  |
 | `integrations`  | `[firebase, google-maps-platform]` |
 
+**Foundations checklist.** Then walk the **product-foundations** skill's
+checklist — users & operators, observability, audit logs, change logs,
+background processes, data retention & PII, notifications, runtime settings,
+rate limiting. For each: present its default contract in one line and ask via
+MCQ — **accept the default / adapt it / not applicable** — recording the
+selection as its cross-cutting token (e.g. `audit: privileged-destructive`,
+`notifications: [push, email]`, `background:
+durable-worker-ephemeral-service`).
+These are elicited defaults, not enforced standards: a skip simply omits the
+token (no `enforcement:` entry). On an update run, walk only foundations not yet
+decided — never re-litigate a recorded selection.
+
 Capture each decision as a single short token or list. Record only the decision,
 not the full blueprint — `blueprint` expands it into
-`docs/blueprint/conventions.md`.
+`docs/blueprint/conventions.md` (foundations per their skill references).
 
 ---
 

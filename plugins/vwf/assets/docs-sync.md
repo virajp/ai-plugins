@@ -30,6 +30,12 @@ changes when code lands, not when a contract is written.
    claims the change falsified).
 3. **Other human docs** the change contradicts (`docs/` guides, per-project
    READMEs in a monorepo) — same rule.
+4. **App changelog** (only when the registry's `cross_cutting` accepted the
+   change-logs foundation): when the landed change alters **user-visible
+   behavior in a `frontend` project**, append a draft entry to the app repo's
+   `CHANGELOG.md` `[Unreleased]` section — user-facing language, not commit
+   prose — per the product-foundations change-logs reference. Backend-only and
+   internal changes get no entry.
 
 ## How
 

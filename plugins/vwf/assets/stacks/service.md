@@ -20,6 +20,17 @@ It holds no admin routes (those live only in `console`).
   middleware); config and cross-cutting services under `_shared/`.
 - **Auth**: the product's auth (e.g. Firebase Auth ID tokens) verified in
   middleware on every authenticated route.
+- **Users & RBAC** (product-foundations): authorization is document-based, read
+  per request — resource owner, membership role, subscription tier; operators
+  are membership in a dedicated `operators` collection; identity custom claims
+  carry **account status only** (`banned`/`to_be_deleted` → coded responses),
+  never roles.
+- **Rate limiting** (product-foundations): a per-class limiter middleware
+  (auth-sensitive / expensive / default) centrally in `_server/`, uniform `429`
+  - `Retry-After` in the coded envelope.
+- **Runtime settings** (product-foundations): a cached, schema-typed accessor
+  over the single settings document from the common package — TTL-cached, never
+  a per-request datastore read.
 - **Firebase & third parties**: only via the common package's aggregate services
   layer — never a direct SDK import. Every datastore call passes a caller string
   for observability.

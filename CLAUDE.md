@@ -146,23 +146,33 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   screens via dev server + Playwright screenshots, judges against
   design-system + Screens contract, axe a11y scan; code-level-only for Flutter),
   `architecture-writer`
-- `skills/` — `rest-api-design`; `blueprint-authoring` (the
-  contract-vs-realization doctrine + per-surface completeness bars — incl. the
-  per-flow Acceptance block **and sequence diagram**, the lifecycle
-  state-diagram bar, and the entity `Serves:` goal edge — + the doc-unit
-  doctrine, auto-applies on `docs/blueprint/**` and — for frontmatter/link
-  hygiene only — `docs/plans/**`); `design-system` (the UX/visual-contract
-  doctrine — tokens, typography, spacing, motion, accessibility,
-  components/anti-patterns — auto-applies on `docs/blueprint/design-system`);
-  `project-setup` (onboarding/migration doctrine — topology detection incl. the
-  **enforced** workspace shape (parent repo + backend/frontend submodules:
-  applied for new/empty repos, proposed as a consent-gated restructure for
-  non-conforming existing ones) and the **enforced reference stacks** (fixed per
-  project type, one stack doc each under `assets/stacks/`; explicit opt-outs
-  recorded under `enforcement:` in `.config/vwf.yaml`, never re-asked),
-  harness-capability detection (per the harness contract, stamped in
-  `.config/vwf.yaml`), consent-gated dry-run migration, the blueprint
-  format-version + drift map; used by `/vwf:setup`)
+- `skills/` — `rest-api-design`; `product-foundations` (the nine foundational
+  concerns every product decides — users & operators, observability
+  (OTel→Grafana), audit logs (privileged+destructive baseline), change logs
+  (Keep-a-Changelog→fastlane), background processes (sync/async +
+  worker-vs-service placement, ask only on ambiguity), data retention & PII,
+  notifications, runtime settings, rate limiting — **elicited defaults**
+  distilled from 95octane: `/vwf:architecture` walks the checklist in step 3c
+  (accept/adapt/skip → `cross_cutting` tokens), `/vwf:blueprint` expands
+  accepted ones into `conventions.md` anchors + per-entity surfaces, execute's
+  docs-sync drafts app changelog entries; realizations live in
+  `assets/stacks/`); `blueprint-authoring` (the contract-vs-realization
+  doctrine + per-surface completeness bars — incl. the per-flow Acceptance block
+  **and sequence diagram**, the lifecycle state-diagram bar, and the entity
+  `Serves:` goal edge — + the doc-unit doctrine, auto-applies on
+  `docs/blueprint/**` and — for frontmatter/link hygiene only —
+  `docs/plans/**`); `design-system` (the UX/visual-contract doctrine — tokens,
+  typography, spacing, motion, accessibility, components/anti-patterns —
+  auto-applies on `docs/blueprint/design-system`); `project-setup`
+  (onboarding/migration doctrine — topology detection incl. the **enforced**
+  workspace shape (parent repo + backend/frontend submodules: applied for
+  new/empty repos, proposed as a consent-gated restructure for non-conforming
+  existing ones) and the **enforced reference stacks** (fixed per project type,
+  one stack doc each under `assets/stacks/`; explicit opt-outs recorded under
+  `enforcement:` in `.config/vwf.yaml`, never re-asked), harness-capability
+  detection (per the harness contract, stamped in `.config/vwf.yaml`),
+  consent-gated dry-run migration, the blueprint format-version + drift map;
+  used by `/vwf:setup`)
 - `assets/templates/` — `entity` (Purpose carries a `Serves:` goal-link line),
   `conventions`, `plan` (incl. the "Acceptance criteria (from blueprint)"
   section `plan` fills and the acceptance stage verifies), `product`,

@@ -15,10 +15,11 @@ the system grows.
 - **Async & messaging:** `durable-workflows`, `message-queue`, `pub-sub`,
   `scheduled-jobs`
 - **Realtime & comms:** `realtime-sync`, `realtime-location`,
-  `push-notifications`, `voice-audio`
-- **Auth & identity:** `third-party-auth`, `custom-claims-rbac`
+  `push-notifications`, `email`, `sms`, `voice-audio`
+- **Auth & identity:** `third-party-auth`, `custom-claims-rbac`, `operator-rbac`
 - **Commerce:** `payments-subscriptions`
 - **Geo:** `maps-navigation`
 - **Web rendering:** `ssr`, `ssg`, `cms-content`, `seo`
 - **Mobile:** `offline-first`, `deep-linking`, `device-permissions`
-- **Observability:** `distributed-tracing`
+- **Observability & governance:** `distributed-tracing`, `audit-log`,
+  `rate-limiting`, `runtime-settings`

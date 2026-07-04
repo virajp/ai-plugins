@@ -363,7 +363,9 @@ Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
 from the [enforced reference stacks](#the-structure--stacks-it-enforces)
 (stated, not offered as a menu; an explicit override becomes an `enforcement:`
-entry in `.config/vwf.yaml`), and writes `docs/blueprint/architecture.md`,
+entry in `.config/vwf.yaml`), walks the **product-foundations checklist** (see
+[vwf skills](#vwf-skills) — one accept/adapt/skip question per foundation,
+recorded as cross-cutting tokens), and writes `docs/blueprint/architecture.md`,
 including the machine-readable Project Registry the other commands depend on and
 a system-shape mermaid diagram kept in sync with it. Re-run it any time the
 topology changes; it asks only about genuine deltas, never re-eliciting what's
@@ -708,6 +710,19 @@ plan/execute loop picks the change up.
 Several skills back the workflow's quality. You don't invoke them directly —
 they inform how Claude writes and reviews:
 
+- **`product-foundations`** — the nine foundational concerns every product
+  decides, as **elicited defaults** distilled from a production reference: users
+  & operators (two user classes, document-based RBAC,
+  claims-for-account-status-only, no impersonation), observability
+  (OpenTelemetry → Grafana Cloud, trace-correlated logs), audit logs
+  (append-only, privileged + destructive actions), change logs (Keep-a-Changelog
+  → fastlane store metadata, drafted by execute), background processes
+  (sync/async per action; durable → worker, ephemeral → service; ask only on
+  ambiguity), data retention & PII (delete by default, pseudonymised legal-basis
+  retention), notifications, runtime settings (one cached settings doc; flags
+  are settings), and rate limiting (endpoint classes, uniform 429).
+  `architecture` walks the checklist (accept / adapt / skip per foundation);
+  `blueprint` expands accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`) plus the per-surface completeness bars: data,
   relationships, concurrency, integration flows (each with observable acceptance

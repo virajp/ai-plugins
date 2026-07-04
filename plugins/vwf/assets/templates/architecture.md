@@ -101,8 +101,16 @@ projects:
 cross_cutting: # system-wide concerns → blueprint's conventions.md
   auth: <selection> # e.g. firebase-id-token, jwt, session-cookie, none
   errors: <selection> # e.g. coded-envelope, http-status-only
-  observability: <selection> # e.g. structured-json-logs, otel-tracing, none
+  observability: <selection> # e.g. opentelemetry-grafana, structured-json-logs, none
   config: <selection> # e.g. env-vars, secrets-manager
   testing: <selection> # e.g. vitest-unit-integration, none
   integrations: [ <service-name>, <...> ] # external services, or []
+  # foundation tokens (product-foundations skill) — present only when accepted:
+  # audit: privileged-destructive
+  # notifications: [ push, email ]
+  # background: durable-worker-ephemeral-service
+  # data-retention: gdpr-dpdpa
+  # runtime_settings: cached-settings-doc
+  # rate_limiting: endpoint-classes
+  # changelog: keepachangelog-fastlane
 ```
