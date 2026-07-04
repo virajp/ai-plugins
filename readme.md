@@ -4,11 +4,14 @@
 opinionated workflow that turns a vague feature request into shipped, reviewed
 code through three disciplined phases:
 
-1. **Blueprint** — keep an always-current blueprint of the *whole product*.
+1. **Blueprint** — keep an always-current blueprint of the *whole product*,
+   anchored to a product doc (problem, users, measurable goals) every entity
+   must trace to.
 2. **Plan** — diff the blueprint against the real code for one slice, and write
    the delta to apply.
-3. **Execute** — implement the plan under strict TDD, then run code review and
-   security review behind approval gates.
+3. **Execute** — implement the plan under strict TDD, then code review, security
+   review, E2E acceptance, and UX conformance behind approval gates — with
+   post-deploy verification and a production-feedback intake closing the loop.
 
 You drive it with slash commands. Claude does the work, asks one question at a
 time, and never writes until you approve.
@@ -61,7 +64,10 @@ adopting it.
 - **Requires a testable project.** `execute` enforces non-negotiable TDD and a
   coverage gate. A project without a test runner won't fit the execute stage;
   missing coverage tooling is tolerated (the coder reports `coverage: n/a` and
-  the gate decides).
+  the gate decides). The verification harness (dev server, E2E suites, staging
+  mode) is self-healing: `setup` detects and stamps what exists, and `plan`
+  injects bootstrap steps for whatever a slice's gates need — so harness gaps
+  surface at plan time with their fix attached, not as surprises at a gate.
 - **Assumes a registry-described workspace.** `plan` and `execute` map each
   slice to a project in the architecture registry and read its code (submodules
   included). You model the codebase with `/vwf:architecture` first; it won't
@@ -126,14 +132,18 @@ The three phases map to three questions:
 
 ```mermaid
 flowchart TD
-    Z["0 · /vwf:setup<br/>(onboard / migrate)"] --> A["1 · /vwf:architecture"]
-    A --> DS["2 · /vwf:design-system<br/>(if UI)"]
-    DS --> B["3 · /vwf:blueprint"]
-    B --> C["4 · /vwf:plan"]
-    C --> D["5 · /vwf:execute<br/>(gated)"]
-    C e1@-. "autonomous alternative" .-> F["5 · /vwf:autopilot<br/>(one worktree)"]
-    D --> E["6 · /vwf:archive"]
+    Z["0 · /vwf:setup<br/>(onboard / migrate)"] --> P["1 · /vwf:product"]
+    P --> A["2 · /vwf:architecture"]
+    A --> DS["3 · /vwf:design-system<br/>(if UI)"]
+    DS --> B["4 · /vwf:blueprint"]
+    B --> C["5 · /vwf:plan"]
+    C --> D["6 · /vwf:execute<br/>(gated)"]
+    C e1@-. "autonomous alternative" .-> F["6 · /vwf:autopilot<br/>(one worktree)"]
+    D --> E["7 · /vwf:archive"]
     F e2@-. "you review & land" .-> E
+    E --> V["8 · deploy (you) → /vwf:verify"]
+    V e7@-. "regressions & readings" .-> FB["/vwf:feedback"]
+    FB e8@-. "routes to product / blueprint / plan" .-> P
     D e3@-. "blueprint/plan gaps" .-> B
     D e4@-. "blueprint/plan gaps" .-> C
     F e5@-. "blueprint/plan gaps" .-> B
@@ -144,6 +154,8 @@ flowchart TD
     e4@{ animate: true }
     e5@{ animate: true }
     e6@{ animate: true }
+    e7@{ animate: true }
+    e8@{ animate: true }
 ```
 
 `architecture` runs once to bootstrap; then you loop
@@ -162,11 +174,12 @@ blueprint is the desired state; the plans are the changes you apply to reach it.
 docs/
 ├── blueprint/                   # the always-current blueprint (desired state)
 │   ├── .vwf.yml                 # blueprint format-version stamp (written by setup)
+│   ├── product.md               # problem, users, measurable goals, slice priority
 │   ├── architecture.md          # system shape + machine-readable Project Registry
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
 │   ├── environment.md           # per-project env-var/secret catalog (names, never values)
-│   ├── integration.md           # cross-entity flows + inter-service contracts
+│   ├── integration.md           # cross-entity flows + acceptance criteria per flow
 │   └── <entity>.md              # one doc per entity (or an <entity>/ folder)
 └── plans/                       # per-cycle plans (the diff to apply)
     ├── <date>-<time>-<slice>.md
@@ -243,22 +256,25 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 
 ## Commands
 
-| Command                   | What it does                                                |
-| ------------------------- | ----------------------------------------------------------- |
-| `/vwf:setup`              | Onboard/migrate a repo into vwf's format (re-runnable)      |
-| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry     |
-| `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)  |
-| `/vwf:blueprint [entity]` | Maintain the full-product blueprint, one doc per entity     |
-| `/vwf:plan [slice]`       | Write a reviewable cycle plan — a diff of blueprint vs code |
-| `/vwf:execute [mode]`     | Implement the plan under TDD, then code + security review   |
-| `/vwf:autopilot [plan]`   | Autonomously run one plan end to end — no per-stage gates   |
-| `/vwf:archive [plan]`     | Retire a completed plan into `docs/plans/archived/`         |
-| `/vwf:handoff <name>`     | Capture the session so work resumes in a fresh one          |
-| `/vwf:recall <name>`      | Resume from a handoff in a fresh session                    |
-| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges              |
+| Command                   | What it does                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `/vwf:setup`              | Onboard/migrate a repo into vwf's format (re-runnable)                         |
+| `/vwf:product`            | The Phase −1 outcome contract — problem, users, goals, slice priority          |
+| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry                        |
+| `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)                     |
+| `/vwf:blueprint [entity]` | Maintain the full-product blueprint, one doc per entity                        |
+| `/vwf:plan [slice]`       | Write a reviewable cycle plan — a diff of blueprint vs code                    |
+| `/vwf:execute [mode]`     | Implement the plan under TDD, then code + security review                      |
+| `/vwf:autopilot [plan]`   | Autonomously run one plan end to end — no per-stage gates                      |
+| `/vwf:archive [plan]`     | Retire a completed plan into `docs/plans/archived/`                            |
+| `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment |
+| `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it                     |
+| `/vwf:handoff <name>`     | Capture the session so work resumes in a fresh one                             |
+| `/vwf:recall <name>`      | Resume from a handoff in a fresh session                                       |
+| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                 |
 
 Every command runs on `sonnet` at high reasoning effort; inside `execute` and
-`autopilot`, the code- and security-review subagents run on `opus`.
+`autopilot`, the code-review, security-review, and ux subagents run on `opus`.
 
 ### /vwf:setup
 
@@ -279,16 +295,31 @@ Every workflow command also runs a quick format check against that stamp and
 nudges you to re-run `/vwf:setup` when a repo falls behind — so a single
 user-level vwf upgrade reaches each repo on next use.
 
+### /vwf:product
+
+The **Phase −1** foundation — run it before `architecture`. It elicits, PM
+style, what no other doc pins down: the **problem** (and why now), the **target
+users**, **goals with measurable metrics** (each under a stable anchor), the
+**slice priority** (what to build next and why), non-goals, and the riskiest
+assumptions. A stateless `product-reviewer` subagent gates the doc — an
+unmeasurable metric or a solution-shaped problem statement is a gap, not a pass.
+
+This is what gives the rest of the workflow product teeth: `blueprint` halts
+without `product.md`, every entity must declare which goal it **serves** (the
+reviewer rejects an entity no goal justifies), and `/vwf:feedback` logs metric
+readings against it. Re-run it to pivot, re-rank, or retire goals — retired
+goals reconcile their inbound links, never dangle.
+
 ### /vwf:architecture
 
-Run this **after `setup`** (or first, on a fresh repo). It elicits your system's
-shape — projects, their types, how they interconnect, where they deploy —
-records each project's stack from the
-[enforced reference stacks](#the-structure--stacks-it-enforces) (stated, not
-offered as a menu; an explicit override becomes a registry `deviations:` entry),
-and writes `docs/blueprint/architecture.md`, including the machine-readable
-Project Registry the other commands depend on. Re-run it any time the topology
-changes; it asks only about genuine deltas, never re-eliciting what's confirmed.
+Run this **after `product`**. It elicits your system's shape — projects, their
+types, how they interconnect, where they deploy — records each project's stack
+from the [enforced reference stacks](#the-structure--stacks-it-enforces)
+(stated, not offered as a menu; an explicit override becomes a registry
+`deviations:` entry), and writes `docs/blueprint/architecture.md`, including the
+machine-readable Project Registry the other commands depend on. Re-run it any
+time the topology changes; it asks only about genuine deltas, never re-eliciting
+what's confirmed.
 
 This is the one doc that *does* name technologies and infrastructure — the
 blueprint deliberately doesn't.
@@ -357,14 +388,22 @@ Implement an approved plan. Execution is mechanical from the plan, but strict:
 /vwf:execute review     # jump to a stage (the prior stage must be complete)
 ```
 
-It runs three stages, each in a fresh purpose-built subagent, each behind a
-**mandatory approval gate**:
+It runs five stages, each in a fresh purpose-built subagent, behind **mandatory
+approval gates** (acceptance + ux share one):
 
-| Stage    | Model  | What happens                                                                |
-| -------- | ------ | --------------------------------------------------------------------------- |
-| code     | sonnet | Implements the plan under TDD (RED → GREEN → REFACTOR) to the coverage gate |
-| review   | opus   | Adversarial code review against the plan, blueprint, conventions, and stack |
-| security | opus   | Threat-models the change against the project's declared capabilities        |
+| Stage      | Model  | What happens                                                                  |
+| ---------- | ------ | ----------------------------------------------------------------------------- |
+| code       | sonnet | Implements the plan under TDD (RED → GREEN → REFACTOR) to the coverage gate   |
+| review     | opus   | Adversarial code review against the plan, blueprint, conventions, and stack   |
+| security   | opus   | Threat-models the change against the project's declared capabilities          |
+| acceptance | sonnet | Independently maps the blueprint's flow criteria to E2E tests and runs them   |
+| ux         | opus   | Renders changed screens, judges them against the design system, axe a11y scan |
+
+`acceptance` runs when the slice touches a flow with acceptance criteria; `ux`
+when it changes screens in a UI project (web gets the full screenshot review;
+Flutter a code-level pass). Each skip is explicit at the gate, never silent —
+and a missing E2E harness is presented for you to decide, mirroring the coverage
+policy.
 
 ```mermaid
 flowchart TD
@@ -375,8 +414,11 @@ flowchart TD
     G2 -->|yes| S["security — security review"]
     G2 -->|findings| C
     S --> G3{"approve"}
-    G3 -->|yes| RC["reconcile + merge"]
+    G3 -->|yes| AX["acceptance (E2E) + ux (rendered)"]
     G3 -->|findings| C
+    AX --> G4{"approve"}
+    G4 -->|yes| RC["reconcile + merge"]
+    G4 -->|findings| C
 ```
 
 `vwf` never chains stages automatically — it pauses for your approval at every
@@ -408,7 +450,9 @@ What it does, by rule:
 - **Full pipeline each step.** `code → review → security`, looping findings back
   to code. **Security findings are always fixed**; **code-review findings loop
   up to 4 rounds**, after which any residual is recorded as a gap — the
-  blueprint/plan wasn't thorough enough.
+  blueprint/plan wasn't thorough enough. After **all** steps, one
+  `acceptance + ux` pass runs (E2E criteria + rendered-UI review), with the same
+  4-round cap.
 - **Gaps don't stop it.** Each gap is written to
   `docs/plans/<plan>.gap-report.md` and to memory, and the run continues.
 
@@ -434,6 +478,40 @@ deletes. Run it manually, or accept the offer at the end of `execute`.
 
 ```text
 /vwf:archive
+```
+
+### /vwf:verify
+
+Run **after you (or CI) deploy** — vwf never deploys. It health-checks every
+deployed project in the named environment, then re-runs the blueprint's flow
+**acceptance criteria against the real environment** (staging-mode E2E — all
+flows, not just the last plan's, so regressions in untouched flows surface).
+Failures route like feedback: a behavior regression becomes a gap with a
+`/vwf:blueprint` / `/vwf:plan` offer; an infra failure is reported as
+operational, not filed as a blueprint gap.
+
+```text
+/vwf:verify staging
+```
+
+### /vwf:feedback
+
+The front door for what production teaches you. Paste a bug report, a metric
+reading, or a user complaint; it classifies and routes it to where it gets
+**fixed** — never to a backlog:
+
+- **Behavior bug / blueprint hole** → gap + a `/vwf:plan` / `/vwf:blueprint`
+  offer (deferred items land in the entity doc's Open Questions, so nothing
+  depends on memory being up).
+- **Metric reading** → a dated row in `product.md`'s Metric readings appendix; a
+  miss triggers a `/vwf:product` re-rank offer.
+- **UX issue** → recorded at the exact screen/state, with a `/vwf:design-system`
+  or `/vwf:blueprint` offer.
+- **Feature idea** → `/vwf:product` first (which goal does it serve?), then the
+  normal pipeline — never straight to code.
+
+```text
+/vwf:feedback "cancelled order #1043 was refunded twice"
 ```
 
 ### /vwf:handoff and /vwf:recall
@@ -515,28 +593,42 @@ mirrored into the plan doc, so they survive a memory outage. See
 A first slice, end to end. Assume a backend service with an `order` entity.
 
 ```text
-# 1. Bootstrap the system shape and registry (once per workspace)
+# 1. Pin the outcome contract (once per workspace, re-run to pivot)
+/vwf:product
+#    → writes docs/blueprint/product.md — problem, goals, slice priority
+
+# 2. Bootstrap the system shape and registry (once per workspace)
 /vwf:architecture
 
-# 2. Specify the order entity — answer the questions, approve the doc
+# 3. Specify the order entity — answer the questions, approve the doc
 /vwf:blueprint order
 #    → writes docs/blueprint/order.md, gated by the completeness reviewer
+#      (every entity links the product goal it serves)
 
-# 3. Plan the first slice — review the diff, approve it
+# 4. Plan the first slice — review the diff, approve it
 /vwf:plan order
-#    → writes docs/plans/2026-06-26-1430-order.md (TDD-ordered steps)
+#    → writes docs/plans/2026-06-26-1430-order.md (TDD-ordered steps
+#      + the acceptance criteria this cycle must land)
 
-# 4. Execute — approve at each gate
+# 5. Execute — approve at each gate
 /vwf:execute
 #    → code (TDD) → [approve] → review → [approve] → security → [approve]
+#    → acceptance (E2E) + ux (rendered) → [approve]
 #    → reconcile registry + any gaps → merge via git-workflow
 
-# 5. Archive the completed plan
+# 6. Archive the completed plan, deploy it yourself, then verify
 /vwf:archive
+/vwf:verify staging
+#    → health per project + all flows' acceptance criteria against staging
+
+# 7. When production talks, route what it says
+/vwf:feedback "median refund time is 3h — target is 1h"
+#    → logs the reading, offers /vwf:product to re-rank
 ```
 
-From here, loop steps 2–5 per slice. Update the blueprint when the product
-changes; re-run `architecture` only when the system's *shape* changes.
+From here, loop steps 3–7 per slice. Update the blueprint when the product
+changes; re-run `product` on a pivot or metric miss; re-run `architecture` only
+when the system's *shape* changes.
 
 ## vwf skills
 
@@ -570,7 +662,8 @@ plugin (see Supporting plugins).
 
 ## Tips
 
-- **Run `architecture` first.** `blueprint` and `plan` halt without a registry.
+- **Run `product` and `architecture` first.** `blueprint` halts without either —
+  the goals and the registry anchor everything downstream.
 - **Keep slices small.** One entity or one section per plan/execute cycle keeps
   reviews sharp and the diff reviewable.
 - **Trust the gates.** Read what each stage reports before approving — the

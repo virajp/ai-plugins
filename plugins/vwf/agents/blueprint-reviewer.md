@@ -35,6 +35,10 @@ re-elicit the missing decisions with the user.
 
 Verify, for the entity doc under review:
 
+- [ ] The Purpose section carries a **Serves:** line with at least one markdown
+      link to a `product.md` goal anchor, and every linked anchor is in the
+      goal-anchor list the orchestrator passed (a link to a nonexistent goal is
+      a gap; a missing Serves line is a gap).
 - [ ] Every enum field lists all members; no open-ended types.
 - [ ] Every field states optionality (and nullability where relevant) and a
       default where one exists.
@@ -71,14 +75,28 @@ Verify, for the entity doc under review:
 - [ ] Section-to-project mappings match the registry; no hardcoded stack names
       leaked into a generic template.
 - [ ] No speculative surface (minimalism rung 1): every field, endpoint, state,
-      and screen traces to a stated product goal or invariant — flag anything
-      added "just in case" or for unrequested configurability. Never flag a
-      surface a safety guardrail requires (validation, data-loss, security,
-      accessibility).
+      and screen traces to a **linked product-doc goal** (the Serves line) or a
+      stated invariant — flag anything added "just in case" or for unrequested
+      configurability. Never flag a surface a safety guardrail requires
+      (validation, data-loss, security, accessibility).
 
 **Conditional items are skipped when the corresponding surface/project is
 absent** — do not flag a missing section for a project type that is not in the
 registry.
+
+**Integration doc (when passed).** When the orchestrator also passes
+`integration.md` (because this pass touched it), apply these items to **every
+flow this pass added or changed** (the orchestrator names them):
+
+- [ ] The flow lists trigger, ordered steps (each naming its entity/service as a
+      resolving markdown link), consistency boundary, failure handling, and
+      idempotency.
+- [ ] The flow has an **Acceptance** block with at least one **success** and one
+      **failure/compensation** criterion, each an observable Given/When/ Then
+      outcome — state a user, API caller, or operator can verify from outside. A
+      criterion naming a test file, fixture, tool, or internal function is a
+      code-independence gap; a criterion that is not observable ("the workflow
+      completes") is a gap.
 
 **Doc unit.** The orchestrator tells you the doc's `doc_unit` (`entity` / `page`
 / `module`). For a `page` or `module` doc, an engineering surface written as

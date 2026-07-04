@@ -102,22 +102,34 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
-- `commands/` — `/vwf:` slash commands: the Blueprint → Plan → Execute model —
-  `setup` (Phase-0 onboarding/migration bootstrapper), `architecture`,
+- `commands/` — `/vwf:` slash commands: the Product → Blueprint → Plan → Execute
+  model — `setup` (Phase-0 onboarding/migration bootstrapper), `product` (the
+  Phase −1 outcome contract: problem/users/goals with `#goal-<slug>`
+  anchors/slice priority; `blueprint` halts without it), `architecture`,
   `design-system`, `blueprint`, `plan`, `execute`, `archive`, plus `autopilot`
-  (the autonomous variant of `execute`), internal `git-workflow`, and
-  `handoff`/`recall` (mempalace-backed session handoff — wing=`<project>`,
-  room=`handoff`, drawer=`<name>`). `autopilot` runs one approved plan to
-  completion **without per-stage human gates** in a dedicated worktree:
-  dependency-ordered steps, `code→review→security` per step (security findings
-  always fixed; review findings loop ≤4 rounds then become documented gaps),
-  gaps written to `docs/plans/<plan>.gap-report.md` + mempalace room `gaps`,
-  **never merges/pushes or archives**, and pauses only on hard halts, the
-  statusline resource caps, an all-blocking gap, or an uncovered irreversible
-  decision. Reuses execute's three subagents.
+  (the autonomous variant of `execute`), `verify` (post-deploy environment
+  check: health pass + the flows' acceptance criteria run against staging/prod
+  via the acceptance verifier's environment mode — vwf never deploys),
+  `feedback` (the production-feedback front door: classifies
+  bug/hole/metric-reading/UX/feature-idea and routes each into the doc+command
+  that fixes it, incl. the `product.md` Metric readings appendix), internal
+  `git-workflow`, and `handoff`/`recall` (mempalace-backed session handoff —
+  wing=`<project>`, room=`handoff`, drawer=`<name>`). `autopilot` runs one
+  approved plan to completion **without per-stage human gates** in a dedicated
+  worktree: dependency-ordered steps, `code→review→security` per step (security
+  findings always fixed; review findings loop ≤4 rounds then become documented
+  gaps), gaps written to `docs/plans/<plan>.gap-report.md` + mempalace room
+  `gaps`, **never merges/pushes or archives**, and pauses only on hard halts,
+  the statusline resource caps, an all-blocking gap, or an uncovered
+  irreversible decision. Reuses execute's three subagents.
 - `agents/` — subagents the commands delegate to: `blueprint-reviewer`,
-  `design-system-reviewer`, `execute-coder`, `execute-code-reviewer`,
-  `execute-security-reviewer`, `architecture-writer`
+  `design-system-reviewer`, `product-reviewer`, `execute-coder`,
+  `execute-code-reviewer`, `execute-security-reviewer`,
+  `execute-acceptance-verifier` (independent criteria→E2E-test mapping + run;
+  also `/vwf:verify`'s environment mode), `execute-ux-reviewer` (renders changed
+  screens via dev server + Playwright screenshots, judges against
+  design-system + Screens contract, axe a11y scan; code-level-only for Flutter),
+  `architecture-writer`
 - `skills/` — `rest-api-design`; `blueprint-authoring` (the
   contract-vs-realization doctrine + per-surface completeness bars + the
   doc-unit doctrine, auto-applies on `docs/blueprint/**` and — for
@@ -132,26 +144,41 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `assets/stacks/`; explicit opt-outs recorded as registry `deviations:`
   entries, never re-asked), consent-gated dry-run migration, the blueprint
   format-version + drift map; used by `/vwf:setup`)
-- `assets/templates/` — `entity`, `conventions`, `plan`, `architecture`,
-  `design-system`, `environment` (the per-project env-var/secret catalog),
-  `integration`, `project-claude` (the vwf section `/vwf:setup` merges into a
-  repo's CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved
-  from the registry). All blueprint templates open with the OKF frontmatter
-  block (format 2)
-- `assets/examples/blueprint/` — a **format-3 conformance bundle** (`order.md`,
-  `customer.md`, `conventions.md`, `design-system.md`, `environment.md`): a
-  worked, format-valid entity slice where every relationship/reference link
-  resolves. Referenced from the blueprint-authoring skill as the concrete "what
-  good looks like"; its asset-refs are covered by `plugins:check`
+- `assets/templates/` — `entity` (Purpose carries a `Serves:` goal-link line),
+  `conventions`, `plan` (incl. the "Acceptance criteria (from blueprint)"
+  section `plan` fills and the acceptance stage verifies), `product`,
+  `architecture`, `design-system`, `environment` (the per-project env-var/secret
+  catalog), `integration` (each flow carries an Acceptance block),
+  `project-claude` (the vwf section `/vwf:setup` merges into a repo's
+  CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved from
+  the registry). All blueprint templates open with the OKF frontmatter block
+- `assets/examples/blueprint/` — a **format-5 conformance bundle** (`order.md`,
+  `customer.md`, `product.md`, `integration.md`, `conventions.md`,
+  `design-system.md`, `environment.md`): a worked, format-valid entity slice
+  where every relationship/reference/goal link resolves and the flow carries a
+  worked Acceptance block. Referenced from the blueprint-authoring skill as the
+  concrete "what good looks like"; its asset-refs are covered by `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `blueprint`, `plan`, `architecture`, `design-system`, and `setup`
 - `assets/execute-stages.md` — the stage pipeline shared by `execute` and
-  `autopilot`: the code→review→security table, per-stage subagent contracts
-  (incl. the slice/round tags and the coverage-report policy), shared stage
-  rules (model enforcement, terse output, loop-on-findings with the recall-miss
-  fallback, gap capture), and the end-of-run architecture/environment reconcile
+  `autopilot`: the code→review→security→acceptance+ux table (acceptance + ux run
+  once per cycle behind one combined gate — after `security` in execute, after
+  all steps in autopilot; each conditional and skipped explicitly), per-stage
+  subagent contracts (incl. the slice/round tags, the coverage-report policy,
+  and the acceptance/ux `n/a` gate-decides policy), shared stage rules (model
+  enforcement, terse output, loop-on-findings with the recall-miss fallback, gap
+  capture), and the end-of-run architecture/environment reconcile
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
+- `assets/harness.md` — the **harness contract**: the verification capabilities
+  a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`,
+  `health`, `screenshots`) with canonical task-name conventions. `setup` detects
+  and stamps them (`.vwf.yml` `harness:` block — vwf-internal, never a format
+  bump), `plan`'s harness preflight re-verifies what a slice's gates need and
+  injects bootstrap steps for missing ones (guardrails — exempt from
+  minimalism), execute's reconcile updates the stamp, and the
+  acceptance/ux/verify surfaces name any `n/a` in this vocabulary — so harness
+  gaps surface at plan time with the fix attached, not at the gate
 - `assets/stacks/` — the **enforced reference stack** docs, one per project type
   (`packages`, `service`, `worker`, `site`, `console`, `frontend`) plus
   `monorepo.md` (backend monorepo tooling), distilled from the 95octane
@@ -181,11 +208,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   reaches each repo, self-healing on next use
 - `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
 
-Docs the commands maintain live under `docs/blueprint/` (registry
-`architecture.md`, `conventions.md`, the product-wide `design-system.md`, the
-per-project env-var/secret catalog `environment.md`, the cross-entity
-`integration.md`, and one entity doc per entity — either `<entity>.md` or, for a
-large entity, a folder `<entity>/` splitting the same sections across
+Docs the commands maintain live under `docs/blueprint/` (the outcome contract
+`product.md` — problem/users/goals/slice-priority + the `/vwf:feedback`-owned
+Metric readings appendix — registry `architecture.md`, `conventions.md`, the
+product-wide `design-system.md`, the per-project env-var/secret catalog
+`environment.md`, the cross-entity `integration.md` — every flow carrying an
+Acceptance block — and one entity doc per entity — either `<entity>.md` or, for
+a large entity, a folder `<entity>/` splitting the same sections across
 `index.md` + `data.md`/`api.md`/`jobs.md`/`screens.md`) and `docs/plans/`
 (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
 commands/agents/templates from the prior model are archived under
@@ -195,44 +224,52 @@ The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
 2**, every doc is a typed OKF concept: it opens with mandatory YAML frontmatter
 (`type` from a fixed vocabulary —
-`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/`vwf-environment`/
-`vwf-integration`/`vwf-entity`/`vwf-plan`/`vwf-gap-report` — plus `title`,
-`description`, `status`; optional `timestamp`/`owner`/`resource`/`tags`), and
-cross-doc relationships are typed markdown links (the OKF edge) rather than
-prose. This makes a blueprint portable to any OKF-aware tool (e.g. the OKF
-static-HTML visualizer) and ingestable by graphify, and lets the
-`blueprint-reviewer` verify frontmatter + that every edge resolves. The doctrine
-lives in the blueprint-authoring skill's `frontmatter-and-links` reference; the
-format is carried by `blueprint-format` + the `1 → 2` and `2 → 3` deltas in the
-project-setup skill's `format-versioning` reference, so `/vwf:setup` migrates
-stale repos on next use. **Format 3** added the `vwf-environment` type and the
-`environment.md` catalog (see Foundations below).
+`vwf-product`/`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/
+`vwf-environment`/`vwf-integration`/`vwf-entity`/`vwf-plan`/`vwf-gap-report` —
+plus `title`, `description`, `status`; optional
+`timestamp`/`owner`/`resource`/`tags`), and cross-doc relationships are typed
+markdown links (the OKF edge) rather than prose. This makes a blueprint portable
+to any OKF-aware tool (e.g. the OKF static-HTML visualizer) and ingestable by
+graphify, and lets the `blueprint-reviewer` verify frontmatter + that every edge
+resolves. The doctrine lives in the blueprint-authoring skill's
+`frontmatter-and-links` reference; the format is carried by `blueprint-format` +
+the `N → N+1` deltas in the project-setup skill's `format-versioning` reference,
+so `/vwf:setup` migrates stale repos on next use. **Format 3** added the
+`vwf-environment` type and the `environment.md` catalog; **format 4** the
+Acceptance block on every `integration.md` flow (what the execute acceptance
+stage verifies); **format 5** the `vwf-product` type + `product.md` foundation
+and the entity `Serves:` goal links (see Foundations below).
 
 **Foundations & ordering.** The workflow is
-`setup → architecture → design-system
-→ blueprint → plan → execute`. `setup` is
-the Phase-0 bootstrapper — it onboards a repo (detect-or-ask topology via MCQ,
-consent-gated migration into the `docs/blueprint/` format, orchestrates
-mise/architecture/design-system, authors CLAUDE.md + README) and is
+`setup → product → architecture → design-system → blueprint → plan → execute`,
+with `verify` (post-deploy) and `feedback` (production intake) closing the loop
+back into `product`/`blueprint`/`plan`. `setup` is the Phase-0 bootstrapper — it
+onboards a repo (detect-or-ask topology via MCQ, consent-gated migration into
+the `docs/blueprint/` format, orchestrates
+mise/product/architecture/design-system, authors CLAUDE.md + README) and is
 **re-runnable**: it stamps the blueprint format version in
 `docs/blueprint/.vwf.yml` and, on a later run, detects drift against the format
-the installed vwf ships and migrates the delta. `architecture` (the registry) is
-unconditionally required before `blueprint`. `design-system` is a second
-foundation, **required once the registry has a UI project** (type `site`,
-`frontend`, or `console`): `blueprint` halts on an entity with a Screens surface
-if `docs/blueprint/design-system.md` is missing. `environment.md` (the
-per-project env-var/secret catalog, type `vwf-environment`) is a third
-foundation, **required once the registry declares an external integration or a
-secrets-manager `config`** — `setup` bootstraps it from the repo's existing
-env-var/secret usage (names only, never values) and `blueprint` maintains it as
-entities add integrations, with `conventions.md#config` holding only the
-injection mechanism. The blueprint is a **code-independent technical contract**
-— it records only decisions that have more than one reasonable answer *and* are
-true regardless of how the code is written today;
-reuse/placement/ordering/library choices are `plan`'s job. The
-`blueprint-reviewer` gate enforces both the completeness bars (data,
-relationships, concurrency, API, UI/UX, flows) and the code-independence
-guardrail (no file/class/library/CSS/pixel leakage).
+the installed vwf ships and migrates the delta. `product.md` (the Phase −1
+outcome contract, type `vwf-product`, gated by the `product-reviewer`) and
+`architecture` (the registry) are both unconditionally required before
+`blueprint` — every entity's Purpose must `Serves:`-link a product goal anchor,
+which the `blueprint-reviewer` verifies and the minimalism check traces to.
+`design-system` is a second foundation, **required once the registry has a UI
+project** (type `site`, `frontend`, or `console`): `blueprint` halts on an
+entity with a Screens surface if `docs/blueprint/design-system.md` is missing.
+`environment.md` (the per-project env-var/secret catalog, type
+`vwf-environment`) is a third foundation, **required once the registry declares
+an external integration or a secrets-manager `config`** — `setup` bootstraps it
+from the repo's existing env-var/secret usage (names only, never values) and
+`blueprint` maintains it as entities add integrations, with
+`conventions.md#config` holding only the injection mechanism. The blueprint is a
+**code-independent technical contract** — it records only decisions that have
+more than one reasonable answer *and* are true regardless of how the code is
+written today; reuse/placement/ordering/library choices are `plan`'s job. The
+`blueprint-reviewer` gate enforces the completeness bars (data, relationships,
+concurrency, API, UI/UX, flows incl. the Acceptance block bar when a pass
+touches `integration.md`), the goal-traceability bar (the `Serves:` line), and
+the code-independence guardrail (no file/class/library/CSS/pixel leakage).
 
 ### Dependencies
 

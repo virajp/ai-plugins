@@ -16,6 +16,8 @@ A Customer is the account that places and owns orders. It holds the minimal
 identity and contact detail needed to attribute purchases and communicate about
 them.
 
+Serves: [Reliable ordering](./product.md#goal-reliable-ordering)
+
 ## Out of Scope
 
 - Authentication credentials and sessions (an Auth concern).

@@ -13,13 +13,21 @@ grows past a handful of flows).
 - **cascade** on delete (cascade / restrict / nullify)
 - whether the relation is required
 
-**Flows (system doc).** A flow is a process that spans entities or services. For
-each:
+**Flows (system doc).** A flow is a process that spans entities **or projects**
+— a single-entity journey that crosses projects (app → service → datastore) is a
+flow too; the cross-project boundary is what makes it one. For each:
 
 - the trigger and the ordered steps, naming the entity or service each touches
 - the **consistency boundary**: which steps are atomic vs eventually consistent
 - **failure handling**: compensation or rollback on a mid-flow failure
 - the idempotency of the flow as a whole
+- **acceptance criteria**: observable Given/When/Then outcomes — what a user or
+  system can verify from the outside once the flow ran. At least one **success**
+  and one **failure/compensation** criterion per flow. Each must be observable
+  (state a user, API caller, or operator can see) and code-independent — name
+  the outcome, never the test file, fixture, or tool. These are the contract
+  `plan` turns into E2E test steps and `execute`'s **acceptance stage** verifies
+  end-to-end.
 
 **Inter-service contracts (system doc).** When projects integrate:
 

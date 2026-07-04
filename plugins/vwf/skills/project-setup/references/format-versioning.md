@@ -6,12 +6,25 @@ and, on re-run, migrates the gap.
 **The stamp** — `docs/blueprint/.vwf.yml`:
 
 ```yaml
-blueprint_format: 3
+blueprint_format: 5
 topology: monorepo # or polyrepo | workspace
 projects: [ api, web, worker ] # by registry name
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
+harness: # verification-harness capabilities (see the harness contract asset)
+  dev: true
+  e2e_local: true
+  local_stack: true
+  e2e_staging: false
+  health: true
+  screenshots: true
 ```
+
+The `harness:` block is **vwf-internal state, not part of the blueprint format**
+— adding or updating it never requires a format bump. `setup` stamps it from
+detection; `plan` re-verifies the capabilities a slice needs and injects
+bootstrap steps for missing ones; execute's reconcile updates it when a cycle
+adds a capability.
 
 **Source of truth (shipped).** The format the installed vwf ships is the integer
 in `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`. The workflow commands
@@ -20,11 +33,26 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 3.** Format 3 = format 2 **plus** an **Environment &
-Secrets** foundation. A format-2 repo is a format-1 repo whose every
-`docs/blueprint/` doc is a well-formed **OKF concept** (vwf is an opinionated
-profile of Google's Open Knowledge Format — see the blueprint-authoring skill's
-frontmatter-and-links reference). Concretely, format 2 = format 1 **plus**:
+**Current format = 5.** Format 5 = format 4 **plus** the **Product** foundation:
+`docs/blueprint/product.md` (type **`vwf-product`**, authored by `/vwf:product`)
+— problem, target users, goals with stable `#goal-<slug>` anchors and measurable
+metrics, slice priority, non-goals, risks. It is **required unconditionally**
+(like the registry — `blueprint` halts without it), and every entity doc's
+Purpose carries a **Serves:** line linking at least one goal anchor.
+
+Format 4 = format 3 **plus** an **Acceptance** block on every flow in
+`integration.md`: observable Given/When/Then outcomes — at least one success and
+one failure/compensation criterion per flow — the contract `plan` turns into E2E
+test steps and `execute`'s acceptance stage verifies (see the
+blueprint-authoring **integration-and-flows** reference). A repo whose
+`integration.md` has no flows (or that has no `integration.md` because no
+cross-entity/cross-project flow exists yet) is **not** in drift.
+
+Format 3 = format 2 **plus** an **Environment & Secrets** foundation. A format-2
+repo is a format-1 repo whose every `docs/blueprint/` doc is a well-formed **OKF
+concept** (vwf is an opinionated profile of Google's Open Knowledge Format — see
+the blueprint-authoring skill's frontmatter-and-links reference). Concretely,
+format 2 = format 1 **plus**:
 
 - Every blueprint doc opens with **YAML frontmatter** carrying the mandatory
   `type`, `title`, `description`, `status` (optional standardized `timestamp` /
@@ -46,7 +74,7 @@ And format 3 adds one artifact + one type:
   injection *mechanism* (the decision); the per-variable catalog lives in
   `environment.md`.
 
-A format-3 repo therefore also has (unchanged from formats 1–2):
+A format-5 repo therefore also has (unchanged from formats 1–4):
 
 - `docs/blueprint/architecture.md` (registry) and `conventions.md`
 - `design-system.md` **if** `ui: true`
@@ -87,6 +115,18 @@ the current format and apply the delta:
   move those rows into `environment.md` and leave `#config` with only the
   injection *mechanism*, linking `environment.md`. Add `integrations: true` to
   the stamp. Then bump the stamp to `3`.
+- **`3 → 4`** → for every flow in `docs/blueprint/integration.md`, add an
+  **Acceptance** block (per the integration template): elicit — never invent —
+  at least one success and one failure/compensation criterion as observable
+  Given/When/Then outcomes. No flows (or no `integration.md`) → no-op, not
+  drift. Then bump the stamp to `4`.
+- **`4 → 5`** → author `docs/blueprint/product.md` via `/vwf:product` (elicit —
+  never invent — the problem, users, goals/metrics, slice priority). Entity docs
+  then gain their **Serves:** goal links **as each is next touched by
+  `/vwf:blueprint`** (the reviewer enforces it on touch) — the migration does
+  not retrofit every entity in one pass; a missing Serves line on an untouched
+  entity is tolerated drift, a missing `product.md` is not. Then bump the stamp
+  to `5`.
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.
 

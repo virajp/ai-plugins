@@ -61,8 +61,10 @@ before computing anything — build on them, don't re-derive resolved choices.
 Skip silently if mempalace is unavailable.
 
 - **Desired:** the blueprint part for the slice, plus `conventions.md`, the
-  registry, and — when the slice consumes external credentials/env vars —
-  `docs/blueprint/environment.md` (the variables it must read).
+  registry, the **Acceptance blocks of any `integration.md` flow this slice
+  touches** (the criteria the cycle must land), and — when the slice consumes
+  external credentials/env vars — `docs/blueprint/environment.md` (the variables
+  it must read).
 - **Actual:** the real code in the submodule(s) the registry maps this slice to
   (resolve section→project by `type` and `doc_unit`, as in `blueprint` §2).
 
@@ -78,6 +80,17 @@ existing code, the stdlib, a native platform feature, or an installed dependency
 over new code or a new dependency (rungs 2–5). The plan carries no speculative
 steps and no unrequested abstraction or configurability — never at the cost of a
 safety guardrail.
+
+**Harness preflight.** Per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`, work out
+which harness capabilities this slice's gates will need (acceptance criteria →
+`e2e_local` + `local_stack`; changed screens in a web UI → `dev` +
+`screenshots`; a touched cloud project → `health`; flows + a deploy target →
+`e2e_staging`). Read the `.vwf.yml` `harness:` block and **re-verify just
+those** against the repo (the stamp may be stale). For each one missing,
+**inject a bootstrap step** into the ordered steps — the coder builds it under
+the normal pipeline. Harness steps are gate-required guardrails: the minimalism
+ladder never strikes them, and they order **before** the steps whose
+verification depends on them.
 
 ### 4. Flag drift
 
@@ -121,6 +134,14 @@ its **OKF frontmatter** (`type: vwf-plan`, `title`, `description`, `status`;
 optional `timestamp`) and a markdown link to the blueprint slice in the Slice
 section — steps ordered for TDD, each naming the failing test that defines
 "done".
+
+**Acceptance criteria.** Copy the Acceptance blocks of the flows this slice
+touches **verbatim** into the plan's "Acceptance criteria (from blueprint)"
+section (with a link to each flow), and make sure the ordered steps include the
+**E2E tests** that cover each criterion — the coder implements them like any TDD
+step; `execute`'s acceptance stage independently maps and runs them. A criterion
+no step covers is a hole in the plan, not something to defer. When the slice
+maps to no flow, write `none — no flow touched`.
 
 ### 8. Approval gate
 

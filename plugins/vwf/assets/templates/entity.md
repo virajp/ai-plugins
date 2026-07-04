@@ -40,6 +40,13 @@ status: draft # draft | reviewed | stable
 
 One paragraph. What it is and why it exists. No implementation detail.
 
+Serves: [<goal name>](./product.md#goal-<slug>)
+
+<!-- Every entity serves at least one product.md goal — the OKF edge the
+     blueprint-reviewer verifies. An entity no goal justifies is scope drift:
+     either a goal is missing from product.md (run /vwf:product) or the entity
+     shouldn't exist. In the folder form this line lives in index.md. -->
+
 ## Out of Scope
 
 - Explicit exclusions. Highest-value section for preventing scope drift.

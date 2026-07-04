@@ -26,6 +26,13 @@ status: draft # draft | reviewed | stable
 - Consistency boundary (atomic vs eventual):
 - Failure handling (compensation / rollback):
 - Idempotency:
+- Acceptance:
+  <!-- Observable Given/When/Then outcomes — what a user or system can verify
+       from the outside once the flow ran. At least one success and one failure
+       criterion. Code-independent: name observable state, never test files,
+       fixtures, or tooling. Verified end-to-end by execute's acceptance stage. -->
+  - Given <initial state>, when <trigger>, then <observable outcome>
+  - Given <failure mid-flow>, when <...>, then <compensation observable>
 
 ## Inter-Service Contracts
 

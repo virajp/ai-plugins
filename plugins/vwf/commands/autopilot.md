@@ -2,9 +2,9 @@
 description: Autonomously execute an approved cycle plan end-to-end in a
   dedicated
   worktree — dependency-ordered, code→review→security per step with finding
-  loops, gaps written to a gap-report, never merging or archiving. Pauses only on
-  hard halts, resource caps, an all-blocking gap, or an uncovered irreversible
-  decision.
+  loops, one E2E acceptance + UX-conformance pass after all steps, gaps written
+  to a gap-report, never merging or archiving. Pauses only on hard halts, resource caps, an
+  all-blocking gap, or an uncovered irreversible decision.
 argument-hint: "[plan-file]"
 model: sonnet
 effort: xhigh
@@ -15,8 +15,9 @@ effort: xhigh
 Run an approved cycle plan to completion **without per-stage human gates**.
 Where `/vwf:execute` pauses for approval at every stage, autopilot takes those
 decisions from the **Autonomous Rules** below and stops only at the **Pause
-Conditions**. It reuses execute's three subagents (`execute-coder`,
-`execute-code-reviewer`, `execute-security-reviewer`) and the memory protocol —
+Conditions**. It reuses execute's five subagents (`execute-coder`,
+`execute-code-reviewer`, `execute-security-reviewer`,
+`execute-acceptance-verifier`, `execute-ux-reviewer`) and the memory protocol —
 only the orchestration policy differs.
 
 Adopt the **Autonomous delivery driver** persona: keep moving, decide from the
@@ -50,12 +51,13 @@ if the format drift is **non-blocking**, log it and continue; if it is
 
 ## Pipeline (per step)
 
-`code` → `review` → `security` per step. The stage table, per-stage subagent
-contracts, and shared stage rules (model enforcement, terse subagent output,
-loop-on-findings, gap capture, never silently editing the blueprint) are defined
-in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` (shared with `/vwf:execute`)
-— follow them throughout. For `autopilot`, the durable gap record is the
-**gap-report** file.
+`code` → `review` → `security` per step, then **`acceptance` + `ux` once after
+all steps** (see the Acceptance & UX section below). The stage table, per-stage
+subagent contracts, and shared stage rules (model enforcement, terse subagent
+output, loop-on-findings, gap capture, never silently editing the blueprint) are
+defined in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` (shared with
+`/vwf:execute`) — follow them throughout. For `autopilot`, the durable gap
+record is the **gap-report** file.
 
 ## Autonomous Rules
 
@@ -212,6 +214,28 @@ journal):
    any gap tags. This incremental write is what a resumed run reads to skip
    completed steps.
 
+## Acceptance & UX (once, after all steps)
+
+When every step is done (or skipped per the gap rules), run the `acceptance` and
+`ux` stages back to back per the contracts in `execute-stages.md` — skip each
+(journaled, never silent) per its condition: acceptance when the plan's
+"Acceptance criteria (from blueprint)" section reads `none — no flow touched`,
+ux when the plan changes no screens in a UI project. Autonomous policy:
+
+- **Acceptance `FAIL` / `NOT-COVERED`, and ux findings → loop to `code`** for
+  the step that owns the flow/screen (dispatch `execute-coder` with the **tag**;
+  the fix is the code, the missing E2E test, or the style/state correction),
+  re-commit, re-verify the affected stage — **up to 4 rounds** (the review-cap
+  rule). Residuals after the 4th round are documented as gaps and the run
+  finishes; a residual is never silently dropped.
+- **Acceptance `n/a — no harness`**, or **ux `RENDERED: n/a` on a web slice** →
+  record it as a gap (what harness/capture is missing) and finish — never
+  scaffold infrastructure autonomously.
+- **Untestable criteria / unpinned states** (`SPEC/PLAN GAPS` / `SPEC GAPS`) →
+  gap-report + room `gaps`, per the gap rules.
+- Journal both stages in the run journal (room `runs`) like steps — a resumed
+  run must know whether they already passed.
+
 ## Gap-report
 
 Maintain `docs/plans/<plan>.gap-report.md` — the consolidated, human-facing,
@@ -251,10 +275,12 @@ are recorded here as gaps too, tagged as plan/blueprint under-specification.
 
 ## Finish
 
-Report: steps completed, per-step commits, final coverage, and the **worktree
-path** — it is committed and ready for the user to review and merge (autopilot
-does not merge or push). If the run stopped short of the full plan, also emit
-the **resume command** (`/vwf:autopilot <plan>`, or `/vwf:recall <handoff-name>`
+Report: steps completed, per-step commits, final coverage, the **acceptance
+result** (per-criterion pass/fail, or why it was skipped/n-a), the **ux result**
+(findings/a11y summary, or why it was skipped), and the **worktree path** — it
+is committed and ready for the user to review and merge (autopilot does not
+merge or push). If the run stopped short of the full plan, also emit the
+**resume command** (`/vwf:autopilot <plan>`, or `/vwf:recall <handoff-name>`
 after a resource-cap pause) so the user can pick it back up.
 
 - **If any gaps remain:** present the gap-report and ask the user to take care

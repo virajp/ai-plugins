@@ -33,6 +33,7 @@ without ambiguity. Surface open decisions rather than guessing.
 
 | Doc             | Path                                                    |
 | --------------- | ------------------------------------------------------- |
+| Product         | `docs/blueprint/product.md`                             |
 | Registry        | `docs/blueprint/architecture.md`                        |
 | Conventions     | `docs/blueprint/conventions.md`                         |
 | Entity (file)   | `docs/blueprint/<entity>.md`                            |
@@ -57,7 +58,13 @@ Reserved entity names: `architecture`, `conventions`, `design-system`,
 
 ## Pipeline
 
-### 1. Read the registry
+### 1. Read the product doc & registry
+
+Read `docs/blueprint/product.md`. **Halt if it does not exist:** "No product doc
+found. Run `/vwf:product` first — the blueprint needs the goals every entity
+must trace to." Hold its goal anchors (`#goal-<slug>`) and slice priority: goals
+anchor every entity's Purpose; the priority list is what you suggest when the
+user asks what to blueprint next.
 
 Read `docs/blueprint/architecture.md`. **Halt if it does not exist:** "No
 registry found. Run `/vwf:architecture` first to bootstrap
@@ -183,7 +190,11 @@ here, not in the entity doc.
 **Cross-entity.** Record each relation in the entity's **Relationships**
 section. Capture any multi-entity flow or inter-service contract in
 `docs/blueprint/integration.md` (from the integration template) — not inside a
-single entity doc.
+single entity doc. A single-entity journey that **crosses projects** (app →
+service → datastore) is a flow too. **Every flow carries an Acceptance block** —
+elicit at least one success and one failure/compensation criterion as observable
+Given/When/Then outcomes per the integration-and-flows reference; these are what
+`plan` turns into E2E test steps and `execute`'s acceptance stage verifies.
 
 **Self-review before the reviewer.** Run the elicitation protocol's self-review
 pass (§8) over the written doc — no `TBD`/`TODO`/placeholder outside Open
@@ -199,14 +210,18 @@ Loop until the doc passes:
    the written entity doc — the single file, or **all files** of the folder form
    (`index.md` + each surface file) — plus the relevant `conventions.md` anchors
    and registry block it references, and the **current list of entity docs**
-   under `docs/blueprint/` (names only) — no conversation context. It checks the
-   doc against the completeness checklist in its own instructions, **verifies
-   every outbound relationship/reference link resolves on disk**, and returns
-   `NO GAPS` or a numbered gap list. Tell it the doc's `doc_unit` so it accepts
-   an explicit `N/A — <reason>` on unit-inapplicable surfaces (§2). The
-   entity-doc list lets it separate a broken/wrong-path link from a link to a
-   not-yet-authored entity: the latter comes back as a gap of kind "target not
-   yet authored", which you present to the user and may accept.
+   under `docs/blueprint/` (names only) — no conversation context. Also pass the
+   **product doc's goal-anchor list** (`#goal-<slug>` names only) so it can
+   verify the entity's goal links. When this pass **touched `integration.md`**,
+   pass that doc too and name the flows added/changed — the reviewer applies its
+   integration-doc items (incl. the Acceptance block bar) to exactly those
+   flows. It checks the doc against the completeness checklist in its own
+   instructions, **verifies every outbound relationship/reference link resolves
+   on disk**, and returns `NO GAPS` or a numbered gap list. Tell it the doc's
+   `doc_unit` so it accepts an explicit `N/A — <reason>` on unit-inapplicable
+   surfaces (§2). The entity-doc list lets it separate a broken/wrong-path link
+   from a link to a not-yet-authored entity: the latter comes back as a gap of
+   kind "target not yet authored", which you present to the user and may accept.
 2. **Gaps** → present them, re-elicit the specific open decisions with the user
    (one at a time), update the doc, return to step 1.
 3. **`NO GAPS`** → exit.

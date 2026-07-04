@@ -45,6 +45,7 @@ status: draft                                      # required — draft | review
 
 | `type`              | Doc                                             |
 | ------------------- | ----------------------------------------------- |
+| `vwf-product`       | `product.md`                                    |
 | `vwf-architecture`  | `architecture.md`                               |
 | `vwf-conventions`   | `conventions.md`                                |
 | `vwf-design-system` | `design-system.md`                              |

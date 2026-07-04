@@ -30,6 +30,17 @@ What the blueprint says should exist. Reference sections; do not restate them.
 1. <step> — test-first note: the failing test that defines done.
 2. ...
 
+## Acceptance criteria (from blueprint)
+
+<!-- Copied verbatim from the Acceptance blocks of the integration.md flows this
+     slice touches — the contract execute's acceptance stage verifies end to
+     end. Steps above must include the E2E tests that cover each criterion
+     (the coder implements them; the acceptance verifier maps and runs them).
+     Write "none — no flow touched" when the slice maps to no flow. -->
+
+- [ ] Given <...>, when <...>, then <...> — from
+      [<flow name>](../blueprint/integration.md)
+
 ## Risks / drift
 
 Any mismatch between blueprint, registry, and code surfaced during diffing.

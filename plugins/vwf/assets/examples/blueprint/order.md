@@ -20,6 +20,9 @@ An Order records a customer's intent to buy a set of items at agreed prices, and
 tracks that purchase from placement through fulfilment. It is the system of
 record for what was bought, by whom, and for how much.
 
+Serves: [Reliable ordering](./product.md#goal-reliable-ordering),
+[Trusted refunds](./product.md#goal-trusted-refunds)
+
 ## Out of Scope
 
 - Payment instrument storage (a Payments concern, not Order).

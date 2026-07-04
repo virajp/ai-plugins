@@ -1,8 +1,9 @@
 ---
-description: Execute an approved cycle plan under TDD, then code review and
-  security review via fresh subagents. Reconciles the architecture registry and
-  flags blueprint drift. Requires an approved plan in docs/plans/.
-argument-hint: "[full | code | review | security]"
+description: Execute an approved cycle plan under TDD, then code review,
+  security review, E2E acceptance, and UX conformance via fresh subagents.
+  Reconciles the architecture registry and flags blueprint drift. Requires an
+  approved plan in docs/plans/.
+argument-hint: "[full | code | review | security | acceptance | ux]"
 model: sonnet
 effort: xhigh
 ---
@@ -10,10 +11,10 @@ effort: xhigh
 # execute — Implement an Approved Plan
 
 Implement an approved cycle plan. Execution is mechanical from the plan: TDD is
-non-negotiable, then code review and security review follow, each in a fresh
-purpose-specific subagent behind a mandatory approval gate. Findings loop back
-to code before advancing. You own the user conversation and orchestrate the
-subagents.
+non-negotiable, then code review, security review, and E2E acceptance follow,
+each in a fresh purpose-specific subagent behind a mandatory approval gate.
+Findings loop back to code before advancing. You own the user conversation and
+orchestrate the subagents.
 
 Adopt the **Delivery orchestrator** persona: enforce approval gates, never chain
 stages automatically, loop review findings back to code before advancing, and be
@@ -43,12 +44,13 @@ is missing).
 
 ## Pipeline
 
-`code` → `review` → `security`. The stage table, per-stage subagent contracts,
-and shared stage rules (model enforcement, terse subagent output,
-loop-on-findings, gap capture, never silently editing the blueprint) are defined
-in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` (shared with
-`/vwf:autopilot`) — follow them throughout. For `execute`, the durable gap
-record is the **plan doc's "Gaps surfaced during execution" section**.
+`code` → `review` → `security` → `acceptance` + `ux` (one combined gate). The
+stage table, per-stage subagent contracts, and shared stage rules (model
+enforcement, terse subagent output, loop-on-findings, gap capture, never
+silently editing the blueprint) are defined in
+`${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` (shared with `/vwf:autopilot`)
+— follow them throughout. For `execute`, the durable gap record is the **plan
+doc's "Gaps surfaced during execution" section**.
 
 ## Hard Rules
 
@@ -143,7 +145,33 @@ Dispatch `execute-security-reviewer` per the stage contract in
 **Gate.** Present the findings block. If `SPEC/PLAN GAPS` is not "none", mirror
 each into the plan doc's "Gaps surfaced during execution" section (per the
 gap-capture rule). Issues → loop back to `code` with the **tag**, re-commit,
-re-review. Wait for approval before reconciliation.
+re-review. Wait for approval before `acceptance`.
+
+## Stage: acceptance + ux (one combined gate)
+
+Two conditional verifiers, dispatched back to back (acceptance first — one boot
+of the local stack serves both), then **one** gate:
+
+- **acceptance** (`execute-acceptance-verifier`, sonnet) — skip (explicitly, at
+  the gate) when the plan's "Acceptance criteria (from blueprint)" section reads
+  `none — no flow touched`. Otherwise dispatch per the stage contract in
+  `execute-stages.md`.
+- **ux** (`execute-ux-reviewer`, opus) — skip (explicitly, at the gate) when the
+  slice changes no screens in a UI project (registry type `site`, `console`,
+  `frontend`). Otherwise dispatch per the stage contract.
+
+**Gate.** Present both blocks (or the explicit skip line for each).
+
+- Acceptance `FAIL` / `NOT-COVERED`, and ux findings → loop back to `code` with
+  the respective **tag** (the fix is the code, the missing E2E test, or the
+  style/state correction), re-commit, re-verify the affected stage.
+- Acceptance `n/a — no harness`, or ux `RENDERED: n/a` on a **web** slice →
+  present what's missing and let the user decide: proceed without it (recorded
+  as a gap in the plan doc) or halt to set up the harness.
+- If any `SPEC/PLAN GAPS` / `SPEC GAPS` line is not "none", mirror each into the
+  plan doc's "Gaps surfaced during execution" section.
+
+Wait for approval before reconciliation.
 
 ---
 

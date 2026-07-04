@@ -1,7 +1,8 @@
 ---
 description: Onboard a repo into vwf's format and keep it current — detect or ask
   (MCQ) the project topology, migrate to the docs/blueprint structure with
-  consent, orchestrate the foundations (mise, architecture, design-system), and
+  consent, orchestrate the foundations (mise, product, architecture,
+  design-system), and
   author CLAUDE.md + README. Re-runnable: detects format drift and migrates when
   the vwf format evolves.
 argument-hint: ""
@@ -13,7 +14,7 @@ effort: xhigh
 
 Bring any repo — new or existing — into vwf's structure, and re-run any time the
 vwf format evolves to migrate the gap. `setup` is the Phase-0 bootstrapper:
-`setup → architecture → design-system → blueprint → plan → execute`.
+`setup → product → architecture → design-system → blueprint → plan → execute`.
 
 You own the user conversation. Every change is **consent-gated and
 worktree-safe** — present a dry-run plan and wait for approval before writing;
@@ -30,6 +31,7 @@ throughout.
 | Format stamp      | `docs/blueprint/.vwf.yml`                                  |
 | CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` |
 | Reference stacks  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`            |
+| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                  |
 
 Doctrine: the **project-setup** skill (topology-detection,
 migration-and-consent, format-versioning, claude-md).
@@ -79,6 +81,14 @@ Per the project-setup skill (topology-detection), read repo signals —
 submodule children — classify each child on its own signals), the project types
 present (schema/contract, service/API, worker, frontend/app, console/admin UI),
 and the stack per project.
+
+**Harness detection.** Detect the repo's verification-harness capabilities per
+`${CLAUDE_PLUGIN_ROOT}/assets/harness.md` (dev task, local E2E + stack, staging
+E2E, health endpoints, screenshot capability) — recorded in the stamp at step 9.
+For a **new/empty repo**, the harness is scaffolded as part of the enforced
+structure (fold it into the step-4 migration plan); for an existing repo,
+missing capabilities are only **recorded** — `/vwf:plan` injects their bootstrap
+steps when a cycle first needs them.
 
 ### 2. Confirm & fill (MCQ)
 
@@ -168,6 +178,9 @@ mechanism alone.
 Gate each foundation on the **step-3 delta** — a conforming repo runs neither,
 yielding an empty plan (the idempotence Hard Rule):
 
+- Run `/vwf:product` only if `docs/blueprint/product.md` is **missing** (the
+  `4 → 5` delta) or the migration surfaced a product-level change. It comes
+  **first** — the goals it pins anchor everything downstream.
 - Run `/vwf:architecture` only if the registry is **missing** or the delta
   requires a registry change (a new/changed project, capability, or
   cross-cutting decision).
@@ -187,10 +200,12 @@ Merge the vwf section (from the project-claude template) into the repo's
 
 ### 9. Stamp the format version
 
-Write `docs/blueprint/.vwf.yml` with the `blueprint_format` version and a
-topology summary (`ui` if a UI surface exists, `integrations` if the registry
-declares integrations or a secrets-manager `config` — i.e. `environment.md` is
-required), per format-versioning — the thing a future `setup` run diffs against.
+Write `docs/blueprint/.vwf.yml` with the `blueprint_format` version, a topology
+summary (`ui` if a UI surface exists, `integrations` if the registry declares
+integrations or a secrets-manager `config` — i.e. `environment.md` is required),
+and the **`harness:` block** from step-1 detection (per capability:
+`true`/`false`/`n/a`, per the harness contract), per format-versioning — the
+thing a future `setup` run diffs against.
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the durable
 onboarding decisions and their rationale (confirmed topology, UI surface,
@@ -200,14 +215,15 @@ the docs capture verbatim. Skip silently if mempalace is unavailable.
 ### 10. Validate
 
 Confirm the registry parses and the required foundations exist for the detected
-topology (design-system present if UI; `environment.md` present if the registry
-declares integrations or a secrets-manager `config`). Confirm the migration
-produced a well-formed **OKF bundle**: every `docs/blueprint/` doc opens with
-valid frontmatter (mandatory `type` from the vocabulary, `title`, `description`,
-`status`) and every relationship/reference link resolves to an existing
-doc/anchor — per the project-setup skill (format-versioning) and the
-blueprint-authoring frontmatter-and-links reference. Confirm `environment.md`
-carries **no secret values**. Report anything still open.
+topology (`product.md` present unconditionally; design-system present if UI;
+`environment.md` present if the registry declares integrations or a
+secrets-manager `config`). Confirm the migration produced a well-formed **OKF
+bundle**: every `docs/blueprint/` doc opens with valid frontmatter (mandatory
+`type` from the vocabulary, `title`, `description`, `status`) and every
+relationship/reference link resolves to an existing doc/anchor — per the
+project-setup skill (format-versioning) and the blueprint-authoring
+frontmatter-and-links reference. Confirm `environment.md` carries **no secret
+values**. Report anything still open.
 
 ### 11. Approval gate & commit
 
