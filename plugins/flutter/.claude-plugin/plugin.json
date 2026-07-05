@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "lspServers": {
-    "dart": {
+    "dart-lsp": {
       "args": [
         "x",
         "flutter@latest",

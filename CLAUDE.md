@@ -76,9 +76,9 @@ Plugins may declare any combination of:
 
 - **`lspServers`** — LSP server definitions keyed by language ID. Each entry
   needs `command`, `args`, `extensionToLanguage`, and optionally
-  `startupTimeout`. `plugins/flutter` bundles three — `dart` (run via `mise`)
-  plus `kotlin-lsp` and `sourcekit-lsp` (Swift), which invoke system-installed
-  binaries on `PATH`.
+  `startupTimeout`. `plugins/flutter` bundles three — `dart-lsp` (run via
+  `mise`) plus `kotlin-lsp` and `sourcekit-lsp` (Swift), which invoke
+  system-installed binaries on `PATH`.
 - **`mcpServers`** — MCP server definitions. See
   `plugins/context7/.claude-plugin/plugin.json`.
 - **`dependencies`** — other plugins this plugin requires (see below); `vwf` is

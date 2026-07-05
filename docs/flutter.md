@@ -49,7 +49,7 @@ and Swift files all get real diagnostics from one plugin.
 
 | Server          | Languages              | How it runs                                     | Prerequisite                                                 |
 | --------------- | ---------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
-| `dart`          | Dart (`.dart`)         | `mise x flutter@latest -- dart language-server` | `mise` on `PATH`; it fetches the Flutter/Dart SDK on demand. |
+| `dart-lsp`      | Dart (`.dart`)         | `mise x flutter@latest -- dart language-server` | `mise` on `PATH`; it fetches the Flutter/Dart SDK on demand. |
 | `kotlin-lsp`    | Kotlin (`.kt`, `.kts`) | `kotlin-lsp --stdio`                            | A `kotlin-lsp` binary on `PATH`.                             |
 | `sourcekit-lsp` | Swift (`.swift`)       | `sourcekit-lsp`                                 | A `sourcekit-lsp` binary on `PATH` (ships with Xcode).       |
 
