@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -34,6 +35,16 @@ after(() => rmSync(tmp, { recursive: true, force: true }));
 const fakeHome = join(tmp, "home");
 const configDir = join(fakeHome, ".config", "opencode");
 
+// checkDeps requires the platform binary plus each selected plugin's runtime
+// tools on PATH. A CI runner has none of them, so seed no-op fakes — the tests
+// exercise the render pipeline, not the dependency gate (i:test covers that
+// under a node-only PATH).
+const fakeBin = join(tmp, "bin");
+mkdirSync(fakeBin, { recursive: true });
+for (const bin of ["opencode", "rtk", "graphify", "mise", "pnpm", "uv"]) {
+  writeFileSync(join(fakeBin, bin), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+}
+
 // Run the CLI against the fake HOME with the local checkout as plugin source.
 function runCli(args) {
   return spawnSync(process.execPath, [CLI, ...args], {
@@ -41,6 +52,7 @@ function runCli(args) {
     cwd: REPO,
     env: {
       ...process.env,
+      PATH: `${fakeBin}:${process.env.PATH}`,
       HOME: fakeHome,
       AI_PLUGINS_SOURCE_DIR: REPO,
       NO_COLOR: "1",
