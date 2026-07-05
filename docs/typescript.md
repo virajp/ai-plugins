@@ -40,14 +40,14 @@ project references, turbo). Each loads only when the routed topic is relevant.
 
 ## Language server
 
-The plugin ships one `lspServers` entry, `typescript`, backed by
+The plugin ships one `lspServers` entry, `typescript-lsp`, backed by
 `typescript-language-server`. It runs through `mise` and `pnpm dlx` — no global
 install per session: on startup `dlx` resolves `typescript-language-server` on
-demand under `node@latest` and launches it over stdio.
+demand and launches it over stdio.
 
 ```sh
-sh -c 'exec mise x node@latest -- pnpm --package=typescript \
-  --package=typescript-language-server dlx typescript-language-server --stdio'
+mise x -- pnpm --package=typescript \
+  --package=typescript-language-server dlx typescript-language-server --stdio
 ```
 
 The workspace's own TypeScript is preferred when present; the `dlx`-provided one

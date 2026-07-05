@@ -1,13 +1,18 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "typescript",
   "lspServers": {
-    "typescript": {
+    "typescript-lsp": {
       "args": [
-        "-c",
-        "exec mise x node@latest -- pnpm --package=typescript --package=typescript-language-server dlx typescript-language-server --stdio"
+        "x",
+        "--",
+        "pnpm",
+        "--package=typescript",
+        "--package=typescript-language-server",
+        "dlx",
+        "typescript-language-server",
+        "--stdio"
       ],
-      "command": "sh",
+      "command": "mise",
       "extensionToLanguage": {
         ".cjs": "javascript",
         ".cts": "typescript",
@@ -20,5 +25,6 @@
       },
       "startupTimeout": 60000
     }
-  }
+  },
+  "name": "typescript"
 }
