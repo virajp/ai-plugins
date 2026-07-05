@@ -14,6 +14,10 @@ pnpx @askviraj/ai-plugins --user context7
 `context7` is also a dependency of `vwf`, so installing `vwf` pulls it in
 automatically.
 
+For **OpenCode**, `--platform opencode --user context7` adds the same server to
+the `mcp` key of `~/.config/opencode/opencode.json` instead (see the readme's
+installer-CLI section).
+
 ## How it runs
 
 The plugin declares one MCP server in its manifest. Claude Code launches it via

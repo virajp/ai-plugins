@@ -18,6 +18,9 @@ pnpx @askviraj/ai-plugins --user mempalace
 When you install `vwf`, `mempalace` is pulled in and enabled automatically — you
 only need this command to install it on its own.
 
+Claude Code only: as a url-sourced (upstream) plugin it is not installable via
+the CLI's `--platform opencode` target — see its own repo for other tools.
+
 ## How vwf uses it
 
 `vwf` uses mempalace as cross-session memory: each cycle recalls prior context

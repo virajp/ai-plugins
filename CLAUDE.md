@@ -666,3 +666,8 @@ opt-in). (The statusline is not a plugin — install it via
 Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
 `mise`) automatically from the same `virajp-plugins` marketplace — no other
 marketplace needs to be registered. See the Dependencies section above.
+
+For **OpenCode** there is no marketplace: install via the CLI's
+`--platform opencode` target, which renders each plugin's skills into
+`~/.config/opencode/ai-plugins/` (url-sourced plugins excluded) — see The
+installer & statusline CLI.

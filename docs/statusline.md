@@ -44,6 +44,10 @@ The CLI:
 If a target key already exists, the CLI prints the current value and asks before
 overwriting. Pass `--yes` (`-y`) to overwrite without prompting.
 
+The statusline is a **Claude Code surface** (it lives under `~/.claude`). When
+the CLI targets only OpenCode (`--platform opencode`), `--statusline` is skipped
+with a note.
+
 The blocks it writes:
 
 ```json
