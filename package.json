@@ -1,6 +1,6 @@
 {
   "name": "@askviraj/ai-plugins",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "CLI to install Viraj Patel's Claude Code toolkit: marketplace plugins (via the claude CLI) and the powerline statusline",
   "keywords": [
     "claude",
