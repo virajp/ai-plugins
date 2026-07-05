@@ -8,8 +8,10 @@
 #  - dependency lists are identical in plugin.json and the marketplace entry.
 #  - every ${CLAUDE_PLUGIN_ROOT}/... reference resolves to a real path (file or dir).
 #  - each agent's `name:` frontmatter matches its filename (plugins with agents/).
-#  - each skill has frontmatter with a `name:` (matching its dir) and `description:`.
-#  - each command has frontmatter with a `description:`, and a plausible `model:`.
+#  - each skill has frontmatter with a `name:` (matching its dir), a
+#    `description:`, and — when present — a plausible `model:`.
+#  - skill names are unique across all local plugins (OpenCode installs them
+#    into one flat namespace).
 #  - each hooks.json is valid JSON and every ${CLAUDE_PLUGIN_ROOT} script it names
 #    resolves to an executable file.
 #  - relative ./ or ../ .md links under any plugin's assets/examples/ resolve.
@@ -37,7 +39,7 @@ def bad(m):    print(f"{RED}{BOLD}  FAIL {m}{OFF}")
 
 MARKET = ".claude-plugin/marketplace.json"
 REF_RE = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
-# Plausible command `model:` values: the short aliases the repo uses plus any
+# Plausible skill `model:` values: the short aliases the repo uses plus any
 # claude-* model id — kept permissive on purpose (a bare non-empty alias passes).
 MODEL_RE = re.compile(r"^(sonnet|opus|haiku|inherit|claude[\w.\[\]-]+)$", re.I)
 # Relative markdown link target (./ or ../), stripping any #anchor.
@@ -115,6 +117,7 @@ def asset_refs(plugin_dir):
     return sorted(found)
 
 header("Checking local plugins ...")
+skill_names = {}  # skill name -> [SKILL.md paths] across all local plugins
 plugin_dirs = sorted(glob.glob("plugins/*/"))
 if not plugin_dirs:
     bad("no plugins found under plugins/")
@@ -164,7 +167,8 @@ for pdir in plugin_dirs:
         if declared != expected:
             errs.append(f"agent {af} declares name '{declared}' (expected '{expected}')")
 
-    # 6. skill frontmatter: name (matches its dir) + description
+    # 6. skill frontmatter: name (matches its dir) + description + plausible
+    #    model when one is pinned; collect names for the uniqueness check below
     skill_files = sorted(glob.glob(os.path.join(pdir, "skills", "*", "SKILL.md")))
     for sf in skill_files:
         fm = frontmatter(sf)
@@ -176,20 +180,11 @@ for pdir in plugin_dirs:
             errs.append(f"skill {sf} declares name '{fm.get('name')}' (expected '{expected}')")
         if not fm.get("description"):
             errs.append(f"skill {sf} missing description")
-
-    # 7. command frontmatter: description + a plausible model (when present)
-    command_files = sorted(glob.glob(os.path.join(pdir, "commands", "*.md")))
-    for cf in command_files:
-        fm = frontmatter(cf)
-        if fm is None:
-            errs.append(f"command {cf} has no YAML frontmatter")
-            continue
-        if not fm.get("description"):
-            errs.append(f"command {cf} missing description")
         if "model" in fm and not MODEL_RE.match(fm["model"] or ""):
-            errs.append(f"command {cf} has implausible model '{fm['model']}'")
+            errs.append(f"skill {sf} has implausible model '{fm['model']}'")
+        skill_names.setdefault(expected, []).append(sf)
 
-    # 8. hooks.json valid + every ${CLAUDE_PLUGIN_ROOT} script exists & is executable
+    # 7. hooks.json valid + every ${CLAUDE_PLUGIN_ROOT} script exists & is executable
     hooks_path = os.path.join(pdir, "hooks", "hooks.json")
     if os.path.isfile(hooks_path):
         try:
@@ -215,8 +210,18 @@ for pdir in plugin_dirs:
             print(f"{RED}         - {e}{OFF}")
     else:
         ok(f"{name_dir} — manifest, name, registered, deps, refs({len(refs)}), "
-           f"agents({len(agent_files)}), skills({len(skill_files)}), "
-           f"commands({len(command_files)})")
+           f"agents({len(agent_files)}), skills({len(skill_files)})")
+
+header("Checking skill names are unique across plugins ...")
+dupes = {n: ps for n, ps in skill_names.items() if len(ps) > 1}
+if dupes:
+    failed = True
+    for n, ps in sorted(dupes.items()):
+        bad(f"skill name '{n}' declared by multiple plugins")
+        for p in ps:
+            print(f"{RED}         - {p}{OFF}")
+else:
+    ok(f"{len(skill_names)} skill names, no duplicates")
 
 header("Cross-checking marketplace local sources resolve ...")
 for name, entry in entries.items():

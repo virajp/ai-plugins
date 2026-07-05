@@ -1,10 +1,13 @@
 ---
+name: handoff
 description: Capture the current session as a handoff document and file it to
-  mempalace (wing=<project>, room=handoff, drawer=<name>) so work can resume in a
-  fresh session. Use when the context window grows beyond ~60%.
+  mempalace
+  (wing=<project>, room=handoff, drawer=<name>) so work can resume in a fresh
+  session. Use when the context window grows beyond ~60%.
 argument-hint: "<name>"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 # handoff — Capture Work for a Fresh Session

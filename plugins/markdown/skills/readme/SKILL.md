@@ -1,12 +1,16 @@
 ---
+name: readme
 description: Create or update the repository's README — scan the codebase and
-  document it with a title, short description, a project list, an architecture
-  mermaid diagram with notes, an infrastructure (cloud tools) section, a
-  local-development setup guide, per-project sections (monorepo or polyrepo), and
-  the important task-runner commands. Follows the documentation-standards skill.
+  document it
+  with a title, short description, a project list, an architecture mermaid
+  diagram with notes, an infrastructure (cloud tools) section, a local-
+  development setup guide, per-project sections (monorepo or polyrepo), and
+  the important task-runner commands. Follows the documentation-standards
+  skill.
 argument-hint: "[target-dir]"
 model: sonnet
 effort: high
+disable-model-invocation: true
 ---
 
 # markdown:readme — Document the repo in its README

@@ -1,10 +1,13 @@
 ---
+name: scaffold
 description: Scaffold the mise three-file split (mise.toml / mise.dev.toml /
-  mise.ci.toml) plus the mandatory task library (init, _scripts/_helpers,
-  code/*, setup/*) into a repo's .config/, detecting the language runtime.
+  mise.ci.toml)
+  plus the mandatory task library (init, _scripts/_helpers, code/*, setup/*)
+  into a repo's .config/, detecting the language runtime.
 argument-hint: "[target-dir]"
 model: sonnet
 effort: high
+disable-model-invocation: true
 ---
 
 # mise:scaffold — Scaffold the mise config & task library

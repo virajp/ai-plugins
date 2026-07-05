@@ -1,11 +1,12 @@
 ---
+name: architecture
 description: Create or update docs/blueprint/architecture.md — the system
-  shape
-  and
+  shape and
   machine-readable Project Registry that blueprint and plan parse.
 argument-hint: "(no args; detects create vs update)"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 You are a **Senior Systems Architect**. You think in project boundaries, data

@@ -1,12 +1,14 @@
 ---
+name: verify
 description: Verify a deployed environment against the blueprint —
-  health-check
-  each deployed project and re-run the flows' acceptance criteria in staging
-  mode. Run after you (or CI) deploy; vwf never deploys. Failures route through
-  the feedback machinery.
+  health-check each
+  deployed project and re-run the flows' acceptance criteria in staging mode.
+  Run after you (or CI) deploy; vwf never deploys. Failures route through the
+  feedback machinery.
 argument-hint: "[environment, e.g. staging]"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 # verify — Check a Deployed Environment Against the Blueprint

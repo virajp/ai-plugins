@@ -3,9 +3,9 @@
 An opinionated Markdown plugin for Claude Code. It ships the always-on
 `documentation-standards` skill — which auto-applies whenever Claude edits a
 file matching `**/*.md` and shapes every Markdown change — plus a
-`/markdown:readme` command you invoke on demand to document a whole repo. The
-command writes through the same skill, so a generated README follows the
-standards below.
+`/markdown:readme` skill you invoke on demand to document a whole repo. It
+writes through the same documentation-standards skill, so a generated README
+follows the standards below.
 
 ## Install
 

@@ -1,11 +1,14 @@
 ---
+name: workflow
 description: Generate a GitHub Actions workflow that installs every tool through
-  the jdx/mise-action (mise only) and supports both polyrepo and monorepo
-  layouts. Detects the repo, asks what to generate, then writes
+  the
+  jdx/mise-action (mise only) and supports both polyrepo and monorepo layouts.
+  Detects the repo, asks what to generate, then writes
   .github/workflows/<name>.yml.
 argument-hint: "[workflow-name | ci | release | deploy]"
 model: sonnet
 effort: high
+disable-model-invocation: true
 ---
 
 # github-actions:workflow — Generate a mise-based GitHub Actions workflow

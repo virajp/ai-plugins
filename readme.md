@@ -319,6 +319,12 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 Every command runs on `sonnet` at high reasoning effort; inside `execute`, the
 code-review, security-review, and ux subagents run on `opus`.
 
+Under the hood each command is a **skill** (`skills/<name>/SKILL.md` with
+`disable-model-invocation: true`) — Claude Code's unified skills keep the
+`/vwf:<name>` invocation exactly as before (this needs a recent Claude Code),
+and the same artifact installs into OpenCode via the
+[installer CLI](#the-installer-cli).
+
 ### /vwf:setup
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
@@ -734,8 +740,10 @@ plan/execute loop picks the change up.
 
 ## vwf skills
 
-Several skills back the workflow's quality. You don't invoke them directly —
-they inform how Claude writes and reviews:
+vwf ships two kinds of skills: the **workflow skills** above (user-invoked via
+`/vwf:<name>`, model-invocation disabled) and the **doctrine skills** below. The
+doctrine skills back the workflow's quality — you don't invoke them directly;
+they auto-apply and inform how Claude writes and reviews:
 
 - **`product-foundations`** — the nine foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
@@ -757,8 +765,8 @@ they inform how Claude writes and reviews:
   module) and the goal-traceability edge (every entity `Serves:` a product
   goal). Auto-applies whenever a `docs/blueprint/` doc is edited (and on
   `docs/plans/` for frontmatter/link hygiene only).
-- **`design-system`** — the UX/visual-contract doctrine (semantic tokens,
-  typography, spacing, motion, accessibility, component behaviors,
+- **`design-system-authoring`** — the UX/visual-contract doctrine (semantic
+  tokens, typography, spacing, motion, accessibility, component behaviors,
   anti-patterns) behind `/vwf:design-system`.
 - **`project-setup`** — the onboarding/migration doctrine behind `/vwf:setup`:
   topology detection, the enforced workspace structure + reference stacks (and
@@ -798,11 +806,11 @@ your stack. Each has a dedicated guide:
 
 | Plugin                                                                             | What it provides                                                                                                                                                                                   | Install                                     |
 | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` command that documents a repo's README                                                               | `--user markdown`                           |
+| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` skill that documents a repo's README                                                                 | `--user markdown`                           |
 | **[typescript](./docs/typescript.md)**                                             | Effect-TS coding standards — a `typescript` router skill (+ effect/effect-runtime/vitest/build references) plus package-json/pnpm/tsconfig/lint-format + the TypeScript/JavaScript language server | `--user typescript`                         |
 | **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped**                          | `--project flutter`                         |
-| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` command                                                                                                       | `--user mise`                               |
-| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` command — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                   | `--user github-actions`                     |
+| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                         | `--user mise`                               |
+| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` skill — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                     | `--user github-actions`                     |
 | **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                        | `--user context7`                           |
 | **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                               | `--user mempalace`                          |
 | **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                             | `--user`/`--project andrej-karpathy-skills` |

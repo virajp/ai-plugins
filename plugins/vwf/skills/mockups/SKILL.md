@@ -1,12 +1,15 @@
 ---
+name: mockups
 description: Render the blueprint's screens as self-contained static HTML
-  mockups — one page per screen plus the state variants the Screens contract
-  pins, styled from design-system tokens — and push them to a claude.ai/design
-  design-system project for canvas review. Mockups are realizations, never
-  contract; generated in an ephemeral build dir, never committed.
+  mockups — one
+  page per screen plus the state variants the Screens contract pins, styled
+  from design-system tokens — and push them to a claude.ai/design design-
+  system project for canvas review. Mockups are realizations, never contract;
+  generated in an ephemeral build dir, never committed.
 argument-hint: "[entity, e.g. order — omit to sweep all screens]"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 # mockups — Push Screen Mockups to Claude Design
@@ -36,8 +39,8 @@ here ever writes into `docs/blueprint/`.
 | Config         | `.config/vwf.yaml` — the `mockups:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                   |
 
 Doctrine: the **blueprint-authoring** skill's `ui-ux-contract` reference (what a
-Screens contract pins) and the **design-system** skill (token semantics). No
-template — this command authors no repo doc.
+Screens contract pins) and the **design-system-authoring** skill (token
+semantics). No template — this command authors no repo doc.
 
 ## Halt Conditions
 

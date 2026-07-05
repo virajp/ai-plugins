@@ -30,13 +30,14 @@ The plugins have two test tasks, run **locally via pre-commit** (never in
   `marketplace.json` with the right `./plugins/<name>` source (both directions),
   `plugin.json`↔marketplace dependency sync, `${CLAUDE_PLUGIN_ROOT}` asset-ref
   resolution, agent `name:`↔filename (for plugins with an `agents/` dir), skill
-  frontmatter (`name:`↔dir + `description:`), command frontmatter
-  (`description:`, plausible `model:`), `hooks.json` validity + script
-  existence/executability, relative links under `assets/examples/**`, and the
-  installer sync assertion (`bin/claude.mjs` `PLUGINS` ≡ marketplace names,
-  `PROJECT_SCOPED`/`OPT_IN` ⊆ `PLUGINS`). url-sourced entries (e.g. `mempalace`)
-  are covered only for JSON validity. Scoped to fire when anything under
-  `plugins/` or the marketplace manifest changes.
+  frontmatter (`name:`↔dir + `description:` + plausible `model:` when pinned),
+  cross-plugin skill-name uniqueness (OpenCode installs skills into one flat
+  namespace), `hooks.json` validity + script existence/executability, relative
+  links under `assets/examples/**`, and the installer sync assertion
+  (`bin/claude.mjs` `PLUGINS` ≡ marketplace names, `PROJECT_SCOPED`/`OPT_IN` ⊆
+  `PLUGINS`). url-sourced entries (e.g. `mempalace`) are covered only for JSON
+  validity. Scoped to fire when anything under `plugins/` or the marketplace
+  manifest changes.
 - **`vwf:test`** — table-tests the `vwf` `npm-to-pnpm.sh` hook through the
   system sed (the BSD-sed portability guarantee); vwf-specific since it is the
   only plugin shipping a hook. Scoped to `plugins/vwf/hooks/`.
@@ -48,15 +49,15 @@ design (a plugin may hold skills versioned on their own cadence).
 
 | Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                               |
 | ------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`                    | `./plugins/vwf`            | Commands, subagents, skills, and an npm→pnpm hook                                                                                                                                                                                                                                              |
-| `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` command that scans a repo and writes/updates its README                                                                                                                                                |
+| `vwf`                    | `./plugins/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, and an npm→pnpm hook                                                                                                                                                                                      |
+| `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` skill that scans a repo and writes/updates its README                                                                                                                                                  |
 | `typescript`             | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/effect-runtime/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`) |
 | `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                       |
 | `flutter`                | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)          |
 | `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                                      |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                        |
-| `mise`                   | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` command                                                                                                                                 |
-| `github-actions`         | `./plugins/github-actions` | A `/github-actions:workflow` command that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy)                                                                                           |
+| `mise`                   | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` skill                                                                                                                                   |
+| `github-actions`         | `./plugins/github-actions` | A `/github-actions:workflow` skill that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy)                                                                                             |
 
 ## Plugin Structure
 
@@ -91,11 +92,14 @@ Plugins may declare any combination of:
   allowlist is absent; re-add it if a cross-marketplace dependency is
   introduced.
 
-Skills, commands, agents, and hooks are **auto-discovered by directory
-convention** — they do not need to be listed in `plugin.json`:
+Skills, agents, and hooks are **auto-discovered by directory convention** — they
+do not need to be listed in `plugin.json`:
 
-- `commands/<name>.md` → `/<plugin>:<name>` slash commands
-- `skills/<name>/SKILL.md` → skills
+- `skills/<name>/SKILL.md` → skills, invocable as `/<plugin>:<name>` (Claude
+  Code's unified skills — a skill with `disable-model-invocation: true` is
+  user-only, i.e. exactly a classic slash command). This repo has **no
+  `commands/` dirs**: former commands are skills, so one artifact serves both
+  Claude Code and OpenCode.
 - `agents/<name>.md` → subagents
 - `hooks/hooks.json` → hooks (see Hooks below)
 
@@ -106,14 +110,15 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
-- `commands/` — `/vwf:` slash commands: the Product → Blueprint → Plan → Execute
-  model — `setup` (Phase-0 onboarding/migration bootstrapper; ends by offering
-  `/vwf:blueprint`), `product` (the Phase −1 outcome contract:
-  problem/users/goals with `#goal-<slug>` anchors/slice priority; `blueprint`
-  halts without it), `architecture`, `design-system`, `blueprint` (a
-  **full-product sweep** — a run works a coverage worklist entity by entity
-  until whole-product coverage holds, then stamps `blueprint.coverage` in
-  `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (optional
+- `skills/` (workflow) — the `/vwf:` slash-invocable workflow skills (each
+  `skills/<name>/SKILL.md` with `disable-model-invocation: true`): the Product →
+  Blueprint → Plan → Execute model — `setup` (Phase-0 onboarding/migration
+  bootstrapper; ends by offering `/vwf:blueprint`), `product` (the Phase −1
+  outcome contract: problem/users/goals with `#goal-<slug>` anchors/slice
+  priority; `blueprint` halts without it), `architecture`, `design-system`,
+  `blueprint` (a **full-product sweep** — a run works a coverage worklist entity
+  by entity until whole-product coverage holds, then stamps `blueprint.coverage`
+  in `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (optional
   post-blueprint: renders each entity's Screens contract as self-contained
   static HTML from design-system tokens — via per-entity `mockup-generator`
   subagents into an ephemeral build dir, never committed — and pushes them to a
@@ -144,7 +149,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   reconciliation is offered (blueprint/plan loop-backs), and archive is offered
   once no gaps remain. (The former `autopilot` command is merged into this
   behavior and retired.)
-- `agents/` — subagents the commands delegate to: `blueprint-reviewer`,
+- `agents/` — subagents the workflow skills delegate to: `blueprint-reviewer`,
   `design-system-reviewer`, `product-reviewer`, `execute-coder`,
   `execute-code-reviewer`, `execute-security-reviewer`,
   `execute-acceptance-verifier` (independent criteria→E2E-test mapping + run;
@@ -154,10 +159,10 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `architecture-writer`, `mockup-generator` (per-entity: Screens contract +
   design-system tokens → self-contained HTML mockups in a scratch build dir,
   returns only a manifest)
-- `skills/` — `rest-api-design`; `product-foundations` (the nine foundational
-  concerns every product decides — users & operators, observability
-  (OTel→Grafana), audit logs (privileged+destructive baseline), change logs
-  (Keep-a-Changelog→fastlane), background processes (sync/async +
+- `skills/` (doctrine, auto-applying) — `rest-api-design`; `product-foundations`
+  (the nine foundational concerns every product decides — users & operators,
+  observability (OTel→Grafana), audit logs (privileged+destructive baseline),
+  change logs (Keep-a-Changelog→fastlane), background processes (sync/async +
   worker-vs-service placement, ask only on ambiguity), data retention & PII,
   notifications, runtime settings, rate limiting — **elicited defaults**
   distilled from 95octane: `/vwf:architecture` walks the checklist in step 3c
@@ -169,8 +174,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   **and sequence diagram**, the lifecycle state-diagram bar, and the entity
   `Serves:` goal edge — + the doc-unit doctrine, auto-applies on
   `docs/blueprint/**` and — for frontmatter/link hygiene only —
-  `docs/plans/**`); `design-system` (the UX/visual-contract doctrine — tokens,
-  typography, spacing, motion, accessibility, components/anti-patterns —
+  `docs/plans/**`); `design-system-authoring` (the UX/visual-contract doctrine —
+  tokens, typography, spacing, motion, accessibility, components/anti-patterns —
   auto-applies on `docs/blueprint/design-system`); `project-setup`
   (onboarding/migration doctrine — topology detection incl. the **enforced**
   workspace shape (parent repo + backend/frontend submodules: applied for
@@ -607,12 +612,14 @@ Things to know when editing hooks here:
    `version` (the marketplace `version` is what end-user installs pin to — bump
    it to ship changes).
 
-## Adding a vwf Skill or Command
+## Adding a vwf Skill
 
-- Skill: create `plugins/vwf/skills/<name>/SKILL.md`.
-- Command: create `plugins/vwf/commands/<name>.md`.
-
-No other registration is needed — both are auto-discovered.
+Create `plugins/vwf/skills/<name>/SKILL.md` — no other registration is needed
+(auto-discovered). For a user-invoked workflow skill (what used to be a
+command), set `disable-model-invocation: true` in the frontmatter; for
+auto-applying doctrine, set `user-invocable: false` + `paths:` scoping. Skill
+names must be unique across **all** local plugins (`plugins:check` enforces this
+— OpenCode installs them into one flat namespace).
 
 ## Installation (end-user)
 

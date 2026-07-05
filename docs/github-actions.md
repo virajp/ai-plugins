@@ -1,13 +1,12 @@
 # github-actions plugin
 
-The `github-actions` plugin gives Claude Code a `/github-actions:workflow`
-command that generates a GitHub Actions workflow whose **only**
-tool-installation step is the
-[`jdx/mise-action`](https://github.com/jdx/mise-action) — every tool the jobs
-need comes from the repo's mise config, installed by the action. The generated
-workflow supports both **polyrepo** (a single project) and **monorepo** (many
-packages) layouts, and the command detects which one you have and asks how to
-handle it. It is command-only — no skill, no auto-apply.
+The `github-actions` plugin gives Claude Code a `/github-actions:workflow` skill
+that generates a GitHub Actions workflow whose **only** tool-installation step
+is the [`jdx/mise-action`](https://github.com/jdx/mise-action) — every tool the
+jobs need comes from the repo's mise config, installed by the action. The
+generated workflow supports both **polyrepo** (a single project) and
+**monorepo** (many packages) layouts, and it detects which one you have and asks
+how to handle it. It is a single user-invoked skill — nothing auto-applies.
 
 ## Install
 

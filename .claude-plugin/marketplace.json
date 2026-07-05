@@ -120,14 +120,14 @@
         "tdd",
         "git-workflow"
       ],
-      "version": "4.5.0"
+      "version": "4.6.0"
     },
     {
       "author": {
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file, plus a /markdown:readme command that scans the repo and writes/updates its README.",
+      "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file, plus a /markdown:readme skill that scans the repo and writes/updates its README.",
       "name": "markdown",
       "source": "./plugins/markdown",
       "strict": true,
@@ -137,10 +137,9 @@
         "writing",
         "changelog",
         "mermaid",
-        "skills",
-        "command"
+        "skills"
       ],
-      "version": "0.5.0"
+      "version": "0.6.0"
     },
     {
       "author": {
@@ -157,10 +156,9 @@
         "tasks",
         "ci",
         "devtools",
-        "skills",
-        "command"
+        "skills"
       ],
-      "version": "0.2.0"
+      "version": "0.3.0"
     },
     {
       "author": {
@@ -192,7 +190,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts — via the /github-actions:workflow command.",
+      "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts — via the /github-actions:workflow skill.",
       "name": "github-actions",
       "source": "./plugins/github-actions",
       "strict": true,
@@ -204,9 +202,9 @@
         "workflow",
         "monorepo",
         "polyrepo",
-        "command"
+        "skills"
       ],
-      "version": "0.2.0"
+      "version": "0.3.0"
     }
   ]
 }

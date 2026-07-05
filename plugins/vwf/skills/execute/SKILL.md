@@ -1,14 +1,16 @@
 ---
+name: execute
 description: Execute an approved cycle plan end-to-end in a dedicated worktree
   —
   dependency-ordered, code→review→security per step under TDD with finding
-  loops, one E2E acceptance + UX-conformance pass after all steps, gaps captured
-  in the plan doc. Autonomous between the start and one final human gate, which
-  reviews the run and approves the merge. Requires an approved plan in
-  docs/plans/.
+  loops, one E2E acceptance + UX-conformance pass after all steps, gaps
+  captured in the plan doc. Autonomous between the start and one final human
+  gate, which reviews the run and approves the merge. Requires an approved
+  plan in docs/plans/.
 argument-hint: "[plan-file]"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 # execute — Run an Approved Plan to Completion

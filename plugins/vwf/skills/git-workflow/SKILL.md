@@ -1,11 +1,13 @@
 ---
+name: git-workflow
 description: Manage git workflows — worktree isolation, commits, merges, and
-  pushes. Use for all substantive changes; never work directly in the main
-  worktree.
+  pushes. Use
+  for all substantive changes; never work directly in the main worktree.
 argument-hint: "(no args)"
-allowed-tools: Bash Read
 model: sonnet
 effort: medium
+allowed-tools: Bash Read
+disable-model-invocation: true
 ---
 
 # Git Workflow

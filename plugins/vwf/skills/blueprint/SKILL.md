@@ -1,13 +1,16 @@
 ---
+name: blueprint
 description: Maintain the always-current, full-product blueprint under
-  docs/blueprint/ — one entity doc per entity plus conventions.md. Stack-agnostic;
-  resolves section→project mapping from the architecture registry. Gated by a
-  fresh-subagent completeness reviewer loop. A run sweeps entity by entity until
+  docs/blueprint/ —
+  one entity doc per entity plus conventions.md. Stack-agnostic; resolves
+  section→project mapping from the architecture registry. Gated by a fresh-
+  subagent completeness reviewer loop. A run sweeps entity by entity until
   whole-product coverage holds, then stamps it in .config/vwf.yaml — /vwf:plan
   halts without a complete stamp.
 argument-hint: "[entity]"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 # blueprint — Full-Product Blueprint

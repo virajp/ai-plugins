@@ -1,10 +1,12 @@
 ---
+name: archive
 description: Move completed cycle plans out of the active set into
-  docs/plans/archived/. Never deletes. May be run manually or offered at the end
-  of execute.
+  docs/plans/archived/.
+  Never deletes. May be run manually or offered at the end of execute.
 argument-hint: "[plan-file]"
 model: sonnet
 effort: low
+disable-model-invocation: true
 ---
 
 # archive — Retire Completed Plans

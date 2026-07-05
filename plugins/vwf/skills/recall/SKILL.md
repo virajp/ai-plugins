@@ -1,10 +1,13 @@
 ---
+name: recall
 description: Retrieve a handoff document from mempalace (wing=<project>,
-  room=handoff, drawer=<name>) to resume work in a fresh session, and optionally
-  run its next prompt. Use to continue after a session that exceeded ~60% context.
+  room=handoff,
+  drawer=<name>) to resume work in a fresh session, and optionally run its
+  next prompt. Use to continue after a session that exceeded ~60% context.
 argument-hint: "<name>"
 model: sonnet
 effort: medium
+disable-model-invocation: true
 ---
 
 # recall — Resume Work from a Handoff

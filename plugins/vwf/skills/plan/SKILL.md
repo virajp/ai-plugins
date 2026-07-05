@@ -1,14 +1,17 @@
 ---
+name: plan
 description: Produce a reviewable cycle plan as a diff for one slice of the
-  blueprint
-  (an entity or a section). Reads desired (blueprint) vs actual (code), writes only
-  the delta to docs/plans/<date>-<time>-<slice>.md. Pulls unimplemented
+  blueprint (an
+  entity or a section). Reads desired (blueprint) vs actual (code), writes
+  only the delta to docs/plans/<date>-<time>-<slice>.md. Pulls unimplemented
   dependencies of the slice into the plan (transitively) and routes any
   blueprint gap it uncovers back through /vwf:blueprint before writing — so no
-  cycle builds on a gap. Requires the blueprint coverage stamp to read complete.
+  cycle builds on a gap. Requires the blueprint coverage stamp to read
+  complete.
 argument-hint: "[entity | entity/section | integration]"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 # plan — Cycle Plan (a Diff, not a re-Blueprint)

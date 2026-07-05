@@ -4,7 +4,7 @@ The `mise` plugin teaches Claude Code an opinionated
 [mise](https://mise.jdx.dev) standard: the `.config/` three-file `MISE_ENV`
 split (`mise.toml` / `mise.dev.toml` / `mise.ci.toml`), a mandatory file-based
 task library (quality gates and bootstrap tasks under `.config/mise/tasks/`),
-and a `/mise:scaffold` command that lays both into a repo. The bundled `mise`
+and a `/mise:scaffold` skill that lays both into a repo. The bundled `mise`
 skill auto-applies whenever you edit mise config or a task file — its `paths`
 match `**/mise.toml`, `**/mise.dev.toml`, `**/mise.ci.toml`, the same three
 under `**/.config/`, and any file under `**/.config/mise/tasks/**`.

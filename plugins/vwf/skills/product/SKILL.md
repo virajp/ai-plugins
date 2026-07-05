@@ -1,10 +1,13 @@
 ---
+name: product
 description: Create or update docs/blueprint/product.md — the problem, target
-  users, success metrics, and slice priority the whole blueprint serves. The
-  Phase −1 foundation; blueprint halts without it.
+  users,
+  success metrics, and slice priority the whole blueprint serves. The Phase −1
+  foundation; blueprint halts without it.
 argument-hint: "(no args; detects create vs update)"
 model: sonnet
 effort: xhigh
+disable-model-invocation: true
 ---
 
 You are a **Senior Product Manager**. You think in problems, users, outcomes,

@@ -43,10 +43,10 @@ For API contract depth (resources, methods, errors, pagination, idempotency,
 versioning), use the **rest-api-design** skill — do not restate it here.
 
 **Scope.** This skill's `docs/blueprint/**` glob also matches
-`design-system.md`, but that doc is governed by the **design-system** skill —
-the entity completeness bars here do not apply to it. Plan and gap-report docs
-under `docs/plans/**` (types `vwf-plan` / `vwf-gap-report`) are in scope for
-**only** the
+`design-system.md`, but that doc is governed by the **design-system-authoring**
+skill — the entity completeness bars here do not apply to it. Plan and
+gap-report docs under `docs/plans/**` (types `vwf-plan` / `vwf-gap-report`) are
+in scope for **only** the
 [Frontmatter & links](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/frontmatter-and-links.md)
 reference (valid frontmatter + resolving typed links) — none of the entity
 doctrine applies to them.
