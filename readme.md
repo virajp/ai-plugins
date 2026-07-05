@@ -907,9 +907,15 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   exactly like Claude's `disable-model-invocation` — while doctrine skills stay
   discoverable under `skills/`;
 - expands plugin **dependencies** like Claude Code does — installing `vwf` also
-  renders `markdown`, `mise`, and wires `context7` (`mempalace` lives upstream
-  and is noted, not installed) — and wires **graphify** for the opencode
-  platform when `vwf` is installed;
+  renders `markdown`, `mise`, and wires `context7` and `mempalace` — and wires
+  **graphify** for the opencode platform when `vwf` is installed;
+- **`mempalace`** (url-sourced) installs from its own upstream repo: its two
+  skills render, its MCP server lands in the config (launched as
+  `mise x -- mempalace-mcp`), and its Claude auto-save hooks are replaced by a
+  bundled OpenCode plugin (`plugin/mempalace-hooks.js`) — a save checkpoint
+  every 15 user messages plus a post-compaction safety save, honoring
+  mempalace's own opt-out (`MEMPALACE_HOOKS_AUTO_SAVE` /
+  `~/.mempalace/config.json`);
 - appends that `virajp-plugins` directory to `skills.paths` in the OpenCode
   config — an existing `opencode.jsonc` is preferred (it wins OpenCode's config
   merge), then an existing `opencode.json`; a new file is created as
@@ -925,9 +931,9 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   skills yet);
 - for `context7`, adds the MCP server to the config's `mcp` key.
 
-**Not ported**: subagents and hooks are Claude Code concepts (vwf's execute
-pipeline degrades accordingly), the statusline is Claude-only, and url-sourced
-plugins (`mempalace`, `andrej-karpathy-skills`) live upstream and are skipped.
+**Not ported**: subagents and vwf's hooks are Claude Code concepts (vwf's
+execute pipeline degrades accordingly), the statusline is Claude-only, and
+`andrej-karpathy-skills` (url-sourced, no upstream support wired) is skipped.
 `--uninstall` and `--upgrade` mirror all of this (uninstall never removes a
 dependency you didn't name); `--version` reports the stamped versions against
 the marketplace manifest.

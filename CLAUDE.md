@@ -439,18 +439,26 @@ Layout:
   uninstall removes exactly what was written and never a user-modified entry),
   write a **command wrapper** `command/<plugin>-<skill>.md` per
   `disable-model-invocation` skill (OpenCode has no user-invoked skills), and
-  add context7's MCP server to the config's `mcp` key. **Config file:** edits
-  target an existing `opencode.jsonc` first (OpenCode merges all config names,
-  jsonc wins), else an existing `opencode.json`; a new file is created as
-  `opencode.jsonc`. All names are read JSONC-tolerantly, and a config with
-  comments is only rewritten after confirmation (or `--yes`) since a rewrite
-  drops them. **Dependencies** expand at plan time from `PLUGIN_DEPS` in
-  `claude.mjs` (kept ≡ the marketplace lists by `plugins:check`; Claude Code
+  write each plugin's MCP server (`MCP_ENTRIES`: context7 via `pnpm dlx`,
+  mempalace via `mise x -- mempalace-mcp`) to the config's `mcp` key. **Upstream
+  plugins** (`UPSTREAM`): mempalace installs from its own repo (tarball;
+  `AI_PLUGINS_UPSTREAM_DIR` overrides for tests) — its repo root is the plugin
+  root (skills/ + integrations/ copied, versioned by its plugin.json), and its
+  Claude hooks are replaced by the bundled `tools/opencode/mempalace-hooks.js`,
+  copied to `<configDir>/plugin/` — an OpenCode plugin that injects a MemPalace
+  save-checkpoint prompt every 15 user messages (`session.idle`) and after
+  compaction (`session.compacted`), honoring mempalace's auto-save opt-out.
+  **Config file:** edits target an existing `opencode.jsonc` first (OpenCode
+  merges all config names, jsonc wins), else an existing `opencode.json`; a new
+  file is created as `opencode.jsonc`. All names are read JSONC-tolerantly, and
+  a config with comments is only rewritten after confirmation (or `--yes`) since
+  a rewrite drops them. **Dependencies** expand at plan time from `PLUGIN_DEPS`
+  in `claude.mjs` (kept ≡ the marketplace lists by `plugins:check`; Claude Code
   auto-installs them natively) — installs only, uninstall never removes an
   unnamed dependency — and a vwf install runs
-  `graphify install --platform opencode`. url-sourced plugins (`URL_SOURCED`:
-  mempalace, andrej-karpathy-skills) are filtered from `--all`, rejected when
-  named, and skipped (with a note) as dependencies — their files live upstream.
+  `graphify install --platform opencode`. url-sourced plugins **without**
+  `UPSTREAM` support (andrej-karpathy-skills) are filtered from `--all`,
+  rejected when named, and skipped (with a note) as dependencies.
   `--uninstall`/`--upgrade`/`--version` mirror all of this via the `.version`
   stamps.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`

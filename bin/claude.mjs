@@ -176,7 +176,7 @@ const PLUGIN_EXTRA_DEPS = {
   typescript: ["mise", "pnpm"],
   context7: ["pnpm"],
   flutter: ["mise", "kotlin-lsp", "sourcekit-lsp"],
-  mempalace: ["uv"],
+  mempalace: ["uv", "mise"], // mise: the OpenCode target launches its MCP via `mise x`
   mise: ["mise"],
   "github-actions": ["mise"],
 };

@@ -45,6 +45,30 @@ for (const bin of ["opencode", "rtk", "graphify", "mise", "pnpm", "uv"]) {
   writeFileSync(join(fakeBin, bin), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
 }
 
+// Fake upstream checkout for the url-sourced mempalace plugin (the installer
+// reads $AI_PLUGINS_UPSTREAM_DIR/<plugin>/ instead of fetching its tarball).
+const upstreamDir = join(tmp, "upstream");
+const fakeMempalace = join(upstreamDir, "mempalace");
+mkdirSync(join(fakeMempalace, ".claude-plugin"), { recursive: true });
+mkdirSync(join(fakeMempalace, "skills", "mempalace"), { recursive: true });
+mkdirSync(join(fakeMempalace, "integrations", "shared"), { recursive: true });
+writeFileSync(
+  join(fakeMempalace, ".claude-plugin", "plugin.json"),
+  JSON.stringify({
+    name: "mempalace",
+    version: "9.9.9",
+    mcpServers: { mempalace: { command: "mempalace-mcp" } },
+  }),
+);
+writeFileSync(
+  join(fakeMempalace, "skills", "mempalace", "SKILL.md"),
+  "---\nname: mempalace\ndescription: fake\n---\nbody\n",
+);
+writeFileSync(
+  join(fakeMempalace, "integrations", "shared", "recall-protocol.md"),
+  "protocol\n",
+);
+
 // Run the CLI against the fake HOME with the local checkout as plugin source.
 function runCli(args) {
   return spawnSync(process.execPath, [CLI, ...args], {
@@ -55,6 +79,7 @@ function runCli(args) {
       PATH: `${fakeBin}:${process.env.PATH}`,
       HOME: fakeHome,
       AI_PLUGINS_SOURCE_DIR: REPO,
+      AI_PLUGINS_UPSTREAM_DIR: upstreamDir,
       NO_COLOR: "1",
     },
   });
@@ -92,10 +117,19 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   // Claude-only surfaces are not rendered.
   assert.ok(!existsSync(join(vwfDir, "agents")));
   assert.ok(!existsSync(join(vwfDir, "hooks")));
-  // vwf's plugin dependencies were expanded (mempalace excepted — upstream).
+  // vwf's plugin dependencies were expanded — including the url-sourced
+  // mempalace, rendered from its (fake) upstream checkout.
   assert.ok(existsSync(join(configDir, "virajp-plugins", "markdown")));
   assert.ok(existsSync(join(configDir, "virajp-plugins", "mise")));
-  assert.ok(!existsSync(join(configDir, "virajp-plugins", "mempalace")));
+  const mpDir = join(configDir, "virajp-plugins", "mempalace");
+  assert.ok(existsSync(join(mpDir, "skills", "mempalace", "SKILL.md")));
+  assert.ok(
+    existsSync(join(mpDir, "integrations", "shared", "recall-protocol.md")),
+  );
+  assert.equal(readFileSync(join(mpDir, ".version"), "utf8").trim(), "9.9.9");
+  // Its Claude hooks are replaced by the bundled OpenCode plugin, and its MCP
+  // server runs through mise.
+  assert.ok(existsSync(join(configDir, "plugin", "mempalace-hooks.js")));
 
   // Every ${CLAUDE_PLUGIN_ROOT} was expanded to the installed absolute path.
   const leftover = [];
@@ -147,6 +181,10 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
     type: "local",
     command: ["pnpm", "dlx", "@upstash/context7-mcp"],
   });
+  assert.deepEqual(config.mcp.mempalace, {
+    type: "local",
+    command: ["mise", "x", "--", "mempalace-mcp"],
+  });
   // Derived from plugins/typescript plugin.json lspServers (typescript-lsp →
   // the OpenCode built-in id "typescript") and stamped beside the render.
   assert.ok(
@@ -182,8 +220,13 @@ test("reinstall is idempotent and preserves foreign config keys", () => {
   );
 });
 
-test("url-sourced plugins are rejected for opencode", () => {
-  const res = runCli(["--platform", "opencode", "--user", "mempalace"]);
+test("unsupported url-sourced plugins are rejected for opencode", () => {
+  const res = runCli([
+    "--platform",
+    "opencode",
+    "--user",
+    "andrej-karpathy-skills",
+  ]);
   assert.notEqual(res.status, 0);
   assert.match(res.stderr + res.stdout, /url-sourced/);
 });
@@ -204,6 +247,8 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
     "markdown",
     "--user",
     "mise",
+    "--user",
+    "mempalace",
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
@@ -220,6 +265,7 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
   assert.deepEqual(config.skills.paths, ["~/my-skills"]);
   assert.equal(config.mcp, undefined);
   assert.equal(config.lsp, undefined);
+  assert.ok(!existsSync(join(configDir, "plugin", "mempalace-hooks.js")));
 });
 
 test("a commented jsonc config is only rewritten with --yes", () => {

@@ -49,6 +49,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
+  copyFile,
   cp,
   mkdir,
   mkdtemp,
@@ -66,6 +67,7 @@ import {
   dirname,
   join,
 } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   DEP_HINTS,
@@ -94,10 +96,45 @@ const REPO_TARBALL_URL =
   "https://codeload.github.com/virajp/ai-plugins/tar.gz/refs/heads/main";
 const SOURCE_DIR_ENV = "AI_PLUGINS_SOURCE_DIR";
 
-// Marketplace entries with a `url` source live in their own upstream repos —
-// there is nothing here to render for OpenCode. Keep in sync with
-// .claude-plugin/marketplace.json.
+// ESM has no __dirname; derive it from this module's URL. The OpenCode
+// support assets ship with the npm package under tools/opencode/.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const OPENCODE_ASSETS = join(__dirname, "..", "tools", "opencode");
+
+// Marketplace entries with a `url` source live in their own upstream repos.
+// Keep in sync with .claude-plugin/marketplace.json.
 const URL_SOURCED = new Set(["mempalace", "andrej-karpathy-skills"]);
+
+// url-sourced plugins this target knows how to install from upstream: where
+// to fetch the repo, which MCP command to write, and which bundled OpenCode
+// JS plugin (tools/opencode/) replaces its Claude hooks. url-sourced plugins
+// NOT listed here (andrej-karpathy-skills) stay uninstallable for OpenCode.
+// AI_PLUGINS_UPSTREAM_DIR (a dir holding <plugin>/ checkouts) overrides the
+// fetch for tests/dev, like AI_PLUGINS_SOURCE_DIR does for this repo.
+const UPSTREAM_DIR_ENV = "AI_PLUGINS_UPSTREAM_DIR";
+const UPSTREAM = {
+  mempalace: {
+    tarball:
+      "https://codeload.github.com/MemPalace/mempalace/tar.gz/refs/heads/main",
+    pluginFile: "mempalace-hooks.js",
+  },
+};
+const installableForOpenCode = name =>
+  !URL_SOURCED.has(name) || Boolean(UPSTREAM[name]);
+
+// MCP servers written into the OpenCode config per plugin. context7 mirrors
+// its plugin.json; mempalace runs its MCP binary through mise so no venv or
+// PATH setup is assumed.
+const MCP_ENTRIES = {
+  context7: {
+    type: "local",
+    command: ["pnpm", "dlx", "@upstash/context7-mcp"],
+  },
+  mempalace: {
+    type: "local",
+    command: ["mise", "x", "--", "mempalace-mcp"],
+  },
+};
 
 // Global vs project config dirs (docs: opencode.ai/docs/config). The
 // `skills.paths` entry written into each config uses a portable spelling:
@@ -283,7 +320,7 @@ class OpenCode {
   resolvePlan(flags) {
     let plugins;
     if (flags.all) {
-      const skipped = USER_SCOPED.filter(name => URL_SOURCED.has(name));
+      const skipped = USER_SCOPED.filter(name => !installableForOpenCode(name));
       if (skipped.length) {
         this.io.log(
           yellow(
@@ -293,7 +330,7 @@ class OpenCode {
           ),
         );
       }
-      plugins = USER_SCOPED.filter(name => !URL_SOURCED.has(name)).map(
+      plugins = USER_SCOPED.filter(installableForOpenCode).map(
         name => ({ name, scope: "user" }),
       );
     }
@@ -312,9 +349,9 @@ class OpenCode {
           }`,
         );
       }
-      const urlSourced = named.filter(p => URL_SOURCED.has(p.name)).map(p =>
-        p.name
-      );
+      const urlSourced = named
+        .filter(p => !installableForOpenCode(p.name))
+        .map(p => p.name);
       if (urlSourced.length) {
         this.io.error(
           `Not installable for OpenCode: ${
@@ -346,7 +383,7 @@ class OpenCode {
           if (seen.has(dep)) {
             continue;
           }
-          if (URL_SOURCED.has(dep)) {
+          if (!installableForOpenCode(dep)) {
             skipped.push(dep);
             continue;
           }
@@ -503,6 +540,12 @@ class OpenCode {
           () => rm(dest, { recursive: true, force: true }),
         );
       }
+      // Its bundled OpenCode plugin (hooks port), if any.
+      if (UPSTREAM[name]?.pluginFile) {
+        await rm(join(configDir, "plugin", UPSTREAM[name].pluginFile), {
+          force: true,
+        });
+      }
       // Its command wrappers.
       const cmdDir = join(configDir, "command");
       if (existsSync(cmdDir)) {
@@ -615,6 +658,59 @@ class OpenCode {
       this.tmpRoot = null;
       this.sourceRoot = null;
     }
+    for (const dir of this.upstreamTmp ?? []) {
+      await rm(dir, { recursive: true, force: true });
+    }
+    this.upstreamTmp = [];
+    this.upstreamRoots = new Map();
+  }
+
+  // The checkout of an UPSTREAM plugin's own repo: the AI_PLUGINS_UPSTREAM_DIR
+  // override (<dir>/<plugin>/), or its fetched+extracted main tarball.
+  async resolveUpstream(name) {
+    this.upstreamRoots ??= new Map();
+    this.upstreamTmp ??= [];
+    if (this.upstreamRoots.has(name)) {
+      return this.upstreamRoots.get(name);
+    }
+    const override = process.env[UPSTREAM_DIR_ENV];
+    if (override) {
+      const root = join(override, name);
+      if (!existsSync(root)) {
+        this.io.error(`$${UPSTREAM_DIR_ENV} (${override}) has no ${name}/.`);
+      }
+      this.upstreamRoots.set(name, root);
+      return root;
+    }
+    let root;
+    await step(
+      this.io,
+      `Fetching ${name} source (upstream: main)`,
+      async () => {
+        const tmp = await mkdtemp(join(tmpdir(), `ai-plugins-${name}-`));
+        this.upstreamTmp.push(tmp);
+        const res = await fetch(UPSTREAM[name].tarball);
+        if (!res.ok) {
+          throw new Error(`GET ${UPSTREAM[name].tarball} → HTTP ${res.status}`);
+        }
+        const tarball = join(tmp, "source.tar.gz");
+        await writeFile(tarball, Buffer.from(await res.arrayBuffer()));
+        const tar = spawnSync("tar", ["-xzf", tarball, "-C", tmp], {
+          encoding: "utf8",
+        });
+        if (tar.status !== 0) {
+          throw new Error(tar.stderr || "tar extraction failed");
+        }
+        const entries = await readdir(tmp, { withFileTypes: true });
+        const dir = entries.find(e => e.isDirectory());
+        if (!dir) {
+          throw new Error("upstream tarball contained no directory");
+        }
+        root = join(tmp, dir.name);
+      },
+    );
+    this.upstreamRoots.set(name, root);
+    return root;
   }
 
   // ── rendering ────────────────────────────────────────────────────────────
@@ -623,7 +719,14 @@ class OpenCode {
   // rewrite ${CLAUDE_PLUGIN_ROOT}, stamp .version, and (re)write the command
   // wrappers for its user-invoked skills.
   async renderPlugin(sourceRoot, name, scope) {
-    const src = join(sourceRoot, "plugins", name);
+    // UPSTREAM plugins render from their own repo checkout: the repo root IS
+    // the plugin root, versioned by its own plugin.json, and its Claude hooks
+    // are replaced by a bundled OpenCode JS plugin (tools/opencode/) copied
+    // into <configDir>/plugin/.
+    const upstream = UPSTREAM[name];
+    const src = upstream
+      ? await this.resolveUpstream(name)
+      : join(sourceRoot, "plugins", name);
     if (!existsSync(join(src, "skills"))) {
       this.io.log(
         yellow(`${name}: no skills/ directory — nothing to install, skipped.`),
@@ -636,7 +739,13 @@ class OpenCode {
     await step(this.io, `Installing ${name} skills (${scope})`, async () => {
       await rm(dest, { recursive: true, force: true });
       await mkdir(dest, { recursive: true });
-      for (const part of ["skills", "assets"]) {
+      // Upstream repos hold much more than the plugin surface — copy skills/
+      // plus integrations/ (their skills link into it); ours copy
+      // skills/ + assets/.
+      const parts = upstream
+        ? ["skills", "integrations"]
+        : ["skills", "assets"];
+      for (const part of parts) {
         if (existsSync(join(src, part))) {
           await cp(join(src, part), join(dest, part), { recursive: true });
         }
@@ -644,15 +753,22 @@ class OpenCode {
       await this.rewritePluginRoot(dest);
       await this.segregateWorkflowSkills(dest);
 
-      const market = JSON.parse(
-        await readFile(
-          join(sourceRoot, ".claude-plugin", "marketplace.json"),
-          "utf8",
-        ),
-      );
-      const version = (market.plugins || [])
-        .find(p => p.name === name)
-        ?.version;
+      let version;
+      if (upstream) {
+        const pj = JSON.parse(
+          await readFile(join(src, ".claude-plugin", "plugin.json"), "utf8"),
+        );
+        version = pj.version;
+      }
+      else {
+        const market = JSON.parse(
+          await readFile(
+            join(sourceRoot, ".claude-plugin", "marketplace.json"),
+            "utf8",
+          ),
+        );
+        version = (market.plugins || []).find(p => p.name === name)?.version;
+      }
       await writeFile(join(dest, ".version"), `${version || "unknown"}\n`);
 
       // Stamp the OpenCode lsp entries this plugin contributes, so updateConfig
@@ -668,6 +784,17 @@ class OpenCode {
         );
       }
     });
+
+    if (upstream?.pluginFile) {
+      await step(this.io, `Installing ${name} OpenCode plugin`, async () => {
+        const pluginDir = join(configDir, "plugin");
+        await mkdir(pluginDir, { recursive: true });
+        await copyFile(
+          join(OPENCODE_ASSETS, upstream.pluginFile),
+          join(pluginDir, upstream.pluginFile),
+        );
+      });
+    }
 
     await this.writeWrappers(name, dest, configDir);
   }
@@ -869,14 +996,14 @@ class OpenCode {
       }
     }
 
-    if (pluginNames.includes("context7")) {
+    for (const name of pluginNames) {
+      const entry = MCP_ENTRIES[name];
+      if (!entry) {
+        continue;
+      }
       config.mcp = isObject(config.mcp) ? config.mcp : {};
-      if (!config.mcp.context7) {
-        // Mirrors plugins/context7/.claude-plugin/plugin.json (mcpServers).
-        config.mcp.context7 = {
-          type: "local",
-          command: ["pnpm", "dlx", "@upstash/context7-mcp"],
-        };
+      if (!config.mcp[name]) {
+        config.mcp[name] = structuredClone(entry);
       }
     }
 
@@ -917,20 +1044,20 @@ class OpenCode {
       }
     }
 
-    if (removedNames.includes("context7") && isObject(config.mcp)) {
-      const entry = config.mcp.context7;
-      // Only remove the exact entry we wrote.
-      if (
-        isObject(entry)
-        && entry.type === "local"
-        && Array.isArray(entry.command)
-        && entry.command.join(" ") === "pnpm dlx @upstash/context7-mcp"
-      ) {
-        delete config.mcp.context7;
-        if (!Object.keys(config.mcp).length) {
-          delete config.mcp;
+    if (isObject(config.mcp)) {
+      for (const name of removedNames) {
+        const wrote = MCP_ENTRIES[name];
+        // Only remove the exact entry we wrote.
+        if (
+          wrote
+          && JSON.stringify(config.mcp[name]) === JSON.stringify(wrote)
+        ) {
+          delete config.mcp[name];
+          changed = true;
         }
-        changed = true;
+      }
+      if (!Object.keys(config.mcp).length) {
+        delete config.mcp;
       }
     }
 

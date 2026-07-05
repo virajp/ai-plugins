@@ -18,8 +18,15 @@ pnpx @askviraj/ai-plugins --user mempalace
 When you install `vwf`, `mempalace` is pulled in and enabled automatically — you
 only need this command to install it on its own.
 
-Claude Code only: as a url-sourced (upstream) plugin it is not installable via
-the CLI's `--platform opencode` target — see its own repo for other tools.
+For **OpenCode**, `--platform opencode --user mempalace` (or installing `vwf`)
+fetches the upstream repo and installs: its two skills, the `mempalace` MCP
+server in the OpenCode config (launched as `mise x -- mempalace-mcp`), and an
+OpenCode plugin (`plugin/mempalace-hooks.js`) that ports the Claude auto-save
+hooks — a save checkpoint every 15 user messages (on `session.idle`) and a
+safety save after compaction, honoring the same opt-out
+(`MEMPALACE_HOOKS_AUTO_SAVE=false` or `hooks.auto_save` in
+`~/.mempalace/config.json`). The Claude `SessionEnd` hook has no OpenCode
+equivalent — the interval saves cover it.
 
 ## How vwf uses it
 
