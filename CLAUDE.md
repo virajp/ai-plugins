@@ -16,7 +16,8 @@ plugin (with post-deploy verify + production-feedback intake). The root
 `plugins/<name>/.claude-plugin/plugin.json`.
 
 The repo also ships a **statusline**, installed via a small `oclif` CLI
-(`@askviraj/ai-plugins`) rather than the marketplace — see The statusline CLI.
+(`@askviraj/ai-plugins`) rather than the marketplace — see The installer &
+statusline CLI.
 
 Plugins are pure JSON/markdown configuration plus shell scripts (no build step).
 The one addition is the statusline CLI: a small plain-JS `oclif` package at the
@@ -387,10 +388,11 @@ auto-enables** these dependencies at the same scope. Key rules:
   enabled — not on a continuous reconcile. If a dependency is later disabled on
   its own, re-enable it directly or toggle `vwf` off/on.
 
-## The statusline CLI
+## The installer & statusline CLI
 
 The statusline is **not** a Claude Code plugin — it is an `oclif` CLI published
-as `@askviraj/ai-plugins` that installs a powerline statusline into Claude Code.
+as `@askviraj/ai-plugins` that installs the toolkit for **Claude Code and/or
+OpenCode** (plugins, OpenCode-rendered skills, and the powerline statusline).
 Layout:
 
 - `tools/statusline/statusline` — the executable Node script (node shebang).
@@ -410,17 +412,42 @@ Layout:
 - `bin/installer.mjs` — the CLI entrypoint: the oclif command class plus the
   bootstrap that runs it (single-command `strategy`/`target` in `package.json`;
   `settings.enableAutoTranspile = false` keeps oclif from hunting for
-  TypeScript). It imports `bin/claude.mjs` (the `ClaudeCode` tool) and
-  `bin/utils.mjs` (shared helpers). The run-directly guard uses
+  TypeScript). It dispatches to one **tool module per platform** —
+  `bin/claude.mjs` (the `ClaudeCode` tool) and `bin/opencode.mjs` (the
+  `OpenCode` tool), both exposing the same surface
+  (`resolvePlan`/`hasSelection`/`install`/`upgrade`/`uninstall`/`printVersions`)
+  — plus `bin/utils.mjs` (shared helpers). `--platform claude|opencode`
+  (repeatable) selects targets; omitted, every platform whose binary is on
+  `PATH` is targeted. The run-directly guard uses
   `realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)` (the ESM
   equivalent of `require.main === module`, symlink-safe for the npm bin).
+- `bin/opencode.mjs` — the OpenCode target. OpenCode has no plugin/marketplace
+  concept, so install = **render**: fetch the repo source (GitHub `main`
+  tarball; `AI_PLUGINS_SOURCE_DIR` — a local checkout — overrides for
+  tests/dev), copy each selected plugin's `skills/` + `assets/` into
+  `<configDir>/ai-plugins/<plugin>/` (`--user` → `~/.config/opencode/`,
+  `--project` → `.opencode/`; agents/hooks are Claude-only, skipped), rewrite
+  every `${CLAUDE_PLUGIN_ROOT}` to the installed absolute path, stamp `.version`
+  from the source marketplace manifest, append the `ai-plugins` dir to
+  `skills.paths` in `opencode.json` (targeted array append; foreign keys
+  preserved), write a **command wrapper** `command/<plugin>-<skill>.md` per
+  `disable-model-invocation` skill (OpenCode has no user-invoked skills), and
+  add context7's MCP server to `opencode.json`'s `mcp` key. **LSP:** OpenCode's
+  built-ins cover typescript/dart/kotlin/swift — no `lsp` config is written.
+  url-sourced plugins (`URL_SOURCED`: mempalace, andrej-karpathy-skills) are
+  filtered from `--all` and rejected when named — their files live upstream.
+  `--uninstall`/`--upgrade`/`--version` mirror all of this via the `.version`
+  stamps.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
 - `test/` — `node --test` suites run by `i:test` (and thus in `release.yml`):
-  `utils.test.mjs` (cmpVer/cmpPre/deepMerge incl. prototype-pollution keys) and
+  `utils.test.mjs` (cmpVer/cmpPre/deepMerge incl. prototype-pollution keys),
   `statusline.test.mjs` (hermetic smoke tests for both render surfaces + the
-  usage-file contract `context-caps.js` reads). Not shipped in the npm package
-  (`files` is `bin` + `tools`).
+  usage-file contract `context-caps.js` reads), and `opencode.test.mjs`
+  (hermetic OpenCode installs into a temp `$HOME` with
+  `AI_PLUGINS_SOURCE_DIR=<checkout>`: render/rewrite, wrapper emission, config
+  idempotency + foreign-key preservation, uninstall symmetry). Not shipped in
+  the npm package (`files` is `bin` + `tools`).
 
 The command does several jobs. **Plugins:** `--all` (every user-scoped plugin,
 at user scope) or `--user <name>` / `--project <name>` (repeatable; name plugins
@@ -634,7 +661,7 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
 `context7`, `mise`, `github-actions`, `andrej-karpathy-skills` (external,
 opt-in). (The statusline is not a plugin — install it via
-`npx @askviraj/ai-plugins …`; see The statusline CLI.)
+`npx @askviraj/ai-plugins …`; see The installer & statusline CLI.)
 
 Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
 `mise`) automatically from the same `virajp-plugins` marketplace — no other

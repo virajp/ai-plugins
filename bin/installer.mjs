@@ -1,14 +1,15 @@
 /**
- * @askviraj/ai-plugins — installs Viraj Patel's Claude Code toolkit (marketplace
- * plugins + the powerline statusline).
+ * @askviraj/ai-plugins — installs Viraj Patel's AI-coding toolkit (marketplace
+ * plugins + the powerline statusline) for Claude Code and/or OpenCode.
  *
  * Single-command oclif CLI, plain JS (no build step). Run via:
  *   npx @askviraj/ai-plugins --all --statusline [--yes]
  *
- * This file is only the CLI entrypoint: it parses flags and dispatches to a tool.
- * All Claude-specific behavior lives in ./claude.mjs (the ClaudeCode tool), and
- * tool-agnostic helpers in ./utils.mjs — so other AI coding tools can be added
- * later as sibling modules exposing the same surface.
+ * This file is only the CLI entrypoint: it parses flags and dispatches to one
+ * tool per targeted platform. Claude-specific behavior lives in ./claude.mjs
+ * (the ClaudeCode tool), OpenCode-specific behavior in ./opencode.mjs, and
+ * tool-agnostic helpers in ./utils.mjs — every tool exposes the same surface
+ * (resolvePlan / hasSelection / install / upgrade / uninstall / printVersions).
  */
 
 import {
@@ -25,24 +26,66 @@ import {
   PROJECT_SCOPED,
   USER_SCOPED,
 } from "./claude.mjs";
-import { yellow } from "./utils.mjs";
+import { OpenCode } from "./opencode.mjs";
+import {
+  green,
+  hasBin,
+  yellow,
+} from "./utils.mjs";
 
 // This is a plain-JS CLI (no TypeScript / ts-node). Tell oclif so it never tries
 // to auto-transpile, which otherwise warns "Could not find typescript".
 settings.enableAutoTranspile = false;
 
+// The AI coding tools this CLI can install for. Claude Code gets marketplace
+// plugins + the statusline; OpenCode gets the plugins' skills rendered into its
+// config (see opencode.mjs). Explicit --platform wins; otherwise every tool
+// found on PATH is targeted.
+const PLATFORMS = ["claude", "opencode"];
+const toolFor = (platform, io) =>
+  platform === "opencode" ? new OpenCode(io) : new ClaudeCode(io);
+
 class Installer extends Command {
+  // The platforms this run acts on: the explicit --platform values, or every
+  // platform whose binary is on PATH. Ordered claude-first.
+  resolvePlatforms(flags) {
+    if (flags.platform?.length) {
+      return PLATFORMS.filter(p => flags.platform.includes(p));
+    }
+    const detected = PLATFORMS.filter(p => hasBin(p));
+    if (!detected.length) {
+      this.error(
+        "Neither `claude` nor `opencode` found on PATH. Install one (claude: "
+          + "`mise use -g claude-code@latest`; opencode: see opencode.ai), or "
+          + "pass --platform explicitly.",
+      );
+    }
+    this.log(
+      green(`Detected platform(s): ${detected.join(", ")}`),
+    );
+    return detected;
+  }
+
   async run() {
     const { flags } = await this.parse(Installer);
-    const tool = new ClaudeCode(this);
+    const platforms = this.resolvePlatforms(flags);
 
     if (flags.version) {
-      await tool.printVersions();
+      for (const platform of platforms) {
+        await toolFor(platform, this).printVersions();
+      }
       return;
     }
 
-    const plan = tool.resolvePlan(flags);
-    const hasSelection = tool.hasSelection(plan);
+    // The statusline is a Claude Code surface (it lives in ~/.claude); flag a
+    // request that can't be honored because claude isn't targeted.
+    if (flags.statusline && !platforms.includes("claude")) {
+      this.log(
+        yellow(
+          "Note: --statusline is Claude Code-only — skipped (claude is not a targeted platform).",
+        ),
+      );
+    }
 
     // --all acts on user-scoped plugins only; flag the project-scoped ones it
     // skips so it's clear how to act on them.
@@ -61,33 +104,52 @@ class Installer extends Command {
       }
     }
 
+    // One job per platform: each tool resolves the same flags into its own plan.
+    const jobs = platforms.map(platform => {
+      const tool = toolFor(platform, this);
+      return { platform, tool, plan: tool.resolvePlan(flags) };
+    });
+    const anySelection = jobs.some(j => j.tool.hasSelection(j.plan));
+    const banner = platform =>
+      platforms.length > 1 && this.log(green(`\n── ${platform} ──`));
+
     // Uninstall mode reuses the same selection flags but removes instead.
     if (flags.uninstall) {
-      if (!hasSelection) {
+      if (!anySelection) {
         this.error(
           "Nothing to uninstall. Pass --all, --user <name>, --project <name>, and/or --statusline with --uninstall.",
         );
       }
-      await tool.uninstall(plan);
+      for (const { platform, tool, plan } of jobs) {
+        if (tool.hasSelection(plan)) {
+          banner(platform);
+          await tool.uninstall(plan);
+        }
+      }
       return;
     }
 
-    if (!hasSelection && !flags.upgrade) {
+    if (!anySelection && !flags.upgrade) {
       this.error(
         "Nothing to do. Pass --all, --user <name>, --project <name>, --statusline, --upgrade, --uninstall, or --version.",
       );
     }
 
-    // Install first — so a fresh machine ends up with the requested plugins…
-    let state = { marketplaceRefreshed: false, graphifyConfigured: false };
-    if (hasSelection) {
-      state = await tool.install(plan, flags);
-    }
-
-    // …then upgrade everything that is installed to the latest versions. Skip the
-    // marketplace refresh and graphify setup if the install phase already did them.
-    if (flags.upgrade) {
-      await tool.upgrade(state.marketplaceRefreshed, state.graphifyConfigured);
+    for (const { platform, tool, plan } of jobs) {
+      banner(platform);
+      // Install first — so a fresh machine ends up with the requested plugins…
+      let state = { marketplaceRefreshed: false, graphifyConfigured: false };
+      if (tool.hasSelection(plan)) {
+        state = await tool.install(plan, flags);
+      }
+      // …then upgrade everything that is installed to the latest versions. Skip
+      // the marketplace refresh / graphify setup an install phase already did.
+      if (flags.upgrade) {
+        await tool.upgrade(
+          state.marketplaceRefreshed,
+          state.graphifyConfigured,
+        );
+      }
     }
   }
 }
@@ -95,7 +157,7 @@ class Installer extends Command {
 // Use `summary` (not `description`) so oclif prints this once at the top of
 // --help; setting `description` would also render a duplicate DESCRIPTION block.
 Installer.summary =
-  "Install Viraj Patel's Claude Code toolkit: marketplace plugins (via the `claude` CLI) and the powerline statusline. Checks required tools (brew/mise/claude/rtk/pnpm/…) first and prints install hints for any that are missing.";
+  "Install Viraj Patel's AI-coding toolkit for Claude Code and/or OpenCode: marketplace plugins (via the `claude` CLI), skills rendered into OpenCode's config, and the powerline statusline. Checks required tools (brew/mise/claude/rtk/pnpm/…) first and prints install hints for any that are missing.";
 
 // Users invoke this via pnpx (npx works too), never the bare `ai-plugins` bin,
 // so spell the runnable command out rather than using <%= config.bin %>.
@@ -105,6 +167,8 @@ Installer.examples = [
   "pnpx @askviraj/ai-plugins --user vwf --user markdown",
   "pnpx @askviraj/ai-plugins --project flutter",
   "pnpx @askviraj/ai-plugins --user vwf --project flutter",
+  "pnpx @askviraj/ai-plugins --platform opencode --user typescript",
+  "pnpx @askviraj/ai-plugins --platform claude --platform opencode --all",
   "pnpx @askviraj/ai-plugins --statusline --yes",
   "pnpx @askviraj/ai-plugins --all --upgrade",
   "pnpx @askviraj/ai-plugins --uninstall --user vwf",
@@ -118,6 +182,12 @@ Installer.flags = {
     description:
       "Show CLI, statusline, and plugin versions (installed vs latest)",
     exclusive: ["upgrade", "uninstall", "all", "user", "project", "statusline"],
+  }),
+  platform: Flags.string({
+    multiple: true,
+    options: PLATFORMS,
+    description:
+      "Target platform(s): claude and/or opencode (repeatable). Omitted → every platform found on PATH",
   }),
   upgrade: Flags.boolean({
     description:
@@ -152,7 +222,7 @@ Installer.flags = {
   }),
   statusline: Flags.boolean({
     description:
-      "Install the statusline — both the main bar (`statusLine`) and the subagent panel (`subagentStatusLine`) — in ~/.claude/settings.json",
+      "Install the statusline — both the main bar (`statusLine`) and the subagent panel (`subagentStatusLine`) — in ~/.claude/settings.json (Claude Code only)",
   }),
   yes: Flags.boolean({
     char: "y",

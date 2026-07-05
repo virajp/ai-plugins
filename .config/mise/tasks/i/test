@@ -47,11 +47,26 @@ if "${CLI[@]}" --all --user vwf >/dev/null 2>&1; then
   exit 1
 fi
 
-print_header "Asserting the missing-dependency check fires ..."
-# With only node on PATH the required tools report as missing, so the CLI prints
-# install hints and exits non-zero before touching claude or the filesystem.
+print_header "Asserting an unknown platform is rejected ..."
+if "${CLI[@]}" --platform bogus --user vwf >/dev/null 2>&1; then
+  print_error "Expected non-zero exit for --platform bogus"
+  exit 1
+fi
+
+print_header "Asserting no-detectable-platform exits non-zero ..."
+# With only node on PATH neither claude nor opencode resolves, so platform
+# auto-detection errors out before anything runs.
 NODE_DIR="$(dirname "$(command -v node)")"
 if env PATH="$NODE_DIR" "${CLI[@]}" --user vwf >/dev/null 2>&1; then
+  print_error "Expected non-zero exit when no platform is detectable"
+  exit 1
+fi
+
+print_header "Asserting the missing-dependency check fires ..."
+# Explicit --platform claude with only node on PATH: the required tools report
+# as missing, so the CLI prints install hints and exits non-zero before touching
+# claude or the filesystem.
+if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user vwf >/dev/null 2>&1; then
   print_error "Expected non-zero exit when dependencies are missing"
   exit 1
 fi
@@ -59,13 +74,13 @@ fi
 # Dependency checks are per-plugin: a tool is required only when a plugin that
 # needs it is selected (the missing list above is computed under PATH=node-only).
 print_header "Asserting per-plugin deps: markdown needs no mise ..."
-if env PATH="$NODE_DIR" "${CLI[@]}" --user markdown 2>&1 | grep -qE '^  mise$'; then
+if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user markdown 2>&1 | grep -qE '^  mise$'; then
   print_error "markdown should not require mise"
   exit 1
 fi
 
 print_header "Asserting per-plugin deps: the mise plugin needs mise ..."
-if ! env PATH="$NODE_DIR" "${CLI[@]}" --user mise 2>&1 | grep -qE '^  mise$'; then
+if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user mise 2>&1 | grep -qE '^  mise$'; then
   print_error "the mise plugin should require mise"
   exit 1
 fi

@@ -143,6 +143,8 @@ const DEP_HINTS = {
     "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
   mise: "brew install mise",
   claude: "mise use -g claude-code@latest",
+  opencode: "mise use -g opencode@latest",
+  tar: "ships with macOS/Linux — install via your OS package manager",
   rtk: "brew install --formulae rtk",
   pnpm: "mise use -g pnpm@latest",
   node: "mise use -g node@latest",
@@ -832,8 +834,11 @@ class ClaudeCode {
 
 export {
   ClaudeCode,
+  DEP_HINTS,
   OPT_IN,
+  PLUGIN_EXTRA_DEPS,
   PLUGINS,
   PROJECT_SCOPED,
+  REMOTE_MARKETPLACE_URL,
   USER_SCOPED,
 };

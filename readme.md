@@ -843,12 +843,18 @@ configuration reference.
 ## The installer CLI
 
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins)
-drives the Claude Code CLI: it adds the `virajp-plugins` marketplace
-(user-scoped) and installs each plugin at its scope. It only ever registers and
-refreshes `virajp-plugins` — every plugin resolves from it alone.
+installs the toolkit for **Claude Code and/or OpenCode**. For Claude Code it
+drives the `claude` CLI: it adds the `virajp-plugins` marketplace (user-scoped)
+and installs each plugin at its scope — only ever registering and refreshing
+`virajp-plugins`. For OpenCode (which has no plugin/marketplace concept) it
+**renders the plugins' skills into OpenCode's config** (see below).
+
+`--platform claude` / `--platform opencode` picks the target (repeatable);
+omitted, the CLI **detects** which tools are on `PATH` and installs for every
+one it finds.
 
 ```sh
-# Everything: all user-scoped plugins + the statusline
+# Everything: all user-scoped plugins + the statusline, for every detected platform
 pnpx @askviraj/ai-plugins --all --statusline
 
 # Just the user-scoped plugins (no statusline)
@@ -856,6 +862,9 @@ pnpx @askviraj/ai-plugins --all
 
 # Named plugins, at user or project scope (flutter is project-scoped)
 pnpx @askviraj/ai-plugins --user vwf --project flutter
+
+# OpenCode only
+pnpx @askviraj/ai-plugins --platform opencode --user typescript
 
 # Versions: CLI, statusline, and each plugin's installed-vs-latest (with scope)
 pnpx @askviraj/ai-plugins --version
@@ -883,6 +892,30 @@ Notes:
 - The installer **checks every required external tool** for what you're
   installing and prints the install command for anything missing — it never
   installs a dependency for you.
+
+### What an OpenCode install does
+
+OpenCode discovers skills from directories on disk, so the installer fetches
+this repo's source (the GitHub `main` tarball) and, per selected plugin:
+
+- copies its `skills/` + `assets/` into
+  `~/.config/opencode/ai-plugins/<plugin>/` (`--project` targets the repo-local
+  `.opencode/` instead), rewriting every `${CLAUDE_PLUGIN_ROOT}` reference to
+  the installed path and stamping the plugin version;
+- appends that `ai-plugins` directory to `skills.paths` in `opencode.json`
+  (created with `$schema` if absent; user keys are always preserved);
+- writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each
+  user-invoked workflow skill, so `/vwf-blueprint` etc. work in OpenCode (which
+  has no user-invoked skills yet);
+- for `context7`, adds the MCP server to `opencode.json`'s `mcp` key.
+
+**Not ported**: subagents and hooks are Claude Code concepts (vwf's execute
+pipeline degrades accordingly), the statusline is Claude-only, and url-sourced
+plugins (`mempalace`, `andrej-karpathy-skills`) live upstream and are skipped.
+**LSP**: OpenCode ships built-in servers covering everything our plugins bundle
+(typescript, dart, kotlin, swift) — no `lsp` config is written. `--uninstall`
+and `--upgrade` mirror all of this; `--version` reports the stamped versions
+against the marketplace manifest.
 
 ## Credits & acknowledgements
 
