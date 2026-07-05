@@ -15,8 +15,8 @@ pnpx @askviraj/ai-plugins --user context7
 automatically.
 
 For **OpenCode**, `--platform opencode --user context7` adds the same server to
-the `mcp` key of `~/.config/opencode/opencode.json` instead (see the readme's
-installer-CLI section).
+the `mcp` key of the OpenCode config (`~/.config/opencode/opencode.jsonc`, or
+your existing `opencode.json`) instead — see the readme's installer-CLI section.
 
 ## How it runs
 

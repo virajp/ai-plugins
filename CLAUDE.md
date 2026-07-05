@@ -429,15 +429,22 @@ Layout:
   `--project` → `.opencode/`; agents/hooks are Claude-only, skipped), rewrite
   every `${CLAUDE_PLUGIN_ROOT}` to the installed absolute path, stamp `.version`
   from the source marketplace manifest, append the `virajp-plugins` dir to
-  `skills.paths` in `opencode.json` (targeted array append; foreign keys
-  preserved), write a **command wrapper** `command/<plugin>-<skill>.md` per
+  `skills.paths` in the OpenCode config (targeted array append; foreign keys
+  preserved), map the plugin's `lspServers` onto the config's `lsp` key
+  (`LSP_ID_MAP` — overrides of OpenCode's built-in ids with the plugins'
+  mise-provisioned launchers, stamped per plugin as `.lsp.json` so uninstall
+  removes exactly what was written and never a user-modified entry), write a
+  **command wrapper** `command/<plugin>-<skill>.md` per
   `disable-model-invocation` skill (OpenCode has no user-invoked skills), and
-  add context7's MCP server to `opencode.json`'s `mcp` key. **LSP:** OpenCode's
-  built-ins cover typescript/dart/kotlin/swift — no `lsp` config is written.
-  url-sourced plugins (`URL_SOURCED`: mempalace, andrej-karpathy-skills) are
-  filtered from `--all` and rejected when named — their files live upstream.
-  `--uninstall`/`--upgrade`/`--version` mirror all of this via the `.version`
-  stamps.
+  add context7's MCP server to the config's `mcp` key. **Config file:** edits
+  target an existing `opencode.jsonc` first (OpenCode merges all config names,
+  jsonc wins), else an existing `opencode.json`; a new file is created as
+  `opencode.jsonc`. All names are read JSONC-tolerantly, and a config with
+  comments is only rewritten after confirmation (or `--yes`) since a rewrite
+  drops them. url-sourced plugins (`URL_SOURCED`: mempalace,
+  andrej-karpathy-skills) are filtered from `--all` and rejected when named —
+  their files live upstream. `--uninstall`/`--upgrade`/`--version` mirror all of
+  this via the `.version` stamps.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
 - `test/` — `node --test` suites run by `i:test` (and thus in `release.yml`):

@@ -60,8 +60,9 @@ function runCli(args) {
   });
 }
 
-const readConfig = () =>
-  JSON.parse(readFileSync(join(configDir, "opencode.json"), "utf8"));
+// New configs are created as opencode.jsonc (preferred by OpenCode's merge).
+const configPath = join(configDir, "opencode.jsonc");
+const readConfig = () => JSON.parse(readFileSync(configPath, "utf8"));
 
 test("install renders skills, rewrites plugin root, and wires config", () => {
   const res = runCli([
@@ -71,6 +72,8 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
     "vwf",
     "--user",
     "context7",
+    "--user",
+    "typescript",
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
@@ -122,7 +125,10 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   assert.ok(wrapper.includes("$ARGUMENTS"));
   assert.ok(wrapper.startsWith("---\ndescription:"));
 
-  // opencode.json: skills.paths + context7 MCP, with the schema set.
+  // opencode.jsonc: skills.paths + context7 MCP + typescript lsp override,
+  // with the schema set.
+  assert.ok(existsSync(configPath), "opencode.jsonc created");
+  assert.ok(!existsSync(join(configDir, "opencode.json")));
   const config = readConfig();
   assert.equal(config.$schema, "https://opencode.ai/config.json");
   assert.deepEqual(config.skills.paths, ["~/.config/opencode/virajp-plugins"]);
@@ -130,6 +136,16 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
     type: "local",
     command: ["pnpm", "dlx", "@upstash/context7-mcp"],
   });
+  // Derived from plugins/typescript plugin.json lspServers (typescript-lsp →
+  // the OpenCode built-in id "typescript") and stamped beside the render.
+  assert.ok(
+    existsSync(join(configDir, "virajp-plugins", "typescript", ".lsp.json")),
+  );
+  assert.equal(config.lsp.typescript.command[0], "mise");
+  assert.ok(
+    config.lsp.typescript.command.includes("typescript-language-server"),
+  );
+  assert.ok(config.lsp.typescript.extensions.includes(".ts"));
 });
 
 test("reinstall is idempotent and preserves foreign config keys", () => {
@@ -137,10 +153,7 @@ test("reinstall is idempotent and preserves foreign config keys", () => {
   const config = readConfig();
   config.theme = "custom";
   config.skills.paths.push("~/my-skills");
-  writeFileSync(
-    join(configDir, "opencode.json"),
-    JSON.stringify(config, null, 2),
-  );
+  writeFileSync(configPath, JSON.stringify(config, null, 2));
 
   const res = runCli(["--platform", "opencode", "--user", "vwf"]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
@@ -173,6 +186,8 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
     "vwf",
     "--user",
     "context7",
+    "--user",
+    "typescript",
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
@@ -188,6 +203,31 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
   assert.equal(config.theme, "custom");
   assert.deepEqual(config.skills.paths, ["~/my-skills"]);
   assert.equal(config.mcp, undefined);
+  assert.equal(config.lsp, undefined);
+});
+
+test("a commented jsonc config is only rewritten with --yes", () => {
+  writeFileSync(
+    configPath,
+    `{
+  // keep me if you can
+  "theme": "custom",
+}
+`,
+  );
+
+  // Without --yes (stdin closed → declined): config text untouched.
+  const declined = runCli(["--platform", "opencode", "--user", "markdown"]);
+  assert.equal(declined.status, 0, declined.stderr || declined.stdout);
+  assert.ok(readFileSync(configPath, "utf8").includes("// keep me"));
+
+  // With --yes: rewritten (comment dropped), foreign key + our entries present.
+  const res = runCli(["--platform", "opencode", "--user", "markdown", "--yes"]);
+  assert.equal(res.status, 0, res.stderr || res.stdout);
+  const config = readConfig();
+  assert.equal(config.theme, "custom");
+  assert.deepEqual(config.skills.paths, ["~/.config/opencode/virajp-plugins"]);
+  assert.ok(!readFileSync(configPath, "utf8").includes("// keep me"));
 });
 
 test("--statusline with opencode-only platform is a noted no-op", () => {

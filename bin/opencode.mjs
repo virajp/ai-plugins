@@ -18,16 +18,20 @@
  *    `<configDir>/virajp-plugins/<plugin>/` (agents/ and hooks/ are Claude-only and
  *    skipped), rewriting every `${CLAUDE_PLUGIN_ROOT}` to that installed
  *    absolute path, and stamping `.version` from the source marketplace.json,
- *  - appends `<configDir>/virajp-plugins` to `skills.paths` in opencode.json
- *    (OpenCode discovers `**\/SKILL.md` recursively under it),
+ *  - appends `<configDir>/virajp-plugins` to `skills.paths` in the OpenCode
+ *    config (OpenCode discovers `**\/SKILL.md` recursively under it),
  *  - writes a command wrapper `<configDir>/command/<plugin>-<skill>.md` for each
  *    skill with `disable-model-invocation: true` (a former slash command) —
  *    OpenCode has no user-invoked skills, so the wrapper restores `/…`
  *    invocation,
- *  - for context7, adds the MCP server to opencode.json's `mcp` key.
+ *  - maps the plugin's `lspServers` (if any) onto OpenCode `lsp` entries,
+ *    overriding the matching built-in ids with our mise-provisioned launchers,
+ *  - for context7, adds the MCP server to the config's `mcp` key.
  *
- * LSP: OpenCode ships built-in servers covering everything our plugins bundle
- * (typescript, dart, kotlin-ls, sourcekit-lsp), so no `lsp` config is written.
+ * Config edits target `opencode.jsonc` (preferred — OpenCode merges all config
+ * filenames and jsonc wins), falling back to an existing `opencode.json`; a
+ * config containing comments is only rewritten after confirmation (or --yes),
+ * since a JSON re-serialize drops them.
  *
  * `--user` targets the global config (~/.config/opencode), `--project` the
  * repo-local `.opencode/`. url-sourced marketplace entries (mempalace,
@@ -62,6 +66,7 @@ import {
   USER_SCOPED,
 } from "./claude.mjs";
 import {
+  confirm,
   fetchJson,
   green,
   hasBin,
@@ -100,6 +105,22 @@ const skillsPathFor = scope =>
 
 const OPENCODE_SCHEMA_URL = "https://opencode.ai/config.json";
 
+// OpenCode merges every config filename in a dir, with `opencode.jsonc` winning
+// over `opencode.json` (over `config.json`) on conflicting keys — so edits go
+// to an existing jsonc first, an existing json next, and a NEW file is created
+// as jsonc. All names accept JSONC syntax.
+const CONFIG_FILES = ["opencode.jsonc", "opencode.json"];
+
+// Claude `lspServers` ids → OpenCode built-in server ids. Writing under the
+// built-in id replaces its launcher with the plugin's (mise-provisioned, no
+// SDK on PATH needed) instead of running two servers per language.
+const LSP_ID_MAP = {
+  "typescript-lsp": "typescript",
+  "dart-lsp": "dart",
+  "kotlin-lsp": "kotlin-ls",
+  "sourcekit-lsp": "sourcekit-lsp",
+};
+
 // Same per-plugin runtime tools as the Claude path; the core dep differs — the
 // install mechanism here is rendering files, gated only on `opencode` itself
 // (and `tar` when fetching the source tarball).
@@ -134,6 +155,103 @@ function frontmatter(text) {
 }
 
 const stripQuotes = v => (v || "").replace(/^["']|["']$/g, "");
+
+// Parse JSONC: strip // and /* */ comments and trailing commas (string-aware —
+// a URL like "https://…" is not a comment), then JSON.parse. Returns the data
+// plus whether comments were present, so callers can warn before a rewrite
+// that would drop them.
+function parseJsonc(raw) {
+  let stripped = "";
+  let hadComments = false;
+  let inString = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (inString) {
+      stripped += c;
+      if (c === "\\") {
+        stripped += raw[++i] ?? "";
+        continue;
+      }
+      if (c === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (c === "\"") {
+      inString = true;
+      stripped += c;
+      continue;
+    }
+    if (c === "/" && raw[i + 1] === "/") {
+      hadComments = true;
+      while (i < raw.length && raw[i] !== "\n") {
+        i++;
+      }
+      stripped += "\n";
+      continue;
+    }
+    if (c === "/" && raw[i + 1] === "*") {
+      hadComments = true;
+      i += 2;
+      while (i < raw.length && !(raw[i] === "*" && raw[i + 1] === "/")) {
+        i++;
+      }
+      i++;
+      continue;
+    }
+    stripped += c;
+  }
+  // Drop trailing commas (`, }` / `, ]`), again string-aware.
+  let out = "";
+  inString = false;
+  for (let i = 0; i < stripped.length; i++) {
+    const c = stripped[i];
+    if (inString) {
+      out += c;
+      if (c === "\\") {
+        out += stripped[++i] ?? "";
+        continue;
+      }
+      if (c === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (c === "\"") {
+      inString = true;
+      out += c;
+      continue;
+    }
+    if (c === ",") {
+      let j = i + 1;
+      while (j < stripped.length && /\s/.test(stripped[j])) {
+        j++;
+      }
+      if (stripped[j] === "}" || stripped[j] === "]") {
+        continue; // skip the trailing comma
+      }
+    }
+    out += c;
+  }
+  return { data: JSON.parse(out), hadComments };
+}
+
+// A plugin's Claude `lspServers` mapped to OpenCode `lsp` entries (null when
+// the plugin ships none).
+function lspEntriesFor(pluginJson) {
+  const servers = pluginJson.lspServers;
+  if (!isObject(servers)) {
+    return null;
+  }
+  const out = {};
+  for (const [id, def] of Object.entries(servers)) {
+    out[LSP_ID_MAP[id] || id] = {
+      command: [def.command, ...(def.args || [])],
+      extensions: Object.keys(def.extensionToLanguage || {}),
+    };
+  }
+  return Object.keys(out).length ? out : null;
+}
 
 class OpenCode {
   // `io` is the oclif command — provides log(), error(), exit(), and config.
@@ -206,7 +324,9 @@ class OpenCode {
       const seen = new Set();
       plugins = named.filter(p => !seen.has(p.name) && seen.add(p.name));
     }
-    return { plugins };
+    // `yes` rides in the plan: config rewrites that would drop JSONC comments
+    // prompt unless it is set.
+    return { plugins, yes: Boolean(flags.yes) };
   }
 
   // Verify every tool the plan needs is on PATH — mirrors ClaudeCode.checkDeps.
@@ -248,16 +368,14 @@ class OpenCode {
         await this.updateConfig(
           scope,
           plan.plugins.filter(p => p.scope === scope).map(p => p.name),
+          plan.yes,
         );
       }
     }
     finally {
       await this.cleanupSource();
     }
-    this.io.log(
-      green("\nLSP: covered by OpenCode built-ins — nothing written."),
-    );
-    this.io.log(green("Restart OpenCode to load the skills."));
+    this.io.log(green("\nRestart OpenCode to load the skills."));
     return { marketplaceRefreshed: false, graphifyConfigured: false };
   }
 
@@ -313,9 +431,16 @@ class OpenCode {
 
   async uninstall(plan) {
     const touched = new Set();
+    const lspByScope = new Map(); // scope → the lsp entries those plugins wrote
     for (const { name, scope } of plan.plugins) {
       const configDir = configDirFor(scope);
       const dest = join(configDir, BUNDLE_DIR, name);
+      const lspStamp = join(dest, ".lsp.json");
+      if (existsSync(lspStamp)) {
+        const acc = lspByScope.get(scope) ?? {};
+        Object.assign(acc, JSON.parse(await readFile(lspStamp, "utf8")));
+        lspByScope.set(scope, acc);
+      }
       if (existsSync(dest)) {
         await step(
           this.io,
@@ -338,6 +463,8 @@ class OpenCode {
       await this.pruneConfig(
         scope,
         plan.plugins.filter(p => p.scope === scope).map(p => p.name),
+        lspByScope.get(scope) ?? {},
+        plan.yes,
       );
     }
   }
@@ -471,6 +598,19 @@ class OpenCode {
         .find(p => p.name === name)
         ?.version;
       await writeFile(join(dest, ".version"), `${version || "unknown"}\n`);
+
+      // Stamp the OpenCode lsp entries this plugin contributes, so updateConfig
+      // applies them and a later uninstall knows exactly what to remove.
+      const pj = JSON.parse(
+        await readFile(join(src, ".claude-plugin", "plugin.json"), "utf8"),
+      );
+      const lsp = lspEntriesFor(pj);
+      if (lsp) {
+        await writeFile(
+          join(dest, ".lsp.json"),
+          `${JSON.stringify(lsp, null, 2)}\n`,
+        );
+      }
     });
 
     await this.writeWrappers(name, dest, configDir);
@@ -542,23 +682,66 @@ class OpenCode {
     }
   }
 
-  // ── opencode.json ────────────────────────────────────────────────────────
+  // ── the OpenCode config (opencode.jsonc / opencode.json) ─────────────────
+
+  // The config file edits target: an existing jsonc first (it wins OpenCode's
+  // merge), an existing json next, else a new opencode.jsonc.
+  configFile(configDir) {
+    for (const name of CONFIG_FILES) {
+      const p = join(configDir, name);
+      if (existsSync(p)) {
+        return p;
+      }
+    }
+    return join(configDir, CONFIG_FILES[0]);
+  }
 
   async readConfig(configDir) {
-    const path = join(configDir, "opencode.json");
+    const path = this.configFile(configDir);
     if (!existsSync(path)) {
-      return { path, config: { $schema: OPENCODE_SCHEMA_URL } };
+      return {
+        path,
+        config: { $schema: OPENCODE_SCHEMA_URL },
+        hadComments: false,
+      };
     }
     const raw = await readFile(path, "utf8");
     if (!raw.trim()) {
-      return { path, config: { $schema: OPENCODE_SCHEMA_URL } };
+      return {
+        path,
+        config: { $schema: OPENCODE_SCHEMA_URL },
+        hadComments: false,
+      };
     }
     try {
-      return { path, config: JSON.parse(raw) };
+      const { data, hadComments } = parseJsonc(raw);
+      return { path, config: data, hadComments };
     }
     catch {
-      this.io.error(`${path} is not valid JSON. Fix or remove it, then retry.`);
+      this.io.error(
+        `${path} is not valid JSON/JSONC. Fix or remove it, then retry.`,
+      );
     }
+  }
+
+  // Re-serializing drops JSONC comments; a commented config is only rewritten
+  // after the user confirms (or with --yes). Returns false when skipped.
+  async confirmRewrite(path, hadComments, yes) {
+    if (!hadComments || yes) {
+      return true;
+    }
+    this.io.log(
+      yellow(`\n${path} contains comments — rewriting drops them.`),
+    );
+    if (await confirm(`Rewrite ${path}?`)) {
+      return true;
+    }
+    this.io.log(
+      yellow(
+        `Skipped ${path} — apply the entries manually or re-run with --yes.`,
+      ),
+    );
+    return false;
   }
 
   async writeConfig(path, config) {
@@ -567,11 +750,12 @@ class OpenCode {
   }
 
   // Append the virajp-plugins dir to skills.paths (targeted array append — a deep
-  // merge would replace the user's array) and add the context7 MCP server when
-  // that plugin was installed. Preserves every unknown key.
-  async updateConfig(scope, pluginNames) {
+  // merge would replace the user's array), apply the installed plugins' lsp
+  // entries, and add the context7 MCP server when that plugin was installed.
+  // Preserves every unknown key; never overwrites an existing lsp/mcp entry.
+  async updateConfig(scope, pluginNames, yes) {
     const configDir = configDirFor(scope);
-    const { path, config } = await this.readConfig(configDir);
+    const { path, config, hadComments } = await this.readConfig(configDir);
 
     config.skills = isObject(config.skills) ? config.skills : {};
     const paths = Array.isArray(config.skills.paths)
@@ -580,6 +764,23 @@ class OpenCode {
     const want = skillsPathFor(scope);
     if (!paths.includes(want)) {
       paths.push(want);
+    }
+
+    // The lsp entries each rendered plugin stamped (see renderPlugin).
+    const lspWritten = [];
+    for (const name of pluginNames) {
+      const stamp = join(configDir, BUNDLE_DIR, name, ".lsp.json");
+      if (!existsSync(stamp)) {
+        continue;
+      }
+      const entries = JSON.parse(await readFile(stamp, "utf8"));
+      config.lsp = isObject(config.lsp) ? config.lsp : {};
+      for (const [id, entry] of Object.entries(entries)) {
+        if (!config.lsp[id]) {
+          config.lsp[id] = entry;
+          lspWritten.push(id);
+        }
+      }
     }
 
     if (pluginNames.includes("context7")) {
@@ -593,23 +794,42 @@ class OpenCode {
       }
     }
 
+    if (!(await this.confirmRewrite(path, hadComments, yes))) {
+      return;
+    }
     await step(
       this.io,
       `Updating ${path}`,
       () => this.writeConfig(path, config),
     );
+    if (lspWritten.length) {
+      this.io.log(green(`  lsp: ${lspWritten.join(", ")}`));
+    }
   }
 
-  // Reverse updateConfig for uninstall: drop our mcp entry with context7, and
-  // drop the skills.paths entry once no rendered plugin remains.
-  async pruneConfig(scope, removedNames) {
+  // Reverse updateConfig for uninstall: drop the lsp entries the removed
+  // plugins stamped (only when unmodified), our mcp entry with context7, and
+  // the skills.paths entry once no rendered plugin remains.
+  async pruneConfig(scope, removedNames, lspEntries, yes) {
     const configDir = configDirFor(scope);
-    const path = join(configDir, "opencode.json");
-    if (!existsSync(path)) {
+    if (!CONFIG_FILES.some(f => existsSync(join(configDir, f)))) {
       return;
     }
-    const { config } = await this.readConfig(configDir);
+    const { path, config, hadComments } = await this.readConfig(configDir);
     let changed = false;
+
+    // Only remove an lsp entry that still matches exactly what we wrote.
+    if (isObject(config.lsp)) {
+      for (const [id, entry] of Object.entries(lspEntries || {})) {
+        if (JSON.stringify(config.lsp[id]) === JSON.stringify(entry)) {
+          delete config.lsp[id];
+          changed = true;
+        }
+      }
+      if (!Object.keys(config.lsp).length) {
+        delete config.lsp;
+      }
+    }
 
     if (removedNames.includes("context7") && isObject(config.mcp)) {
       const entry = config.mcp.context7;
@@ -655,6 +875,9 @@ class OpenCode {
     }
 
     if (changed) {
+      if (!(await this.confirmRewrite(path, hadComments, yes))) {
+        return;
+      }
       await step(
         this.io,
         `Updating ${path}`,

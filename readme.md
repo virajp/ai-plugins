@@ -902,20 +902,26 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   `~/.config/opencode/virajp-plugins/<plugin>/` (`--project` targets the
   repo-local `.opencode/` instead), rewriting every `${CLAUDE_PLUGIN_ROOT}`
   reference to the installed path and stamping the plugin version;
-- appends that `virajp-plugins` directory to `skills.paths` in `opencode.json`
-  (created with `$schema` if absent; user keys are always preserved);
+- appends that `virajp-plugins` directory to `skills.paths` in the OpenCode
+  config — an existing `opencode.jsonc` is preferred (it wins OpenCode's config
+  merge), then an existing `opencode.json`; a new file is created as
+  `opencode.jsonc` with `$schema`. User keys are always preserved, and a config
+  containing comments is only rewritten after you confirm (or with `--yes`),
+  since a rewrite drops them;
+- maps the plugin's bundled `lspServers` onto the config's `lsp` key —
+  `typescript`/`dart`/`kotlin-ls`/`sourcekit-lsp` overrides that replace
+  OpenCode's built-in launchers with the plugins' mise-provisioned ones (no SDK
+  on `PATH` needed); an entry you already have is never overwritten;
 - writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each
   user-invoked workflow skill, so `/vwf-blueprint` etc. work in OpenCode (which
   has no user-invoked skills yet);
-- for `context7`, adds the MCP server to `opencode.json`'s `mcp` key.
+- for `context7`, adds the MCP server to the config's `mcp` key.
 
 **Not ported**: subagents and hooks are Claude Code concepts (vwf's execute
 pipeline degrades accordingly), the statusline is Claude-only, and url-sourced
 plugins (`mempalace`, `andrej-karpathy-skills`) live upstream and are skipped.
-**LSP**: OpenCode ships built-in servers covering everything our plugins bundle
-(typescript, dart, kotlin, swift) — no `lsp` config is written. `--uninstall`
-and `--upgrade` mirror all of this; `--version` reports the stamped versions
-against the marketplace manifest.
+`--uninstall` and `--upgrade` mirror all of this; `--version` reports the
+stamped versions against the marketplace manifest.
 
 ## Credits & acknowledgements
 
