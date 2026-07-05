@@ -13,6 +13,10 @@ apply).
 `/vwf:execute` → `/vwf:archive` — then, after you deploy, `/vwf:verify <env>`
 and `/vwf:feedback` route what production says back into product/blueprint/plan.
 
+Optional: `/vwf:mockups [entity]` renders the blueprint's screens as static HTML
+mockups on a claude.ai/design canvas — a realization for review, never part of
+the contract.
+
 **The blueprint is a code-independent contract.** It records only decisions that
 have more than one reasonable answer *and* are true regardless of how the code
 is written today. Reuse-vs-build, file placement, step ordering, and library

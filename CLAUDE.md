@@ -113,8 +113,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   halts without it), `architecture`, `design-system`, `blueprint` (a
   **full-product sweep** — a run works a coverage worklist entity by entity
   until whole-product coverage holds, then stamps `blueprint.coverage` in
-  `.config/vwf.yaml` and offers `/vwf:plan`), `plan` (halts unless that stamp is
-  `complete`; pulls the slice's **transitive dependency closure** — any
+  `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (optional
+  post-blueprint: renders each entity's Screens contract as self-contained
+  static HTML from design-system tokens — via per-entity `mockup-generator`
+  subagents into an ephemeral build dir, never committed — and pushes them to a
+  claude.ai/design design-system project through the harness DesignSync tool
+  behind an explicit approval gate; pins `mockups.project_id` in
+  `.config/vwf.yaml`; never a gate for `plan`), `plan` (halts unless that stamp
+  is `complete`; pulls the slice's **transitive dependency closure** — any
   depended-on entity's unimplemented delta — into the plan as leading steps;
   **routes blueprint gaps back through `/vwf:blueprint` before writing** — a
   *what*-level hole the diff exposes is fixed in the contract, never settled in
@@ -145,7 +151,9 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   also `/vwf:verify`'s environment mode), `execute-ux-reviewer` (renders changed
   screens via dev server + Playwright screenshots, judges against
   design-system + Screens contract, axe a11y scan; code-level-only for Flutter),
-  `architecture-writer`
+  `architecture-writer`, `mockup-generator` (per-entity: Screens contract +
+  design-system tokens → self-contained HTML mockups in a scratch build dir,
+  returns only a manifest)
 - `skills/` — `rest-api-design`; `product-foundations` (the nine foundational
   concerns every product decides — users & operators, observability
   (OTel→Grafana), audit logs (privileged+destructive baseline), change logs

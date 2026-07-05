@@ -59,6 +59,9 @@ environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in 
   <env-name>:
     <project-name>: <base-url>
 
+mockups: # /vwf:mockups target — ids only, never content
+  project_id: <uuid> # the claude.ai/design design-system project mockups push to
+
 memory:
   wing: <wing-name> # explicit mempalace wing; defaults to product.name
 
@@ -80,6 +83,7 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 | `enforcement`        | `setup` / `architecture` (consented) | `setup`, `architecture`, `blueprint`, the reviewers |
 | `pipeline`           | the user (hand-edited)               | `execute`, the statusline caps hook                 |
 | `environments`       | `setup` / `verify` (confirmed)       | `verify`                                            |
+| `mockups`            | `mockups` (confirmed)                | `mockups`                                           |
 | `docs_sync`          | the user (hand-edited)               | the docs-sync step                                  |
 
 ## The hard floor (never configurable)

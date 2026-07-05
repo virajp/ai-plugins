@@ -159,6 +159,7 @@ flowchart TD
     P --> B["/vwf:blueprint — after any foundation change<br/>(sweeps back to whole-product coverage, re-stamps it)"]:::user
     A --> B
     DS --> B
+    B e8@-. "optional: review screens on the canvas" .-> M["/vwf:mockups — optional<br/>(HTML mockups on claude.ai/design)"]:::user
     B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + unbuilt dependencies)"]:::user
     C -->|"approve & execute"| D["/vwf:execute<br/>(autonomous · one final merge gate)"]:::chained
     D -->|"offered once merged, no gaps"| E["/vwf:archive"]:::chained
@@ -175,6 +176,7 @@ flowchart TD
     e5@{ animate: true }
     e6@{ animate: true }
     e7@{ animate: true }
+    e8@{ animate: true }
     classDef user fill:#0969da,stroke:#0550ae,color:#ffffff
     classDef chained fill:#6e7781,stroke:#57606a,color:#ffffff,stroke-dasharray:4 3
 ```
@@ -297,21 +299,22 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 
 ## Commands
 
-| Command                   | What it does                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------- |
-| `/vwf:setup`              | Onboard/migrate a repo into vwf's format (re-runnable)                          |
-| `/vwf:product`            | The Phase −1 outcome contract — problem, users, goals, slice priority           |
-| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry                         |
-| `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)                      |
-| `/vwf:blueprint [entity]` | Sweep the full-product blueprint to complete coverage, one doc per entity       |
-| `/vwf:plan [slice]`       | Write a reviewable cycle plan — a diff of blueprint vs code, incl. unbuilt deps |
-| `/vwf:execute [plan]`     | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate      |
-| `/vwf:archive [plan]`     | Retire a completed plan into `docs/plans/archived/`                             |
-| `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment  |
-| `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it                      |
-| `/vwf:handoff <name>`     | Capture the session so work resumes in a fresh one                              |
-| `/vwf:recall <name>`      | Resume from a handoff in a fresh session                                        |
-| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                  |
+| Command                   | What it does                                                                       |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| `/vwf:setup`              | Onboard/migrate a repo into vwf's format (re-runnable)                             |
+| `/vwf:product`            | The Phase −1 outcome contract — problem, users, goals, slice priority              |
+| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry                            |
+| `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)                         |
+| `/vwf:blueprint [entity]` | Sweep the full-product blueprint to complete coverage, one doc per entity          |
+| `/vwf:mockups [entity]`   | Optional — push static HTML mockups of the blueprint's screens to claude.ai/design |
+| `/vwf:plan [slice]`       | Write a reviewable cycle plan — a diff of blueprint vs code, incl. unbuilt deps    |
+| `/vwf:execute [plan]`     | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate         |
+| `/vwf:archive [plan]`     | Retire a completed plan into `docs/plans/archived/`                                |
+| `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment     |
+| `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it                         |
+| `/vwf:handoff <name>`     | Capture the session so work resumes in a fresh one                                 |
+| `/vwf:recall <name>`      | Resume from a handoff in a fresh session                                           |
+| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                     |
 
 Every command runs on `sonnet` at high reasoning effort; inside `execute`, the
 code-review, security-review, and ux subagents run on `opus`.
@@ -428,6 +431,30 @@ open decisions, then re-review — until the doc passes. The blueprint is
 permanent and product-wide; it is never feature-scoped. Renaming or deleting an
 entity triggers an inbound-link reconcile, so no other doc is left pointing at a
 doc that moved.
+
+### /vwf:mockups
+
+An **optional step after `blueprint`** — never a gate for `plan`. It renders
+each entity's Screens contract as **self-contained static HTML mockups** (one
+page per screen plus each pinned state variant, styled from the design system's
+tokens) and pushes them to a **claude.ai/design design-system project** via
+Claude Code's built-in DesignSync tool, so you review the product's screens on
+the canvas before any code exists.
+
+```text
+/vwf:mockups          # sweep every entity with a Screens surface
+/vwf:mockups order    # just one entity's screens
+```
+
+Mockups are **realizations, never contract**: they are generated in an ephemeral
+build directory (never committed — the design project is the store of record)
+and regenerated at will. A canvas refinement that changes what a screen should
+*be* routes through `/vwf:blueprint` or `/vwf:design-system`, then the mockups
+are regenerated. The resolved design project is pinned as `mockups.project_id`
+in `.config/vwf.yaml` so later runs ask nothing, stale cards for screens the
+blueprint dropped are cleaned up (scope-bounded), and the push happens only
+behind an explicit approval gate. If DesignSync isn't available in your session
+(or you're not logged in to claude.ai), it offers local-only generation instead.
 
 ### /vwf:plan
 
