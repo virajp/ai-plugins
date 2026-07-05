@@ -8,7 +8,6 @@
         "--",
         "dart",
         "language-server",
-        "--client-id=claude-code",
         "--protocol=lsp"
       ],
       "command": "mise",
@@ -19,21 +18,30 @@
     },
     "kotlin-lsp": {
       "args": [
+        "x",
+        "kotlin@latest",
+        "--",
+        "kotlin-lsp",
         "--stdio"
       ],
-      "command": "kotlin-lsp",
+      "command": "mise",
       "extensionToLanguage": {
         ".kt": "kotlin",
         ".kts": "kotlin"
       },
-      "startupTimeout": 120000
+      "startupTimeout": 60000
     },
     "sourcekit-lsp": {
-      "command": "sourcekit-lsp",
+      "args": [
+        "x",
+        "--",
+        "sourcekit-lsp"
+      ],
+      "command": "mise",
       "extensionToLanguage": {
         ".swift": "swift"
       },
-      "startupTimeout": 120000
+      "startupTimeout": 1000
     }
   },
   "name": "flutter"
