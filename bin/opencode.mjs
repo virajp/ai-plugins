@@ -65,10 +65,7 @@ import {
 } from "node:os";
 import {
   dirname,
-  isAbsolute,
   join,
-  resolve,
-  sep,
 } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -78,7 +75,7 @@ import {
   PLUGIN_EXTRA_DEPS,
   PLUGINS,
   REMOTE_MARKETPLACE_URL,
-  setupGraphify,
+  USER_ONLY,
   USER_SCOPED,
 } from "./claude.mjs";
 import {
@@ -86,8 +83,10 @@ import {
   fetchJson,
   green,
   hasBin,
+  inGitRepo,
   isObject,
   red,
+  runCommand,
   step,
   updateNote,
   yellow,
@@ -372,6 +371,22 @@ class OpenCode {
           }`,
         );
       }
+      // USER_ONLY plugins are pinned to user scope — redirect, with a note.
+      const redirected = named.filter(p =>
+        USER_ONLY.has(p.name) && p.scope !== "user"
+      );
+      if (redirected.length) {
+        this.io.log(
+          yellow(
+            `Note: ${
+              redirected.map(p => p.name).join(", ")
+            } installs at USER scope only — redirected from --project.`,
+          ),
+        );
+        for (const p of redirected) {
+          p.scope = "user";
+        }
+      }
       const seen = new Set();
       plugins = named.filter(p => !seen.has(p.name) && seen.add(p.name));
 
@@ -391,7 +406,11 @@ class OpenCode {
             continue;
           }
           seen.add(dep);
-          plugins.push({ name: dep, scope });
+          // USER_ONLY deps land at user scope even off a project-scoped parent.
+          plugins.push({
+            name: dep,
+            scope: USER_ONLY.has(dep) ? "user" : scope,
+          });
           added.push(dep);
         }
         if (added.length || skipped.length) {
@@ -463,8 +482,7 @@ class OpenCode {
       await this.cleanupSource();
     }
     if (plan.plugins.some(p => p.name === "vwf")) {
-      setupGraphify(this.io, "opencode");
-      await this.dedupePluginRegistrations(plan.yes);
+      await this.setupGraphifyUserLevel();
     }
     this.io.log(green("\nRestart OpenCode to load the skills."));
     return { marketplaceRefreshed: false, graphifyConfigured: false };
@@ -520,8 +538,7 @@ class OpenCode {
     // Re-assert graphify's opencode wiring (idempotent), mirroring the Claude
     // upgrade path.
     if (found.some(p => p.name === "vwf")) {
-      setupGraphify(this.io, "opencode");
-      await this.dedupePluginRegistrations(false);
+      await this.setupGraphifyUserLevel();
     }
     this.io.log(green("\nRestart OpenCode to load the refreshed skills."));
   }
@@ -716,6 +733,65 @@ class OpenCode {
     );
     this.upstreamRoots.set(name, root);
     return root;
+  }
+
+  // vwf relies on graphify. `graphify install --platform opencode` writes its
+  // skills at user level (~/.config/opencode/skills/graphify/) but its JS
+  // plugin at PROJECT level (<cwd>/.opencode/) — and this toolkit installs
+  // graphify at user level only. So: run the CLI with a throwaway cwd (the
+  // user-level skills land where they belong, the project files land in the
+  // throwaway), then relocate the harvested graphify.js into the GLOBAL
+  // plugin/ dir, where OpenCode auto-discovers it — no config entry, no
+  // project writes. Also attaches graphify's git post-commit hook when run
+  // inside a repo (a git artifact, unrelated to platform config). Soft-skips
+  // when graphify isn't on PATH (mirrors claude.mjs setupGraphify).
+  async setupGraphifyUserLevel() {
+    if (!hasBin("graphify")) {
+      process.stdout.write("Setting up graphify ... ");
+      this.io.log(
+        yellow(
+          `skipped (graphify not on PATH — install: ${DEP_HINTS.graphify})`,
+        ),
+      );
+      return;
+    }
+    const throwaway = await mkdtemp(join(tmpdir(), "graphify-harvest-"));
+    try {
+      runCommand(
+        this.io,
+        "Installing graphify for opencode (user level)",
+        "graphify",
+        ["install", "--platform", "opencode"],
+        { cwd: throwaway },
+      );
+      const harvested = join(throwaway, ".opencode", "plugins", "graphify.js");
+      if (existsSync(harvested)) {
+        await step(
+          this.io,
+          "Relocating graphify plugin (user level)",
+          async () => {
+            const pluginDir = join(GLOBAL_DIR, "plugin");
+            await mkdir(pluginDir, { recursive: true });
+            await copyFile(harvested, join(pluginDir, "graphify.js"));
+          },
+        );
+      }
+    }
+    finally {
+      await rm(throwaway, { recursive: true, force: true });
+    }
+    if (inGitRepo()) {
+      runCommand(
+        this.io,
+        "Installing graphify post-commit hook",
+        "graphify",
+        ["hook", "install"],
+      );
+    }
+    else {
+      process.stdout.write("Installing graphify post-commit hook ... ");
+      this.io.log(yellow("skipped (not a git repo)"));
+    }
   }
 
   // ── rendering ────────────────────────────────────────────────────────────
@@ -1022,57 +1098,6 @@ class OpenCode {
     );
     if (lspWritten.length) {
       this.io.log(green(`  lsp: ${lspWritten.join(", ")}`));
-    }
-  }
-
-  // OpenCode loads plugins BOTH from the auto-discovered {plugin,plugins}/*.js
-  // dirs and from the config's `plugin` array — a file present in the dir AND
-  // listed in the array loads twice. `graphify install --platform opencode`
-  // registers both ways (upstream quirk), so after running it, strip array
-  // entries that resolve into an auto-discovered dir of the same config scope.
-  // Checks the global config AND the cwd's project config, since graphify
-  // writes project-scoped files regardless of our plan's scope.
-  async dedupePluginRegistrations(yes) {
-    for (const configDir of [GLOBAL_DIR, PROJECT_DIR]) {
-      if (!CONFIG_FILES.some(f => existsSync(join(configDir, f)))) {
-        continue;
-      }
-      const { path, config, hadComments } = await this.readConfig(configDir);
-      if (!Array.isArray(config.plugin)) {
-        continue;
-      }
-      const autoDirs = ["plugin", "plugins"].map(d => resolve(configDir, d));
-      const autoDiscovered = entry => {
-        if (typeof entry !== "string") {
-          return false;
-        }
-        // Entries may be absolute, config-dir-relative, or (as graphify
-        // writes them) project-root-relative — resolve every candidate.
-        const candidates = isAbsolute(entry)
-          ? [resolve(entry)]
-          : [resolve(configDir, entry), resolve(dirname(configDir), entry)];
-        return candidates.some(p =>
-          autoDirs.some(d => p.startsWith(d + sep)) && existsSync(p)
-        );
-      };
-      const kept = config.plugin.filter(e => !autoDiscovered(e));
-      if (kept.length === config.plugin.length) {
-        continue;
-      }
-      if (kept.length) {
-        config.plugin = kept;
-      }
-      else {
-        delete config.plugin;
-      }
-      if (!(await this.confirmRewrite(path, hadComments, yes))) {
-        continue;
-      }
-      await step(
-        this.io,
-        `Deduping plugin registrations in ${path}`,
-        () => this.writeConfig(path, config),
-      );
     }
   }
 

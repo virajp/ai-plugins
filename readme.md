@@ -907,10 +907,13 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   exactly like Claude's `disable-model-invocation` — while doctrine skills stay
   discoverable under `skills/`;
 - expands plugin **dependencies** like Claude Code does — installing `vwf` also
-  renders `markdown`, `mise`, and wires `context7` and `mempalace` — and wires
-  **graphify** for the opencode platform when `vwf` is installed (deduping
-  graphify's redundant `plugin`-array registration, which would otherwise load
-  it twice);
+  renders `markdown`, `mise`, and wires `context7` and `mempalace`. `mempalace`
+  (like the graphify wiring below) is **user-level only** — a `--project`
+  request is redirected to user scope, on both platforms;
+- wires **graphify at user level** when `vwf` is installed: its user-level
+  skills install as usual, and the project-level `graphify.js` its CLI generates
+  is harvested into `~/.config/opencode/plugin/` instead — no project files are
+  written;
 - **`mempalace`** (url-sourced) installs from its own upstream repo: its two
   skills render, its MCP server lands in the config (launched as
   `mise x -- mempalace-mcp`), and its Claude auto-save hooks are replaced by a

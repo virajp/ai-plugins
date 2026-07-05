@@ -18,6 +18,10 @@ pnpx @askviraj/ai-plugins --user mempalace
 When you install `vwf`, `mempalace` is pulled in and enabled automatically — you
 only need this command to install it on its own.
 
+`mempalace` is **user-level only** on both platforms — per-user memory has no
+per-project install, so a `--project mempalace` request is redirected to user
+scope with a note.
+
 For **OpenCode**, `--platform opencode --user mempalace` (or installing `vwf`)
 fetches the upstream repo and installs: its two skills, the `mempalace` MCP
 server in the OpenCode config (launched as `mise x -- mempalace-mcp`), and an

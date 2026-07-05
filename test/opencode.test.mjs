@@ -45,9 +45,23 @@ mkdirSync(projDir, { recursive: true });
 // under a node-only PATH).
 const fakeBin = join(tmp, "bin");
 mkdirSync(fakeBin, { recursive: true });
-for (const bin of ["opencode", "rtk", "graphify", "mise", "pnpm", "uv"]) {
+for (const bin of ["opencode", "rtk", "mise", "pnpm", "uv"]) {
   writeFileSync(join(fakeBin, bin), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
 }
+// The fake graphify emulates the real CLI's opencode behavior: it writes its
+// JS plugin at PROJECT level (into its cwd) — the installer must harvest and
+// relocate it to the user level.
+writeFileSync(
+  join(fakeBin, "graphify"),
+  `#!/bin/sh
+if [ "$1" = "install" ] && [ "$3" = "opencode" ]; then
+  mkdir -p .opencode/plugins
+  echo "export const GraphifyPlugin = () => ({})" > .opencode/plugins/graphify.js
+fi
+exit 0
+`,
+  { mode: 0o755 },
+);
 
 // Fake upstream checkout for the url-sourced mempalace plugin (the installer
 // reads $AI_PLUGINS_UPSTREAM_DIR/<plugin>/ instead of fetching its tarball).
@@ -134,6 +148,10 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   // Its Claude hooks are replaced by the bundled OpenCode plugin, and its MCP
   // server runs through mise.
   assert.ok(existsSync(join(configDir, "plugin", "mempalace-hooks.js")));
+  // graphify was harvested from its CLI (which writes project-level files)
+  // and relocated to the USER-level plugin dir; the project got nothing.
+  assert.ok(existsSync(join(configDir, "plugin", "graphify.js")));
+  assert.ok(!existsSync(join(projDir, ".opencode")));
 
   // Every ${CLAUDE_PLUGIN_ROOT} was expanded to the installed absolute path.
   const leftover = [];
@@ -296,41 +314,21 @@ test("a commented jsonc config is only rewritten with --yes", () => {
   assert.ok(!readFileSync(configPath, "utf8").includes("// keep me"));
 });
 
-test("graphify's double plugin registration is deduped", () => {
-  // graphify install registers its plugin BOTH as an auto-discovered file and
-  // as a `plugin` array entry — seed that state at both scopes, plus a foreign
-  // entry that must survive.
-  const globalPlugins = join(configDir, "plugins");
-  mkdirSync(globalPlugins, { recursive: true });
-  writeFileSync(join(globalPlugins, "graphify.js"), "export default {}\n");
-  const globalCfg = readConfig();
-  globalCfg.plugin = ["plugins/graphify.js", "some-npm-plugin"];
-  writeFileSync(configPath, JSON.stringify(globalCfg, null, 2));
-
-  const projConfigDir = join(projDir, ".opencode");
-  mkdirSync(join(projConfigDir, "plugins"), { recursive: true });
-  writeFileSync(
-    join(projConfigDir, "plugins", "graphify.js"),
-    "export default {}\n",
-  );
-  writeFileSync(
-    join(projConfigDir, "opencode.json"),
-    // graphify writes the entry project-root-relative.
-    JSON.stringify({ plugin: [".opencode/plugins/graphify.js"] }, null, 2),
-  );
-
-  // vwf triggers setupGraphify (the fake bin) and then the dedupe.
-  const res = runCli(["--platform", "opencode", "--user", "vwf", "--yes"]);
+test("--project mempalace is redirected to user scope", () => {
+  const res = runCli([
+    "--platform",
+    "opencode",
+    "--project",
+    "mempalace",
+    "--yes",
+  ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
-
-  const globalAfter = readConfig();
-  assert.deepEqual(globalAfter.plugin, ["some-npm-plugin"]);
-  assert.ok(existsSync(join(globalPlugins, "graphify.js")));
-  const projAfter = JSON.parse(
-    readFileSync(join(projConfigDir, "opencode.json"), "utf8"),
+  assert.match(res.stdout, /USER scope only/);
+  // Rendered at the GLOBAL config dir, nothing project-scoped.
+  assert.ok(
+    existsSync(join(configDir, "virajp-plugins", "mempalace", ".version")),
   );
-  assert.equal(projAfter.plugin, undefined);
-  assert.ok(existsSync(join(projConfigDir, "plugins", "graphify.js")));
+  assert.ok(!existsSync(join(projDir, ".opencode")));
 });
 
 test("--statusline with opencode-only platform is a noted no-op", () => {

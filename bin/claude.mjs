@@ -122,6 +122,12 @@ const PLUGINS = [
 const PROJECT_SCOPED = new Set(["flutter"]);
 const scopeFor = name => (PROJECT_SCOPED.has(name) ? "project" : "user");
 
+// Plugins pinned to USER scope on every platform: a --project request (or a
+// project-scoped dependency expansion) is redirected to user scope with a
+// note, never honored. mempalace is per-user memory — a per-project install
+// makes no sense for it.
+const USER_ONLY = new Set(["mempalace"]);
+
 // Opt-in plugins: excluded from --all and installed only when named explicitly
 // via --user or --project (scope is the user's choice — unlike PROJECT_SCOPED
 // they carry no forced default scope). Used for external, re-listed plugins that
@@ -588,7 +594,23 @@ class ClaudeCode {
           }`,
         );
       }
-      // Dedupe a name repeated within one scope.
+      // USER_ONLY plugins are pinned to user scope — redirect, with a note.
+      const redirected = named.filter(p =>
+        USER_ONLY.has(p.name) && p.scope !== "user"
+      );
+      if (redirected.length) {
+        this.io.log(
+          yellow(
+            `Note: ${
+              redirected.map(p => p.name).join(", ")
+            } installs at USER scope only — redirected from --project.`,
+          ),
+        );
+        for (const p of redirected) {
+          p.scope = "user";
+        }
+      }
+      // Dedupe a name repeated within one scope (or converging via redirect).
       const seen = new Set();
       plugins = named.filter(p => !seen.has(p.name) && seen.add(p.name));
     }
@@ -853,5 +875,6 @@ export {
   PROJECT_SCOPED,
   REMOTE_MARKETPLACE_URL,
   setupGraphify,
+  USER_ONLY,
   USER_SCOPED,
 };

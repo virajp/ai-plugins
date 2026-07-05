@@ -455,11 +455,13 @@ Layout:
   a rewrite drops them. **Dependencies** expand at plan time from `PLUGIN_DEPS`
   in `claude.mjs` (kept ≡ the marketplace lists by `plugins:check`; Claude Code
   auto-installs them natively) — installs only, uninstall never removes an
-  unnamed dependency — and a vwf install runs
-  `graphify install --platform opencode`, then dedupes graphify's double
-  registration (it writes its plugin file into an auto-discovered
-  `{plugin,plugins}/` dir AND lists it in the config's `plugin` array — the
-  redundant array entry is stripped at both scopes). url-sourced plugins
+  unnamed dependency. **User-level-only:** `USER_ONLY` plugins (mempalace) are
+  pinned to user scope — a `--project` request or project-scoped dep expansion
+  redirects them (with a note). A vwf install wires **graphify at user level
+  only**: the CLI is run with a throwaway cwd (its user-level skills land in
+  `~/.config/opencode/skills/graphify/`), and the project-level `graphify.js` it
+  generates is harvested into the GLOBAL `plugin/` dir — no project writes, no
+  `plugin`-array entry (the dir is auto-discovered). url-sourced plugins
   **without** `UPSTREAM` support (andrej-karpathy-skills) are filtered from
   `--all`, rejected when named, and skipped (with a note) as dependencies.
   `--uninstall`/`--upgrade`/`--version` mirror all of this via the `.version`

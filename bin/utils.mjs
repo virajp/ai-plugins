@@ -174,9 +174,9 @@ async function confirm(message) {
 // With `soft: true` a non-zero exit is treated as a skip (yellow note), not a
 // failure — for best-effort steps like refreshing a marketplace we don't own,
 // whose only common failure is "not registered".
-function runCommand(io, label, cmd, args, { soft = false } = {}) {
+function runCommand(io, label, cmd, args, { soft = false, cwd } = {}) {
   process.stdout.write(`${label} ... `);
-  const res = spawnSync(cmd, args, { encoding: "utf8" });
+  const res = spawnSync(cmd, args, { encoding: "utf8", cwd });
   if (res.error) {
     io.log(red("❌"));
     io.error(`Failed to run ${cmd}: ${res.error.message}`);
