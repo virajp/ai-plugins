@@ -19,6 +19,11 @@
 # Graphify
 graphify-out/
 
+# OpenCode project config — dev-local state written by
+# `graphify install --platform opencode` (and installer smoke runs); this
+# repo ships OpenCode support but is not itself OpenCode-configured.
+.opencode/
+
 # ============================================================
 # Node / CLI
 # ============================================================
