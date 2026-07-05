@@ -901,7 +901,15 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
 - copies its `skills/` + `assets/` into
   `~/.config/opencode/virajp-plugins/<plugin>/` (`--project` targets the
   repo-local `.opencode/` instead), rewriting every `${CLAUDE_PLUGIN_ROOT}`
-  reference to the installed path and stamping the plugin version;
+  reference to the installed path and stamping the plugin version. Workflow
+  skills (user-invoked in Claude) are placed at `commands/<name>/index.md`,
+  **outside** OpenCode's skill discovery — so the model never auto-invokes them,
+  exactly like Claude's `disable-model-invocation` — while doctrine skills stay
+  discoverable under `skills/`;
+- expands plugin **dependencies** like Claude Code does — installing `vwf` also
+  renders `markdown`, `mise`, and wires `context7` (`mempalace` lives upstream
+  and is noted, not installed) — and wires **graphify** for the opencode
+  platform when `vwf` is installed;
 - appends that `virajp-plugins` directory to `skills.paths` in the OpenCode
   config — an existing `opencode.jsonc` is preferred (it wins OpenCode's config
   merge), then an existing `opencode.json`; a new file is created as
@@ -912,16 +920,17 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   `typescript`/`dart`/`kotlin-ls`/`sourcekit-lsp` overrides that replace
   OpenCode's built-in launchers with the plugins' mise-provisioned ones (no SDK
   on `PATH` needed); an entry you already have is never overwritten;
-- writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each
-  user-invoked workflow skill, so `/vwf-blueprint` etc. work in OpenCode (which
-  has no user-invoked skills yet);
+- writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each workflow
+  skill, so `/vwf-blueprint` etc. work in OpenCode (which has no user-invoked
+  skills yet);
 - for `context7`, adds the MCP server to the config's `mcp` key.
 
 **Not ported**: subagents and hooks are Claude Code concepts (vwf's execute
 pipeline degrades accordingly), the statusline is Claude-only, and url-sourced
 plugins (`mempalace`, `andrej-karpathy-skills`) live upstream and are skipped.
-`--uninstall` and `--upgrade` mirror all of this; `--version` reports the
-stamped versions against the marketplace manifest.
+`--uninstall` and `--upgrade` mirror all of this (uninstall never removes a
+dependency you didn't name); `--version` reports the stamped versions against
+the marketplace manifest.
 
 ## Credits & acknowledgements
 

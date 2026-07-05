@@ -160,6 +160,13 @@ const DEP_HINTS = {
 // install mechanism itself. Everything else is per-plugin (PLUGIN_EXTRA_DEPS).
 const CORE_DEPS = ["claude"];
 
+// Plugin → plugin dependencies, mirroring the marketplace manifest
+// (plugins:check asserts the sync). Claude Code auto-installs these itself;
+// the OpenCode target expands them explicitly at plan time.
+const PLUGIN_DEPS = {
+  vwf: ["context7", "markdown", "mempalace", "mise"],
+};
+
 // The external runtime tools each plugin needs — checked ONLY when that plugin
 // is in the install set. A plugin with no external tool (markdown) is absent. A
 // plugin that pulls others in rolls up their tools too: vwf → context7's pnpm,
@@ -261,6 +268,42 @@ function statuslineMatches(existing, value) {
   return isObject(existing)
     && existing.type === value.type
     && existing.command === value.command;
+}
+
+// vwf's workflow skills rely on graphify's knowledge graph, so a vwf install
+// or upgrade wires graphify into the target platform (graphify supports both
+// `claude` and `opencode`). `graphify install` works anywhere and always runs;
+// `graphify hook install` attaches a git post-commit hook, so it runs only
+// inside a git repo and is skipped (with a note) otherwise. Both commands are
+// idempotent, so re-running on every upgrade self-heals the setup. Soft-skips
+// entirely when graphify isn't on PATH — checkDeps guarantees it for installs,
+// but the upgrade-only path does not run that gate.
+function setupGraphify(io, platform) {
+  if (!hasBin("graphify")) {
+    process.stdout.write("Setting up graphify ... ");
+    io.log(
+      yellow(`skipped (graphify not on PATH — install: ${DEP_HINTS.graphify})`),
+    );
+    return;
+  }
+  runCommand(
+    io,
+    `Installing graphify for ${platform}`,
+    "graphify",
+    ["install", "--platform", platform],
+  );
+  if (inGitRepo()) {
+    runCommand(
+      io,
+      "Installing graphify post-commit hook",
+      "graphify",
+      ["hook", "install"],
+    );
+  }
+  else {
+    process.stdout.write("Installing graphify post-commit hook ... ");
+    io.log(yellow("skipped (not a git repo)"));
+  }
 }
 
 class ClaudeCode {
@@ -608,41 +651,9 @@ class ClaudeCode {
     return runCommand(this.io, label, "claude", args, opts);
   }
 
-  // vwf's commands rely on graphify's knowledge graph, so a vwf install or
-  // upgrade wires graphify into Claude Code. `graphify install` works anywhere
-  // and always runs; `graphify hook install` attaches a git post-commit hook, so
-  // it runs only inside a git repo and is skipped (with a note) otherwise. Both
-  // commands are idempotent, so re-running on every upgrade self-heals the setup.
-  // Soft-skips entirely when graphify isn't on PATH — checkDeps guarantees it for
-  // installs, but the upgrade-only path does not run that gate.
+  // Wire graphify for Claude Code (see setupGraphify below).
   setupGraphify() {
-    if (!hasBin("graphify")) {
-      process.stdout.write("Setting up graphify ... ");
-      this.io.log(
-        yellow(
-          `skipped (graphify not on PATH — install: ${DEP_HINTS.graphify})`,
-        ),
-      );
-      return;
-    }
-    runCommand(
-      this.io,
-      "Installing graphify for Claude Code",
-      "graphify",
-      ["install", "--platform", "claude"],
-    );
-    if (inGitRepo()) {
-      runCommand(
-        this.io,
-        "Installing graphify post-commit hook",
-        "graphify",
-        ["hook", "install"],
-      );
-    }
-    else {
-      process.stdout.write("Installing graphify post-commit hook ... ");
-      this.io.log(yellow("skipped (not a git repo)"));
-    }
+    setupGraphify(this.io, "claude");
   }
 
   // Copy the script, seed the user config, and set the requested statusline keys.
@@ -836,9 +847,11 @@ export {
   ClaudeCode,
   DEP_HINTS,
   OPT_IN,
+  PLUGIN_DEPS,
   PLUGIN_EXTRA_DEPS,
   PLUGINS,
   PROJECT_SCOPED,
   REMOTE_MARKETPLACE_URL,
+  setupGraphify,
   USER_SCOPED,
 };

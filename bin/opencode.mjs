@@ -17,7 +17,11 @@
  *  - copies the plugin's `skills/` + `assets/` into
  *    `<configDir>/virajp-plugins/<plugin>/` (agents/ and hooks/ are Claude-only and
  *    skipped), rewriting every `${CLAUDE_PLUGIN_ROOT}` to that installed
- *    absolute path, and stamping `.version` from the source marketplace.json,
+ *    absolute path, and stamping `.version` from the source marketplace.json;
+ *    user-invoked workflow skills (`disable-model-invocation: true`) are moved
+ *    to `commands/<name>.md` so OpenCode's skill discovery (`**\/SKILL.md`)
+ *    never lists them to the model — mirroring Claude's user-only semantics —
+ *    while their command wrappers still reach them by path,
  *  - appends `<configDir>/virajp-plugins` to `skills.paths` in the OpenCode
  *    config (OpenCode discovers `**\/SKILL.md` recursively under it),
  *  - writes a command wrapper `<configDir>/command/<plugin>-<skill>.md` for each
@@ -27,6 +31,10 @@
  *  - maps the plugin's `lspServers` (if any) onto OpenCode `lsp` entries,
  *    overriding the matching built-in ids with our mise-provisioned launchers,
  *  - for context7, adds the MCP server to the config's `mcp` key.
+ *
+ * Plugin dependencies are expanded at plan time (PLUGIN_DEPS — Claude Code
+ * auto-installs these itself), skipping url-sourced ones, and a vwf install
+ * wires graphify for the opencode platform.
  *
  * Config edits target `opencode.jsonc` (preferred — OpenCode merges all config
  * filenames and jsonc wins), falling back to an existing `opencode.json`; a
@@ -46,6 +54,7 @@ import {
   mkdtemp,
   readdir,
   readFile,
+  rename,
   rm,
   writeFile,
 } from "node:fs/promises";
@@ -60,9 +69,11 @@ import {
 
 import {
   DEP_HINTS,
+  PLUGIN_DEPS,
   PLUGIN_EXTRA_DEPS,
   PLUGINS,
   REMOTE_MARKETPLACE_URL,
+  setupGraphify,
   USER_SCOPED,
 } from "./claude.mjs";
 import {
@@ -323,6 +334,42 @@ class OpenCode {
       }
       const seen = new Set();
       plugins = named.filter(p => !seen.has(p.name) && seen.add(p.name));
+
+      // Expand plugin dependencies at the same scope (Claude Code auto-installs
+      // them; here they are part of the plan). Installs only — uninstall never
+      // removes a dependency you didn't name, matching Claude Code. url-sourced
+      // deps live upstream — noted, not rendered.
+      for (const { name, scope } of flags.uninstall ? [] : [...plugins]) {
+        const added = [];
+        const skipped = [];
+        for (const dep of PLUGIN_DEPS[name] || []) {
+          if (seen.has(dep)) {
+            continue;
+          }
+          if (URL_SOURCED.has(dep)) {
+            skipped.push(dep);
+            continue;
+          }
+          seen.add(dep);
+          plugins.push({ name: dep, scope });
+          added.push(dep);
+        }
+        if (added.length || skipped.length) {
+          this.io.log(
+            yellow(
+              `${name} dependencies: ${
+                added.length ? `installing ${added.join(", ")}` : ""
+              }${added.length && skipped.length ? "; " : ""}${
+                skipped.length
+                  ? `${
+                    skipped.join(", ")
+                  } lives upstream — not installable for OpenCode`
+                  : ""
+              }.`,
+            ),
+          );
+        }
+      }
     }
     // `yes` rides in the plan: config rewrites that would drop JSONC comments
     // prompt unless it is set.
@@ -375,6 +422,9 @@ class OpenCode {
     finally {
       await this.cleanupSource();
     }
+    if (plan.plugins.some(p => p.name === "vwf")) {
+      setupGraphify(this.io, "opencode");
+    }
     this.io.log(green("\nRestart OpenCode to load the skills."));
     return { marketplaceRefreshed: false, graphifyConfigured: false };
   }
@@ -425,6 +475,11 @@ class OpenCode {
     }
     finally {
       await this.cleanupSource();
+    }
+    // Re-assert graphify's opencode wiring (idempotent), mirroring the Claude
+    // upgrade path.
+    if (found.some(p => p.name === "vwf")) {
+      setupGraphify(this.io, "opencode");
     }
     this.io.log(green("\nRestart OpenCode to load the refreshed skills."));
   }
@@ -587,6 +642,7 @@ class OpenCode {
         }
       }
       await this.rewritePluginRoot(dest);
+      await this.segregateWorkflowSkills(dest);
 
       const market = JSON.parse(
         await readFile(
@@ -637,14 +693,17 @@ class OpenCode {
     await walk(pluginDir);
   }
 
-  // One command wrapper per user-invoked skill (disable-model-invocation:
-  // true): OpenCode commands are user-typed (`/<file-stem>`), so
-  // `/vwf-blueprint` etc. keep working there. Model-invocable doctrine skills
-  // need no wrapper — OpenCode's skill tool loads them from the description.
-  async writeWrappers(name, pluginDir, configDir) {
+  // Move user-invoked workflow skills (disable-model-invocation: true) out of
+  // skill discovery: OpenCode ignores that flag and its skill tool would list
+  // them to the model, which Claude deliberately prevents. Each moves from
+  // skills/<n>/SKILL.md to commands/<n>/index.md — no SKILL.md filename means
+  // the `**\/SKILL.md` discovery never sees it, while the command wrappers
+  // still reach it by path (mirroring Claude's user-only semantics).
+  async segregateWorkflowSkills(pluginDir) {
     const skillsDir = join(pluginDir, "skills");
-    const cmdDir = join(configDir, "command");
-    let count = 0;
+    if (!existsSync(skillsDir)) {
+      return;
+    }
     for (const entry of await readdir(skillsDir, { withFileTypes: true })) {
       if (!entry.isDirectory()) {
         continue;
@@ -657,6 +716,33 @@ class OpenCode {
       if (fm["disable-model-invocation"] !== "true") {
         continue;
       }
+      const destDir = join(pluginDir, "commands", entry.name);
+      await mkdir(dirname(destDir), { recursive: true });
+      await rename(join(skillsDir, entry.name), destDir);
+      await rename(join(destDir, "SKILL.md"), join(destDir, "index.md"));
+    }
+  }
+
+  // One command wrapper per workflow skill: OpenCode commands are user-typed
+  // (`/<file-stem>`), so `/vwf-blueprint` etc. keep working there. Doctrine
+  // skills need no wrapper — OpenCode's skill tool loads them from the
+  // description.
+  async writeWrappers(name, pluginDir, configDir) {
+    const commandsDir = join(pluginDir, "commands");
+    if (!existsSync(commandsDir)) {
+      return;
+    }
+    const cmdDir = join(configDir, "command");
+    let count = 0;
+    for (const entry of await readdir(commandsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const skillPath = join(commandsDir, entry.name, "index.md");
+      if (!existsSync(skillPath)) {
+        continue;
+      }
+      const fm = frontmatter(await readFile(skillPath, "utf8"));
       await mkdir(cmdDir, { recursive: true });
       const description = stripQuotes(fm.description) || `${entry.name} skill`;
       const hint = stripQuotes(fm["argument-hint"]);
@@ -665,8 +751,8 @@ class OpenCode {
         `description: ${description}`,
         "---",
         "",
-        `Use the "${entry.name}" skill installed under ${pluginDir}/skills/`
-        + `${entry.name}/SKILL.md — read it and follow it for this request.`,
+        `Use the "${entry.name}" workflow skill installed at ${skillPath} — `
+        + `read it and follow it for this request.`,
         ...(hint ? ["", `Arguments (${hint}):`] : [""]),
         "$ARGUMENTS",
         "",

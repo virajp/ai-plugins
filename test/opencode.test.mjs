@@ -77,14 +77,25 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
-  // Skills + assets landed under virajp-plugins/vwf.
+  // Skills + assets landed under virajp-plugins/vwf. Workflow skills
+  // (disable-model-invocation) are segregated to commands/<n>/index.md so
+  // OpenCode's **/SKILL.md discovery never lists them to the model; doctrine
+  // skills stay under skills/.
   const vwfDir = join(configDir, "virajp-plugins", "vwf");
-  assert.ok(existsSync(join(vwfDir, "skills", "blueprint", "SKILL.md")));
+  assert.ok(existsSync(join(vwfDir, "commands", "blueprint", "index.md")));
+  assert.ok(!existsSync(join(vwfDir, "skills", "blueprint")));
+  assert.ok(
+    existsSync(join(vwfDir, "skills", "blueprint-authoring", "SKILL.md")),
+  );
   assert.ok(existsSync(join(vwfDir, "assets", "templates", "entity.md")));
   assert.ok(existsSync(join(vwfDir, ".version")));
   // Claude-only surfaces are not rendered.
   assert.ok(!existsSync(join(vwfDir, "agents")));
   assert.ok(!existsSync(join(vwfDir, "hooks")));
+  // vwf's plugin dependencies were expanded (mempalace excepted — upstream).
+  assert.ok(existsSync(join(configDir, "virajp-plugins", "markdown")));
+  assert.ok(existsSync(join(configDir, "virajp-plugins", "mise")));
+  assert.ok(!existsSync(join(configDir, "virajp-plugins", "mempalace")));
 
   // Every ${CLAUDE_PLUGIN_ROOT} was expanded to the installed absolute path.
   const leftover = [];
@@ -105,7 +116,7 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   walk(vwfDir);
   assert.deepEqual(leftover, [], "unrewritten ${CLAUDE_PLUGIN_ROOT} refs");
   const blueprint = readFileSync(
-    join(vwfDir, "skills", "blueprint", "SKILL.md"),
+    join(vwfDir, "commands", "blueprint", "index.md"),
     "utf8",
   );
   assert.ok(blueprint.includes(vwfDir), "rewritten refs point at install dir");
@@ -178,6 +189,7 @@ test("url-sourced plugins are rejected for opencode", () => {
 });
 
 test("uninstall removes skills, wrappers, and our config entries", () => {
+  // Deps are NOT auto-uninstalled (matching Claude Code) — name everything.
   const res = runCli([
     "--platform",
     "opencode",
@@ -188,6 +200,10 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
     "context7",
     "--user",
     "typescript",
+    "--user",
+    "markdown",
+    "--user",
+    "mise",
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
