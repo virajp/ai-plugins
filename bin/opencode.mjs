@@ -65,7 +65,10 @@ import {
 } from "node:os";
 import {
   dirname,
+  isAbsolute,
   join,
+  resolve,
+  sep,
 } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -461,6 +464,7 @@ class OpenCode {
     }
     if (plan.plugins.some(p => p.name === "vwf")) {
       setupGraphify(this.io, "opencode");
+      await this.dedupePluginRegistrations(plan.yes);
     }
     this.io.log(green("\nRestart OpenCode to load the skills."));
     return { marketplaceRefreshed: false, graphifyConfigured: false };
@@ -517,6 +521,7 @@ class OpenCode {
     // upgrade path.
     if (found.some(p => p.name === "vwf")) {
       setupGraphify(this.io, "opencode");
+      await this.dedupePluginRegistrations(false);
     }
     this.io.log(green("\nRestart OpenCode to load the refreshed skills."));
   }
@@ -1017,6 +1022,57 @@ class OpenCode {
     );
     if (lspWritten.length) {
       this.io.log(green(`  lsp: ${lspWritten.join(", ")}`));
+    }
+  }
+
+  // OpenCode loads plugins BOTH from the auto-discovered {plugin,plugins}/*.js
+  // dirs and from the config's `plugin` array — a file present in the dir AND
+  // listed in the array loads twice. `graphify install --platform opencode`
+  // registers both ways (upstream quirk), so after running it, strip array
+  // entries that resolve into an auto-discovered dir of the same config scope.
+  // Checks the global config AND the cwd's project config, since graphify
+  // writes project-scoped files regardless of our plan's scope.
+  async dedupePluginRegistrations(yes) {
+    for (const configDir of [GLOBAL_DIR, PROJECT_DIR]) {
+      if (!CONFIG_FILES.some(f => existsSync(join(configDir, f)))) {
+        continue;
+      }
+      const { path, config, hadComments } = await this.readConfig(configDir);
+      if (!Array.isArray(config.plugin)) {
+        continue;
+      }
+      const autoDirs = ["plugin", "plugins"].map(d => resolve(configDir, d));
+      const autoDiscovered = entry => {
+        if (typeof entry !== "string") {
+          return false;
+        }
+        // Entries may be absolute, config-dir-relative, or (as graphify
+        // writes them) project-root-relative — resolve every candidate.
+        const candidates = isAbsolute(entry)
+          ? [resolve(entry)]
+          : [resolve(configDir, entry), resolve(dirname(configDir), entry)];
+        return candidates.some(p =>
+          autoDirs.some(d => p.startsWith(d + sep)) && existsSync(p)
+        );
+      };
+      const kept = config.plugin.filter(e => !autoDiscovered(e));
+      if (kept.length === config.plugin.length) {
+        continue;
+      }
+      if (kept.length) {
+        config.plugin = kept;
+      }
+      else {
+        delete config.plugin;
+      }
+      if (!(await this.confirmRewrite(path, hadComments, yes))) {
+        continue;
+      }
+      await step(
+        this.io,
+        `Deduping plugin registrations in ${path}`,
+        () => this.writeConfig(path, config),
+      );
     }
   }
 

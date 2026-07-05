@@ -908,7 +908,9 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   discoverable under `skills/`;
 - expands plugin **dependencies** like Claude Code does — installing `vwf` also
   renders `markdown`, `mise`, and wires `context7` and `mempalace` — and wires
-  **graphify** for the opencode platform when `vwf` is installed;
+  **graphify** for the opencode platform when `vwf` is installed (deduping
+  graphify's redundant `plugin`-array registration, which would otherwise load
+  it twice);
 - **`mempalace`** (url-sourced) installs from its own upstream repo: its two
   skills render, its MCP server lands in the config (launched as
   `mise x -- mempalace-mcp`), and its Claude auto-save hooks are replaced by a

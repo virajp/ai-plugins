@@ -456,9 +456,12 @@ Layout:
   in `claude.mjs` (kept ≡ the marketplace lists by `plugins:check`; Claude Code
   auto-installs them natively) — installs only, uninstall never removes an
   unnamed dependency — and a vwf install runs
-  `graphify install --platform opencode`. url-sourced plugins **without**
-  `UPSTREAM` support (andrej-karpathy-skills) are filtered from `--all`,
-  rejected when named, and skipped (with a note) as dependencies.
+  `graphify install --platform opencode`, then dedupes graphify's double
+  registration (it writes its plugin file into an auto-discovered
+  `{plugin,plugins}/` dir AND lists it in the config's `plugin` array — the
+  redundant array entry is stripped at both scopes). url-sourced plugins
+  **without** `UPSTREAM` support (andrej-karpathy-skills) are filtered from
+  `--all`, rejected when named, and skipped (with a note) as dependencies.
   `--uninstall`/`--upgrade`/`--version` mirror all of this via the `.version`
   stamps.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`

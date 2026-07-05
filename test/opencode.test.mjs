@@ -34,6 +34,10 @@ after(() => rmSync(tmp, { recursive: true, force: true }));
 
 const fakeHome = join(tmp, "home");
 const configDir = join(fakeHome, ".config", "opencode");
+// The CLI runs from a tmp project dir so project-scoped surfaces (.opencode/)
+// land under tmp, never in this repo.
+const projDir = join(tmp, "proj");
+mkdirSync(projDir, { recursive: true });
 
 // checkDeps requires the platform binary plus each selected plugin's runtime
 // tools on PATH. A CI runner has none of them, so seed no-op fakes — the tests
@@ -73,7 +77,7 @@ writeFileSync(
 function runCli(args) {
   return spawnSync(process.execPath, [CLI, ...args], {
     encoding: "utf8",
-    cwd: REPO,
+    cwd: projDir,
     env: {
       ...process.env,
       PATH: `${fakeBin}:${process.env.PATH}`,
@@ -290,6 +294,43 @@ test("a commented jsonc config is only rewritten with --yes", () => {
   assert.equal(config.theme, "custom");
   assert.deepEqual(config.skills.paths, ["~/.config/opencode/virajp-plugins"]);
   assert.ok(!readFileSync(configPath, "utf8").includes("// keep me"));
+});
+
+test("graphify's double plugin registration is deduped", () => {
+  // graphify install registers its plugin BOTH as an auto-discovered file and
+  // as a `plugin` array entry — seed that state at both scopes, plus a foreign
+  // entry that must survive.
+  const globalPlugins = join(configDir, "plugins");
+  mkdirSync(globalPlugins, { recursive: true });
+  writeFileSync(join(globalPlugins, "graphify.js"), "export default {}\n");
+  const globalCfg = readConfig();
+  globalCfg.plugin = ["plugins/graphify.js", "some-npm-plugin"];
+  writeFileSync(configPath, JSON.stringify(globalCfg, null, 2));
+
+  const projConfigDir = join(projDir, ".opencode");
+  mkdirSync(join(projConfigDir, "plugins"), { recursive: true });
+  writeFileSync(
+    join(projConfigDir, "plugins", "graphify.js"),
+    "export default {}\n",
+  );
+  writeFileSync(
+    join(projConfigDir, "opencode.json"),
+    // graphify writes the entry project-root-relative.
+    JSON.stringify({ plugin: [".opencode/plugins/graphify.js"] }, null, 2),
+  );
+
+  // vwf triggers setupGraphify (the fake bin) and then the dedupe.
+  const res = runCli(["--platform", "opencode", "--user", "vwf", "--yes"]);
+  assert.equal(res.status, 0, res.stderr || res.stdout);
+
+  const globalAfter = readConfig();
+  assert.deepEqual(globalAfter.plugin, ["some-npm-plugin"]);
+  assert.ok(existsSync(join(globalPlugins, "graphify.js")));
+  const projAfter = JSON.parse(
+    readFileSync(join(projConfigDir, "opencode.json"), "utf8"),
+  );
+  assert.equal(projAfter.plugin, undefined);
+  assert.ok(existsSync(join(projConfigDir, "plugins", "graphify.js")));
 });
 
 test("--statusline with opencode-only platform is a noted no-op", () => {
