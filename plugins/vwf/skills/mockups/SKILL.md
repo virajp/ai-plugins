@@ -3,8 +3,8 @@ name: mockups
 description: Render the blueprint's screens as self-contained static HTML
   mockups — one
   page per screen plus the state variants the Screens contract pins, styled
-  from design-system tokens — and push them to a claude.ai/design design-
-  system project for canvas review. Mockups are realizations, never contract;
+  from design-system tokens — and push them to a claude.ai/design
+  design-system project for canvas review. Mockups are realizations, never contract;
   generated in an ephemeral build dir, never committed.
 argument-hint: "[entity, e.g. order — omit to sweep all screens]"
 model: sonnet

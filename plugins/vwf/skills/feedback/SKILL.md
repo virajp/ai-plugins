@@ -3,8 +3,8 @@ name: feedback
 description: The front door for production feedback — a bug, a metric reading,
   a UX
   complaint, or a feature idea. Classifies it and routes it into the doc and
-  command that fix it (gaps → blueprint/plan, metrics → product, UX → design-
-  system/screens). Durable even when mempalace is down.
+  command that fix it (gaps → blueprint/plan, metrics → product, UX →
+  design-system/screens). Durable even when mempalace is down.
 argument-hint: "[the feedback — paste a bug report, metric, or complaint]"
 model: sonnet
 effort: xhigh
