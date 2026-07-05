@@ -899,10 +899,10 @@ OpenCode discovers skills from directories on disk, so the installer fetches
 this repo's source (the GitHub `main` tarball) and, per selected plugin:
 
 - copies its `skills/` + `assets/` into
-  `~/.config/opencode/ai-plugins/<plugin>/` (`--project` targets the repo-local
-  `.opencode/` instead), rewriting every `${CLAUDE_PLUGIN_ROOT}` reference to
-  the installed path and stamping the plugin version;
-- appends that `ai-plugins` directory to `skills.paths` in `opencode.json`
+  `~/.config/opencode/virajp-plugins/<plugin>/` (`--project` targets the
+  repo-local `.opencode/` instead), rewriting every `${CLAUDE_PLUGIN_ROOT}`
+  reference to the installed path and stamping the plugin version;
+- appends that `virajp-plugins` directory to `skills.paths` in `opencode.json`
   (created with `$schema` if absent; user keys are always preserved);
 - writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each
   user-invoked workflow skill, so `/vwf-blueprint` etc. work in OpenCode (which

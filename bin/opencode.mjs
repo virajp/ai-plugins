@@ -15,10 +15,10 @@
  *  - fetches the repo source (GitHub main tarball, or $AI_PLUGINS_SOURCE_DIR —
  *    a local checkout — for tests/dev),
  *  - copies the plugin's `skills/` + `assets/` into
- *    `<configDir>/ai-plugins/<plugin>/` (agents/ and hooks/ are Claude-only and
+ *    `<configDir>/virajp-plugins/<plugin>/` (agents/ and hooks/ are Claude-only and
  *    skipped), rewriting every `${CLAUDE_PLUGIN_ROOT}` to that installed
  *    absolute path, and stamping `.version` from the source marketplace.json,
- *  - appends `<configDir>/ai-plugins` to `skills.paths` in opencode.json
+ *  - appends `<configDir>/virajp-plugins` to `skills.paths` in opencode.json
  *    (OpenCode discovers `**\/SKILL.md` recursively under it),
  *  - writes a command wrapper `<configDir>/command/<plugin>-<skill>.md` for each
  *    skill with `disable-model-invocation: true` (a former slash command) —
@@ -86,13 +86,17 @@ const URL_SOURCED = new Set(["mempalace", "andrej-karpathy-skills"]);
 // Global vs project config dirs (docs: opencode.ai/docs/config). The
 // `skills.paths` entry written into each config uses a portable spelling:
 // `~/…` for the global config, a project-relative path for `.opencode/`.
+// The directory the rendered plugins live under inside each OpenCode config
+// dir — named after the marketplace, mirroring where the plugins come from.
+const BUNDLE_DIR = "virajp-plugins";
+
 const GLOBAL_DIR = join(homedir(), ".config", "opencode");
 const PROJECT_DIR = join(process.cwd(), ".opencode");
 const configDirFor = scope => (scope === "project" ? PROJECT_DIR : GLOBAL_DIR);
 const skillsPathFor = scope =>
   scope === "project"
-    ? ".opencode/ai-plugins"
-    : "~/.config/opencode/ai-plugins";
+    ? `.opencode/${BUNDLE_DIR}`
+    : `~/.config/opencode/${BUNDLE_DIR}`;
 
 const OPENCODE_SCHEMA_URL = "https://opencode.ai/config.json";
 
@@ -262,7 +266,7 @@ class OpenCode {
   async upgrade() {
     const found = [];
     for (const scope of ["user", "project"]) {
-      const root = join(configDirFor(scope), "ai-plugins");
+      const root = join(configDirFor(scope), BUNDLE_DIR);
       if (!existsSync(root)) {
         continue;
       }
@@ -275,7 +279,7 @@ class OpenCode {
     if (!found.length) {
       this.io.log(
         yellow(
-          "No ai-plugins skills are installed for OpenCode — nothing to upgrade.",
+          "No virajp-plugins skills are installed for OpenCode — nothing to upgrade.",
         ),
       );
       return;
@@ -285,7 +289,7 @@ class OpenCode {
       for (const { name, scope } of found) {
         const stamp = join(
           configDirFor(scope),
-          "ai-plugins",
+          BUNDLE_DIR,
           name,
           ".version",
         );
@@ -311,7 +315,7 @@ class OpenCode {
     const touched = new Set();
     for (const { name, scope } of plan.plugins) {
       const configDir = configDirFor(scope);
-      const dest = join(configDir, "ai-plugins", name);
+      const dest = join(configDir, BUNDLE_DIR, name);
       if (existsSync(dest)) {
         await step(
           this.io,
@@ -351,10 +355,10 @@ class OpenCode {
     for (const p of latest.plugins || []) {
       latestByName[p.name] = p.version || null;
     }
-    this.io.log("\nOpenCode skills (ai-plugins):");
+    this.io.log("\nOpenCode skills (virajp-plugins):");
     let any = false;
     for (const scope of ["user", "project"]) {
-      const root = join(configDirFor(scope), "ai-plugins");
+      const root = join(configDirFor(scope), BUNDLE_DIR);
       if (!existsSync(root)) {
         continue;
       }
@@ -433,7 +437,7 @@ class OpenCode {
 
   // ── rendering ────────────────────────────────────────────────────────────
 
-  // Copy one plugin's skills/ + assets/ into <configDir>/ai-plugins/<name>/,
+  // Copy one plugin's skills/ + assets/ into <configDir>/virajp-plugins/<name>/,
   // rewrite ${CLAUDE_PLUGIN_ROOT}, stamp .version, and (re)write the command
   // wrappers for its user-invoked skills.
   async renderPlugin(sourceRoot, name, scope) {
@@ -445,7 +449,7 @@ class OpenCode {
       return;
     }
     const configDir = configDirFor(scope);
-    const dest = join(configDir, "ai-plugins", name);
+    const dest = join(configDir, BUNDLE_DIR, name);
 
     await step(this.io, `Installing ${name} skills (${scope})`, async () => {
       await rm(dest, { recursive: true, force: true });
@@ -562,7 +566,7 @@ class OpenCode {
     await writeFile(path, `${JSON.stringify(config, null, 2)}\n`);
   }
 
-  // Append the ai-plugins dir to skills.paths (targeted array append — a deep
+  // Append the virajp-plugins dir to skills.paths (targeted array append — a deep
   // merge would replace the user's array) and add the context7 MCP server when
   // that plugin was installed. Preserves every unknown key.
   async updateConfig(scope, pluginNames) {
@@ -624,7 +628,7 @@ class OpenCode {
       }
     }
 
-    const root = join(configDir, "ai-plugins");
+    const root = join(configDir, BUNDLE_DIR);
     const empty = !existsSync(root)
       || !(await readdir(root)).filter(f => !f.startsWith(".")).length;
     if (

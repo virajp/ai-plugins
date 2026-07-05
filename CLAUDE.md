@@ -425,10 +425,10 @@ Layout:
   concept, so install = **render**: fetch the repo source (GitHub `main`
   tarball; `AI_PLUGINS_SOURCE_DIR` — a local checkout — overrides for
   tests/dev), copy each selected plugin's `skills/` + `assets/` into
-  `<configDir>/ai-plugins/<plugin>/` (`--user` → `~/.config/opencode/`,
+  `<configDir>/virajp-plugins/<plugin>/` (`--user` → `~/.config/opencode/`,
   `--project` → `.opencode/`; agents/hooks are Claude-only, skipped), rewrite
   every `${CLAUDE_PLUGIN_ROOT}` to the installed absolute path, stamp `.version`
-  from the source marketplace manifest, append the `ai-plugins` dir to
+  from the source marketplace manifest, append the `virajp-plugins` dir to
   `skills.paths` in `opencode.json` (targeted array append; foreign keys
   preserved), write a **command wrapper** `command/<plugin>-<skill>.md` per
   `disable-model-invocation` skill (OpenCode has no user-invoked skills), and
@@ -669,5 +669,5 @@ marketplace needs to be registered. See the Dependencies section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
 `--platform opencode` target, which renders each plugin's skills into
-`~/.config/opencode/ai-plugins/` (url-sourced plugins excluded) — see The
+`~/.config/opencode/virajp-plugins/` (url-sourced plugins excluded) — see The
 installer & statusline CLI.

@@ -74,8 +74,8 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
-  // Skills + assets landed under ai-plugins/vwf.
-  const vwfDir = join(configDir, "ai-plugins", "vwf");
+  // Skills + assets landed under virajp-plugins/vwf.
+  const vwfDir = join(configDir, "virajp-plugins", "vwf");
   assert.ok(existsSync(join(vwfDir, "skills", "blueprint", "SKILL.md")));
   assert.ok(existsSync(join(vwfDir, "assets", "templates", "entity.md")));
   assert.ok(existsSync(join(vwfDir, ".version")));
@@ -125,7 +125,7 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   // opencode.json: skills.paths + context7 MCP, with the schema set.
   const config = readConfig();
   assert.equal(config.$schema, "https://opencode.ai/config.json");
-  assert.deepEqual(config.skills.paths, ["~/.config/opencode/ai-plugins"]);
+  assert.deepEqual(config.skills.paths, ["~/.config/opencode/virajp-plugins"]);
   assert.deepEqual(config.mcp.context7, {
     type: "local",
     command: ["pnpm", "dlx", "@upstash/context7-mcp"],
@@ -148,12 +148,12 @@ test("reinstall is idempotent and preserves foreign config keys", () => {
   const after2 = readConfig();
   assert.equal(after2.theme, "custom");
   assert.deepEqual(after2.skills.paths, [
-    "~/.config/opencode/ai-plugins",
+    "~/.config/opencode/virajp-plugins",
     "~/my-skills",
   ]);
-  // No duplicate ai-plugins path was appended.
+  // No duplicate virajp-plugins path was appended.
   assert.equal(
-    after2.skills.paths.filter(p => p.includes("ai-plugins")).length,
+    after2.skills.paths.filter(p => p.includes("virajp-plugins")).length,
     1,
   );
 });
@@ -176,8 +176,8 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
-  assert.ok(!existsSync(join(configDir, "ai-plugins", "vwf")));
-  assert.ok(!existsSync(join(configDir, "ai-plugins")));
+  assert.ok(!existsSync(join(configDir, "virajp-plugins", "vwf")));
+  assert.ok(!existsSync(join(configDir, "virajp-plugins")));
   const wrappers = existsSync(join(configDir, "command"))
     ? readdirSync(join(configDir, "command")).filter(f => f.startsWith("vwf-"))
     : [];
