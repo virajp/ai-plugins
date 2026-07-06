@@ -7,7 +7,8 @@ argument-hint: "(no args)"
 model: sonnet
 effort: medium
 allowed-tools: Bash Read
-disable-model-invocation: true
+disable-model-invocation: false
+user-invocable: true
 ---
 
 # Git Workflow
