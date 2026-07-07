@@ -49,7 +49,7 @@ product's jurisdictions).
 ## Blueprint expansion
 
 - `conventions.md#data-retention` holds the full contract incl. the table; the
-  user entity's Background Jobs carries the deletion workflow; the operator area
-  carries the retention-management surface (compliance-only). Audit and
-  retention interlock: moderation history is a retained category; purges are
+  account-deletion flow's Background Jobs carries the deletion workflow; the
+  operator flows carry the retention-management surface (compliance-only). Audit
+  and retention interlock: moderation history is a retained category; purges are
   audited.

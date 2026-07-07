@@ -10,10 +10,10 @@ channel the product uses is a deliberate selection. Cross-cutting token:
   FCM/APNs) is the default first channel for an app product; email requires a
   real transport selection (not a logging stub shipped to production); SMS only
   when a flow genuinely needs it (cost + consent burden).
-- **Triggers live on entities.** *What* notifies is a per-entity decision: each
-  notifying action names its notification (event, audience, channel(s), payload
-  gist) in the owning entity doc or the integration flow it belongs to. The
-  foundation owns *how* channels work, never the trigger list.
+- **Triggers live on flows.** *What* notifies is a per-flow decision: each
+  notifying step names its notification (event, audience, channel(s), payload
+  gist) in the owning flow doc. The foundation owns *how* channels work, never
+  the trigger list.
 - **Delivery is fire-and-forget or durable per the background-processes rule**:
   a single send off the request path forks in the service; batched, scheduled,
   or retry-critical sends are worker jobs.
@@ -39,6 +39,6 @@ channel the product uses is a deliberate selection. Cross-cutting token:
 ## Blueprint expansion
 
 - `conventions.md#notifications` holds the channel contracts and preference
-  rules; entity docs and `integration.md` flows carry the triggers; the user
-  entity carries the preference fields. Realization: the common package's
-  messaging wrapper + service/worker send paths in the reference-stack docs.
+  rules; flow docs carry the triggers; the user entity carries the preference
+  fields. Realization: the common package's messaging wrapper + service/worker
+  send paths in the reference-stack docs.

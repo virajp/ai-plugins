@@ -97,7 +97,7 @@
           "name": "mise"
         }
       ],
-      "description": "Highly opinionated Product → Blueprint → Plan → Execute workflow for solo developers or small teams — enforced workspace structure and reference stacks, full-product blueprint coverage, dependency-closed plans, an autonomous execute with review/security/acceptance/UX subagents behind one final merge gate, post-deploy verify + feedback intake, and mempalace-backed memory.",
+      "description": "Highly opinionated Product → Blueprint → Plan → Execute workflow for solo developers or small teams — enforced workspace structure and reference stacks, a flow-first blueprint (entities as data contracts, OpenAPI + JSON-Schema artifacts) with whole-product coherence review, chained dependency plans, an autonomous execute with review/security/acceptance/UX subagents behind one final merge gate that stamps blueprint implementation state, post-deploy verify with production release freezing + API backward-compat enforcement, feedback intake, and mempalace-backed memory.",
       "name": "vwf",
       "repository": "https://github.com/virajp/ai-plugins",
       "source": "./plugins/vwf",
@@ -120,7 +120,7 @@
         "tdd",
         "git-workflow"
       ],
-      "version": "4.6.2"
+      "version": "5.0.0"
     },
     {
       "author": {

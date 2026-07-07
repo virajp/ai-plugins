@@ -36,8 +36,11 @@ Cross-cutting token: `observability: opentelemetry-grafana`.
 
 - The environment names (`deployment.environment.name` values) and which
   projects export from local/dev.
-- Any product-specific metrics beyond the request counters (business counters
-  belong to entities; name them in the owning entity doc).
+- Any product-specific metrics beyond the request counters. Business counters
+  are usually a combination of **flow outcomes** (a flow completed, failed, or
+  compensated — name them in the owning flow doc, beside its Acceptance block)
+  and **entity states** (counts by lifecycle state — name them in the owning
+  entity doc, beside its Lifecycle table).
 - Alerting/dashboards: Grafana-side by default (not in-repo); elicit only if the
   product wants dashboards-as-code.
 

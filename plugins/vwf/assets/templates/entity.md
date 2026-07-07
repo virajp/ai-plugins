@@ -3,68 +3,52 @@ type: vwf-entity
 title: <Name>
 description: <one-line purpose of this entity>
 status: draft # draft | reviewed | stable
+implementation: none # none | partial | complete — written by the pipeline only (see frontmatter-and-links)
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---
 
 # Entity: <Name>
 
-<!-- OKF frontmatter above: type/title/description/status are mandatory;
-     timestamp/owner/resource/tags are optional (see frontmatter-and-links).
-     index.md carries type: vwf-entity for the whole entity; when the entity is
-     split, each surface file (data/api/jobs/screens) also opens with
-     frontmatter, its title naming the surface (e.g. "<Name> — Data"). See the
-     blueprint-authoring skill's frontmatter-and-links reference. -->
-
-<!-- One entity per FOLDER: docs/blueprint/<entity>/. This template is its
-     index.md. A small entity keeps every section below in this one file. A
-     large entity keeps index.md to Purpose…Invariants + References + Open
-     Questions (above the marker) and splits the engineering surfaces into
-     sibling files — data.md holds Data Model + Relationships + Concurrency;
-     api.md the API Surface; jobs.md Background Jobs; screens.md Screens. The
-     docs/blueprint/ root holds only the system docs — never a flat entity file.
-
-     Stack-agnostic: section headings below map to projects
-     via the Project Registry in docs/blueprint/architecture.md (by project `type`),
-     never by literal technology. Omit any engineering section whose project type
-     is absent from the registry.
+<!-- One entity per FOLDER: docs/blueprint/entities/<entity>/ — always exactly
+     index.md (this file) + schema.yaml (the authoritative data model). An
+     entity is a SUPPORTING DATA CONTRACT: its behavior in context lives in the
+     flows that use it (docs/blueprint/flows/), its API surface in
+     docs/blueprint/apis/<project>.openapi.yaml, its screens and jobs on the
+     flows that need them. See the blueprint-authoring skill (entity-contract).
 
      Decisions vs mechanics: if a choice has more than one reasonable answer, it
-     belongs here (in the blueprint). If it has exactly one idiomatic answer given
-     architecture.md + conventions.md, leave it to `execute` at codegen time.
-     Spend the precision budget on Data Model and API Surface.
-
-     See the blueprint-authoring skill for the contract-vs-realization line and
-     the per-surface completeness bars. -->
+     belongs here or in schema.yaml. If it has exactly one idiomatic answer
+     given architecture.md + conventions.md, leave it to `execute` at codegen
+     time. -->
 
 ## Purpose
 
 One paragraph. What it is and why it exists. No implementation detail.
 
-Serves: [<goal name>](../product.md#goal-<slug>)
+Used by: [<Flow name>](../../flows/<flow>/index.md)
 
-<!-- Every entity serves at least one product.md goal — the OKF edge the
-     blueprint-reviewer verifies. An entity no goal justifies is scope drift:
-     either a goal is missing from product.md (run /vwf:product) or the entity
-     shouldn't exist. This line lives in index.md. -->
+<!-- Every entity is used by at least one flow — entities serve product goals
+     TRANSITIVELY through the flows that reference them (entity → flow → goal).
+     An entity no flow references is a speculative surface: either a flow is
+     missing from the blueprint or the entity shouldn't exist. The coherence
+     reviewer verifies these back-links match the flows that actually link
+     this entity. -->
 
 ## Out of Scope
 
 - Explicit exclusions. Highest-value section for preventing scope drift.
 
-## Actors & Actions
-
-| Actor | Action | Precondition | Authorization | Outcome (observable) |
-| ----- | ------ | ------------ | ------------- | -------------------- |
-
 ## Lifecycle / State Machine
 
-| From | To | Trigger | Guard | Side effect |
-| ---- | -- | ------- | ----- | ----------- |
+| From | To | Trigger (actor/system) | Guard | Side effect |
+| ---- | -- | ---------------------- | ----- | ----------- |
 
-<!-- With three or more states, or any branching, also draw the lifecycle as a
-     mermaid stateDiagram-v2 below the table — same states and transitions as
-     the table (which stays authoritative), nothing more. Delete the block for
-     a trivial (≤2-state, linear) lifecycle. -->
+<!-- The Trigger column names the acting actor or system. Flow steps that move
+     this entity between states must match a row here — the coherence reviewer
+     checks the two agree. With three or more states, or any branching, also
+     draw the lifecycle as a mermaid stateDiagram-v2 below the table — same
+     states and transitions as the table (which stays authoritative), nothing
+     more. Delete the block for a trivial (≤2-state, linear) lifecycle. -->
 
 ```mermaid
 stateDiagram-v2
@@ -76,16 +60,12 @@ stateDiagram-v2
 
 - Business rules that must never be violated.
 
-<!-- ───────────── above = product intent (stable) ───────────── -->
-<!-- ───────────── below = engineering detail (volatile) ───────────── -->
+## Data Model
 
-## Data Model → <schema/contract project, from registry>
+Authoritative schema: [schema.yaml](./schema.yaml)
 
-| Field | Type | Optional | Default | Validation / Format |
-| ----- | ---- | -------- | ------- | ------------------- |
-
-<!-- Enumerate every enum member; state optionality/nullability explicitly;
-     note id/format conventions so the schema is fully determined. -->
+- Optional short notes only (id/format conventions, derived fields) — never a
+  second field table; the schema is the single source of truth.
 
 ## Relationships
 
@@ -94,12 +74,11 @@ stateDiagram-v2
 | [<Other>](../<other>/index.md) |             |           |           |          |
 
 <!-- "Related entity" MUST be a markdown link to the other entity's blueprint doc
-     (the OKF edge): [Customer](../customer/index.md) — one level up from this
-     entity's folder, into the sibling's. This makes the relationship graph
-     machine-traversable and lets the reviewer verify every edge resolves.
-     Ownership: composition (child can't exist without the parent) vs reference.
-     On delete: cascade / restrict / nullify. Multi-entity flows belong in
-     docs/blueprint/integration.md, not here. -->
+     (the OKF edge) — sibling folders under entities/. Ownership: composition
+     (child can't exist without the parent) vs reference. On delete: cascade /
+     restrict / nullify. The product-wide erDiagram in ../index.md is a view of
+     the union of these tables — keep them in sync. Multi-entity flows belong
+     in docs/blueprint/flows/, not here. -->
 
 ## Concurrency & Consistency
 
@@ -108,37 +87,12 @@ stateDiagram-v2
 - Uniqueness guarantees under races:
 - Idempotency of each mutating action:
 
-## API Surface → <service project(s), from registry>
-
-| Method | Path | Auth (role) | Request | Response | Errors | Idempotent |
-| ------ | ---- | ----------- | ------- | -------- | ------ | ---------- |
-
-<!-- Errors: name the cases only; the envelope shape lives in conventions.md. -->
-
-## Background Jobs → <worker project(s), from registry>
-
-| Job | Trigger | Timer / Retry | Activities | On failure |
-| --- | ------- | ------------- | ---------- | ---------- |
-
-## Screens → <frontend/app project(s), from registry>
-
-| Screen | Route | Reads (API) | States (loading/error/empty) | Actions | Form validation |
-| ------ | ----- | ----------- | ---------------------------- | ------- | --------------- |
-
-<!-- Visual language (tokens, type, spacing, motion, component behavior) comes
-     from docs/blueprint/design-system.md — reference it; record only deviations.
-     Per-screen interaction/state/form decisions: blueprint-authoring skill
-     (ui-ux-contract). -->
-
 ## References
 
 <!-- Markdown links (OKF edges), not bare text — each must resolve. -->
 
-- [auth](../conventions.md#auth), [errors](../conventions.md#errors),
-  [ids](../conventions.md#ids) (only the cross-cutting sections this entity
+- [ids](../../conventions.md#ids) (only the cross-cutting sections this entity
   relies on)
-- [design-system](../design-system.md) — for any entity with Screens (tokens,
-  type, components)
 
 ## Open Questions
 

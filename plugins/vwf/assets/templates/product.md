@@ -13,8 +13,9 @@ status: draft # draft | reviewed | stable
 > `docs/blueprint/product.md`, authored by `/vwf:product` — the Phase −1
 > foundation before `architecture`. Code- and stack-independent: no technology,
 > project, or screen names — those belong to the registry and the entity docs.
-> Every entity's Purpose links the goal(s) it serves; the blueprint-reviewer
-> flags surfaces that trace to no goal.
+> Every flow's Purpose links the goal(s) it serves (entities trace to goals
+> through the flows that use them); the blueprint-reviewer flags surfaces that
+> trace to no goal.
 
 ## Problem
 
@@ -40,13 +41,14 @@ status: draft # draft | reviewed | stable
 
 ## Slice priority
 
-<!-- The ordered "build next" list over entities/flows — what /vwf:blueprint
-     and /vwf:plan pick up first, and why. Re-rank on each /vwf:product re-run;
+<!-- The ordered "build next" list — flows first (the primary blueprint unit),
+     entities only when a data contract is itself the slice — what
+     /vwf:blueprint and /vwf:plan pick up first, and why. Re-rank on each /vwf:product re-run;
      history lives in git. With three or more slices, also draw the build order
      as a small mermaid flowchart (slice names only) so the roadmap reads at a
      glance — a view of the table, which stays authoritative. -->
 
-| Rank | Slice (entity / flow) | Serves goal | Why now |
+| Rank | Slice (flow / entity) | Serves goal | Why now |
 | ---- | --------------------- | ----------- | ------- |
 
 ## Non-goals

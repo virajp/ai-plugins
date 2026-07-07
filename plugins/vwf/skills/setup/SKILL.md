@@ -118,20 +118,26 @@ registry and not re-proposed on later runs.
 Read `.config/vwf.yaml` (or the legacy `docs/blueprint/.vwf.yml`) if present.
 Per the project-setup skill (format-versioning), compute the **migration delta**
 between the repo's current format and the format this vwf ships — a legacy
-`docs/specs/` tree to upgrade, a missing `design-system.md` / `environment.md` /
-`integration.md`, entity docs lacking Relationships / Concurrency, the
-**`1 → 2`** delta (docs missing OKF frontmatter and relationships/references not
-yet written as markdown links), or the **`2 → 3`** delta (a missing
-`environment.md` when the registry declares integrations or a secrets-manager
-`config`). Fold in any old or partial structure.
+`docs/specs/` tree to upgrade, a missing `design-system.md` / `environment.md`,
+entity docs lacking Relationships / Concurrency, the **`1 → 2`** delta (docs
+missing OKF frontmatter and relationships/references not yet written as markdown
+links), the **`2 → 3`** delta (a missing `environment.md` when the registry
+declares integrations or a secrets-manager `config`), or the **`8 → 9`** delta
+(the process-based restructure below). Fold in any old or partial structure.
 
-An entity already in the **folder form** (`docs/blueprint/<entity>/` with
-`index.md` + surface files) is a conforming layout, not drift — leave it as a
-folder; never collapse it into a single file. Each surface file still gets its
-own frontmatter under the `1 → 2` delta. Conversely, since format 8 a **flat**
-`<entity>.md` at the blueprint root **is** drift — the `7 → 8` delta `git mv`s
-it to `<entity>/index.md` and mechanically rewrites the inbound/outbound links
-(per format-versioning), leaving the root to the system docs alone.
+Since format 9 the conforming layout is **flows-first**: flows under
+`docs/blueprint/flows/<flow>/index.md`, entities under
+`docs/blueprint/entities/<entity>/` (`index.md` + `schema.yaml`), API contracts
+under `docs/blueprint/apis/`, and the root reserved for the system docs. A root
+`integration.md`, an entity folder at the blueprint root, entity surface files
+(`data.md`/`api.md`/`jobs.md`/`screens.md`), or a flat `<entity>.md` **is**
+drift — the `8 → 9` delta (per format-versioning) performs the mechanical
+scaffold phase with `git mv` (move, never delete), splits `integration.md` into
+per-flow docs, extracts Data Model tables to `schema.yaml` and API tables to
+OpenAPI stubs, seeds the `implementation:` stamps, and downgrades coverage to
+`partial`; the follow-up `/vwf:blueprint` sweep (offered, consent-gated) does
+the elicited fill. YAML artifacts the scaffold writes must parse — validate them
+in step 10.
 
 ### 4. Build the migration plan (dry-run)
 
@@ -157,9 +163,11 @@ mise config for the user), and record the skip in `setup_progress`.
 ### 6. Migrate (consent-gated)
 
 Scaffold the `docs/blueprint` tree (architecture, conventions, design-system,
-environment, integration skeletons from templates) plus `docs/plans/` and
-`docs/plans/archived/`. Restructure source per the approved plan, **one batch at
-a time with approval** — move with `git mv` (preserve history), never delete.
+environment skeletons from templates, plus `flows/index.md`,
+`entities/index.md`, and the empty `apis/` + `apis/released/` dirs) plus
+`docs/plans/` and `docs/plans/archived/`. Restructure source per the approved
+plan, **one batch at a time with approval** — move with `git mv` (preserve
+history), never delete.
 
 **On batch rejection.** If the user rejects a batch, **stop** — apply no further
 batches. Report which batches were applied and which remain pending, leave the
@@ -240,8 +248,9 @@ bundle**: every `docs/blueprint/` doc opens with valid frontmatter (mandatory
 `type` from the vocabulary, `title`, `description`, `status`) and every
 relationship/reference link resolves to an existing doc/anchor — per the
 project-setup skill (format-versioning) and the blueprint-authoring
-frontmatter-and-links reference. Confirm `environment.md` carries **no secret
-values**. Report anything still open.
+frontmatter-and-links reference. Confirm every YAML artifact the migration wrote
+(`entities/*/schema.yaml`, `apis/*.openapi.yaml`) parses. Confirm
+`environment.md` carries **no secret values**. Report anything still open.
 
 ### 11. Approval gate & commit
 

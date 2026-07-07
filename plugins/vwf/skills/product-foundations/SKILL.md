@@ -48,13 +48,14 @@ the reference-stack docs for the 95octane realization.
   registry — that omission *is* the record.
 - **`/vwf:blueprint`** — for each accepted foundation, expand the contract into
   `conventions.md` under its anchor (the reference names it) on first touch, and
-  elicit the per-entity surface as entities are authored: audit events for
-  privileged/destructive actions, notification triggers, sync/async
-  classification and placement, settings reads. Entity docs link the anchors;
+  elicit the per-flow surface as flows are authored: audit markers on the flow's
+  Trigger & Actors rows and steps for privileged/destructive actions,
+  notification triggers, sync/async classification and placement (the flow's
+  Background Jobs table), settings reads. Flow and entity docs link the anchors;
   they never restate the contract.
 - **`/vwf:plan` / `execute`** — consume the contracts like any other conventions
   anchor; the change-logs reference additionally hooks execute's docs-sync step.
 
 Foundations expand into **existing** blueprint structures (conventions anchors,
-Actors & Actions, Background Jobs, integration flows) — no new mandatory doc
+flow Trigger & Actors, Background Jobs, flow steps) — no new mandatory doc
 sections, so a product that skips a foundation is not in format drift.

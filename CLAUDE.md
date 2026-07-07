@@ -117,49 +117,69 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   bootstrapper; ends by offering `/vwf:blueprint`), `product` (the Phase −1
   outcome contract: problem/users/goals with `#goal-<slug>` anchors/slice
   priority; `blueprint` halts without it), `architecture`, `design-system`,
-  `blueprint` (a **full-product sweep** — a run works a coverage worklist entity
-  by entity until whole-product coverage holds, then stamps `blueprint.coverage`
-  in `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (optional
-  post-blueprint: renders each entity's Screens contract as self-contained
-  static HTML from design-system tokens — via per-entity `mockup-generator`
-  subagents into an ephemeral build dir, never committed — and pushes them to a
+  `blueprint` (a **full-product, flow-first sweep** — a run works a coverage
+  worklist flow by flow, deriving the entities/schemas/API operations each flow
+  stands on, until whole-product coverage holds **and the whole-product
+  coherence review passes**, then stamps `blueprint.coverage` in
+  `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (optional
+  post-blueprint: renders each flow's Screens contract as self-contained static
+  HTML from design-system tokens — via per-flow `mockup-generator` subagents
+  into an ephemeral build dir, never committed — and pushes them to a
   claude.ai/design design-system project through the harness DesignSync tool
   behind an explicit approval gate; pins `mockups.project_id` in
   `.config/vwf.yaml`; never a gate for `plan`), `plan` (halts unless that stamp
-  is `complete`; pulls the slice's **transitive dependency closure** — any
-  depended-on entity's unimplemented delta — into the plan as leading steps;
-  **routes blueprint gaps back through `/vwf:blueprint` before writing** — a
-  *what*-level hole the diff exposes is fixed in the contract, never settled in
-  the plan or parked as a risk, so execute never trips on an open decision; the
-  approval gate offers Approve & execute), `execute`, `archive`, `verify`
+  is `complete`; resolves the slice's **transitive dependency chain** — pruned
+  by the docs' `implementation:` stamps — and plans each unimplemented
+  dependency as **its own plan doc first**, in order, each behind its own gate
+  (plan docs carry `covers:`/`requires:` frontmatter; a genuine dependency cycle
+  collapses into one plan); **routes blueprint gaps back through
+  `/vwf:blueprint` before writing** — a *what*-level hole the diff exposes is
+  fixed in the contract, never settled in the plan or parked as a risk, so
+  execute never trips on an open decision; the last chain element's gate offers
+  Approve & execute), `execute` (halts until every `requires:` prerequisite
+  plan's `covers:` docs read `implementation: complete`), `archive`, `verify`
   (post-deploy environment check: health pass + the flows' acceptance criteria
   run against staging/prod via the acceptance verifier's environment mode — vwf
-  never deploys), `feedback` (the production-feedback front door: classifies
-  bug/hole/metric-reading/UX/feature-idea and routes each into the doc+command
-  that fixes it, incl. the `product.md` Metric readings appendix), internal
-  `git-workflow`, and `handoff`/`recall` (mempalace-backed session handoff —
-  wing=`<project>`, room=`handoff`, drawer=`<name>`). `execute` runs one
-  approved plan to completion **autonomously** in a dedicated worktree:
+  never deploys; a clean run against the **production** environment offers to
+  record a release, freezing each deployed service's OpenAPI contract into
+  `docs/blueprint/apis/released/` — the point from which API backward
+  compatibility is enforced), `feedback` (the production-feedback front door:
+  classifies bug/hole/metric-reading/UX/feature-idea and routes each into the
+  doc+command that fixes it, incl. the `product.md` Metric readings appendix),
+  internal `git-workflow`, and `handoff`/`recall` (mempalace-backed session
+  handoff — wing=`<project>`, room=`handoff`, drawer=`<name>`). `execute` runs
+  one approved plan to completion **autonomously** in a dedicated worktree:
   dependency-ordered steps, `code→review→security` per step (security findings
-  always fixed; review findings loop ≤4 rounds then become documented gaps) plus
-  one `acceptance + ux` pass after all steps (same 4-round cap), gaps mirrored
-  to the plan doc's "Gaps surfaced during execution" section + mempalace room
-  `gaps`, mid-run pauses only on hard halts, the statusline resource caps, an
-  all-blocking gap, or an uncovered irreversible decision — then **one final
-  human gate** (run report + gap list) behind which the merge/push happens, gap
-  reconciliation is offered (blueprint/plan loop-backs), and archive is offered
-  once no gaps remain. (The former `autopilot` command is merged into this
+  always fixed; **breaking-released-API findings gate the same way** —
+  cap-exempt, always fixed; other review findings loop ≤4 rounds then become
+  documented gaps) plus one `acceptance + ux` pass after all steps (same 4-round
+  cap), gaps mirrored to the plan doc's "Gaps surfaced during execution"
+  section + mempalace room `gaps`, mid-run pauses only on hard halts, the
+  statusline resource caps, an all-blocking gap, or an uncovered irreversible
+  decision — then **one final human gate** (run report, gap list, and the
+  `implementation:` stamps written) behind which the merge/push happens, gap
+  reconciliation is offered (blueprint/plan loop-backs), archive is offered once
+  no gaps remain, and the next chained plan is offered when one is unblocked.
+  Its Reconcile step **stamps `implementation:` on each doc the plan `covers:`**
+  — the single sanctioned blueprint edit (state only, never content); everywhere
+  else the blueprint is the source of truth code follows, drift surfaced and
+  never silently absorbed. (The former `autopilot` command is merged into this
   behavior and retired.)
-- `agents/` — subagents the workflow skills delegate to: `blueprint-reviewer`,
+- `agents/` — subagents the workflow skills delegate to: `blueprint-reviewer`
+  (two modes — flow / entity, matching the format-9 doc units),
+  `blueprint-coherence-reviewer` (the end-of-sweep whole-product pass: walks
+  every flow across entities/schemas/API contracts, checks catalog/erDiagram
+  sync, and enforces the released-API additive-only diff as a HARD gap),
   `design-system-reviewer`, `product-reviewer`, `execute-coder`,
-  `execute-code-reviewer`, `execute-security-reviewer`,
+  `execute-code-reviewer` (incl. the released-contract compatibility dimension
+  and its `API COMPAT:` return line), `execute-security-reviewer`,
   `execute-acceptance-verifier` (independent criteria→E2E-test mapping + run;
   also `/vwf:verify`'s environment mode), `execute-ux-reviewer` (renders changed
   screens via dev server + Playwright screenshots, judges against
-  design-system + Screens contract, axe a11y scan; code-level-only for Flutter),
-  `architecture-writer`, `mockup-generator` (per-entity: Screens contract +
-  design-system tokens → self-contained HTML mockups in a scratch build dir,
-  returns only a manifest)
+  design-system + the flow Screens contract, axe a11y scan; code-level-only for
+  Flutter), `architecture-writer`, `mockup-generator` (per-flow: Screens
+  contract + design-system tokens → self-contained HTML mockups in a scratch
+  build dir, returns only a manifest)
 - `skills/` (doctrine, auto-applying) — `rest-api-design`; `product-foundations`
   (the nine foundational concerns every product decides — users & operators,
   observability (OTel→Grafana), audit logs (privileged+destructive baseline),
@@ -168,40 +188,53 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   notifications, runtime settings, rate limiting — **elicited defaults**
   distilled from 95octane: `/vwf:architecture` walks the checklist in step 3c
   (accept/adapt/skip → `cross_cutting` tokens), `/vwf:blueprint` expands
-  accepted ones into `conventions.md` anchors + per-entity surfaces, execute's
-  docs-sync drafts app changelog entries; realizations live in
+  accepted ones into `conventions.md` anchors + per-flow surfaces (audit markers
+  on Trigger & Actors/steps, sync/async placement on the flow's Jobs table),
+  execute's docs-sync drafts app changelog entries; realizations live in
   `assets/stacks/`); `blueprint-authoring` (the contract-vs-realization
-  doctrine + per-surface completeness bars — incl. the per-flow Acceptance block
-  **and sequence diagram**, the lifecycle state-diagram bar, and the entity
-  `Serves:` goal edge — + the doc-unit doctrine, auto-applies on
-  `docs/blueprint/**` and — for frontmatter/link hygiene only —
-  `docs/plans/**`); `design-system-authoring` (the UX/visual-contract doctrine —
-  tokens, typography, spacing, motion, accessibility, components/anti-patterns —
-  auto-applies on `docs/blueprint/design-system`); `project-setup`
-  (onboarding/migration doctrine — topology detection incl. the **enforced**
-  workspace shape (parent repo + backend/frontend submodules: applied for
-  new/empty repos, proposed as a consent-gated restructure for non-conforming
-  existing ones) and the **enforced reference stacks** (fixed per project type,
-  one stack doc each under `assets/stacks/`; explicit opt-outs recorded under
-  `enforcement:` in `.config/vwf.yaml`, never re-asked), harness-capability
-  detection (per the harness contract, stamped in `.config/vwf.yaml`),
-  consent-gated dry-run migration, the blueprint format-version + drift map;
-  used by `/vwf:setup`)
-- `assets/templates/` — `entity` (Purpose carries a `Serves:` goal-link line),
-  `conventions`, `plan` (incl. the "Acceptance criteria (from blueprint)"
-  section `plan` fills and the acceptance stage verifies), `product`,
-  `architecture`, `design-system`, `environment` (the per-project env-var/secret
-  catalog), `integration` (each flow carries an Acceptance block),
+  doctrine + per-surface completeness bars — the **flow-contract** bar (steps,
+  Acceptance block **and sequence diagram**, the screen home rule), the slimmed
+  **entity-contract** bar (lifecycle state-diagram, `Used by:` flow edge), and
+  **api-and-schema-contracts** (the `schema.yaml` / OpenAPI bars, YAML
+  path-typing, the released-snapshot additive-only rule) — + the doc-unit
+  doctrine, auto-applies on `docs/blueprint/**` and — for frontmatter/link
+  hygiene only — `docs/plans/**`); `design-system-authoring` (the
+  UX/visual-contract doctrine — tokens, typography, spacing, motion,
+  accessibility, components/anti-patterns — auto-applies on
+  `docs/blueprint/design-system`); `project-setup` (onboarding/migration
+  doctrine — topology detection incl. the **enforced** workspace shape (parent
+  repo + backend/frontend submodules: applied for new/empty repos, proposed as a
+  consent-gated restructure for non-conforming existing ones) and the **enforced
+  reference stacks** (fixed per project type, one stack doc each under
+  `assets/stacks/`; explicit opt-outs recorded under `enforcement:` in
+  `.config/vwf.yaml`, never re-asked), harness-capability detection (per the
+  harness contract, stamped in `.config/vwf.yaml`), consent-gated dry-run
+  migration, the blueprint format-version + drift map; used by `/vwf:setup`)
+- `assets/templates/` — `flow` (Purpose carries the `Serves:` goal-link line;
+  Trigger & Actors, Steps, sequence diagram, Screens, Jobs, Acceptance),
+  `flows-index` (flow catalog + inter-service contracts), `entity` (the slimmed
+  data contract; Purpose carries a `Used by:` flow-link line), `entities-index`
+  (entity catalog + product-wide erDiagram), `schema.yaml` (the JSON-Schema
+  data-model skeleton), `openapi.yaml` (the OpenAPI 3.1 contract skeleton incl.
+  `info.x-vwf`), `conventions`, `plan` (incl. the `covers:`/`requires:`
+  frontmatter and the "Acceptance criteria (from blueprint)" section `plan`
+  fills and the acceptance stage verifies), `product`, `architecture`,
+  `design-system`, `environment` (the per-project env-var/secret catalog),
   `project-claude` (the vwf section `/vwf:setup` merges into a repo's
   CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved from
-  the registry). All blueprint templates open with the OKF frontmatter block
-- `assets/examples/blueprint/` — a **format-8 conformance bundle** (`order/`,
-  `customer/` entity folders + `product.md`, `integration.md`, `conventions.md`,
-  `design-system.md`, `environment.md`): a worked, format-valid entity slice
-  where every relationship/reference/goal link resolves, the flow carries a
-  worked Acceptance block + sequence diagram, and the order lifecycle its state
-  diagram. Referenced from the blueprint-authoring skill as the concrete "what
-  good looks like"; its asset-refs are covered by `plugins:check`
+  the registry). All blueprint markdown templates open with the OKF frontmatter
+  block; flow/entity templates carry `implementation: none`
+- `assets/examples/blueprint/` — a **format-9 conformance bundle**
+  (`flows/place-order/` + `flows/cancel-refund/` + `flows/index.md`,
+  `entities/order/` + `entities/customer/` (`index.md` + `schema.yaml` each) +
+  `entities/index.md`, `apis/api.openapi.yaml`, plus `product.md`,
+  `conventions.md`, `design-system.md`, `environment.md`): a worked,
+  format-valid slice where every relationship/reference/goal link resolves, each
+  flow carries a worked Acceptance block + sequence diagram, the order lifecycle
+  its state diagram, and the entity catalog its erDiagram. Referenced from the
+  blueprint-authoring skill as the concrete "what good looks like"; its
+  asset-refs and relative links (`.md` and `.yaml`) are covered by
+  `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `product`, `blueprint`, `plan`, `architecture`, `design-system`, `setup`, and
   `feedback`; incl. the **parked-scope rule** — an answer that goes beyond the
@@ -215,23 +248,30 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   gate), per-stage subagent contracts (incl. the slice/round tags, the
   coverage-report policy, and the acceptance/ux `n/a` gap policy), shared stage
   rules (model enforcement, terse output, loop-on-findings with the recall-miss
-  fallback, gap capture), and the end-of-run architecture/environment reconcile
+  fallback, gap capture, the blueprint-is-source-of-truth drift rule with its
+  single `implementation:`-stamp carve-out), and the end-of-run reconcile
+  (architecture/environment/harness/docs + the implementation stamps)
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
 - `assets/vwf-config.md` — the **vwf config** doctrine for `.config/vwf.yaml`
-  (one per workspace, config_format 2): the stamp keys, `product`/`memory.wing`,
+  (one per workspace, config_format 3): the stamp keys, `product`/`memory.wing`,
   the **`blueprint:` coverage stamp** (written by every blueprint sweep; `plan`
-  halts unless `coverage: complete`), per-project nuances (`platforms:`
-  extensions, coverage/health overrides), the `harness:` inventory, the
-  **`enforcement:` block** (structure/stack/rule opt-outs — moved out of the
-  registry, which now purely describes the system), bounded `pipeline` knobs
-  (coverage target, review round cap, stage model tiers — downgrades always
-  reported at the gate — and tighten-only `execute_caps` honored by the
-  statusline caps hook, which also reads the legacy `autopilot_caps` name; the
-  `1 → 2` config migration is the rename), `verify` `environments`, and
-  `docs_sync` scope. Hard floor: config can never disable security review, TDD,
-  the approval gates, or the reviewer bars. Readers fall back to the legacy
-  `docs/blueprint/.vwf.yml` (its presence = pre-6 drift)
+  halts unless `coverage: complete`; `remaining:` names `flows/<flow>` /
+  `entities/<entity>` / `apis/<project>` / `coherence`), per-project nuances
+  (`platforms:` extensions, coverage/health overrides), the `harness:`
+  inventory, the **`enforcement:` block** (structure/stack/rule opt-outs — moved
+  out of the registry, which now purely describes the system), bounded
+  `pipeline` knobs (coverage target, review round cap, stage model tiers —
+  downgrades always reported at the gate — and tighten-only `execute_caps`
+  honored by the statusline caps hook, which also reads the legacy
+  `autopilot_caps` name; the `1 → 2` config migration is the rename), `verify`
+  `environments` + the optional **`production_env`** key (names the release
+  environment; default = the env literally named `production`; the `2 → 3`
+  migration is a bump + these semantics — the release record itself is the
+  `apis/released/` snapshot dir, never config), and `docs_sync` scope. Hard
+  floor: config can never disable security review, TDD, the approval gates, the
+  reviewer bars, or the **released-API compatibility gate**. Readers fall back
+  to the legacy `docs/blueprint/.vwf.yml` (its presence = pre-6 drift)
 - `assets/harness.md` — the **harness contract**: the verification capabilities
   a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`,
   `health`, `screenshots`) with canonical task-name conventions. `setup` detects
@@ -284,25 +324,31 @@ Docs the commands maintain live under `docs/blueprint/` (the outcome contract
 `product.md` — problem/users/goals/slice-priority + the `/vwf:feedback`-owned
 Metric readings appendix — registry `architecture.md`, `conventions.md`, the
 product-wide `design-system.md`, the per-project env-var/secret catalog
-`environment.md`, the cross-entity `integration.md` — every flow carrying an
-Acceptance block — and one entity **folder** per entity — `<entity>/` holding
-`index.md` alone when small, or `index.md` +
-`data.md`/`api.md`/`jobs.md`/`screens.md` when large; the blueprint root holds
-only the system docs, never a flat entity file) and `docs/plans/`
+`environment.md`; **one flow folder per flow** — `flows/<flow>/index.md`, each
+carrying its Screens, Jobs, and Acceptance block — with `flows/index.md` the
+catalog + inter-service contracts; **one entity folder per entity** —
+`entities/<entity>/` holding exactly `index.md` + `schema.yaml` — with
+`entities/index.md` the catalog + product-wide erDiagram; and the API contracts
+`apis/<project>.openapi.yaml` + the frozen `apis/released/` snapshots; the
+blueprint root holds only the system docs) and `docs/plans/`
 (`<date>-<time>-<slice>.md`, with `archived/`). Superseded
 commands/agents/templates are archived under `archived/vwf-<date>/`
 (`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
-`autopilot` command, whose behavior merged into `execute`).
+`autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
+format-8 `integration.md` template, dissolved into the flow templates).
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
 2**, every doc is a typed OKF concept: it opens with mandatory YAML frontmatter
 (`type` from a fixed vocabulary —
 `vwf-product`/`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/
-`vwf-environment`/`vwf-integration`/`vwf-entity`/`vwf-plan`/`vwf-gap-report` —
-plus `title`, `description`, `status`; optional
-`timestamp`/`owner`/`resource`/`tags`), and cross-doc relationships are typed
-markdown links (the OKF edge) rather than prose. This makes a blueprint portable
+`vwf-environment`/`vwf-integration`/`vwf-flow`/`vwf-entities`/`vwf-entity`/
+`vwf-plan`/`vwf-gap-report` — plus `title`, `description`, `status`; optional
+`timestamp`/`owner`/`resource`/`tags`; flow/entity docs additionally carry the
+pipeline-owned `implementation:` build stamp), and cross-doc relationships are
+typed markdown links (the OKF edge) rather than prose. YAML artifacts
+(`schema.yaml`, `*.openapi.yaml`) are typed by **path**, not frontmatter (the
+OpenAPI files carry only `info.x-vwf.status`). This makes a blueprint portable
 to any OKF-aware tool (e.g. the OKF static-HTML visualizer) and ingestable by
 graphify, and lets the `blueprint-reviewer` verify frontmatter + that every edge
 resolves. The doctrine lives in the blueprint-authoring skill's
@@ -310,18 +356,23 @@ resolves. The doctrine lives in the blueprint-authoring skill's
 the `N → N+1` deltas in the project-setup skill's `format-versioning` reference,
 so `/vwf:setup` migrates stale repos on next use. **Format 3** added the
 `vwf-environment` type and the `environment.md` catalog; **format 4** the
-Acceptance block on every `integration.md` flow (what the execute acceptance
-stage verifies); **format 5** the `vwf-product` type + `product.md` foundation
-and the entity `Serves:` goal links (see Foundations below); **format 7**
-mermaid diagrams as contract views — the `architecture.md` system-shape
-flowchart (in sync with the registry), a `sequenceDiagram` per `integration.md`
-flow (incl. the failure branch), and a `stateDiagram-v2` per entity lifecycle
-with ≥3 states or branching — always views of the authoritative tables/steps,
-never additions to them (format 6 is the `.config/vwf.yaml` move, described
-under `assets/vwf-config.md`); **format 8** folders-only entities — every entity
-at `docs/blueprint/<entity>/` (`index.md` alone when small; + surface files when
-large), the root reserved for the system docs, migrated by `setup` via
-`git mv` + mechanical link rewrite.
+Acceptance block on every flow (what the execute acceptance stage verifies);
+**format 5** the `vwf-product` type + `product.md` foundation and the goal links
+(see Foundations below); **format 7** mermaid diagrams as contract views — the
+`architecture.md` system-shape flowchart (in sync with the registry), a
+`sequenceDiagram` per flow (incl. the failure branch), and a `stateDiagram-v2`
+per entity lifecycle with ≥3 states or branching — always views of the
+authoritative tables/steps, never additions to them (format 6 is the
+`.config/vwf.yaml` move, described under `assets/vwf-config.md`); **format 8**
+folders-only entities; **format 9** the **process-based restructure** — flows
+become the primary unit (`flows/<flow>/index.md`, absorbing Screens/Jobs and the
+old `integration.md`, which dissolves into `flows/index.md`), entities slim to
+data contracts under `entities/<entity>/` (`index.md` + `schema.yaml`), API
+contracts move to `apis/<project>.openapi.yaml` with frozen production snapshots
+under `apis/released/`, the product-wide `erDiagram` lands in
+`entities/index.md`, and the `implementation:` stamp arrives — migrated by
+`setup` in two phases (mechanical `git mv` scaffold + an elicited
+`/vwf:blueprint` fill; coverage stays `partial` between them).
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,
@@ -334,30 +385,35 @@ mise/product/architecture/design-system, authors CLAUDE.md + README) and is
 and, on a later run, detects drift against the format the installed vwf ships
 and migrates the delta. `product.md` (the Phase −1 outcome contract, type
 `vwf-product`, gated by the `product-reviewer`) and `architecture` (the
-registry) are both unconditionally required before `blueprint` — every entity's
-Purpose must `Serves:`-link a product goal anchor, which the
+registry) are both unconditionally required before `blueprint` — every
+**flow's** Purpose must `Serves:`-link a product goal anchor (entities trace to
+goals transitively via their `Used by:` flow links), which the
 `blueprint-reviewer` verifies and the minimalism check traces to.
 `design-system` is a second foundation, **required once the registry has a UI
-project** (type `site`, `frontend`, or `console`): `blueprint` halts on an
-entity with a Screens surface if `docs/blueprint/design-system.md` is missing.
+project** (type `site`, `frontend`, or `console`): `blueprint` halts on a flow
+with a Screens surface if `docs/blueprint/design-system.md` is missing.
 `environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and
-`blueprint` maintains it as entities add integrations, with
-`conventions.md#config` holding only the injection mechanism. **Everything up to
-`blueprint` is done in full before planning**: a blueprint run sweeps until
-whole-product coverage holds (every goal served, every referenced entity
-authored + reviewed, every registry surface represented) and stamps it; `plan`
-hard-halts on a partial stamp and dependency-closes its slice, so per-slice
-execution never builds on an unblueprinted or unbuilt dependency. The blueprint
-is a **code-independent technical contract** — it records only decisions that
-have more than one reasonable answer *and* are true regardless of how the code
-is written today; reuse/placement/ordering/library choices are `plan`'s job. The
-`blueprint-reviewer` gate enforces the completeness bars (data, relationships,
-concurrency, API, UI/UX, flows incl. the Acceptance block bar when a pass
-touches `integration.md`), the goal-traceability bar (the `Serves:` line), and
-the code-independence guardrail (no file/class/library/CSS/pixel leakage).
+`blueprint` maintains it as flows add integrations, with `conventions.md#config`
+holding only the injection mechanism. **Everything up to `blueprint` is done in
+full before planning**: a blueprint run sweeps until whole-product coverage
+holds (every goal served by a flow, every referenced entity/schema/API operation
+authored + reviewed, every registry surface represented, the coherence review
+clean) and stamps it; `plan` hard-halts on a partial stamp and chains its
+slice's unimplemented dependencies as their own plans, so per-slice execution
+never builds on an unblueprinted or unbuilt dependency. The blueprint is a
+**code-independent technical contract** — it records only decisions that have
+more than one reasonable answer *and* are true regardless of how the code is
+written today; reuse/placement/ordering/library choices are `plan`'s job. The
+`blueprint-reviewer` gate enforces the per-doc completeness bars (flow steps,
+acceptance, screens, jobs; entity lifecycle, relationships, concurrency, schema;
+API errors + idempotency), the goal-traceability bars (`Serves:` on flows,
+`Used by:` on entities), and the code-independence guardrail (no
+file/class/library/CSS/pixel leakage); the `blueprint-coherence-reviewer` closes
+the sweep with the cross-doc pass (flow↔lifecycle↔schema↔operationId agreement,
+catalog/erDiagram sync, the released-API additive-only diff).
 
 ### Dependencies
 

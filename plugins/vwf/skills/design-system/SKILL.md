@@ -125,10 +125,10 @@ resurfaced. No fixed round cap.
 ### 6. Reconcile & persist
 
 **Impact analysis (update mode).** When this pass **renamed or removed** a token
-or a component behavior, grep `docs/blueprint/` — the entity docs' **Screens**
-and **References** sections — for uses of the old name and report every orphan.
-Offer to fix them via `/vwf:blueprint` (the entity docs are its surface);
-**never silently edit an entity doc from here.**
+or a component behavior, grep `docs/blueprint/` — the flow docs' **Screens**
+sections (`docs/blueprint/flows/*/index.md`) and any **References** — for uses
+of the old name and report every orphan. Offer to fix them via `/vwf:blueprint`
+(the flow docs are its surface); **never silently edit a flow doc from here.**
 
 **Cross-cutting conventions.** A design decision graduates to
 `docs/blueprint/conventions.md` when it becomes a system-wide engineering rule.

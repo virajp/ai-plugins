@@ -21,13 +21,13 @@ normal flow. Don't spend questions on a thing that needs splitting first.
 
 **Park out-of-scope answers — durably.** Mid-elicitation, an answer will
 sometimes raise something beyond the current pass's scope (a new feature,
-another entity's behaviour, a future concern). Acknowledge it and do **not**
-expand the pass — but never leave it only in conversation. Before asking the
-next question, capture it per the parked-scope rule in
+another flow or entity's behaviour, a future concern). Acknowledge it and do
+**not** expand the pass — but never leave it only in conversation. Before asking
+the next question, capture it per the parked-scope rule in
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`: file the full point to mempalace room
-`gaps`, and mirror a terse line into the pass's durable doc — the entity doc's
-Open Questions, the plan's "Out of scope for this cycle", the product doc's
-Risks & assumptions, or the doc's nearest equivalent. A parked point must
+`gaps`, and mirror a terse line into the pass's durable doc — the flow/entity
+doc's Open Questions, the plan's "Out of scope for this cycle", the product
+doc's Risks & assumptions, or the doc's nearest equivalent. A parked point must
 survive the session: when the scope change arrives in a later session, the
 `gaps` recall and the doc line are what surface it — a point that lived only in
 chat is lost.

@@ -8,7 +8,7 @@ status: reviewed
 
 # Design System
 
-<!-- Conformance example (blueprint-format 3). A minimal, code-independent visual
+<!-- Conformance example (blueprint-format 9). A minimal, code-independent visual
      contract: semantic token VALUES and scales, never a component library, CSS
      framework, or design file. Every blueprint Screens section references this. -->
 

@@ -41,7 +41,12 @@ proceed** (don't hard-halt) when any of these are unfinished:
 - a companion `docs/plans/<plan>.gap-report.md` exists with **open** rows (a
   legacy autopilot gap-report, un-reconciled);
 - an **execute run journal** (mempalace room `runs`, drawer `<plan>`) is not
-  marked complete.
+  marked complete;
+- an **active plan** under `docs/plans/` (excluding `archived/`) lists this plan
+  in its `requires:` frontmatter — archiving it out from under a dependent plan;
+- a blueprint doc named in this plan's `covers:` frontmatter is **not**
+  `implementation: complete` — the plan is being retired before what it covers
+  is fully built.
 
 Surface what's outstanding and let the user decide whether to archive anyway.
 Skip the run-journal check silently if mempalace is unavailable.

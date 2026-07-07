@@ -1,0 +1,32 @@
+# docs/blueprint/entities/<entity>/schema.yaml — the AUTHORITATIVE data model
+# for this entity (JSON Schema draft 2020-12, in YAML). The entity's index.md
+# links here; its frontmatter `status:` governs both files (schema.yaml carries
+# no vwf metadata — YAML artifacts are typed by path). See the
+# blueprint-authoring skill (api-and-schema-contracts).
+#
+# Contract, not realization: logical types and constraints only — never
+# storage, ORM, index, or column detail.
+#
+# Bars: every property typed + described; every enum fully enumerated;
+# `required:` present (absence from it IS the optionality statement);
+# `additionalProperties` stated; nullability via type unions; id/format
+# conventions via format/pattern or a description deferring to
+# conventions.md#ids. A foreign-key property names its target entity in its
+# description — the resolving OKF edge lives in index.md's Relationships table.
+$schema: https://json-schema.org/draft/2020-12/schema
+title: <Entity>
+description: <one-line purpose>
+type: object
+properties:
+  id:
+    type: string
+    description: Identifier — format per conventions.md#ids.
+  status:
+    type: string
+    description: Lifecycle state — transitions in index.md Lifecycle.
+    enum: [ <state>, <...> ] # every member, always
+  <field>:
+    type: <type>
+    description: <what it is; FK fields name the target entity>
+required: [ id, status ]
+additionalProperties: false

@@ -13,9 +13,9 @@ human/actor is accountable"). Cross-cutting token:
   observability traces; recording everything is a deliberate, elicited widening,
   never the default.
 - **Event shape** (every event): actor (id + class: customer/operator/system),
-  action (a stable verb from the entity's Actors & Actions), target (entity +
-  id), timestamp, outcome (success/denied/failed), reason (mandatory for
-  operator moderation actions — bans, purges), and the correlating trace id.
+  action (a stable verb from the flow's Trigger & Actors), target (entity + id),
+  timestamp, outcome (success/denied/failed), reason (mandatory for operator
+  moderation actions — bans, purges), and the correlating trace id.
 - **Append-only, never edited or deleted in place** — retention expiry is the
   only removal path, executed as a purge (see data-retention; moderation history
   is itself a retained category with a legal basis).
@@ -33,8 +33,9 @@ human/actor is accountable"). Cross-cutting token:
 This foundation is the least built-out in the reference implementation
 (documented intent, no code yet) — elicit rather than assume:
 
-- The event list: walk each entity's Actors & Actions and mark which rows are
-  audit-recorded (all operator rows + destructive rows by default).
+- The event list: walk each flow's Trigger & Actors rows and steps and mark
+  which are audit-recorded (all operator actions + destructive steps by
+  default).
 - Storage: the default is a dedicated append-only collection/table in the
   primary datastore; elicit if the product needs an external/immutable store.
 - Retention period per event class (ties into the data-retention table).
@@ -43,6 +44,7 @@ This foundation is the least built-out in the reference implementation
 ## Blueprint expansion
 
 - `conventions.md#audit` holds the contract (scope, event shape, storage,
-  access); each entity's Actors & Actions marks audited rows; the operator
-  area's Screens include the moderation-history read surface. Audit-worthy async
-  work (purges, merges) also names its audit event in Background Jobs.
+  access); each flow's Trigger & Actors rows and steps carry audit markers; the
+  operator flows' Screens include the moderation-history read surface.
+  Audit-worthy async work (purges, merges) also names its audit event in the
+  flow's Background Jobs.

@@ -40,9 +40,9 @@ re-elicit the missing decisions with the user.
 - [ ] **OKF frontmatter** present and complete: `type: vwf-product`, `title`,
       `description`, `status`.
 - [ ] **No realization leaked**: the doc names no technology, framework,
-      project, file, or screen — stacks belong to the registry, surfaces to
-      entity docs. Naming an *entity or flow* in Slice priority is correct;
-      naming a *tech choice* is a gap.
+      project, file, or screen — stacks belong to the registry, surfaces to flow
+      docs. Naming a *flow or entity* in Slice priority is correct; naming a
+      *tech choice* is a gap.
 - [ ] No placeholder text remains.
 
 A **Metric readings** section, when present, is a dated log maintained by

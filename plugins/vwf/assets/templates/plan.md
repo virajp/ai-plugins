@@ -3,6 +3,10 @@ type: vwf-plan
 title: <slice> — <date>
 description: Cycle plan (a diff) for the <slice> blueprint slice.
 status: draft # draft | reviewed | stable
+covers: [
+  docs/blueprint/flows/<flow>/index.md,
+] # the blueprint doc(s) this plan implements — one, except for a dependency cycle planned together
+requires: [] # plan filenames (docs/plans/...) that must be executed & merged first — direct prerequisites only
 # optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
 ---
 
@@ -15,9 +19,10 @@ status: draft # draft | reviewed | stable
 
 ## Slice
 
-Which entity/section of the blueprint this plan covers, and a link to it. One
-line per dependency entity the closure pulled in (unimplemented delta only),
-each linked to its blueprint.
+Which flow or entity this plan covers, with a link to its blueprint doc, and the
+plan's chain position when it is part of a dependency chain — e.g. "Plan 2 of 3
+— requires `<plan file>`; required by `<plan file>`". A standalone plan states
+"no dependency chain".
 
 ## Current state (actual)
 
@@ -34,18 +39,20 @@ What the blueprint says should exist. Reference sections; do not restate them.
 
 ## Acceptance criteria (from blueprint)
 
-<!-- Copied verbatim from the Acceptance blocks of the integration.md flows this
-     slice touches — the contract execute's acceptance stage verifies end to
-     end. Steps above must include the E2E tests that cover each criterion
+<!-- Copied verbatim from the Acceptance blocks of the flow docs this slice
+     touches — the contract execute's acceptance stage verifies end to end.
+     Steps above must include the E2E tests that cover each criterion
      (the coder implements them; the acceptance verifier maps and runs them).
      Write "none — no flow touched" when the slice maps to no flow. -->
 
 - [ ] Given <...>, when <...>, then <...> — from
-      [<flow name>](../blueprint/integration.md)
+      [<flow name>](../blueprint/flows/<flow>/index.md)
 
 ## Risks / drift
 
-Any mismatch between blueprint, registry, and code surfaced during diffing.
+Any mismatch between blueprint, registry, and code surfaced during diffing. Code
+that contradicts the blueprint is listed here with the conforming step that
+resolves it — the blueprint is never adjusted to match code silently.
 
 ## Out of scope for this cycle
 

@@ -25,8 +25,8 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    `ENGINE: unavailable — manual dimensions only` to your return block.
 2. **Add the blueprint-compliance dimension `/code-review` does not cover.**
    Read the approved plan (`docs/plans/`), the blueprint slice it implements
-   (`docs/blueprint/`) plus `conventions.md`, and the architecture registry
-   `stack`, then verify:
+   (the flow/entity docs under `docs/blueprint/`) plus `conventions.md`, and the
+   architecture registry `stack`, then verify:
    - **Correctness** — the code does what the blueprint requires.
    - **Blueprint compliance** — every plan step is implemented, nothing extra
      was added.
@@ -46,6 +46,18 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    - **Test quality** — tests actually exercise the behaviour, not just
      coverage.
    - **Naming consistency** — with the surrounding code and the docs.
+   - **Released-contract compatibility** — when the diff touches a service's API
+     surface (routes, handlers, DTOs, serializers) **and** the orchestrator
+     passed a released-snapshot path
+     (`docs/blueprint/apis/released/<project>@<version>.openapi.yaml` — the
+     latest by semver), check the change against the living contract
+     (`docs/blueprint/apis/<project>.openapi.yaml`) and that snapshot. Any
+     change that would break the released contract per the **rest-api-design**
+     skill's reference 8 breaking-change list — a removed/renamed field or
+     endpoint, a type/format change, a method-semantics change, an error-code
+     change, a new mandatory request field, an auth change — is a
+     `[breaking-api]` finding. The orchestrator treats `[breaking-api]` findings
+     like security findings: always fixed, exempt from the review round cap.
 
 Merge both into one findings list. Do not rewrite the code — report only.
 
@@ -81,6 +93,7 @@ FINDINGS:   # one line each, most-severe first; omit anything that isn't a findi
 - [severity] file:line — what's wrong and why   # (or the single line "none")
 SPEC COMPLIANCE: met   # code-vs-plan: "met" or "unmet: <terse list>" (plan steps missing/extra)
 SPEC/PLAN GAPS: none   # holes in the blueprint/plan itself: one terse line each, or "none"
+API COMPAT: ok   # or "breaking — <endpoint/field> vs released <project>@<version>" | "n/a — no released snapshot / no API surface touched"
 VERDICT: approve   # or "changes-required"
 RECALL: <slice>/review/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
 GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
@@ -88,5 +101,7 @@ ENGINE: unavailable — manual dimensions only   # include only if /code-review 
 ```
 
 Nothing before or after the block. Any finding rated `[high]` or worse forces
-`VERDICT: changes-required`. If `changes-required`, the orchestrator loops back
-to the code stage before re-review.
+`VERDICT: changes-required`; a `[breaking-api]` finding likewise forces it, and
+the orchestrator — treating it like a security finding — always fixes it, exempt
+from the review round cap. If `changes-required`, the orchestrator loops back to
+the code stage before re-review.

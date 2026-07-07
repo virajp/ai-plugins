@@ -1,0 +1,54 @@
+# docs/blueprint/apis/<project>.openapi.yaml — the AUTHORITATIVE API contract
+# for one registry `service` project (OpenAPI 3.1), named by registry project
+# name. Flows reference operations by operationId. See the blueprint-authoring
+# skill (api-and-schema-contracts) and the rest-api-design skill.
+#
+# Contract, not realization: paths, methods, schemas, errors, and auth roles
+# are contract; `servers:` blocks, hostnames, and gateway/framework detail are
+# realization — omitted.
+#
+# Backward compatibility: once a frozen snapshot exists under
+# docs/blueprint/apis/released/, changes here must be additive-only per the
+# rest-api-design skill (reference 8) — or come with an explicit major-version
+# bump (info.version major + /vN path). /vwf:verify freezes snapshots on a
+# passing production run.
+openapi: 3.1.0
+info:
+  title: <project> # the registry project name
+  description: <one-line purpose>
+  version: 0.1.0 # semver; 0.x until the first production release
+  x-vwf:
+    status: draft # draft | reviewed — the vwf review stamp for this contract
+paths:
+  /<resources>/{id}:
+    get:
+      operationId: get<Resource> # unique; what flow steps reference
+      summary: <what it returns>
+      security:
+        - bearerAuth: [ <role> ] # roles map conventions.md#auth
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      # Idempotency: GET is idempotent by method semantics; document
+      # Idempotency-Key handling on non-idempotent mutations.
+      responses:
+        "200":
+          description: <success case>
+          content:
+            application/json:
+              schema:
+                $ref: "../entities/<entity>/schema.yaml" # one source of truth for shapes
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  responses:
+    # Enumerate error CASES here; the envelope shape lives in
+    # conventions.md#errors, never restated per operation.
+    NotFound:
+      description: <when this case occurs>
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

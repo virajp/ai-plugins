@@ -44,14 +44,14 @@ collection) lives in the `service` and `console` reference-stack docs.
 - The customer lifecycle beyond the baseline states (product-specific states,
   e.g. trial/subscriber tiers — a field, never a claim).
 - The operator action list (what general vs compliance can do) — becomes the
-  operator area's Actors & Actions table.
+  operator flows' Trigger & Actors.
 - Whether a resource-membership hierarchy exists (groups/teams/orgs) and its
   role enum — document-based like everything else.
 
 ## Blueprint expansion
 
-- The **user entity** (`docs/blueprint/user/`) carries the lifecycle, statuses,
-  and soft-delete semantics; the **operator area** (its own entity/page doc)
-  carries the operator roles' Actors & Actions with explicit authorization per
-  action. `conventions.md#auth` holds the RBAC tiers table and the
-  account-status-claims contract.
+- The **user entity** (`docs/blueprint/entities/user/`) carries the lifecycle,
+  statuses, and soft-delete semantics; the **operator flows** carry the operator
+  roles' Trigger & Actors with explicit authorization per action.
+  `conventions.md#auth` holds the RBAC tiers table and the account-status-claims
+  contract.

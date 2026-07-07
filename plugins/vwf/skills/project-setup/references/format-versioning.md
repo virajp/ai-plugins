@@ -7,8 +7,8 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 2
-blueprint_format: 8
+config_format: 3
+blueprint_format: 9
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,16 +29,48 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 8.** Format 8 = format 7 **plus** **folders-only entities**:
-every entity lives at `docs/blueprint/<entity>/` — `index.md` alone when the
-entity is small (all sections in that one file), `index.md` + the surface files
-(`data.md` / `api.md` / `jobs.md` / `screens.md`) when it is large. The
-`docs/blueprint/` **root holds only the system docs** (`product.md`,
-`architecture.md`, `conventions.md`, `design-system.md`, `environment.md`,
-`integration.md`); a flat `<entity>.md` at the root is drift. Two reasons: the
-root stops mixing entity content with the system docs, and inbound links
-(`<entity>/index.md`) stay stable when an entity later outgrows one file — no
-link rewrite on growth.
+**Current format = 9.** Format 9 = format 8 **plus** the **process-based
+restructure** — flows become the primary doc unit and structured contracts get
+structured formats:
+
+- **Flows** live at `docs/blueprint/flows/<flow>/index.md` (type **`vwf-flow`**,
+  always `index.md` only): Purpose with mandatory `Serves:` goal link(s) — flows
+  are the goal-traceability spine — Trigger & Actors (with authorization and
+  audit markers), ordered Steps (linking the entities/services touched;
+  API-backed steps name an `operationId`), consistency boundary, failure
+  handling, idempotency, the `sequenceDiagram`, **Screens** and **Background
+  Jobs** (both moved here from entities — process orientation puts journeys and
+  their jobs on the process; every screen has exactly one home flow), and the
+  **Acceptance** block. The root `integration.md` dissolves: `flows/index.md`
+  (type `vwf-integration`) keeps only the flow catalog + the Inter-Service
+  Contracts and Consistency Boundaries.
+- **Entities** move under `docs/blueprint/entities/<entity>/` and slim to
+  supporting data contracts — always exactly `index.md` (Purpose with
+  **`Used by:`** flow links replacing `Serves:`; Lifecycle; Invariants;
+  Relationships; Concurrency) + **`schema.yaml`** (the authoritative data model
+  as JSON Schema 2020-12 in YAML). The surface files
+  (`data.md`/`api.md`/`jobs.md`/`screens.md`), the small/large split, and the
+  entity Actors & Actions section are retired. `entities/index.md` (type
+  **`vwf-entities`**) holds the catalog + the product-wide `erDiagram`.
+- **API contracts** move to `docs/blueprint/apis/<project>.openapi.yaml` — one
+  authoritative OpenAPI 3.1 document per registry `service` project
+  (`info.x-vwf.status` carries the review stamp; YAML artifacts are typed by
+  path, not frontmatter). `apis/released/<project>@<version>.openapi.yaml` holds
+  the frozen production snapshots `/vwf:verify` writes; from the first snapshot
+  on, living-contract changes are additive-only or take a major-version bump.
+- Flow and entity docs carry the **`implementation:`** frontmatter key
+  (`none`/`partial`/`complete`) — the pipeline's build-state stamp (see the
+  blueprint-authoring frontmatter-and-links reference).
+
+Format 8 = format 7 **plus** **folders-only entities**: every entity lives at
+`docs/blueprint/<entity>/` — `index.md` alone when the entity is small (all
+sections in that one file), `index.md` + the surface files (`data.md` / `api.md`
+/ `jobs.md` / `screens.md`) when it is large. The `docs/blueprint/` **root holds
+only the system docs** (`product.md`, `architecture.md`, `conventions.md`,
+`design-system.md`, `environment.md`, `integration.md`); a flat `<entity>.md` at
+the root is drift. Two reasons: the root stops mixing entity content with the
+system docs, and inbound links (`<entity>/index.md`) stay stable when an entity
+later outgrows one file — no link rewrite on growth.
 
 Format 7 = format 6 **plus** **flow diagrams as contract views** — complicated
 flows must be readable at a glance, not only as tables (see the
@@ -190,6 +222,53 @@ the current format and apply the delta:
   `./design-system.md` → `../design-system.md`, and a sibling entity →
   `../<other>/index.md`. Verify every edge resolves after the pass (the OKF
   bar). No flat entity docs → no-op. Then bump the stamp to `8`.
+- **`8 → 9`** → the process-based restructure, in **two phases**:
+
+  **Phase 1 — mechanical scaffold** (this migration, consent-gated as usual):
+
+  1. Create `entities/` and
+     `git mv docs/blueprint/<entity>/ →
+     docs/blueprint/entities/<entity>/`
+     for every entity folder (move, never delete). Rewrite links mechanically:
+     from inside an entity, root system docs gain one level (`../product.md` →
+     `../../product.md`); sibling entity links are unchanged
+     (`../<other>/index.md`).
+  2. `git mv docs/blueprint/integration.md docs/blueprint/flows/index.md`, then
+     cut each `### <flow>` body into `flows/<flow-slug>/index.md` (type
+     `vwf-flow`, `status: draft`) — the Inter-Service Contracts and Consistency
+     Boundaries sections stay in `flows/index.md`, which gains the flow-catalog
+     table.
+  3. Per entity: convert the Data Model table into `schema.yaml`
+     (Field/Type/Optional/Default/Validation → properties/`required`/`default`;
+     unmappable validation prose → the property's `description`); replace the
+     markdown section with the schema link + notes.
+  4. Extract every API Surface table into `apis/<project>.openapi.yaml` stubs by
+     the section's registry target (generated `operationId`s like `cancelOrder`;
+     `info.x-vwf.status: draft`; `info.version: 0.1.0`). Create the empty
+     `apis/released/` dir.
+  5. Move each Screens/Jobs row under the single flow whose steps touch it when
+     unambiguous; ambiguous rows go to a **triage checklist** under
+     `flows/index.md` Open Questions — reviewed, never silently guessed.
+  6. Rewrite each entity's `Serves:` line to `Used by:`, linking the migrated
+     flows that reference it; an entity no flow references keeps its old
+     `Serves:` line and is flagged as drift for the follow-up sweep.
+  7. Dissolve surface files: `data.md` content merges into `index.md` +
+     `schema.yaml`; `api.md`/`jobs.md`/`screens.md` dissolve into steps 4–5.
+  8. Seed `implementation:` on every flow and entity doc — `none` by default,
+     with one elicited bulk option ("everything currently blueprinted is built"
+     → `complete`). Set `status: draft` on every doc whose content changed.
+     Scaffold `entities/index.md` (catalog + `erDiagram` from the Relationships
+     tables).
+  9. Bump the stamp to `9`, apply the config `2 → 3` migration (per the
+     vwf-config asset), and downgrade `blueprint.coverage` to `partial`
+     (remaining = the draft flows + the triage list).
+
+  **Phase 2 — elicited fill** (not this migration): the scaffold cannot invent
+  flow actors, missing goal links, triage placements, or acceptance criteria for
+  flows that never existed — offer `/vwf:blueprint` (consent-gated); coverage
+  stamps `complete` only after that sweep, including the new whole-product
+  coherence review.
+
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.
 

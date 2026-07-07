@@ -1,0 +1,122 @@
+# docs/blueprint/apis/api.openapi.yaml — authoritative API contract for the `api`
+# service project (OpenAPI 3.1). Flows reference operations by operationId.
+# Conformance example (blueprint-format 9). Contract, not realization: no
+# servers:/hostname/framework detail. The error envelope shape lives in
+# conventions.md#errors; only error CASES are enumerated here.
+openapi: 3.1.0
+info:
+  title: api
+  description: Order-taking API for the example shop.
+  version: 1.0.0
+  x-vwf:
+    status: reviewed
+paths:
+  /orders:
+    post:
+      operationId: placeOrder
+      summary: Place an order from the customer's cart.
+      description: >
+        Creates an Order in `placed`. Send an `Idempotency-Key` header so a
+        retried submission returns the original order rather than a duplicate.
+        Errors return the coded envelope defined in conventions.md#errors.
+      security:
+        - bearerAuth: [ customer ]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cart_id:
+                  type: string
+                  description: The cart to convert into an order.
+              required: [ cart_id ]
+              additionalProperties: false
+      responses:
+        "201":
+          description: Order created in `placed`.
+          content:
+            application/json:
+              schema:
+                $ref: "../entities/order/schema.yaml"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      summary: Fetch a single order.
+      description: >
+        Returns the order if the caller owns it or holds a staff role. Errors
+        return the coded envelope defined in conventions.md#errors.
+      security:
+        - bearerAuth: [ customer, staff ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The requested order.
+          content:
+            application/json:
+              schema:
+                $ref: "../entities/order/schema.yaml"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /orders/{id}/cancel:
+    post:
+      operationId: cancelOrder
+      summary: Cancel an order and start its refund.
+      description: >
+        Moves a `placed` or `paid` order to `cancelled`; a `paid` order triggers
+        the refund flow. Idempotent — cancelling an already-`cancelled` order is
+        a no-op returning the current order. Errors return the coded envelope
+        defined in conventions.md#errors.
+      security:
+        - bearerAuth: [ customer, staff ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Order now `cancelled`.
+          content:
+            application/json:
+              schema:
+                $ref: "../entities/order/schema.yaml"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+components:
+  responses:
+    # Error CASES only; the envelope shape lives in conventions.md#errors.
+    ValidationError:
+      description: The request failed validation (code `validation`).
+    Conflict:
+      description: The order's current state forbids the operation (code
+        `conflict`).
+    Forbidden:
+      description: The caller may not act on this order (code `forbidden`).
+    NotFound:
+      description: No order with that id is visible to the caller (code
+        `not_found`).
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

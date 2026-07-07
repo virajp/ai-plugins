@@ -14,7 +14,7 @@
 #    into one flat namespace).
 #  - each hooks.json is valid JSON and every ${CLAUDE_PLUGIN_ROOT} script it names
 #    resolves to an executable file.
-#  - relative ./ or ../ .md links under any plugin's assets/examples/ resolve.
+#  - relative ./ or ../ .md/.yaml links under any plugin's assets/examples/ resolve.
 #  - every ./plugins-sourced marketplace entry has a matching local directory.
 #  - the bin/claude.mjs PLUGINS allowlist equals the marketplace plugin set,
 #    PROJECT_SCOPED / OPT_IN are subsets of it, and PLUGIN_DEPS mirrors the
@@ -44,7 +44,7 @@ REF_RE = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
 # claude-* model id — kept permissive on purpose (a bare non-empty alias passes).
 MODEL_RE = re.compile(r"^(sonnet|opus|haiku|inherit|claude[\w.\[\]-]+)$", re.I)
 # Relative markdown link target (./ or ../), stripping any #anchor.
-LINK_RE = re.compile(r"\]\((\.{1,2}/[^)\s#]+\.md)(?:#[^)\s]*)?\)")
+LINK_RE = re.compile(r"\]\((\.{1,2}/[^)\s#]+\.(?:md|ya?ml))(?:#[^)\s]*)?\)")
 failed = False
 
 KEY_RE = re.compile(r"^([A-Za-z0-9_-]+):\s*(.*?)\s*$")
@@ -235,7 +235,7 @@ for name, entry in entries.items():
         failed = True
         bad(f"{name} marketplace source {src} has no plugin.json")
 
-header("Checking example markdown relative links resolve ...")
+header("Checking example markdown relative links (.md/.yaml) resolve ...")
 for md in sorted(glob.glob("plugins/*/assets/examples/**/*.md", recursive=True)):
     bads = []
     for rel in LINK_RE.findall(open(md, encoding="utf-8").read()):

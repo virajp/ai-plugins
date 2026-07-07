@@ -8,18 +8,18 @@ stacks, capabilities) lives in the registry in `docs/blueprint/architecture.md`;
 this file holds only how vwf treats it. Since **blueprint-format 6** it replaces
 the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 2)
+## Schema (config_format 3)
 
 ```yaml
-config_format: 2 # this file's own schema version — setup migrates it
-blueprint_format: 7 # the docs/blueprint format stamp
+config_format: 3 # this file's own schema version — setup migrates it
+blueprint_format: 9 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
-  remaining: [] # unresolved coverage holes (entity names) when partial
+  remaining: [] # unresolved holes when partial: flows/<flow>, entities/<entity>, apis/<project>, coherence
 
 topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
@@ -59,6 +59,8 @@ environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in 
   <env-name>:
     <project-name>: <base-url>
 
+production_env: production # optional — names the release environment for /vwf:verify (default: the env literally named "production")
+
 mockups: # /vwf:mockups target — ids only, never content
   project_id: <uuid> # the claude.ai/design design-system project mockups push to
 
@@ -83,6 +85,7 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 | `enforcement`        | `setup` / `architecture` (consented) | `setup`, `architecture`, `blueprint`, the reviewers |
 | `pipeline`           | the user (hand-edited)               | `execute`, the statusline caps hook                 |
 | `environments`       | `setup` / `verify` (confirmed)       | `verify`                                            |
+| `production_env`     | `setup` / `verify` (confirmed)       | `verify` (the release environment)                  |
 | `mockups`            | `mockups` (confirmed)                | `mockups`                                           |
 | `docs_sync`          | the user (hand-edited)               | the docs-sync step                                  |
 
@@ -90,11 +93,13 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 
 No key in this file can disable: the **security review**, **TDD**, the
 **approval gates** (including `plan`'s blueprint coverage gate and `execute`'s
-final gate), the **blueprint/product/design-system reviewer bars**, or the
-docs-sync step. `pipeline.models` may change a stage's tier but the stage still
-runs — and any downgrade from the shipped default is stated at that stage's
-gate. `pipeline.execute_caps` may only **tighten** (pause earlier than
-65/90/80), never loosen.
+final gate), the **blueprint/product/design-system reviewer bars**, the
+**released-API compatibility gate** (breaking a contract under
+`docs/blueprint/apis/released/` gates like a security finding — always fixed,
+exempt from the review round cap), or the docs-sync step. `pipeline.models` may
+change a stage's tier but the stage still runs — and any downgrade from the
+shipped default is stated at that stage's gate. `pipeline.execute_caps` may only
+**tighten** (pause earlier than 65/90/80), never loosen.
 
 ## Reading rules
 
@@ -111,3 +116,10 @@ gate. `pipeline.execute_caps` may only **tighten** (pause earlier than
 - **`1 → 2` migration** (performed by `/vwf:setup`): rename
   `pipeline.autopilot_caps` → `pipeline.execute_caps` (same shape and
   semantics); the statusline caps hook reads both names during the transition.
+- **`2 → 3` migration** (performed by `/vwf:setup`): bump the number — no key is
+  reshaped. New semantics: the environment named `production` (or the one named
+  by the new optional `production_env` key) is the **release environment** — a
+  clean `/vwf:verify` run against it offers to freeze each deployed service's
+  OpenAPI contract into `docs/blueprint/apis/released/`; the frozen snapshots
+  (not this file) are the release record. If your production environment is
+  named differently, set `production_env`.

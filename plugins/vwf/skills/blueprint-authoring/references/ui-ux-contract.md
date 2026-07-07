@@ -1,10 +1,14 @@
 # UI / UX Contract (per screen)
 
-Per-screen interaction decisions live in the entity's **Screens** section. The
-product-wide visual and interaction *language* — tokens, typography, spacing,
-motion, accessibility standard, global component behaviors — lives in the
-**design system** (`docs/blueprint/design-system.md`, authored by
-`/vwf:design-system`). Reference it; never re-decide visual language per screen.
+Per-screen interaction decisions live in the **flow's** Screens section — the
+flow that owns the journey a screen belongs to (see the
+[flow-contract](./flow-contract.md)). Every screen is defined in exactly one
+flow, its **home** journey; another flow that touches the screen links the home
+flow's row rather than redefining it. The product-wide visual and interaction
+*language* — tokens, typography, spacing, motion, accessibility standard, global
+component behaviors — lives in the **design system**
+(`docs/blueprint/design-system.md`, authored by `/vwf:design-system`). Reference
+it; never re-decide visual language per screen.
 
 Pin per screen / surface (each has more than one reasonable answer):
 
@@ -25,5 +29,5 @@ Pin per screen / surface (each has more than one reasonable answer):
 
 Out (realization): the component library, CSS, exact pixels — and anything
 already fixed by the design system. If a screen must break the design system,
-record the deviation and why **here**, in the entity doc — do not fork the
-design system.
+record the deviation and why **here**, in the flow's Screens section — do not
+fork the design system.

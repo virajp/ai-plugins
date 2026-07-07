@@ -10,7 +10,7 @@ status: reviewed
 Cross-cutting decisions referenced by entity docs. Defined once; entity docs
 link to the relevant anchors rather than repeating.
 
-<!-- Conformance example (blueprint-format 3). Only the anchors the example
+<!-- Conformance example (blueprint-format 9). Only the anchors the example
      entities reference are filled; a real conventions.md carries every
      system-wide concern the architecture registry declares. -->
 

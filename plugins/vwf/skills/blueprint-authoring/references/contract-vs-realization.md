@@ -21,6 +21,13 @@ decision belongs in the blueprint only if it passes **both** tests:
 | UI / UX      | edit happens in a modal; destructive actions confirm | which Dialog component, CSS     |
 | NFR          | a list page returns ≤50 items by default             | the pagination helper           |
 
+**The YAML artifacts split the same way.** In an OpenAPI file, the paths,
+methods, request/response schemas, error cases, and auth roles are **contract**;
+the `servers:` blocks, hostnames, and generated-client / framework choices are
+**realization** and stay out. In a `schema.yaml`, the logical types, enums,
+`required:`/nullability, and FK relationships are **contract**; storage types,
+indexes, and ORM/column mapping are **realization** — left to `plan`/`execute`.
+
 **Never put in a blueprint (drift bait):** file paths, class/function names,
 library or framework names, "reuse module X", framework APIs, exact
 colors/spacing/pixels. The moment a blueprint sentence names *how the current

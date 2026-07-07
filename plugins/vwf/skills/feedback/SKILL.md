@@ -23,7 +23,7 @@ item lands in a durable doc, so nothing depends on memory being up.
 ### 1. Understand & classify
 
 Read the feedback from `$ARGUMENTS` (or ask for it). Read
-`docs/blueprint/product.md` (goals, metrics) and skim the entity docs it
+`docs/blueprint/product.md` (goals, metrics) and skim the flow/entity docs it
 plausibly touches. **Recall** rooms `gaps` and `problems` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — if this item is already known, say so
 and show its status instead of re-filing it.
@@ -45,19 +45,23 @@ One route per item — each ends in a **doc edit now** (durable) plus the **offe
 of the fixing command**:
 
 - **Behavior bug** → the blueprint is right, the code is wrong: file to room
-  `gaps` (tagged by entity/flow) and offer `/vwf:plan <slice>` for a fix cycle.
-  Deferred → one line in the target entity doc's **Open Questions** (or the flow
-  in `integration.md`): what production does vs what the doc promises.
-- **Blueprint hole** → file to room `gaps` and offer `/vwf:blueprint
-  <entity>`
-  to pin the behavior down. Deferred → the same Open Questions line.
+  `gaps` (tagged by flow/entity) and offer `/vwf:plan <slice>` for a fix cycle.
+  Deferred → one line in the owning flow doc's **Open Questions**
+  (`docs/blueprint/flows/<flow>/index.md`), or the entity doc under
+  `docs/blueprint/entities/` when the hole is in the data contract: what
+  production does vs what the doc promises.
+- **Blueprint hole** → file to room `gaps` and offer
+  `/vwf:blueprint
+  <flow|entity>` to pin the behavior down. Deferred → the same
+  Open Questions line.
 - **Metric reading** → append a dated row to the **Metric readings** appendix of
   `product.md` (create the appendix on first use — it is a log, not part of the
   reviewed contract). A **miss against target** → offer `/vwf:product` to
   re-rank slices / revisit the goal; a hit → just recorded.
-- **UX issue** → record it against the entity's **Screens** section (a deviation
-  or open question at the exact screen/state) and offer `/vwf:design-system`
-  (language-level) or `/vwf:blueprint <entity>` (screen-level).
+- **UX issue** → record it against the screen's **home flow** — the `## Screens`
+  row in `docs/blueprint/flows/<flow>/index.md` that defines it (a deviation or
+  open question at the exact screen/state) — and offer `/vwf:design-system`
+  (language-level) or `/vwf:blueprint <flow>` (screen-level).
 - **Feature idea** → never straight to code: offer `/vwf:product` (does it serve
   an existing goal? re-rank; a new goal? add it) — then the normal
   `blueprint → plan → execute` path. Deferred → a row in `product.md`'s Metric

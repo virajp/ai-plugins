@@ -87,22 +87,24 @@ also holds what a Q&A answer surfaces *beyond the current pass's scope* (per the
 elicitation protocol's scope check): the orchestrator files the full point to
 room `gaps`, tagged `<slice>/parked` — what was raised, why it is out of scope
 now, and what pass it belongs to — and mirrors a terse line into the pass's
-durable doc (the entity doc's Open Questions, the plan's "Out of scope for this
-cycle", the product doc's Risks & assumptions). Parked points ride the existing
-recall paths: `blueprint` and `plan` already recall room `gaps` before working
-and treat closing recalled gaps as a first-class goal of the pass — so a scope
-change arriving in a fresh session finds the parked point instead of losing it.
-Same fallback rule: the doc line survives a mempalace outage.
+durable doc (the flow/entity doc's Open Questions, the plan's "Out of scope for
+this cycle", the product doc's Risks & assumptions). Parked points ride the
+existing recall paths: `blueprint` and `plan` already recall room `gaps` before
+working and treat closing recalled gaps as a first-class goal of the pass — so a
+scope change arriving in a fresh session finds the parked point instead of
+losing it. Same fallback rule: the doc line survives a mempalace outage.
 
 ## Run journal — execute resumability (execute only)
 
 `/vwf:execute` keeps a single drawer per plan in room `runs` (drawer =
-`<plan>`): the dependency-ordered step sequence and, per step, its status
-(pending/done), commit ref, review/security round counts, and gap tags. The
-orchestrator writes it when it derives the order and updates it as each step
-completes (`mempalace_add_drawer` then `mempalace_update_drawer`). Because an
-autonomous run's primary pause is a resource cap (`/vwf:handoff` → later
-`/vwf:recall`), a resumed run reads this journal to skip finished steps and pick
-up at the current one — without it, resume would re-implement completed work.
-Skip silently if mempalace is unavailable; the worktree's commits are the
-fallback record. This room is execute-specific; blueprint/plan do not use it.
+`<plan>`): the result of the plan's `requires:` prerequisite check (each
+prerequisite plan and whether it is satisfied), the dependency-ordered step
+sequence and, per step, its status (pending/done), commit ref, review/security
+round counts, and gap tags. The orchestrator writes it when it derives the order
+and updates it as each step completes (`mempalace_add_drawer` then
+`mempalace_update_drawer`). Because an autonomous run's primary pause is a
+resource cap (`/vwf:handoff` → later `/vwf:recall`), a resumed run reads this
+journal to skip finished steps and pick up at the current one — without it,
+resume would re-implement completed work. Skip silently if mempalace is
+unavailable; the worktree's commits are the fallback record. This room is
+execute-specific; blueprint/plan do not use it.

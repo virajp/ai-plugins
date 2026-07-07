@@ -7,9 +7,11 @@ through four disciplined phases:
 1. **Product** — pin the outcome contract: the problem, the users, measurable
    goals, and the order to build in. Everything downstream must trace to it.
 2. **Blueprint** — keep an always-current blueprint of the *whole product*,
-   every entity serving a product goal.
-3. **Plan** — diff the blueprint against the real code for one slice, and write
-   the delta to apply.
+   organized by **flow** (every flow serving a product goal, entities as the
+   data contracts under them), closed by a whole-product coherence review.
+3. **Plan** — diff the blueprint against the real code for one slice, planning
+   its unbuilt dependencies as their own chained plans first, and write the
+   delta to apply.
 4. **Execute** — implement the plan autonomously under strict TDD, with code
    review, security review, E2E acceptance, and UX conformance per the rules,
    behind one final merge gate — with post-deploy verification and a
@@ -66,6 +68,11 @@ adopting it.
   deciding from a fixed rule set and stopping only on a hard halt, a resource
   cap, an all-blocking gap, an irreversible decision — or the **final gate**,
   where you review the whole run and approve the merge.
+- **Released APIs are frozen.** Once `/vwf:verify` records a production release,
+  breaking a released API contract is blocked like a security finding —
+  reviewers loop it until fixed, and the only way out is a conscious
+  major-version bump. If you want to move fast and break contracts, this will
+  fight you.
 - **Requires a testable project.** `execute` enforces non-negotiable TDD and a
   coverage gate. A project without a test runner won't fit the execute stage;
   missing coverage tooling is tolerated (the coder reports `coverage: n/a` and
@@ -125,25 +132,35 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 Each phase answers one question:
 
 - **Product** answers *is this worth building, and what does "good" mean?* — the
-  problem, the users, measurable goals, and the order to build in. Every entity
-  in the blueprint must trace to a goal here.
+  problem, the users, measurable goals, and the order to build in. Every flow in
+  the blueprint must trace to a goal here.
 - **Blueprint** answers *what should the whole product be?* — permanent,
-  product-wide, organized by entity. It is a **code-independent technical
+  product-wide, organized by **flow** (the user/system journeys), with entities
+  as the supporting data contracts. It is a **code-independent technical
   contract**: it pins every decision that has more than one reasonable answer
-  *and* is true regardless of how the code is written — data, API,
-  relationships, concurrency, integration flows (each with acceptance criteria
-  and a sequence diagram), and UI/UX — so `plan` and `execute` never have to ask
-  or assume. Reuse-vs-build, file placement, ordering, and library choices are
-  `plan`'s job, not the blueprint's.
+  *and* is true regardless of how the code is written — flows (each with
+  acceptance criteria and a sequence diagram, carrying the screens and jobs they
+  need), data models as JSON-Schema `schema.yaml` files, API surfaces as
+  per-service OpenAPI contracts, relationships, concurrency, and UI/UX — so
+  `plan` and `execute` never have to ask or assume. A whole-product coherence
+  review walks every flow across the entities and contracts before coverage
+  counts as complete. Reuse-vs-build, file placement, ordering, and library
+  choices are `plan`'s job, not the blueprint's.
 - **Plan** answers *what changes for this one slice, and in what order?* — a
-  diff, not a re-blueprint, scoped to a single entity or section plus any
-  unbuilt entities it depends on.
+  diff, not a re-blueprint, scoped to a single flow or entity. Unbuilt
+  dependencies are not swallowed into the plan: each becomes **its own plan**,
+  chained (`covers:`/`requires:`) and executed in order.
 - **Execute** answers *is it built, correct, safe, and does it do what the
   blueprint promises?* — TDD, then code/security review, then E2E acceptance and
-  rendered-UI conformance.
+  rendered-UI conformance. When the run lands, it stamps each covered blueprint
+  doc's `implementation:` state — the blueprint stays the source of truth, and
+  it now knows what's built.
 - **Verify & feedback** answer *does it hold in production, and what next?* —
   post-deploy checks against the same acceptance criteria, and a routed intake
-  for what production teaches you.
+  for what production teaches you. A clean production run offers to record a
+  **release**, freezing each service's API contract — from then on, breaking a
+  released API is blocked like a security finding unless you consciously cut a
+  new major version.
 
 Each command has its own cadence — `setup` once, `product` on every product
 change, `plan` per build cycle — and the transitions chain from gate offers.
@@ -160,10 +177,10 @@ flowchart TD
     A --> B
     DS --> B
     B e8@-. "optional: review screens on the canvas" .-> M["/vwf:mockups — optional<br/>(HTML mockups on claude.ai/design)"]:::user
-    B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + unbuilt dependencies)"]:::user
+    B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + chained dependency plans)"]:::user
     C -->|"approve & execute"| D["/vwf:execute<br/>(autonomous · one final merge gate)"]:::chained
     D -->|"offered once merged, no gaps"| E["/vwf:archive"]:::chained
-    E --> V["deploy (you) → /vwf:verify"]:::user
+    E --> V["deploy (you) → /vwf:verify<br/>(a clean production pass freezes released API contracts)"]:::user
     V e3@-. "regressions & readings" .-> FB["/vwf:feedback"]:::user
     FB e4@-. "routes back into the product" .-> P
     D e5@-. "blueprint/plan gaps" .-> B
@@ -193,17 +210,22 @@ chains `product`, `architecture`, and `design-system` for you. From then on,
 **`/vwf:product` is the front door for every product change** — adding,
 updating, or retiring features and goals — with `architecture` following when
 the system's shape changes and `design-system` when the visual language does.
-Any foundation change ends in a `/vwf:blueprint` sweep, which loops entity by
-entity until the **whole product** is covered again and re-stamps that coverage
-(`plan` refuses to run without it), then offers to plan the top slice. Building
-is **one command per cycle**: `/vwf:plan <slice>` cuts a diff for the slice
-**plus any unbuilt entities it depends on**, its approval gate offers *Approve &
-execute*, `execute` runs the plan unattended in a dedicated worktree up to one
-final gate where you review the run and approve the merge, and `archive` is
-offered once no gaps remain. After you deploy, `verify` checks the environment
-and `feedback` routes what production says back into the product. When execution
-exposes a hole in the blueprint or plan, `vwf` captures it and loops back to fix
-the source — never silently working around it.
+Any foundation change ends in a `/vwf:blueprint` sweep, which loops flow by flow
+(deriving the entities, schemas, and API operations each flow stands on) until
+the **whole product** is covered again — including a whole-product coherence
+review — and re-stamps that coverage (`plan` refuses to run without it), then
+offers to plan the top slice. Building is **one command per cycle**:
+`/vwf:plan <slice>` resolves the slice's unbuilt dependencies into a **chain of
+small plans** (each behind its own gate, executed in order — never one plan
+swallowing its dependencies), the last gate offers *Approve & execute*,
+`execute` runs each plan unattended in a dedicated worktree up to one final gate
+where you review the run and approve the merge — stamping the covered blueprint
+docs' `implementation:` state as it lands — and `archive` is offered once no
+gaps remain. After you deploy, `verify` checks the environment (and, on a clean
+production pass, offers to freeze the released API contracts) and `feedback`
+routes what production says back into the product. When execution exposes a hole
+in the blueprint or plan, `vwf` captures it and loops back to fix the source —
+never silently working around it.
 
 ## The documents it maintains
 
@@ -221,21 +243,34 @@ docs/
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
 │   ├── environment.md           # per-project env-var/secret catalog (names, never values)
-│   ├── integration.md           # cross-entity flows + acceptance criteria per flow
-│   └── <entity>/                # one folder per entity — index.md alone when
-│       └── index.md             # small; + data/api/jobs/screens.md when large
+│   ├── flows/                   # the PRIMARY unit — one folder per flow
+│   │   ├── index.md             # flow catalog + inter-service contracts
+│   │   └── <flow>/index.md      # trigger, actors, steps, screens, jobs,
+│   │                            # sequence diagram, acceptance criteria
+│   ├── entities/                # the supporting data contracts
+│   │   ├── index.md             # entity catalog + product-wide ER diagram
+│   │   └── <entity>/            # index.md (lifecycle, relationships, invariants)
+│   │       ├── index.md         #   + schema.yaml (the data model, JSON Schema)
+│   │       └── schema.yaml
+│   └── apis/                    # authoritative API contracts (OpenAPI 3.1)
+│       ├── <project>.openapi.yaml
+│       └── released/            # frozen production snapshots — the release
+│                                # record backward compatibility is enforced against
 └── plans/                       # per-cycle plans (the diff to apply)
-    ├── <date>-<time>-<slice>.md # incl. a "Gaps surfaced during execution" section
-    └── archived/                # retired, completed plans
+    ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
+    └── archived/                # surfaced during execution" section
 ```
 
-Each entity doc holds the full-stack picture for that entity — stable product
-intent at the top, volatile engineering detail (data model, API, jobs, screens)
-below a marker. The **Project Registry** in `architecture.md` is a yaml block
-that `blueprint` and `plan` parse to map an entity's sections to the right
-project by `type` — the command mechanics are registry-driven, while the stacks
-themselves come from the enforced reference stacks below (recorded deviations
-aside).
+Each flow doc holds one journey end to end — who triggers it, the steps across
+entities and services, the screens and jobs it needs, and the acceptance
+criteria that prove it. Each entity doc is the data contract under those flows
+(`Used by:` links them), with its authoritative shape in `schema.yaml`. Flow and
+entity docs carry an `implementation:` frontmatter stamp the pipeline maintains
+— the blueprint always knows what's built. The **Project Registry** in
+`architecture.md` is a yaml block that `blueprint` and `plan` parse to map a
+flow's sections to the right project by `type` — the command mechanics are
+registry-driven, while the stacks themselves come from the enforced reference
+stacks below (recorded deviations aside).
 
 ## The structure & stacks it enforces
 
@@ -393,63 +428,68 @@ standard, and global component behaviors — and writes
 the blueprint's) that checks it against the design-system checklist until it
 passes. Like the blueprint, it stays code-independent: it records token *values*
 and *scales*, never the component library, CSS framework, or design file. Every
-entity's Screens reference it instead of re-deciding visual language.
-`blueprint` halts on a UI entity until it exists.
+flow's Screens reference it instead of re-deciding visual language. `blueprint`
+halts on a flow with screens until it exists.
 
 ### /vwf:blueprint
 
 Maintain the desired end state of the **whole product**. A run is a **sweep**:
-it derives a coverage worklist (every product goal served, every referenced
-entity authored and reviewed, every registry surface represented) and works
-through it entity by entity until whole-product coverage holds — then stamps
-`blueprint.coverage: complete` in `.config/vwf.yaml`. `plan` refuses to run
-until that stamp is complete, so a half-blueprinted product can't leak gaps into
-code. Stopping early is fine — the stamp records what remains, and the next run
-picks it up.
+it derives a coverage worklist (every product goal served by a flow, every flow
+reviewed, every entity/schema/API operation a flow references authored and
+reviewed, every registry surface represented) and works through it **flow by
+flow** until whole-product coverage holds and a **whole-product coherence
+review** passes — then stamps `blueprint.coverage: complete` in
+`.config/vwf.yaml`. `plan` refuses to run until that stamp is complete, so a
+half-blueprinted product can't leak gaps into code. Stopping early is fine — the
+stamp records what remains, and the next run picks it up.
 
 ```text
-/vwf:blueprint          # sweep from the top of the worklist
-/vwf:blueprint order    # start the sweep at one entity
+/vwf:blueprint                # sweep from the top of the worklist
+/vwf:blueprint place-order    # start the sweep at one flow (or entity)
 ```
 
-Per entity, `blueprint` reads the registry, works out which engineering surfaces
-apply (data model, API, relationships, concurrency, jobs, screens), and elicits
-the gaps with you under the **`blueprint-authoring`** doctrine. It writes
-`docs/blueprint/order/index.md` (every entity is a folder — small entities are
-just `index.md`; large ones split surfaces into sibling files, so the blueprint
-root stays a clean list of system docs + entity folders), records any
-cross-entity flow or inter-service contract in `integration.md`, points each
-screen at the design system, and updates `conventions.md` for any cross-cutting
-decision raised.
+Per flow, `blueprint` elicits the journey with you under the
+**`blueprint-authoring`** doctrine — trigger and actors, the ordered steps,
+consistency and failure handling, the screens and jobs the flow needs, and its
+acceptance criteria — then derives what the flow stands on: each referenced
+entity (`entities/<entity>/index.md` + its `schema.yaml` data model), the API
+operations it names (per-service OpenAPI contracts under `apis/`), the flow
+catalog, and the product-wide ER diagram. Screens point at the design system;
+`conventions.md` picks up any cross-cutting decision raised.
 
-Complicated flows are **drawn, not just tabled**: every `integration.md` flow
-carries a mermaid sequence diagram (failure branch included), an entity
-lifecycle with three or more states carries a state diagram beside its
-transition table, and `architecture.md` carries a system-shape flowchart kept in
-sync with the registry. Diagrams are views of the authoritative tables — the
-reviewer flags one that adds, contradicts, or goes missing.
+Complicated contracts are **drawn, not just tabled**: every flow carries a
+mermaid sequence diagram (failure branch included), an entity lifecycle with
+three or more states carries a state diagram beside its transition table,
+`entities/index.md` carries the product-wide ER diagram, and `architecture.md` a
+system-shape flowchart kept in sync with the registry. Diagrams are views of the
+authoritative tables — the reviewers flag one that adds, contradicts, or goes
+missing.
 
-A fresh **reviewer subagent** then checks the doc against a completeness
-checklist — data, relationships, concurrency, API, and UI/UX, plus a
-**code-independence guardrail** that flags any file/class/library/CSS leakage —
-and returns `NO GAPS` or a numbered list. Gaps loop back to you for the specific
-open decisions, then re-review — until the doc passes. The blueprint is
-permanent and product-wide; it is never feature-scoped. Renaming or deleting an
-entity triggers an inbound-link reconcile, so no other doc is left pointing at a
-doc that moved.
+A fresh **reviewer subagent** checks each written doc against its completeness
+checklist (flow or entity mode), plus a **code-independence guardrail** that
+flags any file/class/library/CSS leakage, and returns `NO GAPS` or a numbered
+list — gaps loop back to you for the specific open decisions until the doc
+passes. When the worklist empties, a **coherence reviewer** walks every flow
+end-to-end across entities, schemas, and API contracts — the cross-doc gaps
+per-doc review can't see (a step whose state change no lifecycle allows, data no
+schema holds, an operation no contract defines, a breaking change to a released
+API) — and coverage stamps complete only after it returns clean. The blueprint
+is permanent and product-wide; it is never feature-scoped. Renaming or deleting
+a flow or entity triggers an inbound-link reconcile, so no other doc is left
+pointing at a doc that moved.
 
 ### /vwf:mockups
 
 An **optional step after `blueprint`** — never a gate for `plan`. It renders
-each entity's Screens contract as **self-contained static HTML mockups** (one
-page per screen plus each pinned state variant, styled from the design system's
+each flow's Screens contract as **self-contained static HTML mockups** (one page
+per screen plus each pinned state variant, styled from the design system's
 tokens) and pushes them to a **claude.ai/design design-system project** via
 Claude Code's built-in DesignSync tool, so you review the product's screens on
 the canvas before any code exists.
 
 ```text
-/vwf:mockups          # sweep every entity with a Screens surface
-/vwf:mockups order    # just one entity's screens
+/vwf:mockups                # sweep every flow with a Screens section
+/vwf:mockups place-order    # just one flow's screens
 ```
 
 Mockups are **realizations, never contract**: they are generated in an ephemeral
@@ -464,34 +504,37 @@ behind an explicit approval gate. If DesignSync isn't available in your session
 
 ### /vwf:plan
 
-Produce a reviewable plan for one slice of the blueprint:
+Produce reviewable plans for one slice of the blueprint:
 
 ```text
-/vwf:plan order
-/vwf:plan order/api      # just one section of the entity
-/vwf:plan integration    # the cross-entity integration doc
+/vwf:plan place-order        # a flow (searched in flows/ first)
+/vwf:plan entity/order       # an entity data contract
 ```
 
 A plan is a **diff**. `plan` reads the desired state (the blueprint slice +
-conventions + registry) and the actual state (the real code the registry maps
-the slice to), then writes only the delta — what exists, what's missing, what
-changes, and the order to do it in — to `docs/plans/<date>-<time>-<slice>.md`.
-Steps are ordered for TDD: each names the failing test that defines "done".
+schemas + API contracts + conventions + registry) and the actual state (the real
+code the registry maps the slice to), then writes only the delta — what exists,
+what's missing, what changes, and the order to do it in — to
+`docs/plans/<date>-<time>-<slice>.md`. Steps are ordered for TDD: each names the
+failing test that defines "done".
 
 Three guardrails keep a plan from building on a gap — which is what lets
 `execute` run autonomously: it **halts unless the blueprint coverage stamp reads
-complete**; it computes the slice's **dependency closure** — if the slice's
-blueprint depends on an entity that isn't built yet (planning `operator` while
-`settings` has unimplemented delta), that delta is pulled into the plan as
-leading steps, transitively; and it **routes blueprint gaps back to the
-blueprint** — a *what* question the diff exposes (a behaviour, contract, or
-acceptance criterion the blueprint never pinned down) is never settled inside
-the plan or parked as a risk, but fixed via `/vwf:blueprint` first, then the
-diff re-derived. Only *how* questions are decided at plan time, so an approved
-plan carries no open decisions for execute to trip on. If the blueprint implies
-a surface the code lacks, `plan` flags it as drift rather than quietly resolving
-it. You approve the plan before any code is written — and can approve straight
-into `/vwf:execute` in the same breath.
+complete**; it resolves the slice's **dependency chain** — every flow or entity
+the slice stands on whose `implementation:` stamp isn't `complete` becomes **its
+own plan**, planned dependency-first behind its own gate and linked by
+`covers:`/`requires:` frontmatter (a genuine dependency cycle collapses into one
+plan; if the code already conforms, `plan` offers to heal the stamp instead) —
+so no plan swallows its dependencies and `execute` can enforce the order; and it
+**routes blueprint gaps back to the blueprint** — a *what* question the diff
+exposes (a behaviour, contract, or acceptance criterion the blueprint never
+pinned down) is never settled inside the plan or parked as a risk, but fixed via
+`/vwf:blueprint` first, then the diff re-derived. Only *how* questions are
+decided at plan time, so an approved plan carries no open decisions for execute
+to trip on. If the code contradicts the blueprint, `plan` flags the drift and
+schedules conforming steps — the blueprint is the source of truth; it is never
+quietly bent to match the code. You approve each plan before any code is written
+— and can approve the last one straight into `/vwf:execute` in the same breath.
 
 ### /vwf:execute
 
@@ -520,20 +563,31 @@ What it does, by rule:
 - **One plan, one worktree.** Isolates all work in a dedicated git worktree and
   commits every step itself. It merges only after **you** approve the run at the
   final gate.
+- **Chain order enforced.** A plan whose `requires:` prerequisites haven't been
+  executed and merged (their covered docs stamped `implementation: complete`)
+  halts with the plan to run first — chained plans land one focused run at a
+  time, and the next unblocked plan is offered as each one lands.
 - **Whole plan, dependencies first.** Implements every step, ordered so
   prerequisites land before dependents.
 - **Full pipeline each step.** `code → review → security`, looping findings back
-  to code. **Security findings are always fixed**; **code-review findings loop
-  up to 4 rounds**, after which any residual is recorded as a gap — the
-  blueprint/plan wasn't thorough enough. After **all** steps, one
-  `acceptance + ux` pass runs (E2E criteria + rendered-UI review), with the same
-  4-round cap. `acceptance` runs when the slice touches a flow with acceptance
-  criteria; `ux` when it changes screens in a UI project (web gets the full
-  screenshot review; Flutter a code-level pass) — each skip explicit, never
-  silent.
+  to code. **Security findings are always fixed**, and so is any
+  **breaking-released-API finding** (a change that would break a contract frozen
+  under `apis/released/` — cap-exempt, never downgraded to a gap); other
+  **code-review findings loop up to 4 rounds**, after which any residual is
+  recorded as a gap — the blueprint/plan wasn't thorough enough. After **all**
+  steps, one `acceptance + ux` pass runs (E2E criteria + rendered-UI review),
+  with the same 4-round cap. `acceptance` runs when the slice touches a flow
+  with acceptance criteria; `ux` when it changes screens in a UI project (web
+  gets the full screenshot review; Flutter a code-level pass) — each skip
+  explicit, never silent.
 - **Gaps don't stop it.** Each gap (a hole in the blueprint or plan, not a code
   bug) is written to the plan doc's "Gaps surfaced during execution" section and
   to memory, and the run continues.
+- **The blueprint learns what's built.** The end-of-run reconcile stamps each
+  covered blueprint doc's `implementation:` state — the single sanctioned
+  blueprint edit (state only, never content). Everywhere else the blueprint is
+  the source of truth: code that contradicts it is surfaced and conformed, or
+  you consciously amend the contract via `/vwf:blueprint`.
 
 It **pauses** mid-run only on: a hard halt (no plan/blueprint, a test harness
 that can't run, an unresolvable git conflict); a **resource cap** — context >
@@ -544,7 +598,7 @@ don't cover that is irreversible.
 ```mermaid
 flowchart TD
     P["per step: code → review → security<br/>(findings loop back, no human gates)"] --> AX["acceptance (E2E) + ux (rendered)<br/>once, after all steps"]
-    AX --> RC["reconcile — registry, environment,<br/>harness stamp, human docs"]
+    AX --> RC["reconcile — registry, environment, harness stamp,<br/>human docs, implementation stamps"]
     RC --> G{"final gate — you review<br/>the run + gap list"}
     G -->|approve| M["merge (git-workflow)"]
     G -->|fix first| P
@@ -552,13 +606,13 @@ flowchart TD
 ```
 
 At the final gate it presents everything: per-step commits, coverage, the
-acceptance and ux results, and the consolidated gap list. Whatever you decide
-about the merge, it then offers to close each gap at the source — fix the
-blueprint (`/vwf:blueprint`, which re-stamps coverage) or re-derive the plan
-(`/vwf:plan`) — and reconciles **the repo's human docs**: any README/CLAUDE.md
-claim the landed change falsified is fixed in the same cycle (stale docs are
-more harmful than no docs). Archiving is offered once a merged run has no open
-gaps.
+acceptance and ux results, the implementation stamps written, and the
+consolidated gap list. Whatever you decide about the merge, it then offers to
+close each gap at the source — fix the blueprint (`/vwf:blueprint`, which
+re-stamps coverage) or re-derive the plan (`/vwf:plan`) — and reconciles **the
+repo's human docs**: any README/CLAUDE.md claim the landed change falsified is
+fixed in the same cycle (stale docs are more harmful than no docs). Archiving is
+offered once a merged run has no open gaps.
 
 The resource-cap pause is delivered by the
 **[statusline caps hook](#statusline)** — a command can't measure its own
@@ -586,7 +640,17 @@ operational, not filed as a blueprint gap.
 
 ```text
 /vwf:verify staging
+/vwf:verify production    # a clean pass offers to record a release
 ```
+
+A clean run against the **production** environment (the env named `production`,
+or whatever `production_env` in `.config/vwf.yaml` names) offers to record a
+**release**: each deployed service's living OpenAPI contract is frozen into
+`docs/blueprint/apis/released/<project>@<version>.openapi.yaml` — the release
+record. From the first snapshot on, backward compatibility is enforced
+everywhere: the blueprint's coherence review hard-gates a breaking contract
+change without a major-version bump, and execute's code review treats a code
+change that would break the released contract like a security finding.
 
 ### /vwf:feedback
 
@@ -595,7 +659,7 @@ reading, or a user complaint; it classifies and routes it to where it gets
 **fixed** — never to a backlog:
 
 - **Behavior bug / blueprint hole** → gap + a `/vwf:plan` / `/vwf:blueprint`
-  offer (deferred items land in the entity doc's Open Questions, so nothing
+  offer (deferred items land in the owning flow doc's Open Questions, so nothing
   depends on memory being up).
 - **Metric reading** → a dated row in `product.md`'s Metric readings appendix; a
   miss triggers a `/vwf:product` re-rank offer.

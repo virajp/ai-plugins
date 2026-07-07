@@ -1,0 +1,36 @@
+# docs/blueprint/entities/order/schema.yaml — authoritative data model for the
+# Order entity. Contract, not realization: logical types and constraints only.
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Order
+description: A customer's completed purchase — one row per placed order.
+type: object
+properties:
+  id:
+    type: string
+    description: Identifier (prefix ord_) — format per conventions.md#ids.
+  customer_id:
+    type: string
+    description: Owning Customer — foreign key to the Customer entity.
+  status:
+    type: string
+    description: Lifecycle state — transitions in index.md Lifecycle.
+    enum: [ placed, paid, fulfilled, cancelled ] # every lifecycle state
+  total_amount:
+    type: integer
+    description: Order total in the currency's smallest unit (minor units); >=
+      0.
+    minimum: 0
+  currency:
+    type: string
+    description: ISO 4217 currency of total_amount.
+    enum: [ USD, EUR, GBP ]
+  placed_at:
+    type: string
+    format: date-time
+    description: UTC timestamp the order was placed.
+  paid_at:
+    type: [ string, "null" ]
+    format: date-time
+    description: UTC timestamp payment was authorized; null until paid.
+required: [ id, customer_id, status, total_amount, currency, placed_at ]
+additionalProperties: false

@@ -30,11 +30,23 @@ Adopt the **Autonomous delivery driver** persona: keep moving, decide from the
 rules, isolate all work in one worktree, document what you can't resolve, and
 never land or retire anything without the user.
 
-## Halt Condition
+## Halt Conditions
 
 Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
 `/vwf:plan` first." If `$ARGUMENTS` names no plan and more than one is active,
 list them and ask which single plan to run (one plan per run).
+
+**Prerequisite order (chained plans).** Read the plan's `requires:` frontmatter.
+For each required plan, read its `covers:` docs **from the current checkout**
+and halt unless every one reads `implementation: complete`:
+
+> "Prerequisite plan `<file>` has not been executed and merged (`<doc>` is
+> `implementation: <state>`). Run `/vwf:execute <file>` first."
+
+No override flag — if reality differs from the stamp, heal it via `/vwf:plan`
+(its stamp-heal offer) or amend the blueprint via `/vwf:blueprint`; never guess
+past the halt. Because stamps land in the merged Reconcile commit, an
+executed-but-unmerged prerequisite correctly halts too.
 
 ## Format Check
 
@@ -46,13 +58,16 @@ the pause rules — never migrate autonomously.
 
 ## Doc Paths
 
-| Doc         | Path                                                    |
-| ----------- | ------------------------------------------------------- |
-| Plan        | `docs/plans/<plan>.md`                                  |
-| Registry    | `docs/blueprint/architecture.md`                        |
-| Blueprint   | `docs/blueprint/<entity>/` (`index.md` ± surface files) |
-| Conventions | `docs/blueprint/conventions.md`                         |
-| Environment | `docs/blueprint/environment.md`                         |
+| Doc           | Path                                                      |
+| ------------- | --------------------------------------------------------- |
+| Plan          | `docs/plans/<plan>.md`                                    |
+| Registry      | `docs/blueprint/architecture.md`                          |
+| Flow (slice)  | `docs/blueprint/flows/<flow>/index.md`                    |
+| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
+| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`              |
+| Released APIs | `docs/blueprint/apis/released/`                           |
+| Conventions   | `docs/blueprint/conventions.md`                           |
+| Environment   | `docs/blueprint/environment.md`                           |
 
 ## Pipeline (per step)
 
@@ -84,6 +99,11 @@ execution" section**.
 - **Always fix every security finding.** Security findings gate the step: loop
   back to `code` until security review is clean. A security finding is **never**
   downgraded to a gap or deferred.
+- **Always fix every breaking-API finding.** A `[breaking-api]` finding from the
+  review stage (a code change that would break a **released** API contract under
+  `docs/blueprint/apis/released/`) gates exactly like a security finding: loop
+  back to `code` until the `API COMPAT:` line reads clean — exempt from the
+  review round cap, never downgraded to a gap, never configurable off.
 - **Review findings: capped rounds.** For `review` (non-security) findings, loop
   `code → review` up to the configured cap (`.config/vwf.yaml`
   `pipeline.review_round_cap`, default **4**). Any review finding still
@@ -258,12 +278,15 @@ ux when the plan changes no screens in a UI project. Autonomous policy:
 
 ## Reconcile (in the worktree, before the final gate)
 
-1. **Architecture, environment, harness & docs.** Reconcile per the Reconcile
-   section of `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry
-   block for any topology change, `environment.md` for any new secret/env var,
-   the `.config/vwf.yaml` `harness:` block for any capability the run added, and
-   the repo's human docs (README/CLAUDE.md) per docs-sync (report what was
-   synced, or `docs: nothing contradicted`) — committed in the worktree like
+1. **Architecture, environment, harness, docs & implementation stamps.**
+   Reconcile per the Reconcile section of
+   `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry block for any
+   topology change, `environment.md` for any new secret/env var, the
+   `.config/vwf.yaml` `harness:` block for any capability the run added, the
+   repo's human docs (README/CLAUDE.md) per docs-sync (report what was synced,
+   or `docs: nothing contradicted`), and the **`implementation:` stamp** on each
+   blueprint doc in the plan's `covers:` list (the single sanctioned blueprint
+   edit — state only, per the stage rules) — committed in the worktree like
    every other step.
 2. **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's
    durable decisions, resolved findings, and each gap to mempalace (rooms
@@ -278,8 +301,10 @@ Present the whole run at **one** human gate: steps completed, per-step commits,
 final coverage vs the configured target, the **acceptance result**
 (per-criterion pass/fail, or why it was skipped/n-a), the **ux result**
 (findings/a11y summary, or why it was skipped), any configured model downgrades
-that applied, the consolidated **gap list** from the plan doc's "Gaps surfaced
-during execution" section, and the **worktree path**. Then wait.
+that applied, the **implementation stamps written** (each `covers:` doc and the
+state it was set to, with why anything short of `complete`), the consolidated
+**gap list** from the plan doc's "Gaps surfaced during execution" section, and
+the **worktree path**. Then wait.
 
 - **Approve** → hand off to `/vwf:git-workflow` for the merge/push sequence
   behind its own approval gate.
@@ -301,3 +326,8 @@ later cycle's recall sees it as closed.
 After a merge with no open gaps, offer to archive the completed plan via
 `/vwf:archive`. While gaps remain open, don't offer it — the plan doc is still
 the working record of what needs reconciling.
+
+**Chain forward.** Scan the active plans under `docs/plans/` for any whose
+`requires:` frontmatter lists the plan just completed. If one is now unblocked
+(every prerequisite's `covers:` docs read `implementation: complete`), offer
+`/vwf:execute <next-plan>` — chained plans land one focused run at a time.

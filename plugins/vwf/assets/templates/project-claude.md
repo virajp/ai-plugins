@@ -13,7 +13,7 @@ apply).
 `/vwf:execute` → `/vwf:archive` — then, after you deploy, `/vwf:verify <env>`
 and `/vwf:feedback` route what production says back into product/blueprint/plan.
 
-Optional: `/vwf:mockups [entity]` renders the blueprint's screens as static HTML
+Optional: `/vwf:mockups [flow]` renders the blueprint's screens as static HTML
 mockups on a claude.ai/design canvas — a realization for review, never part of
 the contract.
 
@@ -24,8 +24,8 @@ choices are `plan`'s job — not the blueprint's.
 
 **Docs:**
 
-- `docs/blueprint/product.md` — problem, users, measurable goals (every entity
-  `Serves:` one), slice priority.
+- `docs/blueprint/product.md` — problem, users, measurable goals (every flow
+  `Serves:` one; entities trace through flows), slice priority.
 - `docs/blueprint/architecture.md` — system shape + machine-readable Project
   Registry.
 - `docs/blueprint/design-system.md` — product-wide UX/visual contract (if UI).
@@ -33,11 +33,17 @@ choices are `plan`'s job — not the blueprint's.
   config…).
 - `docs/blueprint/environment.md` — per-project inventory of env vars + secrets,
   no values (if the system has an external integration/secret).
-- `docs/blueprint/integration.md` — cross-entity flows (each with acceptance
-  criteria) + inter-service contracts.
-- `docs/blueprint/<entity>/` — one folder per entity: `index.md` alone when
-  small, plus `data.md`/`api.md`/`jobs.md`/`screens.md` when large. The
-  blueprint root holds only the system docs above.
+- `docs/blueprint/flows/<flow>/` — one folder per flow, the **primary**
+  blueprint unit: trigger, actors, steps, screens, jobs, and acceptance
+  criteria. `flows/index.md` holds the catalog + inter-service contracts.
+- `docs/blueprint/entities/<entity>/` — one folder per entity, the supporting
+  data contracts: `index.md` (lifecycle, relationships, invariants) +
+  `schema.yaml` (the authoritative data model). `entities/index.md` holds the
+  catalog + product-wide ER diagram.
+- `docs/blueprint/apis/<project>.openapi.yaml` — the authoritative API contract
+  per service project; `apis/released/` holds the frozen production snapshots
+  (backward compatibility is enforced against the latest one). The blueprint
+  root holds only the system docs above.
 
 **The blueprint is an OKF bundle.** `docs/blueprint/` is an Open Knowledge
 Format (OKF) v0.1 bundle — every doc is a typed concept (YAML frontmatter) and

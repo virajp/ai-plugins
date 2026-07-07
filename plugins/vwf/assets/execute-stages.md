@@ -41,9 +41,15 @@ Per-stage dispatch contract:
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
   **slice** and **round number** for its recall tag). It reviews the code
   adversarially against the **plan, the blueprint, conventions, and the registry
-  stack**, using `/code-review` as its engine. It files its full findings to
-  mempalace (room `problems`) and returns the terse findings block plus a recall
-  tag.
+  stack**, using `/code-review` as its engine. When the plan touches a service's
+  API surface, also pass the **living contract**
+  (`docs/blueprint/apis/<project>.openapi.yaml`) and the **latest released
+  snapshot** (highest semver under `docs/blueprint/apis/released/`, when one
+  exists) — the reviewer's released-contract compatibility dimension checks the
+  change against both and returns an `API COMPAT:` line; a `[breaking-api]`
+  finding gates like a security finding (always fixed, exempt from the round
+  cap). It files its full findings to mempalace (room `problems`) and returns
+  the terse findings block plus a recall tag.
 - **security** — dispatch `execute-security-reviewer` (pass the wing, plus the
   **slice** and **round number** for its recall tag). It threat-models the
   changes against the project's declared **capabilities** in the registry, using
@@ -66,15 +72,16 @@ Per-stage dispatch contract:
   an `n/a` here usually means the preflight was skipped or the plan predates
   it.)
 - **ux** — dispatch `execute-ux-reviewer` (pass the changed screens from the
-  plan's screen steps, the `design-system.md` path, the entity's Screens
-  section(s), the UI project's registry entry, the wing, and the **slice** and
-  **round number**). It renders the changed screens via the repo's own dev
-  server + Playwright (per state where drivable), judges them against the design
-  system and the Screens contract, runs an **axe** accessibility scan (WCAG A/AA
-  violations are findings), and always adds a code-level token/state pass —
-  which is the whole review for a Flutter slice. Findings loop back to `code`
-  like review findings; `RENDERED: n/a` on a web slice is recorded as a gap and
-  reported at the final gate.
+  plan's screen steps, the `design-system.md` path, the owning flow docs'
+  Screens section(s) (`docs/blueprint/flows/<flow>/index.md`), the UI project's
+  registry entry, the wing, and the **slice** and **round number**). It renders
+  the changed screens via the repo's own dev server + Playwright (per state
+  where drivable), judges them against the design system and the Screens
+  contract, runs an **axe** accessibility scan (WCAG A/AA violations are
+  findings), and always adds a code-level token/state pass — which is the whole
+  review for a Flutter slice. Findings loop back to `code` like review findings;
+  `RENDERED: n/a` on a web slice is recorded as a gap and reported at the final
+  gate.
 
 ## Shared stage rules
 
@@ -107,7 +114,15 @@ Per-stage dispatch contract:
   surfaces** — the plan doc's "Gaps surfaced during execution" section. Gaps do
   not block the pipeline; they are reconciled at cycle end.
 - **Never silently edit the blueprint** — flag drift and offer; do not rewrite
-  it.
+  it. **Single exception:** the Reconcile step updates the `implementation:`
+  frontmatter key on the docs the plan's `covers:` lists — a state stamp the
+  pipeline owns, recording what the run landed. No other frontmatter key, and no
+  body or schema content, may be touched; anything else is drift to flag.
+- **The blueprint is the source of truth — code follows.** When landed code
+  contradicts the blueprint (not merely lags it), the pipeline never adjusts the
+  blueprint to match: the contradiction is surfaced (a finding when the plan
+  pinned it, a gap otherwise) and resolved by conforming the code or by the user
+  consciously amending the contract via `/vwf:blueprint`.
 
 ## Reconcile (end of run)
 
@@ -132,3 +147,16 @@ Per-stage dispatch contract:
    what actually landed — surgical edits in the same worktree/commit flow, and
    report what was synced (or `docs: nothing contradicted`). Stale docs are more
    harmful than no docs; this step is never skipped silently.
+5. **Implementation stamp.** For each blueprint doc in the plan's `covers:`
+   frontmatter, set its `implementation:` key to what the run actually landed —
+   the single carve-out from the never-silently-edit rule (state stamp only,
+   never content):
+   - a **flow** is `complete` when every plan step covering it landed **and**
+     its Acceptance criteria all returned `PASS` (stage run, none
+     `FAIL`/`NOT-COVERED`) **and** no open gap in the plan doc names it;
+   - an **entity** is `complete` when its blueprint delta fully landed with no
+     open gap naming it (entities are verified through flows — no acceptance
+     requirement of their own);
+   - anything less that still landed code is `partial`; nothing landed leaves
+     the stamp untouched. Commit the stamp edits in the worktree like every
+     other change and report each stamp written at the final gate.

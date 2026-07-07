@@ -16,7 +16,7 @@ priority the user did not confirm.
 
 **Boundary.** This doc is code- **and stack-independent**: no technology,
 framework, project, or screen names. Stacks belong to `architecture.md`;
-surfaces to entity docs. If the user answers with a solution ("we need push
+surfaces to flow docs. If the user answers with a solution ("we need push
 notifications"), elicit the outcome behind it.
 
 ## Doc Path
@@ -70,8 +70,8 @@ user is unsure. Cover, in order:
 3. **Goals & success metrics** — one goal at a time: the outcome, a measurable
    metric with a target and horizon, and where it is measured. Refuse
    unmeasurable phrasing; propose a proxy metric instead.
-4. **Slice priority** — rank the entities/flows to build next, each serving a
-   named goal, with a one-line why. When entity docs already exist under
+4. **Slice priority** — rank the flows/entities to build next, each serving a
+   named goal, with a one-line why. When flow or entity docs already exist under
    `docs/blueprint/`, offer them as the ranking candidates.
 5. **Non-goals** — what is deliberately out; at least one, or an explicit "none
    yet".
@@ -89,8 +89,9 @@ approval.
 Write or edit `docs/blueprint/product.md` yourself from the template — OKF
 frontmatter (`type: vwf-product`), every goal under a stable `{#goal-<slug>}`
 anchor. In update mode, **never delete a goal outright**: a retired goal's
-inbound links (entity docs' Purpose lines) must be reconciled — re-point or
-remove each with the user, like the blueprint's rename/delete rule.
+inbound links (flow docs' Purpose lines, which carry the `Serves:` goal edges)
+must be reconciled — re-point or remove each with the user, like the blueprint's
+rename/delete rule.
 
 ## Step 6 — Reviewer loop (fresh subagent)
 
@@ -107,9 +108,9 @@ decrease between rounds.
 
 ## Step 7 — Goal coverage (update mode)
 
-Grep the entity docs under `docs/blueprint/` for links to `product.md#goal-`
-anchors. Report — as information, not a gate — any goal **no entity serves yet**
-and any entity Purpose linking a **goal that no longer exists** (the latter must
+Grep the flow docs under `docs/blueprint/flows/` for links to `product.md#goal-`
+anchors. Report — as information, not a gate — any goal **no flow serves yet**
+and any flow Purpose linking a **goal that no longer exists** (the latter must
 be reconciled before commit, per Step 5).
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the durable

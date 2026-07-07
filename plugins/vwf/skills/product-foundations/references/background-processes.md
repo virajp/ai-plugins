@@ -7,8 +7,8 @@ Cross-cutting token: `background: durable-worker-ephemeral-service`.
 ## Default contract
 
 - **Classification is per action.** During blueprint elicitation, each mutating
-  row in an entity's Actors & Actions states whether its server work completes
-  in-request (sync) or continues after the response (async).
+  step in a flow's Steps states whether its server work completes in-request
+  (sync) or continues after the response (async).
 - **The placement rule** (the 95octane-derived default):
   - **worker** — anything **durable**: multi-step, retryable, compensating,
     scheduled/cron, long-running, or survives a process restart (the durable
@@ -22,11 +22,11 @@ Cross-cutting token: `background: durable-worker-ephemeral-service`.
   could be forked or made a one-activity workflow), ask the user via MCQ —
   consistent with the decisions-vs-mechanics filter. Never silently choose in
   the ambiguous zone, and never ask when the rule decides.
-- **The placement is recorded**: async actions land as rows in the owning
-  entity's **Background Jobs** section (worker placement: job, trigger,
-  timer/retry, activities, on-failure) or as an explicit fire-and-forget note on
-  the action's outcome (service placement). Cron work is a scheduled workflow on
-  the worker, never an in-process timer in the service.
+- **The placement is recorded**: async actions land as rows in the owning flow's
+  **Background Jobs** section (worker placement: job, trigger, timer/retry,
+  activities, on-failure) or as an explicit fire-and-forget note on the step's
+  outcome (service placement). Cron work is a scheduled workflow on the worker,
+  never an in-process timer in the service.
 - Durable jobs are **idempotent and signalable** where the contract needs it;
   the workflow/signal names are the service↔worker contract (see the worker
   reference-stack doc).
@@ -42,7 +42,7 @@ Cross-cutting token: `background: durable-worker-ephemeral-service`.
 ## Blueprint expansion
 
 - `conventions.md#background` (or the existing `#integrations` workflow note)
-  records the placement rule once; each entity's Background Jobs carries the
-  worker-placed jobs; fire-and-forget effects are visible on the action rows.
+  records the placement rule once; each flow's Background Jobs carries the
+  worker-placed jobs; fire-and-forget effects are visible on the flow steps.
   Realization: Temporal client/worker patterns in the `service` and `worker`
   reference-stack docs.
