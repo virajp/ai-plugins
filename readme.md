@@ -334,22 +334,22 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 
 ## Commands
 
-| Command                   | What it does                                                                       |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| `/vwf:setup`              | Onboard/migrate a repo into vwf's format (re-runnable)                             |
-| `/vwf:product`            | The Phase −1 outcome contract — problem, users, goals, slice priority              |
-| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry                            |
-| `/vwf:design-system`      | Product-wide UX/visual contract (mandatory once UI exists)                         |
-| `/vwf:blueprint [entity]` | Sweep the full-product blueprint to complete coverage, one doc per entity          |
-| `/vwf:mockups [entity]`   | Optional — push static HTML mockups of the blueprint's screens to claude.ai/design |
-| `/vwf:plan [slice]`       | Write a reviewable cycle plan — a diff of blueprint vs code, incl. unbuilt deps    |
-| `/vwf:execute [plan]`     | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate         |
-| `/vwf:archive [plan]`     | Retire a completed plan into `docs/plans/archived/`                                |
-| `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment     |
-| `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it                         |
-| `/vwf:handoff <name>`     | Capture the session so work resumes in a fresh one                                 |
-| `/vwf:recall <name>`      | Resume from a handoff in a fresh session                                           |
-| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                     |
+| Command                 | What it does                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                             |
+| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority              |
+| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                            |
+| `/vwf:design-system`    | Product-wide UX/visual contract (mandatory once UI exists)                         |
+| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage       |
+| `/vwf:mockups [flow]`   | Optional — push static HTML mockups of the blueprint's screens to claude.ai/design |
+| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans  |
+| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate         |
+| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                |
+| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment     |
+| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it                         |
+| `/vwf:handoff <name>`   | Capture the session so work resumes in a fresh one                                 |
+| `/vwf:recall <name>`    | Resume from a handoff in a fresh session                                           |
+| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                     |
 
 Every command runs on `sonnet` at high reasoning effort; inside `execute`, the
 code-review, security-review, and ux subagents run on `opus`.
@@ -394,12 +394,12 @@ assumptions. A stateless `product-reviewer` subagent gates the doc — an
 unmeasurable metric or a solution-shaped problem statement is a gap, not a pass.
 
 This is what gives the rest of the workflow product teeth: `blueprint` halts
-without `product.md`, every entity must declare which goal it **serves** (the
-reviewer rejects an entity no goal justifies), and `/vwf:feedback` logs metric
-readings against it. It's not a one-time doc — re-run it on **every product
-change**: adding, updating, or retiring a feature/goal, a pivot, or a re-rank
-(update mode asks only about the delta). Retired goals reconcile their inbound
-links, never dangle.
+without `product.md`, every flow must declare which goal it **serves** (the
+reviewer rejects a flow no goal justifies; entities trace to goals through the
+flows that use them), and `/vwf:feedback` logs metric readings against it. It's
+not a one-time doc — re-run it on **every product change**: adding, updating, or
+retiring a feature/goal, a pivot, or a re-rank (update mode asks only about the
+delta). Retired goals reconcile their inbound links, never dangle.
 
 ### /vwf:architecture
 
@@ -721,7 +721,7 @@ protocol**:
 - **Only real decisions** — if exactly one idiomatic answer exists, it proceeds
   without asking. It never guesses an open decision — it records it instead.
 - **Out-of-scope answers are parked, not lost** — when your answer raises
-  something beyond the current pass (a new feature, another entity, a future
+  something beyond the current pass (a new feature, another flow, a future
   concern), it stays out of this pass but is captured durably: filed to memory
   (room `gaps`) and mirrored into the doc's Open Questions / Out of scope
   section, so the next relevant session recalls it instead of depending on
@@ -755,9 +755,10 @@ mirrored into the plan doc, so they survive a memory outage. See
 
 ## A worked walkthrough
 
-A first slice, end to end. Assume a backend service with an `order` entity. (On
-a fresh repo, `/vwf:setup` runs steps 1–2 for you and offers step 3 — they're
-shown standalone here, as you'd run them for later updates.)
+A first slice, end to end. Assume a backend service whose first flow is
+`place-order` (with an `order` entity under it). (On a fresh repo, `/vwf:setup`
+runs steps 1–2 for you and offers step 3 — they're shown standalone here, as
+you'd run them for later updates.)
 
 ```text
 # 1. Pin the outcome contract (once per workspace, re-run to pivot)
@@ -768,28 +769,35 @@ shown standalone here, as you'd run them for later updates.)
 /vwf:architecture
 
 # 3. Blueprint — the sweep runs until the whole product is covered
-/vwf:blueprint order
-#    → writes docs/blueprint/order/index.md (and continues down the coverage
-#      worklist), each doc gated by the completeness reviewer; stamps
-#      blueprint.coverage: complete when the sweep finishes
+/vwf:blueprint place-order
+#    → writes docs/blueprint/flows/place-order/index.md and derives what it
+#      stands on (entities/order/{index.md,schema.yaml}, the operations in
+#      apis/api.openapi.yaml), continues down the coverage worklist, each doc
+#      gated by its completeness reviewer; runs the whole-product coherence
+#      review, then stamps blueprint.coverage: complete
 
-# 4. Plan the first slice — review the diff, approve it
-/vwf:plan order
-#    → writes docs/plans/2026-06-26-1430-order.md (TDD-ordered steps,
-#      any unbuilt dependencies folded in, + the acceptance criteria
-#      this cycle must land) — approve, or approve & execute
+# 4. Plan the first slice — review the diff(s), approve
+/vwf:plan place-order
+#    → resolves the dependency chain; an unbuilt `order` entity gets its own
+#      plan first (covers:/requires: linked), then the flow's plan — each
+#      TDD-ordered with the acceptance criteria this cycle must land —
+#      approve each, or approve & execute at the end of the chain
 
-# 5. Execute — runs unattended, one final gate
+# 5. Execute — runs unattended, one final gate (per chained plan, in order)
 /vwf:execute
-#    → per step: code (TDD) → review → security (findings loop back)
+#    → per step: code (TDD) → review → security (findings loop back;
+#      breaking a released API is always fixed)
 #    → acceptance (E2E) + ux (rendered) once, after all steps
-#    → reconcile registry + docs → [final gate: review run + gaps]
-#    → merge via git-workflow
+#    → reconcile registry + docs + implementation stamps
+#    → [final gate: review run + gaps] → merge via git-workflow
+#    → offers the next plan in the chain
 
 # 6. Archive the completed plan, deploy it yourself, then verify
 /vwf:archive
 /vwf:verify staging
 #    → health per project + all flows' acceptance criteria against staging
+/vwf:verify production
+#    → same checks; a clean pass offers to freeze the released API contracts
 
 # 7. When production talks, route what it says
 /vwf:feedback "median refund time is 3h — target is 1h"
@@ -823,12 +831,14 @@ they auto-apply and inform how Claude writes and reviews:
   `architecture` walks the checklist (accept / adapt / skip per foundation);
   `blueprint` expands accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
-  the blueprint vs `plan`) plus the per-surface completeness bars: data,
-  relationships, concurrency, integration flows (each with observable acceptance
-  criteria), and UI/UX — including the doc-unit doctrine (entity / page /
-  module) and the goal-traceability edge (every entity `Serves:` a product
-  goal). Auto-applies whenever a `docs/blueprint/` doc is edited (and on
-  `docs/plans/` for frontmatter/link hygiene only).
+  the blueprint vs `plan`) plus the per-surface completeness bars: the flow
+  contract (steps, screens, jobs, observable acceptance criteria), the entity
+  data contract (lifecycle, relationships, concurrency, `schema.yaml`), and the
+  API/schema bars (OpenAPI + JSON Schema, the released-snapshot additive-only
+  rule) — including the doc-unit doctrine (entity / page / module) and the
+  goal-traceability edges (every flow `Serves:` a product goal; every entity
+  `Used by:` a flow). Auto-applies whenever a `docs/blueprint/` doc is edited
+  (and on `docs/plans/` for frontmatter/link hygiene only).
 - **`design-system-authoring`** — the UX/visual-contract doctrine (semantic
   tokens, typography, spacing, motion, accessibility, component behaviors,
   anti-patterns) behind `/vwf:design-system`.
@@ -852,8 +862,9 @@ plugin (see Supporting plugins).
 
 - **Run `product` and `architecture` first.** `blueprint` halts without either —
   the goals and the registry anchor everything downstream.
-- **Keep slices small.** One entity or one section per plan/execute cycle keeps
-  reviews sharp and the diff reviewable.
+- **Keep slices small.** One flow or entity per plan/execute cycle keeps reviews
+  sharp and the diff reviewable — the dependency chain splits the rest into
+  their own plans anyway.
 - **Trust the gates.** Read the plan diff before approving it, and the run
   report + gap list at execute's final gate before merging — the approval is the
   point, not a formality.
