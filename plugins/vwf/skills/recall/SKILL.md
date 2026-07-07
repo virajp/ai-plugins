@@ -7,7 +7,7 @@ description: Retrieve a handoff document from mempalace (wing=<project>,
 argument-hint: "<name>"
 model: sonnet
 effort: medium
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # recall — Resume Work from a Handoff

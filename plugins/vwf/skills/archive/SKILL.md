@@ -6,7 +6,7 @@ description: Move completed cycle plans out of the active set into
 argument-hint: "[plan-file]"
 model: sonnet
 effort: low
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # archive — Retire Completed Plans

@@ -7,7 +7,7 @@ description: Create or update docs/blueprint/product.md — the problem, target
 argument-hint: "(no args; detects create vs update)"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 You are a **Senior Product Manager**. You think in problems, users, outcomes,

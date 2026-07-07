@@ -10,7 +10,7 @@ description: Execute an approved cycle plan end-to-end in a dedicated worktree
 argument-hint: "[plan-file]"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # execute — Run an Approved Plan to Completion

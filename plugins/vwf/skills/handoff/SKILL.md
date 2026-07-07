@@ -7,7 +7,7 @@ description: Capture the current session as a handoff document and file it to
 argument-hint: "<name>"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # handoff — Capture Work for a Fresh Session

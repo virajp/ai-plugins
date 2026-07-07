@@ -7,7 +7,7 @@ description: Create or update docs/blueprint/design-system.md — the
   foundation, mandatory once the product has a UI surface.
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # design-system — Product-Wide UX/Visual Contract

@@ -8,7 +8,7 @@ description: Verify a deployed environment against the blueprint —
 argument-hint: "[environment, e.g. staging]"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # verify — Check a Deployed Environment Against the Blueprint

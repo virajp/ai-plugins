@@ -11,7 +11,7 @@ description: Produce a reviewable cycle plan as a diff for one slice of the
 argument-hint: "[entity | entity/section | integration]"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # plan — Cycle Plan (a Diff, not a re-Blueprint)

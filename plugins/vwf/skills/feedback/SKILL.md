@@ -8,7 +8,7 @@ description: The front door for production feedback — a bug, a metric reading,
 argument-hint: "[the feedback — paste a bug report, metric, or complaint]"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # feedback — Route Production Feedback Into the Workflow

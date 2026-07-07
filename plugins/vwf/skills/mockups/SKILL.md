@@ -9,7 +9,7 @@ description: Render the blueprint's screens as self-contained static HTML
 argument-hint: "[entity, e.g. order — omit to sweep all screens]"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # mockups — Push Screen Mockups to Claude Design

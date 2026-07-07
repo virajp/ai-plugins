@@ -10,7 +10,7 @@ description: Maintain the always-current, full-product blueprint under
 argument-hint: "[entity]"
 model: sonnet
 effort: xhigh
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # blueprint — Full-Product Blueprint
