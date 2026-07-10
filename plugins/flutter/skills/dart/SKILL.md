@@ -1,13 +1,13 @@
 ---
 name: dart
-version: 0.4.1
+version: 0.5.0
 category: development
 description: Flutter & Dart development — the always-on coding baseline plus
   deep
   references for state management, architecture, navigation, UI/theming/animation,
-  data & networking, Firebase, media, monetization, native interop, and build
-  tooling. Auto-applies when editing any Dart file. Use when writing or reviewing
-  any Flutter/Dart code; read the reference matching your task.
+  performance, data & networking, Firebase, media, monetization, native interop,
+  and build tooling. Auto-applies when editing any Dart file. Use when writing or
+  reviewing any Flutter/Dart code; read the reference matching your task.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
@@ -39,11 +39,12 @@ the always-on baseline.
 
 ## UI
 
-| Topic                                                                                | When to read                                                               |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| [Building layouts](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/building-layouts.md) | Building layouts with the constraint system and layout widgets             |
-| [Theming](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/theming.md)                   | The MyColors token system, the Material 3 bootstrap theme, adaptive design |
-| [Animation](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/animate/index.md)           | Declarative widget animations with flutter_animate                         |
+| Topic                                                                                | When to read                                                                                                        |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| [Building layouts](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/building-layouts.md) | Building layouts with the constraint system and layout widgets                                                      |
+| [Theming](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/theming.md)                   | The MyColors token system, the Material 3 bootstrap theme, adaptive design                                          |
+| [Animation](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/animate/index.md)           | Declarative widget animations with flutter_animate                                                                  |
+| [Performance](${CLAUDE_PLUGIN_ROOT}/skills/dart/references/performance.md)           | Frame-budget best practices — build() cost, saveLayer/opacity pitfalls, lazy lists, RepaintBoundary, profiling jank |
 
 ## Data & Networking
 

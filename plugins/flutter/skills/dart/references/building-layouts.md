@@ -94,3 +94,7 @@ class AdaptiveHome extends StatelessWidget {
 When a `Row`/`Column` overflows (the yellow-and-black stripes), wrap the
 offending child in `Expanded` if it is in a flex box, or wrap the parent in a
 scrollable widget.
+
+A concrete `children:` list is fine for a handful of static items, as above —
+for long or data-driven lists use `ListView.builder` so only visible items are
+built (see the performance reference).

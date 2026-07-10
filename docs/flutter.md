@@ -37,10 +37,10 @@ file never pulls the whole corpus into context.
 The `dart` skill's reference library spans the former standalone skills — GetX,
 the Firebase suite (auth, analytics, app-check, crashlytics, messaging,
 storage), feature areas (architecture, state, navigation, theming, layouts,
-animations, maps, webview, webrtc, revenuecat, image handling, http/json,
-concurrency, caching), testing, and build/tooling (flavors, app-size, coverage,
-the `build_runner` pipeline). The `swift` skill's references cover SwiftUI and
-Xcode. Each reference loads only when the routed topic is relevant.
+animations, performance, maps, webview, webrtc, revenuecat, image handling,
+http/json, concurrency, caching), testing, and build/tooling (flavors, app-size,
+coverage, the `build_runner` pipeline). The `swift` skill's references cover
+SwiftUI and Xcode. Each reference loads only when the routed topic is relevant.
 
 ## Language servers
 
