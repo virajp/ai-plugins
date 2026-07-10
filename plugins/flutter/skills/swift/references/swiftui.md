@@ -321,6 +321,10 @@ var body: some View {
 
 ## Swift Package Manager
 
+Never add a new package (via Xcode or a `Package.swift` `dependencies:` entry)
+without the user's explicit consent — name the package, its repository URL, and
+what it's for, then wait for a yes.
+
 Add packages in Xcode: File > Add Package Dependencies.
 
 `Package.swift` for library packages:

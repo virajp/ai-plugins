@@ -149,7 +149,10 @@ step only if a blueprint requirement needs it (rung 1), and prefer reusing
 existing code, the stdlib, a native platform feature, or an installed dependency
 over new code or a new dependency (rungs 2–5). The plan carries no speculative
 steps and no unrequested abstraction or configurability — never at the cost of a
-safety guardrail.
+safety guardrail. Every **new third-party dependency** a step introduces is
+named explicitly in that step (package + what it's for): the plan's approval
+gate is where the user consents to new dependencies, and execute never installs
+one the plan doesn't name.
 
 **Harness preflight.** Per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`, work out
 which harness capabilities this element's gates will need (acceptance criteria →

@@ -1,6 +1,6 @@
 ---
 name: package-json
-version: 0.1.1
+version: 0.2.0
 category: development
 description: Opinionated package.json standards for single-package repos and
   pnpm monorepos — pnpm as the only package manager, "latest" versions, ESM, the
@@ -21,6 +21,14 @@ repo and a **monorepo** alike; the workspace-only additions (`workspace:*`
 links, the root orchestrator, `requiredScripts`) are marked as such. In a
 monorepo the workspace globs live in the root `pnpm-workspace.yaml` (see the
 **pnpm** skill).
+
+## Adding dependencies
+
+- **Ask first.** Never add a new package to `dependencies`/`devDependencies` (or
+  run `pnpm add`) without the user's explicit consent — name the package, what
+  it's for, and why the stdlib or an already-installed dependency can't cover
+  it, then wait for a yes. This holds even for packages a skill or standard
+  recommends (e.g. the `@/`-alias devDependencies below).
 
 ## Versions
 

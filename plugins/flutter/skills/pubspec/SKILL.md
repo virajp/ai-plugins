@@ -1,6 +1,6 @@
 ---
 name: pubspec
-version: 0.1.1
+version: 0.2.0
 category: development
 description: Opinionated pubspec.yaml standards for Flutter apps —
   unconstrained
@@ -22,6 +22,9 @@ declarative and uncluttered.
 
 ## Adding dependencies
 
+- **Ask first.** Never add a new package (to `dependencies` or
+  `dev_dependencies`) without the user's explicit consent — name the package,
+  its pub.dev link, and what it's for, then wait for a yes.
 - Add the package with **no version constraint** — `flutter pub get` resolves it
   and `pubspec.lock` pins it.
 - Add a `# https://pub.dev/packages/<name>` comment above every package.

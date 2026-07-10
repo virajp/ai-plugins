@@ -37,6 +37,16 @@ Lazy, not negligent. Minimalism is never an excuse to remove or weaken:
 A lower rung never justifies dropping one of these. When a guardrail forces more
 code, that code stays.
 
+## New dependencies — consent required
+
+A **new third-party dependency** (an npm/pnpm package, a pub.dev package, an SPM
+package, or the stack's equivalent) is never added silently. In interactive
+phases the user consents explicitly before it lands: the plan **names** every
+new dependency a step introduces (package + purpose), so the plan's approval
+gate is where consent happens. In execute, the coder installs **only**
+dependencies the approved plan names; one the plan missed is a plan gap —
+captured per the gap protocol, never installed on the coder's own judgment.
+
 ## By role
 
 - **Authoring (blueprint)** — apply rung 1 to *requirements*: specify only
@@ -49,4 +59,5 @@ code, that code stays.
 - **Reviewing (blueprint-reviewer, code-reviewer)** — flag the inverse: anything
   present that no requirement, plan step, or rung justifies (speculative
   features, premature abstraction, a rewrite of something reusable, a needless
-  dependency), while never penalizing code a safety guardrail requires.
+  dependency — or any new dependency the plan never named), while never
+  penalizing code a safety guardrail requires.

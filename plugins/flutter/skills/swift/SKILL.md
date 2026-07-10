@@ -1,6 +1,6 @@
 ---
 name: swift
-version: 0.4.1
+version: 0.5.0
 category: development
 description: The iOS-native (Swift) side of a Flutter app — the Swift/SwiftUI
   coding baseline, MethodChannel bridging from AppDelegate, and Xcode

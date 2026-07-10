@@ -580,6 +580,10 @@ What it does, by rule:
   with acceptance criteria; `ux` when it changes screens in a UI project (web
   gets the full screenshot review; Flutter a code-level pass) — each skip
   explicit, never silent.
+- **No unapproved dependencies.** The coder installs only the third-party
+  packages the approved plan names — the plan's approval gate is where you
+  consent to each new dependency. One the plan missed is captured as a gap,
+  never installed on the run's own judgment.
 - **Gaps don't stop it.** Each gap (a hole in the blueprint or plan, not a code
   bug) is written to the plan doc's "Gaps surfaced during execution" section and
   to memory, and the run continues.

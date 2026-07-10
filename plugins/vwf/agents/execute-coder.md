@@ -63,8 +63,12 @@ code before a failing test exists:
    decision ladder in `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` first: reuse
    existing code, the stdlib, a native platform feature, or an installed
    dependency before writing new code or adding a dependency; prefer one line
-   where it reads clearly. Nothing speculative; nothing not in the plan — but
-   never trade away a safety guardrail (validation, data-loss, security,
+   where it reads clearly. Install a **new** dependency only if the plan names
+   it — the plan's approval gate is where the user consented to it. If a
+   dependency the plan doesn't name seems necessary, do **not** install it:
+   capture it as a plan gap (per Blueprint/plan gaps above) and implement the
+   minimum without it. Nothing speculative; nothing not in the plan — but never
+   trade away a safety guardrail (validation, data-loss, security,
    accessibility) for brevity.
 3. **REFACTOR** — with the suite green, clean up. Do not add behavior during
    refactor; tests stay green throughout.
