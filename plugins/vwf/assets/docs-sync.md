@@ -39,6 +39,11 @@ changes when code lands, not when a contract is written.
 
 ## How
 
+- **Find contradicted docs graph-first**: when the repo carries a knowledge
+  graph, per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md` query it for the docs
+  that describe the changed behavior (`graphify query`) instead of grepping
+  every doc — then verify each hit by reading it; fall back silently when no
+  graph exists.
 - **Surgical by default**: update only passages the change falsified or that now
   omit a landed capability. Do not rewrite style, restructure, or document
   unchanged behavior — every edited line must trace to the change.

@@ -34,7 +34,15 @@ high-severity issues.
    surfaces too: third-party or datastore access that skips the common package's
    layers (dodging their audit/authz wrapping), and privileged/admin capability
    implemented outside the console project.
-3. Rate every finding by exploitability and impact.
+3. **Trace real call paths.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`,
+   when a knowledge graph is reachable (this worktree or the main checkout per
+   that asset's Worktrees rule), ground the threat model in actual reachability:
+   `graphify path` from the entry points (routes, handlers, jobs) to the changed
+   modules, and `graphify query` for which surfaces consume the data the change
+   writes. The graph reflects the last commit; verify every path by reading the
+   files, and cite `file:line`, never the graph. Skip silently when no graph
+   exists.
+4. Rate every finding by exploitability and impact.
 
 Merge both into one rated findings list. Do not rewrite the code — report only.
 

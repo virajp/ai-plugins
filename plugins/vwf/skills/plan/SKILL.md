@@ -120,6 +120,13 @@ own plan doc behind its own approval gate.
 - **Actual:** the real code in the submodule(s) the registry maps this element
   to (resolve section→project by `type` and `doc_unit`, as in `blueprint` §2).
 
+Survey the actual state **graph-first** per
+`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`: when the repo carries a knowledge
+graph, ask it what already realizes this element — which modules, routes, jobs,
+and screens exist, where they live, who calls them — and read the files it
+points to; fall back silently to direct reads when no graph is reachable. The
+graph orients the survey; the delta itself is always computed from the files.
+
 Determine what already exists, what is missing, what must change, and the order
 to do it in. Reference blueprint sections; do not restate them.
 

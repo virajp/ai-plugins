@@ -24,7 +24,10 @@ item lands in a durable doc, so nothing depends on memory being up.
 
 Read the feedback from `$ARGUMENTS` (or ask for it). Read
 `docs/blueprint/product.md` (goals, metrics) and skim the flow/entity docs it
-plausibly touches. **Recall** rooms `gaps` and `problems` per
+plausibly touches — when the repo carries a knowledge graph, locate that surface
+graph-first per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md` (`graphify query` the
+symptom to find the owning flow/entity/screens) instead of skimming blind.
+**Recall** rooms `gaps` and `problems` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — if this item is already known, say so
 and show its status instead of re-filing it.
 

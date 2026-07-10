@@ -46,6 +46,15 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    - **Test quality** — tests actually exercise the behaviour, not just
      coverage.
    - **Naming consistency** — with the surrounding code and the docs.
+   - **Impact** — per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when a
+     knowledge graph is reachable (this worktree or the main checkout per that
+     asset's Worktrees rule), query it for the dependents and call sites of
+     every changed module (`graphify query`, `graphify path`) and check the diff
+     against them — including reuse candidates the minimalism dimension flags
+     (an existing helper the diff re-implements). The graph reflects the last
+     commit — read the diff itself directly — and every finding cites a
+     `file:line` you verified, never the graph. Skip silently when no graph
+     exists.
    - **Released-contract compatibility** — when the diff touches a service's API
      surface (routes, handlers, DTOs, serializers) **and** the orchestrator
      passed a released-snapshot path

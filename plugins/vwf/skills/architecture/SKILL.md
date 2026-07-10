@@ -61,6 +61,15 @@ topology, stack, and cross-cutting decisions and their rationale (room
 (room `gaps`, tag `parked`), before eliciting — build on them and don't re-ask
 resolved questions. Skip silently if mempalace is unavailable.
 
+**Graph-first grounding.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when
+the repo carries a knowledge graph, query it for the actual system shape —
+projects, stacks, who calls whom — before eliciting. In create mode it grounds
+the defaults you offer; in update mode it is how you **detect** genuine deltas
+between the registry and the code instead of asking the user to enumerate them.
+Confirm every graph-derived fact with the user (or the file it points to) before
+recording it — never write registry content on graph output alone. Skip silently
+when no graph is reachable.
+
 Elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`: one decision per
 `AskUserQuestion` round, MCQ + "Other" for single-valued fields, multi-valued

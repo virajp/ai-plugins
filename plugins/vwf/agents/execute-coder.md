@@ -44,6 +44,14 @@ the blueprint/plan under-/mis-specified, where, and the assumption you proceeded
 on), and surface a terse one-liner in your return block. Skip the mempalace
 write silently if it is unavailable — still report the gap inline.
 
+**Orient graph-first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when a
+knowledge graph is reachable (in this worktree, or via the main checkout per
+that asset's Worktrees rule), `graphify query` before you code: where the code
+you must touch lives, who calls it, and whether something already realizes the
+behaviour — the minimalism ladder's reuse rung. The graph never contains your
+own uncommitted work; verify every lead by reading the file, and fall back
+silently to Grep/Glob when no graph exists.
+
 Implement per the plan under strict TDD. Take one behavior at a time and run the
 **RED → GREEN → REFACTOR** cycle for every change — never write implementation
 code before a failing test exists:

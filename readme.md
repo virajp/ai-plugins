@@ -753,6 +753,24 @@ step and proceeds — except `handoff`/`recall`, which fall back to
 mirrored into the plan doc, so they survive a memory outage. See
 **[docs/mempalace.md](./docs/mempalace.md)**.
 
+## Code intelligence
+
+`vwf` uses the `graphify` CLI as its code-intelligence layer. When a repo
+carries a knowledge graph (`graphify-out/graph.json`), every
+codebase-understanding moment goes to the graph first — `plan`'s actual-state
+survey, `setup`'s topology detection, `architecture`'s registry-vs-code delta
+detection, `feedback`'s "which flow owns this bug", and execute's coder (reuse
+discovery) and reviewers (impact analysis, call-path threat modeling) — with raw
+file reads reserved for verification: the graph orients, the file is the
+evidence. The graph reflects the last commit (graphify's post-commit hook keeps
+it fresh), so the uncommitted diff is always read directly, and execute's
+worktrees reach back to the main checkout's graph for pre-change context.
+
+This too is best-effort: no graph (or no CLI) means every surface falls back to
+direct reads silently — nothing blocks. `/vwf:setup` is the one command that
+builds a graph (consent-gated, at the end of onboarding) and installs the
+refresh hook.
+
 ## A worked walkthrough
 
 A first slice, end to end. Assume a backend service whose first flow is

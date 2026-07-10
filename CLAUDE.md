@@ -303,6 +303,19 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   in the plan doc, so they survive a mempalace outage and feed the
   blueprint/plan fixes. The skip-silently-when-down rule carves out
   `handoff`/`recall`, which fall back to `docs/handoffs/<name>.md` instead
+- `assets/graphify.md` — the **code-intelligence protocol**: when a repo carries
+  a knowledge graph (`graphify-out/graph.json`), codebase-understanding
+  questions go graph-first (`graphify query`/`path`/`explain`) with file reads
+  as verification (the graph orients, the file is the evidence; the graph
+  reflects the last commit, so the uncommitted diff is always read directly, and
+  execute's worktrees reach back to the main checkout's graph). Wired into
+  `plan`'s actual-state survey, `setup`'s topology detection, `architecture`'s
+  update-mode delta detection, `feedback`'s surface location, docs-sync's
+  contradicted-doc search, and the execute coder (reuse discovery) /
+  code-reviewer (impact) / security-reviewer (call-path threat model) /
+  acceptance-verifier (test-mapping seed). Absence never blocks — every surface
+  falls back to direct reads silently; only `/vwf:setup` builds a graph
+  (consent-gated, end of onboarding, plus the post-commit refresh hook)
 - `assets/docs-sync.md` — the **docs-sync rule** (stale docs are more harmful
   than no docs): every run that changes reality — `execute` (landed code, via
   the shared Reconcile step 4), `architecture` and `product` in update mode —

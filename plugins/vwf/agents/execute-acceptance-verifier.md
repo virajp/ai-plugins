@@ -37,11 +37,14 @@ staging-capable test).
 
 1. **Map criteria → tests.** For each criterion, find the E2E/integration
    test(s) that exercise it — search the repo's e2e/test trees yourself (`e2e/`,
-   `*.e2e.test.*`, integration suites). Judge by what the test actually asserts,
-   not by its name: the test must drive the flow's trigger and assert the
-   criterion's **observable outcome**. A test that mocks away the project
-   boundary the flow crosses does not count as covering a cross-project
-   criterion.
+   `*.e2e.test.*`, integration suites); when a knowledge graph is reachable (per
+   `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`), `graphify query` for the tests
+   touching the flow's trigger and outcome to seed the search, falling back
+   silently when none exists. Judge by what the test actually asserts, not by
+   its name (and never by the graph's word): the test must drive the flow's
+   trigger and assert the criterion's **observable outcome**. A test that mocks
+   away the project boundary the flow crosses does not count as covering a
+   cross-project criterion.
 2. **Boot the stack & run.** Discover how the repo runs E2E per the harness
    contract (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`): the canonical
    `test:e2e` mise task first, then near-canonical names (`all:e2e`, package

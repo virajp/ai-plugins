@@ -75,6 +75,11 @@ list rather than restarting; re-confirm anything the user wants revisited.
 before detecting — build on them, don't re-ask resolved questions. Skip silently
 if mempalace is unavailable.
 
+**Graph-first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when the repo
+already carries `graphify-out/graph.json`, query it for the system shape first —
+the projects present, their stacks, and who depends on whom — then confirm what
+it reports against the manifests below; fall back silently when no graph exists.
+
 Per the project-setup skill (topology-detection), read repo signals —
 `package.json`, `pnpm-workspace.yaml`, `pubspec.yaml`, `go.mod`, `Cargo.toml`,
 `.gitmodules`, dir layout — plus any existing `docs/blueprint/` or legacy
@@ -259,6 +264,15 @@ approval, **finalize resumability state**: remove the transient
 `setup_progress:` key from `.config/vwf.yaml` and delete the scratch
 `docs/blueprint/.vwf-migration-plan.md`. Then commit via `/vwf:git-workflow`
 with a `chore(vwf):` or `docs:` message. Keep the worktree local; do not push.
+
+**Knowledge graph.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, `setup` is
+the **only** vwf command that builds graphs. After the commit, if
+`graphify-out/graph.json` is missing and the `graphify` CLI is on `PATH`, offer
+— consent-gated; it is a long, LLM-driven build — to build it (invoke the
+`graphify` skill on the repo root of the **main checkout**, never the worktree)
+and install the post-commit refresh hook (`graphify hook install`). A decline is
+honored without re-asking this run; every other vwf surface falls back to direct
+reads when no graph exists, so absence never blocks anything.
 
 **Chain forward.** With the foundations in place, offer to continue straight
 into `/vwf:blueprint` (the full-product sweep — the next step of the pipeline);
