@@ -33,8 +33,8 @@ function updatePlugin() {
   fi
 }
 
-print_header "Adding virajp/claude-plugins marketplace to Claude ..."
-claude plugin marketplace add virajp/claude-plugins || true
+print_header "Adding virajp/ai-plugins marketplace to Claude ..."
+claude plugin marketplace add virajp/ai-plugins || true
 
 print_header "Updating all marketplaces ..."
 claude plugin marketplace update || true
