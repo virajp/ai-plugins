@@ -54,6 +54,7 @@ design (a plugin may hold skills versioned on their own cadence).
 | `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` skill that scans a repo and writes/updates its README                                                                                                                                                  |
 | `typescript`             | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/effect-runtime/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`) |
 | `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                       |
+| `claude-design`          | `./plugins/claude-design`  | Claude Design MCP server (Anthropic's remote endpoint `https://api.anthropic.com/v1/design/mcp`); a vwf dep                                                                                                                                                                                    |
 | `flutter`                | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)          |
 | `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                                      |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                        |
@@ -112,45 +113,45 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
 - `skills/` (workflow) — the `/vwf:` slash-invocable workflow skills (each
-  `skills/<name>/SKILL.md` with `disable-model-invocation: true`): the Product →
-  Blueprint → Plan → Execute model — `setup` (Phase-0 onboarding/migration
-  bootstrapper; ends by offering `/vwf:blueprint`), `product` (the Phase −1
-  outcome contract: problem/users/goals with `#goal-<slug>` anchors/slice
-  priority; `blueprint` halts without it), `architecture`, `design-system`,
-  `blueprint` (a **full-product, flow-first sweep** — a run works a coverage
-  worklist flow by flow, deriving the entities/schemas/API operations each flow
-  stands on, until whole-product coverage holds **and the whole-product
-  coherence review passes**, then stamps `blueprint.coverage` in
-  `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (optional
-  post-blueprint: renders each flow's Screens contract as self-contained static
-  HTML from design-system tokens — via per-flow `mockup-generator` subagents
-  into an ephemeral build dir, never committed — and pushes them to a
-  claude.ai/design design-system project through the harness DesignSync tool
-  behind an explicit approval gate; pins `mockups.project_id` in
-  `.config/vwf.yaml`; never a gate for `plan`), `plan` (halts unless that stamp
-  is `complete`; resolves the slice's **transitive dependency chain** — pruned
-  by the docs' `implementation:` stamps — and plans each unimplemented
-  dependency as **its own plan doc first**, in order, each behind its own gate
-  (plan docs carry `covers:`/`requires:` frontmatter; a genuine dependency cycle
-  collapses into one plan); **routes blueprint gaps back through
-  `/vwf:blueprint` before writing** — a *what*-level hole the diff exposes is
-  fixed in the contract, never settled in the plan or parked as a risk, so
-  execute never trips on an open decision; the last chain element's gate offers
-  Approve & execute), `execute` (halts until every `requires:` prerequisite
-  plan's `covers:` docs read `implementation: complete`), `archive`, `verify`
-  (post-deploy environment check: health pass + the flows' acceptance criteria
-  run against staging/prod via the acceptance verifier's environment mode — vwf
-  never deploys; a clean run against the **production** environment offers to
-  record a release, freezing each deployed service's OpenAPI contract into
-  `docs/blueprint/apis/released/` — the point from which API backward
-  compatibility is enforced), `feedback` (the production-feedback front door:
-  classifies bug/hole/metric-reading/UX/feature-idea and routes each into the
-  doc+command that fixes it, incl. the `product.md` Metric readings appendix),
-  internal `git-workflow`, and `handoff`/`recall` (mempalace-backed session
-  handoff — wing=`<project>`, room=`handoff`, drawer=`<name>`). `execute` runs
-  one approved plan to completion **autonomously** in a dedicated worktree:
-  dependency-ordered steps, `code→review→security` per step (security findings
-  always fixed; **breaking-released-API findings gate the same way** —
+  `skills/<name>/SKILL.md`; model-invocable too since
+  `disable-model-invocation: false`): the Product → Blueprint → Plan → Execute
+  model — `setup` (Phase-0 onboarding/migration bootstrapper; ends by offering
+  `/vwf:blueprint`), `product` (the Phase −1 outcome contract:
+  problem/users/goals with `#goal-<slug>` anchors/slice priority; `blueprint`
+  halts without it), `architecture`, `design-system`, `blueprint` (a
+  **full-product, flow-first sweep** — a run works a coverage worklist flow by
+  flow, deriving the entities/schemas/API operations each flow stands on, until
+  whole-product coverage holds **and the whole-product coherence review
+  passes**, then stamps `blueprint.coverage` in `.config/vwf.yaml` and offers
+  `/vwf:plan`), `mockups` (optional post-blueprint: renders each flow's Screens
+  contract as self-contained static HTML from design-system tokens — via
+  per-flow `mockup-generator` subagents into an ephemeral build dir, never
+  committed — and pushes them to a claude.ai/design design-system project
+  through the harness DesignSync tool behind an explicit approval gate; pins
+  `mockups.project_id` in `.config/vwf.yaml`; never a gate for `plan`), `plan`
+  (halts unless that stamp is `complete`; resolves the slice's **transitive
+  dependency chain** — pruned by the docs' `implementation:` stamps — and plans
+  each unimplemented dependency as **its own plan doc first**, in order, each
+  behind its own gate (plan docs carry `covers:`/`requires:` frontmatter; a
+  genuine dependency cycle collapses into one plan); **routes blueprint gaps
+  back through `/vwf:blueprint` before writing** — a *what*-level hole the diff
+  exposes is fixed in the contract, never settled in the plan or parked as a
+  risk, so execute never trips on an open decision; the last chain element's
+  gate offers Approve & execute), `execute` (halts until every `requires:`
+  prerequisite plan's `covers:` docs read `implementation: complete`),
+  `archive`, `verify` (post-deploy environment check: health pass + the flows'
+  acceptance criteria run against staging/prod via the acceptance verifier's
+  environment mode — vwf never deploys; a clean run against the **production**
+  environment offers to record a release, freezing each deployed service's
+  OpenAPI contract into `docs/blueprint/apis/released/` — the point from which
+  API backward compatibility is enforced), `feedback` (the production-feedback
+  front door: classifies bug/hole/metric-reading/UX/feature-idea and routes each
+  into the doc+command that fixes it, incl. the `product.md` Metric readings
+  appendix), internal `git-workflow`, and `handoff`/`recall` (mempalace-backed
+  session handoff — wing=`<project>`, room=`handoff`, drawer=`<name>`).
+  `execute` runs one approved plan to completion **autonomously** in a dedicated
+  worktree: dependency-ordered steps, `code→review→security` per step (security
+  findings always fixed; **breaking-released-API findings gate the same way** —
   cap-exempt, always fixed; other review findings loop ≤4 rounds then become
   documented gaps) plus one `acceptance + ux` pass after all steps (same 4-round
   cap), gaps mirrored to the plan doc's "Gaps surfaced during execution"
@@ -430,21 +431,21 @@ catalog/erDiagram sync, the released-API additive-only diff).
 
 ### Dependencies
 
-`vwf` depends on `context7`, `markdown`, `mempalace`, and `mise` — **all
-resolved from the `virajp-plugins` marketplace itself**, so installing `vwf`
-needs no other marketplace registered. `context7`, `markdown`, and `mise` are
-authored here; `mempalace` is not — it is **re-listed** in
-`.claude-plugin/marketplace.json` via a `url` source (pointing at its upstream
-repo) so it lives under `virajp-plugins`.
+`vwf` depends on `claude-design`, `context7`, `markdown`, `mempalace`, and
+`mise` — **all resolved from the `virajp-plugins` marketplace itself**, so
+installing `vwf` needs no other marketplace registered. `claude-design`,
+`context7`, `markdown`, and `mise` are authored here; `mempalace` is not — it is
+**re-listed** in `.claude-plugin/marketplace.json` via a `url` source (pointing
+at its upstream repo) so it lives under `virajp-plugins`.
 
 The dependency list is declared in **two** places, which must stay in sync —
 both reference `@virajp-plugins` for every entry (the `plugins:check` task
 enforces this):
 
-- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `markdown`,
-  `mempalace`, `mise`
-- `.claude-plugin/marketplace.json` (vwf entry) → `context7`, `markdown`,
-  `mempalace`, `mise`
+- `plugins/vwf/.claude-plugin/plugin.json` → `claude-design`, `context7`,
+  `markdown`, `mempalace`, `mise`
+- `.claude-plugin/marketplace.json` (vwf entry) → `claude-design`, `context7`,
+  `markdown`, `mempalace`, `mise`
 
 When `vwf` is enabled, Claude Code (≥ 2.1.143) **auto-installs and
 auto-enables** these dependencies at the same scope. Key rules:
@@ -509,7 +510,8 @@ Layout:
   write a **command wrapper** `command/<plugin>-<skill>.md` per
   `disable-model-invocation` skill (OpenCode has no user-invoked skills), and
   write each plugin's MCP server (`MCP_ENTRIES`: context7 via `pnpm dlx`,
-  mempalace via `mise x -- mempalace-mcp`) to the config's `mcp` key. **Upstream
+  mempalace via `mise x -- mempalace-mcp`, claude-design as a `remote` entry
+  pointing at Anthropic's endpoint) to the config's `mcp` key. **Upstream
   plugins** (`UPSTREAM`): mempalace installs from its own repo (tarball;
   `AI_PLUGINS_UPSTREAM_DIR` overrides for tests) — its repo root is the plugin
   root (skills/ + integrations/ copied, versioned by its plugin.json), and its
@@ -739,8 +741,9 @@ Things to know when editing hooks here:
 ## Adding a vwf Skill
 
 Create `plugins/vwf/skills/<name>/SKILL.md` — no other registration is needed
-(auto-discovered). For a user-invoked workflow skill (what used to be a
-command), set `disable-model-invocation: true` in the frontmatter; for
+(auto-discovered). Workflow skills (what used to be commands) stay slash- AND
+model-invocable — set `disable-model-invocation: false` like the existing ones;
+`true` is reserved for skills that must stay user-only (none in vwf today). For
 auto-applying doctrine, set `user-invocable: false` + `paths:` scoping. Skill
 names must be unique across **all** local plugins (`plugins:check` enforces this
 — OpenCode installs them into one flat namespace).
@@ -756,13 +759,14 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 Available plugin names: `vwf`, `markdown`, `typescript`, `flutter`, `mempalace`,
-`context7`, `mise`, `github-actions`, `andrej-karpathy-skills` (external,
-opt-in). (The statusline is not a plugin — install it via
+`claude-design`, `context7`, `mise`, `github-actions`, `andrej-karpathy-skills`
+(external, opt-in). (The statusline is not a plugin — install it via
 `npx @askviraj/ai-plugins …`; see The installer & statusline CLI.)
 
-Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
-`mise`) automatically from the same `virajp-plugins` marketplace — no other
-marketplace needs to be registered. See the Dependencies section above.
+Installing `vwf` pulls in its dependencies (`claude-design`, `context7`,
+`markdown`, `mempalace`, `mise`) automatically from the same `virajp-plugins`
+marketplace — no other marketplace needs to be registered. See the Dependencies
+section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
 `--platform opencode` target, which renders each plugin's skills into

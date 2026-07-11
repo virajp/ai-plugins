@@ -109,6 +109,7 @@ const PLUGINS = [
   "markdown",
   "typescript",
   "flutter",
+  "claude-design",
   "context7",
   "mempalace",
   "mise",
@@ -170,7 +171,7 @@ const CORE_DEPS = ["claude"];
 // (plugins:check asserts the sync). Claude Code auto-installs these itself;
 // the OpenCode target expands them explicitly at plan time.
 const PLUGIN_DEPS = {
-  vwf: ["context7", "markdown", "mempalace", "mise"],
+  vwf: ["claude-design", "context7", "markdown", "mempalace", "mise"],
 };
 
 // The external runtime tools each plugin needs — checked ONLY when that plugin

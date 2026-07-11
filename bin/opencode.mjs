@@ -30,7 +30,8 @@
  *    invocation,
  *  - maps the plugin's `lspServers` (if any) onto OpenCode `lsp` entries,
  *    overriding the matching built-in ids with our mise-provisioned launchers,
- *  - for context7, adds the MCP server to the config's `mcp` key.
+ *  - for context7 and claude-design, adds the MCP server to the config's
+ *    `mcp` key.
  *
  * Plugin dependencies are expanded at plan time (PLUGIN_DEPS — Claude Code
  * auto-installs these itself), skipping url-sourced ones, and a vwf install
@@ -126,8 +127,12 @@ const installableForOpenCode = name =>
 
 // MCP servers written into the OpenCode config per plugin. context7 mirrors
 // its plugin.json; mempalace runs its MCP binary through mise so no venv or
-// PATH setup is assumed.
+// PATH setup is assumed; claude-design is Anthropic's remote MCP endpoint.
 const MCP_ENTRIES = {
+  "claude-design": {
+    type: "remote",
+    url: "https://api.anthropic.com/v1/design/mcp",
+  },
   context7: {
     type: "local",
     command: ["pnpm", "dlx", "@upstash/context7-mcp"],
@@ -932,7 +937,7 @@ class OpenCode {
   }
 
   // One command wrapper per workflow skill: OpenCode commands are user-typed
-  // (`/<file-stem>`), so `/vwf-blueprint` etc. keep working there. Doctrine
+  // (`/<file-stem>`), so `/markdown-readme` etc. keep working there. Doctrine
   // skills need no wrapper — OpenCode's skill tool loads them from the
   // description.
   async writeWrappers(name, pluginDir, configDir) {

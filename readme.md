@@ -109,10 +109,10 @@ checks for each and prints the exact command for anything missing.
 | graphify        | knowledge graph the commands rely on     | `mise use -g pipx:graphifyy@latest`   |
 | uv              | runs the `mempalace` memory server       | `mise use -g uv@latest`               |
 
-`vwf` also depends on four plugins — `context7`, `markdown`, `mempalace`, and
-`mise` — all resolved from the same `virajp-plugins` marketplace. Claude Code
-**auto-installs and auto-enables** them when you enable `vwf` (requires Claude
-Code ≥ 2.1.143).
+`vwf` also depends on five plugins — `claude-design`, `context7`, `markdown`,
+`mempalace`, and `mise` — all resolved from the same `virajp-plugins`
+marketplace. Claude Code **auto-installs and auto-enables** them when you enable
+`vwf` (requires Claude Code ≥ 2.1.143).
 
 ## Install
 
@@ -354,10 +354,10 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 Every command runs on `sonnet` at high reasoning effort; inside `execute`, the
 code-review, security-review, and ux subagents run on `opus`.
 
-Under the hood each command is a **skill** (`skills/<name>/SKILL.md` with
-`disable-model-invocation: true`) — Claude Code's unified skills keep the
-`/vwf:<name>` invocation exactly as before (this needs a recent Claude Code),
-and the same artifact installs into OpenCode via the
+Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
+Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
+needs a recent Claude Code), the model can also invoke them itself when the
+conversation calls for one, and the same artifact installs into OpenCode via the
 [installer CLI](#the-installer-cli).
 
 ### /vwf:setup
@@ -909,6 +909,7 @@ your stack. Each has a dedicated guide:
 | **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                         | `--user mise`                               |
 | **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` skill — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                     | `--user github-actions`                     |
 | **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                        | `--user context7`                           |
+| **[claude-design](./docs/claude-design.md)**                                       | The Claude Design MCP server — Anthropic's remote endpoint for claude.ai/design (also a `vwf` dependency)                                                                                          | `--user claude-design`                      |
 | **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                               | `--user mempalace`                          |
 | **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                             | `--user`/`--project andrej-karpathy-skills` |
 
@@ -1004,9 +1005,9 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   exactly like Claude's `disable-model-invocation` — while doctrine skills stay
   discoverable under `skills/`;
 - expands plugin **dependencies** like Claude Code does — installing `vwf` also
-  renders `markdown`, `mise`, and wires `context7` and `mempalace`. `mempalace`
-  (like the graphify wiring below) is **user-level only** — a `--project`
-  request is redirected to user scope, on both platforms;
+  renders `markdown`, `mise`, and wires `claude-design`, `context7`, and
+  `mempalace`. `mempalace` (like the graphify wiring below) is **user-level
+  only** — a `--project` request is redirected to user scope, on both platforms;
 - wires **graphify at user level** when `vwf` is installed: its user-level
   skills install as usual, and the project-level `graphify.js` its CLI generates
   is harvested into `~/.config/opencode/plugin/` instead — no project files are
@@ -1029,9 +1030,10 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   OpenCode's built-in launchers with the plugins' mise-provisioned ones (no SDK
   on `PATH` needed); an entry you already have is never overwritten;
 - writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each workflow
-  skill, so `/vwf-blueprint` etc. work in OpenCode (which has no user-invoked
+  skill, so `/markdown-readme` etc. work in OpenCode (which has no user-invoked
   skills yet);
-- for `context7`, adds the MCP server to the config's `mcp` key.
+- for `context7` and `claude-design`, adds the MCP server to the config's `mcp`
+  key (`claude-design` as a `remote` entry).
 
 **Not ported**: subagents and vwf's hooks are Claude Code concepts (vwf's
 execute pipeline degrades accordingly), the statusline is Claude-only, and

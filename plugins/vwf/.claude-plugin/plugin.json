@@ -3,6 +3,10 @@
   "dependencies": [
     {
       "marketplace": "virajp-plugins",
+      "name": "claude-design"
+    },
+    {
+      "marketplace": "virajp-plugins",
       "name": "context7"
     },
     {

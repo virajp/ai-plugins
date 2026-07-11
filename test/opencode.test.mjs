@@ -120,16 +120,22 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
-  // Skills + assets landed under virajp-plugins/vwf. Workflow skills
-  // (disable-model-invocation) are segregated to commands/<n>/index.md so
-  // OpenCode's **/SKILL.md discovery never lists them to the model; doctrine
-  // skills stay under skills/.
+  // Skills + assets landed under virajp-plugins/vwf. vwf's skills are all
+  // model-invocable (disable-model-invocation: false), so they stay under
+  // skills/ where OpenCode's **/SKILL.md discovery lists them — no commands/
+  // segregation.
   const vwfDir = join(configDir, "virajp-plugins", "vwf");
-  assert.ok(existsSync(join(vwfDir, "commands", "blueprint", "index.md")));
-  assert.ok(!existsSync(join(vwfDir, "skills", "blueprint")));
+  assert.ok(existsSync(join(vwfDir, "skills", "blueprint", "SKILL.md")));
+  assert.ok(!existsSync(join(vwfDir, "commands")));
   assert.ok(
     existsSync(join(vwfDir, "skills", "blueprint-authoring", "SKILL.md")),
   );
+  // User-only workflow skills (disable-model-invocation: true) ARE segregated
+  // to commands/<n>/index.md, outside skill discovery — markdown's readme
+  // skill (a vwf dep) exercises that path.
+  const mdDir = join(configDir, "virajp-plugins", "markdown");
+  assert.ok(existsSync(join(mdDir, "commands", "readme", "index.md")));
+  assert.ok(!existsSync(join(mdDir, "skills", "readme")));
   assert.ok(existsSync(join(vwfDir, "assets", "templates", "entity.md")));
   assert.ok(existsSync(join(vwfDir, ".version")));
   // Claude-only surfaces are not rendered.
@@ -172,23 +178,20 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   walk(vwfDir);
   assert.deepEqual(leftover, [], "unrewritten ${CLAUDE_PLUGIN_ROOT} refs");
   const blueprint = readFileSync(
-    join(vwfDir, "commands", "blueprint", "index.md"),
+    join(vwfDir, "skills", "blueprint", "SKILL.md"),
     "utf8",
   );
   assert.ok(blueprint.includes(vwfDir), "rewritten refs point at install dir");
 
-  // Command wrappers exist exactly for the disable-model-invocation skills.
-  const wrappers = readdirSync(join(configDir, "command")).filter(f =>
-    f.startsWith("vwf-")
-  );
-  assert.equal(wrappers.length, 14);
-  assert.ok(wrappers.includes("vwf-blueprint.md"));
-  // Doctrine skills get no wrapper.
-  assert.ok(!wrappers.includes("vwf-blueprint-authoring.md"));
-  const wrapper = readFileSync(
-    join(configDir, "command", "vwf-blueprint.md"),
-    "utf8",
-  );
+  // Command wrappers exist exactly for the disable-model-invocation skills:
+  // vwf has none, markdown's readme gets one.
+  const commandDir = join(configDir, "command");
+  const wrappers = readdirSync(commandDir);
+  assert.deepEqual(wrappers.filter(f => f.startsWith("vwf-")), []);
+  assert.ok(wrappers.includes("markdown-readme.md"));
+  // Model-invocable skills get no wrapper.
+  assert.ok(!wrappers.includes("markdown-documentation-standards.md"));
+  const wrapper = readFileSync(join(commandDir, "markdown-readme.md"), "utf8");
   assert.ok(wrapper.includes("$ARGUMENTS"));
   assert.ok(wrapper.startsWith("---\ndescription:"));
 
@@ -206,6 +209,11 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   assert.deepEqual(config.mcp.mempalace, {
     type: "local",
     command: ["mise", "x", "--", "mempalace-mcp"],
+  });
+  // claude-design (a vwf dep) has no skills to render — only its remote MCP.
+  assert.deepEqual(config.mcp["claude-design"], {
+    type: "remote",
+    url: "https://api.anthropic.com/v1/design/mcp",
   });
   // Derived from plugins/typescript plugin.json lspServers (typescript-lsp →
   // the OpenCode built-in id "typescript") and stamped beside the render.
@@ -261,6 +269,8 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
     "--uninstall",
     "--user",
     "vwf",
+    "--user",
+    "claude-design",
     "--user",
     "context7",
     "--user",
