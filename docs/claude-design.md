@@ -12,7 +12,16 @@ pnpx @askviraj/ai-plugins --user claude-design
 ```
 
 `claude-design` is also a dependency of `vwf`, so installing `vwf` pulls it in
-automatically.
+automatically. vwf uses it at three points of the workflow:
+
+- **`/vwf:design-system`** — optional canvas token sheets during elicitation,
+  and a consent-gated publish of the reviewed contract as a Claude Design design
+  system (pinned as `design.design_system_id`).
+- **`/vwf:mockups`** — the push surface where the harness DesignSync tool is
+  absent (e.g. OpenCode); pushes bind the published design system and
+  self-verify via server-side `render_preview`.
+- **`/vwf:feedback canvas`** — harvests the canvas review conversation
+  (`get_conversation`) back into the blueprint/design-system routes.
 
 For **OpenCode**, `--platform opencode --user claude-design` adds the same
 server as a `remote` entry under the `mcp` key of the OpenCode config
