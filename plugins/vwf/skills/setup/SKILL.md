@@ -202,10 +202,11 @@ yielding an empty plan (the idempotence Hard Rule):
   requires a registry change (a new/changed project, capability, or
   cross-cutting decision).
 - Run `/vwf:design-system` only if the topology has a **UI surface**
-  (`ui: true`) **and** `docs/blueprint/design-system.md` is missing or stale.
-  Recommend its **`generate`** path (canvas-first authoring on claude.ai/design)
-  when a Claude Design surface is connected — the command falls back to text
-  elicitation on its own when none is.
+  (`ui: true`) **and** `docs/blueprint/design-system.md` is missing or stale. It
+  **imports** the product's Claude Design design system (pick or build one on
+  claude.ai/design first); with no surface connected it halts with connect
+  instructions — tell the user, and record the skip in `setup_progress` so a
+  later run resumes it.
 
 These are interactive — hand off, then resume. If a foundation command fails,
 report the error, offer to continue without it (leaving that foundation for a

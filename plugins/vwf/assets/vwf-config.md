@@ -62,7 +62,7 @@ environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in 
 production_env: production # optional — names the release environment for /vwf:verify (default: the env literally named "production")
 
 design: # claude.ai/design pins & canvas state — ids and flow names only, never content
-  design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system publishes or imports (its own canvas project); every mockup push binds it via get_claude_design_prompt
+  design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
   projects: # the claude.ai/design design-system project each registry UI project pushes its mockups to — pin the same uuid to share one canvas, or separate uuids, as the product needs
     <registry-project>: <uuid>
   flows_pushed: [] # flows whose Screens cards are current on the canvas — recorded by blueprint's per-flow render step and by mockups, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory

@@ -264,7 +264,7 @@ docs/
 │   ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
 │   └── archived/                # surfaced during execution" section
 └── prompts/                     # numbered canvas design briefs (committed intent)
-    └── NNN-*.md                 # written by /vwf:screens prompt & design-system generate
+    └── NNN-*.md                 # written by /vwf:screens prompt
 ```
 
 Each flow doc holds one journey end to end — who triggers it, the steps across
@@ -345,7 +345,7 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                          |
 | `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                           |
 | `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                         |
-| `/vwf:design-system`    | Product-wide UX/visual contract — authored on Claude Design (generate/import) or in text                        |
+| `/vwf:design-system`    | Import the product's Claude Design design system into the contract (mandatory once UI exists)                   |
 | `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
 | `/vwf:mockups [flow]`   | Batch re-render/push of screen mockups (blueprint passes render screens in-pass)                                |
 | `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint              |
@@ -428,48 +428,32 @@ blueprint deliberately doesn't.
 ### /vwf:design-system
 
 A second foundation, **mandatory once the registry has a UI project** (type
-`site`, `frontend`, or `console`). It elicits the product-wide UX/visual
-language — semantic color tokens, typography, spacing, motion, the accessibility
-standard, and global component behaviors — and writes
-`docs/blueprint/design-system.md`, gated by a fresh **reviewer subagent** (like
-the blueprint's) that checks it against the design-system checklist until it
-passes. Like the blueprint, it stays code-independent: it records token *values*
-and *scales*, never the component library, CSS framework, or design file. Every
-flow's Screens reference it instead of re-deciding visual language. `blueprint`
-halts on a flow with screens until it exists.
-
-**Claude Design is the preferred authoring surface** — a design system is judged
-visually, not as hex values in chat. With the claude-design connection
-available, the command offers three paths:
+`site`, `frontend`, or `console`) — and **import-only**: Claude Design owns
+design-system authoring. You pick or build the design system on claude.ai/design
+(its stock systems are strong, and visual language is judged on a canvas, not as
+hex values in chat); the command imports it:
 
 ```text
-/vwf:design-system import     # recommended — distill a canvas design system into the doc
-/vwf:design-system generate   # bespoke brand: elicit a brief → seed a canvas session
-/vwf:design-system            # choose interactively (text elicitation fallback)
+/vwf:design-system                  # resolve: pin → pick from your design systems
+/vwf:design-system <ds-id>          # import this design system
 ```
 
-**`import` is the recommended default** — Claude Design ships strong design
-systems; pick or iterate one on the canvas and import it. `generate` covers
-products with bespoke brand constraints a stock system won't fit: it elicits an
-intent-level brief (brand, mood, accessibility bar, constraints — never token
-values), writes it to `docs/prompts/NNN-design-system.md`, pins a
-claude.ai/design design-system project, and delivers the prompt into the
-project's chat panel — you iterate visually on the canvas, then run `import`.
-`import` reads the design system back **as data**, distills it into
-`docs/blueprint/design-system.md`, elicits only what the canvas never decided,
-and runs the normal reviewer gate — import is an authoring path, not a bypass.
-The doc stays the **contract of record** (it's what the reviewers, the ux gate,
-and the code follow); the canvas is where it's authored. Doc-side edits can be
-published back to the pinned design system (`design.design_system_id` —
-**universal**: one per product, its own canvas project, bound by every mockup
-push regardless of which per-project canvas the mockups land on), and when both
-sides changed, the command surfaces the drift and asks which direction wins —
-never a silent merge. Text elicitation (with optional token-sheet illustrations)
-remains the full fallback when no Claude Design surface is connected. Products
-that ship a CLI (a project declaring platform `cli` in `.config/vwf.yaml`)
-additionally pin a **Terminal UX** section — output formatting, color semantics,
-progress and error conventions — elicited in text (the canvas neither designs
-nor imports it) and enforced by execute's code reviewer.
+It reads the chosen design system **as data**, distills it into
+`docs/blueprint/design-system.md` — the **offline contract** the reviewers, the
+execute ux gate, and the coder consume without network or claude.ai auth —
+elicits only what a canvas never decides (the accessibility conformance target;
+the **Terminal UX** section when a project declares platform `cli`), runs the
+**reviewer subagent** gate until `NO GAPS`, and pins `design.design_system_id`
+in `.config/vwf.yaml` (**universal**: one per product, bound by every mockup
+push regardless of which per-project canvas the mockups land on). Like the
+blueprint, the doc stays code-independent: token *values* and *scales*, never
+the component library, CSS framework, or design file. Every flow's Screens
+reference it; `blueprint` halts on a flow with screens until it exists.
+
+**Drift is one-way.** The canvas is the source; the doc is its distillation.
+Change the design system on claude.ai/design and re-run the import — the doc is
+never published back. With no Claude Design connection the command halts with
+connect instructions (`/mcp`); there is no offline authoring mode.
 
 ### /vwf:blueprint
 
@@ -542,7 +526,7 @@ mockups** (one page per screen plus each pinned state variant, styled from the
 design system's tokens) and pushes them to a **claude.ai/design design-system
 project** via Claude Code's built-in DesignSync tool — or the claude-design
 plugin's MCP server where DesignSync doesn't exist (OpenCode). Pushes bind the
-published design system (when `/vwf:design-system` pinned one) and self-check a
+pinned design system (when `/vwf:design-system` imported one) and self-check a
 sample of the pushed cards with a server-side render before handing you the
 links.
 

@@ -14,10 +14,10 @@ pnpx @askviraj/ai-plugins --user claude-design
 `claude-design` is also a dependency of `vwf`, so installing `vwf` pulls it in
 automatically. vwf uses it at three points of the workflow:
 
-- **`/vwf:design-system`** — the preferred authoring surface: `generate` seeds a
-  canvas session with an elicited design brief (via `put_conversation`),
-  `import` distills the canvas design system into the repo contract; doc-side
-  edits publish back (pinned as `design.design_system_id`).
+- **`/vwf:design-system`** — import-only: Claude Design owns design-system
+  authoring; the skill imports the chosen design system into the repo contract
+  and pins `design.design_system_id`. No canvas connection → it halts with
+  connect instructions.
 - **`/vwf:blueprint`** — each flow pass with Screens gates on an in-pass render
   & review: the flow's mockups (happy + sad paths) are pushed to the pinned
   design project and reviewed before the pass is approved.
@@ -27,7 +27,7 @@ automatically. vwf uses it at three points of the workflow:
   accepted deltas through `/vwf:blueprint`.
 - **`/vwf:mockups`** — the batch re-render/regeneration tool, and the push
   surface where the harness DesignSync tool is absent (e.g. OpenCode); pushes
-  bind the published design system and self-verify via server-side
+  bind the pinned design system and self-verify via server-side
   `render_preview`.
 - **`/vwf:feedback canvas`** — harvests the canvas review conversation
   (`get_conversation`) back into the blueprint/design-system routes.
