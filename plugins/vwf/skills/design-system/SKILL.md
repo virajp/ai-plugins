@@ -67,6 +67,12 @@ one of these.
 is behind what vwf ships, nudge `/vwf:setup` (proceed unless a needed artifact
 is missing).
 
+**Terminal surfaces.** Read `projects.<name>.platforms` in `.config/vwf.yaml`
+(per the vwf-config asset): any project declaring `cli` makes the doc's
+**Terminal UX** section required (design-system-authoring's terminal-ux
+reference). It is always elicited **in text**, whatever path authors the visual
+language — the canvas neither designs nor imports it.
+
 ### 2. Recall (mempalace)
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior design decisions and
@@ -77,8 +83,8 @@ unavailable.
 
 ### 3. Choose the authoring path
 
-Resolve a Claude Design surface exactly as `/vwf:mockups` §1 — DesignSync first,
-the claude-design MCP as fallback.
+Resolve a Claude Design surface per
+`${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` §1.
 
 - **Surface available:** honor `$ARGUMENTS` (`generate` → §A, `import` → §B).
   Absent an argument, ask (MCQ): **(a) Generate on canvas** — recommended for a
@@ -96,9 +102,8 @@ the claude-design MCP as fallback.
    accessibility bar, hard constraints (existing brand colors, mandated
    typefaces). Do **not** elicit token values — deciding those visually is the
    point of the canvas.
-2. **Resolve the design project** pin-first exactly as `/vwf:mockups` §4
-   (`design.project_id` → verify → else list/create → offer to pin). It must be
-   a design-system project (`type: PROJECT_TYPE_DESIGN_SYSTEM`).
+2. **Resolve the design project** pin-first per
+   `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` §2.
 3. **Compose the generation prompt**: the brief + one paragraph of product
    context (from `product.md`) + everything the later import must be able to
    fill — semantic tokens (with dark values where the brief promises dark mode),
@@ -132,9 +137,9 @@ the claude-design MCP as fallback.
    realization** still holds: values and scales, never the component library,
    CSS framework, or design-file mechanics the canvas copy may mention.
    **Nothing invented:** a section the canvas never decided (commonly the
-   accessibility standard, motion principles, or anti-patterns) is elicited now,
-   per the protocol — the import fills the doc; elicitation fills the import's
-   holes.
+   accessibility standard, motion principles, anti-patterns, or the Terminal UX
+   section when a `cli` platform requires it) is elicited now, per the protocol
+   — the import fills the doc; elicitation fills the import's holes.
 4. **Pin.** Confirm `design.design_system_id` (and `design.project_id`, when the
    source is the product's own project) in `.config/vwf.yaml`.
 

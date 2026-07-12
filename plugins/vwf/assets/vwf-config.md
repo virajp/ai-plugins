@@ -19,7 +19,7 @@ product:
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
-  remaining: [] # unresolved holes when partial: flows/<flow>, entities/<entity>, apis/<project>, coherence
+  remaining: [] # unresolved holes when partial: flows/<flow>, entities/<entity>, apis/<project>, screens/<flow> (skipped visual review), coherence
 
 topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
@@ -30,7 +30,7 @@ projects: # per-project NUANCES only — no type/path/stack keys, ever
     platforms: [
       <target>,
       <...>,
-    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows)
+    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section)
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -64,7 +64,7 @@ production_env: production # optional — names the release environment for /vwf
 design: # claude.ai/design pins & canvas state — ids and flow names only, never content
   project_id: <uuid> # the design-system project mockups and token sheets push to
   design_system_id: <uuid> # optional — the Claude Design design system mockup pushes bind via get_claude_design_prompt (usually = project_id after /vwf:design-system publishes or imports)
-  flows_pushed: [] # flows whose Screens cards are current on the canvas — recorded by mockups, dropped by blueprint when a flow's Screens change; read by plan's soft canvas-review advisory
+  flows_pushed: [] # flows whose Screens cards are current on the canvas — recorded by blueprint's per-flow render step and by mockups, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory
 
 memory:
   wing: <wing-name> # explicit mempalace wing; defaults to product.name
@@ -77,19 +77,19 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 
 ## Semantics — who reads/writes what
 
-| Section              | Written by                                                                                                 | Read by                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| stamp keys           | `setup`                                                                                                    | every command's format check                              |
-| `product` / `memory` | `setup` (confirmed with the user)                                                                          | every command's wing resolution                           |
-| `blueprint`          | `blueprint` (after every sweep)                                                                            | `plan` (the coverage gate)                                |
-| `projects.*`         | `setup`; `execute` reconcile                                                                               | `blueprint` (platforms), `plan`, the verifiers            |
-| `harness`            | `setup`; `execute` reconcile                                                                               | `plan` preflight, acceptance/ux verifiers, `verify`       |
-| `enforcement`        | `setup` / `architecture` (consented)                                                                       | `setup`, `architecture`, `blueprint`, the reviewers       |
-| `pipeline`           | the user (hand-edited)                                                                                     | `execute`, the statusline caps hook                       |
-| `environments`       | `setup` / `verify` (confirmed)                                                                             | `verify`                                                  |
-| `production_env`     | `setup` / `verify` (confirmed)                                                                             | `verify` (the release environment)                        |
-| `design`             | `design-system` / `mockups` (pins, confirmed); `mockups` (`flows_pushed`); `blueprint` (drops stale flows) | `design-system`, `mockups`, `feedback`, `plan` (advisory) |
-| `docs_sync`          | the user (hand-edited)                                                                                     | the docs-sync step                                        |
+| Section              | Written by                                                                              | Read by                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| stamp keys           | `setup`                                                                                 | every command's format check                                            |
+| `product` / `memory` | `setup` (confirmed with the user)                                                       | every command's wing resolution                                         |
+| `blueprint`          | `blueprint` (after every sweep)                                                         | `plan` (the coverage gate)                                              |
+| `projects.*`         | `setup` / `architecture` (`platforms`, consented); `execute` reconcile                  | `blueprint` (platforms), `design-system` (`cli`), `plan`, the verifiers |
+| `harness`            | `setup`; `execute` reconcile                                                            | `plan` preflight, acceptance/ux verifiers, `verify`                     |
+| `enforcement`        | `setup` / `architecture` (consented)                                                    | `setup`, `architecture`, `blueprint`, the reviewers                     |
+| `pipeline`           | the user (hand-edited)                                                                  | `execute`, the statusline caps hook                                     |
+| `environments`       | `setup` / `verify` (confirmed)                                                          | `verify`                                                                |
+| `production_env`     | `setup` / `verify` (confirmed)                                                          | `verify` (the release environment)                                      |
+| `design`             | `design-system` / `mockups` (pins, confirmed); `blueprint` / `mockups` (`flows_pushed`) | `design-system`, `blueprint`, `mockups`, `feedback`, `plan` (advisory)  |
+| `docs_sync`          | the user (hand-edited)                                                                  | the docs-sync step                                                      |
 
 ## The hard floor (never configurable)
 

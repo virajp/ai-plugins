@@ -13,10 +13,12 @@ apply).
 `/vwf:execute` → `/vwf:archive` — then, after you deploy, `/vwf:verify <env>`
 and `/vwf:feedback` route what production says back into product/blueprint/plan.
 
-Optional: `/vwf:mockups [flow]` renders the blueprint's screens as static HTML
-mockups on a claude.ai/design canvas — a realization for review, never part of
-the contract. `/vwf:feedback canvas` harvests the canvas review conversation
-back into the contracts (as routed intent, never as files).
+Blueprint flow passes render each flow's screens (happy & sad paths) for visual
+review on a claude.ai/design canvas before the pass is approved — mockups are
+realizations for review, never part of the contract. `/vwf:mockups [flow]` batch
+re-renders them (e.g. after a design-system change); `/vwf:feedback canvas`
+harvests the canvas review conversation back into the contracts (as routed
+intent, never as files).
 
 **The blueprint is a code-independent contract.** It records only decisions that
 have more than one reasonable answer *and* are true regardless of how the code

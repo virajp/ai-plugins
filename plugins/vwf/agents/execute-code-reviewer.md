@@ -55,6 +55,14 @@ and the codebase patterns. You do not approve code with unverified assumptions.
      commit — read the diff itself directly — and every finding cites a
      `file:line` you verified, never the graph. Skip silently when no graph
      exists.
+   - **Terminal UX conformance** — when the diff touches a project that declares
+     platform `cli` in `.config/vwf.yaml` and the design system
+     (`docs/blueprint/design-system.md` or its folder form) has a Terminal UX
+     section: output formatting (human/machine modes, stdout vs stderr), color
+     semantics and the no-color rule, progress conventions, error shape + exit
+     codes, and help/naming conventions must match it — an unrecorded deviation
+     is a finding. (CLIs have no ux-reviewer pass; this dimension is their UX
+     gate.)
    - **Released-contract compatibility** — when the diff touches a service's API
      surface (routes, handlers, DTOs, serializers) **and** the orchestrator
      passed a released-snapshot path

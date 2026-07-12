@@ -38,6 +38,7 @@ library, CSS framework, or design file — that mapping is realization (`plan`).
 | [Motion](${CLAUDE_PLUGIN_ROOT}/skills/design-system-authoring/references/motion.md)                                           | Duration/easing tokens, motion principles, reduced-motion             |
 | [Accessibility](${CLAUDE_PLUGIN_ROOT}/skills/design-system-authoring/references/accessibility.md)                             | The committed accessibility standard (the gate)                       |
 | [Components & anti-patterns](${CLAUDE_PLUGIN_ROOT}/skills/design-system-authoring/references/components-and-anti-patterns.md) | Global component behaviors and what to avoid                          |
+| [Terminal UX](${CLAUDE_PLUGIN_ROOT}/skills/design-system-authoring/references/terminal-ux.md)                                 | CLI/TUI conventions — required when a project declares platform `cli` |
 | [Checklist](${CLAUDE_PLUGIN_ROOT}/skills/design-system-authoring/references/checklist.md)                                     | Pre-delivery gate for the design-system doc                           |
 
 Authored by `/vwf:design-system`, which elicits these decisions and writes

@@ -123,6 +123,8 @@ is missing).
   `apis/<project>.openapi.yaml`;
 - every registry project's surfaces are represented per its `doc_unit`
   (`N/A — <reason>` counts as represented);
+- every flow with a Screens section has passed its **visual review** (§6a) — a
+  recorded skip (`screens/<flow>` in `remaining:`) is an open hole;
 - the whole-product **coherence review** (§8) returned `NO GAPS` since the last
   content change.
 
@@ -322,13 +324,49 @@ changes outside `status:`.)
 
 **Drop the canvas stamp.** If this pass changed a flow's `## Screens` section
 and `.config/vwf.yaml` lists that flow under `design.flows_pushed`, remove it —
-the canvas cards no longer show the contract; the next `/vwf:mockups <flow>`
-re-pushes and re-lists it. (Like the build stamp: a state-only edit, riding the
-same commit.)
+the canvas cards no longer show the contract. Normally §6a's re-render re-lists
+it within this same pass; when §6a was explicitly skipped, the drop stands and a
+later `/vwf:mockups <flow>` re-pushes it. (Like the build stamp: a state-only
+edit, riding the same commit.)
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store this pass's
 durable decisions and their rationale, plus any drift flagged, to mempalace
 (rooms `decisions`, `problems`) — skip what the docs already capture verbatim.
+
+### 6a. Render & review the screens (gates the pass — flows with Screens)
+
+When this pass authored or materially changed a flow's `## Screens` section (UI
+projects of type `site`, `console`, or `frontend` — a `cli` platform has no
+screens), the pass approval (§7) **gates on a visual review** of those screens.
+Screens are contracts with happy *and* sad paths; the user must see them before
+approving the flow.
+
+1. **Render.** Dispatch a fresh `mockup-generator` subagent for this flow (its
+   Screens table + deviations, the design-system doc(s), a fresh build dir in
+   the session scratch dir) — the default view plus **every pinned state**; the
+   ui-ux-contract bar makes error and empty pins mandatory, so the sad paths are
+   always in the set. `frontend` (Flutter) screens render as HTML approximations
+   at the design system's device viewport.
+2. **Push (canvas preferred).** Per
+   `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md`: resolve a surface, resolve the
+   pinned project, push under `mockups/<flow>/**` (the same path scheme as
+   `/vwf:mockups`; deletes stay inside this flow's directory), verify a sample,
+   and share the `open_url`. Record the flow in `design.flows_pushed`. In
+   **local-only mode** the local render satisfies the gate: give the absolute
+   build-dir paths to open in a browser.
+3. **Review.** The user reviews the rendered screens. Remarks route **now**:
+   screen-level → the Screens table / recorded deviations (re-elicit, update the
+   doc; a material contract change re-runs the per-doc reviewer (§5) and
+   re-renders — back to 1); visual-language-level → flag for
+   `/vwf:design-system`, parked per the elicitation protocol's parked-scope rule
+   when out of this pass's scope.
+4. **Skip (escape hatch).** The user may explicitly decline the review. Record
+   it honestly: one line in the flow doc's Open Questions ("screens not yet
+   visually reviewed") and `screens/<flow>` in `blueprint.remaining` at stamp
+   time (§9) — coverage stays `partial` while any `screens/` entry remains,
+   exactly like any other hole.
+
+Flows without a Screens section skip this step silently.
 
 ### 7. Reconcile inbound links (rename / delete) & continue the sweep
 
@@ -344,13 +382,14 @@ old doc.
   relationship pointing at a deleted doc is never left dangling.
 
 **Approval & continuation.** Summarize what was written/changed (flow, entities
-touched, schema/API deltas, conventions, registry, catalogs, link fixups) and
-wait for explicit approval. After approval, re-derive the coverage worklist (§1)
-— this pass may have closed holes or opened new ones. If units remain, proceed
-to the next (back to §2) — one flow per pass, each behind its own approval. The
-user may stop early; note what remains in the approval summary and the commit
-message, and stamp accordingly (§9). Never trim the worklist to end sooner —
-coverage is checked, not negotiated.
+touched, schema/API deltas, conventions, registry, catalogs, link fixups) plus
+the §6a visual-review outcome (canvas-reviewed / locally reviewed /
+skipped-as-gap) and wait for explicit approval. After approval, re-derive the
+coverage worklist (§1) — this pass may have closed holes or opened new ones. If
+units remain, proceed to the next (back to §2) — one flow per pass, each behind
+its own approval. The user may stop early; note what remains in the approval
+summary and the commit message, and stamp accordingly (§9). Never trim the
+worklist to end sooner — coverage is checked, not negotiated.
 
 ### 8. Whole-product coherence review (before a `complete` stamp)
 
@@ -378,12 +417,12 @@ Record the sweep's result in `.config/vwf.yaml` (per the vwf-config asset):
 ```yaml
 blueprint:
   coverage: complete # or partial
-  remaining: [] # when partial: flows/<flow>, entities/<entity>, apis/<project>, coherence
+  remaining: [] # when partial: flows/<flow>, entities/<entity>, apis/<project>, screens/<flow>, coherence
 ```
 
 Stamp after **every** run — a targeted update that opened a hole (or skipped the
-coherence re-run) downgrades a `complete` stamp to `partial`. This stamp is what
-`/vwf:plan` gates on.
+coherence re-run, or skipped a §6a visual review) downgrades a `complete` stamp
+to `partial`. This stamp is what `/vwf:plan` gates on.
 
 ### 10. Commit (git-workflow)
 

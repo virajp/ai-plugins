@@ -18,9 +18,13 @@ automatically. vwf uses it at three points of the workflow:
   canvas session with an elicited design brief (via `put_conversation`),
   `import` distills the canvas design system into the repo contract; doc-side
   edits publish back (pinned as `design.design_system_id`).
-- **`/vwf:mockups`** — the push surface where the harness DesignSync tool is
-  absent (e.g. OpenCode); pushes bind the published design system and
-  self-verify via server-side `render_preview`.
+- **`/vwf:blueprint`** — each flow pass with Screens gates on an in-pass render
+  & review: the flow's mockups (happy + sad paths) are pushed to the pinned
+  design project and reviewed before the pass is approved.
+- **`/vwf:mockups`** — the batch re-render/regeneration tool, and the push
+  surface where the harness DesignSync tool is absent (e.g. OpenCode); pushes
+  bind the published design system and self-verify via server-side
+  `render_preview`.
 - **`/vwf:feedback canvas`** — harvests the canvas review conversation
   (`get_conversation`) back into the blueprint/design-system routes.
 

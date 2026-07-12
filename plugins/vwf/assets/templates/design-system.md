@@ -57,6 +57,18 @@ Families: heading / body / mono — named, with intent.
 Global patterns: buttons, inputs/forms, overlays, feedback, empty/loading/error,
 navigation.
 
+## Terminal UX
+
+<!-- Required when any registry project declares platform `cli` in
+     .config/vwf.yaml; delete this section otherwise. See the
+     design-system-authoring skill's terminal-ux reference. -->
+
+- Output formatting (human / machine / quiet-verbose, stdout vs stderr):
+- Color semantics (roles → token names; NO_COLOR / non-TTY rule):
+- Progress conventions:
+- Errors & exit codes:
+- Help & naming conventions:
+
 ## Anti-Patterns
 
 - What to avoid.

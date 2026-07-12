@@ -111,6 +111,13 @@ Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
 `entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`,
 `console` → `page`.
 
+**Terminal surfaces.** While walking the projects, ask (once) whether any
+project exposes a **CLI/TUI** — a shipped command-line tool, not internal dev
+scripts. For each that does, record `cli` under `projects.<name>.platforms` in
+`.config/vwf.yaml` (confirmed, per the vwf-config asset). A `cli` platform is
+what makes the design system's **Terminal UX** section required — it is not a
+registry `type` and never triggers Screens or mockups.
+
 **Reference stacks are enforced.** Every project type has a reference stack doc
 at `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md` — read it and record that
 stack; do not offer alternatives. The escape hatch: if the user explicitly

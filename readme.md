@@ -341,7 +341,7 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                         |
 | `/vwf:design-system`    | Product-wide UX/visual contract — authored on Claude Design (generate/import) or in text                        |
 | `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
-| `/vwf:mockups [flow]`   | Optional — push static HTML mockups of the blueprint's screens to claude.ai/design                              |
+| `/vwf:mockups [flow]`   | Batch re-render/push of screen mockups (blueprint passes render screens in-pass)                                |
 | `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
 | `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
 | `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
@@ -453,7 +453,11 @@ is where it's authored. Doc-side edits can be published back to the pinned
 design system (`design.design_system_id`), and when both sides changed, the
 command surfaces the drift and asks which direction wins — never a silent merge.
 Text elicitation (with optional token-sheet illustrations) remains the full
-fallback when no Claude Design surface is connected.
+fallback when no Claude Design surface is connected. Products that ship a CLI (a
+project declaring platform `cli` in `.config/vwf.yaml`) additionally pin a
+**Terminal UX** section — output formatting, color semantics, progress and error
+conventions — elicited in text (the canvas neither designs nor imports it) and
+enforced by execute's code reviewer.
 
 ### /vwf:blueprint
 
@@ -481,6 +485,16 @@ operations it names (per-service OpenAPI contracts under `apis/`), the flow
 catalog, and the product-wide ER diagram. Screens point at the design system;
 `conventions.md` picks up any cross-cutting decision raised.
 
+**You see every screen before you approve it.** A flow pass that authored or
+changed Screens **gates on a render & review**: the pass renders that flow's
+screens as static HTML mockups — the happy path *and* every pinned sad path
+(error and empty states are mandatory pins per screen) — pushes them to the
+pinned claude.ai/design project, and your remarks route straight back into the
+Screens contract before the pass closes. Offline, a local render (files you open
+in a browser) satisfies the gate. You can explicitly skip — the skip is recorded
+honestly as `screens/<flow>` in `blueprint.remaining`, which keeps coverage
+`partial` like any other hole.
+
 Complicated contracts are **drawn, not just tabled**: every flow carries a
 mermaid sequence diagram (failure branch included), an entity lifecycle with
 three or more states carries a state diagram beside its transition table,
@@ -504,15 +518,18 @@ pointing at a doc that moved.
 
 ### /vwf:mockups
 
-An **optional step after `blueprint`** — never a gate for `plan`. It renders
-each flow's Screens contract as **self-contained static HTML mockups** (one page
-per screen plus each pinned state variant, styled from the design system's
-tokens) and pushes them to a **claude.ai/design design-system project** via
-Claude Code's built-in DesignSync tool — or the claude-design plugin's MCP
-server where DesignSync doesn't exist (OpenCode) — so you review the product's
-screens on the canvas before any code exists. Pushes bind the published design
-system (when `/vwf:design-system` pinned one) and self-check a sample of the
-pushed cards with a server-side render before handing you the links.
+The **batch re-render / regeneration tool** — blueprint flow passes render and
+review each flow's screens in-pass, so you reach for this to re-render
+everything after a design-system change, refresh a repo blueprinted before
+in-pass rendering existed, or redo one flow post-hoc. Never a gate for `plan`.
+It renders each flow's Screens contract as **self-contained static HTML
+mockups** (one page per screen plus each pinned state variant, styled from the
+design system's tokens) and pushes them to a **claude.ai/design design-system
+project** via Claude Code's built-in DesignSync tool — or the claude-design
+plugin's MCP server where DesignSync doesn't exist (OpenCode). Pushes bind the
+published design system (when `/vwf:design-system` pinned one) and self-check a
+sample of the pushed cards with a server-side render before handing you the
+links.
 
 ```text
 /vwf:mockups                # sweep every flow with a Screens section
@@ -528,11 +545,11 @@ your canvas review remarks into those routes), then the mockups are regenerated.
 The resolved design project is pinned as `design.project_id` in
 `.config/vwf.yaml` so later runs ask nothing, pushed flows are recorded in
 `design.flows_pushed` (what `plan`'s soft canvas-review advisory reads — and
-what `blueprint` drops when a flow's Screens change), stale cards for screens
-the blueprint dropped are cleaned up (scope-bounded), and the push happens only
-behind an explicit approval gate. If neither DesignSync nor the claude-design
-MCP server is available in your session (or you're not logged in to claude.ai),
-it offers local-only generation instead.
+what `blueprint` drops when a flow's Screens change unrendered), stale cards for
+screens the blueprint dropped are cleaned up (scope-bounded), and the push
+happens only behind an explicit approval gate. If neither DesignSync nor the
+claude-design MCP server is available in your session (or you're not logged in
+to claude.ai), it offers local-only generation instead.
 
 ### /vwf:plan
 

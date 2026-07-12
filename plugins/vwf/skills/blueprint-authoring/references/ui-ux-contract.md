@@ -18,8 +18,11 @@ Pin per screen / surface (each has more than one reasonable answer):
   multi-step; optimistic vs pessimistic feedback; confirmation and undo for
   destructive actions.
 - **State UX** — loading, empty (first-run vs no-results), error (placement +
-  how the user recovers), success, partial/pending. Use the design system's
-  global state patterns; record only deviations.
+  how the user recovers), success, partial/pending. **Error and empty are
+  mandatory pins for every screen** (or an explicit `n/a — <why>`): the sad
+  paths are contract, not optional variants — they are what the blueprint flow
+  pass renders for visual review and `/vwf:mockups` draws. Use the design
+  system's global state patterns; record only deviations.
 - **Form UX** — field order, validation timing (on-blur vs on-submit), inline
   error placement, required indicators, autosave vs explicit save.
 - **Feedback & realtime** — toast/banner/progress choice; whether data updates

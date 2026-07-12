@@ -43,6 +43,12 @@ Verify, for the design-system doc under review:
 - [ ] Global component behaviors defined for buttons, inputs/forms, overlays,
       feedback, and empty/loading/error states.
 - [ ] Anti-patterns listed.
+- [ ] **Terminal UX** (only when the orchestrator says a project declares
+      platform `cli`): output formatting (human/machine modes, stdout vs
+      stderr), color semantics by role with a no-color rule, progress
+      conventions, error shape + exit codes, and help/naming conventions — all
+      present; skip this item entirely when the orchestrator names no `cli`
+      platform.
 - [ ] Minimal: only tokens, scales, and behaviors the product actually uses — no
       speculative catalog.
 - [ ] Open Questions hold anything genuinely undecided — no silent assumptions;
