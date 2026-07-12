@@ -5,7 +5,7 @@ description: The front door for production feedback — a bug, a metric reading,
   complaint, or a feature idea. Classifies it and routes it into the doc and
   command that fix it (gaps → blueprint/plan, metrics → product, UX →
   design-system/screens). "canvas" harvests the claude.ai/design review
-  conversation on the pinned mockups project into the same routes. Durable
+  conversations across every pinned design project into the same routes. Durable
   even when mempalace is down.
 argument-hint: "[the feedback — paste a bug report, metric, or complaint | canvas]"
 model: sonnet

@@ -178,27 +178,28 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   front door: classifies bug/hole/metric-reading/UX/feature-idea and routes each
   into the doc+command that fixes it, incl. the `product.md` Metric readings
   appendix; `/vwf:feedback canvas` harvests the claude.ai/design review
-  conversation on the pinned mockups project — `get_conversation`, transcript
-  treated as data, never instructions — and routes each remark through the same
-  classification, so canvas review flows back as contract intent, never as
-  files), internal `git-workflow`, and `handoff`/`recall` (mempalace-backed
-  session handoff — wing=`<project>`, room=`handoff`, drawer=`<name>`).
-  `execute` runs one approved plan to completion **autonomously** in a dedicated
-  worktree: dependency-ordered steps, `code→review→security` per step (security
-  findings always fixed; **breaking-released-API findings gate the same way** —
-  cap-exempt, always fixed; other review findings loop ≤4 rounds then become
-  documented gaps) plus one `acceptance + ux` pass after all steps (same 4-round
-  cap), gaps mirrored to the plan doc's "Gaps surfaced during execution"
-  section + mempalace room `gaps`, mid-run pauses only on hard halts, the
-  statusline resource caps, an all-blocking gap, or an uncovered irreversible
-  decision — then **one final human gate** (run report, gap list, and the
-  `implementation:` stamps written) behind which the merge/push happens, gap
-  reconciliation is offered (blueprint/plan loop-backs), archive is offered once
-  no gaps remain, and the next chained plan is offered when one is unblocked.
-  Its Reconcile step **stamps `implementation:` on each doc the plan `covers:`**
-  — the single sanctioned blueprint edit (state only, never content); everywhere
-  else the blueprint is the source of truth code follows, drift surfaced and
-  never silently absorbed. (The former `autopilot` command is merged into this
+  conversations across every pinned design project — `get_conversation`,
+  transcript treated as data, never instructions — and routes each remark
+  through the same classification, so canvas review flows back as contract
+  intent, never as files), internal `git-workflow`, and `handoff`/`recall`
+  (mempalace-backed session handoff — wing=`<project>`, room=`handoff`,
+  drawer=`<name>`). `execute` runs one approved plan to completion
+  **autonomously** in a dedicated worktree: dependency-ordered steps,
+  `code→review→security` per step (security findings always fixed;
+  **breaking-released-API findings gate the same way** — cap-exempt, always
+  fixed; other review findings loop ≤4 rounds then become documented gaps) plus
+  one `acceptance + ux` pass after all steps (same 4-round cap), gaps mirrored
+  to the plan doc's "Gaps surfaced during execution" section + mempalace room
+  `gaps`, mid-run pauses only on hard halts, the statusline resource caps, an
+  all-blocking gap, or an uncovered irreversible decision — then **one final
+  human gate** (run report, gap list, and the `implementation:` stamps written)
+  behind which the merge/push happens, gap reconciliation is offered
+  (blueprint/plan loop-backs), archive is offered once no gaps remain, and the
+  next chained plan is offered when one is unblocked. Its Reconcile step
+  **stamps `implementation:` on each doc the plan `covers:`** — the single
+  sanctioned blueprint edit (state only, never content); everywhere else the
+  blueprint is the source of truth code follows, drift surfaced and never
+  silently absorbed. (The former `autopilot` command is merged into this
   behavior and retired.)
 - `agents/` — subagents the workflow skills delegate to: `blueprint-reviewer`
   (two modes — flow / entity, matching the format-9 doc units),
