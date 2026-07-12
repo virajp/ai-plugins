@@ -118,14 +118,18 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   model — `setup` (Phase-0 onboarding/migration bootstrapper; ends by offering
   `/vwf:blueprint`), `product` (the Phase −1 outcome contract:
   problem/users/goals with `#goal-<slug>` anchors/slice priority; `blueprint`
-  halts without it), `architecture`, `design-system` (elicits the UX/visual
-  contract, optionally illustrating candidates as canvas token sheets, and —
-  after review — offers a consent-gated publish of the contract to the pinned
-  claude.ai/design design-system project, pinning `design.design_system_id`; the
-  repo doc stays the contract, the canvas copy a regenerated view), `blueprint`
-  (a **full-product, flow-first sweep** — a run works a coverage worklist flow
-  by flow, deriving the entities/schemas/API operations each flow stands on,
-  until whole-product coverage holds **and the whole-product coherence review
+  halts without it), `architecture`, `design-system` (the UX/visual contract;
+  **Claude Design is the preferred authoring surface** — `generate` elicits an
+  intent-level brief and seeds the pinned canvas project with a generation
+  prompt via `put_conversation` (a readable copy the user pastes into the
+  composer), `import` distills the canvas design system back into the repo doc
+  as data through the normal reviewer gate, text elicitation stays the no-canvas
+  fallback; the doc is the contract of record, doc-side edits offer a publish
+  back to the canvas, and two-sided drift is resolved by an explicit direction
+  choice, never a silent merge; pins `design.design_system_id`), `blueprint` (a
+  **full-product, flow-first sweep** — a run works a coverage worklist flow by
+  flow, deriving the entities/schemas/API operations each flow stands on, until
+  whole-product coverage holds **and the whole-product coherence review
   passes**, then stamps `blueprint.coverage` in `.config/vwf.yaml` and offers
   `/vwf:plan`), `mockups` (optional post-blueprint: renders each flow's Screens
   contract as self-contained static HTML from design-system tokens — via

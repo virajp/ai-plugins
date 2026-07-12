@@ -63,7 +63,7 @@ production_env: production # optional — names the release environment for /vwf
 
 design: # claude.ai/design pins & canvas state — ids and flow names only, never content
   project_id: <uuid> # the design-system project mockups and token sheets push to
-  design_system_id: <uuid> # optional — the published Claude Design design system mockup pushes bind via get_claude_design_prompt (usually = project_id after /vwf:design-system publishes)
+  design_system_id: <uuid> # optional — the Claude Design design system mockup pushes bind via get_claude_design_prompt (usually = project_id after /vwf:design-system publishes or imports)
   flows_pushed: [] # flows whose Screens cards are current on the canvas — recorded by mockups, dropped by blueprint when a flow's Screens change; read by plan's soft canvas-review advisory
 
 memory:

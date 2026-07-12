@@ -14,9 +14,10 @@ pnpx @askviraj/ai-plugins --user claude-design
 `claude-design` is also a dependency of `vwf`, so installing `vwf` pulls it in
 automatically. vwf uses it at three points of the workflow:
 
-- **`/vwf:design-system`** — optional canvas token sheets during elicitation,
-  and a consent-gated publish of the reviewed contract as a Claude Design design
-  system (pinned as `design.design_system_id`).
+- **`/vwf:design-system`** — the preferred authoring surface: `generate` seeds a
+  canvas session with an elicited design brief (via `put_conversation`),
+  `import` distills the canvas design system into the repo contract; doc-side
+  edits publish back (pinned as `design.design_system_id`).
 - **`/vwf:mockups`** — the push surface where the harness DesignSync tool is
   absent (e.g. OpenCode); pushes bind the published design system and
   self-verify via server-side `render_preview`.

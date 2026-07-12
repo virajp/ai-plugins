@@ -339,7 +339,7 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                          |
 | `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                           |
 | `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                         |
-| `/vwf:design-system`    | Product-wide UX/visual contract (mandatory once UI exists)                                                      |
+| `/vwf:design-system`    | Product-wide UX/visual contract — authored on Claude Design (generate/import) or in text                        |
 | `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
 | `/vwf:mockups [flow]`   | Optional — push static HTML mockups of the blueprint's screens to claude.ai/design                              |
 | `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
@@ -431,14 +431,29 @@ and *scales*, never the component library, CSS framework, or design file. Every
 flow's Screens reference it instead of re-deciding visual language. `blueprint`
 halts on a flow with screens until it exists.
 
-When the claude-design connection is available, two optional canvas extras: it
-can illustrate open decisions as **token sheets / type specimens** pushed to the
-pinned claude.ai/design project (you judge the palette on the canvas, not as hex
-values in chat), and after the doc passes review it offers to **publish the
-contract as a Claude Design design system** (pinned as `design.design_system_id`
-in `.config/vwf.yaml`) — every later mockup push and ad-hoc canvas session then
-inherits the product's tokens. The repo doc stays the contract; the canvas copy
-is a regenerated view.
+**Claude Design is the preferred authoring surface** — a design system is judged
+visually, not as hex values in chat. With the claude-design connection
+available, the command offers three paths:
+
+```text
+/vwf:design-system generate   # elicit a design brief → seed a canvas session
+/vwf:design-system import     # distill the canvas design system into the doc
+/vwf:design-system            # choose interactively (text elicitation fallback)
+```
+
+`generate` elicits an intent-level brief (brand, mood, accessibility bar,
+constraints — never token values), pins a claude.ai/design design-system
+project, and delivers a generation prompt into the project's chat panel — you
+iterate visually on the canvas, then run `import`. `import` reads the design
+system back **as data**, distills it into `docs/blueprint/design-system.md`,
+elicits only what the canvas never decided, and runs the normal reviewer gate —
+import is an authoring path, not a bypass. The doc stays the **contract of
+record** (it's what the reviewers, the ux gate, and the code follow); the canvas
+is where it's authored. Doc-side edits can be published back to the pinned
+design system (`design.design_system_id`), and when both sides changed, the
+command surfaces the drift and asks which direction wins — never a silent merge.
+Text elicitation (with optional token-sheet illustrations) remains the full
+fallback when no Claude Design surface is connected.
 
 ### /vwf:blueprint
 
