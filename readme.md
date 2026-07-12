@@ -260,9 +260,11 @@ docs/
 │       ├── <project>.openapi.yaml
 │       └── released/            # frozen production snapshots — the release
 │                                # record backward compatibility is enforced against
-└── plans/                       # per-cycle plans (the diff to apply)
-    ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
-    └── archived/                # surfaced during execution" section
+├── plans/                       # per-cycle plans (the diff to apply)
+│   ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
+│   └── archived/                # surfaced during execution" section
+└── prompts/                     # numbered canvas design briefs (committed intent)
+    └── NNN-*.md                 # written by /vwf:screens prompt & design-system generate
 ```
 
 Each flow doc holds one journey end to end — who triggers it, the steps across
@@ -629,8 +631,8 @@ schedules conforming steps — the blueprint is the source of truth; it is never
 quietly bent to match the code. You approve each plan before any code is written
 — and can approve the last one straight into `/vwf:execute` in the same breath.
 One soft nudge at that gate: a flow slice whose screens were never pushed for
-canvas review (`design.flows_pushed`) gets a note offering `/vwf:mockups` first
-— advisory only, never a halt.
+canvas review (`design.flows_pushed`) gets a note offering `/vwf:mockups` — or a
+pending `/vwf:screens import` — first. Advisory only, never a halt.
 
 ### /vwf:execute
 

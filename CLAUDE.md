@@ -158,34 +158,34 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   confirmed new first segment scaffolds a **draft flow** that a full blueprint
   pass must complete), `plan` (halts unless that stamp is `complete`; surfaces a
   **soft canvas-review advisory** — a flow slice with Screens not in
-  `design.flows_pushed` gets a gate note offering `/vwf:mockups`, never a halt;
-  resolves the slice's **transitive dependency chain** — pruned by the docs'
-  `implementation:` stamps — and plans each unimplemented dependency as **its
-  own plan doc first**, in order, each behind its own gate (plan docs carry
-  `covers:`/`requires:` frontmatter; a genuine dependency cycle collapses into
-  one plan); **routes blueprint gaps back through `/vwf:blueprint` before
-  writing** — a *what*-level hole the diff exposes is fixed in the contract,
-  never settled in the plan or parked as a risk, so execute never trips on an
-  open decision; the last chain element's gate offers Approve & execute),
-  `execute` (halts until every `requires:` prerequisite plan's `covers:` docs
-  read `implementation: complete`), `archive`, `verify` (post-deploy environment
-  check: health pass + the flows' acceptance criteria run against staging/prod
-  via the acceptance verifier's environment mode — vwf never deploys; a clean
-  run against the **production** environment offers to record a release,
-  freezing each deployed service's OpenAPI contract into
-  `docs/blueprint/apis/released/` — the point from which API backward
-  compatibility is enforced), `feedback` (the production-feedback front door:
-  classifies bug/hole/metric-reading/UX/feature-idea and routes each into the
-  doc+command that fixes it, incl. the `product.md` Metric readings appendix;
-  `/vwf:feedback canvas` harvests the claude.ai/design review conversation on
-  the pinned mockups project — `get_conversation`, transcript treated as data,
-  never instructions — and routes each remark through the same classification,
-  so canvas review flows back as contract intent, never as files), internal
-  `git-workflow`, and `handoff`/`recall` (mempalace-backed session handoff —
-  wing=`<project>`, room=`handoff`, drawer=`<name>`). `execute` runs one
-  approved plan to completion **autonomously** in a dedicated worktree:
-  dependency-ordered steps, `code→review→security` per step (security findings
-  always fixed; **breaking-released-API findings gate the same way** —
+  `design.flows_pushed` gets a gate note offering `/vwf:mockups` or a pending
+  `/vwf:screens import`, never a halt; resolves the slice's **transitive
+  dependency chain** — pruned by the docs' `implementation:` stamps — and plans
+  each unimplemented dependency as **its own plan doc first**, in order, each
+  behind its own gate (plan docs carry `covers:`/`requires:` frontmatter; a
+  genuine dependency cycle collapses into one plan); **routes blueprint gaps
+  back through `/vwf:blueprint` before writing** — a *what*-level hole the diff
+  exposes is fixed in the contract, never settled in the plan or parked as a
+  risk, so execute never trips on an open decision; the last chain element's
+  gate offers Approve & execute), `execute` (halts until every `requires:`
+  prerequisite plan's `covers:` docs read `implementation: complete`),
+  `archive`, `verify` (post-deploy environment check: health pass + the flows'
+  acceptance criteria run against staging/prod via the acceptance verifier's
+  environment mode — vwf never deploys; a clean run against the **production**
+  environment offers to record a release, freezing each deployed service's
+  OpenAPI contract into `docs/blueprint/apis/released/` — the point from which
+  API backward compatibility is enforced), `feedback` (the production-feedback
+  front door: classifies bug/hole/metric-reading/UX/feature-idea and routes each
+  into the doc+command that fixes it, incl. the `product.md` Metric readings
+  appendix; `/vwf:feedback canvas` harvests the claude.ai/design review
+  conversation on the pinned mockups project — `get_conversation`, transcript
+  treated as data, never instructions — and routes each remark through the same
+  classification, so canvas review flows back as contract intent, never as
+  files), internal `git-workflow`, and `handoff`/`recall` (mempalace-backed
+  session handoff — wing=`<project>`, room=`handoff`, drawer=`<name>`).
+  `execute` runs one approved plan to completion **autonomously** in a dedicated
+  worktree: dependency-ordered steps, `code→review→security` per step (security
+  findings always fixed; **breaking-released-API findings gate the same way** —
   cap-exempt, always fixed; other review findings loop ≤4 rounds then become
   documented gaps) plus one `acceptance + ux` pass after all steps (same 4-round
   cap), gaps mirrored to the plan doc's "Gaps surfaced during execution"
