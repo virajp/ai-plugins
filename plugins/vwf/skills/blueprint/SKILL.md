@@ -361,7 +361,15 @@ approving the flow.
    re-renders — back to 1); visual-language-level → flag for
    `/vwf:design-system`, parked per the elicitation protocol's parked-scope rule
    when out of this pass's scope.
-4. **Skip (escape hatch).** The user may explicitly decline the review. Record
+4. **Design-first (alternative to 1–3).** The user may prefer Claude Design to
+   *design* these screens rather than review vwf's contract-derived render: run
+   `/vwf:screens prompt <flow>` (it emits the numbered brief under
+   `docs/prompts/` and delivers it to the flow's canvas), record
+   `screens/<flow>` in `blueprint.remaining` — deferred by design, not skipped —
+   and continue the sweep. The later `/vwf:screens import <flow>` closes it
+   through a targeted pass here, folding what the canvas decided into the
+   contract delta-by-delta.
+5. **Skip (escape hatch).** The user may explicitly decline the review. Record
    it honestly: one line in the flow doc's Open Questions ("screens not yet
    visually reviewed") and `screens/<flow>` in `blueprint.remaining` at stamp
    time (§9) — coverage stays `partial` while any `screens/` entry remains,

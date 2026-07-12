@@ -87,10 +87,12 @@ Resolve a Claude Design surface per
 `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` §1.
 
 - **Surface available:** honor `$ARGUMENTS` (`generate` → §A, `import` → §B).
-  Absent an argument, ask (MCQ): **(a) Generate on canvas** — recommended for a
-  new design system; **(b) Import an existing Claude Design design system**;
-  **(c) Elicit in text here** — recommended for a targeted update to an
-  already-reviewed doc.
+  Absent an argument, ask (MCQ): **(a) Import a Claude Design design system** —
+  the recommended default: Claude Design ships strong design systems; pick or
+  iterate one on the canvas and import it, rather than authoring from scratch;
+  **(b) Generate on canvas** — for a product with bespoke brand constraints a
+  stock system won't fit; **(c) Elicit in text here** — recommended for a
+  targeted update to an already-reviewed doc.
 - **No surface (or not authorized):** say so once and proceed with §C. Never
   halt over it; `$ARGUMENTS` naming a canvas path gets the same note.
 
@@ -117,12 +119,13 @@ Resolve a Claude Design surface per
    global component behaviors (empty/loading/error included), and anti-patterns
    — phrased as a design request, so the canvas session decides everything the
    contract will need.
-4. **Deliver it.** Push a copy into the project's chat panel via
-   `put_conversation` (title `vwf design brief`) — it is a **readable copy**,
-   Claude Design does not execute it; the user pastes it into the composer.
-   Print the same prompt in your reply together with the project's editor link
-   (`open_url` — never `serve_url`). Pushing to claude.ai is outward-facing:
-   confirm before the push.
+4. **Deliver it.** Write the prompt to `docs/prompts/NNN-design-system.md` (NNN
+   = the next zero-padded number across `docs/prompts/`) — the durable copy,
+   committed per §9. Push the same text into the project's chat panel via
+   `put_conversation` (title `vwf design brief`) — a **readable copy**, Claude
+   Design does not execute it; the user pastes it into the composer — and share
+   the project's editor link (`open_url` — never `serve_url`). Pushing to
+   claude.ai is outward-facing: confirm before the push.
 5. **Stop.** Generation is the user's interactive canvas session, not yours.
    Close with: iterate on the canvas; when satisfied, run
    `/vwf:design-system import`. A new pin is committed per §9; nothing else was

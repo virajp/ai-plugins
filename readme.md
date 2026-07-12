@@ -177,6 +177,8 @@ flowchart TD
     A --> B
     DS --> B
     B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(HTML mockups on claude.ai/design)"]:::user
+    B e9@-. "design-first screens" .-> SC["/vwf:screens<br/>(prompt → canvas → import)"]:::user
+    SC e10@-. "accepted deltas → blueprint pass" .-> B
     B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + chained dependency plans)"]:::user
     C -->|"approve & execute"| D["/vwf:execute<br/>(autonomous · one final merge gate)"]:::chained
     D -->|"offered once merged, no gaps"| E["/vwf:archive"]:::chained
@@ -193,6 +195,8 @@ flowchart TD
     e5@{ animate: true }
     e6@{ animate: true }
     e7@{ animate: true }
+    e9@{ animate: true }
+    e10@{ animate: true }
     e8@{ animate: true }
     classDef user fill:#0969da,stroke:#0550ae,color:#ffffff
     classDef chained fill:#6e7781,stroke:#57606a,color:#ffffff,stroke-dasharray:4 3
@@ -342,6 +346,7 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:design-system`    | Product-wide UX/visual contract — authored on Claude Design (generate/import) or in text                        |
 | `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
 | `/vwf:mockups [flow]`   | Batch re-render/push of screen mockups (blueprint passes render screens in-pass)                                |
+| `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint              |
 | `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
 | `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
 | `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
@@ -436,30 +441,33 @@ visually, not as hex values in chat. With the claude-design connection
 available, the command offers three paths:
 
 ```text
-/vwf:design-system generate   # elicit a design brief → seed a canvas session
-/vwf:design-system import     # distill the canvas design system into the doc
+/vwf:design-system import     # recommended — distill a canvas design system into the doc
+/vwf:design-system generate   # bespoke brand: elicit a brief → seed a canvas session
 /vwf:design-system            # choose interactively (text elicitation fallback)
 ```
 
-`generate` elicits an intent-level brief (brand, mood, accessibility bar,
-constraints — never token values), pins a claude.ai/design design-system
-project, and delivers a generation prompt into the project's chat panel — you
-iterate visually on the canvas, then run `import`. `import` reads the design
-system back **as data**, distills it into `docs/blueprint/design-system.md`,
-elicits only what the canvas never decided, and runs the normal reviewer gate —
-import is an authoring path, not a bypass. The doc stays the **contract of
-record** (it's what the reviewers, the ux gate, and the code follow); the canvas
-is where it's authored. Doc-side edits can be published back to the pinned
-design system (`design.design_system_id` — **universal**: one per product, its
-own canvas project, bound by every mockup push regardless of which per-project
-canvas the mockups land on), and when both sides changed, the command surfaces
-the drift and asks which direction wins — never a silent merge. Text elicitation
-(with optional token-sheet illustrations) remains the full fallback when no
-Claude Design surface is connected. Products that ship a CLI (a project
-declaring platform `cli` in `.config/vwf.yaml`) additionally pin a **Terminal
-UX** section — output formatting, color semantics, progress and error
-conventions — elicited in text (the canvas neither designs nor imports it) and
-enforced by execute's code reviewer.
+**`import` is the recommended default** — Claude Design ships strong design
+systems; pick or iterate one on the canvas and import it. `generate` covers
+products with bespoke brand constraints a stock system won't fit: it elicits an
+intent-level brief (brand, mood, accessibility bar, constraints — never token
+values), writes it to `docs/prompts/NNN-design-system.md`, pins a
+claude.ai/design design-system project, and delivers the prompt into the
+project's chat panel — you iterate visually on the canvas, then run `import`.
+`import` reads the design system back **as data**, distills it into
+`docs/blueprint/design-system.md`, elicits only what the canvas never decided,
+and runs the normal reviewer gate — import is an authoring path, not a bypass.
+The doc stays the **contract of record** (it's what the reviewers, the ux gate,
+and the code follow); the canvas is where it's authored. Doc-side edits can be
+published back to the pinned design system (`design.design_system_id` —
+**universal**: one per product, its own canvas project, bound by every mockup
+push regardless of which per-project canvas the mockups land on), and when both
+sides changed, the command surfaces the drift and asks which direction wins —
+never a silent merge. Text elicitation (with optional token-sheet illustrations)
+remains the full fallback when no Claude Design surface is connected. Products
+that ship a CLI (a project declaring platform `cli` in `.config/vwf.yaml`)
+additionally pin a **Terminal UX** section — output formatting, color semantics,
+progress and error conventions — elicited in text (the canvas neither designs
+nor imports it) and enforced by execute's code reviewer.
 
 ### /vwf:blueprint
 
@@ -494,9 +502,11 @@ screens as static HTML mockups — the happy path *and* every pinned sad path
 design project pinned for the flow's UI project (`design.projects.*` — UI
 projects share one canvas or keep their own), and your remarks route straight
 back into the Screens contract before the pass closes. Offline, a local render
-(files you open in a browser) satisfies the gate. You can explicitly skip — the
-skip is recorded honestly as `screens/<flow>` in `blueprint.remaining`, which
-keeps coverage `partial` like any other hole.
+(files you open in a browser) satisfies the gate. Prefer the canvas to *design*
+the screens instead? The pass can defer design-first to
+[`/vwf:screens`](#vwfscreens) — brief out, canvas designs, import folds back.
+You can also explicitly skip — the skip is recorded honestly as `screens/<flow>`
+in `blueprint.remaining`, which keeps coverage `partial` like any other hole.
 
 Complicated contracts are **drawn, not just tabled**: every flow carries a
 mermaid sequence diagram (failure branch included), an entity lifecycle with
@@ -554,6 +564,36 @@ screens the blueprint dropped are cleaned up (scope-bounded), and the push
 happens only behind an explicit approval gate. If neither DesignSync nor the
 claude-design MCP server is available in your session (or you're not logged in
 to claude.ai), it offers local-only generation instead.
+
+### /vwf:screens
+
+The **two-way screen sync** — for when you want Claude Design to *design* the
+screens rather than review vwf's contract-derived renders (blueprint's §6a
+offers this as its design-first option):
+
+```text
+/vwf:screens prompt place-order   # brief the canvas: docs/prompts/NNN-screens-place-order.md
+/vwf:screens import place-order   # fold the designed pages back (omit flow: all briefed flows)
+```
+
+`prompt` writes a numbered design brief from the blueprint's context (the flow's
+goal, steps, Screens rows, the mandatory error/empty states, the bound design
+system) and delivers it to the flow's canvas chat. The brief carries a **naming
+contract**: every page is named `<flow>/<screen-slug>`, where `<flow>` is
+exactly the folder name under `docs/blueprint/flows/` — that name is how
+`import` matches pages back to flows, and how you reconcile the canvas against
+the flows tree by eye. Iterate on the canvas as long as you like.
+
+`import` reads the designed pages back **as data**, matches them by the naming
+contract (an unmatched page gets a per-page question — assign, propose a new
+flow, or discard), diffs each flow's pages against its Screens contract, and
+asks **one question per delta**: accept (the design wins; the contract follows),
+reject (the contract stands; the canvas gets rework), or adapt. Accepted deltas
+are handed to `/vwf:blueprint <flow>` — the blueprint skill remains the only
+flow-doc editor, so every design-driven change still passes the reviewer gate
+and demotes `implementation:` stamps where the contract moved. A confirmed new
+flow is scaffolded as a draft that a full blueprint pass must complete — pixels
+don't carry steps or acceptance criteria.
 
 ### /vwf:plan
 

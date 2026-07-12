@@ -15,10 +15,12 @@ and `/vwf:feedback` route what production says back into product/blueprint/plan.
 
 Blueprint flow passes render each flow's screens (happy & sad paths) for visual
 review on a claude.ai/design canvas before the pass is approved — mockups are
-realizations for review, never part of the contract. `/vwf:mockups [flow]` batch
-re-renders them (e.g. after a design-system change); `/vwf:feedback canvas`
-harvests the canvas review conversation back into the contracts (as routed
-intent, never as files).
+realizations for review, never part of the contract. Design-first instead:
+`/vwf:screens prompt <flow>` briefs the canvas (pages named
+`<flow>/<screen-slug>`), `/vwf:screens import` folds the designs back through
+blueprint passes. `/vwf:mockups [flow]` batch re-renders (e.g. after a
+design-system change); `/vwf:feedback canvas` harvests the canvas review
+conversation back into the contracts (as routed intent, never as files).
 
 **The blueprint is a code-independent contract.** It records only decisions that
 have more than one reasonable answer *and* are true regardless of how the code

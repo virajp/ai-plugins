@@ -21,6 +21,10 @@ automatically. vwf uses it at three points of the workflow:
 - **`/vwf:blueprint`** — each flow pass with Screens gates on an in-pass render
   & review: the flow's mockups (happy + sad paths) are pushed to the pinned
   design project and reviewed before the pass is approved.
+- **`/vwf:screens`** — the two-way screen sync: `prompt <flow>` briefs the
+  canvas (a numbered file under `docs/prompts/` with the `<flow>/<screen-slug>`
+  naming contract), `import` matches the designed pages back by name and routes
+  accepted deltas through `/vwf:blueprint`.
 - **`/vwf:mockups`** — the batch re-render/regeneration tool, and the push
   surface where the harness DesignSync tool is absent (e.g. OpenCode); pushes
   bind the published design system and self-verify via server-side
