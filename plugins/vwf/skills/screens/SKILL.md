@@ -65,8 +65,11 @@ empty states are mandatory pins).
 2. **Write the brief** from the screen-prompt template to
    `docs/prompts/NNN-screens-<flow>.md` — NNN is the next number across
    `docs/prompts/` (zero-padded, e.g. `007`). The naming-contract section is
-   verbatim-mandatory. Screens with no contract yet (a draft flow) are described
-   from the steps.
+   verbatim-mandatory. Fill the **Screen format** section from the registry
+   project's `type` + `platforms:` — keep only the matching directive (a
+   phone-framed mobile viewport for `frontend`, browser-width at the primary
+   breakpoint for `site`, wide desktop for `console`), never the generic list.
+   Screens with no contract yet (a draft flow) are described from the steps.
 3. **Deliver.** Resolve a surface and the flow's UI project's design project
    (canvas-push §§1–2). Push the brief's text into the project's chat panel via
    `put_conversation` (title `vwf screens brief — <flow>`) — a readable copy the

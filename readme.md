@@ -564,11 +564,14 @@ offers this as its design-first option):
 
 `prompt` writes a numbered design brief from the blueprint's context (the flow's
 goal, steps, Screens rows, the mandatory error/empty states, the bound design
-system) and delivers it to the flow's canvas chat. The brief carries a **naming
-contract**: every page is named `<flow>/<screen-slug>`, where `<flow>` is
-exactly the folder name under `docs/blueprint/flows/` — that name is how
-`import` matches pages back to flows, and how you reconcile the canvas against
-the flows tree by eye. Iterate on the canvas as long as you like.
+system, and a **screen format** directive from the UI project's type — a
+phone-framed mobile viewport for a `frontend` app, browser-width pages at the
+primary breakpoint for a `site`, wide desktop for a `console`) and delivers it
+to the flow's canvas chat. The brief carries a **naming contract**: every page
+is named `<flow>/<screen-slug>`, where `<flow>` is exactly the folder name under
+`docs/blueprint/flows/` — that name is how `import` matches pages back to flows,
+and how you reconcile the canvas against the flows tree by eye. Iterate on the
+canvas as long as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new

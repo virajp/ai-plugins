@@ -254,7 +254,10 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   fills and the acceptance stage verifies), `product`, `architecture`,
   `design-system`, `environment` (the per-project env-var/secret catalog),
   `screen-prompt` (the `/vwf:screens prompt` design brief — carries the
-  verbatim-mandatory naming contract; no OKF frontmatter, it is a canvas brief,
+  verbatim-mandatory naming contract and a per-platform **Screen format**
+  directive derived from the registry project's type/platforms: phone-framed
+  mobile viewport for `frontend`, browser-width at the primary breakpoint for
+  `site`, wide desktop for `console`; no OKF frontmatter, it is a canvas brief,
   not a blueprint doc), `project-claude` (the vwf section `/vwf:setup` merges
   into a repo's CLAUDE.md), `handoff` (stack-agnostic; section→project mapping
   resolved from the registry). All blueprint markdown templates open with the

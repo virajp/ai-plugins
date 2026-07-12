@@ -57,10 +57,23 @@ type scale, spacing, and component behaviors; do not invent new visual language.
 Where a screen genuinely needs to deviate, make the deviation obvious so it can
 be discussed.
 
-## Platform & viewport
+## Screen format
 
-`<the UI project's type and platforms — e.g. web at the design system's
-primary breakpoint; mobile at device viewport>`
+<!-- Derive from the registry UI project's `type` + `platforms:` and keep ONLY
+     the matching directive(s) below — this tells Claude Design what kind of
+     page to build; never leave it generic. -->
+
+- **Mobile app** (`frontend`, ios/android): design every page at a **phone
+  viewport** (390×844 logical px portrait, or the viewport the design system
+  states) **inside a phone frame** — status bar, safe areas, touch-sized
+  controls per the design system; no browser chrome. A tablet/desktop target
+  declared under `platforms:` gets its own variant only where the layout
+  genuinely differs — name it `<flow>/<screen-slug>--<platform>`.
+- **Web app** (`site`): full **browser-width** pages at the design system's
+  primary breakpoint — no device frame; add a responsive variant only where this
+  brief pins breakpoint behavior.
+- **Admin console** (`console`): **desktop-first** at a wide breakpoint (≥1280
+  px), data-dense layout, no device frame.
 
 ## Out of scope
 
