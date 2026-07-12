@@ -88,8 +88,10 @@ sequenceDiagram
 
 <!-- The screens this flow traverses. HOME RULE: every screen is defined in
      exactly one flow (its home journey); another flow that touches it links the
-     home flow's row instead of redefining it. Visual language (tokens, type,
-     spacing, motion, component behavior) comes from
+     home flow's row instead of redefining it. Error and empty are MANDATORY
+     pins per screen (or an explicit "n/a — <why>") — sad paths are contract;
+     the blueprint pass renders every pinned state for visual review. Visual
+     language (tokens, type, spacing, motion, component behavior) comes from
      docs/blueprint/design-system.md — reference it; record only deviations.
      An optional screen-navigation mermaid flowchart is allowed only when the
      flow has 3+ screens with branching navigation — a judgement, not a bar. -->

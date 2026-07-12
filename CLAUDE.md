@@ -141,21 +141,22 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   in-pass, so this sweeps or refreshes: after a design-system change, for a
   legacy repo, or one flow post-hoc; per-flow `mockup-generator` subagents into
   an ephemeral build dir, never committed, pushed per the canvas-push asset
-  behind an explicit approval gate; pins `design.project_id` and records
-  `design.flows_pushed` in `.config/vwf.yaml`; never a gate for `plan`), `plan`
-  (halts unless that stamp is `complete`; surfaces a **soft canvas-review
-  advisory** — a flow slice with Screens not in `design.flows_pushed` gets a
-  gate note offering `/vwf:mockups`, never a halt; resolves the slice's
-  **transitive dependency chain** — pruned by the docs' `implementation:` stamps
-  — and plans each unimplemented dependency as **its own plan doc first**, in
-  order, each behind its own gate (plan docs carry `covers:`/`requires:`
-  frontmatter; a genuine dependency cycle collapses into one plan); **routes
-  blueprint gaps back through `/vwf:blueprint` before writing** — a *what*-level
-  hole the diff exposes is fixed in the contract, never settled in the plan or
-  parked as a risk, so execute never trips on an open decision; the last chain
-  element's gate offers Approve & execute), `execute` (halts until every
-  `requires:` prerequisite plan's `covers:` docs read
-  `implementation: complete`), `archive`, `verify` (post-deploy environment
+  behind an explicit approval gate; pins one design project per registry UI
+  project (`design.projects.<project>` — shared or separate canvases, the
+  product's call) and records `design.flows_pushed` in `.config/vwf.yaml`; never
+  a gate for `plan`), `plan` (halts unless that stamp is `complete`; surfaces a
+  **soft canvas-review advisory** — a flow slice with Screens not in
+  `design.flows_pushed` gets a gate note offering `/vwf:mockups`, never a halt;
+  resolves the slice's **transitive dependency chain** — pruned by the docs'
+  `implementation:` stamps — and plans each unimplemented dependency as **its
+  own plan doc first**, in order, each behind its own gate (plan docs carry
+  `covers:`/`requires:` frontmatter; a genuine dependency cycle collapses into
+  one plan); **routes blueprint gaps back through `/vwf:blueprint` before
+  writing** — a *what*-level hole the diff exposes is fixed in the contract,
+  never settled in the plan or parked as a risk, so execute never trips on an
+  open decision; the last chain element's gate offers Approve & execute),
+  `execute` (halts until every `requires:` prerequisite plan's `covers:` docs
+  read `implementation: complete`), `archive`, `verify` (post-deploy environment
   check: health pass + the flows' acceptance criteria run against staging/prod
   via the acceptance verifier's environment mode — vwf never deploys; a clean
   run against the **production** environment offers to record a release,
@@ -282,7 +283,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `write_files`, `render_preview` sample verify, the serve_url-never-surfaces
   rule) used by `blueprint` §6a, `mockups`, and `design-system`
 - `assets/vwf-config.md` — the **vwf config** doctrine for `.config/vwf.yaml`
-  (one per workspace, config_format 4): the stamp keys, `product`/`memory.wing`,
+  (one per workspace, config_format 5): the stamp keys, `product`/`memory.wing`,
   the **`blueprint:` coverage stamp** (written by every blueprint sweep; `plan`
   halts unless `coverage: complete`; `remaining:` names `flows/<flow>` /
   `screens/<flow>` (a skipped §6a visual review) / `entities/<entity>` /
@@ -297,14 +298,18 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (names the release environment; default = the env literally named
   `production`; the `2 → 3` migration is a bump + these semantics — the release
   record itself is the `apis/released/` snapshot dir, never config), the
-  **`design:` block** (claude.ai/design pins — `project_id`, `design_system_id`
-  — plus the `flows_pushed` canvas-currency list `blueprint`'s render step and
-  `mockups` record, `blueprint` drops on an unrendered Screens change, and
-  `plan`'s soft advisory reads; the `3 → 4` migration renames `mockups:` →
-  `design:`, readers honoring the legacy key as drift), and `docs_sync` scope.
-  Hard floor: config can never disable security review, TDD, the approval gates,
-  the reviewer bars, or the **released-API compatibility gate**. Readers fall
-  back to the legacy `docs/blueprint/.vwf.yml` (its presence = pre-6 drift)
+  **`design:` block** (claude.ai/design pins — the **universal**
+  `design_system_id` (one per product, its own canvas project) and the
+  **per-registry-project** `projects:` map (each UI project's mockup canvas —
+  shared or separate uuids) — plus the `flows_pushed` canvas-currency list
+  `blueprint`'s render step and `mockups` record, `blueprint` drops on an
+  unrendered Screens change, and `plan`'s soft advisory reads; the `3 → 4`
+  migration renames `mockups:` → `design:`, the `4 → 5` migration splits
+  `project_id` into the `projects:` map, readers honoring legacy keys as drift),
+  and `docs_sync` scope. Hard floor: config can never disable security review,
+  TDD, the approval gates, the reviewer bars, or the **released-API
+  compatibility gate**. Readers fall back to the legacy
+  `docs/blueprint/.vwf.yml` (its presence = pre-6 drift)
 - `assets/harness.md` — the **harness contract**: the verification capabilities
   a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`,
   `health`, `screenshots`) with canonical task-name conventions. `setup` detects

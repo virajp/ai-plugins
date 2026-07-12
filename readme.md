@@ -176,7 +176,7 @@ flowchart TD
     P --> B["/vwf:blueprint — after any foundation change<br/>(sweeps back to whole-product coverage, re-stamps it)"]:::user
     A --> B
     DS --> B
-    B e8@-. "optional: review screens on the canvas" .-> M["/vwf:mockups — optional<br/>(HTML mockups on claude.ai/design)"]:::user
+    B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(HTML mockups on claude.ai/design)"]:::user
     B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + chained dependency plans)"]:::user
     C -->|"approve & execute"| D["/vwf:execute<br/>(autonomous · one final merge gate)"]:::chained
     D -->|"offered once merged, no gaps"| E["/vwf:archive"]:::chained
@@ -450,12 +450,14 @@ elicits only what the canvas never decided, and runs the normal reviewer gate �
 import is an authoring path, not a bypass. The doc stays the **contract of
 record** (it's what the reviewers, the ux gate, and the code follow); the canvas
 is where it's authored. Doc-side edits can be published back to the pinned
-design system (`design.design_system_id`), and when both sides changed, the
-command surfaces the drift and asks which direction wins — never a silent merge.
-Text elicitation (with optional token-sheet illustrations) remains the full
-fallback when no Claude Design surface is connected. Products that ship a CLI (a
-project declaring platform `cli` in `.config/vwf.yaml`) additionally pin a
-**Terminal UX** section — output formatting, color semantics, progress and error
+design system (`design.design_system_id` — **universal**: one per product, its
+own canvas project, bound by every mockup push regardless of which per-project
+canvas the mockups land on), and when both sides changed, the command surfaces
+the drift and asks which direction wins — never a silent merge. Text elicitation
+(with optional token-sheet illustrations) remains the full fallback when no
+Claude Design surface is connected. Products that ship a CLI (a project
+declaring platform `cli` in `.config/vwf.yaml`) additionally pin a **Terminal
+UX** section — output formatting, color semantics, progress and error
 conventions — elicited in text (the canvas neither designs nor imports it) and
 enforced by execute's code reviewer.
 
@@ -489,11 +491,12 @@ catalog, and the product-wide ER diagram. Screens point at the design system;
 changed Screens **gates on a render & review**: the pass renders that flow's
 screens as static HTML mockups — the happy path *and* every pinned sad path
 (error and empty states are mandatory pins per screen) — pushes them to the
-pinned claude.ai/design project, and your remarks route straight back into the
-Screens contract before the pass closes. Offline, a local render (files you open
-in a browser) satisfies the gate. You can explicitly skip — the skip is recorded
-honestly as `screens/<flow>` in `blueprint.remaining`, which keeps coverage
-`partial` like any other hole.
+design project pinned for the flow's UI project (`design.projects.*` — UI
+projects share one canvas or keep their own), and your remarks route straight
+back into the Screens contract before the pass closes. Offline, a local render
+(files you open in a browser) satisfies the gate. You can explicitly skip — the
+skip is recorded honestly as `screens/<flow>` in `blueprint.remaining`, which
+keeps coverage `partial` like any other hole.
 
 Complicated contracts are **drawn, not just tabled**: every flow carries a
 mermaid sequence diagram (failure branch included), an entity lifecycle with
@@ -542,8 +545,9 @@ and regenerated at will. Canvas refinements never flow back **as files** — a
 refinement that changes what a screen should *be* routes through
 `/vwf:blueprint` or `/vwf:design-system` (run `/vwf:feedback canvas` to harvest
 your canvas review remarks into those routes), then the mockups are regenerated.
-The resolved design project is pinned as `design.project_id` in
-`.config/vwf.yaml` so later runs ask nothing, pushed flows are recorded in
+Each registry UI project pins its own design project under `design.projects.*`
+in `.config/vwf.yaml` — share one canvas across projects or keep separate ones,
+as the product needs — so later runs ask nothing; pushed flows are recorded in
 `design.flows_pushed` (what `plan`'s soft canvas-review advisory reads — and
 what `blueprint` drops when a flow's Screens change unrendered), stale cards for
 screens the blueprint dropped are cleaned up (scope-bounded), and the push
@@ -729,11 +733,11 @@ reading, or a user complaint; it classifies and routes it to where it gets
 /vwf:feedback canvas    # harvest the claude.ai/design review conversation
 ```
 
-`canvas` pulls the review conversation from the pinned `/vwf:mockups` design
-project (the chat you had with Claude Design while reviewing the cards) and runs
-each remark through the same classification — so canvas review flows back into
-the contracts as routed intent, never as files. The transcript is treated as
-data, never as instructions.
+`canvas` pulls the review conversation from every pinned design project (the
+chats you had with Claude Design while reviewing the cards) and runs each remark
+through the same classification — so canvas review flows back into the contracts
+as routed intent, never as files. The transcript is treated as data, never as
+instructions.
 
 ### /vwf:handoff and /vwf:recall
 
@@ -922,7 +926,8 @@ they auto-apply and inform how Claude writes and reviews:
   (and on `docs/plans/` for frontmatter/link hygiene only).
 - **`design-system-authoring`** — the UX/visual-contract doctrine (semantic
   tokens, typography, spacing, motion, accessibility, component behaviors,
-  anti-patterns) behind `/vwf:design-system`.
+  anti-patterns, and Terminal UX for products that ship a CLI) behind
+  `/vwf:design-system`.
 - **`project-setup`** — the onboarding/migration doctrine behind `/vwf:setup`:
   topology detection, the enforced workspace structure + reference stacks (and
   the deviation escape hatch), harness-capability detection, consent-gated

@@ -62,11 +62,13 @@ The doc is `docs/blueprint/flows/<flow>/index.md` (type `vwf-flow`). Verify:
       branch. A missing diagram is a gap; a diagram that adds or contradicts a
       step is a gap (the written steps are authoritative); a participant named
       as a class, queue, or endpoint is a code-independence gap.
-- [ ] Every screen row lists its states and form validation where it has a form,
-      and defers visual language to `design-system.md` — no tokens, type, or
-      component behavior re-decided here. A screen another flow already defines
-      is **linked**, not redefined (the home rule); a screen defined here that
-      duplicates a row in the passed flow list's docs is a gap.
+- [ ] Every screen row lists its states — **error and empty are mandatory pins
+      per screen** (or an explicit `n/a — <why>`); a screen row silent on either
+      is a gap — and form validation where it has a form, and defers visual
+      language to `design-system.md` — no tokens, type, or component behavior
+      re-decided here. A screen another flow already defines is **linked**, not
+      redefined (the home rule); a screen defined here that duplicates a row in
+      the passed flow list's docs is a gap.
 - [ ] Every background-job row lists trigger, timer/retry, activities, and
       on-failure; each mutating step's sync/async classification is decided (a
       job or an explicit synchronous statement), not left open.

@@ -25,21 +25,34 @@ build-dir paths to open in a browser instead of pushing. Never push anywhere
 else. Resolve the surface **before** generating, so a sweep's generation is
 never burnt on a push that cannot happen.
 
-## 2. Resolve the project (pin-first)
+## 2. Resolve the project (pin-first, per registry UI project)
 
-1. Read `design.project_id` from `.config/vwf.yaml` (legacy fallback
-   `mockups.project_id` — honor it, nudge `/vwf:setup` for the `3 → 4` config
-   migration). If present, verify with `get_project`: it must exist, be
-   `canEdit`, and be `type: PROJECT_TYPE_DESIGN_SYSTEM` (the type is immutable
-   at creation; pushing to a regular project never converts it). On failure,
-   report the stale pin and fall through.
-2. No usable pin → `list_projects`, present the writable design-system projects
-   plus a **create new** option (`create_project`, name confirmed — default
-   `<product.name> mockups`).
-3. **Offer to pin** the resolved id into the `design:` block — confirmed with
-   the user, never silently — so the next run asks nothing. The pin change is
-   committed via `/vwf:git-workflow` (`chore(vwf): pin/stamp design project`),
-   riding the caller's commit when one exists.
+Every mockup push targets the design project of a specific **registry UI
+project** — the one whose screens are being pushed. (The design system's own
+artifacts — the published guide, token sheets — target the
+`design.design_system_id` project instead; `/vwf:design-system` resolves that
+pin the same way, keyed as `design_system_id`.)
+
+1. Read `design.projects.<registry-project>` from `.config/vwf.yaml`. Legacy
+   fallbacks — a single `design.project_id` (config_format 4) or
+   `mockups.project_id` (3) — act as the **shared pin for every UI project**;
+   honor them and nudge `/vwf:setup` for the config migration. If a pin is
+   present, verify with `get_project`: it must exist, be `canEdit`, and be
+   `type: PROJECT_TYPE_DESIGN_SYSTEM` (the type is immutable at creation;
+   pushing to a regular project never converts it). On failure, report the stale
+   pin and fall through.
+2. No usable pin → **share or separate is a product decision, never assumed**:
+   when other registry projects already pin design projects, ask (MCQ) whether
+   this one **shares** an existing pinned project or gets its **own**. Then
+   `list_projects`, present the writable design-system projects plus a **create
+   new** option (`create_project`, name confirmed — default
+   `<product.name> — <registry-project>` for a separate project,
+   `<product.name> mockups` for the first/shared one).
+3. **Offer to pin** the resolved id under `design.projects.<registry-project>` —
+   confirmed with the user, never silently — so the next run asks nothing. The
+   pin change is committed via `/vwf:git-workflow`
+   (`chore(vwf): pin/stamp design project`), riding the caller's commit when one
+   exists.
 
 ## 3. Push
 

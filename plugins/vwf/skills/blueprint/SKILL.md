@@ -349,11 +349,12 @@ approving the flow.
    at the design system's device viewport.
 2. **Push (canvas preferred).** Per
    `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md`: resolve a surface, resolve the
-   pinned project, push under `mockups/<flow>/**` (the same path scheme as
-   `/vwf:mockups`; deletes stay inside this flow's directory), verify a sample,
-   and share the `open_url`. Record the flow in `design.flows_pushed`. In
-   **local-only mode** the local render satisfies the gate: give the absolute
-   build-dir paths to open in a browser.
+   design project pinned for **the flow's UI project**
+   (`design.projects.<registry-project>`), push under `mockups/<flow>/**` (the
+   same path scheme as `/vwf:mockups`; deletes stay inside this flow's
+   directory), verify a sample, and share the `open_url`. Record the flow in
+   `design.flows_pushed`. In **local-only mode** the local render satisfies the
+   gate: give the absolute build-dir paths to open in a browser.
 3. **Review.** The user reviews the rendered screens. Remarks route **now**:
    screen-level → the Screens table / recorded deviations (re-elicit, update the
    doc; a material contract change re-runs the per-doc reviewer (§5) and

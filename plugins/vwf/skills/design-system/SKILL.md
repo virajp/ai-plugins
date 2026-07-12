@@ -102,8 +102,14 @@ Resolve a Claude Design surface per
    accessibility bar, hard constraints (existing brand colors, mandated
    typefaces). Do **not** elicit token values — deciding those visually is the
    point of the canvas.
-2. **Resolve the design project** pin-first per
-   `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` §2.
+2. **Resolve the design-system project** — the design system's own canvas
+   project, universal (one per product), pinned as `design.design_system_id`:
+   verify an existing pin with `get_project` (`canEdit`,
+   `type: PROJECT_TYPE_DESIGN_SYSTEM`); none/stale → `list_design_systems` /
+   `create_project` (name confirmed — default `<product.name> design system`)
+   and **offer to pin**. This is distinct from the per-registry-project mockup
+   projects (`design.projects.*`, canvas-push §2) — token sheets and the
+   published guide live here, mockups live there.
 3. **Compose the generation prompt**: the brief + one paragraph of product
    context (from `product.md`) + everything the later import must be able to
    fill — semantic tokens (with dark values where the brief promises dark mode),
@@ -140,8 +146,9 @@ Resolve a Claude Design surface per
    accessibility standard, motion principles, anti-patterns, or the Terminal UX
    section when a `cli` platform requires it) is elicited now, per the protocol
    — the import fills the doc; elicitation fills the import's holes.
-4. **Pin.** Confirm `design.design_system_id` (and `design.project_id`, when the
-   source is the product's own project) in `.config/vwf.yaml`.
+4. **Pin.** Confirm `design.design_system_id` in `.config/vwf.yaml` — the
+   universal design-system pin, one per product; the per-registry-project mockup
+   pins (`design.projects.*`) are unaffected.
 
 Continue with §4 — imported content goes through the same write, review, and
 reconcile gates as any other pass. Import is an authoring path, not a bypass.
@@ -164,9 +171,9 @@ behaviors → anti-patterns.
 **Visual aid (optional).** When a Claude Design surface is available (the user
 chose text anyway), you may still **offer** to illustrate a candidate palette or
 type scale: a self-contained token-sheet HTML page (inline styles, no JS) in the
-session scratch dir, pushed under `elicitation/` (never `mockups/` — that
-namespace belongs to `/vwf:mockups` and its delete policy) via
-`get_claude_design_prompt` → `finalize_plan` → `write_files`, sharing the
+session scratch dir, pushed under `elicitation/` in the **design-system
+project** (`design.design_system_id`, resolved as §A.2 — never a mockup project)
+via `get_claude_design_prompt` → `finalize_plan` → `write_files`, sharing the
 `open_url`. Confirm before the first push of a run; sheets are working artifacts
 a later pass may delete freely. The sheet illustrates the question — the
 decision is still elicited and recorded in the doc.
@@ -263,14 +270,14 @@ approval:
   nothing; just ensure the pins from §B.4 are recorded.
 - **After a doc-side pass (§C, or reviewer-loop edits to the doc):** when a
   Claude Design surface is available and the doc is `status: reviewed`,
-  **offer** to publish the contract to the pinned design-system project — a
-  guide distilled verbatim from the doc (tokens, scales, motion, accessibility
-  standard, component behaviors; nothing invented), written via
-  `get_claude_design_prompt` → `finalize_plan` → `write_files`,
-  regenerate-over-edit (each publish replaces the guide files wholesale). Pin
-  `design.design_system_id` (confirmed, never silently) — normally the same uuid
-  as `design.project_id`; a team pointing at a shared org design system pins
-  only, publishing nothing.
+  **offer** to publish the contract to the design-system project
+  (`design.design_system_id`, resolved as §A.2) — a guide distilled verbatim
+  from the doc (tokens, scales, motion, accessibility standard, component
+  behaviors; nothing invented), written via `get_claude_design_prompt` →
+  `finalize_plan` → `write_files`, regenerate-over-edit (each publish replaces
+  the guide files wholesale). Pin `design.design_system_id` (confirmed, never
+  silently); a team pointing at a shared org design system pins only, publishing
+  nothing.
 - **Both sides changed** since they last agreed: never merge silently. Surface
   the drift and ask which direction wins this run — doc → canvas (publish) or
   canvas → doc (re-import, back through §B) — the losing side is overwritten

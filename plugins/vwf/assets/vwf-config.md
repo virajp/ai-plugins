@@ -8,10 +8,10 @@ stacks, capabilities) lives in the registry in `docs/blueprint/architecture.md`;
 this file holds only how vwf treats it. Since **blueprint-format 6** it replaces
 the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 4)
+## Schema (config_format 5)
 
 ```yaml
-config_format: 4 # this file's own schema version — setup migrates it
+config_format: 5 # this file's own schema version — setup migrates it
 blueprint_format: 9 # the docs/blueprint format stamp
 
 product:
@@ -62,8 +62,9 @@ environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in 
 production_env: production # optional — names the release environment for /vwf:verify (default: the env literally named "production")
 
 design: # claude.ai/design pins & canvas state — ids and flow names only, never content
-  project_id: <uuid> # the design-system project mockups and token sheets push to
-  design_system_id: <uuid> # optional — the Claude Design design system mockup pushes bind via get_claude_design_prompt (usually = project_id after /vwf:design-system publishes or imports)
+  design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system publishes or imports (its own canvas project); every mockup push binds it via get_claude_design_prompt
+  projects: # the claude.ai/design design-system project each registry UI project pushes its mockups to — pin the same uuid to share one canvas, or separate uuids, as the product needs
+    <registry-project>: <uuid>
   flows_pushed: [] # flows whose Screens cards are current on the canvas — recorded by blueprint's per-flow render step and by mockups, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory
 
 memory:
@@ -77,19 +78,19 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 
 ## Semantics — who reads/writes what
 
-| Section              | Written by                                                                              | Read by                                                                 |
-| -------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| stamp keys           | `setup`                                                                                 | every command's format check                                            |
-| `product` / `memory` | `setup` (confirmed with the user)                                                       | every command's wing resolution                                         |
-| `blueprint`          | `blueprint` (after every sweep)                                                         | `plan` (the coverage gate)                                              |
-| `projects.*`         | `setup` / `architecture` (`platforms`, consented); `execute` reconcile                  | `blueprint` (platforms), `design-system` (`cli`), `plan`, the verifiers |
-| `harness`            | `setup`; `execute` reconcile                                                            | `plan` preflight, acceptance/ux verifiers, `verify`                     |
-| `enforcement`        | `setup` / `architecture` (consented)                                                    | `setup`, `architecture`, `blueprint`, the reviewers                     |
-| `pipeline`           | the user (hand-edited)                                                                  | `execute`, the statusline caps hook                                     |
-| `environments`       | `setup` / `verify` (confirmed)                                                          | `verify`                                                                |
-| `production_env`     | `setup` / `verify` (confirmed)                                                          | `verify` (the release environment)                                      |
-| `design`             | `design-system` / `mockups` (pins, confirmed); `blueprint` / `mockups` (`flows_pushed`) | `design-system`, `blueprint`, `mockups`, `feedback`, `plan` (advisory)  |
-| `docs_sync`          | the user (hand-edited)                                                                  | the docs-sync step                                                      |
+| Section              | Written by                                                                                                         | Read by                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| stamp keys           | `setup`                                                                                                            | every command's format check                                            |
+| `product` / `memory` | `setup` (confirmed with the user)                                                                                  | every command's wing resolution                                         |
+| `blueprint`          | `blueprint` (after every sweep)                                                                                    | `plan` (the coverage gate)                                              |
+| `projects.*`         | `setup` / `architecture` (`platforms`, consented); `execute` reconcile                                             | `blueprint` (platforms), `design-system` (`cli`), `plan`, the verifiers |
+| `harness`            | `setup`; `execute` reconcile                                                                                       | `plan` preflight, acceptance/ux verifiers, `verify`                     |
+| `enforcement`        | `setup` / `architecture` (consented)                                                                               | `setup`, `architecture`, `blueprint`, the reviewers                     |
+| `pipeline`           | the user (hand-edited)                                                                                             | `execute`, the statusline caps hook                                     |
+| `environments`       | `setup` / `verify` (confirmed)                                                                                     | `verify`                                                                |
+| `production_env`     | `setup` / `verify` (confirmed)                                                                                     | `verify` (the release environment)                                      |
+| `design`             | `design-system` (`design_system_id`); `blueprint` / `mockups` (`projects.*` pins — confirmed — and `flows_pushed`) | `design-system`, `blueprint`, `mockups`, `feedback`, `plan` (advisory)  |
+| `docs_sync`          | the user (hand-edited)                                                                                             | the docs-sync step                                                      |
 
 ## The hard floor (never configurable)
 
@@ -131,3 +132,12 @@ shipped default is stated at that stage's gate. `pipeline.execute_caps` may only
   mockups). `design_system_id` and `flows_pushed` are new optional keys with no
   migration action. During the transition, readers fall back to the legacy
   `mockups.project_id` and treat its presence as `3` drift (nudge `/vwf:setup`).
+- **`4 → 5` migration** (performed by `/vwf:setup`): the single
+  `design.project_id` becomes the **per-registry-project map** `design.projects`
+  — one entry per registry UI project, each keyed to the old shared uuid
+  (sharing preserved; split later by re-pinning). The design system becomes
+  **universal**: `design.design_system_id` is one per product, its own canvas
+  project, no longer tied to a mockup project's uuid. `flows_pushed` is
+  unchanged. Readers fall back to a legacy `design.project_id` (or the older
+  `mockups.project_id`) as the shared pin for **every** UI project — its
+  presence is `4` (or `3`) drift.
