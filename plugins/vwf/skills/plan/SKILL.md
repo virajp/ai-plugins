@@ -166,6 +166,13 @@ pipeline. Harness steps are gate-required guardrails: the minimalism ladder
 never strikes them, and they order **before** the steps whose verification
 depends on them.
 
+**Canvas-review advisory (soft — never a halt).** When the element is a flow
+whose doc has a `## Screens` section and that flow is **not** listed under
+`design.flows_pushed` in `.config/vwf.yaml` (or the block is absent), note it
+for the §8 gate: these screens were never pushed for canvas review — offer
+`/vwf:mockups <flow>` before approving. Advisory only: planning and approval
+proceed regardless (mockups is never a gate).
+
 ### 4. Route blueprint gaps back; flag drift
 
 **A blueprint gap goes back to the blueprint — before the plan is written.**

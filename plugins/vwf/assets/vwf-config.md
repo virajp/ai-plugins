@@ -8,10 +8,10 @@ stacks, capabilities) lives in the registry in `docs/blueprint/architecture.md`;
 this file holds only how vwf treats it. Since **blueprint-format 6** it replaces
 the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 3)
+## Schema (config_format 4)
 
 ```yaml
-config_format: 3 # this file's own schema version — setup migrates it
+config_format: 4 # this file's own schema version — setup migrates it
 blueprint_format: 9 # the docs/blueprint format stamp
 
 product:
@@ -61,8 +61,10 @@ environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in 
 
 production_env: production # optional — names the release environment for /vwf:verify (default: the env literally named "production")
 
-mockups: # /vwf:mockups target — ids only, never content
-  project_id: <uuid> # the claude.ai/design design-system project mockups push to
+design: # claude.ai/design pins & canvas state — ids and flow names only, never content
+  project_id: <uuid> # the design-system project mockups and token sheets push to
+  design_system_id: <uuid> # optional — the published Claude Design design system mockup pushes bind via get_claude_design_prompt (usually = project_id after /vwf:design-system publishes)
+  flows_pushed: [] # flows whose Screens cards are current on the canvas — recorded by mockups, dropped by blueprint when a flow's Screens change; read by plan's soft canvas-review advisory
 
 memory:
   wing: <wing-name> # explicit mempalace wing; defaults to product.name
@@ -75,19 +77,19 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 
 ## Semantics — who reads/writes what
 
-| Section              | Written by                           | Read by                                             |
-| -------------------- | ------------------------------------ | --------------------------------------------------- |
-| stamp keys           | `setup`                              | every command's format check                        |
-| `product` / `memory` | `setup` (confirmed with the user)    | every command's wing resolution                     |
-| `blueprint`          | `blueprint` (after every sweep)      | `plan` (the coverage gate)                          |
-| `projects.*`         | `setup`; `execute` reconcile         | `blueprint` (platforms), `plan`, the verifiers      |
-| `harness`            | `setup`; `execute` reconcile         | `plan` preflight, acceptance/ux verifiers, `verify` |
-| `enforcement`        | `setup` / `architecture` (consented) | `setup`, `architecture`, `blueprint`, the reviewers |
-| `pipeline`           | the user (hand-edited)               | `execute`, the statusline caps hook                 |
-| `environments`       | `setup` / `verify` (confirmed)       | `verify`                                            |
-| `production_env`     | `setup` / `verify` (confirmed)       | `verify` (the release environment)                  |
-| `mockups`            | `mockups` (confirmed)                | `mockups`                                           |
-| `docs_sync`          | the user (hand-edited)               | the docs-sync step                                  |
+| Section              | Written by                                                                                                 | Read by                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| stamp keys           | `setup`                                                                                                    | every command's format check                              |
+| `product` / `memory` | `setup` (confirmed with the user)                                                                          | every command's wing resolution                           |
+| `blueprint`          | `blueprint` (after every sweep)                                                                            | `plan` (the coverage gate)                                |
+| `projects.*`         | `setup`; `execute` reconcile                                                                               | `blueprint` (platforms), `plan`, the verifiers            |
+| `harness`            | `setup`; `execute` reconcile                                                                               | `plan` preflight, acceptance/ux verifiers, `verify`       |
+| `enforcement`        | `setup` / `architecture` (consented)                                                                       | `setup`, `architecture`, `blueprint`, the reviewers       |
+| `pipeline`           | the user (hand-edited)                                                                                     | `execute`, the statusline caps hook                       |
+| `environments`       | `setup` / `verify` (confirmed)                                                                             | `verify`                                                  |
+| `production_env`     | `setup` / `verify` (confirmed)                                                                             | `verify` (the release environment)                        |
+| `design`             | `design-system` / `mockups` (pins, confirmed); `mockups` (`flows_pushed`); `blueprint` (drops stale flows) | `design-system`, `mockups`, `feedback`, `plan` (advisory) |
+| `docs_sync`          | the user (hand-edited)                                                                                     | the docs-sync step                                        |
 
 ## The hard floor (never configurable)
 
@@ -123,3 +125,9 @@ shipped default is stated at that stage's gate. `pipeline.execute_caps` may only
   OpenAPI contract into `docs/blueprint/apis/released/`; the frozen snapshots
   (not this file) are the release record. If your production environment is
   named differently, set `production_env`.
+- **`3 → 4` migration** (performed by `/vwf:setup`): rename `mockups:` →
+  `design:` (`mockups.project_id` → `design.project_id`, same semantics — the
+  pin now serves `design-system`, `mockups`, `feedback`, and `plan`, not just
+  mockups). `design_system_id` and `flows_pushed` are new optional keys with no
+  migration action. During the transition, readers fall back to the legacy
+  `mockups.project_id` and treat its presence as `3` drift (nudge `/vwf:setup`).

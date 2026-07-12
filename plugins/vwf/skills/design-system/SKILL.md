@@ -25,11 +25,12 @@ you**. Apply the **design-system-authoring** skill doctrine throughout.
 
 ## Doc Paths
 
-| Doc           | Path                                                      |
-| ------------- | --------------------------------------------------------- |
-| Registry      | `docs/blueprint/architecture.md`                          |
-| Design system | `docs/blueprint/design-system.md`                         |
-| Template      | `${CLAUDE_PLUGIN_ROOT}/assets/templates/design-system.md` |
+| Doc           | Path                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Registry      | `docs/blueprint/architecture.md`                                                                                                 |
+| Design system | `docs/blueprint/design-system.md`                                                                                                |
+| Template      | `${CLAUDE_PLUGIN_ROOT}/assets/templates/design-system.md`                                                                        |
+| Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` (canvas pins; only touched by §3a/§8) |
 
 Doctrine: the **design-system-authoring** skill (foundations, color-tokens,
 typography, layout-and-spacing, motion, accessibility,
@@ -76,6 +77,30 @@ behaviors → anti-patterns.
   tokens, scales, and behaviors the product actually uses — no speculative
   catalog.
 - Surface genuinely open items as **Open Questions**; never assume silently.
+
+### 3a. Visual elicitation (optional — canvas)
+
+A palette or type scale is judged better on a canvas than as hex values in chat.
+When a Claude Design surface is available (resolve exactly as `/vwf:mockups` §1
+— DesignSync first, the claude-design MCP as fallback; skip this whole step
+silently when neither is), **offer** to render the candidates visually:
+
+1. Generate a self-contained **token sheet / type specimen** HTML page (inline
+   styles, no JS, same self-containment rules as the mockup-generator's) in the
+   session scratch dir — swatches with token names and values, the type scale
+   set in the candidate faces, spacing rhythm samples.
+2. Resolve the design project **pin-first** exactly as `/vwf:mockups` §4
+   (`design.project_id` → verify → else list/create → offer to pin), push the
+   sheet under `elicitation/` (never `mockups/` — that namespace belongs to
+   `/vwf:mockups` and its delete policy) via `get_claude_design_prompt` →
+   `finalize_plan` → `write_files`, and give the user the **`open_url`** editor
+   link — never `serve_url` (it embeds a token).
+3. Regenerate and re-push the sheet as decisions move; it is a working artifact
+   — a later pass may delete `elicitation/**` freely.
+
+Pushing to claude.ai is outward-facing: **confirm before the first push** of a
+run. This never replaces the elicitation protocol — the sheet illustrates the
+question; the decision is still elicited and recorded in the doc.
 
 ### 4. Write the doc
 
@@ -156,8 +181,31 @@ doc captures verbatim. Skip silently if mempalace is unavailable.
 
 Summarize what was written/changed and wait for explicit approval.
 
-### 8. Commit (git-workflow)
+### 8. Publish to Claude Design (optional — after approval)
 
-After approval, hand **all** git actions to `/vwf:git-workflow`. Use a
-`blueprint(design-system):` or `docs(design-system):` message. Do not run raw
-git here.
+When a Claude Design surface is available (as in §3a) and the doc is
+`status: reviewed`, **offer** to publish the contract to the pinned
+claude.ai/design design-system project, so every canvas session — `/vwf:mockups`
+pushes and ad-hoc user designs alike — inherits the product's tokens:
+
+1. Resolve the project pin-first (as `/vwf:mockups` §4); it must be
+   `type: PROJECT_TYPE_DESIGN_SYSTEM`.
+2. Distill `design-system.md` (or the folder form) into a design-system guide —
+   the tokens, type/spacing scales, motion principles, accessibility standard,
+   and component behaviors, verbatim from the doc, nothing invented — and write
+   it to the project via `get_claude_design_prompt` → `finalize_plan` →
+   `write_files`. Regenerate-over-edit: each publish replaces the guide files
+   wholesale.
+3. **Pin `design.design_system_id`** in `.config/vwf.yaml` (confirmed, never
+   silently) — normally the same uuid as `design.project_id`; a team may instead
+   point it at a shared org design system, in which case skip step 2 and only
+   pin.
+
+The repo doc remains the contract; the canvas copy is a regenerated **view**,
+one-way doc → canvas. Declining publishes nothing and blocks nothing.
+
+### 9. Commit (git-workflow)
+
+After approval, hand **all** git actions to `/vwf:git-workflow` (any `design:`
+pin from §3a/§8 rides the same commit). Use a `blueprint(design-system):` or
+`docs(design-system):` message. Do not run raw git here.

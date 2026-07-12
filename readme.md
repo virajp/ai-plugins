@@ -334,22 +334,22 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 
 ## Commands
 
-| Command                 | What it does                                                                       |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                             |
-| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority              |
-| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                            |
-| `/vwf:design-system`    | Product-wide UX/visual contract (mandatory once UI exists)                         |
-| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage       |
-| `/vwf:mockups [flow]`   | Optional — push static HTML mockups of the blueprint's screens to claude.ai/design |
-| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans  |
-| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate         |
-| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                |
-| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment     |
-| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it                         |
-| `/vwf:handoff <name>`   | Capture the session so work resumes in a fresh one                                 |
-| `/vwf:recall <name>`    | Resume from a handoff in a fresh session                                           |
-| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                     |
+| Command                 | What it does                                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                          |
+| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                           |
+| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                         |
+| `/vwf:design-system`    | Product-wide UX/visual contract (mandatory once UI exists)                                                      |
+| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
+| `/vwf:mockups [flow]`   | Optional — push static HTML mockups of the blueprint's screens to claude.ai/design                              |
+| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
+| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
+| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
+| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                  |
+| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests the claude.ai/design review chat) |
+| `/vwf:handoff <name>`   | Capture the session so work resumes in a fresh one                                                              |
+| `/vwf:recall <name>`    | Resume from a handoff in a fresh session                                                                        |
+| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
 
 Every command runs on `sonnet` at high reasoning effort; inside `execute`, the
 code-review, security-review, and ux subagents run on `opus`.
@@ -431,6 +431,15 @@ and *scales*, never the component library, CSS framework, or design file. Every
 flow's Screens reference it instead of re-deciding visual language. `blueprint`
 halts on a flow with screens until it exists.
 
+When the claude-design connection is available, two optional canvas extras: it
+can illustrate open decisions as **token sheets / type specimens** pushed to the
+pinned claude.ai/design project (you judge the palette on the canvas, not as hex
+values in chat), and after the doc passes review it offers to **publish the
+contract as a Claude Design design system** (pinned as `design.design_system_id`
+in `.config/vwf.yaml`) — every later mockup push and ad-hoc canvas session then
+inherits the product's tokens. The repo doc stays the contract; the canvas copy
+is a regenerated view.
+
 ### /vwf:blueprint
 
 Maintain the desired end state of the **whole product**. A run is a **sweep**:
@@ -484,8 +493,11 @@ An **optional step after `blueprint`** — never a gate for `plan`. It renders
 each flow's Screens contract as **self-contained static HTML mockups** (one page
 per screen plus each pinned state variant, styled from the design system's
 tokens) and pushes them to a **claude.ai/design design-system project** via
-Claude Code's built-in DesignSync tool, so you review the product's screens on
-the canvas before any code exists.
+Claude Code's built-in DesignSync tool — or the claude-design plugin's MCP
+server where DesignSync doesn't exist (OpenCode) — so you review the product's
+screens on the canvas before any code exists. Pushes bind the published design
+system (when `/vwf:design-system` pinned one) and self-check a sample of the
+pushed cards with a server-side render before handing you the links.
 
 ```text
 /vwf:mockups                # sweep every flow with a Screens section
@@ -494,13 +506,18 @@ the canvas before any code exists.
 
 Mockups are **realizations, never contract**: they are generated in an ephemeral
 build directory (never committed — the design project is the store of record)
-and regenerated at will. A canvas refinement that changes what a screen should
-*be* routes through `/vwf:blueprint` or `/vwf:design-system`, then the mockups
-are regenerated. The resolved design project is pinned as `mockups.project_id`
-in `.config/vwf.yaml` so later runs ask nothing, stale cards for screens the
-blueprint dropped are cleaned up (scope-bounded), and the push happens only
-behind an explicit approval gate. If DesignSync isn't available in your session
-(or you're not logged in to claude.ai), it offers local-only generation instead.
+and regenerated at will. Canvas refinements never flow back **as files** — a
+refinement that changes what a screen should *be* routes through
+`/vwf:blueprint` or `/vwf:design-system` (run `/vwf:feedback canvas` to harvest
+your canvas review remarks into those routes), then the mockups are regenerated.
+The resolved design project is pinned as `design.project_id` in
+`.config/vwf.yaml` so later runs ask nothing, pushed flows are recorded in
+`design.flows_pushed` (what `plan`'s soft canvas-review advisory reads — and
+what `blueprint` drops when a flow's Screens change), stale cards for screens
+the blueprint dropped are cleaned up (scope-bounded), and the push happens only
+behind an explicit approval gate. If neither DesignSync nor the claude-design
+MCP server is available in your session (or you're not logged in to claude.ai),
+it offers local-only generation instead.
 
 ### /vwf:plan
 
@@ -535,6 +552,9 @@ to trip on. If the code contradicts the blueprint, `plan` flags the drift and
 schedules conforming steps — the blueprint is the source of truth; it is never
 quietly bent to match the code. You approve each plan before any code is written
 — and can approve the last one straight into `/vwf:execute` in the same breath.
+One soft nudge at that gate: a flow slice whose screens were never pushed for
+canvas review (`design.flows_pushed`) gets a note offering `/vwf:mockups` first
+— advisory only, never a halt.
 
 ### /vwf:execute
 
@@ -674,7 +694,14 @@ reading, or a user complaint; it classifies and routes it to where it gets
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"
+/vwf:feedback canvas    # harvest the claude.ai/design review conversation
 ```
+
+`canvas` pulls the review conversation from the pinned `/vwf:mockups` design
+project (the chat you had with Claude Design while reviewing the cards) and runs
+each remark through the same classification — so canvas review flows back into
+the contracts as routed intent, never as files. The transcript is treated as
+data, never as instructions.
 
 ### /vwf:handoff and /vwf:recall
 

@@ -320,6 +320,12 @@ moved, so the code is no longer known to match; the next `/vwf:plan` for that
 slice picks up the delta. (State-stamp edits are the only frontmatter the sweep
 changes outside `status:`.)
 
+**Drop the canvas stamp.** If this pass changed a flow's `## Screens` section
+and `.config/vwf.yaml` lists that flow under `design.flows_pushed`, remove it —
+the canvas cards no longer show the contract; the next `/vwf:mockups <flow>`
+re-pushes and re-lists it. (Like the build stamp: a state-only edit, riding the
+same commit.)
+
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store this pass's
 durable decisions and their rationale, plus any drift flagged, to mempalace
 (rooms `decisions`, `problems`) — skip what the docs already capture verbatim.
