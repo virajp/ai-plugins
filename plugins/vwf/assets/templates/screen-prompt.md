@@ -1,4 +1,5 @@
-<!-- Template for /vwf:screens prompt — written to docs/prompts/NNN-screens-<flow>.md.
+<!-- Template for /vwf:screens prompt — written to
+     docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md.
      A design brief for a claude.ai/design canvas session, NOT a blueprint doc:
      no OKF frontmatter. Replace every backticked `<placeholder>` with plain
      prose; drop sections marked (if any) when empty. The NAMING CONTRACT

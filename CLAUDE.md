@@ -410,12 +410,14 @@ entity folder per entity** — `entities/<entity>/` holding exactly `index.md` +
 and the API contracts `apis/<project>.openapi.yaml` + the frozen
 `apis/released/` snapshots; the blueprint root holds only the system docs),
 `docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`), and
-`docs/prompts/` (`NNN-*.md` — numbered canvas design briefs written by
-`/vwf:screens prompt`; committed intent artifacts, not blueprint docs).
-Superseded commands/agents/templates are archived under `archived/vwf-<date>/`
-(`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
-`autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
-format-8 `integration.md` template, dissolved into the flow templates).
+`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<seq>.md` — canvas design briefs
+grouped by prompt type → registry project → flow, sessions numbered within each
+flow folder; written by `/vwf:screens prompt`; committed intent artifacts, not
+blueprint docs). Superseded commands/agents/templates are archived under
+`archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
+`vwf-2026-07-04/` holds the retired `autopilot` command, whose behavior merged
+into `execute`; `vwf-2026-07-07/` the format-8 `integration.md` template,
+dissolved into the flow templates).
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format

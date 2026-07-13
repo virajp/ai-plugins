@@ -267,8 +267,11 @@ docs/
 ├── plans/                       # per-cycle plans (the diff to apply)
 │   ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
 │   └── archived/                # surfaced during execution" section
-└── prompts/                     # numbered canvas design briefs (committed intent)
-    └── NNN-*.md                 # written by /vwf:screens prompt
+└── prompts/                     # canvas design briefs (committed intent)
+    └── <type>/                  # prompt type (e.g. screens)
+        └── <project>/           # registry project
+            └── <NNN>-<flow>/    # the flow the brief commissions
+                └── <seq>.md     # sessions numbered per flow (001.md, 002.md, …)
 ```
 
 Each flow doc holds one journey end to end — who triggers it, the steps across
@@ -570,7 +573,7 @@ screens rather than review vwf's contract-derived renders (blueprint's §6a
 offers this as its design-first option):
 
 ```text
-/vwf:screens prompt place-order   # brief the canvas: docs/prompts/NNN-screens-place-order.md
+/vwf:screens prompt place-order   # brief: docs/prompts/screens/web/010-place-order/001.md
 /vwf:screens import place-order   # fold the designed pages back (omit flow: all briefed flows)
 ```
 

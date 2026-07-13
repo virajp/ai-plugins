@@ -1,7 +1,7 @@
 ---
 name: screens
 description: Two-way screen sync with Claude Design. "prompt <flow>" emits a
-  numbered design brief (docs/prompts/NNN-screens-<flow>.md) that commissions
+  numbered design brief (docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md) that commissions
   the flow's pages on the claude.ai/design canvas under a strict naming
   contract; "import [flow]" reads the designed pages back as data, diffs them
   against the Screens contracts, and routes every accepted delta through
@@ -35,14 +35,14 @@ the same names make the canvas humanly reconcilable against the flows tree.
 
 ## Doc Paths
 
-| Doc           | Path                                                                                       |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| Flows         | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (the `## Screens` section)          |
-| Prompts       | `docs/prompts/NNN-screens-<flow>.md` (NNN = next zero-padded number in the folder)         |
-| Prompt templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/screen-prompt.md`                                  |
-| Design system | `docs/blueprint/design-system.md` (or folder form)                                         |
-| Registry      | `docs/blueprint/architecture.md`                                                           |
-| Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` |
+| Doc           | Path                                                                                                                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Flows         | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (the `## Screens` section)                                                                                                                                                 |
+| Prompts       | `docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md` — grouped by prompt type → registry project → flow; `<seq>` = the next zero-padded brief number **within that flow's folder** (successive sessions: `001.md`, `002.md`, …) |
+| Prompt templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/screen-prompt.md`                                                                                                                                                                         |
+| Design system | `docs/blueprint/design-system.md` (or folder form)                                                                                                                                                                                |
+| Registry      | `docs/blueprint/architecture.md`                                                                                                                                                                                                  |
+| Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                                                                                                                                        |
 
 Canvas mechanics: `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` (surface §1,
 per-UI-project pins §2, link hygiene §5). Doctrine: the blueprint-authoring
@@ -77,21 +77,23 @@ empty states are mandatory pins).
    must never rebuild it from scratch. In local-only mode skip the inventory:
    everything is marked create.
 3. **Write the brief** from the screen-prompt template to
-   `docs/prompts/NNN-screens-<flow>.md` — NNN is the next number across
-   `docs/prompts/` (zero-padded, e.g. `007`). The naming-contract section is
-   verbatim-mandatory. Mark **every screen, state variant, stitch page, and the
-   `<flow>/index` navigator** with its disposition from the step-2 inventory —
-   `create` (no page exists) or `update` (the page exists; revise in place under
-   the same name, carrying the contract deltas this brief states) — and fill the
-   template's Existing-pages rule accordingly. Fill the **Screen format**
-   section from the registry project's `type` + `platforms:` — keep only the
-   matching directive(s) (a phone-framed mobile viewport for `frontend`,
-   browser-width at the primary breakpoint for `site`, wide desktop for
-   `console`; **add the in-car directive** when `platforms:` includes
-   `carplay`/`android-auto` and the flow's Screens contract marks screens as
-   available in-car), never the generic list. Fill the **Stitch pages**
-   section's entry points from the flow's Trigger & Actors — most flows have
-   one; list each that genuinely starts the journey (app launch, deep link,
+   `docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md` — grouped by prompt
+   type (`screens`), then the flow's registry project, then the numbered flow
+   folder name; `<seq>` is the next zero-padded number **within that flow's
+   folder** (`001.md` for the first session, `002.md` for the next, …). The
+   naming-contract section is verbatim-mandatory. Mark **every screen, state
+   variant, stitch page, and the `<flow>/index` navigator** with its disposition
+   from the step-2 inventory — `create` (no page exists) or `update` (the page
+   exists; revise in place under the same name, carrying the contract deltas
+   this brief states) — and fill the template's Existing-pages rule accordingly.
+   Fill the **Screen format** section from the registry project's `type` +
+   `platforms:` — keep only the matching directive(s) (a phone-framed mobile
+   viewport for `frontend`, browser-width at the primary breakpoint for `site`,
+   wide desktop for `console`; **add the in-car directive** when `platforms:`
+   includes `carplay`/`android-auto` and the flow's Screens contract marks
+   screens as available in-car), never the generic list. Fill the **Stitch
+   pages** section's entry points from the flow's Trigger & Actors — most flows
+   have one; list each that genuinely starts the journey (app launch, deep link,
    notification, …). Screens with no contract yet (a draft flow) are described
    from the steps.
 4. **Deliver.** Push the brief's text into the project's chat panel via
@@ -106,8 +108,9 @@ empty states are mandatory pins).
 
 ## Mode: import [flow]
 
-1. **Scope.** `[flow]` given → that flow. Omitted → every flow with a
-   `docs/prompts/*-screens-*.md` brief (the ledger of commissioned sessions).
+1. **Scope.** `[flow]` given → that flow. Omitted → every flow with a brief
+   under `docs/prompts/screens/` (the ledger of commissioned sessions — one
+   directory per project/flow).
 2. **List & match.** Resolve the surface and each in-scope UI project's pinned
    design project (canvas-push §§1–2); `list_files` each. Match every page by
    the naming contract: first path segment ≡ a numbered flow folder name under

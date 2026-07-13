@@ -173,9 +173,9 @@ whose doc has a `## Screens` section and that flow is **not** listed under
 `design.flows_pushed` in `.config/vwf.yaml` (or the block is absent), note it
 for the §8 gate: these screens were never pushed for canvas review — offer
 `/vwf:mockups <flow>`, or `/vwf:screens import <flow>` when a
-`docs/prompts/*-screens-<flow>.md` brief has a design session pending, before
-approving. Advisory only: planning and approval proceed regardless (neither is
-ever a gate here).
+`docs/prompts/screens/<project>/<NNN>-<flow>/` brief has a design session
+pending, before approving. Advisory only: planning and approval proceed
+regardless (neither is ever a gate here).
 
 ### 4. Route blueprint gaps back; flag drift
 
