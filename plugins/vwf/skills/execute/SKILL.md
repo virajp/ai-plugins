@@ -62,7 +62,7 @@ the pause rules — never migrate autonomously.
 | ------------- | --------------------------------------------------------- |
 | Plan          | `docs/plans/<plan>.md`                                    |
 | Registry      | `docs/blueprint/architecture.md`                          |
-| Flow (slice)  | `docs/blueprint/flows/<flow>/index.md`                    |
+| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`    |
 | Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
 | API contract  | `docs/blueprint/apis/<project>.openapi.yaml`              |
 | Released APIs | `docs/blueprint/apis/released/`                           |

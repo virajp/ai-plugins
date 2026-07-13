@@ -1,12 +1,12 @@
 # Flow Contract
 
 Flows are the **primary blueprint unit**. One flow per folder
-`docs/blueprint/flows/<flow>/index.md` (type `vwf-flow`, always `index.md` only
-— a flow too big for one file is several flows). The goal-traceability spine
-runs product goal → flow (`Serves:`) → the entities/APIs/screens the flow
-touches. A flow is a process that spans entities **or projects** — a
-single-entity journey that crosses projects (app → service → datastore) is a
-flow too; the cross- project boundary is what makes it one.
+`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (type `vwf-flow`, always
+`index.md` only — a flow too big for one file is several flows). The
+goal-traceability spine runs product goal → flow (`Serves:`) → the
+entities/APIs/screens the flow touches. A flow is a process that spans entities
+**or projects** — a single-entity journey that crosses projects (app → service →
+datastore) is a flow too; the cross- project boundary is what makes it one.
 
 Fill every applicable section to the **no-two-reasonable-answers** bar. Omit
 Screens if the registry has no UI project; omit Background Jobs if it has no

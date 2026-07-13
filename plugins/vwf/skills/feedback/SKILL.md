@@ -83,8 +83,8 @@ of the fixing command**:
 - **Behavior bug** → the blueprint is right, the code is wrong: file to room
   `gaps` (tagged by flow/entity) and offer `/vwf:plan <slice>` for a fix cycle.
   Deferred → one line in the owning flow doc's **Open Questions**
-  (`docs/blueprint/flows/<flow>/index.md`), or the entity doc under
-  `docs/blueprint/entities/` when the hole is in the data contract: what
+  (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), or the entity doc
+  under `docs/blueprint/entities/` when the hole is in the data contract: what
   production does vs what the doc promises.
 - **Blueprint hole** → file to room `gaps` and offer
   `/vwf:blueprint
@@ -95,9 +95,10 @@ of the fixing command**:
   reviewed contract). A **miss against target** → offer `/vwf:product` to
   re-rank slices / revisit the goal; a hit → just recorded.
 - **UX issue** → record it against the screen's **home flow** — the `## Screens`
-  row in `docs/blueprint/flows/<flow>/index.md` that defines it (a deviation or
-  open question at the exact screen/state) — and offer `/vwf:design-system`
-  (language-level) or `/vwf:blueprint <flow>` (screen-level).
+  row in `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` that defines it
+  (a deviation or open question at the exact screen/state) — and offer
+  `/vwf:design-system` (language-level) or `/vwf:blueprint <flow>`
+  (screen-level).
 - **Feature idea** → never straight to code: offer `/vwf:product` (does it serve
   an existing goal? re-rank; a new goal? add it) — then the normal
   `blueprint → plan → execute` path. Deferred → a row in `product.md`'s Metric

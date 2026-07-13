@@ -23,7 +23,7 @@ report.
 The orchestrator passes: the acceptance criteria to verify (each criterion with
 its source flow — from the plan's "Acceptance criteria (from blueprint)"
 section, which quotes the flow docs; or every flow's Acceptance block from
-`docs/blueprint/flows/*/index.md` when `/vwf:verify` dispatches you), the
+`docs/blueprint/flows/*/*/index.md` when `/vwf:verify` dispatches you), the
 registry (project paths and stacks), the project wing, and the **slice** and
 **round number** for your recall tag.
 

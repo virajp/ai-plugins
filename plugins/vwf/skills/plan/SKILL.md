@@ -40,7 +40,7 @@ it. When a planning decision is genuinely open, elicit it following the
 | -------------- | --------------------------------------------------------- |
 | Registry       | `docs/blueprint/architecture.md`                          |
 | Conventions    | `docs/blueprint/conventions.md`                           |
-| Flow (slice)   | `docs/blueprint/flows/<flow>/index.md`                    |
+| Flow (slice)   | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`    |
 | Entity (slice) | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
 | API contract   | `docs/blueprint/apis/<project>.openapi.yaml`              |
 | Released APIs  | `docs/blueprint/apis/released/`                           |
@@ -60,7 +60,9 @@ the sweep — a plan cut from a partial blueprint builds gaps into the code." A
 missing block means no sweep has stamped this repo yet — same halt.
 
 The slice is a single unit from `$ARGUMENTS`: `flow/<name>`, `entity/<name>`, or
-a bare `<name>` — resolve a bare name against `docs/blueprint/flows/` first,
+a bare `<name>` — resolve a bare name against `docs/blueprint/flows/` first
+(matching the flow **slug**, ignoring the project group and `NNN-` prefix —
+`signin` matches `flows/app/020-signin/`; the same slug in two projects → MCQ),
 then `docs/blueprint/entities/`; if both exist, ask (MCQ). There is no `api/`
 slice — an API contract change rides the flow or entity plan that needs it.
 **Halt if no blueprint doc exists** for the slice: "No blueprint found for

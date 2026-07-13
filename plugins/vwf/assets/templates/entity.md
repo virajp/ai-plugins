@@ -25,7 +25,7 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
 One paragraph. What it is and why it exists. No implementation detail.
 
-Used by: [<Flow name>](../../flows/<flow>/index.md)
+Used by: [<Flow name>](../../flows/<project>/<NNN>-<flow>/index.md)
 
 <!-- Every entity is used by at least one flow — entities serve product goals
      TRANSITIVELY through the flows that reference them (entity → flow → goal).

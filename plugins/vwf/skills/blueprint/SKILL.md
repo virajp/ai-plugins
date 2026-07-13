@@ -25,9 +25,17 @@ are **supporting data contracts** the flows stand on.
 
 The doc units:
 
-- **Flow** — `docs/blueprint/flows/<flow>/index.md` (always `index.md` only; a
-  flow too big for one file is several flows). `flows/index.md` is the thin
-  catalog plus the cross-flow contracts.
+- **Flow** — `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (always
+  `index.md` only; a flow too big for one file is several flows). Flows are
+  **grouped by their primary registry project** — the project that owns the
+  journey (the UI project of its Screens; for a UI-less flow, the service/worker
+  whose trigger starts it; ambiguous → ask, never guess) — and **numbered in
+  execution order** on that surface (`010-splash`, `020-signin`, …): three
+  digits, **gap numbering** in steps of 10 so an insert takes a number between
+  its neighbors (`015-onboarding`) without renumbering; only when no integer
+  remains between neighbors is the local tail renumbered (via the §7 rename
+  reconcile). `flows/index.md` is the thin catalog — grouped per project, rows
+  in numeric order — plus the cross-flow contracts.
 - **Entity** — `docs/blueprint/entities/<entity>/`: always exactly `index.md`
   (lifecycle, relationships, invariants, concurrency) + `schema.yaml` (the
   authoritative data model). `entities/index.md` is the catalog plus the
@@ -67,7 +75,7 @@ surface without ambiguity. Surface open decisions rather than guessing.
 | Conventions      | `docs/blueprint/conventions.md`                            |
 | Design system    | `docs/blueprint/design-system.md`                          |
 | Environment      | `docs/blueprint/environment.md`                            |
-| Flow             | `docs/blueprint/flows/<flow>/index.md`                     |
+| Flow             | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`     |
 | Flow catalog     | `docs/blueprint/flows/index.md`                            |
 | Entity           | `docs/blueprint/entities/<entity>/` (`index.md` + schema)  |
 | Entity catalog   | `docs/blueprint/entities/index.md`                         |
@@ -88,8 +96,9 @@ environment-catalog, frontmatter-and-links, quick-reference). API contracts also
 apply the **rest-api-design** skill for endpoint contract depth.
 
 Reserved names: `product`, `architecture`, `conventions`, `design-system`,
-`environment`, `flows`, `entities`, `apis`, and `index` inside `flows/` /
-`entities/` — a flow or entity folder never takes one of these.
+`environment`, `flows`, `entities`, `apis`, and `index` inside
+`flows/<project>/` / `entities/` — a flow or entity folder never takes one of
+these.
 
 ---
 
@@ -124,7 +133,8 @@ is missing).
 - every registry project's surfaces are represented per its `doc_unit`
   (`N/A — <reason>` counts as represented);
 - every flow with a Screens section has passed its **visual review** (§6a) — a
-  recorded skip (`screens/<flow>` in `remaining:`) is an open hole;
+  recorded skip (`screens/<project>/<NNN>-<flow>` in `remaining:`) is an open
+  hole;
 - the whole-product **coherence review** (§8) returned `NO GAPS` since the last
   content change.
 
@@ -243,13 +253,16 @@ as resolving markdown links per the blueprint-authoring
 
 Write, from the templates:
 
-- **The flow** — `flows/<flow>/index.md`, every applicable section (§2). Every
-  step names its actor and links the entity/service it touches; API-backed steps
-  name an `operationId`. **Every flow carries an Acceptance block** — at least
-  one success and one failure/compensation criterion as observable
-  Given/When/Then; these are what `plan` turns into E2E test steps and
-  `execute`'s acceptance stage verifies. Screens obey the **home rule** (a
-  screen is defined in exactly one flow; other flows link it).
+- **The flow** — `flows/<project>/<NNN>-<flow>/index.md`, every applicable
+  section (§2). A **new** flow lands in its primary project's group with the
+  next gap number in execution order (elicit where it slots when not obvious —
+  the number is a product statement about when the journey runs). Every step
+  names its actor and links the entity/service it touches; API-backed steps name
+  an `operationId`. **Every flow carries an Acceptance block** — at least one
+  success and one failure/compensation criterion as observable Given/When/Then;
+  these are what `plan` turns into E2E test steps and `execute`'s acceptance
+  stage verifies. Screens obey the **home rule** (a screen is defined in exactly
+  one flow; other flows link it).
 - **What it stands on** — for each entity a step references: create or extend
   `entities/<entity>/index.md` + `schema.yaml`; for each `operationId`: add or
   extend the operation in `apis/<project>.openapi.yaml` (from the OpenAPI
@@ -257,10 +270,11 @@ Write, from the templates:
   transition in the entity's Lifecycle table — add the transition or fix the
   step, never leave them disagreeing. Set each entity's `Used by:` line to the
   flows that reference it.
-- **The catalogs** — update the flow's row in `flows/index.md` (create from the
-  flows-index template if missing) and, when relationships changed, the
-  `erDiagram` in `entities/index.md` (create from the entities-index template)
-  so it stays the exact union of the Relationships tables.
+- **The catalogs** — update the flow's row in its **project's section** of
+  `flows/index.md`, keeping rows in numeric order (create from the flows-index
+  template if missing) and, when relationships changed, the `erDiagram` in
+  `entities/index.md` (create from the entities-index template) so it stays the
+  exact union of the Relationships tables.
 - **Conventions** — update `docs/blueprint/conventions.md` for any cross-cutting
   decision raised.
 
@@ -375,15 +389,15 @@ approving the flow.
    *design* these screens rather than review vwf's contract-derived render: run
    `/vwf:screens prompt <flow>` (it emits the numbered brief under
    `docs/prompts/` and delivers it to the flow's canvas), record
-   `screens/<flow>` in `blueprint.remaining` — deferred by design, not skipped —
-   and continue the sweep. The later `/vwf:screens import <flow>` closes it
-   through a targeted pass here, folding what the canvas decided into the
-   contract delta-by-delta.
+   `screens/<project>/<NNN>-<flow>` in `blueprint.remaining` — deferred by
+   design, not skipped — and continue the sweep. The later
+   `/vwf:screens import <flow>` closes it through a targeted pass here, folding
+   what the canvas decided into the contract delta-by-delta.
 5. **Skip (escape hatch).** The user may explicitly decline the review. Record
    it honestly: one line in the flow doc's Open Questions ("screens not yet
-   visually reviewed") and `screens/<flow>` in `blueprint.remaining` at stamp
-   time (§9) — coverage stays `partial` while any `screens/` entry remains,
-   exactly like any other hole.
+   visually reviewed") and `screens/<project>/<NNN>-<flow>` in
+   `blueprint.remaining` at stamp time (§9) — coverage stays `partial` while any
+   `screens/` entry remains, exactly like any other hole.
 
 Flows without a Screens section skip this step silently.
 
@@ -436,7 +450,7 @@ Record the sweep's result in `.config/vwf.yaml` (per the vwf-config asset):
 ```yaml
 blueprint:
   coverage: complete # or partial
-  remaining: [] # when partial: flows/<flow>, entities/<entity>, apis/<project>, screens/<flow>, coherence
+  remaining: [] # when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>, coherence
 ```
 
 Stamp after **every** run — a targeted update that opened a hole (or skipped the

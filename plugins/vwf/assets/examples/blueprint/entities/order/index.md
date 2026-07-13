@@ -21,8 +21,8 @@ An Order records a customer's intent to buy a set of items at agreed prices, and
 tracks that purchase from placement through fulfilment. It is the system of
 record for what was bought, by whom, and for how much.
 
-Used by: [Place order](../../flows/place-order/index.md),
-[Order cancellation & refund](../../flows/cancel-refund/index.md)
+Used by: [Place order](../../flows/web/010-place-order/index.md),
+[Order cancellation & refund](../../flows/web/020-cancel-refund/index.md)
 
 ## Out of Scope
 

@@ -21,10 +21,12 @@ Design nails visual and interaction nuance the blueprint's tables cannot.
 contract — **through `/vwf:blueprint`, one confirmed delta at a time**. The
 blueprint stays the contract of record; the canvas is where screens get good.
 
-**The naming contract is the join key.** Screen pages are named
-`<flow>/<screen-slug>` where `<flow>` is exactly the folder name under
-`docs/blueprint/flows/`; every flow folder carries **`<flow>/index`** — a
-navigator linking every page in the folder, in step order (a screen is never
+**The naming contract is the join key.** `<flow>` is exactly the numbered folder
+name under `docs/blueprint/flows/<project>/` — e.g. `020-signin` — for the
+registry project this canvas is pinned to; the numbering makes the canvas
+folders sort in execution order, exactly like the blueprint tree. Screen pages
+are named `<flow>/<screen-slug>`; every flow folder carries **`<flow>/index`** —
+a navigator linking every page in the folder, in step order (a screen is never
 named `index`); and each **entry point** additionally gets a **stitch page at
 the project root** — named `<flow>`, or `<flow>--<entry-slug>` when the flow has
 several — that composes the whole journey in step order, with edge cases as
@@ -35,7 +37,7 @@ the same names make the canvas humanly reconcilable against the flows tree.
 
 | Doc           | Path                                                                                       |
 | ------------- | ------------------------------------------------------------------------------------------ |
-| Flows         | `docs/blueprint/flows/<flow>/index.md` (the `## Screens` section)                          |
+| Flows         | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (the `## Screens` section)          |
 | Prompts       | `docs/prompts/NNN-screens-<flow>.md` (NNN = next zero-padded number in the folder)         |
 | Prompt templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/screen-prompt.md`                                  |
 | Design system | `docs/blueprint/design-system.md` (or folder form)                                         |
@@ -97,12 +99,13 @@ empty states are mandatory pins).
    `docs/prompts/*-screens-*.md` brief (the ledger of commissioned sessions).
 2. **List & match.** Resolve the surface and each in-scope UI project's pinned
    design project (canvas-push §§1–2); `list_files` each. Match every page by
-   the naming contract: first path segment ≡ a folder name under
-   `docs/blueprint/flows/` → that flow's **screen page**; `<flow>/index` → that
-   flow's **navigator** — matched to the flow but excluded from the screen diff
-   (it is a table of contents; flag it only when it fails to link every page in
-   its folder — canvas rework); a **root** page (no path segment) named `<flow>`
-   or `<flow>--<entry>` → that flow's **stitch page**. A page matching no flow →
+   the naming contract: first path segment ≡ a numbered flow folder name under
+   `docs/blueprint/flows/<project>/` (the registry project this canvas is pinned
+   to) → that flow's **screen page**; `<flow>/index` → that flow's **navigator**
+   — matched to the flow but excluded from the screen diff (it is a table of
+   contents; flag it only when it fails to link every page in its folder —
+   canvas rework); a **root** page (no path segment) named `<flow>` or
+   `<flow>--<entry>` → that flow's **stitch page**. A page matching no flow →
    one MCQ per page (show its `render_preview` screenshot + path): assign to an
    existing flow / treat its first segment as a **proposed new flow** / discard
    from this import. Never infer silently.

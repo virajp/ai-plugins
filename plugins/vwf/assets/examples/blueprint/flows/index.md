@@ -15,10 +15,12 @@ status: reviewed
 
 ## Flow catalog
 
-| Flow                                                    | Serves goal                                               | Entities touched                                                               | Status   |
-| ------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
-| [Place order](./place-order/index.md)                   | [Reliable ordering](../product.md#goal-reliable-ordering) | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
-| [Order cancellation & refund](./cancel-refund/index.md) | [Trusted refunds](../product.md#goal-trusted-refunds)     | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
+### web
+
+| #   | Flow                                                            | Serves goal                                               | Entities touched                                                               | Status   |
+| --- | --------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
+| 010 | [Place order](./web/010-place-order/index.md)                   | [Reliable ordering](../product.md#goal-reliable-ordering) | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
+| 020 | [Order cancellation & refund](./web/020-cancel-refund/index.md) | [Trusted refunds](../product.md#goal-trusted-refunds)     | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
 
 ## Inter-Service Contracts
 

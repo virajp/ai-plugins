@@ -46,7 +46,7 @@ stop).
 
 Read the registry (`docs/blueprint/architecture.md`) for the deployed projects
 (cloud types: `service`, `worker`, `site`, `console`) and the Acceptance blocks
-of every flow under `docs/blueprint/flows/*/index.md`. Resolve each project's
+of every flow under `docs/blueprint/flows/*/*/index.md`. Resolve each project's
 base URL for the named environment from the **`environments:` block in
 `.config/vwf.yaml`** first (per the vwf-config asset); fall back to the repo's
 own configuration (deploy manifests, env files by **name** via
@@ -80,7 +80,7 @@ reported as a warning (deploys lag contracts), never a halt.
 ### 3. Acceptance pass (against the environment)
 
 Dispatch `execute-acceptance-verifier` in **environment mode**: pass the
-Acceptance blocks of **every** flow (`docs/blueprint/flows/*/index.md` —
+Acceptance blocks of **every** flow (`docs/blueprint/flows/*/*/index.md` —
 regressions in untouched flows are the point, not just the last plan's), the
 registry, the target environment's base URLs, and the repo's staging-mode E2E
 mechanism per the harness contract (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md` —

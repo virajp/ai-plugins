@@ -73,15 +73,15 @@ Per-stage dispatch contract:
   it.)
 - **ux** — dispatch `execute-ux-reviewer` (pass the changed screens from the
   plan's screen steps, the `design-system.md` path, the owning flow docs'
-  Screens section(s) (`docs/blueprint/flows/<flow>/index.md`), the UI project's
-  registry entry, the wing, and the **slice** and **round number**). It renders
-  the changed screens via the repo's own dev server + Playwright (per state
-  where drivable), judges them against the design system and the Screens
-  contract, runs an **axe** accessibility scan (WCAG A/AA violations are
-  findings), and always adds a code-level token/state pass — which is the whole
-  review for a Flutter slice. Findings loop back to `code` like review findings;
-  `RENDERED: n/a` on a web slice is recorded as a gap and reported at the final
-  gate.
+  Screens section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`),
+  the UI project's registry entry, the wing, and the **slice** and **round
+  number**). It renders the changed screens via the repo's own dev server +
+  Playwright (per state where drivable), judges them against the design system
+  and the Screens contract, runs an **axe** accessibility scan (WCAG A/AA
+  violations are findings), and always adds a code-level token/state pass —
+  which is the whole review for a Flutter slice. Findings loop back to `code`
+  like review findings; `RENDERED: n/a` on a web slice is recorded as a gap and
+  reported at the final gate.
 
 ## Shared stage rules
 

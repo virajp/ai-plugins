@@ -7,8 +7,8 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 3
-blueprint_format: 9
+config_format: 5
+blueprint_format: 10
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,21 +29,23 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 9.** Format 9 = format 8 **plus** the **process-based
-restructure** — flows become the primary doc unit and structured contracts get
-structured formats:
+**Current format = 10.** Format 10 = format 9 **plus** the **project-grouped,
+execution-ordered flows** restructure (the `9 → 10` delta below). Format 9 =
+format 8 **plus** the **process-based restructure** — flows become the primary
+doc unit and structured contracts get structured formats:
 
-- **Flows** live at `docs/blueprint/flows/<flow>/index.md` (type **`vwf-flow`**,
-  always `index.md` only): Purpose with mandatory `Serves:` goal link(s) — flows
-  are the goal-traceability spine — Trigger & Actors (with authorization and
-  audit markers), ordered Steps (linking the entities/services touched;
-  API-backed steps name an `operationId`), consistency boundary, failure
-  handling, idempotency, the `sequenceDiagram`, **Screens** and **Background
-  Jobs** (both moved here from entities — process orientation puts journeys and
-  their jobs on the process; every screen has exactly one home flow), and the
-  **Acceptance** block. The root `integration.md` dissolves: `flows/index.md`
-  (type `vwf-integration`) keeps only the flow catalog + the Inter-Service
-  Contracts and Consistency Boundaries.
+- **Flows** live at `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (type
+  **`vwf-flow`**, grouped by primary registry project, NNN = execution order in
+  gap numbering, always `index.md` only): Purpose with mandatory `Serves:` goal
+  link(s) — flows are the goal-traceability spine — Trigger & Actors (with
+  authorization and audit markers), ordered Steps (linking the entities/services
+  touched; API-backed steps name an `operationId`), consistency boundary,
+  failure handling, idempotency, the `sequenceDiagram`, **Screens** and
+  **Background Jobs** (both moved here from entities — process orientation puts
+  journeys and their jobs on the process; every screen has exactly one home
+  flow), and the **Acceptance** block. The root `integration.md` dissolves:
+  `flows/index.md` (type `vwf-integration`) keeps only the flow catalog + the
+  Inter-Service Contracts and Consistency Boundaries.
 - **Entities** move under `docs/blueprint/entities/<entity>/` and slim to
   supporting data contracts — always exactly `index.md` (Purpose with
   **`Used by:`** flow links replacing `Serves:`; Lifecycle; Invariants;
@@ -268,6 +270,35 @@ the current format and apply the delta:
   flows that never existed — offer `/vwf:blueprint` (consent-gated); coverage
   stamps `complete` only after that sweep, including the new whole-product
   coherence review.
+
+- **`9 → 10`** → **project-grouped, execution-ordered flows**:
+
+  1. For every flow folder, resolve its **primary project** — the registry
+     project that owns the journey (the UI project of its Screens; for a UI-less
+     flow, the service/worker whose trigger starts it). Unambiguous → state it;
+     ambiguous → MCQ, never guessed.
+  2. Elicit each project group's **execution order** (the order the journeys run
+     on that surface — e.g. splash before signin) and assign **NNN gap numbers**
+     in steps of 10 (`010`, `020`, …) so later inserts slot between neighbors
+     without renumbering.
+  3. `git mv docs/blueprint/flows/<flow>/ →
+     docs/blueprint/flows/<project>/<NNN>-<flow>/`
+     (move, never delete). Rewrite links mechanically: outbound links from moved
+     flow docs gain one level (`../../entities/…` → `../../../entities/…`,
+     `../index.md` → `../../index.md`); inbound links (entity `Used by:` lines,
+     catalogs, active plans' `covers:`) re-point to the new path. Verify every
+     edge resolves (the OKF bar).
+  4. Regroup the `flows/index.md` catalog by project (one subsection per
+     registry project, rows in numeric order).
+  5. Rewrite flow identifiers in `.config/vwf.yaml`: `design.flows_pushed`
+     entries and `blueprint.remaining` `flows/…`/`screens/…` entries become
+     `<project>/<NNN>-<flow>`. Note that pushed canvas folders still carry the
+     old names — the next `/vwf:mockups` sweep or `/vwf:screens` session renames
+     them (drop stale `flows_pushed` entries if strictness is preferred; elicit
+     once).
+  6. Bump the stamp to `10`. No content changes — `status:` and
+     `implementation:` stamps are preserved; coverage is preserved when every
+     link resolves after the pass.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

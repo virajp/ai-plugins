@@ -38,7 +38,7 @@ here ever writes into `docs/blueprint/`.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Registry      | `docs/blueprint/architecture.md`                                                                                                                                      |
 | Design system | `docs/blueprint/design-system.md`, or the folder form `docs/blueprint/design-system/` (read every split file)                                                         |
-| Flow screens  | the `## Screens` section of `docs/blueprint/flows/<flow>/index.md` (home rule: a screen is defined in exactly one flow)                                               |
+| Flow screens  | the `## Screens` section of `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (home rule: a screen is defined in exactly one flow)                               |
 | Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` (legacy `mockups.project_id` = config drift; honor it, nudge `/vwf:setup`) |
 
 Doctrine: the **blueprint-authoring** skill's `ui-ux-contract` reference (what a

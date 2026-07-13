@@ -134,31 +134,32 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   asset — the user sees the screens, happy and sad paths, before approving the
   pass; a local render satisfies the gate offline; the user may instead defer
   **design-first** to `/vwf:screens` (brief out, canvas designs, import folds
-  back); an explicit skip records `screens/<flow>` in `blueprint.remaining`) —
-  until whole-product coverage holds **and the whole-product coherence review
-  passes**, then stamps `blueprint.coverage` in `.config/vwf.yaml` and offers
-  `/vwf:plan`), `mockups` (the **batch re-render / regeneration tool** —
-  blueprint passes render screens in-pass, so this sweeps or refreshes: after a
-  design-system change, for a legacy repo, or one flow post-hoc; per-flow
-  `mockup-generator` subagents into an ephemeral build dir, never committed,
-  pushed per the canvas-push asset behind an explicit approval gate; pins one
-  design project per registry UI project (`design.projects.<project>` — shared
-  or separate canvases, the product's call) and records `design.flows_pushed` in
-  `.config/vwf.yaml`; never a gate for `plan`), `screens` (the **two-way screen
-  sync**: `prompt <flow>` writes a numbered design brief to `docs/prompts/`
-  under the naming contract `<flow>/<screen-slug>` — the flow folder name is the
-  join key, machine- and human-reconcilable — plus a **`<flow>/index`
-  navigator** per folder (links every page in step order; excluded from the
-  screen diff) and a root **stitch page** per entry point (`<flow>[--<entry>]`:
-  the journey composed in step order, edge cases as tweaks of that page) — and
-  delivers it to the flow's canvas chat; `import` matches the designed pages
-  back by those names (unmatched pages get a per-page MCQ), diffs screen pages
-  against the Screens contract and stitch pages against Trigger/Steps/sequence
-  at journey level, asks **one MCQ per delta** (accept/reject/adapt), and routes
-  every accepted change through `/vwf:blueprint` — it never edits a flow doc
-  itself; a confirmed new first segment scaffolds a **draft flow** that a full
-  blueprint pass must complete), `plan` (halts unless that stamp is `complete`;
-  surfaces a **soft canvas-review advisory** — a flow slice with Screens not in
+  back); an explicit skip records `screens/<project>/<NNN>-<flow>` in
+  `blueprint.remaining`) — until whole-product coverage holds **and the
+  whole-product coherence review passes**, then stamps `blueprint.coverage` in
+  `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (the **batch re-render /
+  regeneration tool** — blueprint passes render screens in-pass, so this sweeps
+  or refreshes: after a design-system change, for a legacy repo, or one flow
+  post-hoc; per-flow `mockup-generator` subagents into an ephemeral build dir,
+  never committed, pushed per the canvas-push asset behind an explicit approval
+  gate; pins one design project per registry UI project
+  (`design.projects.<project>` — shared or separate canvases, the product's
+  call) and records `design.flows_pushed` in `.config/vwf.yaml`; never a gate
+  for `plan`), `screens` (the **two-way screen sync**: `prompt <flow>` writes a
+  numbered design brief to `docs/prompts/` under the naming contract
+  `<flow>/<screen-slug>` — the flow folder name is the join key, machine- and
+  human-reconcilable — plus a **`<flow>/index` navigator** per folder (links
+  every page in step order; excluded from the screen diff) and a root **stitch
+  page** per entry point (`<flow>[--<entry>]`: the journey composed in step
+  order, edge cases as tweaks of that page) — and delivers it to the flow's
+  canvas chat; `import` matches the designed pages back by those names
+  (unmatched pages get a per-page MCQ), diffs screen pages against the Screens
+  contract and stitch pages against Trigger/Steps/sequence at journey level,
+  asks **one MCQ per delta** (accept/reject/adapt), and routes every accepted
+  change through `/vwf:blueprint` — it never edits a flow doc itself; a
+  confirmed new first segment scaffolds a **draft flow** that a full blueprint
+  pass must complete), `plan` (halts unless that stamp is `complete`; surfaces a
+  **soft canvas-review advisory** — a flow slice with Screens not in
   `design.flows_pushed` gets a gate note offering `/vwf:mockups` or a pending
   `/vwf:screens import`, never a halt; resolves the slice's **transitive
   dependency chain** — pruned by the docs' `implementation:` stamps — and plans
@@ -270,16 +271,16 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   into a repo's CLAUDE.md), `handoff` (stack-agnostic; section→project mapping
   resolved from the registry). All blueprint markdown templates open with the
   OKF frontmatter block; flow/entity templates carry `implementation: none`
-- `assets/examples/blueprint/` — a **format-9 conformance bundle**
-  (`flows/place-order/` + `flows/cancel-refund/` + `flows/index.md`,
-  `entities/order/` + `entities/customer/` (`index.md` + `schema.yaml` each) +
-  `entities/index.md`, `apis/api.openapi.yaml`, plus `product.md`,
-  `conventions.md`, `design-system.md`, `environment.md`): a worked,
-  format-valid slice where every relationship/reference/goal link resolves, each
-  flow carries a worked Acceptance block + sequence diagram, the order lifecycle
-  its state diagram, and the entity catalog its erDiagram. Referenced from the
-  blueprint-authoring skill as the concrete "what good looks like"; its
-  asset-refs and relative links (`.md` and `.yaml`) are covered by
+- `assets/examples/blueprint/` — a **format-10 conformance bundle**
+  (`flows/web/010-place-order/` + `flows/web/020-cancel-refund/` +
+  `flows/index.md`, `entities/order/` + `entities/customer/` (`index.md` +
+  `schema.yaml` each) + `entities/index.md`, `apis/api.openapi.yaml`, plus
+  `product.md`, `conventions.md`, `design-system.md`, `environment.md`): a
+  worked, format-valid slice where every relationship/reference/goal link
+  resolves, each flow carries a worked Acceptance block + sequence diagram, the
+  order lifecycle its state diagram, and the entity catalog its erDiagram.
+  Referenced from the blueprint-authoring skill as the concrete "what good looks
+  like"; its asset-refs and relative links (`.md` and `.yaml`) are covered by
   `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `product`, `blueprint`, `plan`, `architecture`, `design-system`, `setup`, and
@@ -307,30 +308,30 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 - `assets/vwf-config.md` — the **vwf config** doctrine for `.config/vwf.yaml`
   (one per workspace, config_format 5): the stamp keys, `product`/`memory.wing`,
   the **`blueprint:` coverage stamp** (written by every blueprint sweep; `plan`
-  halts unless `coverage: complete`; `remaining:` names `flows/<flow>` /
-  `screens/<flow>` (a skipped §6a visual review) / `entities/<entity>` /
-  `apis/<project>` / `coherence`), per-project nuances (`platforms:` extensions,
-  coverage/health overrides), the `harness:` inventory, the **`enforcement:`
-  block** (structure/stack/rule opt-outs — moved out of the registry, which now
-  purely describes the system), bounded `pipeline` knobs (coverage target,
-  review round cap, stage model tiers — downgrades always reported at the gate —
-  and tighten-only `execute_caps` honored by the statusline caps hook, which
-  also reads the legacy `autopilot_caps` name; the `1 → 2` config migration is
-  the rename), `verify` `environments` + the optional **`production_env`** key
-  (names the release environment; default = the env literally named
-  `production`; the `2 → 3` migration is a bump + these semantics — the release
-  record itself is the `apis/released/` snapshot dir, never config), the
-  **`design:` block** (claude.ai/design pins — the **universal**
-  `design_system_id` (one per product, its own canvas project) and the
-  **per-registry-project** `projects:` map (each UI project's mockup canvas —
-  shared or separate uuids) — plus the `flows_pushed` canvas-currency list
-  `blueprint`'s render step and `mockups` record, `blueprint` drops on an
-  unrendered Screens change, and `plan`'s soft advisory reads; the `3 → 4`
-  migration renames `mockups:` → `design:`, the `4 → 5` migration splits
-  `project_id` into the `projects:` map, readers honoring legacy keys as drift),
-  and `docs_sync` scope. Hard floor: config can never disable security review,
-  TDD, the approval gates, the reviewer bars, or the **released-API
-  compatibility gate**. Readers fall back to the legacy
+  halts unless `coverage: complete`; `remaining:` names
+  `flows/<project>/<NNN>-<flow>` / `screens/<project>/<NNN>-<flow>` (a skipped
+  §6a visual review) / `entities/<entity>` / `apis/<project>` / `coherence`),
+  per-project nuances (`platforms:` extensions, coverage/health overrides), the
+  `harness:` inventory, the **`enforcement:` block** (structure/stack/rule
+  opt-outs — moved out of the registry, which now purely describes the system),
+  bounded `pipeline` knobs (coverage target, review round cap, stage model tiers
+  — downgrades always reported at the gate — and tighten-only `execute_caps`
+  honored by the statusline caps hook, which also reads the legacy
+  `autopilot_caps` name; the `1 → 2` config migration is the rename), `verify`
+  `environments` + the optional **`production_env`** key (names the release
+  environment; default = the env literally named `production`; the `2 → 3`
+  migration is a bump + these semantics — the release record itself is the
+  `apis/released/` snapshot dir, never config), the **`design:` block**
+  (claude.ai/design pins — the **universal** `design_system_id` (one per
+  product, its own canvas project) and the **per-registry-project** `projects:`
+  map (each UI project's mockup canvas — shared or separate uuids) — plus the
+  `flows_pushed` canvas-currency list `blueprint`'s render step and `mockups`
+  record, `blueprint` drops on an unrendered Screens change, and `plan`'s soft
+  advisory reads; the `3 → 4` migration renames `mockups:` → `design:`, the
+  `4 → 5` migration splits `project_id` into the `projects:` map, readers
+  honoring legacy keys as drift), and `docs_sync` scope. Hard floor: config can
+  never disable security review, TDD, the approval gates, the reviewer bars, or
+  the **released-API compatibility gate**. Readers fall back to the legacy
   `docs/blueprint/.vwf.yml` (its presence = pre-6 drift)
 - `assets/harness.md` — the **harness contract**: the verification capabilities
   a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`,
@@ -397,20 +398,22 @@ Docs the commands maintain live under `docs/blueprint/` (the outcome contract
 `product.md` — problem/users/goals/slice-priority + the `/vwf:feedback`-owned
 Metric readings appendix — registry `architecture.md`, `conventions.md`, the
 product-wide `design-system.md`, the per-project env-var/secret catalog
-`environment.md`; **one flow folder per flow** — `flows/<flow>/index.md`, each
+`environment.md`; **one flow folder per flow, grouped by primary registry
+project and numbered in execution order** —
+`flows/<project>/<NNN>-<flow>/index.md` (NNN gap-numbered in steps of 10), each
 carrying its Screens, Jobs, and Acceptance block — with `flows/index.md` the
-catalog + inter-service contracts; **one entity folder per entity** —
-`entities/<entity>/` holding exactly `index.md` + `schema.yaml` — with
-`entities/index.md` the catalog + product-wide erDiagram; and the API contracts
-`apis/<project>.openapi.yaml` + the frozen `apis/released/` snapshots; the
-blueprint root holds only the system docs), `docs/plans/`
-(`<date>-<time>-<slice>.md`, with `archived/`), and `docs/prompts/` (`NNN-*.md`
-— numbered canvas design briefs written by `/vwf:screens prompt`; committed
-intent artifacts, not blueprint docs). Superseded commands/agents/templates are
-archived under `archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
-`vwf-2026-07-04/` holds the retired `autopilot` command, whose behavior merged
-into `execute`; `vwf-2026-07-07/` the format-8 `integration.md` template,
-dissolved into the flow templates).
+catalog (per-project sections, numeric order) + inter-service contracts; **one
+entity folder per entity** — `entities/<entity>/` holding exactly `index.md` +
+`schema.yaml` — with `entities/index.md` the catalog + product-wide erDiagram;
+and the API contracts `apis/<project>.openapi.yaml` + the frozen
+`apis/released/` snapshots; the blueprint root holds only the system docs),
+`docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`), and
+`docs/prompts/` (`NNN-*.md` — numbered canvas design briefs written by
+`/vwf:screens prompt`; committed intent artifacts, not blueprint docs).
+Superseded commands/agents/templates are archived under `archived/vwf-<date>/`
+(`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
+`autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
+format-8 `integration.md` template, dissolved into the flow templates).
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
@@ -447,7 +450,13 @@ contracts move to `apis/<project>.openapi.yaml` with frozen production snapshots
 under `apis/released/`, the product-wide `erDiagram` lands in
 `entities/index.md`, and the `implementation:` stamp arrives — migrated by
 `setup` in two phases (mechanical `git mv` scaffold + an elicited
-`/vwf:blueprint` fill; coverage stays `partial` between them).
+`/vwf:blueprint` fill; coverage stays `partial` between them); **format 10** the
+**project-grouped, execution-ordered flows** — every flow moves under its
+primary registry project and takes an NNN execution-order prefix with gap
+numbering (`flows/<project>/<NNN>-<flow>/`, e.g. `flows/app/010-splash/`;
+inserts slot between neighbors without renumbering), the catalog regroups per
+project, and the flow folder name (`<NNN>-<flow>`) stays the canvas join key —
+migrated by `setup` mechanically with the execution order elicited.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,

@@ -9,16 +9,21 @@ status: draft # draft | reviewed | stable
 
 # Flows & Cross-Flow Contracts
 
-<!-- Deliberately thin. Per-flow contracts live in flows/<flow>/index.md — this
+<!-- Deliberately thin. Per-flow contracts live in flows/<project>/<NNN>-<flow>/index.md — this
      file holds only the catalog and what is cross-flow by nature. Per-flow
      content never leaks back here. See the blueprint-authoring skill
      (flow-contract). -->
 
 ## Flow catalog
 
-| Flow                             | Serves goal                         | Entities touched | Status |
-| -------------------------------- | ----------------------------------- | ---------------- | ------ |
-| [<flow name>](./<flow>/index.md) | [<goal>](../product.md#goal-<slug>) | <links>          | draft  |
+<!-- One subsection per registry project (the flow group folders); rows in
+     numeric (execution) order — NNN is gap-numbered in steps of 10. -->
+
+### <project>
+
+| #     | Flow                                             | Serves goal                         | Entities touched | Status |
+| ----- | ------------------------------------------------ | ----------------------------------- | ---------------- | ------ |
+| <NNN> | [<flow name>](./<project>/<NNN>-<flow>/index.md) | [<goal>](../product.md#goal-<slug>) | <links>          | draft  |
 
 ## Inter-Service Contracts
 

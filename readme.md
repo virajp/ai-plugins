@@ -135,8 +135,10 @@ Each phase answers one question:
   problem, the users, measurable goals, and the order to build in. Every flow in
   the blueprint must trace to a goal here.
 - **Blueprint** answers *what should the whole product be?* — permanent,
-  product-wide, organized by **flow** (the user/system journeys), with entities
-  as the supporting data contracts. It is a **code-independent technical
+  product-wide, organized by **flow** (the user/system journeys, grouped by the
+  registry project that owns each journey and numbered in execution order —
+  mobile-app flows live apart from website and console flows), with entities as
+  the supporting data contracts. It is a **code-independent technical
   contract**: it pins every decision that has more than one reasonable answer
   *and* is true regardless of how the code is written — flows (each with
   acceptance criteria and a sequence diagram, carrying the screens and jobs they
@@ -247,9 +249,11 @@ docs/
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
 │   ├── environment.md           # per-project env-var/secret catalog (names, never values)
-│   ├── flows/                   # the PRIMARY unit — one folder per flow
-│   │   ├── index.md             # flow catalog + inter-service contracts
-│   │   └── <flow>/index.md      # trigger, actors, steps, screens, jobs,
+│   ├── flows/                   # the PRIMARY unit — grouped by project, numbered
+│   │   ├── index.md             # flow catalog (per-project sections) + inter-service contracts
+│   │   └── <project>/           # one group per registry project owning the journeys
+│   │       └── <NNN>-<flow>/    # NNN = execution order (gap-numbered: 010, 020, …)
+│   │           └── index.md     # trigger, actors, steps, screens, jobs,
 │   │                            # sequence diagram, acceptance criteria
 │   ├── entities/                # the supporting data contracts
 │   │   ├── index.md             # entity catalog + product-wide ER diagram
@@ -472,6 +476,13 @@ stamp records what remains, and the next run picks it up.
 /vwf:blueprint place-order    # start the sweep at one flow (or entity)
 ```
 
+Flows live **grouped by the registry project that owns the journey** and
+**numbered in execution order** — `flows/<project>/<NNN>-<flow>/`
+(`flows/app/010-splash/`, `flows/app/020-signin/`, …; gap numbering in steps of
+10, so an insert slots between neighbors without renumbering). A product with a
+mobile app, a website, and a console keeps each surface's flows apart, each
+catalog section reading top-to-bottom in the order the journeys run.
+
 Per flow, `blueprint` elicits the journey with you under the
 **`blueprint-authoring`** doctrine — trigger and actors, the ordered steps,
 consistency and failure handling, the screens and jobs the flow needs, and its
@@ -491,8 +502,9 @@ back into the Screens contract before the pass closes. Offline, a local render
 (files you open in a browser) satisfies the gate. Prefer the canvas to *design*
 the screens instead? The pass can defer design-first to
 [`/vwf:screens`](#vwfscreens) — brief out, canvas designs, import folds back.
-You can also explicitly skip — the skip is recorded honestly as `screens/<flow>`
-in `blueprint.remaining`, which keeps coverage `partial` like any other hole.
+You can also explicitly skip — the skip is recorded honestly as
+`screens/<project>/<NNN>-<flow>` in `blueprint.remaining`, which keeps coverage
+`partial` like any other hole.
 
 Complicated contracts are **drawn, not just tabled**: every flow carries a
 mermaid sequence diagram (failure branch included), an entity lifecycle with
@@ -570,8 +582,9 @@ primary breakpoint for a `site`, wide desktop for a `console`, plus car-display
 template-idiom variants for screens available in-car when the project declares
 `carplay`/`android-auto`) and delivers it to the flow's canvas chat. The brief
 carries a **naming contract**: every screen page is named
-`<flow>/<screen-slug>`, where `<flow>` is exactly the folder name under
-`docs/blueprint/flows/` — that name is how `import` matches pages back to flows,
+`<flow>/<screen-slug>`, where `<flow>` is exactly the numbered folder name under
+`docs/blueprint/flows/<project>/` (e.g. `020-signin` — so the canvas sorts in
+execution order too) — that name is how `import` matches pages back to flows,
 and how you reconcile the canvas against the flows tree by eye. Screens are
 parts; the journey is the product — so the brief also requires a
 **`<flow>/index` navigator inside each flow folder** (linking every screen and

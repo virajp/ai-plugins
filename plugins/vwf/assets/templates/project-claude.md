@@ -38,9 +38,10 @@ choices are `plan`'s job — not the blueprint's.
   config…).
 - `docs/blueprint/environment.md` — per-project inventory of env vars + secrets,
   no values (if the system has an external integration/secret).
-- `docs/blueprint/flows/<flow>/` — one folder per flow, the **primary**
-  blueprint unit: trigger, actors, steps, screens, jobs, and acceptance
-  criteria. `flows/index.md` holds the catalog + inter-service contracts.
+- `docs/blueprint/flows/<project>/<NNN>-<flow>/` — one folder per flow, the
+  **primary** blueprint unit: trigger, actors, steps, screens, jobs, and
+  acceptance criteria. `flows/index.md` holds the catalog + inter-service
+  contracts.
 - `docs/blueprint/entities/<entity>/` — one folder per entity, the supporting
   data contracts: `index.md` (lifecycle, relationships, invariants) +
   `schema.yaml` (the authoritative data model). `entities/index.md` holds the

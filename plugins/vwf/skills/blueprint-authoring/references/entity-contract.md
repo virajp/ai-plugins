@@ -61,11 +61,12 @@ onto the flows that exercise it:
 
 Where flows carry `Serves:` (a direct edge to a product goal), an entity carries
 **`Used by:`** — one line in Purpose linking at least one flow
-(`[<Flow>](../../flows/<flow>/index.md)`). Entities serve product goals
-**transitively**, through the flows that reference them (entity → flow → goal).
-An entity no flow references is a speculative surface: either a flow is missing
-from the blueprint or the entity shouldn't exist. The coherence reviewer
-verifies these back-links match the flows that actually link the entity.
+(`[<Flow>](../../flows/<project>/<NNN>-<flow>/index.md)`). Entities serve
+product goals **transitively**, through the flows that reference them (entity →
+flow → goal). An entity no flow references is a speculative surface: either a
+flow is missing from the blueprint or the entity shouldn't exist. The coherence
+reviewer verifies these back-links match the flows that actually link the
+entity.
 
 ## The lifecycle bar
 

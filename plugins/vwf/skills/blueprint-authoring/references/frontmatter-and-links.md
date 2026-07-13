@@ -44,22 +44,22 @@ status: draft                                      # required — draft | review
 
 ### `type` vocabulary
 
-| `type`              | Doc                                             |
-| ------------------- | ----------------------------------------------- |
-| `vwf-product`       | `product.md`                                    |
-| `vwf-architecture`  | `architecture.md`                               |
-| `vwf-conventions`   | `conventions.md`                                |
-| `vwf-design-system` | `design-system.md`                              |
-| `vwf-environment`   | `environment.md`                                |
-| `vwf-flow`          | a flow doc `flows/<flow>/index.md`              |
-| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts) |
-| `vwf-entity`        | an entity doc `entities/<entity>/index.md`      |
-| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)  |
-| `vwf-plan`          | a `docs/plans/` cycle plan                      |
-| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)  |
+| `type`              | Doc                                                |
+| ------------------- | -------------------------------------------------- |
+| `vwf-product`       | `product.md`                                       |
+| `vwf-architecture`  | `architecture.md`                                  |
+| `vwf-conventions`   | `conventions.md`                                   |
+| `vwf-design-system` | `design-system.md`                                 |
+| `vwf-environment`   | `environment.md`                                   |
+| `vwf-flow`          | a flow doc `flows/<project>/<NNN>-<flow>/index.md` |
+| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)    |
+| `vwf-entity`        | an entity doc `entities/<entity>/index.md`         |
+| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)     |
+| `vwf-plan`          | a `docs/plans/` cycle plan                         |
+| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)     |
 
-Every flow is a **folder** (`docs/blueprint/flows/<flow>/`) holding `index.md`
-alone (`type: vwf-flow`). Every entity is a **folder**
+Every flow is a **folder** (`docs/blueprint/flows/<project>/<NNN>-<flow>/`)
+holding `index.md` alone (`type: vwf-flow`). Every entity is a **folder**
 (`docs/blueprint/entities/<entity>/`) holding exactly `index.md`
 (`type: vwf-entity`) + `schema.yaml`. The reviewer treats a folder as one
 concept.
@@ -109,26 +109,27 @@ never conflate.
 ## Links (the edges)
 
 Cross-doc relationships are **typed markdown links**, never bare prose — so the
-graph is machine-traversable and every edge can be verified to resolve. Flows
-and entities live **two levels deep** (`flows/<flow>/` and
-`entities/<entity>/`), so the root system docs are two levels up:
+graph is machine-traversable and every edge can be verified to resolve. Entities
+live **two levels deep** (`entities/<entity>/`); flows live **three levels
+deep** (`flows/<project>/<NNN>-<flow>/`), so from a flow the root system docs
+are three levels up, from an entity two:
 
 - A flow's **`Serves:`** line links a product goal anchor:
-  `[<goal>](../../product.md#goal-<slug>)`.
+  `[<goal>](../../../product.md#goal-<slug>)`.
 - A flow's **Steps** and **References** link the entities/services and contracts
-  they touch: `[Order](../../entities/order/index.md)`,
-  `[api API contract](../../apis/api.openapi.yaml)`,
-  `[errors](../../conventions.md#errors)`.
+  they touch: `[Order](../../../entities/order/index.md)`,
+  `[api API contract](../../../apis/api.openapi.yaml)`,
+  `[errors](../../../conventions.md#errors)`.
 - An entity's **`Used by:`** line links the owning flow:
-  `[Place order](../../flows/place-order/index.md)`.
+  `[Place order](../../flows/web/010-place-order/index.md)`.
 - An entity's **Relationships** table links the sibling entity in the "Related
   entity" cell: `[Customer](../customer/index.md)` — one level up from this
   entity's folder, into the sibling's.
 - An entity's **References** link `conventions.md` anchors:
   `[ids](../../conventions.md#ids)`.
 - `flows/index.md` (the catalog) links each flow and goal:
-  `[Place order](./place-order/index.md)`, `[<goal>](../product.md#goal-<slug>)`
-  (it sits one level under the root).
+  `[Place order](./web/010-place-order/index.md)`,
+  `[<goal>](../product.md#goal-<slug>)` (it sits one level under the root).
 - `environment.md` (a root doc) links the injection mechanism it defers to:
   `[config](./conventions.md#config)`.
 
@@ -141,7 +142,7 @@ completeness bars.
 A small, format-valid bundle lives at
 `${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/` — a commerce slice where
 every edge resolves. Read
-[`flows/place-order/index.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/flows/place-order/index.md)
+[`flows/web/010-place-order/index.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/flows/web/010-place-order/index.md)
 as the entry point: it `Serves:` a product goal, its steps link
 `entities/order/index.md` and name operationIds in `apis/api.openapi.yaml`, and
 its Screens defer visual language to `design-system.md`. The

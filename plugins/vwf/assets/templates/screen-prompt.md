@@ -12,15 +12,16 @@ Design the screens for the **`<flow>`** flow of **`<product name>`**.
 ## Naming contract (required — do not rename)
 
 Name every screen page `<flow>/<screen-slug>` — the first path segment must be
-exactly `<flow>` (it matches this product's flow folder). One page per screen;
-state variants as `<flow>/<screen-slug>--<state>`. Every flow folder also
-carries **`<flow>/index`** — the folder's navigator (see below) — so never name
-a screen `index`. The **stitch pages** (see below) live at the **project root**,
-named exactly `<flow>` — or `<flow>--<entry-slug>` when the flow has several
-entry points. If a screen you need does not belong to this flow, name it
-`<other-flow>/<screen-slug>` using that flow's exact name — or, for a journey
-this product does not have yet, pick a short kebab-case name and use it as the
-first segment; it will be reviewed as a proposed new flow.
+exactly `<flow>`, the numbered flow folder name (e.g. `020-signin`; it matches
+this product's flow folder, and the number keeps the canvas sorted in execution
+order). One page per screen; state variants as `<flow>/<screen-slug>--<state>`.
+Every flow folder also carries **`<flow>/index`** — the folder's navigator (see
+below) — so never name a screen `index`. The **stitch pages** (see below) live
+at the **project root**, named exactly `<flow>` — or `<flow>--<entry-slug>` when
+the flow has several entry points. If a screen you need does not belong to this
+flow, name it `<other-flow>/<screen-slug>` using that flow's exact name — or,
+for a journey this product does not have yet, pick a short kebab-case name and
+use it as the first segment; it will be reviewed as a proposed new flow.
 
 ## Product context
 

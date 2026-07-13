@@ -37,7 +37,8 @@ pipeline's build-state stamp — its presence and value are **never** a gap.
 
 ## Flow mode — checklist
 
-The doc is `docs/blueprint/flows/<flow>/index.md` (type `vwf-flow`). Verify:
+The doc is `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (type
+`vwf-flow`). Verify:
 
 - [ ] The Purpose section carries a **Serves:** line with at least one markdown
       link to a `product.md` goal anchor, and every linked anchor is in the

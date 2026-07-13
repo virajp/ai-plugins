@@ -9,7 +9,7 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
 # Flow: <Flow name>
 
-<!-- One flow per FOLDER: docs/blueprint/flows/<flow>/index.md — always index.md
+<!-- One flow per FOLDER: docs/blueprint/flows/<project>/<NNN>-<flow>/index.md — always index.md
      only (a flow too big for one file is several flows). Flows are the PRIMARY
      blueprint unit: the goal-traceability spine runs product goal → flow →
      entity/API/screen. See the blueprint-authoring skill (flow-contract).
