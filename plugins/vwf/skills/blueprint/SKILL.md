@@ -161,6 +161,16 @@ stack's default, the Screens elicitation covers what genuinely differs per
 platform — navigation/input idiom, window/layout behavior, platform-specific
 states — and records only the differences, never a per-platform copy.
 
+**Automotive (`carplay` / `android-auto`).** When the flow's UI project declares
+an in-car platform, **elicit whether this flow is available in-car** — a product
+decision; most flows are not. For an in-car flow, the Screens elicitation
+records the in-car variant per screen: the platform **template** it maps to
+(list / grid / map / now-playing / …), what is shown vs the phone screen
+(glanceable subset), and the driver-distraction constraints — recorded as
+platform variants/deviations on the Screens rows, never a per-platform copy of
+the flow. In-car UIs are template-constrained by the OS; custom layout does not
+apply there.
+
 **Doc unit.** Each registry project declares a `doc_unit` (`entity` / `page` /
 `module`). Under format 9 these map as: `page` doc units (typically a `site` or
 `console`) are authored as **flows** — a page journey is a flow; `module` doc

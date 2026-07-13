@@ -91,6 +91,14 @@ be discussed.
   brief pins breakpoint behavior.
 - **Admin console** (`console`): **desktop-first** at a wide breakpoint (≥1280
   px), data-dense layout, no device frame.
+- **In-car** (`carplay` / `android-auto` under `platforms:` — only for the
+  screens this brief marks as available in-car): design each in-car variant as
+  `<flow>/<screen-slug>--carplay` / `--android-auto` at a **car head-unit
+  display** (~800×480 landscape unless the design system states one) **inside a
+  car-display frame**, using the platform's **template idiom** (list / grid /
+  map / now-playing / …) — large touch targets, glanceable text,
+  driver-distraction-safe; the product design system applies only where the
+  platform allows (icons, accent color).
 
 ## Out of scope
 

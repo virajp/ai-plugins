@@ -261,11 +261,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   per entry point, edge cases as tweaks), and a per-platform **Screen format**
   directive derived from the registry project's type/platforms: phone-framed
   mobile viewport for `frontend`, browser-width at the primary breakpoint for
-  `site`, wide desktop for `console`; no OKF frontmatter, it is a canvas brief,
-  not a blueprint doc), `project-claude` (the vwf section `/vwf:setup` merges
-  into a repo's CLAUDE.md), `handoff` (stack-agnostic; section→project mapping
-  resolved from the registry). All blueprint markdown templates open with the
-  OKF frontmatter block; flow/entity templates carry `implementation: none`
+  `site`, wide desktop for `console`, car-display template-idiom variants for
+  in-car screens on `carplay`/`android-auto` platforms; no OKF frontmatter, it
+  is a canvas brief, not a blueprint doc), `project-claude` (the vwf section
+  `/vwf:setup` merges into a repo's CLAUDE.md), `handoff` (stack-agnostic;
+  section→project mapping resolved from the registry). All blueprint markdown
+  templates open with the OKF frontmatter block; flow/entity templates carry
+  `implementation: none`
 - `assets/examples/blueprint/` — a **format-9 conformance bundle**
   (`flows/place-order/` + `flows/cancel-refund/` + `flows/index.md`,
   `entities/order/` + `entities/customer/` (`index.md` + `schema.yaml` each) +

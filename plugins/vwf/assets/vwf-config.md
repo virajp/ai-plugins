@@ -30,7 +30,7 @@ projects: # per-project NUANCES only — no type/path/stack keys, ever
     platforms: [
       <target>,
       <...>,
-    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section)
+    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section; `carplay`/`android-auto` mark in-car surfaces — frontend projects only, extending the Screens elicitation and the /vwf:screens briefs)
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or

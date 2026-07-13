@@ -69,13 +69,15 @@ empty states are mandatory pins).
    `docs/prompts/NNN-screens-<flow>.md` — NNN is the next number across
    `docs/prompts/` (zero-padded, e.g. `007`). The naming-contract section is
    verbatim-mandatory. Fill the **Screen format** section from the registry
-   project's `type` + `platforms:` — keep only the matching directive (a
+   project's `type` + `platforms:` — keep only the matching directive(s) (a
    phone-framed mobile viewport for `frontend`, browser-width at the primary
-   breakpoint for `site`, wide desktop for `console`), never the generic list.
-   Fill the **Stitch pages** section's entry points from the flow's Trigger &
-   Actors — most flows have one; list each that genuinely starts the journey
-   (app launch, deep link, notification, …). Screens with no contract yet (a
-   draft flow) are described from the steps.
+   breakpoint for `site`, wide desktop for `console`; **add the in-car
+   directive** when `platforms:` includes `carplay`/`android-auto` and the
+   flow's Screens contract marks screens as available in-car), never the generic
+   list. Fill the **Stitch pages** section's entry points from the flow's
+   Trigger & Actors — most flows have one; list each that genuinely starts the
+   journey (app launch, deep link, notification, …). Screens with no contract
+   yet (a draft flow) are described from the steps.
 3. **Deliver.** Resolve a surface and the flow's UI project's design project
    (canvas-push §§1–2). Push the brief's text into the project's chat panel via
    `put_conversation` (title `vwf screens brief — <flow>`) — a readable copy the

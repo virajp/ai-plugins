@@ -29,6 +29,13 @@ Pin per screen / surface (each has more than one reasonable answer):
   live or on refresh (the UX expectation, not the transport).
 - **Content** — error messages, empty-state copy, and CTA labels where the
   wording is a product decision.
+- **In-car variants** (screens of a flow available on a `carplay` /
+  `android-auto` platform) — per in-car screen: the platform **template** it
+  maps to (list / grid / map / now-playing / …), the glanceable content subset
+  vs the phone screen, and interaction limits while driving. In-car UIs are
+  template-constrained by the OS — custom layout and visual language do not
+  apply; the design system reaches only as far as the platform allows (icons,
+  accent color).
 
 Out (realization): the component library, CSS, exact pixels — and anything
 already fixed by the design system. If a screen must break the design system,
