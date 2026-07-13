@@ -11,13 +11,15 @@ Design the screens for the **`<flow>`** flow of **`<product name>`**.
 
 ## Naming contract (required — do not rename)
 
-Name every page `<flow>/<screen-slug>` — the first path segment must be exactly
-`<flow>` (it matches this product's flow folder). One page per screen; state
-variants as `<flow>/<screen-slug>--<state>`. If a screen you need does not
-belong to this flow, name it `<other-flow>/<screen-slug>` using that flow's
-exact name — or, for a journey this product does not have yet, pick a short
-kebab-case name and use it as the first segment; it will be reviewed as a
-proposed new flow.
+Name every screen page `<flow>/<screen-slug>` — the first path segment must be
+exactly `<flow>` (it matches this product's flow folder). One page per screen;
+state variants as `<flow>/<screen-slug>--<state>`. The **stitch pages** (see
+below) live at the **project root**, named exactly `<flow>` — or
+`<flow>--<entry-slug>` when the flow has several entry points. If a screen you
+need does not belong to this flow, name it `<other-flow>/<screen-slug>` using
+that flow's exact name — or, for a journey this product does not have yet, pick
+a short kebab-case name and use it as the first segment; it will be reviewed as
+a proposed new flow.
 
 ## Product context
 
@@ -47,6 +49,21 @@ Screens section yet, describe the screens the steps imply.
 - **Recorded deviations (if any):**
   `<deviations from the design system this
   screen already records>`
+
+## Stitch pages (project root — required)
+
+The flow's screens are parts; the journey is the product. For **each entry
+point** below, build one page at the **project root** (not inside the `<flow>/`
+folder) that **stitches the whole flow together**: the screens above composed in
+their step order, happy path end to end, with the transitions/navigation between
+them indicated. Name it exactly `<flow>` for a single entry point, or
+`<flow>--<entry-slug>` per entry point when there are several. Cover the edge
+cases — the error, empty, and other pinned states — as **tweaks (variations) of
+the stitch page**, never as extra root pages.
+
+`<the flow's entry points, from its Trigger & Actors — one line each: who
+enters, from where (app launch, deep link, notification, …), and which screen
+the journey starts on>`
 
 ## Design system
 

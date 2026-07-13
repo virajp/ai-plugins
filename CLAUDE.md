@@ -147,25 +147,28 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `.config/vwf.yaml`; never a gate for `plan`), `screens` (the **two-way screen
   sync**: `prompt <flow>` writes a numbered design brief to `docs/prompts/`
   under the naming contract `<flow>/<screen-slug>` — the flow folder name is the
-  join key, machine- and human-reconcilable — and delivers it to the flow's
-  canvas chat; `import` matches the designed pages back by that name (unmatched
-  pages get a per-page MCQ), asks **one MCQ per delta** (accept/reject/adapt),
-  and routes every accepted change through `/vwf:blueprint` — it never edits a
-  flow doc itself; a confirmed new first segment scaffolds a **draft flow** that
-  a full blueprint pass must complete), `plan` (halts unless that stamp is
-  `complete`; surfaces a **soft canvas-review advisory** — a flow slice with
-  Screens not in `design.flows_pushed` gets a gate note offering `/vwf:mockups`
-  or a pending `/vwf:screens import`, never a halt; resolves the slice's
-  **transitive dependency chain** — pruned by the docs' `implementation:` stamps
-  — and plans each unimplemented dependency as **its own plan doc first**, in
-  order, each behind its own gate (plan docs carry `covers:`/`requires:`
-  frontmatter; a genuine dependency cycle collapses into one plan); **routes
-  blueprint gaps back through `/vwf:blueprint` before writing** — a *what*-level
-  hole the diff exposes is fixed in the contract, never settled in the plan or
-  parked as a risk, so execute never trips on an open decision; the last chain
-  element's gate offers Approve & execute), `execute` (halts until every
-  `requires:` prerequisite plan's `covers:` docs read
-  `implementation: complete`), `archive`, `verify` (post-deploy environment
+  join key, machine- and human-reconcilable — plus a root **stitch page** per
+  entry point (`<flow>[--<entry>]`: the journey composed in step order, edge
+  cases as tweaks of that page) — and delivers it to the flow's canvas chat;
+  `import` matches the designed pages back by those names (unmatched pages get a
+  per-page MCQ), diffs screen pages against the Screens contract and stitch
+  pages against Trigger/Steps/sequence at journey level, asks **one MCQ per
+  delta** (accept/reject/adapt), and routes every accepted change through
+  `/vwf:blueprint` — it never edits a flow doc itself; a confirmed new first
+  segment scaffolds a **draft flow** that a full blueprint pass must complete),
+  `plan` (halts unless that stamp is `complete`; surfaces a **soft canvas-review
+  advisory** — a flow slice with Screens not in `design.flows_pushed` gets a
+  gate note offering `/vwf:mockups` or a pending `/vwf:screens import`, never a
+  halt; resolves the slice's **transitive dependency chain** — pruned by the
+  docs' `implementation:` stamps — and plans each unimplemented dependency as
+  **its own plan doc first**, in order, each behind its own gate (plan docs
+  carry `covers:`/`requires:` frontmatter; a genuine dependency cycle collapses
+  into one plan); **routes blueprint gaps back through `/vwf:blueprint` before
+  writing** — a *what*-level hole the diff exposes is fixed in the contract,
+  never settled in the plan or parked as a risk, so execute never trips on an
+  open decision; the last chain element's gate offers Approve & execute),
+  `execute` (halts until every `requires:` prerequisite plan's `covers:` docs
+  read `implementation: complete`), `archive`, `verify` (post-deploy environment
   check: health pass + the flows' acceptance criteria run against staging/prod
   via the acceptance verifier's environment mode — vwf never deploys; a clean
   run against the **production** environment offers to record a release,
@@ -254,7 +257,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   fills and the acceptance stage verifies), `product`, `architecture`,
   `design-system`, `environment` (the per-project env-var/secret catalog),
   `screen-prompt` (the `/vwf:screens prompt` design brief — carries the
-  verbatim-mandatory naming contract and a per-platform **Screen format**
+  verbatim-mandatory naming contract, the required root **stitch pages** (one
+  per entry point, edge cases as tweaks), and a per-platform **Screen format**
   directive derived from the registry project's type/platforms: phone-framed
   mobile viewport for `frontend`, browser-width at the primary breakpoint for
   `site`, wide desktop for `console`; no OKF frontmatter, it is a canvas brief,

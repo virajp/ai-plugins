@@ -567,22 +567,27 @@ goal, steps, Screens rows, the mandatory error/empty states, the bound design
 system, and a **screen format** directive from the UI project's type — a
 phone-framed mobile viewport for a `frontend` app, browser-width pages at the
 primary breakpoint for a `site`, wide desktop for a `console`) and delivers it
-to the flow's canvas chat. The brief carries a **naming contract**: every page
-is named `<flow>/<screen-slug>`, where `<flow>` is exactly the folder name under
-`docs/blueprint/flows/` — that name is how `import` matches pages back to flows,
-and how you reconcile the canvas against the flows tree by eye. Iterate on the
-canvas as long as you like.
+to the flow's canvas chat. The brief carries a **naming contract**: every screen
+page is named `<flow>/<screen-slug>`, where `<flow>` is exactly the folder name
+under `docs/blueprint/flows/` — that name is how `import` matches pages back to
+flows, and how you reconcile the canvas against the flows tree by eye. Screens
+are parts; the journey is the product — so the brief also requires a **stitch
+page at the project root per entry point** (named `<flow>`, or `<flow>--<entry>`
+when the flow has several): the whole flow composed in step order, happy path
+end to end, with the edge cases covered as **tweaks** of that page rather than
+extra pages. Iterate on the canvas as long as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
-flow, or discard), diffs each flow's pages against its Screens contract, and
-asks **one question per delta**: accept (the design wins; the contract follows),
-reject (the contract stands; the canvas gets rework), or adapt. Accepted deltas
-are handed to `/vwf:blueprint <flow>` — the blueprint skill remains the only
-flow-doc editor, so every design-driven change still passes the reviewer gate
-and demotes `implementation:` stamps where the contract moved. A confirmed new
-flow is scaffolded as a draft that a full blueprint pass must complete — pixels
-don't carry steps or acceptance criteria.
+flow, or discard), diffs each flow's screen pages against its Screens contract —
+and the stitch pages against the flow's trigger, step order, and sequence
+diagram at journey level — and asks **one question per delta**: accept (the
+design wins; the contract follows), reject (the contract stands; the canvas gets
+rework), or adapt. Accepted deltas are handed to `/vwf:blueprint <flow>` — the
+blueprint skill remains the only flow-doc editor, so every design-driven change
+still passes the reviewer gate and demotes `implementation:` stamps where the
+contract moved. A confirmed new flow is scaffolded as a draft that a full
+blueprint pass must complete — pixels don't carry steps or acceptance criteria.
 
 ### /vwf:plan
 
