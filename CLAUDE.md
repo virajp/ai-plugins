@@ -151,7 +151,9 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   human-reconcilable — plus a **`<flow>/index` navigator** per folder (links
   every page in step order; excluded from the screen diff) and a root **stitch
   page** per entry point (`<flow>[--<entry>]`: the journey composed in step
-  order, edge cases as tweaks of that page) — and delivers it to the flow's
+  order, edge cases as tweaks of that page) — the brief is **delta-aware**: a
+  canvas inventory marks every page `create` or `update` (revise in place, same
+  name — a second session never rebuilds a flow) — and delivers it to the flow's
   canvas chat; `import` matches the designed pages back by those names
   (unmatched pages get a per-page MCQ), diffs screen pages against the Screens
   contract and stitch pages against Trigger/Steps/sequence at journey level,

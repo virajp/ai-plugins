@@ -23,6 +23,14 @@ flow, name it `<other-flow>/<screen-slug>` using that flow's exact name — or,
 for a journey this product does not have yet, pick a short kebab-case name and
 use it as the first segment; it will be reviewed as a proposed new flow.
 
+## Existing pages (update in place — never rebuild)
+
+Every item below is marked **create** (no page exists yet — build it) or
+**update** (the page already exists in this project — revise it in place under
+the **same name**, applying only what this brief changes; keep everything else
+as designed). Never duplicate an existing page under a new name, and never
+rebuild an *update* page from scratch — earlier design work on it stands.
+
 ## Product context
 
 `<one paragraph from product.md: the problem, the users, the goal this flow
@@ -38,9 +46,12 @@ doing and what the system does at each step>`
 One subsection per screen row in the flow's Screens contract; for a flow with no
 Screens section yet, describe the screens the steps imply.
 
-### `<screen name>` (`<flow>/<screen-slug>`)
+### `<screen name>` (`<flow>/<screen-slug>`) — `<create | update>`
 
 - **Purpose / step served:** `<which step(s) this screen serves>`
+- **If update — what changes:**
+  `<the contract deltas this revision applies;
+  drop this line for create>`
 - **Data shown:**
   `<what it reads — the Reads (operationId) column, in plain
   words>`
@@ -52,7 +63,7 @@ Screens section yet, describe the screens the steps imply.
   `<deviations from the design system this
   screen already records>`
 
-## Flow index (`<flow>/index` — required)
+## Flow index (`<flow>/index` — required — `<create | update>`)
 
 Inside the flow folder, build **`<flow>/index`**: a navigator page linking (and
 thumbnailing, where practical) **every** page in the folder — each screen and
@@ -73,8 +84,8 @@ cases — the error, empty, and other pinned states — as **tweaks (variations)
 the stitch page**, never as extra root pages.
 
 `<the flow's entry points, from its Trigger & Actors — one line each: who
-enters, from where (app launch, deep link, notification, …), and which screen
-the journey starts on>`
+enters, from where (app launch, deep link, notification, …), which screen the
+journey starts on, and whether its stitch page is create or update>`
 
 ## Design system
 

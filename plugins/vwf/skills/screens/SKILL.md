@@ -69,28 +69,39 @@ empty states are mandatory pins).
    the registry entry for the flow's UI project (type, platforms). Recall parked
    UX points (mempalace room `gaps`, tag `parked`) so the brief's Out of scope
    section carries them; skip silently if mempalace is down.
-2. **Write the brief** from the screen-prompt template to
+2. **Canvas inventory.** Resolve a surface and the flow's UI project's design
+   project (canvas-push §§1–2), then `list_files` the flow's existing pages —
+   `<flow>/**` plus the root `<flow>`/`<flow>--*` stitch pages (structural
+   metadata only; never read remote content here). The brief must **update what
+   exists and create only what is missing** — a second design session for a flow
+   must never rebuild it from scratch. In local-only mode skip the inventory:
+   everything is marked create.
+3. **Write the brief** from the screen-prompt template to
    `docs/prompts/NNN-screens-<flow>.md` — NNN is the next number across
    `docs/prompts/` (zero-padded, e.g. `007`). The naming-contract section is
-   verbatim-mandatory. Fill the **Screen format** section from the registry
-   project's `type` + `platforms:` — keep only the matching directive(s) (a
-   phone-framed mobile viewport for `frontend`, browser-width at the primary
-   breakpoint for `site`, wide desktop for `console`; **add the in-car
-   directive** when `platforms:` includes `carplay`/`android-auto` and the
-   flow's Screens contract marks screens as available in-car), never the generic
-   list. Fill the **Stitch pages** section's entry points from the flow's
-   Trigger & Actors — most flows have one; list each that genuinely starts the
-   journey (app launch, deep link, notification, …). Screens with no contract
-   yet (a draft flow) are described from the steps.
-3. **Deliver.** Resolve a surface and the flow's UI project's design project
-   (canvas-push §§1–2). Push the brief's text into the project's chat panel via
+   verbatim-mandatory. Mark **every screen, state variant, stitch page, and the
+   `<flow>/index` navigator** with its disposition from the step-2 inventory —
+   `create` (no page exists) or `update` (the page exists; revise in place under
+   the same name, carrying the contract deltas this brief states) — and fill the
+   template's Existing-pages rule accordingly. Fill the **Screen format**
+   section from the registry project's `type` + `platforms:` — keep only the
+   matching directive(s) (a phone-framed mobile viewport for `frontend`,
+   browser-width at the primary breakpoint for `site`, wide desktop for
+   `console`; **add the in-car directive** when `platforms:` includes
+   `carplay`/`android-auto` and the flow's Screens contract marks screens as
+   available in-car), never the generic list. Fill the **Stitch pages**
+   section's entry points from the flow's Trigger & Actors — most flows have
+   one; list each that genuinely starts the journey (app launch, deep link,
+   notification, …). Screens with no contract yet (a draft flow) are described
+   from the steps.
+4. **Deliver.** Push the brief's text into the project's chat panel via
    `put_conversation` (title `vwf screens brief — <flow>`) — a readable copy the
    user pastes into the composer — and share the project `open_url`. Confirm
    before the push; in local-only mode the file itself is the deliverable (say
    where it is).
-4. **Commit** the prompt file via `/vwf:git-workflow`
+5. **Commit** the prompt file via `/vwf:git-workflow`
    (`docs(prompts): screens brief for <flow>`).
-5. **Stop.** The canvas session is the user's — iterate as long as needed; when
+6. **Stop.** The canvas session is the user's — iterate as long as needed; when
    satisfied, run `/vwf:screens import <flow>`.
 
 ## Mode: import [flow]
