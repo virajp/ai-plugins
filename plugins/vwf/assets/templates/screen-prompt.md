@@ -97,6 +97,19 @@ type scale, spacing, and component behaviors; do not invent new visual language.
 Where a screen genuinely needs to deviate, make the deviation obvious so it can
 be discussed.
 
+## Color modes
+
+<!-- From the prompt-mode color-modes answer. Light-only → keep only the first
+     sentence; light + dark → keep the whole section. -->
+
+Design every page in **light mode** — the design system's Light token values —
+as the page itself.
+`<Dark mode is also commissioned: provide a **dark-mode
+tweak (variation) of every page** — identical layout and content, the design
+system's Dark token values — so modes are flipped on the page itself; never
+create separate dark pages or "--dark" names. Edge-case and dark tweaks
+coexist: they are independent variations of the same page.>`
+
 ## Screen format
 
 <!-- Derive from the registry UI project's `type` + `platforms:` and keep ONLY

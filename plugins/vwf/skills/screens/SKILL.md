@@ -69,41 +69,50 @@ empty states are mandatory pins).
    the registry entry for the flow's UI project (type, platforms). Recall parked
    UX points (mempalace room `gaps`, tag `parked`) so the brief's Out of scope
    section carries them; skip silently if mempalace is down.
-2. **Canvas inventory.** Resolve a surface and the flow's UI project's design
+2. **Color modes (ask).** Check the design system's Color Tokens for **Dark
+   values**. Ask (MCQ): **light + dark** — recommended when the design system
+   pins dark values — or **light only** (the right answer when the design system
+   has no dark scope; say so). When dark is commissioned, it is delivered as a
+   **tweak (variation) of every page** — same layout, the design system's Dark
+   token values — so the reviewer flips modes on the page itself; never as
+   separate `--dark` pages. Record the choice in the brief's Color modes
+   section.
+3. **Canvas inventory.** Resolve a surface and the flow's UI project's design
    project (canvas-push §§1–2), then `list_files` the flow's existing pages —
    `<flow>/**` plus the root `<flow>`/`<flow>--*` stitch pages (structural
    metadata only; never read remote content here). The brief must **update what
    exists and create only what is missing** — a second design session for a flow
    must never rebuild it from scratch. In local-only mode skip the inventory:
    everything is marked create.
-3. **Write the brief** from the screen-prompt template to
+4. **Write the brief** from the screen-prompt template to
    `docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md` — grouped by prompt
    type (`screens`), then the flow's registry project, then the numbered flow
    folder name; `<seq>` is the next zero-padded number **within that flow's
    folder** (`001.md` for the first session, `002.md` for the next, …). The
    naming-contract section is verbatim-mandatory. Mark **every screen, state
    variant, stitch page, and the `<flow>/index` navigator** with its disposition
-   from the step-2 inventory — `create` (no page exists) or `update` (the page
+   from the step-3 inventory — `create` (no page exists) or `update` (the page
    exists; revise in place under the same name, carrying the contract deltas
    this brief states) — and fill the template's Existing-pages rule accordingly.
-   Fill the **Screen format** section from the registry project's `type` +
-   `platforms:` — keep only the matching directive(s) (a phone-framed mobile
-   viewport for `frontend`, browser-width at the primary breakpoint for `site`,
-   wide desktop for `console`; **add the in-car directive** when `platforms:`
-   includes `carplay`/`android-auto` and the flow's Screens contract marks
-   screens as available in-car), never the generic list. Fill the **Stitch
-   pages** section's entry points from the flow's Trigger & Actors — most flows
-   have one; list each that genuinely starts the journey (app launch, deep link,
-   notification, …). Screens with no contract yet (a draft flow) are described
-   from the steps.
-4. **Deliver.** Push the brief's text into the project's chat panel via
+   Fill the **Color modes** section from the step-2 answer (drop the dark
+   directive when light-only). Fill the **Screen format** section from the
+   registry project's `type` + `platforms:` — keep only the matching
+   directive(s) (a phone-framed mobile viewport for `frontend`, browser-width at
+   the primary breakpoint for `site`, wide desktop for `console`; **add the
+   in-car directive** when `platforms:` includes `carplay`/`android-auto` and
+   the flow's Screens contract marks screens as available in-car), never the
+   generic list. Fill the **Stitch pages** section's entry points from the
+   flow's Trigger & Actors — most flows have one; list each that genuinely
+   starts the journey (app launch, deep link, notification, …). Screens with no
+   contract yet (a draft flow) are described from the steps.
+5. **Deliver.** Push the brief's text into the project's chat panel via
    `put_conversation` (title `vwf screens brief — <flow>`) — a readable copy the
    user pastes into the composer — and share the project `open_url`. Confirm
    before the push; in local-only mode the file itself is the deliverable (say
    where it is).
-5. **Commit** the prompt file via `/vwf:git-workflow`
+6. **Commit** the prompt file via `/vwf:git-workflow`
    (`docs(prompts): screens brief for <flow>`).
-6. **Stop.** The canvas session is the user's — iterate as long as needed; when
+7. **Stop.** The canvas session is the user's — iterate as long as needed; when
    satisfied, run `/vwf:screens import <flow>`.
 
 ## Mode: import [flow]
@@ -133,10 +142,11 @@ empty states are mandatory pins).
    against the flow's Trigger & Actors, Steps, and sequence diagram: entry
    points present vs triggers, screen order vs step order, a transition the
    steps don't back (or a step no screen serves), edge-case tweaks vs the
-   failure/compensation branches. Present **one MCQ per delta** — accept (the
-   design is right; the contract follows) / reject (the contract stands; the
-   canvas should change) / adapt (take part; say which). Batch the verdicts per
-   flow.
+   failure/compensation branches. When the flow's latest brief commissioned
+   **dark mode**, a page with no dark tweak is a delta (canvas rework — the
+   contract does not change). Present **one MCQ per delta** — accept (the design
+   is right; the contract follows) / reject (the contract stands; the canvas
+   should change) / adapt (take part; say which). Batch the verdicts per flow.
 5. **Route — never edit here.**
    - **Accepted deltas** → hand each touched flow's verdict list to
      `/vwf:blueprint <flow>` as that pass's input: the pass applies them under

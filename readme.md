@@ -599,7 +599,11 @@ page rather than extra pages. The brief is **delta-aware**: before writing it,
 vwf inventories the flow's existing canvas pages and marks each item **create**
 (missing — build it) or **update** (exists — revise in place under the same
 name, applying only what changed), so a second design session for a flow refines
-it instead of rebuilding it. Iterate on the canvas as long as you like.
+it instead of rebuilding it. It also **asks the color modes**: light only, or
+light + dark — when dark is commissioned (recommended once the design system
+pins Dark token values), every page gets a **dark-mode tweak** — identical
+layout, dark tokens — so you flip modes on the page itself; never separate dark
+pages. Iterate on the canvas as long as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
