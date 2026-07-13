@@ -13,13 +13,14 @@ Design the screens for the **`<flow>`** flow of **`<product name>`**.
 
 Name every screen page `<flow>/<screen-slug>` — the first path segment must be
 exactly `<flow>` (it matches this product's flow folder). One page per screen;
-state variants as `<flow>/<screen-slug>--<state>`. The **stitch pages** (see
-below) live at the **project root**, named exactly `<flow>` — or
-`<flow>--<entry-slug>` when the flow has several entry points. If a screen you
-need does not belong to this flow, name it `<other-flow>/<screen-slug>` using
-that flow's exact name — or, for a journey this product does not have yet, pick
-a short kebab-case name and use it as the first segment; it will be reviewed as
-a proposed new flow.
+state variants as `<flow>/<screen-slug>--<state>`. Every flow folder also
+carries **`<flow>/index`** — the folder's navigator (see below) — so never name
+a screen `index`. The **stitch pages** (see below) live at the **project root**,
+named exactly `<flow>` — or `<flow>--<entry-slug>` when the flow has several
+entry points. If a screen you need does not belong to this flow, name it
+`<other-flow>/<screen-slug>` using that flow's exact name — or, for a journey
+this product does not have yet, pick a short kebab-case name and use it as the
+first segment; it will be reviewed as a proposed new flow.
 
 ## Product context
 
@@ -49,6 +50,15 @@ Screens section yet, describe the screens the steps imply.
 - **Recorded deviations (if any):**
   `<deviations from the design system this
   screen already records>`
+
+## Flow index (`<flow>/index` — required)
+
+Inside the flow folder, build **`<flow>/index`**: a navigator page linking (and
+thumbnailing, where practical) **every** page in the folder — each screen and
+each of its state variants — in step order, so a flow with many screens can be
+walked and validated page by page. It is a table of contents, not a composition
+— the journey composition lives in the root stitch pages below. Keep it current
+as pages are added, renamed, or removed.
 
 ## Stitch pages (project root — required)
 

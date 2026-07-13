@@ -573,11 +573,13 @@ carries a **naming contract**: every screen page is named
 `<flow>/<screen-slug>`, where `<flow>` is exactly the folder name under
 `docs/blueprint/flows/` — that name is how `import` matches pages back to flows,
 and how you reconcile the canvas against the flows tree by eye. Screens are
-parts; the journey is the product — so the brief also requires a **stitch page
-at the project root per entry point** (named `<flow>`, or `<flow>--<entry>` when
-the flow has several): the whole flow composed in step order, happy path end to
-end, with the edge cases covered as **tweaks** of that page rather than extra
-pages. Iterate on the canvas as long as you like.
+parts; the journey is the product — so the brief also requires a
+**`<flow>/index` navigator inside each flow folder** (linking every screen and
+state variant in step order, so a many-screen flow is easy to walk and validate)
+and a **stitch page at the project root per entry point** (named `<flow>`, or
+`<flow>--<entry>` when the flow has several): the whole flow composed in step
+order, happy path end to end, with the edge cases covered as **tweaks** of that
+page rather than extra pages. Iterate on the canvas as long as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
