@@ -578,54 +578,47 @@ offers this as its design-first option):
 ```
 
 `prompt` writes a numbered design brief from the blueprint's context (the flow's
-goal, steps, Screens rows, the mandatory error/empty states, the bound design
-system — with a directive to **build each screen from the design-system
-project's templates**, which the brief lists by name — and a **screen format**
-directive from the UI project's type: a phone-framed mobile viewport for a
-`frontend` app, browser-width pages at the primary breakpoint for a `site`, wide
-desktop for a `console`, plus car-display template-idiom designs for screens
-available in-car when the project declares `carplay`/`android-auto`) and
-delivers it to the flow's canvas chat. The brief commissions **interactive
-screens, never static mockups**: **one working page per screen**, with every
-variation riding on the page itself — conditional/sad states (error, empty, and
-each contract-pinned state), color mode, and the device frame (toggleable,
-default on) as **tweaks**, platform variants as on-page designs — never
-`--<state>`, `--dark`, or per-platform pages. Each screen **links to the next in
-step order**, so the happy path is clickable end to end. The brief carries a
-**naming contract**: every screen page is named `<flow>/<screen-slug>`, where
-`<flow>` is exactly the numbered folder name under
-`docs/blueprint/flows/<project>/` (e.g. `020-signin` — so the canvas sorts in
-execution order too) — that name is how `import` matches pages back to flows,
-and how you reconcile the canvas against the flows tree by eye. Screens are
-parts; the journey is the product — so the brief also requires a
-**`<flow>/index` navigator inside each flow folder** (linking every page in step
-order, so a many-screen flow is easy to walk and validate) and an interactive
-**journey page at the project root per entry point** (named `<flow>`, or
-`<flow>--<entry>` when the flow has several): it opens the journey at that entry
-point's first screen and lets anyone navigate the full happy path through every
-screen via the wired navigation. The brief is **delta-aware**: before writing
-it, vwf inventories the flow's existing canvas pages and marks each item
-**create** (missing — build it) or **update** (exists — revise in place under
-the same name, applying only what changed), so a second design session for a
-flow refines it instead of rebuilding it. It also **asks the color modes**:
-light only, or dark + light — when both are commissioned (recommended once the
-design system pins Dark token values), every page renders **dark by default**
-with a **mode tweak** flipping it to light — identical layout, the mode's tokens
-— so you flip modes on the page itself; never separate mode pages. Iterate on
-the canvas as long as you like.
+goal, steps, entry points, Screens rows, and the mandatory error/empty states) —
+**the file is the deliverable**: you paste it into the flow's canvas chat
+yourself; vwf never runs a brief against the Claude Design MCP. The brief
+carries **no design or visual instructions** — no tokens, type, spacing, or
+component styling; Claude Design picks all of that up from its Design System
+project. What it commissions is **one interactive page per flow per platform,
+never static mockups**: the platform pages (`mobile`, `tablet`, `desktop`,
+`carplay`/`android-auto` for screens available in-car, … — derived from the UI
+project's `type` + `platforms:`) each compose the flow's screens in step order
+with **navigation wired between them**, so the full happy path is clickable end
+to end, and every variation rides on the page itself — conditional/sad states
+(error, empty, and each contract-pinned state), color mode, and the device frame
+(toggleable, default on) as **tweaks** — never per-screen, per-state, or
+per-mode pages. The brief carries a **naming contract**: each page is named
+`<flow>--<platform>`, where `<flow>` is exactly the numbered folder name under
+`docs/blueprint/flows/<project>/` (e.g. `020-signin--mobile` — so the canvas
+sorts in execution order too) — that name is how `import` matches pages back to
+flows, and how you reconcile the canvas against the flows tree by eye. The brief
+is **delta-aware**: before writing it, vwf inventories the flow's existing
+canvas pages (a read-only `list_files`) and marks each platform page **create**
+(missing — build it) or **update** (exists — revise in place under the same
+name, applying only what changed), so a second design session for a flow refines
+it instead of rebuilding it. It also **asks the color modes**: light only, or
+dark + light — when both are commissioned (recommended once the design system
+pins Dark token values), every page renders **dark by default** with a **mode
+tweak** flipping it to light; never separate mode pages. Iterate on the canvas
+as long as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
-flow, or discard), diffs each flow's screen pages against its Screens contract
-(state tweaks vs pinned states, wired navigation vs step order) — and the
-journey pages against the flow's trigger, step order, and sequence diagram at
-journey level — and asks **one question per delta**: accept (the design wins;
-the contract follows), reject (the contract stands; the canvas gets rework), or
-adapt. Accepted deltas are handed to `/vwf:blueprint <flow>` — the blueprint
-skill remains the only flow-doc editor, so every design-driven change still
-passes the reviewer gate and demotes `implementation:` stamps where the contract
-moved. A confirmed new flow is scaffolded as a draft that a full blueprint pass
-must complete — pixels don't carry steps or acceptance criteria.
+flow, or discard), diffs each flow's platform pages against its Screens contract
+(screens present vs contracted, state tweaks vs pinned states, wired navigation
+vs step order) — and at journey level against the flow's trigger, step order,
+and sequence diagram, flagging a declared platform with no page — and asks **one
+question per delta**: accept (the design wins; the contract follows), reject
+(the contract stands; the canvas gets rework), or adapt. Accepted deltas are
+handed to `/vwf:blueprint <flow>` — the blueprint skill remains the only
+flow-doc editor, so every design-driven change still passes the reviewer gate
+and demotes `implementation:` stamps where the contract moved. A confirmed new
+flow is scaffolded as a draft that a full blueprint pass must complete — pixels
+don't carry steps or acceptance criteria.
 
 ### /vwf:plan
 
