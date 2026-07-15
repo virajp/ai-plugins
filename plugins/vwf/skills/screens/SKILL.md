@@ -1,7 +1,8 @@
 ---
 name: screens
 description: Two-way screen sync with Claude Design. "prompt <flow>" emits a
-  numbered design brief (docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md)
+  numbered wireframe-level design brief
+  (docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md)
   commissioning one interactive page per flow per platform on the
   claude.ai/design canvas under a strict naming contract — the file is the
   deliverable, never run against the canvas; "import [flow]" reads the designed
@@ -18,11 +19,12 @@ disable-model-invocation: false
 
 Screens are the surface where canvas iteration beats contract prose: Claude
 Design nails visual and interaction nuance the blueprint's tables cannot.
-`prompt` writes a brief that commissions a flow's pages with full blueprint
-context — **the file is the deliverable**: the user pastes it into the canvas
-chat themselves; this skill never runs a brief against the Claude Design MCP.
-`import` brings the designed pages back and folds what they decided into the
-contract — **through `/vwf:blueprint`, one confirmed delta at a time**. The
+`prompt` writes a **wireframe-level** brief that commissions a flow's pages —
+structure, navigation, and behavior only; the design itself is made in the
+canvas chat — and **the file is the deliverable**: the user pastes it into the
+canvas chat themselves; this skill never runs a brief against the Claude Design
+MCP. `import` brings the designed pages back and folds what they decided into
+the contract — **through `/vwf:blueprint`, one confirmed delta at a time**. The
 blueprint stays the contract of record; the canvas is where screens get good.
 
 **The naming contract is the join key.** The canvas unit is **one interactive
@@ -32,15 +34,15 @@ numbered folder name under `docs/blueprint/flows/<project>/` for the registry
 project this canvas is pinned to, so the canvas sorts in execution order like
 the blueprint tree; the platform suffix (`mobile`, `tablet`, `desktop`,
 `carplay`, `android-auto`, …) comes from the registry project's `type` +
-`platforms:`. Each page composes the flow's screens in step order with
-navigation wired — the full happy path is clickable end to end — and every
-variation rides as a **tweak** of the page: conditional/sad states, color mode
-(dark default when both are commissioned), and the device frame (default on).
-Never per-screen, per-state, per-mode, or folder pages. The prompt mandates all
-of it, import matches by it, and the same names make the canvas humanly
-reconcilable against the flows tree. **Briefs carry no design/visual
-instructions** — the canvas picks the design system up from its Design System
-project.
+`platforms:`. Each page wires navigation between the flow's screens — the full
+happy path is clickable end to end — inside a default-on device frame where the
+platform has one, and any variation added to a page rides as a **tweak** of the
+page, never a separate page. The prompt mandates it, import matches by it, and
+the same names make the canvas humanly reconcilable against the flows tree.
+**Briefs are wireframe-level** — structure, navigation, and behavior only: no
+design/visual instructions and no content, data, action, state, or color-mode
+decisions. The canvas picks the design system up from its Design System project,
+and the canvas chat is where the design is made.
 
 ## Doc Paths
 
@@ -54,10 +56,10 @@ project.
 | Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                                                                                                                                        |
 
 Canvas mechanics: `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` (surface §1,
-per-UI-project pins §2, link hygiene §5) — used only to *read* the canvas
-(inventory, import), never to deliver or run a brief. Doctrine: the
-blueprint-authoring skill's `ui-ux-contract` reference (what a Screens contract
-pins — error and empty states are mandatory pins).
+per-UI-project pins §2, link hygiene §5) — used only by `import` to *read* the
+canvas, never to deliver or run a brief (`prompt` never touches the canvas).
+Doctrine: the blueprint-authoring skill's `ui-ux-contract` reference (what a
+Screens contract pins — error and empty states are mandatory pins).
 
 ## Halt Conditions
 
@@ -75,25 +77,12 @@ pins — error and empty states are mandatory pins).
 ## Mode: prompt <flow>
 
 1. **Gather context.** Read the flow doc (steps, Screens rows + deviations, the
-   `Serves:` goal), `product.md` (one context paragraph), the design system
-   (only for the step-2 dark-values check), and the registry entry for the
-   flow's UI project (type, platforms — these decide the platform pages). Recall
-   parked UX points (mempalace room `gaps`, tag `parked`) so the brief's Out of
-   scope section carries them; skip silently if mempalace is down.
-2. **Color modes (ask).** Check the design system's Color Tokens for **Dark
-   values**. Ask (MCQ): **dark + light** — recommended when the design system
-   pins dark values — or **light only** (the right answer when the design system
-   has no dark scope; say so). When both are commissioned, every page renders
-   **dark by default** and carries a **mode tweak** flipping it to light; never
-   separate mode pages. Record the choice in the brief's Color modes section.
-3. **Canvas inventory (read-only).** Resolve a surface and the flow's UI
-   project's design project (canvas-push §§1–2), then `list_files` the flow's
-   existing `<flow>--<platform>` pages (structural metadata only; never read
-   remote content here). The brief must **update what exists and create only
-   what is missing** — a second design session for a flow must never rebuild it
-   from scratch. In local-only mode skip the inventory: everything is marked
-   create.
-4. **Write the brief** from the screen-prompt template to
+   `Serves:` goal), `product.md` (one context paragraph), and the registry entry
+   for the flow's UI project (type, platforms — these decide the platform
+   pages). Recall parked UX points (mempalace room `gaps`, tag `parked`) so the
+   brief's Out of scope section carries them; skip silently if mempalace is
+   down. Never touch the canvas in this mode.
+2. **Write the brief** from the screen-prompt template to
    `docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md` — grouped by prompt
    type (`screens`), then the flow's registry project, then the numbered flow
    folder name; `<seq>` is the next zero-padded number **within that flow's
@@ -103,22 +92,23 @@ pins — error and empty states are mandatory pins).
    `<flow>--<platform>` line per declared platform (`frontend` ios/android →
    `mobile`, plus `tablet`/`desktop` targets where declared; `site`/`console` →
    `desktop`; `carplay`/`android-auto` only when the flow's Screens contract
-   marks screens available in-car) — each marked `create` or `update` from the
-   step-3 inventory. Fill each screen's **Navigates to** line from the step
-   order and its **state tweaks** from the Screens contract's pinned states;
-   fill the entry points from the flow's Trigger & Actors; fill the **Color
-   modes** section from the step-2 answer (light-only keeps only the first
-   sentence). Include **no design/visual instructions** — no tokens, type,
-   spacing, or component styling; the canvas resolves those from its Design
-   System project. Screens with no contract yet (a draft flow) are described
-   from the steps.
-5. **Deliver the file — nothing else.** The brief file is the deliverable: say
+   marks screens available in-car). Fill each screen's **Navigates to** line
+   from the step order and the entry points from the flow's Trigger & Actors. On
+   a revision session (an earlier `<seq>` exists in the flow's folder), fill
+   each touched screen's **What changes** line with the deltas this session
+   revises; the template's standing revise-in-place rule covers existing pages.
+   The brief is **wireframe-level only**: no design/visual instructions (no
+   tokens, type, spacing, or component styling) and no content, data, action,
+   state, or color-mode decisions — the canvas resolves the design system from
+   its Design System project and decides the rest in its chat. Screens with no
+   contract yet (a draft flow) are described from the steps.
+3. **Deliver the file — nothing else.** The brief file is the deliverable: say
    where it is and that the user pastes it into the flow's canvas chat. Never
    push it via the Claude Design MCP, never `put_conversation`, never run the
    brief.
-6. **Commit** the prompt file via `/vwf:git-workflow`
+4. **Commit** the prompt file via `/vwf:git-workflow`
    (`docs(prompts): screens brief for <flow>`).
-7. **Stop.** The canvas session is the user's — iterate as long as needed; when
+5. **Stop.** The canvas session is the user's — iterate as long as needed; when
    satisfied, run `/vwf:screens import <flow>`.
 
 ## Mode: import [flow]

@@ -577,34 +577,30 @@ offers this as its design-first option):
 /vwf:screens import place-order   # fold the designed pages back (omit flow: all briefed flows)
 ```
 
-`prompt` writes a numbered design brief from the blueprint's context (the flow's
-goal, steps, entry points, Screens rows, and the mandatory error/empty states) —
-**the file is the deliverable**: you paste it into the flow's canvas chat
-yourself; vwf never runs a brief against the Claude Design MCP. The brief
-carries **no design or visual instructions** — no tokens, type, spacing, or
-component styling; Claude Design picks all of that up from its Design System
-project. What it commissions is **one interactive page per flow per platform,
-never static mockups**: the platform pages (`mobile`, `tablet`, `desktop`,
-`carplay`/`android-auto` for screens available in-car, … — derived from the UI
-project's `type` + `platforms:`) each compose the flow's screens in step order
-with **navigation wired between them**, so the full happy path is clickable end
-to end, and every variation rides on the page itself — conditional/sad states
-(error, empty, and each contract-pinned state), color mode, and the device frame
-(toggleable, default on) as **tweaks** — never per-screen, per-state, or
-per-mode pages. The brief carries a **naming contract**: each page is named
+`prompt` writes a numbered **wireframe-level** design brief from the blueprint's
+context (the flow's goal, steps, and entry points) — **the file is the
+deliverable**: you paste it into the flow's canvas chat yourself; vwf never runs
+a brief against the Claude Design MCP, and `prompt` never touches the canvas.
+The brief carries **only what a wireframe needs** — each screen's purpose, where
+it navigates, its form fields and validation timing — and nothing that would
+steer the design: no tokens, type, spacing, or component styling, and no
+content, data, action, state, or color-mode decisions. Claude Design picks the
+visual language up from its Design System project, and the canvas chat is where
+you make the design yours. What the brief commissions is **one interactive page
+per flow per platform, never static mockups**: the platform pages (`mobile`,
+`tablet`, `desktop`, `carplay`/`android-auto` for screens available in-car, … —
+derived from the UI project's `type` + `platforms:`) each wire **navigation
+between the flow's screens**, so the full happy path is clickable end to end
+from every entry point, rendered inside a default-on device frame — and any
+variation you add on the canvas rides as a **tweak** of the page, never a
+separate page. The brief carries a **naming contract**: each page is named
 `<flow>--<platform>`, where `<flow>` is exactly the numbered folder name under
 `docs/blueprint/flows/<project>/` (e.g. `020-signin--mobile` — so the canvas
 sorts in execution order too) — that name is how `import` matches pages back to
-flows, and how you reconcile the canvas against the flows tree by eye. The brief
-is **delta-aware**: before writing it, vwf inventories the flow's existing
-canvas pages (a read-only `list_files`) and marks each platform page **create**
-(missing — build it) or **update** (exists — revise in place under the same
-name, applying only what changed), so a second design session for a flow refines
-it instead of rebuilding it. It also **asks the color modes**: light only, or
-dark + light — when both are commissioned (recommended once the design system
-pins Dark token values), every page renders **dark by default** with a **mode
-tweak** flipping it to light; never separate mode pages. Iterate on the canvas
-as long as you like.
+flows, and how you reconcile the canvas against the flows tree by eye. A page
+that already exists is **revised in place under the same name** (the brief's
+per-screen "What changes" lines say what this session revises), never rebuilt.
+Iterate on the canvas as long as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
