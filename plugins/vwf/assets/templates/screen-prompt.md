@@ -1,61 +1,43 @@
 <!-- Template for /vwf:screens prompt — written to
      docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md.
-     A wireframe-level design brief for a claude.ai/design canvas session, NOT
-     a blueprint doc: no OKF frontmatter. The user pastes it into the canvas
-     chat themselves — /vwf:screens never runs it. Replace every backticked
-     `<placeholder>` with plain prose; drop sections marked (if any) when
-     empty. The NAMING CONTRACT section is verbatim-mandatory — /vwf:screens
-     import matches pages back to flows by these names. Send nothing beyond
-     wireframe-level structure: no design/visual instructions, no content,
-     data, action, state, or color-mode decisions — the canvas picks the
-     design system up from its Design System project, and the canvas chat is
-     where the design is made. -->
+     A compact wireframe-level design brief for a claude.ai/design canvas
+     session, NOT a blueprint doc: no OKF frontmatter. The user pastes it into
+     the canvas chat themselves — /vwf:screens never runs it. Replace every
+     backticked `<placeholder>` with plain prose; drop sections marked (if any)
+     when empty. The standing conventions — the naming contract,
+     revise-in-place, the interactive-journey mandate, variations-as-tweaks,
+     stub treatment, device frames — live in the canvas project's own
+     CLAUDE.md (see the skill's Canvas conventions note) and are never
+     restated here; the brief carries only the per-flow payload. The Pages to
+     build names are the sync key — /vwf:screens import matches pages back to
+     flows by them; never rename them. Send nothing beyond wireframe-level
+     structure: no design/visual instructions, no content, data, action,
+     state, or color-mode decisions — the canvas picks the design system up
+     from its Design System project, and the canvas chat is where the design
+     is made. -->
 
 # Screens brief — `<flow>`
 
 Design the **`<flow>`** flow of **`<product name>`** as **one interactive page
-per platform**.
+per platform**, under this project's standing conventions (CLAUDE.md).
 
-## Naming contract (required — do not rename)
-
-Build **exactly one page per platform** listed below, at the **project root**,
-named `<flow>--<platform>` — the prefix must be exactly `<flow>`, the numbered
-flow folder name (e.g. `020-signin--mobile`; it matches this product's flow
-folder, and the number keeps the canvas sorted in execution order).
-
-## Pages to build (one per platform)
+## Pages to build (exact names — the sync key)
 
 <!-- One line per platform derived from the registry project's `type` +
      `platforms:` — keep only the platforms this product declares (and, for
      in-car, only when the flow's Screens contract marks screens available
-     in-car). -->
+     in-car). The name prefix must be exactly the numbered flow folder name
+     (e.g. `020-signin--mobile`). -->
 
-- **`<flow>--mobile`** — phone-framed portrait page
-- **`<flow>--tablet`** — tablet layout, only where it genuinely differs from
-  mobile
-- **`<flow>--desktop`** — browser-width / wide desktop page
-- **`<flow>--carplay`** / **`<flow>--android-auto`** — car head-unit display in
-  a car frame, platform template idiom (list / grid / map / now-playing / …),
-  only the screens marked available in-car
+- **`<flow>--mobile`**
+- **`<flow>--tablet`** — only where it genuinely differs from mobile
+- **`<flow>--desktop`**
+- **`<flow>--carplay`** / **`<flow>--android-auto`** — only the screens marked
+  available in-car
 
-If a page with one of these names already exists in this project, **revise it in
-place under the same name**, applying only what this brief changes — never
-rebuild it from scratch or duplicate it under a new name.
+## Goal
 
-## Interactivity (required)
-
-Each platform page is a **working interactive journey, never a static
-wireframe**: controls responding, forms validating as specified, and
-**navigation wired between the screens** — starting from an entry point, anyone
-can click through the full happy path end to end. Where the platform uses a
-device frame (phone, car display), the page renders inside it by default. Any
-variation added to a page — in this session or a later one — rides as a **tweak
-of the page, never a separate page**.
-
-## Product context
-
-`<one paragraph from product.md: the problem, the users, the goal this flow
-serves>`
+This flow serves **`<goal>`**: `<one clause on why this journey matters>`.
 
 ## The flow
 
@@ -87,5 +69,5 @@ to decide.
 
 ## Out of scope
 
-`<anything adjacent screens/flows already cover, plus parked points the design
-must not pre-empt (if any)>`
+`<screens/journeys adjacent flows own — composed as stubs per the project
+conventions — plus parked points the design must not pre-empt (if any)>`

@@ -34,15 +34,22 @@ numbered folder name under `docs/blueprint/flows/<project>/` for the registry
 project this canvas is pinned to, so the canvas sorts in execution order like
 the blueprint tree; the platform suffix (`mobile`, `tablet`, `desktop`,
 `carplay`, `android-auto`, …) comes from the registry project's `type` +
-`platforms:`. Each page wires navigation between the flow's screens — the full
-happy path is clickable end to end — inside a default-on device frame where the
-platform has one, and any variation added to a page rides as a **tweak** of the
-page, never a separate page. The prompt mandates it, import matches by it, and
-the same names make the canvas humanly reconcilable against the flows tree.
-**Briefs are wireframe-level** — structure, navigation, and behavior only: no
+`platforms:`. Import matches pages by these names, and the same names make the
+canvas humanly reconcilable against the flows tree.
+
+**Canvas conventions.** The standing rules live in the **canvas project's own
+CLAUDE.md**, which the user maintains on the canvas — the naming contract, the
+revise-in-place rule, the interactive-journey mandate (wired navigation, the
+happy path clickable end to end; never a static page), variations-as-tweaks
+(never separate pages), stub treatment for out-of-flow screens, and device
+frames. **Briefs never restate them** — a brief is the **wireframe-level,
+per-flow payload only**: the exact page names (the sync key), a goal line, the
+steps and entry points, and per-screen purpose/navigation/forms. No
 design/visual instructions and no content, data, action, state, or color-mode
-decisions. The canvas picks the design system up from its Design System project,
-and the canvas chat is where the design is made.
+decisions — the canvas picks the design system up from its Design System
+project, and the canvas chat is where the design is made. When the pinned design
+project carries no such CLAUDE.md yet, still write the compact brief — and tell
+the user to add the convention list above to the canvas project first.
 
 ## Doc Paths
 
@@ -77,27 +84,28 @@ Screens contract pins — error and empty states are mandatory pins).
 ## Mode: prompt <flow>
 
 1. **Gather context.** Read the flow doc (steps, Screens rows + deviations, the
-   `Serves:` goal), `product.md` (one context paragraph), and the registry entry
-   for the flow's UI project (type, platforms — these decide the platform
-   pages). Recall parked UX points (mempalace room `gaps`, tag `parked`) so the
-   brief's Out of scope section carries them; skip silently if mempalace is
-   down. Never touch the canvas in this mode.
+   `Serves:` goal), `product.md` (the served goal, for the brief's Goal line),
+   and the registry entry for the flow's UI project (type, platforms — these
+   decide the platform pages). Recall parked UX points (mempalace room `gaps`,
+   tag `parked`) so the brief's Out of scope section carries them; skip silently
+   if mempalace is down. Never touch the canvas in this mode.
 2. **Write the brief** from the screen-prompt template to
    `docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md` — grouped by prompt
    type (`screens`), then the flow's registry project, then the numbered flow
    folder name; `<seq>` is the next zero-padded number **within that flow's
-   folder** (`001.md` for the first session, `002.md` for the next, …). The
-   naming-contract section is verbatim-mandatory. Fill the **Pages to build**
-   list from the registry project's `type` + `platforms:` — one
-   `<flow>--<platform>` line per declared platform (`frontend` ios/android →
+   folder** (`001.md` for the first session, `002.md` for the next, …). Fill the
+   **Pages to build** list from the registry project's `type` + `platforms:` —
+   one `<flow>--<platform>` line per declared platform (`frontend` ios/android →
    `mobile`, plus `tablet`/`desktop` targets where declared; `site`/`console` →
    `desktop`; `carplay`/`android-auto` only when the flow's Screens contract
-   marks screens available in-car). Fill each screen's **Navigates to** line
-   from the step order and the entry points from the flow's Trigger & Actors. On
-   a revision session (an earlier `<seq>` exists in the flow's folder), fill
-   each touched screen's **What changes** line with the deltas this session
-   revises; the template's standing revise-in-place rule covers existing pages.
-   The brief is **wireframe-level only**: no design/visual instructions (no
+   marks screens available in-car) — these names are **exact** (the import sync
+   key). Fill the **Goal** line from the flow's `Serves:` link, each screen's
+   **Navigates to** line from the step order, and the entry points from the
+   flow's Trigger & Actors. On a revision session (an earlier `<seq>` exists in
+   the flow's folder), fill each touched screen's **What changes** line with the
+   deltas this session revises. The brief is the **compact per-flow payload
+   only** — the standing conventions live in the canvas project's CLAUDE.md (see
+   Canvas conventions) and are never restated; no design/visual instructions (no
    tokens, type, spacing, or component styling) and no content, data, action,
    state, or color-mode decisions — the canvas resolves the design system from
    its Design System project and decides the rest in its chat. Screens with no

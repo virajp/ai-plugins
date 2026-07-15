@@ -577,30 +577,26 @@ offers this as its design-first option):
 /vwf:screens import place-order   # fold the designed pages back (omit flow: all briefed flows)
 ```
 
-`prompt` writes a numbered **wireframe-level** design brief from the blueprint's
-context (the flow's goal, steps, and entry points) — **the file is the
-deliverable**: you paste it into the flow's canvas chat yourself; vwf never runs
-a brief against the Claude Design MCP, and `prompt` never touches the canvas.
-The brief carries **only what a wireframe needs** — each screen's purpose, where
-it navigates, its form fields and validation timing — and nothing that would
-steer the design: no tokens, type, spacing, or component styling, and no
-content, data, action, state, or color-mode decisions. Claude Design picks the
-visual language up from its Design System project, and the canvas chat is where
-you make the design yours. What the brief commissions is **one interactive page
-per flow per platform, never static mockups**: the platform pages (`mobile`,
-`tablet`, `desktop`, `carplay`/`android-auto` for screens available in-car, … —
-derived from the UI project's `type` + `platforms:`) each wire **navigation
-between the flow's screens**, so the full happy path is clickable end to end
-from every entry point, rendered inside a default-on device frame — and any
-variation you add on the canvas rides as a **tweak** of the page, never a
-separate page. The brief carries a **naming contract**: each page is named
-`<flow>--<platform>`, where `<flow>` is exactly the numbered folder name under
-`docs/blueprint/flows/<project>/` (e.g. `020-signin--mobile` — so the canvas
-sorts in execution order too) — that name is how `import` matches pages back to
-flows, and how you reconcile the canvas against the flows tree by eye. A page
-that already exists is **revised in place under the same name** (the brief's
-per-screen "What changes" lines say what this session revises), never rebuilt.
-Iterate on the canvas as long as you like.
+`prompt` writes a numbered **compact wireframe-level** design brief from the
+blueprint's context — **the file is the deliverable**: you paste it into the
+flow's canvas chat yourself; vwf never runs a brief against the Claude Design
+MCP, and `prompt` never touches the canvas. The **standing conventions live in
+the canvas project's own CLAUDE.md**, which you maintain on the canvas: one
+interactive page per flow per platform (never static mockups), the naming
+contract, revise-in-place for existing pages, wired navigation with the happy
+path clickable end to end, variations as tweaks (never separate pages), stub
+treatment for out-of-flow screens, and device frames. The brief never restates
+them — it carries **only the per-flow payload**: the exact page names
+(`<flow>--<platform>`, e.g. `020-signin--mobile`, where `<flow>` is exactly the
+numbered folder name under `docs/blueprint/flows/<project>/` — the sync key
+`import` matches pages back by, with platforms derived from the UI project's
+`type` + `platforms:`), a one-line goal, the flow's steps and entry points, and
+each screen's purpose, navigation, form fields + validation timing (plus "What
+changes" lines on a revision session). Nothing that would steer the design goes
+in: no tokens, type, spacing, or component styling, and no content, data,
+action, state, or color-mode decisions — Claude Design picks the visual language
+up from its Design System project, and the canvas chat is where you make the
+design yours. Iterate on the canvas as long as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
