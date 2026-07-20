@@ -109,6 +109,24 @@ sequenceDiagram
      An optional screen-navigation mermaid flowchart is allowed only when the
      flow has 3+ screens with branching navigation — a judgement, not a bar. -->
 
+### `<code>` — `<Screen>` components
+
+| Component | Rules |
+| --------- | ----- |
+
+<!-- One Components block per Screens row (format 12), headed by the row's
+     Code. Component = each element the screen displays — text, info, error
+     surfaces, buttons, inputs, lists, media — named with its kind. Rules =
+     the behavior contract where more than one reasonable answer exists: when
+     the component is visible or enabled (e.g. a button clickable only once
+     the form validates), what activating it does (naming the operationId it
+     calls or the coded screen it navigates to), and its content where the
+     wording is a product decision (error messages, empty-state copy, CTA
+     labels). Every entry in the row's Actions cell appears as a component;
+     rules must agree with the row's States and the flow's steps.
+     Code-independent: kinds and behavior only — never component-library
+     names, CSS, or pixels. -->
+
 ## Background Jobs → <worker project(s), from registry>
 
 | Job | Trigger | Timer / Retry | Activities | On failure |

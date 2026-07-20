@@ -28,6 +28,14 @@ Pin per screen / surface (each has more than one reasonable answer):
   Use the design system's global state patterns; record only deviations.
 - **Form UX** — field order, validation timing (on-blur vs on-submit), inline
   error placement, required indicators, autosave vs explicit save.
+- **Components & rules** — the elements the screen displays (text, info, error
+  surfaces, buttons, inputs, lists, media), each with its rules: the conditions
+  under which it is visible or enabled (a button clickable only when the form
+  validates), what activating it does (the operation called or the coded screen
+  reached), and its content where the wording is a product decision. Recorded as
+  the screen's **Components block** (format 12) under the Screens table, headed
+  by the row's code; `/vwf:screens prompt` transcribes it into the design brief.
+  Kinds and behavior only — the component library and styling stay realization.
 - **Feedback & realtime** — toast/banner/progress choice; whether data updates
   live or on refresh (the UX expectation, not the transport).
 - **Content** — error messages, empty-state copy, and CTA labels where the

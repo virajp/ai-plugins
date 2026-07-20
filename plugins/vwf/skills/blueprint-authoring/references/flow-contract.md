@@ -65,7 +65,12 @@ Pin per screen — its **Code** (`<NNN><letter>`: the flow's number plus `a`, `b
 `c`, … in step order — the per-screen sync key canvas frames are named by and
 `/vwf:screens import` matches on; stable once assigned, an inserted screen takes
 the next free letter, never a re-letter), route, the operations it reads
-(`operationId`), its states (loading/error/empty), actions, and form validation.
+(`operationId`), its states (loading/error/empty), actions, and form validation
+— plus, one **Components block** per row (format 12), headed by its code: the
+elements the screen displays (text, info, error surfaces, buttons, inputs,
+lists, media), each with its rules — visibility/enable conditions, what
+activating it does, and contract-pinned content (see the
+[UI/UX contract](./ui-ux-contract.md)).
 
 **Home rule.** Every screen is defined in exactly **one** flow — its home
 journey. Another flow that touches the same screen **links the home flow's row**

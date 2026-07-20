@@ -7,8 +7,8 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 5
-blueprint_format: 11
+config_format: 6
+blueprint_format: 12
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,9 +29,16 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 11.** Format 11 = format 10 **plus** the **device-grouped
-flows and pinned screen codes** restructure (the `10 → 11` delta below): a UI
-project's flows nest under a **device-type subgroup**
+**Current format = 12.** Format 12 = format 11 **plus** **screen components as
+contract** (the `11 → 12` delta below): every Screens table row carries a
+**Components block** (headed by the row's code, per the flow template) — the
+elements the screen displays (text, info, error surfaces, buttons, inputs,
+lists, media), each with its rules: visibility/enable conditions, what
+activating it does, and content where the wording is a product decision.
+`/vwf:screens prompt` transcribes the block into the design brief; the
+blueprint-reviewer enforces it per row. Format 11 = format 10 **plus** the
+**device-grouped flows and pinned screen codes** restructure (the `10 → 11`
+delta below): a UI project's flows nest under a **device-type subgroup**
 (`flows/<project>/<device>/<NNN>-<flow>/` — `mobile` for `frontend`, `web` for
 `site`/`console`, plus `carplay`/`android-auto` subgroups holding in-car
 journeys authored as their **own subset flows** with a `Subset of:` parent link;
@@ -349,6 +356,16 @@ the current format and apply the delta:
      `/vwf:mockups` sweep.
   6. Bump the stamp to `11`. Beyond the Code column, no content changes —
      `status:` and `implementation:` stamps are preserved.
+
+- **`11 → 12`** → **screen components as contract**: every Screens row gains a
+  **Components block** (per the flow template) — the elements the screen
+  displays, each with its rules. Component rules are product decisions the
+  migration must never invent: they are elicited **as each flow is next touched
+  by `/vwf:blueprint`** (the reviewer enforces the block on touch) — a missing
+  Components block on an untouched flow is tolerated drift, never a coverage
+  downgrade. The migration itself is a stamp bump to `12` plus the config
+  `5 → 6` migration (per the vwf-config asset) — the per-device
+  `design.projects` pins the format-12 screens machinery reads.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

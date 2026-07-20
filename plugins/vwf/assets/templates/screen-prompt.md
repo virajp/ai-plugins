@@ -13,14 +13,16 @@
      revise-in-place, the interactive-journey mandate, the standing tweak set
      (darkMode on, device frame on with the mobile/tablet camera cutout, a
      tweak per pinned sad and conditional state), stub treatment — live in
-     the canvas project's own CLAUDE.md (see the skill's Canvas conventions
-     note) and are never restated here; the brief carries only the per-flow
-     payload. The page name and frame codes are the sync keys — /vwf:screens
-     import matches by them; never rename them. Send nothing beyond
-     wireframe-level structure: no design/visual instructions, no content,
-     data, or action decisions — the canvas picks the design system up from
-     its Design System project, and the canvas chat is where the design is
-     made. -->
+     the canvas project's own CLAUDE.md (its repo-side source is the sibling
+     CLAUDE--<platform>.md, from the canvas-claude template) and are never
+     restated here; the brief carries only the per-flow payload. The page name
+     and frame codes are the sync keys — /vwf:screens import matches by them;
+     never rename them. Send no design/visual instructions (no tokens, type,
+     spacing, or styling) — the canvas picks the design system up from its
+     Design System project, and visual treatment is decided in the canvas
+     chat. What each screen SHOWS and how it BEHAVES is contract: the
+     components and their rules are transcribed from the flow doc's Components
+     blocks, never left for the canvas to decide. -->
 
 # Screens brief — `<flow>` (`<platform>`)
 
@@ -55,8 +57,8 @@ starts on; the page covers every entry point>`
 One subsection per screen row in the flow's Screens contract, headed by its
 pinned **code** — the frame name on the canvas; for a flow with no Screens
 section yet, describe the screens the steps imply with provisional codes in step
-order. Structure, navigation, and states only — visual treatment and content are
-the canvas's to decide.
+order. Structure, navigation, components, and states — visual treatment is the
+canvas's to decide.
 
 ### `<code>` — `<screen name>`
 
@@ -64,6 +66,12 @@ the canvas's to decide.
 - **Navigates to:**
   `<the next coded screen(s) in step order — wire this
   navigation>`
+- **Components:**
+  `<from the row's Components block — each element the screen
+  displays (text, info, error surfaces, buttons, inputs, lists, media) with its
+  rules: when it is visible/enabled (e.g. the button is clickable only once the
+  form validates), what activating it does, and its contract-pinned content
+  (error messages, empty-state copy, CTA labels)>`
 - **Sad states:**
   `<every pinned error/failure state — one tweak each on this
   frame>`

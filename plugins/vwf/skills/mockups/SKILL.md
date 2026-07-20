@@ -83,8 +83,9 @@ populated view always, plus only the states the row pins**
 (`${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` — no speculative variant catalog).
 Flows without a Screens section are skipped silently in sweep mode; `$ARGUMENTS`
 present → the scope is that one flow. **Group the worklist by registry UI
-project** (each flow's Screens section names its UI project(s)) — each group
-pushes to that project's own pinned design project.
+project and platform** (each flow's Screens section names its UI project(s); its
+device subgroup names the platform) — each group pushes to that project +
+platform's own pinned design project.
 
 ### 3. Recall (mempalace)
 
@@ -92,11 +93,12 @@ Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall rooms `decisions` (design
 rationale beyond the docs) and `gaps` (tag `parked` — parked UX points a mockup
 must not over-promise). Skip silently if mempalace is unavailable.
 
-### 4. Resolve the design projects (pin-first, per registry UI project)
+### 4. Resolve the design projects (pin-first, per registry UI project + platform)
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` §2, once per registry UI
-project in scope — projects may share one pinned design project or hold separate
-ones (`design.projects.*`).
+project + platform in scope (`design.projects.<registry-project>.<platform>`) —
+registry projects may share one pinned design project per platform or hold
+separate ones; two platforms never share.
 
 ### 5. Generate (delegated, per flow)
 

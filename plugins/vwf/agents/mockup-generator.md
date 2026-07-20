@@ -17,9 +17,11 @@ HTML mockups a designer reviews on the claude.ai/design canvas.
 
 You receive:
 
-- **Flow name** and its **Screens contract** — the Screens table (Screen | Route
-  | Reads (API) | States | Actions | Form validation) plus any recorded
-  deviations beneath it.
+- **Flow name** and its **Screens contract** — the Screens table (Code | Screen
+  | Route | Reads (API) | States | Actions | Form validation), the per-screen
+  **Components blocks** (each screen's displayed elements and their rules —
+  render the components a block pins, honoring its visibility/enable conditions
+  and contract-pinned content), plus any recorded deviations beneath it.
 - **Design-system doc(s)** — paths to `docs/blueprint/design-system.md` or every
   file of the folder form. Read them fully.
 - **Build directory** — the absolute path to write into. Write only there.

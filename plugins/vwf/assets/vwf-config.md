@@ -8,11 +8,11 @@ stacks, capabilities) lives in the registry in `docs/blueprint/architecture.md`;
 this file holds only how vwf treats it. Since **blueprint-format 6** it replaces
 the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 5)
+## Schema (config_format 6)
 
 ```yaml
-config_format: 5 # this file's own schema version — setup migrates it
-blueprint_format: 11 # the docs/blueprint format stamp
+config_format: 6 # this file's own schema version — setup migrates it
+blueprint_format: 12 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -63,8 +63,9 @@ production_env: production # optional — names the release environment for /vwf
 
 design: # claude.ai/design pins & canvas state — ids and flow names only, never content
   design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
-  projects: # the claude.ai/design design-system project each registry UI project pushes its mockups to — pin the same uuid to share one canvas, or separate uuids, as the product needs
-    <registry-project>: <uuid>
+  projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
+    <registry-project>:
+      <platform>: <uuid> # mobile | tablet | desktop | carplay | android-auto
   flows_pushed: [] # flows whose Screens cards are current on the canvas — entries are <project>/<device>/<NNN>-<flow>; recorded by blueprint's per-flow render step, by mockups, and by screens import, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory
 
 memory:
@@ -78,19 +79,19 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 
 ## Semantics — who reads/writes what
 
-| Section              | Written by                                                                                                         | Read by                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| stamp keys           | `setup`                                                                                                            | every command's format check                                            |
-| `product` / `memory` | `setup` (confirmed with the user)                                                                                  | every command's wing resolution                                         |
-| `blueprint`          | `blueprint` (after every sweep)                                                                                    | `plan` (the coverage gate)                                              |
-| `projects.*`         | `setup` / `architecture` (`platforms`, consented); `execute` reconcile                                             | `blueprint` (platforms), `design-system` (`cli`), `plan`, the verifiers |
-| `harness`            | `setup`; `execute` reconcile                                                                                       | `plan` preflight, acceptance/ux verifiers, `verify`                     |
-| `enforcement`        | `setup` / `architecture` (consented)                                                                               | `setup`, `architecture`, `blueprint`, the reviewers                     |
-| `pipeline`           | the user (hand-edited)                                                                                             | `execute`, the statusline caps hook                                     |
-| `environments`       | `setup` / `verify` (confirmed)                                                                                     | `verify`                                                                |
-| `production_env`     | `setup` / `verify` (confirmed)                                                                                     | `verify` (the release environment)                                      |
-| `design`             | `design-system` (`design_system_id`); `blueprint` / `mockups` (`projects.*` pins — confirmed — and `flows_pushed`) | `design-system`, `blueprint`, `mockups`, `feedback`, `plan` (advisory)  |
-| `docs_sync`          | the user (hand-edited)                                                                                             | the docs-sync step                                                      |
+| Section              | Written by                                                                                                                       | Read by                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| stamp keys           | `setup`                                                                                                                          | every command's format check                                                      |
+| `product` / `memory` | `setup` (confirmed with the user)                                                                                                | every command's wing resolution                                                   |
+| `blueprint`          | `blueprint` (after every sweep)                                                                                                  | `plan` (the coverage gate)                                                        |
+| `projects.*`         | `setup` / `architecture` (`platforms`, consented); `execute` reconcile                                                           | `blueprint` (platforms), `design-system` (`cli`), `plan`, the verifiers           |
+| `harness`            | `setup`; `execute` reconcile                                                                                                     | `plan` preflight, acceptance/ux verifiers, `verify`                               |
+| `enforcement`        | `setup` / `architecture` (consented)                                                                                             | `setup`, `architecture`, `blueprint`, the reviewers                               |
+| `pipeline`           | the user (hand-edited)                                                                                                           | `execute`, the statusline caps hook                                               |
+| `environments`       | `setup` / `verify` (confirmed)                                                                                                   | `verify`                                                                          |
+| `production_env`     | `setup` / `verify` (confirmed)                                                                                                   | `verify` (the release environment)                                                |
+| `design`             | `design-system` (`design_system_id`); `blueprint` / `mockups` / `screens` (`projects.*.*` pins — confirmed — and `flows_pushed`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) |
+| `docs_sync`          | the user (hand-edited)                                                                                                           | the docs-sync step                                                                |
 
 ## The hard floor (never configurable)
 
@@ -141,3 +142,13 @@ shipped default is stated at that stage's gate. `pipeline.execute_caps` may only
   unchanged. Readers fall back to a legacy `design.project_id` (or the older
   `mockups.project_id`) as the shared pin for **every** UI project — its
   presence is `4` (or `3`) drift.
+- **`5 → 6` migration** (performed by `/vwf:setup`): each
+  `design.projects.<registry-project>` entry becomes a **per-platform map** —
+  one canvas project per platform, since each platform canvas carries its own
+  conventions CLAUDE.md (device frame, layout; written by `/vwf:screens`). An
+  existing flat uuid becomes the pin for the project's **primary platform**
+  (`mobile` for a `frontend`, `desktop` for a `site`/`console`); other declared
+  platforms are pinned on next use (canvas-push §2). Readers fall back to a flat
+  `design.projects.<registry-project>` uuid as that primary-platform pin — its
+  presence is `5` drift. Two platforms must never share a uuid; a shared uuid
+  found during migration is surfaced for re-pinning, never silently kept.

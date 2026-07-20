@@ -81,6 +81,15 @@ UI project's flow (`<device>` = `mobile` / `web` / `carplay` / `android-auto`),
       or component behavior re-decided here. A screen another flow already
       defines is **linked**, not redefined (the home rule); a screen defined
       here that duplicates a row in the passed flow list's docs is a gap.
+- [ ] Every Screens row has a matching **Components block** (format 12) headed
+      by its code, listing the elements the screen displays (text, info, error
+      surfaces, buttons, inputs, lists, media), each with its rules —
+      visibility/enable conditions (e.g. when a button is clickable), what
+      activating it does, and content where the wording is a product decision. A
+      row with no block, an Actions-cell entry with no matching component, or a
+      rule contradicting the row's States or the flow's steps is a gap; a
+      component-library name, CSS, or pixel value in a block is a
+      code-independence gap.
 - [ ] Every background-job row lists trigger, timer/retry, activities, and
       on-failure; each mutating step's sync/async classification is decided (a
       job or an explicit synchronous statement), not left open.

@@ -270,13 +270,16 @@ Write, from the templates:
   statement about when the journey runs). Every Screens row carries its **Code**
   (`<NNN><letter>` — letters in step order; stable once assigned, an insert
   takes the next free letter, never a re-letter) — the per-screen sync key the
-  canvas frames and `/vwf:screens import` match on. Every step names its actor
-  and links the entity/service it touches; API-backed steps name an
-  `operationId`. **Every flow carries an Acceptance block** — at least one
-  success and one failure/compensation criterion as observable Given/When/Then;
-  these are what `plan` turns into E2E test steps and `execute`'s acceptance
-  stage verifies. Screens obey the **home rule** (a screen is defined in exactly
-  one flow; other flows link it).
+  canvas frames and `/vwf:screens import` match on — and its **Components
+  block** (format 12): the elements the screen displays, each with its rules
+  (visibility/enable conditions, what activating it does, contract-pinned
+  content), elicited per the ui-ux-contract bar. Every step names its actor and
+  links the entity/service it touches; API-backed steps name an `operationId`.
+  **Every flow carries an Acceptance block** — at least one success and one
+  failure/compensation criterion as observable Given/When/Then; these are what
+  `plan` turns into E2E test steps and `execute`'s acceptance stage verifies.
+  Screens obey the **home rule** (a screen is defined in exactly one flow; other
+  flows link it).
 - **What it stands on** — for each entity a step references: create or extend
   `entities/<entity>/index.md` + `schema.yaml`; for each `operationId`: add or
   extend the operation in `apis/<project>.openapi.yaml` (from the OpenAPI
@@ -381,20 +384,20 @@ Screens are contracts with happy *and* sad paths; the user must see them before
 approving the flow.
 
 1. **Render.** Dispatch a fresh `mockup-generator` subagent for this flow (its
-   Screens table + deviations, the design-system doc(s), a fresh build dir in
-   the session scratch dir) — the default view plus **every pinned state**; the
-   ui-ux-contract bar makes error and empty pins mandatory, so the sad paths are
-   always in the set. `frontend` (Flutter) screens render as HTML approximations
-   at the design system's device viewport.
+   Screens table + Components blocks + deviations, the design-system doc(s), a
+   fresh build dir in the session scratch dir) — the default view plus **every
+   pinned state**; the ui-ux-contract bar makes error and empty pins mandatory,
+   so the sad paths are always in the set. `frontend` (Flutter) screens render
+   as HTML approximations at the design system's device viewport.
 2. **Push (canvas preferred).** Per
    `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md`: resolve a surface, resolve the
-   design project pinned for **the flow's UI project**
-   (`design.projects.<registry-project>`), push under
-   `mockups/<device>/<NNN>-<flow>/**` (the same path scheme as `/vwf:mockups`;
-   deletes stay inside this flow's directory), verify a sample, and share the
-   `open_url`. Record the flow in `design.flows_pushed`. In **local-only mode**
-   the local render satisfies the gate: give the absolute build-dir paths to
-   open in a browser.
+   design project pinned for **the flow's UI project and platform**
+   (`design.projects.<registry-project>.<platform>` — the flow's device subgroup
+   names the platform), push under `mockups/<device>/<NNN>-<flow>/**` (the same
+   path scheme as `/vwf:mockups`; deletes stay inside this flow's directory),
+   verify a sample, and share the `open_url`. Record the flow in
+   `design.flows_pushed`. In **local-only mode** the local render satisfies the
+   gate: give the absolute build-dir paths to open in a browser.
 3. **Review.** The user reviews the rendered screens. Remarks route **now**:
    screen-level → the Screens table / recorded deviations (re-elicit, update the
    doc; a material contract change re-runs the per-doc reviewer (§5) and

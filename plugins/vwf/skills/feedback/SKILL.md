@@ -27,10 +27,10 @@ intake is the claude.ai/design review conversation instead of pasted text — wh
 the user said to Claude Design while reviewing the `/vwf:mockups` cards:
 
 1. Gather every distinct pinned uuid from `.config/vwf.yaml`: the
-   `design.projects.*` map, `design.design_system_id`, and the legacy fallbacks
-   (`design.project_id`, `mockups.project_id`). No pins at all → "No design
-   project pinned — push mockups first (a blueprint flow pass with Screens, or
-   `/vwf:mockups`)." Stop.
+   `design.projects.*.*` per-platform map, `design.design_system_id`, and the
+   legacy fallbacks (flat `design.projects.*` uuids, `design.project_id`,
+   `mockups.project_id`). No pins at all → "No design project pinned — push
+   mockups first (a blueprint flow pass with Screens, or `/vwf:mockups`)." Stop.
 2. Load the claude-design MCP `get_conversation` tool via `ToolSearch`
    (`mcp__plugin_claude-design_claude-design__` prefix). Tool absent or
    unauthorized (the user may need `/mcp` to connect) → say exactly that and

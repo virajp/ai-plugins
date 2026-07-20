@@ -25,33 +25,42 @@ build-dir paths to open in a browser instead of pushing. Never push anywhere
 else. Resolve the surface **before** generating, so a sweep's generation is
 never burnt on a push that cannot happen.
 
-## 2. Resolve the project (pin-first, per registry UI project)
+## 2. Resolve the project (pin-first, per registry UI project + platform)
 
-Every mockup push targets the design project of a specific **registry UI
-project** — the one whose screens are being pushed. (The design system itself
-lives in the `design.design_system_id` project — `/vwf:design-system` imports
-*from* it; nothing in vwf pushes to it.)
+Every mockup push targets the design project of a specific **registry UI project
+and platform** (`mobile` / `tablet` / `desktop` / `carplay` / `android-auto`) —
+one canvas project per platform, since each platform canvas carries its own
+conventions CLAUDE.md (device frame, layout — written by `/vwf:screens`); **two
+platforms never share a canvas project**. A flow's device subgroup names the
+platform (`mobile` → `mobile`, `web` → `desktop`, an in-car subgroup → its
+in-car platform). (The design system itself lives in the
+`design.design_system_id` project — `/vwf:design-system` imports *from* it;
+nothing in vwf pushes to it.)
 
-1. Read `design.projects.<registry-project>` from `.config/vwf.yaml`. Legacy
-   fallbacks — a single `design.project_id` (config_format 4) or
-   `mockups.project_id` (3) — act as the **shared pin for every UI project**;
-   honor them and nudge `/vwf:setup` for the config migration. If a pin is
-   present, verify with `get_project`: it must exist, be `canEdit`, and be
-   `type: PROJECT_TYPE_DESIGN_SYSTEM` (the type is immutable at creation;
-   pushing to a regular project never converts it). On failure, report the stale
-   pin and fall through.
-2. No usable pin → **share or separate is a product decision, never assumed**:
-   when other registry projects already pin design projects, ask (MCQ) whether
-   this one **shares** an existing pinned project or gets its **own**. Then
+1. Read `design.projects.<registry-project>.<platform>` from `.config/vwf.yaml`.
+   Legacy fallbacks — a flat `design.projects.<registry-project>` uuid
+   (config_format 5) acts as the pin for the project's **primary platform**
+   (`mobile` for a `frontend`, `desktop` for a `site`/`console`); a single
+   `design.project_id` (4) or `mockups.project_id` (3) as that shared
+   primary-platform pin for every UI project — honor them and nudge `/vwf:setup`
+   for the config migration. If a pin is present, verify with `get_project`: it
+   must exist, be `canEdit`, and be `type: PROJECT_TYPE_DESIGN_SYSTEM` (the type
+   is immutable at creation; pushing to a regular project never converts it). On
+   failure, report the stale pin and fall through.
+2. No usable pin → **sharing across registry projects (same platform) is a
+   product decision, never assumed**: when other registry projects already pin a
+   design project for this platform, ask (MCQ) whether this one **shares** it or
+   gets its **own** — but never offer another platform's project. Then
    `list_projects`, present the writable design-system projects plus a **create
    new** option (`create_project`, name confirmed — default
-   `<product.name> — <registry-project>` for a separate project,
-   `<product.name> mockups` for the first/shared one).
-3. **Offer to pin** the resolved id under `design.projects.<registry-project>` —
-   confirmed with the user, never silently — so the next run asks nothing. The
-   pin change is committed via `/vwf:git-workflow`
-   (`chore(vwf): pin/stamp design project`), riding the caller's commit when one
-   exists.
+   `<product.name> — <platform>`, qualified
+   `<product.name> <registry-project> — <platform>` when several UI projects
+   need distinguishing).
+3. **Offer to pin** the resolved id under
+   `design.projects.<registry-project>.<platform>` — confirmed with the user,
+   never silently — so the next run asks nothing. The pin change is committed
+   via `/vwf:git-workflow` (`chore(vwf): pin/stamp design project`), riding the
+   caller's commit when one exists.
 
 ## 3. Push
 

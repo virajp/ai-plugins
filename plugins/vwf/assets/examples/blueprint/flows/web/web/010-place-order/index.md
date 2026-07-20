@@ -89,6 +89,23 @@ sequenceDiagram
      screen is homed by the cancel-refund flow. Visual language comes from
      ../../../../design-system.md; record only deviations here. -->
 
+### 010a — Checkout components
+
+| Component              | Rules                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Cart summary (info)    | Lists the items and total being ordered; read-only on this screen                                                  |
+| Payment details form   | Fields per Form validation; validates on blur                                                                      |
+| Place order (button)   | Enabled only when the cart is non-empty and payment details validate; click → `placeOrder`; disabled while placing |
+| Decline error (inline) | Shown when payment declines; states that no order was placed and the cart is intact                                |
+
+### 010b — Order history components
+
+| Component           | Rules                                                                           |
+| ------------------- | ------------------------------------------------------------------------------- |
+| Order list          | One row per order, newest first; row click → Order detail (020a, cancel-refund) |
+| Empty state (info)  | Shown before the first order; invites the customer to start shopping            |
+| Load error (banner) | Shown when `getOrder` fails; offers retry                                       |
+
 ## Acceptance
 
 - Given a signed-in customer with a non-empty cart, when they check out and
