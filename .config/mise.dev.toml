@@ -30,7 +30,8 @@ uv       = { version = "latest" }
 [shell_alias]
 be-setup  = "mise run --cd ../backend setup:all"
 cc        = "claude --allow-dangerously-skip-permissions --dangerously-skip-permissions"
-cco       = "claude --model 'opus[1m]' --allow-dangerously-skip-permissions --dangerously-skip-permissions"
+ccf       = "claude --model 'fable[1m]' --effort 'high' --allow-dangerously-skip-permissions --dangerously-skip-permissions"
+cco       = "claude --model 'opus[1m]' --effort 'high' --allow-dangerously-skip-permissions --dangerously-skip-permissions"
 fe-setup  = "mise run --cd ../frontend setup:all"
 precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
