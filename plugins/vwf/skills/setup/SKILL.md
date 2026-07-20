@@ -128,25 +128,31 @@ entity docs lacking Relationships / Concurrency, the **`1 → 2`** delta (docs
 missing OKF frontmatter and relationships/references not yet written as markdown
 links), the **`2 → 3`** delta (a missing `environment.md` when the registry
 declares integrations or a secrets-manager `config`), the **`8 → 9`** delta (the
-process-based restructure below), or the **`9 → 10`** delta (flows regrouped by
+process-based restructure below), the **`9 → 10`** delta (flows regrouped by
 primary project and numbered in execution order — per format-versioning, a
-mechanical `git mv` + link rewrite with the ordering elicited). Fold in any old
-or partial structure.
+mechanical `git mv` + link rewrite with the ordering elicited), or the
+**`10 → 11`** delta (a UI project's flows regrouped under device-type subgroups,
+Screens rows gaining their frame Codes, in-car journeys elicited into their own
+subset flows — per format-versioning). Fold in any old or partial structure.
 
-Since format 10 the conforming layout is **flows-first, project-grouped**: flows
-under `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (grouped by primary
-registry project, numbered in execution order with gap numbering), entities
-under `docs/blueprint/entities/<entity>/` (`index.md` + `schema.yaml`), API
-contracts under `docs/blueprint/apis/`, and the root reserved for the system
-docs. A root `integration.md`, an entity folder at the blueprint root, entity
-surface files (`data.md`/`api.md`/`jobs.md`/`screens.md`), a flat `<entity>.md`,
-or an ungrouped/unnumbered `flows/<flow>/` folder **is** drift — the `8 → 9`
-delta (per format-versioning) performs the mechanical scaffold phase with
-`git mv` (move, never delete), splits `integration.md` into per-flow docs,
-extracts Data Model tables to `schema.yaml` and API tables to OpenAPI stubs,
-seeds the `implementation:` stamps, and downgrades coverage to `partial`; the
-follow-up `/vwf:blueprint` sweep (offered, consent-gated) does the elicited
-fill. YAML artifacts the scaffold writes must parse — validate them in step 10.
+Since format 11 the conforming layout is **flows-first, project- and
+device-grouped**: a UI project's flows under
+`docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md` (device subgroup
+= `mobile` / `web` plus declared in-car platforms; numbered in execution order
+with gap numbering per subgroup), a non-UI project's under
+`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`, entities under
+`docs/blueprint/entities/<entity>/` (`index.md` + `schema.yaml`), API contracts
+under `docs/blueprint/apis/`, and the root reserved for the system docs. A root
+`integration.md`, an entity folder at the blueprint root, entity surface files
+(`data.md`/`api.md`/`jobs.md`/`screens.md`), a flat `<entity>.md`, an
+ungrouped/unnumbered `flows/<flow>/` folder, or a UI project's flow sitting
+directly under `flows/<project>/` **is** drift — the `8 → 9` delta (per
+format-versioning) performs the mechanical scaffold phase with `git mv` (move,
+never delete), splits `integration.md` into per-flow docs, extracts Data Model
+tables to `schema.yaml` and API tables to OpenAPI stubs, seeds the
+`implementation:` stamps, and downgrades coverage to `partial`; the follow-up
+`/vwf:blueprint` sweep (offered, consent-gated) does the elicited fill. YAML
+artifacts the scaffold writes must parse — validate them in step 10.
 
 ### 4. Build the migration plan (dry-run)
 

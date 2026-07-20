@@ -9,7 +9,7 @@ tags: [ commerce, checkout ]
 
 # Flow: Place order
 
-<!-- Conformance example (blueprint-format 9). A worked, format-valid flow doc:
+<!-- Conformance example (blueprint-format 11). A worked, format-valid flow doc:
      the goal-traceability spine runs product goal → this flow → entity/API/screen.
      Code-independent: names entities, the `api` service, and operationIds only. -->
 
@@ -19,7 +19,7 @@ A shopper reviews their cart and pays for it in a single checkout sitting,
 receiving a confirmed order they can revisit later. This is the primary path by
 which an Order comes into being, so it carries the "no lost orders" promise.
 
-Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
+Serves: [Reliable ordering](../../../../product.md#goal-reliable-ordering)
 
 ## Trigger & Actors
 
@@ -30,12 +30,12 @@ Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
 ## Steps
 
 1. Customer submits their cart on the Checkout screen — creates an
-   [Order](../../../entities/order/index.md) in `placed` via `placeOrder`.
+   [Order](../../../../entities/order/index.md) in `placed` via `placeOrder`.
 2. System authorizes payment with the payment provider inside the same checkout
-   transaction; on success the [Order](../../../entities/order/index.md) moves
-   `placed → paid`.
+   transaction; on success the [Order](../../../../entities/order/index.md)
+   moves `placed → paid`.
 3. Customer reviews the confirmed order and their past orders — reads
-   [Order](../../../entities/order/index.md) via `getOrder`.
+   [Order](../../../../entities/order/index.md) via `getOrder`.
 
 ## Consistency boundary
 
@@ -80,14 +80,14 @@ sequenceDiagram
 
 ## Screens → web
 
-| Screen        | Route     | Reads (operationId) | States (loading/error/empty)          | Actions     | Form validation                 |
-| ------------- | --------- | ------------------- | ------------------------------------- | ----------- | ------------------------------- |
-| Checkout      | /checkout | `placeOrder`        | loading · error (decline inline) · —  | Place order | Cart non-empty; payment details |
-| Order history | /orders   | `getOrder`          | loading · error · empty (first order) | Open detail | —                               |
+| Code | Screen        | Route     | Reads (operationId) | States (loading/error/empty)          | Actions     | Form validation                 |
+| ---- | ------------- | --------- | ------------------- | ------------------------------------- | ----------- | ------------------------------- |
+| 010a | Checkout      | /checkout | `placeOrder`        | loading · error (decline inline) · —  | Place order | Cart non-empty; payment details |
+| 010b | Order history | /orders   | `getOrder`          | loading · error · empty (first order) | Open detail | —                               |
 
 <!-- Home flow for the Checkout and Order history screens; the Order detail
      screen is homed by the cancel-refund flow. Visual language comes from
-     ../../design-system.md; record only deviations here. -->
+     ../../../../design-system.md; record only deviations here. -->
 
 ## Acceptance
 
@@ -100,10 +100,11 @@ sequenceDiagram
 
 ## References
 
-- [api API contract](../../../apis/api.openapi.yaml) — for `placeOrder` /
+- [api API contract](../../../../apis/api.openapi.yaml) — for `placeOrder` /
   `getOrder`
-- [auth](../../../conventions.md#auth), [errors](../../../conventions.md#errors)
-- [design-system](../../../design-system.md) — this flow has Screens
+- [auth](../../../../conventions.md#auth),
+  [errors](../../../../conventions.md#errors)
+- [design-system](../../../../design-system.md) — this flow has Screens
 
 ## Open Questions
 

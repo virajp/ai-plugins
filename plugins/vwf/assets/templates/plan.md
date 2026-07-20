@@ -4,7 +4,7 @@ title: <slice> — <date>
 description: Cycle plan (a diff) for the <slice> blueprint slice.
 status: draft # draft | reviewed | stable
 covers: [
-  docs/blueprint/flows/<project>/<NNN>-<flow>/index.md,
+  docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md,
 ] # the blueprint doc(s) this plan implements — one, except for a dependency cycle planned together
 requires: [] # plan filenames (docs/plans/...) that must be executed & merged first — direct prerequisites only
 # optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
@@ -46,7 +46,7 @@ What the blueprint says should exist. Reference sections; do not restate them.
      Write "none — no flow touched" when the slice maps to no flow. -->
 
 - [ ] Given <...>, when <...>, then <...> — from
-      [<flow name>](../blueprint/flows/<project>/<NNN>-<flow>/index.md)
+      [<flow name>](../blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md)
 
 ## Risks / drift
 

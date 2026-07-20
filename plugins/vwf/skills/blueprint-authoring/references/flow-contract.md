@@ -1,12 +1,24 @@
 # Flow Contract
 
-Flows are the **primary blueprint unit**. One flow per folder
-`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (type `vwf-flow`, always
-`index.md` only — a flow too big for one file is several flows). The
-goal-traceability spine runs product goal → flow (`Serves:`) → the
-entities/APIs/screens the flow touches. A flow is a process that spans entities
-**or projects** — a single-entity journey that crosses projects (app → service →
-datastore) is a flow too; the cross- project boundary is what makes it one.
+Flows are the **primary blueprint unit**. One flow per folder —
+`docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md` for a UI
+project's flows (the device subgroup is the journey's primary surface: `mobile`
+for `frontend`, `web` for `site`/`console`, plus a `carplay` / `android-auto`
+subgroup per declared in-car platform),
+`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` for a non-UI project's
+(type `vwf-flow`, always `index.md` only — a flow too big for one file is
+several flows). The goal-traceability spine runs product goal → flow (`Serves:`)
+→ the entities/APIs/screens the flow touches. A flow is a process that spans
+entities **or projects** — a single-entity journey that crosses projects (app →
+service → datastore) is a flow too; the cross- project boundary is what makes it
+one.
+
+**In-car flows are subset flows.** A `carplay` / `android-auto` journey is
+always a limited subset of a phone journey — different screens, fewer features —
+authored as its **own flow** in the in-car subgroup, never as per-platform
+variants on the phone flow's Screens rows. Its Purpose carries a mandatory
+**`Subset of:`** line linking the parent phone flow (an OKF edge the reviewer
+verifies) alongside `Serves:`.
 
 Fill every applicable section to the **no-two-reasonable-answers** bar. Omit
 Screens if the registry has no UI project; omit Background Jobs if it has no
@@ -16,8 +28,10 @@ worker.
 
 - **Purpose** — one paragraph: the observable outcome this flow delivers and why
   it exists, plus a mandatory `Serves:` line linking at least one `product.md`
-  goal anchor (`[<goal>](../../product.md#goal-<slug>)`). This is the OKF edge
-  the blueprint-reviewer verifies; a flow no goal justifies is scope drift.
+  goal anchor (`[<goal>](../../../../product.md#goal-<slug>)` from the
+  device-grouped form; one `../` fewer from a non-UI flow). This is the OKF edge
+  the blueprint-reviewer verifies; a flow no goal justifies is scope drift. An
+  in-car flow adds the mandatory `Subset of:` parent link (above).
 - **Trigger & Actors** — a table of who/what can start the flow, with
   **Authorization** and **Audit-recorded** columns. This absorbs the
   authorization contract formerly on the entity's Actors & Actions surface;
@@ -47,8 +61,11 @@ worker.
 
 Screens moved from the entity to the flow: process orientation puts a UI journey
 on the process that owns it, not scattered across the data entities it reads.
-Pin per screen — route, the operations it reads (`operationId`), its states
-(loading/error/empty), actions, and form validation.
+Pin per screen — its **Code** (`<NNN><letter>`: the flow's number plus `a`, `b`,
+`c`, … in step order — the per-screen sync key canvas frames are named by and
+`/vwf:screens import` matches on; stable once assigned, an inserted screen takes
+the next free letter, never a re-letter), route, the operations it reads
+(`operationId`), its states (loading/error/empty), actions, and form validation.
 
 **Home rule.** Every screen is defined in exactly **one** flow — its home
 journey. Another flow that touches the same screen **links the home flow's row**

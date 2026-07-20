@@ -9,18 +9,20 @@ status: reviewed
 
 # Flows & Cross-Flow Contracts
 
-<!-- Conformance example (blueprint-format 9). Deliberately thin: per-flow
-     contracts live in flows/<flow>/index.md — this file holds only the catalog
-     and what is cross-flow by nature. -->
+<!-- Conformance example (blueprint-format 11). Deliberately thin: per-flow
+     contracts live in flows/<project>/<device>/<NNN>-<flow>/index.md — this
+     file holds only the catalog and what is cross-flow by nature. -->
 
 ## Flow catalog
 
 ### web
 
-| #   | Flow                                                            | Serves goal                                               | Entities touched                                                               | Status   |
-| --- | --------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
-| 010 | [Place order](./web/010-place-order/index.md)                   | [Reliable ordering](../product.md#goal-reliable-ordering) | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
-| 020 | [Order cancellation & refund](./web/020-cancel-refund/index.md) | [Trusted refunds](../product.md#goal-trusted-refunds)     | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
+#### web
+
+| #   | Flow                                                                | Serves goal                                               | Entities touched                                                               | Status   |
+| --- | ------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
+| 010 | [Place order](./web/web/010-place-order/index.md)                   | [Reliable ordering](../product.md#goal-reliable-ordering) | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
+| 020 | [Order cancellation & refund](./web/web/020-cancel-refund/index.md) | [Trusted refunds](../product.md#goal-trusted-refunds)     | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
 
 ## Inter-Service Contracts
 

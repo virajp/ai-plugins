@@ -8,7 +8,7 @@ and, on re-run, migrates the gap.
 
 ```yaml
 config_format: 5
-blueprint_format: 10
+blueprint_format: 11
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,10 +29,19 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 10.** Format 10 = format 9 **plus** the **project-grouped,
-execution-ordered flows** restructure (the `9 → 10` delta below). Format 9 =
-format 8 **plus** the **process-based restructure** — flows become the primary
-doc unit and structured contracts get structured formats:
+**Current format = 11.** Format 11 = format 10 **plus** the **device-grouped
+flows and pinned screen codes** restructure (the `10 → 11` delta below): a UI
+project's flows nest under a **device-type subgroup**
+(`flows/<project>/<device>/<NNN>-<flow>/` — `mobile` for `frontend`, `web` for
+`site`/`console`, plus `carplay`/`android-auto` subgroups holding in-car
+journeys authored as their **own subset flows** with a `Subset of:` parent link;
+flows of non-UI projects keep `flows/<project>/<NNN>-<flow>/`), and every
+Screens table row carries a **Code** (`<NNN><letter>` — `020a`, `020b`, … in
+step order, stable once assigned) — the per-screen sync key the canvas frames
+and `/vwf:screens import` match on. Format 10 = format 9 **plus** the
+**project-grouped, execution-ordered flows** restructure (the `9 → 10` delta
+below). Format 9 = format 8 **plus** the **process-based restructure** — flows
+become the primary doc unit and structured contracts get structured formats:
 
 - **Flows** live at `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (type
   **`vwf-flow`**, grouped by primary registry project, NNN = execution order in
@@ -299,6 +308,47 @@ the current format and apply the delta:
   6. Bump the stamp to `10`. No content changes — `status:` and
      `implementation:` stamps are preserved; coverage is preserved when every
      link resolves after the pass.
+
+- **`10 → 11`** → **device-grouped flows + pinned screen codes**:
+
+  1. For every **UI** registry project (`site`, `frontend`, `console`), resolve
+     its **primary device subgroup** — `mobile` for `frontend`, `web` for
+     `site`/`console` — and
+     `git mv docs/blueprint/flows/<project>/<NNN>-<flow>/ →
+     docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/`
+     for each of its flows (move, never delete). Flows of non-UI projects are
+     untouched. Rewrite links mechanically: outbound links from moved flow docs
+     gain one level (`../../../entities/…` → `../../../../entities/…`,
+     `../../index.md` → `../../../index.md`); inbound links (entity `Used by:`
+     lines, catalogs, active plans' `covers:`) re-point to the new path. Verify
+     every edge resolves (the OKF bar). NNN execution order is now **per device
+     subgroup**; existing numbers are preserved by the move.
+  2. Add the **Code** column to every Screens table: `<NNN><letter>` (`020a`,
+     `020b`, …), letters assigned in existing row (step) order. Codes are stable
+     once assigned — a later insert takes the next free letter, never a
+     re-letter.
+  3. In-car variants recorded as Screens-row deviations under the format-10
+     automotive shape cannot be migrated mechanically — an in-car journey is now
+     its **own flow** (`flows/<project>/<carplay|android-auto>/<NNN>-<flow>/`,
+     Purpose carrying a `Subset of:` link to the parent phone flow). Flag each
+     such deviation, downgrade `blueprint.coverage` to `partial` with the
+     pending in-car flows in `remaining:`, and offer `/vwf:blueprint`
+     (consent-gated) to elicit them — the migration never invents journeys.
+  4. `git mv docs/prompts/screens/<project>/<NNN>-<flow>/ →
+     docs/prompts/screens/<project>/<device>/<NNN>-<flow>/`
+     for each existing brief folder. Numbered `<seq>.md` briefs are superseded —
+     since format 11 a brief is `<platform>.md` (one per flow per device type,
+     always the full flow blueprint, regenerated in place); elicit once whether
+     to delete the old numbered briefs or keep them as history (git holds them
+     either way).
+  5. Rewrite flow identifiers in `.config/vwf.yaml`: `design.flows_pushed` and
+     `blueprint.remaining` `flows/…`/`screens/…` entries gain the device segment
+     (`<project>/<device>/<NNN>-<flow>`). Canvas **page names**
+     (`<NNN>-<flow>--<platform>`) are unchanged, so no canvas rename is needed;
+     the `mockups/` card folder scheme gains the device segment on the next
+     `/vwf:mockups` sweep.
+  6. Bump the stamp to `11`. Beyond the Code column, no content changes —
+     `status:` and `implementation:` stamps are preserved.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

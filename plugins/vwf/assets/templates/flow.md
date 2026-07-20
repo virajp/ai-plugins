@@ -9,10 +9,14 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
 # Flow: <Flow name>
 
-<!-- One flow per FOLDER: docs/blueprint/flows/<project>/<NNN>-<flow>/index.md — always index.md
-     only (a flow too big for one file is several flows). Flows are the PRIMARY
-     blueprint unit: the goal-traceability spine runs product goal → flow →
-     entity/API/screen. See the blueprint-authoring skill (flow-contract).
+<!-- One flow per FOLDER: docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md
+     for a UI project (<device> = mobile | web | carplay | android-auto),
+     docs/blueprint/flows/<project>/<NNN>-<flow>/index.md for a non-UI project —
+     always index.md only (a flow too big for one file is several flows). Flows
+     are the PRIMARY blueprint unit: the goal-traceability spine runs product
+     goal → flow → entity/API/screen. See the blueprint-authoring skill
+     (flow-contract). Link depths below assume the device-grouped (UI) form;
+     drop one ../ per link for a non-UI flow.
 
      Stack-agnostic and code-independent: name entities, services (by registry
      project name), and operationIds — never queues, libraries, classes, or
@@ -24,10 +28,14 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
 One paragraph. The observable outcome this flow delivers and why it exists.
 
-Serves: [<goal name>](../../product.md#goal-<slug>)
+Serves: [<goal name>](../../../../product.md#goal-<slug>)
 
 <!-- Every flow serves at least one product.md goal — the OKF edge the
-     blueprint-reviewer verifies. A flow no goal justifies is scope drift. -->
+     blueprint-reviewer verifies. A flow no goal justifies is scope drift.
+     An in-car flow (carplay / android-auto subgroup) additionally carries a
+     mandatory parent link — it is always a subset of a phone journey:
+
+     Subset of: [<parent flow>](../../mobile/<NNN>-<flow>/index.md) -->
 
 ## Trigger & Actors
 
@@ -42,7 +50,7 @@ Serves: [<goal name>](../../product.md#goal-<slug>)
 ## Steps
 
 1. <actor/system> <action> — touches
-   [<Entity>](../../entities/<entity>/index.md) via `<operationId>`
+   [<Entity>](../../../../entities/<entity>/index.md) via `<operationId>`
 2. ...
 
 <!-- Ordered, each step naming its actor, the action, and the entity/service
@@ -83,14 +91,19 @@ sequenceDiagram
 
 ## Screens → <UI project(s), from registry>
 
-| Screen | Route | Reads (operationId) | States (loading/error/empty) | Actions | Form validation |
-| ------ | ----- | ------------------- | ---------------------------- | ------- | --------------- |
+| Code | Screen | Route | Reads (operationId) | States (loading/error/empty) | Actions | Form validation |
+| ---- | ------ | ----- | ------------------- | ---------------------------- | ------- | --------------- |
 
-<!-- The screens this flow traverses. HOME RULE: every screen is defined in
-     exactly one flow (its home journey); another flow that touches it links the
-     home flow's row instead of redefining it. Error and empty are MANDATORY
-     pins per screen (or an explicit "n/a — <why>") — sad paths are contract;
-     the blueprint pass renders every pinned state for visual review. Visual
+<!-- The screens this flow traverses. Code = <NNN><letter> (020a, 020b, … in
+     step order) — the per-screen sync key: canvas frames are named by it and
+     /vwf:screens import matches on it. Stable once assigned: an inserted
+     screen takes the next free letter, never a re-letter. HOME RULE: every
+     screen is defined in exactly one flow (its home journey); another flow
+     that touches it links the home flow's row instead of redefining it. Error
+     and empty are MANDATORY pins per screen (or an explicit "n/a — <why>") —
+     sad paths are contract; so are the CONDITIONAL product states the screen
+     genuinely has (empty data, an entity-state variant). The blueprint pass
+     renders every pinned state for visual review. Visual
      language (tokens, type, spacing, motion, component behavior) comes from
      docs/blueprint/design-system.md — reference it; record only deviations.
      An optional screen-navigation mermaid flowchart is allowed only when the
@@ -119,11 +132,12 @@ sequenceDiagram
 
 <!-- Markdown links (OKF edges), not bare text — each must resolve. -->
 
-- [<project> API contract](../../apis/<project>.openapi.yaml) — for the
+- [<project> API contract](../../../../apis/<project>.openapi.yaml) — for the
   operationIds the steps name
-- [auth](../../conventions.md#auth), [errors](../../conventions.md#errors) (only
-  the cross-cutting sections this flow relies on)
-- [design-system](../../design-system.md) — for any flow with Screens
+- [auth](../../../../conventions.md#auth),
+  [errors](../../../../conventions.md#errors) (only the cross-cutting sections
+  this flow relies on)
+- [design-system](../../../../design-system.md) — for any flow with Screens
 
 ## Open Questions
 

@@ -1,43 +1,44 @@
 <!-- Template for /vwf:screens prompt — written to
-     docs/prompts/screens/<project>/<NNN>-<flow>/<seq>.md.
-     A compact wireframe-level design brief for a claude.ai/design canvas
-     session, NOT a blueprint doc: no OKF frontmatter. The user pastes it into
-     the canvas chat themselves — /vwf:screens never runs it. Replace every
-     backticked `<placeholder>` with plain prose; drop sections marked (if any)
-     when empty. The standing conventions — the naming contract,
-     revise-in-place, the interactive-journey mandate, variations-as-tweaks,
-     stub treatment, device frames — live in the canvas project's own
-     CLAUDE.md (see the skill's Canvas conventions note) and are never
-     restated here; the brief carries only the per-flow payload. The Pages to
-     build names are the sync key — /vwf:screens import matches pages back to
-     flows by them; never rename them. Send nothing beyond wireframe-level
-     structure: no design/visual instructions, no content, data, action,
-     state, or color-mode decisions — the canvas picks the design system up
-     from its Design System project, and the canvas chat is where the design
-     is made. -->
+     docs/prompts/screens/<project>/<device>/<NNN>-<flow>/<platform>.md.
+     ONE brief per flow per device type (mobile.md, tablet.md, desktop.md,
+     carplay.md, android-auto.md), each commissioning exactly ONE interactive
+     page. A compact wireframe-level design brief for a claude.ai/design
+     canvas session, NOT a blueprint doc: no OKF frontmatter. The user pastes
+     it into the canvas chat themselves — /vwf:screens never runs it. The
+     brief is ALWAYS the flow's full screen blueprint — on a revision,
+     regenerate the whole file in place (git keeps history); never write a
+     change note. Replace every backticked `<placeholder>` with plain prose;
+     drop sections marked (if any) when empty. The standing conventions — the
+     naming contract (pages, frame codes, the index--<platform> stitch),
+     revise-in-place, the interactive-journey mandate, the standing tweak set
+     (darkMode on, device frame on with the mobile/tablet camera cutout, a
+     tweak per pinned sad and conditional state), stub treatment — live in
+     the canvas project's own CLAUDE.md (see the skill's Canvas conventions
+     note) and are never restated here; the brief carries only the per-flow
+     payload. The page name and frame codes are the sync keys — /vwf:screens
+     import matches by them; never rename them. Send nothing beyond
+     wireframe-level structure: no design/visual instructions, no content,
+     data, or action decisions — the canvas picks the design system up from
+     its Design System project, and the canvas chat is where the design is
+     made. -->
 
-# Screens brief — `<flow>`
+# Screens brief — `<flow>` (`<platform>`)
 
-Design the **`<flow>`** flow of **`<product name>`** as **one interactive page
-per platform**, under this project's standing conventions (CLAUDE.md).
+Design the **`<flow>`** flow of **`<product name>`** for **`<platform>`** as
+**one interactive page**, under this project's standing conventions (CLAUDE.md).
 
-## Pages to build (exact names — the sync key)
+## Page to build (exact name — the sync key)
 
-<!-- One line per platform derived from the registry project's `type` +
-     `platforms:` — keep only the platforms this product declares (and, for
-     in-car, only when the flow's Screens contract marks screens available
-     in-car). The name prefix must be exactly the numbered flow folder name
-     (e.g. `020-signin--mobile`). -->
-
-- **`<flow>--mobile`**
-- **`<flow>--tablet`** — only where it genuinely differs from mobile
-- **`<flow>--desktop`**
-- **`<flow>--carplay`** / **`<flow>--android-auto`** — only the screens marked
-  available in-car
+- **`<flow>--<platform>`** — revise in place if it exists; stitch its happy path
+  into **`index--<platform>`** in flow-number order.
 
 ## Goal
 
 This flow serves **`<goal>`**: `<one clause on why this journey matters>`.
+
+`<for an in-car flow: one line naming the parent phone flow this journey is a
+subset of — the page covers only the in-car subset, glanceable and
+template-constrained>`
 
 ## The flow
 
@@ -51,18 +52,24 @@ starts on; the page covers every entry point>`
 
 ## Screens (wireframe level)
 
-One subsection per screen row in the flow's Screens contract; for a flow with no
-Screens section yet, describe the screens the steps imply. Structure and
-navigation only — visual treatment, content, and state design are the canvas's
-to decide.
+One subsection per screen row in the flow's Screens contract, headed by its
+pinned **code** — the frame name on the canvas; for a flow with no Screens
+section yet, describe the screens the steps imply with provisional codes in step
+order. Structure, navigation, and states only — visual treatment and content are
+the canvas's to decide.
 
-### `<screen name>`
+### `<code>` — `<screen name>`
 
 - **Purpose / step served:** `<which step(s) this screen serves>`
-- **Navigates to:** `<the next screen(s) in step order — wire this navigation>`
-- **What changes (if update):**
-  `<the deltas this revision applies to an
-  existing page; drop this line for a first session>`
+- **Navigates to:**
+  `<the next coded screen(s) in step order — wire this
+  navigation>`
+- **Sad states:**
+  `<every pinned error/failure state — one tweak each on this
+  frame>`
+- **Conditional states (if any):**
+  `<the pinned non-sad product states —
+  empty data, entity-state variants — one tweak each>`
 - **Form (if any):**
   `<fields and validation timing — structure and behavior
   only, no visual treatment>`

@@ -58,16 +58,16 @@ the pause rules — never migrate autonomously.
 
 ## Doc Paths
 
-| Doc           | Path                                                      |
-| ------------- | --------------------------------------------------------- |
-| Plan          | `docs/plans/<plan>.md`                                    |
-| Registry      | `docs/blueprint/architecture.md`                          |
-| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`    |
-| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
-| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`              |
-| Released APIs | `docs/blueprint/apis/released/`                           |
-| Conventions   | `docs/blueprint/conventions.md`                           |
-| Environment   | `docs/blueprint/environment.md`                           |
+| Doc           | Path                                                              |
+| ------------- | ----------------------------------------------------------------- |
+| Plan          | `docs/plans/<plan>.md`                                            |
+| Registry      | `docs/blueprint/architecture.md`                                  |
+| Flow (slice)  | `docs/blueprint/flows/<project>/[<device>/]<NNN>-<flow>/index.md` |
+| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema)         |
+| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`                      |
+| Released APIs | `docs/blueprint/apis/released/`                                   |
+| Conventions   | `docs/blueprint/conventions.md`                                   |
+| Environment   | `docs/blueprint/environment.md`                                   |
 
 ## Pipeline (per step)
 

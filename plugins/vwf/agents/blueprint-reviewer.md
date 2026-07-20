@@ -37,13 +37,19 @@ pipeline's build-state stamp — its presence and value are **never** a gap.
 
 ## Flow mode — checklist
 
-The doc is `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (type
-`vwf-flow`). Verify:
+The doc is `docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md` for a
+UI project's flow (`<device>` = `mobile` / `web` / `carplay` / `android-auto`),
+`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` for a non-UI project's
+(type `vwf-flow`). Verify:
 
 - [ ] The Purpose section carries a **Serves:** line with at least one markdown
       link to a `product.md` goal anchor, and every linked anchor is in the
       goal-anchor list the orchestrator passed (a link to a nonexistent goal is
       a gap; a missing Serves line is a gap).
+- [ ] An in-car flow (a `carplay` / `android-auto` subgroup) additionally
+      carries a **Subset of:** line whose markdown link resolves to a parent
+      flow in the same project's phone (`mobile`) subgroup — missing or dangling
+      is a gap; a `Subset of:` line on a non-in-car flow is a gap.
 - [ ] Trigger & Actors: every actor that may start the flow is listed with an
       explicit Authorization entry; operator and destructive triggers are marked
       audit-recorded (or their absence is explained).
@@ -63,13 +69,18 @@ The doc is `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (type
       branch. A missing diagram is a gap; a diagram that adds or contradicts a
       step is a gap (the written steps are authoritative); a participant named
       as a class, queue, or endpoint is a code-independence gap.
+- [ ] Every screen row carries a **Code** — `<NNN><letter>` where `<NNN>` is
+      this flow's number and letters run `a`, `b`, `c`, … with no duplicates (a
+      missing, malformed, or duplicated code is a gap; gaps in the letter
+      sequence are fine — codes are stable, never re-lettered).
 - [ ] Every screen row lists its states — **error and empty are mandatory pins
       per screen** (or an explicit `n/a — <why>`); a screen row silent on either
-      is a gap — and form validation where it has a form, and defers visual
-      language to `design-system.md` — no tokens, type, or component behavior
-      re-decided here. A screen another flow already defines is **linked**, not
-      redefined (the home rule); a screen defined here that duplicates a row in
-      the passed flow list's docs is a gap.
+      is a gap — plus the conditional product states the screen genuinely has
+      (empty data, entity-state variants), and form validation where it has a
+      form, and defers visual language to `design-system.md` — no tokens, type,
+      or component behavior re-decided here. A screen another flow already
+      defines is **linked**, not redefined (the home rule); a screen defined
+      here that duplicates a row in the passed flow list's docs is a gap.
 - [ ] Every background-job row lists trigger, timer/retry, activities, and
       on-failure; each mutating step's sync/async classification is decided (a
       job or an explicit synchronous statement), not left open.

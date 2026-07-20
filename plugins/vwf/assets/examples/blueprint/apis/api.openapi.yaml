@@ -1,6 +1,6 @@
 # docs/blueprint/apis/api.openapi.yaml — authoritative API contract for the `api`
 # service project (OpenAPI 3.1). Flows reference operations by operationId.
-# Conformance example (blueprint-format 9). Contract, not realization: no
+# Conformance example (blueprint-format 11). Contract, not realization: no
 # servers:/hostname/framework detail. The error envelope shape lives in
 # conventions.md#errors; only error CASES are enumerated here.
 openapi: 3.1.0

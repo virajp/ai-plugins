@@ -134,8 +134,10 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   asset — the user sees the screens, happy and sad paths, before approving the
   pass; a local render satisfies the gate offline; the user may instead defer
   **design-first** to `/vwf:screens` (brief out, canvas designs, import folds
-  back); an explicit skip records `screens/<project>/<NNN>-<flow>` in
-  `blueprint.remaining`) — until whole-product coverage holds **and the
+  back); an explicit skip records `screens/<project>/<device>/<NNN>-<flow>` in
+  `blueprint.remaining`; `carplay`/`android-auto` platforms get their journeys
+  as **own subset flows** in the in-car device subgroup, `Subset of:`-linked to
+  the parent phone flow) — until whole-product coverage holds **and the
   whole-product coherence review passes**, then stamps `blueprint.coverage` in
   `.config/vwf.yaml` and offers `/vwf:plan`), `mockups` (the **batch re-render /
   regeneration tool** — blueprint passes render screens in-pass, so this sweeps
@@ -145,76 +147,87 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   gate; pins one design project per registry UI project
   (`design.projects.<project>` — shared or separate canvases, the product's
   call) and records `design.flows_pushed` in `.config/vwf.yaml`; never a gate
-  for `plan`), `screens` (the **two-way screen sync**: `prompt <flow>` writes a
-  numbered **compact wireframe-level** design brief to `docs/prompts/` — **the
-  file is the deliverable**, pasted into the canvas chat by the user, never run
-  against the Claude Design MCP; `prompt` never touches the canvas —
-  commissioning **one interactive page per flow per platform, never static
-  mockups**, named `<flow>--<platform>` (`020-signin--mobile`; the flow folder
-  name is the join key, machine- and human-reconcilable; platforms from the
-  registry project's `type` + `platforms:` —
-  `mobile`/`tablet`/`desktop`/`carplay`/`android-auto`); the **standing
-  conventions live in the canvas project's own CLAUDE.md** (naming contract,
-  revise-in-place, the interactive-journey mandate, variations-as-tweaks, stub
-  treatment, device frames) — briefs never restate them (a pinned project
-  without one gets the convention list to add), so a brief carries **only the
-  per-flow payload** (the exact page names — the import sync key — a goal line,
-  steps + entry points, per-screen purpose/navigation/form fields + validation
-  timing, revision deltas on the **What changes** line): no design/visual
-  instructions and no content, data, action, state, or color-mode decisions —
-  Claude Design resolves the design system from its Design System project and
-  the canvas chat is where the design is made; `import` matches the designed
-  pages back by those names (unmatched pages get a per-page MCQ), diffs each
-  platform page against the Screens contract (screens present, state tweaks vs
-  pinned states, wired navigation vs step order) and against
-  Trigger/Steps/sequence at journey level (a declared platform with no page is a
-  delta), asks **one MCQ per delta** (accept/reject/adapt), and routes every
-  accepted change through `/vwf:blueprint` — it never edits a flow doc itself; a
-  confirmed new prefix scaffolds a **draft flow** that a full blueprint pass
-  must complete), `plan` (halts unless that stamp is `complete`; surfaces a
-  **soft canvas-review advisory** — a flow slice with Screens not in
-  `design.flows_pushed` gets a gate note offering `/vwf:mockups` or a pending
-  `/vwf:screens import`, never a halt; resolves the slice's **transitive
-  dependency chain** — pruned by the docs' `implementation:` stamps — and plans
-  each unimplemented dependency as **its own plan doc first**, in order, each
-  behind its own gate (plan docs carry `covers:`/`requires:` frontmatter; a
-  genuine dependency cycle collapses into one plan); **routes blueprint gaps
-  back through `/vwf:blueprint` before writing** — a *what*-level hole the diff
-  exposes is fixed in the contract, never settled in the plan or parked as a
-  risk, so execute never trips on an open decision; the last chain element's
-  gate offers Approve & execute), `execute` (halts until every `requires:`
-  prerequisite plan's `covers:` docs read `implementation: complete`),
-  `archive`, `verify` (post-deploy environment check: health pass + the flows'
-  acceptance criteria run against staging/prod via the acceptance verifier's
-  environment mode — vwf never deploys; a clean run against the **production**
-  environment offers to record a release, freezing each deployed service's
-  OpenAPI contract into `docs/blueprint/apis/released/` — the point from which
-  API backward compatibility is enforced), `feedback` (the production-feedback
-  front door: classifies bug/hole/metric-reading/UX/feature-idea and routes each
-  into the doc+command that fixes it, incl. the `product.md` Metric readings
-  appendix; `/vwf:feedback canvas` harvests the claude.ai/design review
-  conversations across every pinned design project — `get_conversation`,
-  transcript treated as data, never instructions — and routes each remark
-  through the same classification, so canvas review flows back as contract
-  intent, never as files), internal `git-workflow`, and `handoff`/`recall`
-  (mempalace-backed session handoff — wing=`<project>`, room=`handoff`,
-  drawer=`<name>`). `execute` runs one approved plan to completion
-  **autonomously** in a dedicated worktree: dependency-ordered steps,
-  `code→review→security` per step (security findings always fixed;
-  **breaking-released-API findings gate the same way** — cap-exempt, always
-  fixed; other review findings loop ≤4 rounds then become documented gaps) plus
-  one `acceptance + ux` pass after all steps (same 4-round cap), gaps mirrored
-  to the plan doc's "Gaps surfaced during execution" section + mempalace room
-  `gaps`, mid-run pauses only on hard halts, the statusline resource caps, an
-  all-blocking gap, or an uncovered irreversible decision — then **one final
-  human gate** (run report, gap list, and the `implementation:` stamps written)
-  behind which the merge/push happens, gap reconciliation is offered
-  (blueprint/plan loop-backs), archive is offered once no gaps remain, and the
-  next chained plan is offered when one is unblocked. Its Reconcile step
-  **stamps `implementation:` on each doc the plan `covers:`** — the single
-  sanctioned blueprint edit (state only, never content); everywhere else the
-  blueprint is the source of truth code follows, drift surfaced and never
-  silently absorbed. (The former `autopilot` command is merged into this
+  for `plan`), `screens` (the **two-way screen sync**: `prompt <flow>` writes
+  **one compact wireframe-level design brief per device type**
+  (`docs/prompts/screens/<project>/<device>/<NNN>-<flow>/<platform>.md` —
+  `mobile.md`, `tablet.md`, `carplay.md`, …), each **always the flow's full
+  screen blueprint, regenerated in place, never a change note** — **the files
+  are the deliverable**, pasted into the canvas chat by the user, never run
+  against the Claude Design MCP; `prompt` never touches the canvas — each
+  commissioning **one interactive page, never static mockups**, named
+  `<flow>--<platform>` (`020-signin--mobile`; the flow folder name is the join
+  key, machine- and human-reconcilable; platforms from the registry project's
+  `type` + `platforms:` — `mobile`/`tablet`/`desktop`/`carplay`/`android-auto`,
+  an in-car suffix resolving to the in-car subgroup's subset flows), its frames
+  named by the Screens rows' pinned **codes** (`020a`, `020b`, … — the
+  per-screen sync key), its happy path stitched into the per-device
+  **`index--<platform>`** page (the whole happy-flow mockup, walkable from the
+  index alone); the **standing conventions live in the canvas project's own
+  CLAUDE.md** (naming contract incl. frame codes + index stitch,
+  revise-in-place, the interactive-journey mandate, the standing tweak set —
+  `darkMode` default on, device `frame` default on with the mobile/tablet camera
+  cutout, a tweak per pinned sad state and per pinned conditional product state
+  — stub treatment) — briefs never restate them (a pinned project without one
+  gets the convention list to add), so a brief carries **only the per-flow
+  payload** (the page name — the import sync key — a goal line, steps and entry
+  points, per-coded-screen purpose/navigation/form fields with validation
+  timing, and the pinned states its tweaks must cover): no design/visual
+  instructions and no content, data, or action decisions — Claude Design
+  resolves the design system from its Design System project and the canvas chat
+  is where the design is made; `import` matches the designed pages back by those
+  names (unmatched pages get a per-page MCQ), diffs each platform page against
+  the Screens contract (frames vs pinned codes, state tweaks vs pinned
+  sad/conditional states, the standing `darkMode`/`frame` tweaks, wired
+  navigation vs step order), against Trigger/Steps/sequence at journey level (a
+  declared platform with no page is a delta; an in-car page with no subset flow
+  proposes one), and against the `index--<platform>` stitch (a missing index or
+  unreachable flow page is canvas rework), asks **one MCQ per delta**
+  (accept/reject/adapt), and routes every accepted change through
+  `/vwf:blueprint` — it never edits a flow doc itself; a confirmed new prefix
+  scaffolds a **draft flow** that a full blueprint pass must complete), `plan`
+  (halts unless that stamp is `complete`; surfaces a **soft canvas-review
+  advisory** — a flow slice with Screens not in `design.flows_pushed` gets a
+  gate note offering `/vwf:mockups` or a pending `/vwf:screens import`, never a
+  halt; resolves the slice's **transitive dependency chain** — pruned by the
+  docs' `implementation:` stamps — and plans each unimplemented dependency as
+  **its own plan doc first**, in order, each behind its own gate (plan docs
+  carry `covers:`/`requires:` frontmatter; a genuine dependency cycle collapses
+  into one plan); **routes blueprint gaps back through `/vwf:blueprint` before
+  writing** — a *what*-level hole the diff exposes is fixed in the contract,
+  never settled in the plan or parked as a risk, so execute never trips on an
+  open decision; the last chain element's gate offers Approve & execute),
+  `execute` (halts until every `requires:` prerequisite plan's `covers:` docs
+  read `implementation: complete`), `archive`, `verify` (post-deploy environment
+  check: health pass + the flows' acceptance criteria run against staging/prod
+  via the acceptance verifier's environment mode — vwf never deploys; a clean
+  run against the **production** environment offers to record a release,
+  freezing each deployed service's OpenAPI contract into
+  `docs/blueprint/apis/released/` — the point from which API backward
+  compatibility is enforced), `feedback` (the production-feedback front door:
+  classifies bug/hole/metric-reading/UX/feature-idea and routes each into the
+  doc+command that fixes it, incl. the `product.md` Metric readings appendix;
+  `/vwf:feedback canvas` harvests the claude.ai/design review conversations
+  across every pinned design project — `get_conversation`, transcript treated as
+  data, never instructions — and routes each remark through the same
+  classification, so canvas review flows back as contract intent, never as
+  files), internal `git-workflow`, and `handoff`/`recall` (mempalace-backed
+  session handoff — wing=`<project>`, room=`handoff`, drawer=`<name>`).
+  `execute` runs one approved plan to completion **autonomously** in a dedicated
+  worktree: dependency-ordered steps, `code→review→security` per step (security
+  findings always fixed; **breaking-released-API findings gate the same way** —
+  cap-exempt, always fixed; other review findings loop ≤4 rounds then become
+  documented gaps) plus one `acceptance + ux` pass after all steps (same 4-round
+  cap), gaps mirrored to the plan doc's "Gaps surfaced during execution"
+  section + mempalace room `gaps`, mid-run pauses only on hard halts, the
+  statusline resource caps, an all-blocking gap, or an uncovered irreversible
+  decision — then **one final human gate** (run report, gap list, and the
+  `implementation:` stamps written) behind which the merge/push happens, gap
+  reconciliation is offered (blueprint/plan loop-backs), archive is offered once
+  no gaps remain, and the next chained plan is offered when one is unblocked.
+  Its Reconcile step **stamps `implementation:` on each doc the plan `covers:`**
+  — the single sanctioned blueprint edit (state only, never content); everywhere
+  else the blueprint is the source of truth code follows, drift surfaced and
+  never silently absorbed. (The former `autopilot` command is merged into this
   behavior and retired.)
 - `agents/` — subagents the workflow skills delegate to: `blueprint-reviewer`
   (two modes — flow / entity, matching the format-9 doc units),
@@ -262,32 +275,35 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `.config/vwf.yaml`, never re-asked), harness-capability detection (per the
   harness contract, stamped in `.config/vwf.yaml`), consent-gated dry-run
   migration, the blueprint format-version + drift map; used by `/vwf:setup`)
-- `assets/templates/` — `flow` (Purpose carries the `Serves:` goal-link line;
-  Trigger & Actors, Steps, sequence diagram, Screens, Jobs, Acceptance),
-  `flows-index` (flow catalog + inter-service contracts), `entity` (the slimmed
-  data contract; Purpose carries a `Used by:` flow-link line), `entities-index`
-  (entity catalog + product-wide erDiagram), `schema.yaml` (the JSON-Schema
-  data-model skeleton), `openapi.yaml` (the OpenAPI 3.1 contract skeleton incl.
-  `info.x-vwf`), `conventions`, `plan` (incl. the `covers:`/`requires:`
-  frontmatter and the "Acceptance criteria (from blueprint)" section `plan`
-  fills and the acceptance stage verifies), `product`, `architecture`,
-  `design-system`, `environment` (the per-project env-var/secret catalog),
-  `screen-prompt` (the `/vwf:screens prompt` **compact wireframe-level** design
-  brief — the per-flow payload only: the **Pages to build** names (one
-  interactive `<flow>--<platform>` page per declared platform — the import sync
-  key), a **Goal** line, the flow's steps + entry points, and per-screen
-  purpose/navigation/forms; the standing conventions (naming, revise-in-place,
-  interactivity, tweaks, stubs, frames) live in the canvas project's own
-  CLAUDE.md and are never restated; **no design/visual instructions** and no
-  content, data, action, state, or color-mode decisions; the canvas resolves the
-  design system from its Design System project; no OKF frontmatter, it is a
-  canvas brief, not a blueprint doc), `project-claude` (the vwf section
-  `/vwf:setup` merges into a repo's CLAUDE.md), `handoff` (stack-agnostic;
-  section→project mapping resolved from the registry). All blueprint markdown
-  templates open with the OKF frontmatter block; flow/entity templates carry
-  `implementation: none`
-- `assets/examples/blueprint/` — a **format-10 conformance bundle**
-  (`flows/web/010-place-order/` + `flows/web/020-cancel-refund/` +
+- `assets/templates/` — `flow` (Purpose carries the `Serves:` goal-link line —
+  plus the `Subset of:` parent link on an in-car flow; Trigger & Actors, Steps,
+  sequence diagram, Screens — rows carry the `<NNN><letter>` frame codes — Jobs,
+  Acceptance), `flows-index` (flow catalog + inter-service contracts), `entity`
+  (the slimmed data contract; Purpose carries a `Used by:` flow-link line),
+  `entities-index` (entity catalog + product-wide erDiagram), `schema.yaml` (the
+  JSON-Schema data-model skeleton), `openapi.yaml` (the OpenAPI 3.1 contract
+  skeleton incl. `info.x-vwf`), `conventions`, `plan` (incl. the
+  `covers:`/`requires:` frontmatter and the "Acceptance criteria (from
+  blueprint)" section `plan` fills and the acceptance stage verifies),
+  `product`, `architecture`, `design-system`, `environment` (the per-project
+  env-var/secret catalog), `screen-prompt` (the `/vwf:screens prompt` **compact
+  wireframe-level** design brief — one per flow per device type, always the full
+  flow blueprint, regenerated in place; the per-flow payload only: the single
+  `<flow>--<platform>` **Page to build** name (the import sync key, stitched
+  into `index--<platform>`), a **Goal** line, the flow's steps + entry points,
+  and per-screen — headed by its pinned code — purpose/navigation/forms + the
+  pinned sad/conditional states; the standing conventions (naming incl. frame
+  codes + index, revise-in-place, interactivity, the standing tweak set, stubs)
+  live in the canvas project's own CLAUDE.md and are never restated; **no
+  design/visual instructions** and no content, data, or action decisions; the
+  canvas resolves the design system from its Design System project; no OKF
+  frontmatter, it is a canvas brief, not a blueprint doc), `project-claude` (the
+  vwf section `/vwf:setup` merges into a repo's CLAUDE.md), `handoff`
+  (stack-agnostic; section→project mapping resolved from the registry). All
+  blueprint markdown templates open with the OKF frontmatter block; flow/entity
+  templates carry `implementation: none`
+- `assets/examples/blueprint/` — a **format-11 conformance bundle**
+  (`flows/web/web/010-place-order/` + `flows/web/web/020-cancel-refund/` +
   `flows/index.md`, `entities/order/` + `entities/customer/` (`index.md` +
   `schema.yaml` each) + `entities/index.md`, `apis/api.openapi.yaml`, plus
   `product.md`, `conventions.md`, `design-system.md`, `environment.md`): a
@@ -324,13 +340,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (one per workspace, config_format 5): the stamp keys, `product`/`memory.wing`,
   the **`blueprint:` coverage stamp** (written by every blueprint sweep; `plan`
   halts unless `coverage: complete`; `remaining:` names
-  `flows/<project>/<NNN>-<flow>` / `screens/<project>/<NNN>-<flow>` (a skipped
-  §6a visual review) / `entities/<entity>` / `apis/<project>` / `coherence`),
-  per-project nuances (`platforms:` extensions, coverage/health overrides), the
-  `harness:` inventory, the **`enforcement:` block** (structure/stack/rule
-  opt-outs — moved out of the registry, which now purely describes the system),
-  bounded `pipeline` knobs (coverage target, review round cap, stage model tiers
-  — downgrades always reported at the gate — and tighten-only `execute_caps`
+  `flows/<project>/[<device>/]<NNN>-<flow>` /
+  `screens/<project>/<device>/<NNN>-<flow>` (a skipped §6a visual review) /
+  `entities/<entity>` / `apis/<project>` / `coherence`), per-project nuances
+  (`platforms:` extensions, coverage/health overrides), the `harness:`
+  inventory, the **`enforcement:` block** (structure/stack/rule opt-outs — moved
+  out of the registry, which now purely describes the system), bounded
+  `pipeline` knobs (coverage target, review round cap, stage model tiers —
+  downgrades always reported at the gate — and tighten-only `execute_caps`
   honored by the statusline caps hook, which also reads the legacy
   `autopilot_caps` name; the `1 → 2` config migration is the rename), `verify`
   `environments` + the optional **`production_env`** key (names the release
@@ -414,23 +431,27 @@ Docs the commands maintain live under `docs/blueprint/` (the outcome contract
 Metric readings appendix — registry `architecture.md`, `conventions.md`, the
 product-wide `design-system.md`, the per-project env-var/secret catalog
 `environment.md`; **one flow folder per flow, grouped by primary registry
-project and numbered in execution order** —
-`flows/<project>/<NNN>-<flow>/index.md` (NNN gap-numbered in steps of 10), each
-carrying its Screens, Jobs, and Acceptance block — with `flows/index.md` the
-catalog (per-project sections, numeric order) + inter-service contracts; **one
-entity folder per entity** — `entities/<entity>/` holding exactly `index.md` +
-`schema.yaml` — with `entities/index.md` the catalog + product-wide erDiagram;
-and the API contracts `apis/<project>.openapi.yaml` + the frozen
-`apis/released/` snapshots; the blueprint root holds only the system docs),
-`docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`), and
-`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<seq>.md` — canvas design briefs
-grouped by prompt type → registry project → flow, sessions numbered within each
-flow folder; written by `/vwf:screens prompt`; committed intent artifacts, not
-blueprint docs). Superseded commands/agents/templates are archived under
-`archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
-`vwf-2026-07-04/` holds the retired `autopilot` command, whose behavior merged
-into `execute`; `vwf-2026-07-07/` the format-8 `integration.md` template,
-dissolved into the flow templates).
+project — then by device-type subgroup for UI projects — and numbered in
+execution order** — `flows/<project>/<device>/<NNN>-<flow>/index.md` for UI
+projects (`<device>` = `mobile`/`web`/`carplay`/`android-auto`; in-car journeys
+are their own subset flows, `Subset of:`-linked to the parent phone flow),
+`flows/<project>/<NNN>-<flow>/index.md` for non-UI (NNN gap-numbered in steps of
+10 per subgroup), each carrying its Screens (rows coded `<NNN><letter>`), Jobs,
+and Acceptance block — with `flows/index.md` the catalog (per-project/device
+sections, numeric order) + inter-service contracts; **one entity folder per
+entity** — `entities/<entity>/` holding exactly `index.md` + `schema.yaml` —
+with `entities/index.md` the catalog + product-wide erDiagram; and the API
+contracts `apis/<project>.openapi.yaml` + the frozen `apis/released/` snapshots;
+the blueprint root holds only the system docs), `docs/plans/`
+(`<date>-<time>-<slice>.md`, with `archived/`), and `docs/prompts/`
+(`<type>/<project>/<device>/<NNN>-<flow>/<platform>.md` — canvas design briefs
+grouped by prompt type → registry project → device subgroup → flow, one brief
+per device type regenerated in place; written by `/vwf:screens prompt`;
+committed intent artifacts, not blueprint docs). Superseded
+commands/agents/templates are archived under `archived/vwf-<date>/`
+(`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
+`autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
+format-8 `integration.md` template, dissolved into the flow templates).
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
@@ -473,7 +494,16 @@ primary registry project and takes an NNN execution-order prefix with gap
 numbering (`flows/<project>/<NNN>-<flow>/`, e.g. `flows/app/010-splash/`;
 inserts slot between neighbors without renumbering), the catalog regroups per
 project, and the flow folder name (`<NNN>-<flow>`) stays the canvas join key —
-migrated by `setup` mechanically with the execution order elicited.
+migrated by `setup` mechanically with the execution order elicited; **format
+11** the **device-grouped flows + pinned screen codes** — a UI project's flows
+nest under a device-type subgroup (`flows/<project>/<device>/<NNN>-<flow>/`,
+e.g. `flows/app/mobile/010-splash/`; `carplay`/`android-auto` subgroups hold the
+in-car journeys as their own subset flows with a `Subset of:` parent link),
+every Screens row takes its `<NNN><letter>` frame code (the canvas per-screen
+sync key), and `docs/prompts/screens/` briefs become one `<platform>.md` per
+flow per device type — migrated by `setup` mechanically (`git mv` + link
+rewrite + code assignment), with in-car subset flows elicited via
+`/vwf:blueprint`.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,

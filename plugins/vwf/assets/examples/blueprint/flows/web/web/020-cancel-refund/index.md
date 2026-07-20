@@ -10,7 +10,7 @@ tags: [ commerce, refunds ]
 
 # Flow: Order cancellation & refund
 
-<!-- Conformance example (blueprint-format 9). A worked, format-valid flow doc
+<!-- Conformance example (blueprint-format 11). A worked, format-valid flow doc
      with an operator actor, a background job, and a compensation branch. -->
 
 ## Purpose
@@ -19,7 +19,7 @@ A customer or support operator cancels a paid order before it is fulfilled, and
 the payment is refunded in full without manual intervention. The refund is
 prompt and issued exactly once, so shoppers trust the shop enough to reorder.
 
-Serves: [Trusted refunds](../../../product.md#goal-trusted-refunds)
+Serves: [Trusted refunds](../../../../product.md#goal-trusted-refunds)
 
 ## Trigger & Actors
 
@@ -34,13 +34,13 @@ Serves: [Trusted refunds](../../../product.md#goal-trusted-refunds)
 ## Steps
 
 1. Customer or support operator cancels a `paid`
-   [Order](../../../entities/order/index.md) before fulfilment via
+   [Order](../../../../entities/order/index.md) before fulfilment via
    `cancelOrder`; the order moves `paid → cancelled` **(audit-recorded when an
    operator acts)**.
 2. The refund worker requests the refund from the payment provider and records
-   the outcome on the [Order](../../../entities/order/index.md).
-3. The [Customer](../../../entities/customer/index.md) is notified of the refund
-   result.
+   the outcome on the [Order](../../../../entities/order/index.md).
+3. The [Customer](../../../../entities/customer/index.md) is notified of the
+   refund result.
 
 ## Consistency boundary
 
@@ -86,13 +86,13 @@ sequenceDiagram
 
 ## Screens → web
 
-| Screen       | Route        | Reads (operationId)       | States (loading/error/empty) | Actions          | Form validation |
-| ------------ | ------------ | ------------------------- | ---------------------------- | ---------------- | --------------- |
-| Order detail | /orders/{id} | `getOrder`, `cancelOrder` | loading skeleton · error · — | Cancel (confirm) | —               |
+| Code | Screen       | Route        | Reads (operationId)       | States (loading/error/empty) | Actions          | Form validation |
+| ---- | ------------ | ------------ | ------------------------- | ---------------------------- | ---------------- | --------------- |
+| 020a | Order detail | /orders/{id} | `getOrder`, `cancelOrder` | loading skeleton · error · — | Cancel (confirm) | —               |
 
 <!-- Home flow for the Order detail screen. Cancel is destructive: it uses the
      design-system `danger` role behind a confirmation overlay. Visual language
-     comes from ../../design-system.md; record only deviations here. -->
+     comes from ../../../../design-system.md; record only deviations here. -->
 
 ## Background Jobs → worker
 
@@ -112,10 +112,11 @@ sequenceDiagram
 
 ## References
 
-- [api API contract](../../../apis/api.openapi.yaml) — for `cancelOrder` /
+- [api API contract](../../../../apis/api.openapi.yaml) — for `cancelOrder` /
   `getOrder`
-- [auth](../../../conventions.md#auth), [errors](../../../conventions.md#errors)
-- [design-system](../../../design-system.md) — this flow has Screens
+- [auth](../../../../conventions.md#auth),
+  [errors](../../../../conventions.md#errors)
+- [design-system](../../../../design-system.md) — this flow has Screens
 
 ## Open Questions
 

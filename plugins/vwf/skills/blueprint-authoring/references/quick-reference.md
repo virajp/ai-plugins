@@ -19,9 +19,9 @@ Questions.
   semantics stated.
 - **Diagram** — a `sequenceDiagram` (incl. the failure branch), a view of the
   steps.
-- **Screens** — per screen: route, reads (operationId), all states, actions,
-  form UX; defined in exactly one home flow; visual language referenced from the
-  design system, not re-decided.
+- **Screens** — per screen: code (`<NNN><letter>`, the canvas sync key), route,
+  reads (operationId), all states, actions, form UX; defined in exactly one home
+  flow; visual language referenced from the design system, not re-decided.
 - **Background Jobs** — per job: trigger, timer/retry, activities, on-failure;
   sync/async + worker-vs-service placement decided here.
 - **Acceptance** — ≥1 success + ≥1 failure GWT, observable, code-independent.

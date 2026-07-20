@@ -36,9 +36,13 @@ states, actions, and form fields the contract pins.
 
 Inside the build dir (mirrored verbatim to the design project):
 
-- `mockups/<flow>/<screen-slug>.html` — the default view
-- `mockups/<flow>/<screen-slug>--<state>.html` — one per pinned state (`--`
-  separates slug from state, so hyphenated screen names stay unambiguous)
+- `mockups/<device>/<NNN>-<flow>/<screen-slug>.html` — the default view
+- `mockups/<device>/<NNN>-<flow>/<screen-slug>--<state>.html` — one per pinned
+  state (`--` separates slug from state, so hyphenated screen names stay
+  unambiguous)
+
+(`<device>/<NNN>-<flow>` is the flow's path under its project group — the
+orchestrator passes it as the flow name.)
 
 ### Card marker
 

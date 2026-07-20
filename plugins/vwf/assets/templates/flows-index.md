@@ -9,21 +9,27 @@ status: draft # draft | reviewed | stable
 
 # Flows & Cross-Flow Contracts
 
-<!-- Deliberately thin. Per-flow contracts live in flows/<project>/<NNN>-<flow>/index.md — this
-     file holds only the catalog and what is cross-flow by nature. Per-flow
-     content never leaks back here. See the blueprint-authoring skill
-     (flow-contract). -->
+<!-- Deliberately thin. Per-flow contracts live in
+     flows/<project>/<device>/<NNN>-<flow>/index.md (UI projects) or
+     flows/<project>/<NNN>-<flow>/index.md (non-UI) — this file holds only the
+     catalog and what is cross-flow by nature. Per-flow content never leaks
+     back here. See the blueprint-authoring skill (flow-contract). -->
 
 ## Flow catalog
 
-<!-- One subsection per registry project (the flow group folders); rows in
-     numeric (execution) order — NNN is gap-numbered in steps of 10. -->
+<!-- One subsection per registry project (the flow group folders); for a UI
+     project, one sub-subsection per device subgroup (mobile / web / carplay /
+     android-auto). Rows in numeric (execution) order — NNN is gap-numbered in
+     steps of 10, per subgroup. Drop the <device> segment (and the device
+     heading) for a non-UI project. -->
 
 ### <project>
 
-| #     | Flow                                             | Serves goal                         | Entities touched | Status |
-| ----- | ------------------------------------------------ | ----------------------------------- | ---------------- | ------ |
-| <NNN> | [<flow name>](./<project>/<NNN>-<flow>/index.md) | [<goal>](../product.md#goal-<slug>) | <links>          | draft  |
+#### <device>
+
+| #     | Flow                                                      | Serves goal                         | Entities touched | Status |
+| ----- | --------------------------------------------------------- | ----------------------------------- | ---------------- | ------ |
+| <NNN> | [<flow name>](./<project>/<device>/<NNN>-<flow>/index.md) | [<goal>](../product.md#goal-<slug>) | <links>          | draft  |
 
 ## Inter-Service Contracts
 

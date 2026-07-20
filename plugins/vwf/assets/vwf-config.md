@@ -12,14 +12,14 @@ the old stamp at `docs/blueprint/.vwf.yml`.
 
 ```yaml
 config_format: 5 # this file's own schema version — setup migrates it
-blueprint_format: 10 # the docs/blueprint format stamp
+blueprint_format: 11 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
-  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow> (skipped visual review), coherence
+  remaining: [] # unresolved holes when partial: flows/<project>/[<device>/]<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<device>/<NNN>-<flow> (skipped visual review), coherence
 
 topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
@@ -30,7 +30,7 @@ projects: # per-project NUANCES only — no type/path/stack keys, ever
     platforms: [
       <target>,
       <...>,
-    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section; `carplay`/`android-auto` mark in-car surfaces — frontend projects only, extending the Screens elicitation and the /vwf:screens briefs)
+    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section; `carplay`/`android-auto` mark in-car surfaces — frontend projects only, each adding an in-car device subgroup under flows/<project>/ whose journeys are subset flows of the phone app)
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -65,7 +65,7 @@ design: # claude.ai/design pins & canvas state — ids and flow names only, neve
   design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
   projects: # the claude.ai/design design-system project each registry UI project pushes its mockups to — pin the same uuid to share one canvas, or separate uuids, as the product needs
     <registry-project>: <uuid>
-  flows_pushed: [] # flows whose Screens cards are current on the canvas — entries are <project>/<NNN>-<flow>; recorded by blueprint's per-flow render step and by mockups, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory
+  flows_pushed: [] # flows whose Screens cards are current on the canvas — entries are <project>/<device>/<NNN>-<flow>; recorded by blueprint's per-flow render step, by mockups, and by screens import, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory
 
 memory:
   wing: <wing-name> # explicit mempalace wing; defaults to product.name
