@@ -47,19 +47,25 @@ their own conventions.
 
 <!-- Keep only this platform's block; drop the others. -->
 
-- **mobile** — every screen renders in a phone frame: dark bezel **with the
-  camera notch/cutout** for a true visual, portrait, toggleable via the `frame`
-  tweak (default on); theme via `darkMode` (default on).
-- **tablet** — every screen renders in a tablet frame **with the camera
-  cutout**, toggleable via the `frame` tweak (default on); theme via `darkMode`
-  (default on).
-- **desktop** — every screen renders in a browser-chrome frame at a desktop
-  viewport, toggleable via the `frame` tweak (default on); theme via `darkMode`
-  (default on).
-- **carplay / android-auto** — every screen renders in the in-car display frame
-  (`frame` default on). Screens are **template-constrained by the OS** (list /
-  grid / map / now-playing) and glanceable — minimal interaction while driving;
-  the design system reaches only as far as the platform allows.
+- **mobile** — every screen renders at **390×844** (portrait) in a phone frame:
+  dark bezel **with the camera notch/cutout** for a true visual, toggleable via
+  the `frame` tweak (default on); theme via `darkMode` (default on).
+- **tablet** — every screen renders at **834×1194** (portrait) in a tablet frame
+  **with the camera cutout**, toggleable via the `frame` tweak (default on);
+  theme via `darkMode` (default on).
+- **desktop** — every screen renders at a **1440×900** viewport in a
+  browser-chrome frame, toggleable via the `frame` tweak (default on); theme via
+  `darkMode` (default on).
+- **carplay** — every screen renders at **800×480** (landscape, the CarPlay base
+  resolution) in the in-car display frame (`frame` default on). Screens are
+  **template-constrained by the OS** (list / grid / map / now-playing) and
+  glanceable — minimal interaction while driving; the design system reaches only
+  as far as the platform allows.
+- **android-auto** — every screen renders at **1280×720** (landscape, the common
+  head-unit resolution) in the in-car display frame (`frame` default on).
+  Screens are **template-constrained by the OS** (list / grid / map / media) and
+  glanceable — minimal interaction while driving; the design system reaches only
+  as far as the platform allows.
 
 ## Behavior conventions
 
