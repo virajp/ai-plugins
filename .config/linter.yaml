@@ -11,3 +11,8 @@ ignores:
   # exclude these template/example docs from markdown linting.
   - "plugins/vwf/assets/templates/**"
   - "plugins/vwf/assets/examples/**"
+
+overrides:
+  markdown:
+    rules:
+      markdown/no-reversed-media-syntax: off
