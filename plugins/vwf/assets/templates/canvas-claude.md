@@ -75,6 +75,12 @@ their own conventions.
 - Standing tweak set on every coded frame: `darkMode` (default on), `frame`
   (default on), one tweak per pinned **sad state**, one tweak per pinned
   **conditional product state** (empty data, entity-state variants).
+- Info/warning/error popup messages appear **close to the point of interaction**
+  — a message for a control in the bottom part of the screen never lands at the
+  top, where the user would miss it.
+- Popup messages **never overlay an existing component** — they fit into the
+  layout properly, without hiding the control that triggered them or any content
+  the user still needs.
 - Out-of-scope flows and screens homed by other flows compose as **stubs** —
   visibly stubbed and labeled with their flow number — never designed here.
 
