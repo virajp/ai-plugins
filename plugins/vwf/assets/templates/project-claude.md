@@ -40,12 +40,12 @@ choices are `plan`'s job — not the blueprint's.
   config…).
 - `docs/blueprint/environment.md` — per-project inventory of env vars + secrets,
   no values (if the system has an external integration/secret).
-- `docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/` (UI projects; the
-  device subgroup is `mobile` / `web` / `carplay` / `android-auto`) or
-  `docs/blueprint/flows/<project>/<NNN>-<flow>/` (non-UI) — one folder per flow,
-  the **primary** blueprint unit: trigger, actors, steps, screens (each row
-  carrying its frame code), jobs, and acceptance criteria. `flows/index.md`
-  holds the catalog + inter-service contracts.
+- `docs/blueprint/flows/<project>/<NNN>-<flow>/` — one folder per flow, UI and
+  non-UI projects alike; a UI project's flow declares its device in the
+  `device:` frontmatter key (`mobile` / `web` / `carplay` / `android-auto`), the
+  **primary** blueprint unit: trigger, actors, steps, screens (each row carrying
+  its frame code), jobs, and acceptance criteria. `flows/index.md` holds the
+  catalog + inter-service contracts.
 - `docs/blueprint/entities/<entity>/` — one folder per entity, the supporting
   data contracts: `index.md` (lifecycle, relationships, invariants) +
   `schema.yaml` (the authoritative data model). `entities/index.md` holds the

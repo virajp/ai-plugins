@@ -1,6 +1,6 @@
 <!-- Template for /vwf:screens prompt — written to
-     docs/prompts/screens/<project>/<device>/<NNN>-<flow>/<platform>.md.
-     ONE brief per flow per device type (mobile.md, tablet.md, desktop.md,
+     docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md.
+     ONE brief per flow per platform (mobile.md, tablet.md, desktop.md,
      carplay.md, android-auto.md), each commissioning exactly ONE interactive
      page. A compact wireframe-level design brief for a claude.ai/design
      canvas session, NOT a blueprint doc: no OKF frontmatter. The user pastes

@@ -44,27 +44,60 @@ status: draft                                      # required — draft | review
 
 ### `type` vocabulary
 
-| `type`              | Doc                                                           |
-| ------------------- | ------------------------------------------------------------- |
-| `vwf-product`       | `product.md`                                                  |
-| `vwf-architecture`  | `architecture.md`                                             |
-| `vwf-conventions`   | `conventions.md`                                              |
-| `vwf-design-system` | `design-system.md`                                            |
-| `vwf-environment`   | `environment.md`                                              |
-| `vwf-flow`          | a flow doc `flows/<project>/[<device>/]<NNN>-<flow>/index.md` |
-| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)               |
-| `vwf-entity`        | an entity doc `entities/<entity>/index.md`                    |
-| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)                |
-| `vwf-plan`          | a `docs/plans/` cycle plan                                    |
-| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)                |
+| `type`              | Doc                                                |
+| ------------------- | -------------------------------------------------- |
+| `vwf-product`       | `product.md`                                       |
+| `vwf-architecture`  | `architecture.md`                                  |
+| `vwf-conventions`   | `conventions.md`                                   |
+| `vwf-design-system` | `design-system.md`                                 |
+| `vwf-environment`   | `environment.md`                                   |
+| `vwf-flow`          | a flow doc `flows/<project>/<NNN>-<flow>/index.md` |
+| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)    |
+| `vwf-entity`        | an entity doc `entities/<entity>/index.md`         |
+| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)     |
+| `vwf-plan`          | a `docs/plans/` cycle plan                         |
+| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)     |
 
-Every flow is a **folder**
-(`docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/` for a UI project,
-`docs/blueprint/flows/<project>/<NNN>-<flow>/` for a non-UI one) holding
-`index.md` alone (`type: vwf-flow`). Every entity is a **folder**
+Every flow is a **folder** (`docs/blueprint/flows/<project>/<NNN>-<flow>/` — one
+uniform depth for UI and non-UI projects alike) holding `index.md` alone
+(`type: vwf-flow`). Every entity is a **folder**
 (`docs/blueprint/entities/<entity>/`) holding exactly `index.md`
 (`type: vwf-entity`) + `schema.yaml`. The reviewer treats a folder as one
 concept.
+
+## The `device:` key (which device a flow is for)
+
+A flow doc belonging to a **UI project** carries one more key beside `status:`
+and `implementation:`:
+
+```yaml
+device: mobile # mobile | web | carplay | android-auto
+```
+
+Since **format 14** the flow path carries no device segment — every flow sits
+directly under its registry project — so this key is the **sole carrier** of the
+device type. Everything that used to read the device from the path reads it
+here: `/vwf:screens` (which platform briefs a flow gets, and the canvas page
+suffix), `/vwf:blueprint` (the in-car subset-flow rules), `/vwf:mockups` (the
+push path), and `flows/index.md`'s per-device catalog grouping.
+
+Rules the reviewer enforces:
+
+- **Required** on every flow of a UI project (registry `type` `site`,
+  `frontend`, or `console`); **omitted** on a non-UI project's flows.
+- The value comes from the fixed vocabulary above and must be one the registry
+  project actually declares (its `type` + `platforms:`).
+- `carplay` / `android-auto` mark **in-car subset flows** — each is its own flow
+  and must carry the mandatory `Subset of:` link to its parent phone flow (now a
+  sibling folder, `../<NNN>-<flow>/index.md`).
+- `NNN` is gap-numbered in steps of 10 **per device**, so two devices' flows may
+  share a number inside one project folder; the folder names still differ.
+
+Note the vocabulary is deliberately **not** the same as the *platform* set
+(`mobile` | `tablet` | `desktop` | `carplay` | `android-auto`) used for screen
+brief filenames and canvas page suffixes: one device groups the platforms it
+renders on (a `mobile` flow yields `mobile.md` and, where the registry declares
+it, `tablet.md`).
 
 ## YAML artifacts are typed by path
 
@@ -112,29 +145,28 @@ never conflate.
 
 Cross-doc relationships are **typed markdown links**, never bare prose — so the
 graph is machine-traversable and every edge can be verified to resolve. Entities
-live **two levels deep** (`entities/<entity>/`); a UI project's flows live
-**four levels deep** (`flows/<project>/<device>/<NNN>-<flow>/`), a non-UI
-project's **three** (`flows/<project>/<NNN>-<flow>/`) — so from a UI flow the
-root system docs are four levels up, from a non-UI flow three, from an entity
-two (UI-flow depths shown below):
+live **two levels deep** (`entities/<entity>/`); **every** flow lives **three
+levels deep** (`flows/<project>/<NNN>-<flow>/`) — UI and non-UI alike since
+format 14 dropped the device segment — so from a flow the root system docs are
+three levels up, from an entity two:
 
 - A flow's **`Serves:`** line links a product goal anchor:
-  `[<goal>](../../../../product.md#goal-<slug>)`.
-- An in-car flow's **`Subset of:`** line links its parent phone flow:
-  `[Sign in](../../mobile/020-signin/index.md)`.
+  `[<goal>](../../../product.md#goal-<slug>)`.
+- An in-car flow's **`Subset of:`** line links its parent phone flow, now a
+  **sibling folder**: `[Sign in](../020-signin/index.md)`.
 - A flow's **Steps** and **References** link the entities/services and contracts
-  they touch: `[Order](../../../../entities/order/index.md)`,
-  `[api API contract](../../../../apis/api.openapi.yaml)`,
-  `[errors](../../../../conventions.md#errors)`.
+  they touch: `[Order](../../../entities/order/index.md)`,
+  `[api API contract](../../../apis/api.openapi.yaml)`,
+  `[errors](../../../conventions.md#errors)`.
 - An entity's **`Used by:`** line links the owning flow:
-  `[Place order](../../flows/web/web/010-place-order/index.md)`.
+  `[Place order](../../flows/web/010-place-order/index.md)`.
 - An entity's **Relationships** table links the sibling entity in the "Related
   entity" cell: `[Customer](../customer/index.md)` — one level up from this
   entity's folder, into the sibling's.
 - An entity's **References** link `conventions.md` anchors:
   `[ids](../../conventions.md#ids)`.
 - `flows/index.md` (the catalog) links each flow and goal:
-  `[Place order](./web/web/010-place-order/index.md)`,
+  `[Place order](./web/010-place-order/index.md)`,
   `[<goal>](../product.md#goal-<slug>)` (it sits one level under the root).
 - `environment.md` (a root doc) links the injection mechanism it defers to:
   `[config](./conventions.md#config)`.
@@ -148,7 +180,7 @@ completeness bars.
 A small, format-valid bundle lives at
 `${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/` — a commerce slice where
 every edge resolves. Read
-[`flows/web/web/010-place-order/index.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/flows/web/web/010-place-order/index.md)
+[`flows/web/010-place-order/index.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/flows/web/010-place-order/index.md)
 as the entry point: it `Serves:` a product goal, its steps link
 `entities/order/index.md` and name operationIds in `apis/api.openapi.yaml`, and
 its Screens defer visual language to `design-system.md`. The

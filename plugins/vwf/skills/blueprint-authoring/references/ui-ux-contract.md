@@ -41,7 +41,7 @@ Pin per screen / surface (each has more than one reasonable answer):
 - **Content** — error messages, empty-state copy, and CTA labels where the
   wording is a product decision.
 - **In-car screens** (screens of a `carplay` / `android-auto` **subset flow** —
-  in-car journeys are their own flows in the in-car device subgroup, never
+  in-car journeys are their own flows carrying the in-car `device:` value, never
   variants on the phone flow's rows; see the
   [flow-contract](./flow-contract.md)) — per in-car screen: the platform
   **template** it maps to (list / grid / map / now-playing / …), the glanceable

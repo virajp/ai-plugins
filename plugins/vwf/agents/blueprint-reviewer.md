@@ -37,19 +37,25 @@ pipeline's build-state stamp — its presence and value are **never** a gap.
 
 ## Flow mode — checklist
 
-The doc is `docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md` for a
-UI project's flow (`<device>` = `mobile` / `web` / `carplay` / `android-auto`),
-`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` for a non-UI project's
-(type `vwf-flow`). Verify:
+The doc is `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — one uniform
+depth for UI and non-UI projects alike (type `vwf-flow`). Verify:
 
+- [ ] **Frontmatter `device:`** — a flow of a **UI** project (registry `type`
+      `site` / `frontend` / `console`) carries `device:` with one of `mobile` /
+      `web` / `carplay` / `android-auto`, and the value is a device the registry
+      project actually declares. Missing on a UI flow is a gap; a value outside
+      the vocabulary is a gap; a `device:` key on a **non-UI** project's flow is
+      a gap.
 - [ ] The Purpose section carries a **Serves:** line with at least one markdown
       link to a `product.md` goal anchor, and every linked anchor is in the
       goal-anchor list the orchestrator passed (a link to a nonexistent goal is
       a gap; a missing Serves line is a gap).
-- [ ] An in-car flow (a `carplay` / `android-auto` subgroup) additionally
-      carries a **Subset of:** line whose markdown link resolves to a parent
-      flow in the same project's phone (`mobile`) subgroup — missing or dangling
-      is a gap; a `Subset of:` line on a non-in-car flow is a gap.
+- [ ] An in-car flow (`device: carplay` / `android-auto`) additionally carries a
+      **Subset of:** line whose markdown link resolves to a parent flow of the
+      same project carrying `device: mobile` — the parent is a **sibling
+      folder** (`../<NNN>-<flow>/index.md`), so a link that still climbs through
+      a device directory is a gap, as is a missing or dangling one. A
+      `Subset of:` line on a non-in-car flow is a gap.
 - [ ] Trigger & Actors: every actor that may start the flow is listed with an
       explicit Authorization entry; operator and destructive triggers are marked
       audit-recorded (or their absence is explained).

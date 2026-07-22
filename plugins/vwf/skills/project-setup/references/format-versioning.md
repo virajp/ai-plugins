@@ -7,8 +7,8 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 6
-blueprint_format: 12
+config_format: 7
+blueprint_format: 14
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,22 +29,32 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 12.** Format 12 = format 11 **plus** **screen components as
-contract** (the `11 → 12` delta below): every Screens table row carries a
-**Components block** (headed by the row's code, per the flow template) — the
-elements the screen displays (text, info, error surfaces, buttons, inputs,
-lists, media), each with its rules: visibility/enable conditions, what
-activating it does, and content where the wording is a product decision.
-`/vwf:screens prompt` transcribes the block into the design brief; the
-blueprint-reviewer enforces it per row. Format 11 = format 10 **plus** the
-**device-grouped flows and pinned screen codes** restructure (the `10 → 11`
-delta below): a UI project's flows nest under a **device-type subgroup**
-(`flows/<project>/<device>/<NNN>-<flow>/` — `mobile` for `frontend`, `web` for
-`site`/`console`, plus `carplay`/`android-auto` subgroups holding in-car
-journeys authored as their **own subset flows** with a `Subset of:` parent link;
-flows of non-UI projects keep `flows/<project>/<NNN>-<flow>/`), and every
-Screens table row carries a **Code** (`<NNN><letter>` — `020a`, `020b`, … in
-step order, stable once assigned) — the per-screen sync key the canvas frames
+**Current format = 14.** (13 is deliberately **skipped** — no format ever
+carried it; a repo stamped 13 is impossible and would be treated as 12.) Format
+14 = format 12 **plus** the **device-out-of-path** restructure (the `12 → 14`
+delta below): a UI project's flows no longer nest under a device-type subgroup —
+every flow sits directly at `flows/<project>/<NNN>-<flow>/`, UI and non-UI
+alike, and the device type moves into a **`device:` frontmatter key** (`mobile`
+| `web` | `carplay` | `android-auto`, required for UI-project flows, omitted for
+non-UI). The same segment drops out of the prompts tree
+(`docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md`, with
+`CLAUDE--<platform>.md` at the project root). NNN stays gap-numbered **per
+device**, so one project folder may hold two flows sharing a number. Format 12 =
+format 11 **plus** **screen components as contract** (the `11 → 12` delta
+below): every Screens table row carries a **Components block** (headed by the
+row's code, per the flow template) — the elements the screen displays (text,
+info, error surfaces, buttons, inputs, lists, media), each with its rules:
+visibility/enable conditions, what activating it does, and content where the
+wording is a product decision. `/vwf:screens prompt` transcribes the block into
+the design brief; the blueprint-reviewer enforces it per row. Format 11 = format
+10 **plus** the **device-grouped flows and pinned screen codes** restructure
+(the `10 → 11` delta below): a UI project's flows nest under a **device-type
+subgroup** (`flows/<project>/<device>/<NNN>-<flow>/` — `mobile` for `frontend`,
+`web` for `site`/`console`, plus `carplay`/`android-auto` subgroups holding
+in-car journeys authored as their **own subset flows** with a `Subset of:`
+parent link; flows of non-UI projects keep `flows/<project>/<NNN>-<flow>/`), and
+every Screens table row carries a **Code** (`<NNN><letter>` — `020a`, `020b`, …
+in step order, stable once assigned) — the per-screen sync key the canvas frames
 and `/vwf:screens import` match on. Format 10 = format 9 **plus** the
 **project-grouped, execution-ordered flows** restructure (the `9 → 10` delta
 below). Format 9 = format 8 **plus** the **process-based restructure** — flows
@@ -366,6 +376,52 @@ the current format and apply the delta:
   downgrade. The migration itself is a stamp bump to `12` plus the config
   `5 → 6` migration (per the vwf-config asset) — the per-device
   `design.projects` pins the format-12 screens machinery reads.
+
+- **`12 → 14`** → **device out of the path, into frontmatter** (13 is skipped —
+  no repo ever carried it; treat a stamped `13` as `12`). Fully mechanical, no
+  elicitation — every value the migration needs is already in the tree:
+
+  1. `git mv docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/ →
+     docs/blueprint/flows/<project>/<NNN>-<flow>/`
+     for each flow of each UI project (move, never delete). Non-UI project flows
+     are already flat and are untouched. **Collision guard:** if two device
+     subgroups hold a folder with the *same* `<NNN>-<flow>` name, the move would
+     clobber — halt and elicit a rename for one of them before continuing (NNN
+     alone may repeat; the full folder name may not).
+  2. Add `device: <subgroup>` to the frontmatter of each moved flow, taking the
+     value from the subgroup directory it came from — placed after `status:`,
+     before `implementation:`. Non-UI flows get no key.
+  3. Rewrite links mechanically, the inverse of the `10 → 11` step. From each
+     moved flow doc:
+     - **root-ward links lose one level** — `../../../../entities/…` →
+       `../../../entities/…`, likewise `product.md`, `conventions.md`,
+       `design-system.md`, `apis/…`;
+     - **the flow-catalog back-link** `../../../index.md` → `../../index.md`;
+     - **every flow → flow link collapses to a sibling path** —
+       `../../<device>/<NNN>-<flow>/index.md` → `../<NNN>-<flow>/index.md`. This
+       covers an in-car flow's `Subset of:` parent **and** the ordinary
+       cross-flow links the Screens **home rule** produces (a flow linking the
+       row of the flow that homes a screen); both must be rewritten, not just
+       `Subset of:`.
+
+     Inbound links from `flows/index.md`, entity `Used by:` lines, and plan docs
+     drop the `<device>` segment. Verify every edge resolves afterwards (the OKF
+     bar) — a dangling link is a failed migration, not tolerated drift.
+  4. `git mv docs/prompts/screens/<project>/<device>/<NNN>-<flow>/ →
+     docs/prompts/screens/<project>/<NNN>-<flow>/`
+     for each brief folder, and `git mv` each `CLAUDE--<platform>.md` up to
+     `docs/prompts/screens/<project>/`. Same collision guard as step 1.
+  5. Rewrite flow identifiers in `.config/vwf.yaml`: `design.flows_pushed` and
+     `blueprint.remaining` `flows/…`/`screens/…` entries **drop** the device
+     segment (`<project>/<NNN>-<flow>`). Canvas **page names**
+     (`<NNN>-<flow>--<platform>`) are unchanged, so no canvas rename is needed;
+     the canvas-side `mockups/<device>/` card folders are unchanged too — that
+     segment is now sourced from the flow's `device:` key rather than its path.
+  6. Regroup `flows/index.md`'s catalog headings by the new `device:` key rather
+     than the (now absent) directory level. Row order and content are unchanged.
+  7. Bump the stamp to `14` and `config_format` to `7` (per the vwf-config asset
+     — the `6 → 7` migration is exactly this entry-format rewrite). No content
+     changes: `status:` and `implementation:` stamps are preserved.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

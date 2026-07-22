@@ -10,26 +10,28 @@ status: draft # draft | reviewed | stable
 # Flows & Cross-Flow Contracts
 
 <!-- Deliberately thin. Per-flow contracts live in
-     flows/<project>/<device>/<NNN>-<flow>/index.md (UI projects) or
-     flows/<project>/<NNN>-<flow>/index.md (non-UI) — this file holds only the
-     catalog and what is cross-flow by nature. Per-flow content never leaks
-     back here. See the blueprint-authoring skill (flow-contract). -->
+     flows/<project>/<NNN>-<flow>/index.md — one uniform depth for UI and
+     non-UI projects alike (format 14) — this file holds only the catalog and
+     what is cross-flow by nature. Per-flow content never leaks back here. See
+     the blueprint-authoring skill (flow-contract). -->
 
 ## Flow catalog
 
 <!-- One subsection per registry project (the flow group folders); for a UI
-     project, one sub-subsection per device subgroup (mobile / web / carplay /
-     android-auto). Rows in numeric (execution) order — NNN is gap-numbered in
-     steps of 10, per subgroup. Drop the <device> segment (and the device
-     heading) for a non-UI project. -->
+     project, one sub-subsection per device type, READ FROM EACH FLOW'S device
+     FRONTMATTER KEY (mobile / web / carplay / android-auto) — the path no
+     longer carries it (format 14). Rows in numeric (execution) order — NNN is
+     gap-numbered in steps of 10, per device, so each device heading restarts
+     the number line. Drop the device heading for a non-UI project (its flows
+     carry no device key). -->
 
 ### <project>
 
 #### <device>
 
-| #     | Flow                                                      | Serves goal                         | Entities touched | Status |
-| ----- | --------------------------------------------------------- | ----------------------------------- | ---------------- | ------ |
-| <NNN> | [<flow name>](./<project>/<device>/<NNN>-<flow>/index.md) | [<goal>](../product.md#goal-<slug>) | <links>          | draft  |
+| #     | Flow                                             | Serves goal                         | Entities touched | Status |
+| ----- | ------------------------------------------------ | ----------------------------------- | ---------------- | ------ |
+| <NNN> | [<flow name>](./<project>/<NNN>-<flow>/index.md) | [<goal>](../product.md#goal-<slug>) | <links>          | draft  |
 
 ## Inter-Service Contracts
 

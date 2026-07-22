@@ -43,8 +43,8 @@ Inside the build dir (mirrored verbatim to the design project):
   state (`--` separates slug from state, so hyphenated screen names stay
   unambiguous)
 
-(`<device>/<NNN>-<flow>` is the flow's path under its project group — the
-orchestrator passes it as the flow name.)
+(`<device>` is the flow's `device:` frontmatter value and `<NNN>-<flow>` its
+folder name under the project group — the orchestrator passes both.)
 
 ### Card marker
 

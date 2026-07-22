@@ -8,18 +8,18 @@ stacks, capabilities) lives in the registry in `docs/blueprint/architecture.md`;
 this file holds only how vwf treats it. Since **blueprint-format 6** it replaces
 the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 6)
+## Schema (config_format 7)
 
 ```yaml
-config_format: 6 # this file's own schema version — setup migrates it
-blueprint_format: 12 # the docs/blueprint format stamp
+config_format: 7 # this file's own schema version — setup migrates it
+blueprint_format: 14 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
-  remaining: [] # unresolved holes when partial: flows/<project>/[<device>/]<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<device>/<NNN>-<flow> (skipped visual review), coherence
+  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow> (skipped visual review), coherence
 
 topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
@@ -30,7 +30,7 @@ projects: # per-project NUANCES only — no type/path/stack keys, ever
     platforms: [
       <target>,
       <...>,
-    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section; `carplay`/`android-auto` mark in-car surfaces — frontend projects only, each adding an in-car device subgroup under flows/<project>/ whose journeys are subset flows of the phone app)
+    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section; `carplay`/`android-auto` mark in-car surfaces — frontend projects only, each admitting flows under flows/<project>/ that carry that `device:` value, whose journeys are subset flows of the phone app)
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -66,7 +66,7 @@ design: # claude.ai/design pins & canvas state — ids and flow names only, neve
   projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
       <platform>: <uuid> # mobile | tablet | desktop | carplay | android-auto
-  flows_pushed: [] # flows whose Screens cards are current on the canvas — entries are <project>/<device>/<NNN>-<flow>; recorded by blueprint's per-flow render step, by mockups, and by screens import, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory
+  flows_pushed: [] # flows whose Screens cards are current on the canvas — entries are <project>/<NNN>-<flow>; recorded by blueprint's per-flow render step, by mockups, and by screens import, dropped by blueprint when a flow's Screens change unrendered; read by plan's soft canvas-review advisory
 
 memory:
   wing: <wing-name> # explicit mempalace wing; defaults to product.name
@@ -152,3 +152,12 @@ shipped default is stated at that stage's gate. `pipeline.execute_caps` may only
   `design.projects.<registry-project>` uuid as that primary-platform pin — its
   presence is `5` drift. Two platforms must never share a uuid; a shared uuid
   found during migration is surfaced for re-pinning, never silently kept.
+- **`6 → 7` migration** (performed by `/vwf:setup`, alongside the blueprint
+  `12 → 14` delta): every flow identifier stored in this file **drops its
+  `<device>` segment**, since format 14 moved the device out of the flow path
+  and into the flow doc's `device:` frontmatter key. Concretely
+  `design.flows_pushed` entries go `<project>/<device>/<NNN>-<flow>` →
+  `<project>/<NNN>-<flow>`, and `blueprint.remaining` `flows/…` and `screens/…`
+  entries do the same. Purely mechanical — no pin, stamp, or coverage value
+  changes. Readers honor a legacy entry carrying a device segment by matching on
+  the trailing `<project>/<NNN>-<flow>` — its presence is `6` drift.

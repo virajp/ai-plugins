@@ -133,14 +133,17 @@ primary project and numbered in execution order — per format-versioning, a
 mechanical `git mv` + link rewrite with the ordering elicited), or the
 **`10 → 11`** delta (a UI project's flows regrouped under device-type subgroups,
 Screens rows gaining their frame Codes, in-car journeys elicited into their own
-subset flows — per format-versioning). Fold in any old or partial structure.
+subset flows — per format-versioning), or the **`12 → 14`** delta (those device
+subgroups flattened back out, the device moving into the flow's `device:`
+frontmatter key — a mechanical `git mv` + link rewrite + config entry rewrite).
+Fold in any old or partial structure.
 
-Since format 11 the conforming layout is **flows-first, project- and
-device-grouped**: a UI project's flows under
-`docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md` (device subgroup
-= `mobile` / `web` plus declared in-car platforms; numbered in execution order
-with gap numbering per subgroup), a non-UI project's under
-`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`, entities under
+Since format 14 the conforming layout is **flows-first and project-grouped**:
+every flow, UI or not, under
+`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` at one uniform depth,
+with a UI project's flow declaring its device in the `device:` frontmatter key
+(`mobile` / `web` plus declared in-car platforms) and numbered in execution
+order with gap numbering **per device**, entities under
 `docs/blueprint/entities/<entity>/` (`index.md` + `schema.yaml`), API contracts
 under `docs/blueprint/apis/`, and the root reserved for the system docs. A root
 `integration.md`, an entity folder at the blueprint root, entity surface files
