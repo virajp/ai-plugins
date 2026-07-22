@@ -1,6 +1,6 @@
 <!-- Template for the canvas project conventions file — written by
      /vwf:screens prompt to
-     docs/prompts/screens/<project>/<device>/CLAUDE--<platform>.md, ONE per
+     docs/prompts/screens/<project>/CLAUDE--<platform>.md, ONE per
      pinned design project (per registry UI project + platform; two platforms
      never share a canvas project). The file is a deliverable: the user sets
      it as the canvas project's own CLAUDE.md and keeps it current from here.

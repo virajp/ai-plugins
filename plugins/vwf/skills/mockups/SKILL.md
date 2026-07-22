@@ -38,7 +38,7 @@ here ever writes into `docs/blueprint/`.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Registry      | `docs/blueprint/architecture.md`                                                                                                                                      |
 | Design system | `docs/blueprint/design-system.md`, or the folder form `docs/blueprint/design-system/` (read every split file)                                                         |
-| Flow screens  | the `## Screens` section of `docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md` (home rule: a screen is defined in exactly one flow)                      |
+| Flow screens  | the `## Screens` section of `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (home rule: a screen is defined in exactly one flow)                               |
 | Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` (legacy `mockups.project_id` = config drift; honor it, nudge `/vwf:setup`) |
 
 Doctrine: the **blueprint-authoring** skill's `ui-ux-contract` reference (what a
@@ -84,8 +84,8 @@ populated view always, plus only the states the row pins**
 Flows without a Screens section are skipped silently in sweep mode; `$ARGUMENTS`
 present → the scope is that one flow. **Group the worklist by registry UI
 project and platform** (each flow's Screens section names its UI project(s); its
-device subgroup names the platform) — each group pushes to that project +
-platform's own pinned design project.
+`device:` frontmatter key names the platform) — each group pushes to that
+project + platform's own pinned design project.
 
 ### 3. Recall (mempalace)
 

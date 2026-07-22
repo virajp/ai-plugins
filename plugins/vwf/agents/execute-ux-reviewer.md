@@ -22,9 +22,9 @@ or styles; you report.
 
 The orchestrator passes: the changed screens (from the plan's screen steps), the
 paths to `docs/blueprint/design-system.md` and the owning flow's Screens
-section(s) (`docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md`),
-the registry entry for the UI project (type and stack), the project wing, and
-the **slice** and **round number** for your recall tag.
+section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
+registry entry for the UI project (type and stack), the project wing, and the
+**slice** and **round number** for your recall tag.
 
 ## What to do
 

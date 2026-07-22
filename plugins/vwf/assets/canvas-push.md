@@ -31,9 +31,9 @@ Every mockup push targets the design project of a specific **registry UI project
 and platform** (`mobile` / `tablet` / `desktop` / `carplay` / `android-auto`) —
 one canvas project per platform, since each platform canvas carries its own
 conventions CLAUDE.md (device frame, layout — written by `/vwf:screens`); **two
-platforms never share a canvas project**. A flow's device subgroup names the
-platform (`mobile` → `mobile`, `web` → `desktop`, an in-car subgroup → its
-in-car platform). (The design system itself lives in the
+platforms never share a canvas project**. A flow's `device:` frontmatter key
+names the platform (`mobile` → `mobile`, `web` → `desktop`, an in-car device →
+its in-car platform). (The design system itself lives in the
 `design.design_system_id` project — `/vwf:design-system` imports *from* it;
 nothing in vwf pushes to it.)
 

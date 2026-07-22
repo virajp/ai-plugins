@@ -8,7 +8,7 @@ status: reviewed
 
 # Entities
 
-<!-- Conformance example (blueprint-format 11). A catalog plus ONE product-wide
+<!-- Conformance example (blueprint-format 14). A catalog plus ONE product-wide
      erDiagram — a view of the union of every entity's Relationships table, which
      stays authoritative. -->
 

@@ -3,20 +3,24 @@ type: vwf-flow
 title: <Flow name>
 description: <one-line outcome this flow delivers>
 status: draft # draft | reviewed | stable
+device: mobile # mobile | web | carplay | android-auto — UI-project flows only; omit for a non-UI flow
 implementation: none # none | partial | complete — written by the pipeline only (see frontmatter-and-links)
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---
 
 # Flow: <Flow name>
 
-<!-- One flow per FOLDER: docs/blueprint/flows/<project>/<device>/<NNN>-<flow>/index.md
-     for a UI project (<device> = mobile | web | carplay | android-auto),
-     docs/blueprint/flows/<project>/<NNN>-<flow>/index.md for a non-UI project —
-     always index.md only (a flow too big for one file is several flows). Flows
-     are the PRIMARY blueprint unit: the goal-traceability spine runs product
-     goal → flow → entity/API/screen. See the blueprint-authoring skill
-     (flow-contract). Link depths below assume the device-grouped (UI) form;
-     drop one ../ per link for a non-UI flow.
+<!-- One flow per FOLDER: docs/blueprint/flows/<project>/<NNN>-<flow>/index.md —
+     always index.md only (a flow too big for one file is several flows). The
+     path carries no device segment (format 14): a UI project's flows all sit
+     directly under the project, and the DEVICE FRONTMATTER KEY carries the
+     device type (mobile | web | carplay | android-auto). Non-UI flows omit the
+     key. NNN is gap-numbered in steps of 10 PER DEVICE, so two devices' flows
+     may share a number in the same directory — the folder names still differ.
+     Flows are the PRIMARY blueprint unit: the goal-traceability spine runs
+     product goal → flow → entity/API/screen. See the blueprint-authoring skill
+     (flow-contract). Every flow sits at the same depth, so the link depths
+     below hold for UI and non-UI flows alike.
 
      Stack-agnostic and code-independent: name entities, services (by registry
      project name), and operationIds — never queues, libraries, classes, or
@@ -28,14 +32,15 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
 One paragraph. The observable outcome this flow delivers and why it exists.
 
-Serves: [<goal name>](../../../../product.md#goal-<slug>)
+Serves: [<goal name>](../../../product.md#goal-<slug>)
 
 <!-- Every flow serves at least one product.md goal — the OKF edge the
      blueprint-reviewer verifies. A flow no goal justifies is scope drift.
-     An in-car flow (carplay / android-auto subgroup) additionally carries a
-     mandatory parent link — it is always a subset of a phone journey:
+     An in-car flow (device: carplay | android-auto) additionally carries a
+     mandatory parent link — it is always a subset of a phone journey, and the
+     parent is now a SIBLING folder:
 
-     Subset of: [<parent flow>](../../mobile/<NNN>-<flow>/index.md) -->
+     Subset of: [<parent flow>](../<NNN>-<flow>/index.md) -->
 
 ## Trigger & Actors
 
@@ -50,7 +55,7 @@ Serves: [<goal name>](../../../../product.md#goal-<slug>)
 ## Steps
 
 1. <actor/system> <action> — touches
-   [<Entity>](../../../../entities/<entity>/index.md) via `<operationId>`
+   [<Entity>](../../../entities/<entity>/index.md) via `<operationId>`
 2. ...
 
 <!-- Ordered, each step naming its actor, the action, and the entity/service
@@ -150,12 +155,11 @@ sequenceDiagram
 
 <!-- Markdown links (OKF edges), not bare text — each must resolve. -->
 
-- [<project> API contract](../../../../apis/<project>.openapi.yaml) — for the
+- [<project> API contract](../../../apis/<project>.openapi.yaml) — for the
   operationIds the steps name
-- [auth](../../../../conventions.md#auth),
-  [errors](../../../../conventions.md#errors) (only the cross-cutting sections
-  this flow relies on)
-- [design-system](../../../../design-system.md) — for any flow with Screens
+- [auth](../../../conventions.md#auth), [errors](../../../conventions.md#errors)
+  (only the cross-cutting sections this flow relies on)
+- [design-system](../../../design-system.md) — for any flow with Screens
 
 ## Open Questions
 
