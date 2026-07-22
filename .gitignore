@@ -12,9 +12,6 @@
 # Claude / AI tooling
 # ============================================================
 .claude/settings.local.json
-# Local project plugin-enablement written by `claude plugin install --scope
-# project` (e.g. testing the installer here); not shared repo config.
-.claude/settings.json
 
 # Graphify
 graphify-out/
