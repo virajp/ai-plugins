@@ -154,7 +154,12 @@ The doc is `docs/blueprint/entities/<entity>/` — **always** `index.md` +
       and its "Related entity" cell is a **markdown link** to the sibling
       entity's doc that **resolves** (or "target not yet authored").
 - [ ] Concurrency & consistency states concurrent-write resolution and the
-      idempotency of each mutating action.
+      idempotency of each mutating action. `default — per conventions#baseline`
+      is **complete** (the engineering baseline's optimistic-versioning rule
+      covers it). A deviation from a baseline rule must state its reason on the
+      doc **and** name a scoped `enforcement.rules` waiver
+      (`baseline/<rule>/<unit>`) — a deviation note without its waiver, or a
+      waiver the orchestrator passed with no matching doc note, is a gap.
 - [ ] Every cross-cutting reference resolves to a real `conventions.md` anchor,
       written as a markdown link.
 - [ ] **OKF frontmatter** present and complete on `index.md`:

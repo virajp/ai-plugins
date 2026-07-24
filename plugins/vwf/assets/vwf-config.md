@@ -47,7 +47,7 @@ harness: # workspace-level capability inventory (see the harness contract)
 enforcement: # vwf's enforcement opt-outs — moved here from the registry in format 6
   structure: enforced # or { deviated: <choice>, reason: <one line> }
   stacks: {} # <project>: { choice: <stack>, reason: <one line> }
-  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (see assets/standard-flows.md)
+  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -55,7 +55,7 @@ pipeline: # bounded knobs — see the hard floor below
   models: {} # per-stage tier override, e.g. review: sonnet — ALWAYS reported at the gate as configured-vs-default
   execute_caps: {} # tighten-only: context/five_hour/seven_day below the shipped 65/90/80
 
-environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value)
+environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value); keys use the CANONICAL names development/staging/production per assets/delivery-pipeline.md — a synonym key (dev/test/stage/prod) is drift to propose fixing
   <env-name>:
     <project-name>: <base-url>
 
@@ -100,10 +100,13 @@ No key in this file can disable: the **security review**, **TDD**, the
 final gate), the **blueprint/product/design-system reviewer bars**, the
 **released-API compatibility gate** (breaking a contract under
 `docs/blueprint/apis/released/` gates like a security finding — always fixed,
-exempt from the review round cap), or the docs-sync step. `pipeline.models` may
-change a stage's tier but the stage still runs — and any downgrade from the
-shipped default is stated at that stage's gate. `pipeline.execute_caps` may only
-**tighten** (pause earlier than 65/90/80), never loosen.
+exempt from the review round cap), or the docs-sync step. A
+`baseline/boundary-validation` waiver may only ever be **scoped to a named
+unit** — a product-wide waiver of boundary validation is refused (unvalidated
+boundaries are a security surface). `pipeline.models` may change a stage's tier
+but the stage still runs — and any downgrade from the shipped default is stated
+at that stage's gate. `pipeline.execute_caps` may only **tighten** (pause
+earlier than 65/90/80), never loosen.
 
 ## Reading rules
 

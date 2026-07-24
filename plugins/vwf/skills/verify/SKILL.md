@@ -56,9 +56,16 @@ into the config** so the next run asks nothing. Health probes honor any
 per-project override (`projects.<name>.harness.health` — a declared `n/a` is
 reported as such, not "unverifiable").
 
+**Environment names are canonical** per
+`${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`: `development` / `staging` /
+`production`. Resolve a synonym the user types (`dev`, `test`, `stage`, `prod`)
+to its canonical environment, and flag a synonym **key** in the config's
+`environments:` block as drift (offer the rename; never normalize silently).
+
 **The release environment** is the one named `production`, unless the config's
 `production_env:` key names another (per the vwf-config asset). Note whether
-this run targets it — §5 fires only then.
+this run targets it — §5 fires only then. A staging run is never a release
+(`pipeline/staging-is-not-a-release`).
 
 **Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall rooms `gaps`
 and `problems` for still-open items — a criterion already known-failing is

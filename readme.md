@@ -130,10 +130,10 @@ checks for each and prints the exact command for anything missing.
 | graphify        | knowledge graph the commands rely on     | `mise use -g pipx:graphifyy@latest`   |
 | uv              | runs the `mempalace` memory server       | `mise use -g uv@latest`               |
 
-`vwf` also depends on five plugins — `claude-design`, `context7`, `markdown`,
-`mempalace`, and `mise` — all resolved from the same `virajp-plugins`
-marketplace. Claude Code **auto-installs and auto-enables** them when you enable
-`vwf` (requires Claude Code ≥ 2.1.143).
+`vwf` also depends on six plugins — `claude-design`, `context7`,
+`github-actions`, `markdown`, `mempalace`, and `mise` — all resolved from the
+same `virajp-plugins` marketplace. Claude Code **auto-installs and
+auto-enables** them when you enable `vwf` (requires Claude Code ≥ 2.1.143).
 
 ## Install
 
@@ -365,6 +365,36 @@ Two placement rules ride along with the shape — seeded into each repo's
    every other external service are wrapped once as Effect layers; no other
    project imports a third-party SDK directly (client-side sign-in is the one
    exception).
+
+They are joined by the **engineering baseline** — 15 centralized technical rules
+seeded into `conventions.md#baseline` on the blueprint's first touch and
+followed by default everywhere; only exceptions are documented. The set:
+optimistic **write versioning** on every mutating write (entity docs stop
+re-deciding concurrency — the default is the contract), atomic multi-document
+writes, server-authoritative UTC timestamps, soft-delete by default, strict
+**boundary validation** (malformed input/output rejected, never coerced — the
+one rule that can never be waived product-wide), business/technical code
+separation with backing services as attached resources (injected config only),
+idempotency keys on every mutating operation, one error envelope, cursor
+pagination, retry-only-idempotent with backoff + jitter, tolerant-reader event
+consumers, **stateless processes** (every service/worker safe at N replicas),
+**graceful shutdown** (acknowledged work never lost to a termination),
+structured logs with no PII (logs/traces/metrics via OpenTelemetry), and integer
+minor units for money. A deviation lives in **two places, always**: stated on
+the doc it applies to and waived under `enforcement.rules`
+(`baseline/<rule>[/<unit>]`) — the blueprint reviewers flag either half missing,
+and the execute reviewers enforce the rules against the code itself.
+
+Alongside it sits the **delivery-pipeline contract**
+(`conventions.md#pipeline`): three canonical environments — `development` (the
+developer's machine, any branch, never deployed), `staging` (testers only, built
+from `develop` only), `production` (customers, built from `main` only) — with
+`dev`/`test`/`prod`-style synonyms treated as drift, and deploys that are
+**tag-triggered only** (`stage-*` → staging, `prod-*` → production) with
+**branch validation** in the workflow (a prod tag on a feature branch can never
+deploy). A staging deploy is never a release — production releases are recorded
+only by `/vwf:verify`. The `github-actions` plugin (now a vwf dependency)
+generates deploy workflows conforming to this contract.
 
 `console` deserves a note: it is the internal admin panel — a single Hono +
 Effect app serving both the operator API and an embedded React + Refine UI, and

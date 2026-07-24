@@ -162,6 +162,52 @@ user.
 
 Keep the YAML minimal — only the jobs/steps the chosen workflow needs.
 
+### Deploy workflows (the vwf delivery-pipeline contract)
+
+Before generating a **deploy** workflow, check whether the repo carries the vwf
+pipeline contract — `docs/blueprint/conventions.md#pipeline` (or a vwf plugin
+installation providing `assets/delivery-pipeline.md`). When it does, the
+contract **pins the trigger shape and you do not ask about it**; ask only what
+it leaves open (runner, secrets/OIDC, deploy commands, job shape):
+
+- **Tag-triggered only.** `stage-*` tags deploy to `staging`, `prod-*` tags to
+  `production`. Never generate a branch-push deploy trigger, and never a deploy
+  targeting `development` (that environment is the developer's machine).
+- **Branch-validated.** The first job step after checkout verifies the tagged
+  commit is reachable from the required branch and fails otherwise — `develop`
+  for `stage-*`, `main` for `prod-*`:
+
+  ```yaml
+  on:
+    push:
+      tags: [ "stage-*", "prod-*" ]
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v7
+          with: { fetch-depth: 0 }
+        - name: Validate tag branch
+          run: |
+            case "${GITHUB_REF_NAME}" in
+              stage-*) BRANCH=develop; ENV=staging ;;
+              prod-*)  BRANCH=main;    ENV=production ;;
+            esac
+            git merge-base --is-ancestor "${GITHUB_SHA}" "origin/${BRANCH}" \
+              || { echo "::error::${GITHUB_REF_NAME} is not on ${BRANCH}"; exit 1; }
+            echo "DEPLOY_ENV=${ENV}" >> "$GITHUB_ENV"
+        - uses: jdx/mise-action@v4
+        - run: mise run deploy:${DEPLOY_ENV} # or the repo's deploy task
+  ```
+
+- **Staging is not a release.** A `stage-*` workflow never publishes packages,
+  creates GitHub releases, or updates changelogs — those belong only to the
+  `prod-*` path (and the release *record* itself belongs to `/vwf:verify`, not
+  CI).
+
+Without the contract, deploy triggers are elicited as normal (§2) — but offer
+this shape as the recommended default.
+
 ## 4. Report
 
 State the file written, the layout and strategy chosen, and the prerequisites

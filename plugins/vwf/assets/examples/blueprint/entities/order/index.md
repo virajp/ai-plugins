@@ -77,8 +77,9 @@ Authoritative schema: [schema.yaml](./schema.yaml)
 
 ## Concurrency & Consistency
 
-- Concurrent-write resolution: optimistic — a version token guards each state
-  transition; a stale write returns a conflict error.
+- Concurrent-write resolution: default — per
+  [baseline](../../conventions.md#baseline) (optimistic versioning; a stale
+  write returns the conflict error).
 - Uniqueness under races: `id` is unique; no two placements share it.
 - Idempotency: the transition to `paid` is idempotent per payment reference
   (re-delivery of the same authorization is a no-op).

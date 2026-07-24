@@ -281,6 +281,8 @@ test("uninstall removes skills, wrappers, and our config entries", () => {
     "mise",
     "--user",
     "mempalace",
+    "--user",
+    "github-actions",
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
