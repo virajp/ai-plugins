@@ -424,12 +424,12 @@ moved, so the code is no longer known to match; the next `/vwf:plan` for that
 slice picks up the delta. (State-stamp edits are the only frontmatter the sweep
 changes outside `status:`.)
 
-**Drop the canvas stamp.** If this pass changed a flow's `## Screens` section
-and `.config/vwf.yaml` lists that flow under `design.flows_pushed`, remove it —
-the canvas cards no longer show the contract. Normally §6a's re-render re-lists
-it within this same pass; when §6a was explicitly skipped, the drop stands and a
-later `/vwf:mockups <flow>` re-pushes it. (Like the build stamp: a state-only
-edit, riding the same commit.)
+**Drop the render stamp.** If this pass changed a flow's `## Screens` section
+and `.config/vwf.yaml` lists that flow under `design.flows_rendered`, remove it
+— the scratchpad render no longer shows the contract. Normally §6a's re-render
+re-lists it within this same pass; when §6a was explicitly skipped, the drop
+stands and a later `/vwf:mockups <flow>` re-renders it. (Like the build stamp: a
+state-only edit, riding the same commit.)
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store this pass's
 durable decisions and their rationale, plus any drift flagged, to mempalace
@@ -443,21 +443,18 @@ screens), the pass approval (§7) **gates on a visual review** of those screens.
 Screens are contracts with happy *and* sad paths; the user must see them before
 approving the flow.
 
-1. **Render.** Dispatch a fresh `mockup-generator` subagent for this flow (its
-   Screens table + Components blocks + deviations, the design-system doc(s), a
-   fresh build dir in the session scratch dir) — the default view plus **every
-   pinned state**; the ui-ux-contract bar makes error and empty pins mandatory,
-   so the sad paths are always in the set. `frontend` (Flutter) screens render
-   as HTML approximations at the design system's device viewport.
-2. **Push (canvas preferred).** Per
-   `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md`: resolve a surface, resolve the
-   design project pinned for **the flow's UI project and platform**
-   (`design.projects.<registry-project>.<platform>` — the flow's `device:` key
-   names the platform), push under `mockups/<device>/<NNN>-<flow>/**` (the same
-   path scheme as `/vwf:mockups`; deletes stay inside this flow's directory),
-   verify a sample, and share the `open_url`. Record the flow in
-   `design.flows_pushed`. In **local-only mode** the local render satisfies the
-   gate: give the absolute build-dir paths to open in a browser.
+1. **Render (local, never canvas).** Ensure `docs/scratchpad/` is gitignored
+   (`git check-ignore -q docs/scratchpad`; if not, append `docs/scratchpad/` to
+   `.gitignore` — the line rides this pass's commit). Dispatch a fresh
+   `mockup-generator` subagent for this flow (its Screens table + Components
+   blocks + deviations, the design-system doc(s), and the flow's render dir
+   `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` — overwritten in place) —
+   the default view plus **every pinned state**; the ui-ux-contract bar makes
+   error and empty pins mandatory, so the sad paths are always in the set.
+   `frontend` (Flutter) screens render as HTML approximations at the design
+   system's device viewport. Mockups are **never pushed to Claude Design**.
+2. **Hand over.** Give the user the absolute file paths to open in a browser,
+   then record the flow in `design.flows_rendered` (the render-currency stamp).
 3. **Review.** The user reviews the rendered screens. Remarks route **now**:
    screen-level → the Screens table / recorded deviations (re-elicit, update the
    doc; a material contract change re-runs the per-doc reviewer (§5) and

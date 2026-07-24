@@ -7,7 +7,7 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 7
+config_format: 8
 blueprint_format: 14
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required

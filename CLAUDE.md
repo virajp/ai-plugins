@@ -130,25 +130,24 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   back), `blueprint` (a **full-product, flow-first sweep** — a run works a
   coverage worklist flow by flow, deriving the entities/schemas/API operations
   each flow stands on; a flow pass with Screens **gates on an in-pass render &
-  review** (§6a: per-flow `mockup-generator` + canvas push per the canvas-push
-  asset — the user sees the screens, happy and sad paths, before approving the
-  pass; a local render satisfies the gate offline; the user may instead defer
-  **design-first** to `/vwf:screens` (brief out, canvas designs, import folds
-  back); an explicit skip records `screens/<project>/<NNN>-<flow>` in
-  `blueprint.remaining`; `carplay`/`android-auto` platforms get their journeys
-  as **own subset flows** carrying the in-car `device:` value,
-  `Subset of:`-linked to the parent phone flow) — until whole-product coverage
-  holds **and the whole-product coherence review passes**, then stamps
-  `blueprint.coverage` in `.config/vwf.yaml` and offers `/vwf:plan`), `mockups`
-  (the **batch re-render / regeneration tool** — blueprint passes render screens
-  in-pass, so this sweeps or refreshes: after a design-system change, for a
-  legacy repo, or one flow post-hoc; per-flow `mockup-generator` subagents into
-  an ephemeral build dir, never committed, pushed per the canvas-push asset
-  behind an explicit approval gate; pins one design project per registry UI
-  project **per platform** (`design.projects.<project>.<platform>` — two
-  platforms never share a canvas, each carries its own conventions CLAUDE.md;
-  the same platform of two registry projects may share, the product's call) and
-  records `design.flows_pushed` in `.config/vwf.yaml`; never a gate for `plan`),
+  review** (§6a: per-flow `mockup-generator` into the gitignored
+  `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` tree — **never pushed to
+  Claude Design** — the user sees the screens, happy and sad paths, in their own
+  browser before approving the pass; the user may instead defer **design-first**
+  to `/vwf:screens` (brief out, canvas designs, import folds back); an explicit
+  skip records `screens/<project>/<NNN>-<flow>` in `blueprint.remaining`;
+  `carplay`/`android-auto` platforms get their journeys as **own subset flows**
+  carrying the in-car `device:` value, `Subset of:`-linked to the parent phone
+  flow) — until whole-product coverage holds **and the whole-product coherence
+  review passes**, then stamps `blueprint.coverage` in `.config/vwf.yaml` and
+  offers `/vwf:plan`), `mockups` (the **batch re-render / regeneration tool** —
+  blueprint passes render screens in-pass, so this sweeps or refreshes: after a
+  design-system change, for a legacy repo, or one flow post-hoc; per-flow
+  `mockup-generator` subagents writing into
+  `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` — gitignored (auto-added
+  when missing), overwritten in place per flow, stale files pruned, never
+  committed, **never pushed to Claude Design** — and records
+  `design.flows_rendered` in `.config/vwf.yaml`; never a gate for `plan`),
   `screens` (the **two-way screen sync**: `prompt <flow>` writes **one compact
   wireframe-level design brief per platform**
   (`docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md` — `mobile.md`,
@@ -198,8 +197,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   every accepted contract change through `/vwf:blueprint` — it never edits a
   flow doc itself; a confirmed new prefix scaffolds a **draft flow** that a full
   blueprint pass must complete), `plan` (halts unless that stamp is `complete`;
-  surfaces a **soft canvas-review advisory** — a flow slice with Screens not in
-  `design.flows_pushed` gets a gate note offering `/vwf:mockups` or a pending
+  surfaces a **soft visual-review advisory** — a flow slice with Screens not in
+  `design.flows_rendered` gets a gate note offering `/vwf:mockups` or a pending
   `/vwf:screens import`, never a halt; resolves the slice's **transitive
   dependency chain** — pruned by the docs' `implementation:` stamps — and plans
   each unimplemented dependency as **its own plan doc first**, in order, each
@@ -276,8 +275,9 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   screens via dev server + Playwright screenshots, judges against
   design-system + the flow Screens contract, axe a11y scan; code-level-only for
   Flutter), `architecture-writer`, `mockup-generator` (per-flow: Screens
-  contract + design-system tokens → self-contained HTML mockups in a scratch
-  build dir, returns only a manifest)
+  contract + design-system tokens → self-contained HTML mockups written into the
+  flow's gitignored `docs/scratchpad/` dir, overwritten in place; returns only a
+  manifest)
 - `skills/` (doctrine, auto-applying) — `rest-api-design`; `product-foundations`
   (the nine foundational concerns every product decides — users & operators,
   observability (OTel→Grafana), audit logs (privileged+destructive baseline),
@@ -396,9 +396,10 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (surface resolution DesignSync → claude-design MCP → local-only, pin-first
   per-project+platform resolution, `get_claude_design_prompt` → `finalize_plan`
   → `write_files`, `render_preview` sample verify, the serve_url-never-surfaces
-  rule) used by `blueprint` §6a, `mockups`, and `design-system`
+  rule) used by `design-system` and `screens` — **never by mockups**, which
+  render only into the gitignored `docs/scratchpad/` tree
 - `assets/vwf-config.md` — the **vwf config** doctrine for `.config/vwf.yaml`
-  (one per workspace, config_format 7): the stamp keys, `product`/`memory.wing`,
+  (one per workspace, config_format 8): the stamp keys, `product`/`memory.wing`,
   the **`blueprint:` coverage stamp** (written by every blueprint sweep; `plan`
   halts unless `coverage: complete`; `remaining:` names
   `flows/<project>/<NNN>-<flow>` / `screens/<project>/<NNN>-<flow>` (a skipped
@@ -416,15 +417,17 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `apis/released/` snapshot dir, never config), the **`design:` block**
   (claude.ai/design pins — the **universal** `design_system_id` (one per
   product, its own canvas project) and the **per-registry-project,
-  per-platform** `projects:` map (one mockup canvas per UI project per platform
-  — two platforms never share, each canvas carries its own conventions
-  CLAUDE.md; the same platform of two projects may share a uuid) — plus the
-  `flows_pushed` canvas-currency list `blueprint`'s render step, `mockups`, and
-  `screens` record, `blueprint` drops on an unrendered Screens change, and
-  `plan`'s soft advisory reads; the `3 → 4` migration renames `mockups:` →
-  `design:`, the `4 → 5` migration splits `project_id` into the `projects:` map,
-  the `5 → 6` migration splits each project pin into a per-platform map (a flat
-  uuid reads as the primary-platform pin), readers honoring legacy keys as
+  per-platform** `projects:` map (one design canvas per UI project per platform,
+  serving `/vwf:screens` and `/vwf:feedback canvas` — two platforms never share,
+  each canvas carries its own conventions CLAUDE.md; the same platform of two
+  projects may share a uuid) — plus the `flows_rendered` visual-currency list
+  `blueprint`'s §6a render, `mockups` (scratchpad renders), and `screens` import
+  record, `blueprint` drops on an unrendered Screens change, and `plan`'s soft
+  advisory reads; the `3 → 4` migration renames `mockups:` → `design:`, the
+  `4 → 5` migration splits `project_id` into the `projects:` map, the `5 → 6`
+  migration splits each project pin into a per-platform map (a flat uuid reads
+  as the primary-platform pin), the `7 → 8` migration renames `flows_pushed` →
+  `flows_rendered` (mockups went local-only), readers honoring legacy keys as
   drift), and `docs_sync` scope. Hard floor: config can never disable security
   review, TDD, the approval gates, the reviewer bars, or the **released-API
   compatibility gate**. Readers fall back to the legacy
@@ -516,11 +519,15 @@ prompt type → registry project → flow, one brief per platform regenerated in
 place (the filename carries the platform, so no device directory level exists),
 plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
-committed intent artifacts, not blueprint docs). Superseded
-commands/agents/templates are archived under `archived/vwf-<date>/`
-(`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
-`autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
-format-8 `integration.md` template, dissolved into the flow templates).
+committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
+(**gitignored, never committed** — the mockup render tree,
+`<project>/<device>/<NNN>-<flow>/<screen-slug>[--<state>].html`, written by
+`/vwf:mockups` and blueprint §6a, overwritten in place per flow; vwf auto-adds
+the `.gitignore` line when missing). Superseded commands/agents/templates are
+archived under `archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
+`vwf-2026-07-04/` holds the retired `autopilot` command, whose behavior merged
+into `execute`; `vwf-2026-07-07/` the format-8 `integration.md` template,
+dissolved into the flow templates).
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Since **blueprint-format
@@ -586,16 +593,17 @@ depth for UI and non-UI alike, and the device moves into a required **`device:`
 frontmatter key** (`mobile`/`web`/`carplay`/`android-auto`, omitted on non-UI
 flows) that becomes its sole carrier — every consumer that read the device from
 the path (`/vwf:screens` platform resolution and canvas page suffixes,
-`/vwf:blueprint`'s in-car subset rules, `/vwf:mockups`' push path, the catalog's
-device grouping) now reads the key; the `docs/prompts/screens/` tree loses the
-same level (`<project>/<NNN>-<flow>/<platform>.md`, `CLAUDE--<platform>.md` at
-the project root — the filename already carried the platform), an in-car flow's
-`Subset of:` link collapses to a sibling path, flow-doc link depths lose one
-level, and NNN stays gap-numbered **per device** so one project folder may hold
-two flows sharing a number — migrated by `setup` mechanically (`git mv` + link
-rewrite + frontmatter injection, with a halt if two devices held a same-named
-flow folder) alongside the config `6 → 7` entry rewrite that drops the device
-segment from `design.flows_pushed` and `blueprint.remaining`.
+`/vwf:blueprint`'s in-car subset rules, `/vwf:mockups`' render path, the
+catalog's device grouping) now reads the key; the `docs/prompts/screens/` tree
+loses the same level (`<project>/<NNN>-<flow>/<platform>.md`,
+`CLAUDE--<platform>.md` at the project root — the filename already carried the
+platform), an in-car flow's `Subset of:` link collapses to a sibling path,
+flow-doc link depths lose one level, and NNN stays gap-numbered **per device**
+so one project folder may hold two flows sharing a number — migrated by `setup`
+mechanically (`git mv` + link rewrite + frontmatter injection, with a halt if
+two devices held a same-named flow folder) alongside the config `6 → 7` entry
+rewrite that drops the device segment from `design.flows_pushed` and
+`blueprint.remaining`.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,

@@ -178,11 +178,12 @@ pipeline. Harness steps are gate-required guardrails: the minimalism ladder
 never strikes them, and they order **before** the steps whose verification
 depends on them.
 
-**Canvas-review advisory (soft — never a halt).** When the element is a flow
+**Visual-review advisory (soft — never a halt).** When the element is a flow
 whose doc has a `## Screens` section and that flow is **not** listed under
-`design.flows_pushed` in `.config/vwf.yaml` (or the block is absent), note it
-for the §8 gate: these screens were never pushed for canvas review — offer
-`/vwf:mockups <flow>`, or `/vwf:screens import <flow>` when a
+`design.flows_rendered` in `.config/vwf.yaml` (or the block is absent — legacy
+`flows_pushed` read as drift), note it for the §8 gate: these screens have no
+current visual render — offer `/vwf:mockups <flow>` (a local scratchpad render),
+or `/vwf:screens import <flow>` when a
 `docs/prompts/screens/<project>/<NNN>-<flow>/` brief has a design session
 pending, before approving. Advisory only: planning and approval proceed
 regardless (neither is ever a gate here).
