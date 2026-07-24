@@ -9,7 +9,7 @@ description: Import the product's Claude Design design system into
   on claude.ai/design; this skill imports, it never authors visual language.
 argument-hint: "[design-system id — omit to pick from your Claude Design design systems]"
 model: sonnet
-effort: xhigh
+effort: high
 disable-model-invocation: false
 ---
 

@@ -6,7 +6,7 @@ description: Onboard a repo into vwf's format and keep it current — detect or 
   and author CLAUDE.md + README. Re-runnable: detects format drift and
   migrates when the vwf format evolves.
 model: sonnet
-effort: xhigh
+effort: high
 disable-model-invocation: false
 ---
 
@@ -34,8 +34,12 @@ throughout.
 | Reference stacks  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`              |
 | Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                    |
 
-Doctrine: the **project-setup** skill (topology-detection,
-migration-and-consent, format-versioning, claude-md).
+Doctrine: the **project-setup** skill — a router. Read each reference at the
+step that needs it, not upfront: `topology-detection` + `workspace-structure` at
+§1, `migration-and-consent` at §4, `claude-md` at §8. Read
+**`format-versioning`** (~430 lines of per-version deltas) **only when §3 finds
+actual drift**, and only the deltas between the repo's stamp and the shipped
+format — an already-current repo never needs it.
 
 ## Hard Rules
 

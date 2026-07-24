@@ -33,17 +33,38 @@ adopting it.
 
 **Model & cost**
 
-- **Built for a large context window.** The commands run on `sonnet` at high
-  reasoning effort, with the code-review, security-review, and ux subagents on
-  `opus` — and the orchestrator holds a lot at once: the blueprint, the plan,
-  the registry, and each subagent's output. Run Claude Code with the
-  **1-million-token** context; the standard window will degrade or overflow on a
-  real cycle.
-- **High token cost.** High-effort reasoning throughout, opus reviewers, and
-  each `execute` cycle spawns several subagents (coder, code review, security
-  review, plus E2E acceptance and UX conformance when the slice warrants them)
-  with fix loop-backs. Expect a meaningful spend per slice — this is not a cheap
-  workflow.
+- **Built for a large context window.** The orchestrator holds a lot at once:
+  the blueprint, the plan, the registry, and each subagent's output. Run Claude
+  Code with the **1-million-token** context; the standard window will degrade or
+  overflow on a real cycle.
+- **Model and effort are tiered per surface, not uniform.** `opus` runs where
+  judgment decides the outcome (`product`, `blueprint`, `plan`, the
+  `blueprint-reviewer` and `blueprint-coherence-reviewer` gates) or where nobody
+  is watching — `execute` is the only unattended command, and its
+  `execute-coder`, code-review, security-review, and ux subagents are all `opus`
+  too. `sonnet` runs the remaining commands and the writer/surveyor subagents;
+  `haiku` runs the two purely mechanical ones (`archive`, `recall`). Effort
+  follows the same logic rather than sitting at maximum everywhere: a stronger
+  model reaches the same answer in fewer reasoning tokens, so capability and
+  effort are traded against each other per surface instead of both being maxed.
+  No gate is weakened — every review stage still runs, and config can never
+  disable one.
+- **Read-heavy work is delegated to keep the orchestrator fast.** Coverage
+  scans, the desired-vs-actual codebase survey, and the bulk doc writing run in
+  subagents (`blueprint-surveyor`, `plan-surveyor`, `flow-writer`,
+  `entity-writer`) that return conclusions rather than file contents. Anything
+  the orchestrator loads is re-processed on every later turn of the pass, so
+  keeping scans out of its context compounds across a sweep.
+- **High token cost.** An `execute` cycle runs several subagents per step — the
+  coder, code review and security review all on `opus`, plus E2E acceptance and
+  UX conformance when the slice warrants them — with fix loop-backs. The coder
+  is the dominant consumer: it runs per step and per fix round, so `opus` there
+  is the single largest cost in the workflow. The wager is that better code
+  means fewer `code → review` rounds, and round count drives a cycle's length
+  more than per-token latency does. Independent stages also run concurrently —
+  review ‖ security per step, all per-doc blueprint reviewers in one round —
+  which cuts wall-clock but not spend. Expect a meaningful cost per slice; this
+  is not a cheap workflow.
 
 **Dependencies**
 
@@ -374,8 +395,16 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:recall <name>`    | Resume from a handoff in a fresh session                                                                        |
 | `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
 
-Every command runs on `sonnet` at high reasoning effort; inside `execute`, the
-code-review, security-review, and ux subagents run on `opus`.
+Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
+where judgment decides the outcome or where nobody is watching — `product`,
+`blueprint`, `plan`, and `execute` (the only unattended command), plus the
+`blueprint-reviewer`, `blueprint-coherence-reviewer`, `execute-coder`,
+code-review, security-review, and ux subagents. `sonnet` runs the remaining
+commands and the writer/surveyor subagents; `haiku` runs the two purely
+mechanical ones (`archive`, `recall`). Effort tracks the same logic — `high`
+through most of the workflow, `medium`/`low` on mechanical surfaces. No
+configuration can skip a gate: `pipeline.models` may re-tier a stage, but the
+stage always runs and any downgrade is reported at that gate.
 
 Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
 Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
@@ -719,7 +748,7 @@ It runs five stages, each in a fresh purpose-built subagent:
 
 | Stage      | Model  | What happens                                                                  |
 | ---------- | ------ | ----------------------------------------------------------------------------- |
-| code       | sonnet | Implements the plan under TDD (RED → GREEN → REFACTOR) to the coverage gate   |
+| code       | opus   | Implements the plan under TDD (RED → GREEN → REFACTOR) to the coverage gate   |
 | review     | opus   | Adversarial code review against the plan, blueprint, conventions, and stack   |
 | security   | opus   | Threat-models the change against the project's declared capabilities          |
 | acceptance | sonnet | Independently maps the blueprint's flow criteria to E2E tests and runs them   |

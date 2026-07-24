@@ -7,7 +7,7 @@ description: Stateless completeness reviewer for the /vwf:product command.
   context.
 tools: Read, Grep, Glob
 model: sonnet
-effort: xhigh
+effort: high
 ---
 
 You are a stateless product-doc completeness reviewer. You receive **only** the

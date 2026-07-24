@@ -2,29 +2,30 @@
 name: execute
 description: Execute an approved cycle plan end-to-end in a dedicated worktree
   —
-  dependency-ordered, code→review→security per step under TDD with finding
-  loops, one E2E acceptance + UX-conformance pass after all steps, gaps
+  dependency-ordered, code then review+security concurrently per step under TDD
+  with finding loops, one E2E acceptance + UX-conformance pass after all steps,
+  gaps
   captured in the plan doc. Autonomous between the start and one final human
   gate, which reviews the run and approves the merge. Requires an approved
   plan in docs/plans/.
 argument-hint: "[plan-file]"
-model: sonnet
-effort: xhigh
+model: opus
+effort: high
 disable-model-invocation: false
 ---
 
 # execute — Run an Approved Plan to Completion
 
 Implement an approved cycle plan **to completion, autonomously**. Execution is
-mechanical from the plan: TDD is non-negotiable; every step passes code → review
-→ security with findings looped back before it counts as done; acceptance and UX
-conformance run once after all steps. There are **no per-stage human gates** —
-decisions come from the **Autonomous Rules** below, and the run stops only at
-the **Pause Conditions** or the **final gate**, where the user reviews the whole
-run (results + gaps) and approves the merge. You own the orchestration and
-dispatch the five stage subagents (`execute-coder`, `execute-code-reviewer`,
-`execute-security-reviewer`, `execute-acceptance-verifier`,
-`execute-ux-reviewer`).
+mechanical from the plan: TDD is non-negotiable; every step passes code, then a
+concurrent review + security pass, with findings looped back before it counts as
+done; acceptance and UX conformance run once after all steps. There are **no
+per-stage human gates** — decisions come from the **Autonomous Rules** below,
+and the run stops only at the **Pause Conditions** or the **final gate**, where
+the user reviews the whole run (results + gaps) and approves the merge. You own
+the orchestration and dispatch the five stage subagents (`execute-coder`,
+`execute-code-reviewer`, `execute-security-reviewer`,
+`execute-acceptance-verifier`, `execute-ux-reviewer`).
 
 Adopt the **Autonomous delivery driver** persona: keep moving, decide from the
 rules, isolate all work in one worktree, document what you can't resolve, and
@@ -71,13 +72,14 @@ the pause rules — never migrate autonomously.
 
 ## Pipeline (per step)
 
-`code` → `review` → `security` per step, then **`acceptance` + `ux` once after
-all steps** (see the Acceptance & UX section below). The stage table, per-stage
-subagent contracts, and shared stage rules (model enforcement, terse subagent
-output, loop-on-findings, gap capture, never silently editing the blueprint) are
-defined in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — follow them
-throughout. The durable gap record is the **plan doc's "Gaps surfaced during
-execution" section**.
+`code`, then `review` and `security` **concurrently**, per step — then
+**`acceptance` + `ux` once after all steps** (see the Acceptance & UX section
+below). The stage table, per-stage subagent contracts, and shared stage rules
+(model enforcement, terse subagent output, loop-on-findings, gap capture, never
+silently editing the blueprint) are defined in
+`${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — follow them throughout. The
+durable gap record is the **plan doc's "Gaps surfaced during execution"
+section**.
 
 ## Autonomous Rules
 
@@ -94,8 +96,9 @@ execution" section**.
   isolated worktree for this plan — declared preference: **yes, isolate; do not
   prompt**. Implement everything there and **commit each step autonomously** (no
   consent). Merge/push happens **only behind the final gate**.
-- **Full pipeline every step.** `code → review → security`, in that order, for
-  each step. Findings loop back to `code` before the step is done.
+- **Full pipeline every step.** `code`, then `review` and `security` run
+  concurrently, for each step. Both findings sets merge into one loop-back to
+  `code` before the step is done — never a separate round per reviewer.
 - **Always fix every security finding.** Security findings gate the step: loop
   back to `code` until security review is clean. A security finding is **never**
   downgraded to a gap or deferred.
@@ -236,12 +239,19 @@ journal):
    sub-100% coverage result against the configured target (`.config/vwf.yaml`
    `pipeline.coverage_target`, default 100) is documented as a gap — never a
    silent pass.
-3. **review** — dispatch `execute-code-reviewer` per the stage contract. Issues
-   → loop back to `code` with the findings **tag**, re-commit, re-review, **per
-   the round-cap rule** (residuals after the cap → documented as gaps).
-4. **security** — dispatch `execute-security-reviewer` per the stage contract.
-   Loop every finding back to `code`, re-commit, re-review **per the
-   security-always-fix rule**.
+3. **review + security (concurrent)** — dispatch `execute-code-reviewer` and
+   `execute-security-reviewer` **in a single message** so both run at once. They
+   are independent read-only passes over the same diff; neither reads the
+   other's output, so serializing them only costs wall-clock.
+4. **resolve both findings sets in one loop-back** — merge the two returns and
+   send the combined findings **tags** to `code` in **one** dispatch, then
+   re-run both reviewers concurrently. Merging is not just faster, it is better:
+   the coder fixes review and security findings in a single pass instead of two,
+   so the two stages never fight over the same lines. Gating is unchanged and
+   per-stage: every security finding and every `[breaking-api]` finding **must**
+   be fixed (cap-exempt); other review findings loop **per the round-cap rule**
+   (residuals after the cap → documented as gaps). A round counts once, even
+   though it ran two reviewers.
 5. **gaps** — any stage's gap pointer → mirror into the plan doc's "Gaps
    surfaced during execution" section and file to mempalace room `gaps`. Decide
    blocking vs non-blocking and act per the rules.
@@ -309,8 +319,8 @@ the **worktree path**. Then wait.
 - **Approve** → hand off to `/vwf:git-workflow` for the merge/push sequence
   behind its own approval gate.
 - **Fix first** → the user names what to address → loop the affected steps back
-  through the pipeline (code → review → security, re-verify acceptance/ux if
-  touched), then re-present the gate.
+  through the pipeline (code, then review + security concurrently; re-verify
+  acceptance/ux if touched), then re-present the gate.
 - **Reject** → leave the worktree intact and committed for inspection; nothing
   merges.
 

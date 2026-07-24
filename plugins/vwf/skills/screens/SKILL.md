@@ -19,7 +19,7 @@ description: Two-way screen sync with Claude Design. "prompt <flow>" writes one
   itself.
 argument-hint: "[prompt <flow> | import [flow]]"
 model: sonnet
-effort: xhigh
+effort: high
 disable-model-invocation: false
 ---
 
