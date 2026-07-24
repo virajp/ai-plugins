@@ -256,7 +256,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   `flow-walk <flow>` per flow plus exactly one `bundle` shard, which
   `/vwf:blueprint` uses above 6 flows and which always carries the released-API
   diff), `blueprint-surveyor` (the sweep's coverage worklist: walks the bundle
-  against the coverage conditions and returns only the ordered worklist, so the
+  against the coverage conditions — incl. the standard-flows mandates, synonym
+  candidates returned for MCQ — and returns only the ordered worklist, so the
   scan never lands in the orchestrator), `plan-surveyor` (the desired-vs-actual
   survey — the largest inline read in the workflow: graph-first per the graphify
   asset, returns `PRESENT`/`PARTIAL`/`ABSENT`/reuse candidates/contradictions as
@@ -379,6 +380,18 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (architecture/environment/harness/docs + the implementation stamps)
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
+- `assets/standard-flows.md` — the **canonical flow-slug vocabulary** per UI
+  project type (exact slugs: `splash`, `signin`, `home`, `onboarding`,
+  `settings`, `notifications`, `profile`, `delete-account`, `recover-account`):
+  per-type mandates (`frontend` requires splash+home; `console` home, splash
+  optional; `site` home), the **auth-capability signal** (an Auth & identity
+  capability in the registry requires `signin`, and with it
+  `profile`/`delete-account`/`recover-account`), the synonym table
+  (`login`→`signin` etc. — rename proposals, consent-gated through §7, never
+  automatic), and the waiver id (`enforcement.rules`
+  `standard-flows/<project>/<slug>`). Enforced as a blueprint coverage condition
+  by the `blueprint-surveyor`; naming applied at elicitation and by the
+  flow-contract reference; in-car subset flows and non-UI projects exempt
 - `assets/canvas-push.md` — the **shared claude.ai/design push protocol**
   (surface resolution DesignSync → claude-design MCP → local-only, pin-first
   per-project+platform resolution, `get_claude_design_prompt` → `finalize_plan`

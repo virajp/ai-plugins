@@ -19,7 +19,7 @@ product:
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
-  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow> (skipped visual review), coherence
+  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow> (skipped visual review), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
 topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
@@ -47,7 +47,7 @@ harness: # workspace-level capability inventory (see the harness contract)
 enforcement: # vwf's enforcement opt-outs — moved here from the registry in format 6
   structure: enforced # or { deviated: <choice>, reason: <one line> }
   stacks: {} # <project>: { choice: <stack>, reason: <one line> }
-  rules: {} # <rule-id>: { waived: true, reason: <one line> }
+  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (see assets/standard-flows.md)
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
