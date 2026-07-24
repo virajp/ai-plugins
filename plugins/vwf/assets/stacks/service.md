@@ -39,7 +39,15 @@ It holds no admin routes (those live only in `console`).
   connected, idempotent on already-started, recording instead of connecting
   under test.
 - **Schemas**: every request/response/domain schema is an Effect Schema from the
-  common package's `schemas/*` subpaths, decoded at the boundary.
+  common package's `schemas/*` subpaths, decoded at the boundary — the
+  `baseline/boundary-validation` realization: decode failures reject, never
+  coerce.
+- **Write versioning** (`baseline/write-versioning`): every Firestore document
+  carries a `version` field; mutations run in a transaction that reads the doc,
+  checks the expected version, and writes `version + 1` — a stale version fails
+  the write with the coded conflict response. Multi-document writes use one
+  transaction/batched write (`baseline/atomic-multi-write`); timestamps are
+  `FieldValue.serverTimestamp()` only (`baseline/server-time`).
 - **Config**: env vars via Effect `Config` + `Schema` validation (fail-fast on
   invalid); secrets injected by Doppler.
 - **Observability**: OpenTelemetry via Effect; `withSpan` on every public

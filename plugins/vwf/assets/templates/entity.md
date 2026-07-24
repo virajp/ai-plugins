@@ -82,8 +82,14 @@ Authoritative schema: [schema.yaml](./schema.yaml)
 
 ## Concurrency & Consistency
 
-- Concurrent-write resolution (optimistic version / last-write-wins / merge /
-  conflict error):
+<!-- Concurrent-write resolution defaults to optimistic versioning per
+     conventions.md#baseline (baseline/write-versioning) — write
+     `default — per conventions#baseline` unless this entity genuinely
+     deviates; a deviation states the resolution AND its reason here, paired
+     with the scoped enforcement.rules waiver. -->
+
+- Concurrent-write resolution: default — per
+  [baseline](../../conventions.md#baseline)
 - Uniqueness guarantees under races:
 - Idempotency of each mutating action:
 

@@ -51,6 +51,18 @@ to the relevant anchors rather than repeating.
 
 ## Release & changelog {#changelog}
 
+## Engineering baseline {#baseline}
+
+<!-- Seeded by `blueprint` on first touch from the vwf engineering-baseline
+     asset: the 13 default technical rules (write-versioning, atomic
+     multi-write, server time, soft delete, boundary validation,
+     business/technical separation, idempotency keys, error envelope, cursor
+     pagination, retry discipline, tolerant reader, structured logs no-PII,
+     integer money) as canonical contract lines, each with its baseline/<rule>
+     id. Omit any rule a product-wide enforcement.rules waiver covers. Docs and
+     cycles follow these by default; only exceptions are documented — on the
+     deviating doc AND as a scoped waiver. -->
+
 ## Shared patterns {#patterns}
 
 <!-- Workspace repos (registry declares a `packages` common project): seed the

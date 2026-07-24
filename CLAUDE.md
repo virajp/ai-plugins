@@ -380,6 +380,20 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (architecture/environment/harness/docs + the implementation stamps)
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
+- `assets/engineering-baseline.md` — the **13 centralized technical rules**
+  every product follows by default, enforced not elicited (stack-agnostic
+  contracts; realizations in `assets/stacks/`): write-versioning (optimistic, a
+  version token per mutating write — entity Concurrency sections read
+  `default — per conventions#baseline`), atomic multi-write, server-time,
+  soft-delete, boundary-validation (reject, never coerce; its waiver may never
+  be product-wide — part of the config hard floor), business/technical
+  separation, idempotency-keys, error-envelope, cursor-pagination,
+  retry-discipline, tolerant-reader, structured-logs-no-PII, integer-money.
+  `/vwf:blueprint` seeds them into `conventions.md#baseline` on first touch and
+  never re-elicits them; exceptions are recorded **both** on the deviating doc
+  and as an `enforcement.rules` waiver (`baseline/<rule>[/<unit>]`) — the
+  blueprint reviewers flag one without the other; the execute reviewers enforce
+  the seeded lines like any conventions anchor
 - `assets/standard-flows.md` — the **canonical flow-slug vocabulary** per UI
   project type (exact slugs: `splash`, `signin`, `home`, `onboarding`,
   `settings`, `notifications`, `profile`, `delete-account`, `recover-account`):

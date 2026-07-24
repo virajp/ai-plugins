@@ -288,6 +288,14 @@ Blueprint-specific notes layered on the protocol:
   rule; MCQ only when both placements are defensible), and the runtime-settings
   keys the flow reads. Foundations expand into existing sections — never new
   mandatory structure.
+- **Engineering baseline (never re-elicited):** the defaults in
+  `${CLAUDE_PLUGIN_ROOT}/assets/engineering-baseline.md` are settled — do not
+  ask about write versioning, boundary validation, idempotency, error shape,
+  pagination, retries, timestamps, soft-delete, log hygiene, or money units
+  unless the user raises a deviation. Entity Concurrency defaults to
+  `default — per conventions#baseline`; API operations assume the idempotency /
+  error-envelope / cursor-pagination rules. Elicitation spends its questions on
+  what is genuinely open, not on the baseline.
 - **Standard slugs:** when the journey being elicited matches an entry in
   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (splash, signin, home,
   onboarding, settings, notifications, profile, delete-account,
@@ -342,7 +350,14 @@ stand.
   only when a pass actually touches an API surface.
 - **Conventions & environment (yours)** — update `docs/blueprint/conventions.md`
   for any cross-cutting decision raised, and `environment.md` per the rule
-  below.
+  below. On the **first touch** of `conventions.md` in a repo (or when its
+  `#baseline` anchor is missing), seed the **engineering baseline** per
+  `${CLAUDE_PLUGIN_ROOT}/assets/engineering-baseline.md` — the 13 default
+  technical rules as canonical contract lines, omitting any covered by a
+  product-wide `enforcement.rules` waiver. These are enforced defaults, not
+  elicitation material: never ask the user whether to adopt one; a deviation
+  arrives only when the user raises it, and lands as the doc note + scoped
+  waiver pair.
 
 Read only the template a surface you write yourself needs — never all eight up
 front.
@@ -384,6 +399,10 @@ wrote a flow plus four entities then costs one round, not five.
   relevant `conventions.md` anchors and registry block, and the names-only lists
   of existing flow and entity docs (so it can verify `Used by:` and relationship
   links resolve).
+
+Either mode also gets any `enforcement.rules` waivers with a `baseline/` prefix
+that scope to the doc under review (for the baseline deviation ↔ waiver pairing
+check).
 
 No conversation context either way. The reviewer checks the doc against the
 checklist in its own instructions, **verifies every outbound link resolves on

@@ -366,6 +366,22 @@ Two placement rules ride along with the shape — seeded into each repo's
    project imports a third-party SDK directly (client-side sign-in is the one
    exception).
 
+They are joined by the **engineering baseline** — 13 centralized technical rules
+seeded into `conventions.md#baseline` on the blueprint's first touch and
+followed by default everywhere; only exceptions are documented. The set:
+optimistic **write versioning** on every mutating write (entity docs stop
+re-deciding concurrency — the default is the contract), atomic multi-document
+writes, server-authoritative UTC timestamps, soft-delete by default, strict
+**boundary validation** (malformed input/output rejected, never coerced — the
+one rule that can never be waived product-wide), business/technical code
+separation, idempotency keys on every mutating operation, one error envelope,
+cursor pagination, retry-only-idempotent with backoff + jitter, tolerant-reader
+event consumers, structured logs with no PII, and integer minor units for money.
+A deviation lives in **two places, always**: stated on the doc it applies to and
+waived under `enforcement.rules` (`baseline/<rule>[/<unit>]`) — the blueprint
+reviewers flag either half missing, and the execute reviewers enforce the rules
+against the code itself.
+
 `console` deserves a note: it is the internal admin panel — a single Hono +
 Effect app serving both the operator API and an embedded React + Refine UI, and
 the **sole holder of admin capabilities** (the public `service` exposes no admin

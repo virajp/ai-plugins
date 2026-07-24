@@ -30,10 +30,15 @@ the precision budget on `schema.yaml`.
   reference), on-delete (cascade / restrict / nullify), and whether required.
   Unchanged from before; the product-wide `erDiagram` in `entities/index.md` is
   a view of the union of these tables.
-- **Concurrency & Consistency** — how concurrent writes resolve (optimistic
-  version / last-write-wins / merge / conflict error), uniqueness guarantees
-  under races, and the idempotency of each mutating action. A contract decision,
-  not an implementation detail — pin it.
+- **Concurrency & Consistency** — concurrent-write resolution **defaults to
+  optimistic versioning** per the engineering baseline
+  (`conventions.md#baseline`, rule `baseline/write-versioning`): write
+  `default — per conventions#baseline` and move on. A genuine deviation
+  (last-write-wins / merge / conflict error) states the resolution **and its
+  reason** here, paired with the scoped `enforcement.rules` waiver — one without
+  the other is a gap. Uniqueness guarantees under races and the idempotency of
+  each mutating action are still pinned per entity. A contract decision, not an
+  implementation detail.
 - **References** — resolving markdown links to the `conventions.md` anchors this
   entity relies on.
 - **Open Questions** — dated, genuinely-open items; never silent assumptions.

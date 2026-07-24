@@ -69,6 +69,12 @@ service, named by the registry project name. Flow steps reference operations by
 Use the **rest-api-design** skill for contract depth (resources, methods,
 pagination, error format, auth schemes, versioning) — do not restate it here.
 
+The **engineering baseline** makes three of those defaults enforced rather than
+advisory: `baseline/idempotency-keys` (every mutating operation idempotent),
+`baseline/error-envelope` (one shape, `conventions.md#errors`), and
+`baseline/cursor-pagination` (cursor by default; offset only behind a scoped
+`enforcement.rules` waiver stated on the contract).
+
 ### openapi.yaml self-gate
 
 - [ ] `openapi: 3.1.x`; `info.version` is semver; `info.x-vwf.status` is `draft`

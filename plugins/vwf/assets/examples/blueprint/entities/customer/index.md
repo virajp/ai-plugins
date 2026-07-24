@@ -65,8 +65,12 @@ Authoritative schema: [schema.yaml](./schema.yaml)
 
 ## Concurrency & Consistency
 
-- Concurrent-write resolution: last-write-wins on profile fields; `email`
-  uniqueness enforced atomically at write.
+- Concurrent-write resolution: **deviation** from
+  [baseline](../../conventions.md#baseline) `baseline/write-versioning` —
+  last-write-wins on profile fields (single-owner data; a lost concurrent
+  profile edit is acceptable, a version-conflict error is not worth the UX).
+  Waived as `baseline/write-versioning/entities/customer`. `email` uniqueness
+  still enforced atomically at write.
 - Uniqueness under races: `email` uniqueness holds even for simultaneous
   registrations (one wins, the other gets a `conflict`).
 - Idempotency: registration is idempotent per email (a repeat returns the
