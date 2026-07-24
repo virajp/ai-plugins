@@ -225,28 +225,48 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   intent, never as files), internal `git-workflow`, and `handoff`/`recall`
   (mempalace-backed session handoff — wing=`<project>`, room=`handoff`,
   drawer=`<name>`). `execute` runs one approved plan to completion
-  **autonomously** in a dedicated worktree: dependency-ordered steps,
-  `code→review→security` per step (security findings always fixed;
-  **breaking-released-API findings gate the same way** — cap-exempt, always
-  fixed; other review findings loop ≤4 rounds then become documented gaps) plus
-  one `acceptance + ux` pass after all steps (same 4-round cap), gaps mirrored
-  to the plan doc's "Gaps surfaced during execution" section + mempalace room
-  `gaps`, mid-run pauses only on hard halts, the statusline resource caps, an
-  all-blocking gap, or an uncovered irreversible decision — then **one final
-  human gate** (run report, gap list, and the `implementation:` stamps written)
-  behind which the merge/push happens, gap reconciliation is offered
-  (blueprint/plan loop-backs), archive is offered once no gaps remain, and the
-  next chained plan is offered when one is unblocked. Its Reconcile step
-  **stamps `implementation:` on each doc the plan `covers:`** — the single
-  sanctioned blueprint edit (state only, never content); everywhere else the
-  blueprint is the source of truth code follows, drift surfaced and never
-  silently absorbed. (The former `autopilot` command is merged into this
-  behavior and retired.)
-- `agents/` — subagents the workflow skills delegate to: `blueprint-reviewer`
-  (two modes — flow / entity, matching the format-9 doc units),
-  `blueprint-coherence-reviewer` (the end-of-sweep whole-product pass: walks
-  every flow across entities/schemas/API contracts, checks catalog/erDiagram
-  sync, and enforces the released-API additive-only diff as a HARD gap),
+  **autonomously** in a dedicated worktree: dependency-ordered steps, `code`
+  then `review` ‖ `security` **concurrently** per step — the two are independent
+  read-only passes over the same diff, and their findings merge into **one**
+  loop-back to `code` (so a round counts once, and the coder never fixes the
+  same lines twice) — (security findings always fixed; **breaking-released-API
+  findings gate the same way** — cap-exempt, always fixed; other review findings
+  loop ≤4 rounds then become documented gaps) plus one `acceptance + ux` pass
+  after all steps (same 4-round cap), gaps mirrored to the plan doc's "Gaps
+  surfaced during execution" section + mempalace room `gaps`, mid-run pauses
+  only on hard halts, the statusline resource caps, an all-blocking gap, or an
+  uncovered irreversible decision — then **one final human gate** (run report,
+  gap list, and the `implementation:` stamps written) behind which the
+  merge/push happens, gap reconciliation is offered (blueprint/plan loop-backs),
+  archive is offered once no gaps remain, and the next chained plan is offered
+  when one is unblocked. Its Reconcile step **stamps `implementation:` on each
+  doc the plan `covers:`** — the single sanctioned blueprint edit (state only,
+  never content); everywhere else the blueprint is the source of truth code
+  follows, drift surfaced and never silently absorbed. (The former `autopilot`
+  command is merged into this behavior and retired.)
+- `agents/` — subagents the workflow skills delegate to. Delegation here is a
+  **latency and context strategy as much as a quality one**: read-heavy scans
+  and mechanical writing run in a subagent so their file loads never enter the
+  orchestrator's context, where every loaded line is re-processed on each later
+  turn. The agents: `blueprint-reviewer` (two modes — flow / entity, matching
+  the format-9 doc units), `blueprint-coherence-reviewer` (the end-of-sweep
+  whole-product pass: walks every flow across entities/schemas/API contracts,
+  checks catalog/erDiagram sync, and enforces the released-API additive-only
+  diff as a HARD gap; takes a **scope** — `full`, or sharded into one
+  `flow-walk <flow>` per flow plus exactly one `bundle` shard, which
+  `/vwf:blueprint` uses above 6 flows and which always carries the released-API
+  diff), `blueprint-surveyor` (the sweep's coverage worklist: walks the bundle
+  against the coverage conditions and returns only the ordered worklist, so the
+  scan never lands in the orchestrator), `plan-surveyor` (the desired-vs-actual
+  survey — the largest inline read in the workflow: graph-first per the graphify
+  asset, returns `PRESENT`/`PARTIAL`/`ABSENT`/reuse candidates/contradictions as
+  `file:line` pointers, never code), `flow-writer` and `entity-writer` (render
+  the orchestrator's **already-elicited** decisions into format-conformant flow
+  and entity docs plus their catalog rows — they read the templates and their
+  own per-surface authoring references, which is the doctrine load kept out of
+  the orchestrator; they never elicit, never invent, and report anything
+  unfilled under `UNRESOLVED:`; several `entity-writer`s run concurrently and
+  each touches only its own catalog row and erDiagram edges),
   `design-system-reviewer`, `product-reviewer`, `execute-coder`,
   `execute-code-reviewer` (incl. the released-contract compatibility dimension
   and its `API COMPAT:` return line), `execute-security-reviewer`,
@@ -347,13 +367,15 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   before the next question, so a scope change arriving in a new session recalls
   it
 - `assets/execute-stages.md` — the stage pipeline used by `execute`: the
-  code→review→security→acceptance+ux table (acceptance + ux run once per cycle
-  after all steps; each conditional and skipped explicitly, stated at the final
-  gate), per-stage subagent contracts (incl. the slice/round tags, the
+  code→(review ‖ security)→acceptance+ux table, carrying a **Runs** column
+  (review and security are concurrent per step; acceptance + ux run once per
+  cycle after all steps; each conditional and skipped explicitly, stated at the
+  final gate), per-stage subagent contracts (incl. the slice/round tags, the
   coverage-report policy, and the acceptance/ux `n/a` gap policy), shared stage
-  rules (model enforcement, terse output, loop-on-findings with the recall-miss
-  fallback, gap capture, the blueprint-is-source-of-truth drift rule with its
-  single `implementation:`-stamp carve-out), and the end-of-run reconcile
+  rules (model enforcement, terse output, loop-on-findings — both reviewers'
+  tags merged into one `code` dispatch, with the recall-miss fallback — gap
+  capture, the blueprint-is-source-of-truth drift rule with its single
+  `implementation:`-stamp carve-out), and the end-of-run reconcile
   (architecture/environment/harness/docs + the implementation stamps)
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`

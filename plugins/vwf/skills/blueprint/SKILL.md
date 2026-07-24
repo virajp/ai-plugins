@@ -66,10 +66,18 @@ clean whole-product coherence review (§8)**, or the user stops early — in whi
 case the stamp records `partial` with what remains, and planning stays blocked
 until a later run finishes the sweep.
 
-You own the user conversation. Elicitation is **interactive and stays with you**
-— do not spawn a subagent for it (a subagent cannot pause to ask a question).
-Only the completeness and coherence reviews are delegated, to fresh stateless
-subagents.
+You own the user conversation — and little else. Elicitation is **interactive
+and stays with you** (a subagent cannot pause to ask a question), as do the
+judgment calls that shape it: where a new flow slots in the execution order,
+which approach to propose, what a gap means. **Everything read-heavy or
+mechanical is delegated** to fresh stateless subagents: the coverage survey
+(§1), the flow and entity writing (§4), the per-doc completeness reviews (§5),
+the screen render (§6a), and the coherence review (§8).
+
+That split is deliberate. Anything you load stays in your context and is
+re-processed on every later turn of the sweep, so a scan you run yourself taxes
+the whole run. Take subagent returns as given; read a file yourself only when a
+specific decision genuinely needs its contents.
 
 Adopt the **Product & Engineering Author** persona: capture user goals and
 observable outcomes precisely, then pin down the flows, data model, and API
@@ -99,10 +107,14 @@ surface without ambiguity. Surface open decisions rather than guessing.
 | Conv. template   | `${CLAUDE_PLUGIN_ROOT}/assets/templates/conventions.md`                                                            |
 | Env. template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`                                                            |
 
-Doctrine: the **blueprint-authoring** skill (contract-vs-realization,
-flow-contract, entity-contract, api-and-schema-contracts, ui-ux-contract,
-environment-catalog, frontmatter-and-links, quick-reference). API contracts also
-apply the **rest-api-design** skill for endpoint contract depth.
+Doctrine: the **blueprint-authoring** skill — a **router**. Read only the
+reference its own "when to read" table names for the surface you are currently
+on, and read it **when you reach that surface**, not upfront. Never preload the
+full set: it is ~800 lines and every line loaded early is re-processed on each
+later turn of the sweep. `quick-reference` is the **reviewer's** bar (§5) — not
+the orchestrator's to carry. API contracts likewise apply the
+**rest-api-design** skill for endpoint contract depth, pulled on demand when you
+reach the API surface.
 
 Reserved names: `product`, `architecture`, `conventions`, `design-system`,
 `environment`, `flows`, `entities`, `apis`, the device names (`mobile`, `web`,
@@ -130,7 +142,16 @@ registry found. Run `/vwf:architecture` first to bootstrap
 is behind what vwf ships, nudge `/vwf:setup` (proceed unless a needed artifact
 is missing).
 
-**Build the coverage worklist.** Whole-product coverage holds when, all at once:
+**Build the coverage worklist (delegated).** Dispatch a fresh
+`blueprint-surveyor` subagent rather than walking the bundle yourself — it reads
+every flow, entity, and API file and returns only the ordered worklist, so the
+scan never lands in your context. Pass it **paths and name lists, not
+contents**: the `docs/blueprint/` root, the goal-anchor list (names only), the
+product doc's slice priority, the registry `projects:` block, and the current
+`blueprint.remaining` list. It returns `COVERAGE:` plus the ordered `WORKLIST:`
+— consume that as given.
+
+Whole-product coverage holds when, all at once:
 
 - every product goal (`#goal-<slug>`) is `Serves:`-linked by at least one flow;
 - every flow doc is `status: reviewed` (it passed the reviewer loop);
@@ -147,12 +168,13 @@ is missing).
 - the whole-product **coherence review** (§8) returned `NO GAPS` since the last
   content change.
 
-List every flow and entity that fails a check, **flows first**, ordered by the
-product doc's slice priority — this is the run's worklist. The sweep's spine is
-goals → flows: entities, schemas, and API operations are derived from the flows
-that need them, never authored speculatively. Deciding whether a goal genuinely
-needs a *new* flow (vs. an existing one extended) is elicitation, not inference:
-when a goal is unserved, ask.
+These are the conditions the surveyor checks; its `WORKLIST:` is the run's
+worklist (flows first, then entities, APIs, coherence — ordered by the product
+doc's slice priority). Do not re-derive it. The sweep's spine is goals → flows:
+entities, schemas, and API operations are derived from the flows that need them,
+never authored speculatively. Deciding whether a goal genuinely needs a *new*
+flow (vs. an existing one extended) is elicitation, not inference — so the
+surveyor's `UNSERVED GOALS:` list is a prompt to **ask**, never to author.
 
 If `$ARGUMENTS` named a flow or entity, start there (prepend it to the
 worklist); otherwise start at the top. An empty worklist with a named unit means
@@ -229,13 +251,14 @@ decision surfaces, fill the conventions skeleton.
 
 Blueprint-specific notes layered on the protocol:
 
-- **Apply the `blueprint-authoring` skill:** the contract-vs-realization line
-  (record only decisions true regardless of how the code is written today; leave
-  reuse/placement/ordering/library choices to `plan`), plus the per-surface bars
-  — **flow-contract** (steps, consistency, failure, idempotency, acceptance, the
-  screen home rule), **entity-contract** (lifecycle, relationships,
-  concurrency), **api-and-schema-contracts** (schema.yaml and OpenAPI bars), and
-  per-screen **UI/UX** (referencing the design system, not re-deciding it).
+- **Apply the `blueprint-authoring` skill:** read **contract-vs-realization** up
+  front — it is the sort test that governs what you elicit at all (record only
+  decisions true regardless of how the code is written today; leave
+  reuse/placement/ordering/library choices to `plan`). Pull any **other**
+  reference only as you reach the surface it covers, per the skill's routing
+  table. Do not preload the per-surface completeness bars to self-check against
+  — enforcing them is the reviewer's job (§5), and carrying them here doubles
+  the orchestrator's context for no added rigor.
 - **Decisions-vs-mechanics (protocol §4):** spend the precision budget on the
   flow's Steps + Acceptance and on `schema.yaml` / the OpenAPI operations; the
   Purpose half may stay prose-light.
@@ -266,40 +289,43 @@ as resolving markdown links per the blueprint-authoring
 **frontmatter-and-links** reference. Set `status: draft` until the reviewer loop
 (§5) returns `NO GAPS`, then `reviewed`.
 
-Write, from the templates:
+**Delegate the bulk writing.** The flow and entity docs are rendered by writer
+subagents, not by you — they read the templates and the per-surface authoring
+references themselves, which is exactly the doctrine load you are keeping out of
+your own context. Dispatch them with the **decisions the user confirmed**; they
+never elicit and never invent. Anything they could not fill comes back under
+`UNRESOLVED:` — re-elicit it and re-dispatch, never let a plausible default
+stand.
 
-- **The flow** — `flows/<project>/<NNN>-<flow>/index.md`, every applicable
-  section (§2). A **new** flow lands in its primary project's group (for a UI
-  project: with its `device:` key set) with the next gap number in that device's
-  execution order (elicit where it slots when not obvious — the number is a
-  product statement about when the journey runs). Every Screens row carries its
-  **Code** (`<NNN><letter>` — letters in step order; stable once assigned, an
-  insert takes the next free letter, never a re-letter) — the per-screen sync
-  key the canvas frames and `/vwf:screens import` match on — and its
-  **Components block** (format 12): the elements the screen displays, each with
-  its rules (visibility/enable conditions, what activating it does,
-  contract-pinned content), elicited per the ui-ux-contract bar. Every step
-  names its actor and links the entity/service it touches; API-backed steps name
-  an `operationId`. **Every flow carries an Acceptance block** — at least one
-  success and one failure/compensation criterion as observable Given/When/Then;
-  these are what `plan` turns into E2E test steps and `execute`'s acceptance
-  stage verifies. Screens obey the **home rule** (a screen is defined in exactly
-  one flow; other flows link it).
-- **What it stands on** — for each entity a step references: create or extend
-  `entities/<entity>/index.md` + `schema.yaml`; for each `operationId`: add or
-  extend the operation in `apis/<project>.openapi.yaml` (from the OpenAPI
-  template when the file is new). A flow-step state change must match a
-  transition in the entity's Lifecycle table — add the transition or fix the
-  step, never leave them disagreeing. Set each entity's `Used by:` line to the
-  flows that reference it.
-- **The catalogs** — update the flow's row in its **project's section** (under
-  its device subsection for a UI project) of `flows/index.md`, keeping rows in
-  numeric order (create from the flows-index template if missing) and, when
-  relationships changed, the `erDiagram` in `entities/index.md` (create from the
-  entities-index template) so it stays the exact union of the Relationships
-  tables.
-- **Conventions** — update `docs/blueprint/conventions.md` for any cross-cutting
-  decision raised.
+- **The flow** → one `flow-writer`. Pass the placement (project, `<NNN>`, slug,
+  and the `device:` value for a UI project), the elicited decisions (purpose and
+  goal anchors, trigger & actors, ordered steps with actors/entities/
+  `operationId`s, screens with their pinned `<NNN><letter>` codes and Components
+  blocks, jobs, acceptance criteria, deviations), the relevant `conventions.md`
+  anchors and registry block, and — for an in-car subset flow — the parent phone
+  flow's path. It writes the flow doc **and** its `flows/index.md` catalog row.
+  A **new** flow takes the next gap number in that device's execution order;
+  elicit where it slots when not obvious — the number is a product statement
+  about when the journey runs, so it is yours to decide, not the writer's.
+- **What it stands on** — for each entity a step references, dispatch one
+  `entity-writer`. Entities in a pass are independent: **dispatch them all in a
+  single message so they run concurrently.** Each writes its
+  `entities/<entity>/index.md` + `schema.yaml`, its `entities/index.md` catalog
+  row, and its own edges in the product-wide `erDiagram`. A flow-step state
+  change must match a transition in the entity's Lifecycle table — pass the
+  transition explicitly so the writer records it; never leave step and lifecycle
+  disagreeing.
+- **The API contracts (yours)** — for each `operationId`: add or extend the
+  operation in `apis/<project>.openapi.yaml` (from the OpenAPI template when the
+  file is new), applying the **rest-api-design** skill and the
+  blueprint-authoring **api-and-schema-contracts** reference. Read those two
+  only when a pass actually touches an API surface.
+- **Conventions & environment (yours)** — update `docs/blueprint/conventions.md`
+  for any cross-cutting decision raised, and `environment.md` per the rule
+  below.
+
+Read only the template a surface you write yourself needs — never all eight up
+front.
 
 **Released-contract guard.** When editing an `apis/<project>.openapi.yaml` that
 has a released snapshot under `apis/released/` (latest = highest semver in its
@@ -325,7 +351,10 @@ dispatching the reviewer. Don't burn a reviewer round on trivia.
 ### 5. Reviewer loop (fresh subagent)
 
 Loop until each written doc passes. Dispatch a **fresh** `blueprint-reviewer`
-subagent (stateless) per doc, naming its **mode**:
+subagent (stateless) per doc, naming its **mode**. The per-doc reviews are
+mutually independent — **dispatch every doc's reviewer in a single message so
+the whole round runs concurrently**, rather than one doc at a time. A pass that
+wrote a flow plus four entities then costs one round, not five.
 
 - **Flow mode** — pass the flow doc, the relevant `conventions.md` anchors and
   registry block, the **product doc's goal-anchor list** (names only), the
@@ -346,12 +375,18 @@ from a link to a not-yet-authored doc: the latter comes back as a gap of kind
 lands on the worklist).
 
 **Gaps** → present them, re-elicit the specific open decisions with the user
-(one at a time), update the doc, dispatch a fresh reviewer. **`NO GAPS`** → set
-`status: reviewed`, exit.
+(one at a time), update the doc, dispatch a fresh reviewer. Only the docs that
+came back with gaps go into the next round — a doc that returned `NO GAPS` is
+done. **`NO GAPS`** → set `status: reviewed`, exit.
 
 **Convergence guard:** before another round, compare to the prior round. Pause
 and ask the user if the gap count did not strictly decrease, or a resolved gap
 resurfaced. No fixed round cap.
+
+**Context guard.** A concurrent round returns every reviewer's findings at once.
+If a round's returns would push you past the handoff threshold, review the docs
+in two smaller concurrent batches instead of one — parallelism is a wall-clock
+optimization, never a reason to blow the context budget mid-sweep.
 
 ### 6. Reconcile architecture & persist
 
@@ -451,15 +486,29 @@ worklist to end sooner — coverage is checked, not negotiated.
 ### 8. Whole-product coherence review (before a `complete` stamp)
 
 When the worklist is otherwise empty, dispatch the
-**`blueprint-coherence-reviewer`** subagent (stateless, fresh) once over the
-whole bundle. Pass it **paths, not contents**: the `docs/blueprint/` root, the
-goal-anchor list (names only), the registry block, the names-only flow and
-entity lists, and the `apis/` file list (plus `apis/released/` when present). It
-walks every flow end-to-end across entities, schemas, and API contracts — the
-cross-doc consistency no per-doc review can see — and returns `NO GAPS` or a
-numbered gap list. A **breaking change to a released API contract without a
-major-version bump is a hard gap**: it blocks the `complete` stamp until the
-contract is fixed or explicitly re-versioned.
+**`blueprint-coherence-reviewer`** subagent (stateless, fresh) over the bundle,
+naming its **scope**. Pass it **paths, not contents**: the `docs/blueprint/`
+root, the goal-anchor list (names only), the registry block, the names-only flow
+and entity lists, and the `apis/` file list (plus `apis/released/` when
+present). It returns `NO GAPS` or a numbered gap list.
+
+**Choose the shape by bundle size:**
+
+- **≤ 6 flows** → one reviewer at scope `full`. Sharding a small bundle costs
+  more than it saves.
+- **more than 6 flows** → shard: one `flow-walk <flow>` reviewer per flow plus
+  exactly one `bundle` reviewer, **all dispatched in a single message** so they
+  run concurrently. The `flow-walk` shards each walk one flow end-to-end across
+  its entities, schemas, and API contracts; the `bundle` shard owns every check
+  that compares flows to each other (goal coverage, cross-flow consistency,
+  entities and the `erDiagram`, API contracts, bundle hygiene). Merge the
+  returns into one gap list — the shard prefixes keep them unambiguous.
+
+The `bundle` shard is **mandatory** whichever shape you pick: it carries the
+released-contract diff. A **breaking change to a released API contract without a
+major-version bump is a hard gap** — it blocks the `complete` stamp until the
+contract is fixed or explicitly re-versioned. Never stamp `complete` on
+`flow-walk` returns alone.
 
 **Gaps** → route each to the owning flow/entity pass (§§2–7: re-elicit, rewrite,
 per-doc review), then re-run the coherence review. **Convergence guard:** pause

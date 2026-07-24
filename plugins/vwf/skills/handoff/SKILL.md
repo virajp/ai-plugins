@@ -6,7 +6,7 @@ description: Capture the current session as a handoff document and file it to
   session. Use when the context window grows beyond ~60%.
 argument-hint: "<name>"
 model: sonnet
-effort: xhigh
+effort: medium
 disable-model-invocation: false
 ---
 

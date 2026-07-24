@@ -9,7 +9,7 @@ description: Verify a deployed environment against the blueprint —
   through the feedback machinery.
 argument-hint: "[environment, e.g. staging]"
 model: sonnet
-effort: xhigh
+effort: medium
 disable-model-invocation: false
 ---
 
@@ -67,10 +67,11 @@ reported as **known**, not rediscovered. Skip silently if mempalace is down.
 ### 2. Health pass
 
 For each deployed project: probe its health/readiness endpoint (or root) and
-record up/down + version where exposed. A `worker` with no HTTP surface is
-checked by its own observable (its queue/schedule heartbeat if the repo exposes
-one) or reported `unverifiable — no health surface` (a candidate gap, not a
-silent skip).
+record up/down + version where exposed. The probes are independent — **issue
+them all in a single message** so they run concurrently rather than serially
+down the registry. A `worker` with no HTTP surface is checked by its own
+observable (its queue/schedule heartbeat if the repo exposes one) or reported
+`unverifiable — no health surface` (a candidate gap, not a silent skip).
 
 **Version cross-check (report-only).** Where a `service` project exposes a
 version and has a living contract `docs/blueprint/apis/<project>.openapi.yaml`,

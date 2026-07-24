@@ -7,13 +7,19 @@ stages **are**.
 
 ## Stages
 
-| Stage      | What             | Model  | Subagent                      |
-| ---------- | ---------------- | ------ | ----------------------------- |
-| code       | Write Code (TDD) | sonnet | `execute-coder`               |
-| review     | Code Review      | opus   | `execute-code-reviewer`       |
-| security   | Security Review  | opus   | `execute-security-reviewer`   |
-| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` |
-| ux         | UX Conformance   | opus   | `execute-ux-reviewer`         |
+| Stage      | What             | Model  | Subagent                      | Runs                     |
+| ---------- | ---------------- | ------ | ----------------------------- | ------------------------ |
+| code       | Write Code (TDD) | sonnet | `execute-coder`               | per step                 |
+| review     | Code Review      | opus   | `execute-code-reviewer`       | per step, ‖ `security`   |
+| security   | Security Review  | opus   | `execute-security-reviewer`   | per step, ‖ `review`     |
+| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all steps    |
+| ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance` |
+
+`review` and `security` are **independent read-only passes over the same diff**
+— neither reads the other's output. Dispatch both in a single message so they
+run concurrently, and merge their findings into **one** loop-back to `code`.
+Their gating is unchanged and stays per-stage (security and `[breaking-api]`
+always fixed; other review findings capped).
 
 `acceptance` and `ux` run **once per cycle**, after **all** steps, back to back
 so one boot of the local stack serves both. Each is conditional — skipped
@@ -101,11 +107,14 @@ Per-stage dispatch contract:
   or full file/dir dumps. The orchestrator reads files itself when it needs
   their contents.
 - **Loop on findings** — review/security issues loop back to `code` with the
-  **tag**, re-commit via `/vwf:git-workflow`, then re-review. If the coder's
-  recall of that tag misses (mempalace down or the drawer absent), the
-  orchestrator passes the terse FINDINGS block it already holds from the
-  reviewer's return — the loop never stalls on a recall miss. The invoking
-  command sets the gating and round policy.
+  **tag**, re-commit via `/vwf:git-workflow`, then re-review. Send **both**
+  reviewers' tags in a single `code` dispatch and re-run both concurrently: one
+  merged fix pass keeps the two stages from rewriting each other's lines, and a
+  round counts once even though two reviewers ran. If the coder's recall of a
+  tag misses (mempalace down or the drawer absent), the orchestrator passes the
+  terse FINDINGS block it already holds from that reviewer's return — the loop
+  never stalls on a recall miss. The invoking command sets the gating and round
+  policy.
 - **Capture blueprint/plan gaps as they surface** — a *gap* (a hole in the
   blueprint or plan, distinct from a code finding) reported by any stage is
   never silently worked around. The subagent files the full gap to mempalace

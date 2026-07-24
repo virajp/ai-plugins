@@ -122,15 +122,25 @@ own plan doc behind its own approval gate.
 - **Actual:** the real code in the submodule(s) the registry maps this element
   to (resolve section→project by `type` and `doc_unit`, as in `blueprint` §2).
 
-Survey the actual state **graph-first** per
-`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`: when the repo carries a knowledge
-graph, ask it what already realizes this element — which modules, routes, jobs,
-and screens exist, where they live, who calls them — and read the files it
-points to; fall back silently to direct reads when no graph is reachable. The
-graph orients the survey; the delta itself is always computed from the files.
+**Delegate the survey.** Dispatch a fresh `plan-surveyor` subagent per chain
+element rather than reading the codebase yourself — this is the largest inline
+read in the workflow, and everything it loads would otherwise tax every
+subsequent turn of the pass. Pass it the element's blueprint doc path(s), the
+registry `projects:` block, the relevant `conventions.md` anchors, and the API
+contract path(s) the element references. It surveys **graph-first** per
+`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md` (falling back silently to direct
+reads when no graph is reachable) and returns terse `PRESENT:` / `PARTIAL:` /
+`ABSENT:` / `REUSE CANDIDATES:` / `CONTRADICTIONS:` / `HARNESS:` lines with
+`file:line` pointers — never code. When a chain has several unimplemented
+elements, **dispatch their surveyors in a single message** so they run
+concurrently.
 
-Determine what already exists, what is missing, what must change, and the order
-to do it in. Reference blueprint sections; do not restate them.
+Read a pointed-at file yourself only when a specific decision genuinely needs
+its contents. From the surveyor's return, determine what must change and the
+order to do it in. Reference blueprint sections; do not restate them.
+
+A `CONTRADICTIONS:` entry is never resolved in the plan — route it per §4, like
+any blueprint gap. `HARNESS:` seeds the preflight below.
 
 **Stamp-heal.** If the element's computed delta is **empty** — the code already
 conforms though the stamp reads `none`/`partial` — offer (user-confirmed, never

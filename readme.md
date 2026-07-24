@@ -33,17 +33,33 @@ adopting it.
 
 **Model & cost**
 
-- **Built for a large context window.** The commands run on `sonnet` at high
-  reasoning effort, with the code-review, security-review, and ux subagents on
-  `opus` — and the orchestrator holds a lot at once: the blueprint, the plan,
-  the registry, and each subagent's output. Run Claude Code with the
-  **1-million-token** context; the standard window will degrade or overflow on a
-  real cycle.
-- **High token cost.** High-effort reasoning throughout, opus reviewers, and
-  each `execute` cycle spawns several subagents (coder, code review, security
-  review, plus E2E acceptance and UX conformance when the slice warrants them)
-  with fix loop-backs. Expect a meaningful spend per slice — this is not a cheap
-  workflow.
+- **Built for a large context window.** The commands run on `sonnet`, with the
+  code-review, security-review, and ux subagents on `opus` — and the
+  orchestrator holds a lot at once: the blueprint, the plan, the registry, and
+  each subagent's output. Run Claude Code with the **1-million-token** context;
+  the standard window will degrade or overflow on a real cycle.
+- **Reasoning effort is tiered, not uniform.** Maximum effort (`xhigh`) is
+  reserved for the surfaces where judgment actually decides the outcome —
+  `product`, `blueprint`, and `plan`, plus the `blueprint-reviewer`,
+  `blueprint-coherence-reviewer`, and `execute-coder` subagents. Orchestration
+  and dispatch surfaces (`execute`, `setup`, `screens`, `feedback`,
+  `architecture`, `design-system`) run at `high`; largely mechanical ones
+  (`mockups`, `verify`, `handoff`) at `medium`. Effort is a **per-turn** cost
+  fixed for a whole invocation, so this materially changes how long a pass feels
+  without weakening the gates — every review stage still runs, and config can
+  never disable one.
+- **Read-heavy work is delegated to keep the orchestrator fast.** Coverage
+  scans, the desired-vs-actual codebase survey, and the bulk doc writing run in
+  subagents (`blueprint-surveyor`, `plan-surveyor`, `flow-writer`,
+  `entity-writer`) that return conclusions rather than file contents. Anything
+  the orchestrator loads is re-processed on every later turn of the pass, so
+  keeping scans out of its context compounds across a sweep.
+- **High token cost.** Opus reviewers and several subagents per `execute` cycle
+  (coder, code review, security review, plus E2E acceptance and UX conformance
+  when the slice warrants them) with fix loop-backs. Independent stages run
+  concurrently — review ‖ security per step, all per-doc blueprint reviewers in
+  one round — which cuts wall-clock but not spend. Expect a meaningful cost per
+  slice; this is not a cheap workflow.
 
 **Dependencies**
 

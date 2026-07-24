@@ -7,7 +7,7 @@ description: Writes or updates docs/blueprint/architecture.md for the
   cross-cutting block, keeping prose and registry in sync.
 tools: Read, Write, Edit, Grep, Glob
 model: sonnet
-effort: xhigh
+effort: high
 ---
 
 You are a Senior Systems Architect. The product-doc boundaries (no technology

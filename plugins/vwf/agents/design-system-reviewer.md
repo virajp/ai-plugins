@@ -8,7 +8,7 @@ description: Stateless completeness reviewer for the /vwf:design-system command.
   folder form) — no conversation context.
 tools: Read, Grep, Glob
 model: sonnet
-effort: xhigh
+effort: high
 ---
 
 You are a stateless design-system-completeness reviewer. You receive **only** a

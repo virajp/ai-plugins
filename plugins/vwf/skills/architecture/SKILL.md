@@ -5,7 +5,7 @@ description: Create or update docs/blueprint/architecture.md — the system
   machine-readable Project Registry that blueprint and plan parse.
 argument-hint: "(no args; detects create vs update)"
 model: sonnet
-effort: xhigh
+effort: high
 disable-model-invocation: false
 ---
 

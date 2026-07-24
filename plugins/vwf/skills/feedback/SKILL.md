@@ -9,7 +9,7 @@ description: The front door for production feedback — a bug, a metric reading,
   even when mempalace is down.
 argument-hint: "[the feedback — paste a bug report, metric, or complaint | canvas]"
 model: sonnet
-effort: xhigh
+effort: high
 disable-model-invocation: false
 ---
 
