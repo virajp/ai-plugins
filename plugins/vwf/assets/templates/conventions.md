@@ -51,6 +51,12 @@ to the relevant anchors rather than repeating.
 
 ## Release & changelog {#changelog}
 
+## Reliability targets {#reliability}
+
+## Disaster recovery {#disaster-recovery}
+
+## Cost {#cost}
+
 ## Engineering baseline {#baseline}
 
 <!-- Seeded by `blueprint` on first touch from the vwf engineering-baseline

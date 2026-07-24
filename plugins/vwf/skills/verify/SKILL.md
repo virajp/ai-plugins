@@ -85,6 +85,11 @@ version and has a living contract `docs/blueprint/apis/<project>.openapi.yaml`,
 compare the deployed version to the contract's `info.version` — a mismatch is
 reported as a warning (deploys lag contracts), never a halt.
 
+**Reliability targets (report-only).** When `conventions.md#reliability` exists
+(the reliability-targets foundation), judge the health pass against it: a probe
+that succeeds but breaches the service's stated latency SLO is reported as a
+**warning**, never a pass — and never a halt.
+
 ### 3. Acceptance pass (against the environment)
 
 Dispatch `execute-acceptance-verifier` in **environment mode**: pass the

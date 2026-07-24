@@ -279,11 +279,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   flow's gitignored `docs/scratchpad/` dir, overwritten in place; returns only a
   manifest)
 - `skills/` (doctrine, auto-applying) — `rest-api-design`; `product-foundations`
-  (the nine foundational concerns every product decides — users & operators,
+  (the twelve foundational concerns every product decides — users & operators,
   observability (OTel→Grafana), audit logs (privileged+destructive baseline),
   change logs (Keep-a-Changelog→fastlane), background processes (sync/async +
   worker-vs-service placement, ask only on ambiguity), data retention & PII,
-  notifications, runtime settings, rate limiting — **elicited defaults**
+  notifications, runtime settings, rate limiting, reliability targets
+  (per-service SLOs + error-budget stance, read by verify's health pass),
+  disaster recovery & backup (RPO/RTO per datastore, tested restores), cost
+  guardrails (budget alerts, scaling caps, metered ops) — **elicited defaults**
   distilled from 95octane: `/vwf:architecture` walks the checklist in step 3c
   (accept/adapt/skip → `cross_cutting` tokens), `/vwf:blueprint` expands
   accepted ones into `conventions.md` anchors + per-flow surfaces (audit markers

@@ -1077,7 +1077,7 @@ vwf ships two kinds of skills: the **workflow skills** above (user-invoked via
 doctrine skills back the workflow's quality — you don't invoke them directly;
 they auto-apply and inform how Claude writes and reviews:
 
-- **`product-foundations`** — the nine foundational concerns every product
+- **`product-foundations`** — the twelve foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
   & operators (two user classes, document-based RBAC,
   claims-for-account-status-only, no impersonation), observability
@@ -1087,9 +1087,13 @@ they auto-apply and inform how Claude writes and reviews:
   (sync/async per action; durable → worker, ephemeral → service; ask only on
   ambiguity), data retention & PII (delete by default, pseudonymised legal-basis
   retention), notifications, runtime settings (one cached settings doc; flags
-  are settings), and rate limiting (endpoint classes, uniform 429).
-  `architecture` walks the checklist (accept / adapt / skip per foundation);
-  `blueprint` expands accepted ones into contracts.
+  are settings), rate limiting (endpoint classes, uniform 429), reliability
+  targets (per-service availability/latency SLOs with an error-budget stance),
+  disaster recovery & backup (RPO/RTO per datastore, automated backups, restore
+  drills), and cost guardrails (one budget with alerts, per-service scaling
+  caps, metered expensive operations). `architecture` walks the checklist
+  (accept / adapt / skip per foundation); `blueprint` expands accepted ones into
+  contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`) plus the per-surface completeness bars: the flow
   contract (steps, screens, jobs, observable acceptance criteria), the entity
