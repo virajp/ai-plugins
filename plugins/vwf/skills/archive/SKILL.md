@@ -4,7 +4,7 @@ description: Move completed cycle plans out of the active set into
   docs/plans/archived/.
   Never deletes. May be run manually or offered at the end of execute.
 argument-hint: "[plan-file]"
-model: sonnet
+model: haiku
 effort: low
 disable-model-invocation: false
 ---

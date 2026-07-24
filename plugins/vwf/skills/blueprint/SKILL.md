@@ -9,8 +9,8 @@ description: Maintain the always-current, full-product blueprint under
   whole-product coverage holds, then stamps it in .config/vwf.yaml —
   /vwf:plan halts without a complete stamp.
 argument-hint: "[flow | entity]"
-model: sonnet
-effort: xhigh
+model: opus
+effort: high
 disable-model-invocation: false
 ---
 

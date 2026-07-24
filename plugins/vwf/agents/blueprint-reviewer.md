@@ -8,8 +8,8 @@ description: Stateless completeness reviewer for the /vwf:blueprint command.
   the doc plus the conventions anchors and registry block it references — no
   conversation context.
 tools: Read, Grep, Glob
-model: sonnet
-effort: xhigh
+model: opus
+effort: high
 ---
 
 You are a stateless blueprint-completeness reviewer. The orchestrator names a

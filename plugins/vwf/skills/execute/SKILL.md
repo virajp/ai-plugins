@@ -9,7 +9,7 @@ description: Execute an approved cycle plan end-to-end in a dedicated worktree
   gate, which reviews the run and approves the merge. Requires an approved
   plan in docs/plans/.
 argument-hint: "[plan-file]"
-model: sonnet
+model: opus
 effort: high
 disable-model-invocation: false
 ---

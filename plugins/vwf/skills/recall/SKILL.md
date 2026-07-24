@@ -5,7 +5,7 @@ description: Retrieve a handoff document from mempalace (wing=<project>,
   drawer=<name>) to resume work in a fresh session, and optionally run its
   next prompt. Use to continue after a session that exceeded ~60% context.
 argument-hint: "<name>"
-model: sonnet
+model: haiku
 effort: medium
 disable-model-invocation: false
 ---

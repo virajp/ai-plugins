@@ -9,7 +9,7 @@ stages **are**.
 
 | Stage      | What             | Model  | Subagent                      | Runs                     |
 | ---------- | ---------------- | ------ | ----------------------------- | ------------------------ |
-| code       | Write Code (TDD) | sonnet | `execute-coder`               | per step                 |
+| code       | Write Code (TDD) | opus   | `execute-coder`               | per step                 |
 | review     | Code Review      | opus   | `execute-code-reviewer`       | per step, ‖ `security`   |
 | security   | Security Review  | opus   | `execute-security-reviewer`   | per step, ‖ `review`     |
 | acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all steps    |

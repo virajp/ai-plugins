@@ -7,8 +7,8 @@ description: Stateless whole-product coherence reviewer for the /vwf:blueprint
   list. Pass paths only (the blueprint root, goal-anchor list, registry block,
   doc-name lists, apis file list) — no conversation context.
 tools: Read, Grep, Glob
-model: sonnet
-effort: xhigh
+model: opus
+effort: high
 ---
 
 You are a stateless whole-product coherence reviewer — the cross-doc pass the

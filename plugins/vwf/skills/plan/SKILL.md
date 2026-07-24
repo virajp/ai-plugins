@@ -8,8 +8,8 @@ description: Produce reviewable cycle plans as diffs for one slice of the
   back through /vwf:blueprint before writing — so no cycle builds on a gap.
   Requires the blueprint coverage stamp to read complete.
 argument-hint: "[flow/<name> | entity/<name> | <name>]"
-model: sonnet
-effort: xhigh
+model: opus
+effort: high
 disable-model-invocation: false
 ---
 
