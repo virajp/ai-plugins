@@ -2,7 +2,8 @@
 name: product-foundations
 description: The foundational concerns every product must decide — users &
   operators, observability, audit logs, change logs, background processes, data
-  retention & PII, notifications, runtime settings, rate limiting. Elicited
+  retention & PII, notifications, runtime settings, rate limiting, reliability
+  targets, disaster recovery & backup, cost guardrails. Elicited
   defaults distilled from the 95octane reference implementation. Used by
   /vwf:architecture (the foundations checklist) and /vwf:blueprint (expanding
   accepted foundations into contracts); read the reference matching the
@@ -11,7 +12,7 @@ description: The foundational concerns every product must decide — users &
 
 # Product Foundations
 
-Nine concerns every product hits sooner or later. Each has a **default
+Twelve concerns every product hits sooner or later. Each has a **default
 contract** distilled from the 95octane reference implementation — proposed per
 product, never silently assumed: `/vwf:architecture` walks this checklist as
 part of its cross-cutting elicitation (one MCQ per foundation: **accept the
@@ -38,6 +39,9 @@ the reference-stack docs for the 95octane realization.
 | Notifications        | Per-channel contracts (push/email/SMS); triggers live on entities          | [notifications](references/notifications.md)               |
 | Runtime settings     | One cached, schema-typed settings document; flags are settings             | [runtime-settings](references/runtime-settings.md)         |
 | Rate limiting        | Endpoint-class limits with a uniform 429 contract                          | [rate-limiting](references/rate-limiting.md)               |
+| Reliability targets  | Per-service availability + latency SLOs with an error-budget stance        | [reliability-targets](references/reliability-targets.md)   |
+| DR & backup          | RPO/RTO per datastore; automated backups; restore drills on a cadence      | [disaster-recovery](references/disaster-recovery.md)       |
+| Cost guardrails      | One budget with 50/90/100% alerts; per-service scaling caps; metered ops   | [cost-guardrails](references/cost-guardrails.md)           |
 
 ## How the workflow consumes this
 
