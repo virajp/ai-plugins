@@ -47,7 +47,7 @@ harness: # workspace-level capability inventory (see the harness contract)
 enforcement: # vwf's enforcement opt-outs — moved here from the registry in format 6
   structure: enforced # or { deviated: <choice>, reason: <one line> }
   stacks: {} # <project>: { choice: <stack>, reason: <one line> }
-  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide)
+  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -55,7 +55,7 @@ pipeline: # bounded knobs — see the hard floor below
   models: {} # per-stage tier override, e.g. review: sonnet — ALWAYS reported at the gate as configured-vs-default
   execute_caps: {} # tighten-only: context/five_hour/seven_day below the shipped 65/90/80
 
-environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value)
+environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value); keys use the CANONICAL names development/staging/production per assets/delivery-pipeline.md — a synonym key (dev/test/stage/prod) is drift to propose fixing
   <env-name>:
     <project-name>: <base-url>
 

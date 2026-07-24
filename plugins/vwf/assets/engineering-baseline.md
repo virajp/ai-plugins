@@ -67,7 +67,10 @@ unvalidated boundaries are a security surface.
    by business code; business rules never live inside technical helpers. The
    workspace placement rules (`rules/schemas-in-common`,
    `rules/integrations-via-common` — seeded under `#patterns`) are this rule's
-   workspace-shaped realization.
+   workspace-shaped realization. Backing services are **attached resources**
+   (12factor IV): reached only through injected config
+   (`environment.md`-catalogued), swappable without a code change — never a
+   hardcoded host, bucket, or queue name.
 
 **API discipline** (defaults the rest-api-design skill details; this rule makes
 them enforced rather than advisory)
@@ -91,19 +94,35 @@ them enforced rather than advisory)
     consumers ignore unknown fields and never break on additive change
     (mirroring the released-API additive-only rule on the async surface).
 
+**Process discipline** (12factor VI, VIII, IX)
+
+12. **`baseline/stateless-processes`** — no request or session state lives in
+    process memory across requests; anything that must survive a request lives
+    in a backing service. Every `service` and `worker` is **safe at N concurrent
+    replicas** — no singleton assumption, no local-disk handoff, no in-memory
+    lock — unless a scoped waiver declares the singleton and why.
+    (`write-versioning` and `idempotency-keys` are what make N-replica safety
+    real; this rule is why they matter.)
+13. **`baseline/graceful-shutdown`** — a process drains on the termination
+    signal: in-flight requests complete or hand back cleanly, claimed jobs are
+    finished or returned to the queue, and **acknowledged work is never lost to
+    a shutdown** (composes with `retry-discipline` and the delivery semantics
+    the flows pin). Sudden death must be survivable; graceful exit is the norm.
+
 **Operational hygiene**
 
-12. **`baseline/structured-logs-no-pii`** — logs are structured (key-value, not
+14. **`baseline/structured-logs-no-pii`** — logs are structured (key-value, not
     prose) and **never contain PII or secrets**; identifiers are opaque ids.
-    Composes with the observability and data-retention foundations.
-13. **`baseline/integer-money`** — money and precise quantities are **integer
+    Logs, traces, and metrics all travel through **OpenTelemetry** (the
+    observability foundation) — never bespoke log files or side channels.
+15. **`baseline/integer-money`** — money and precise quantities are **integer
     minor units** (cents, satoshi, grams) with an explicit currency/unit field —
     never floats.
 
 ## How the surfaces apply it
 
 - **`/vwf:blueprint`** seeds `#baseline` into `conventions.md` on first touch
-  (all 13 lines, minus any product-wide waivers) and applies the defaults while
+  (all 15 lines, minus any product-wide waivers) and applies the defaults while
   authoring: entity Concurrency defaults to rule 1, flow Consistency boundaries
   assume rule 2, API operations carry rules 7–9 — elicitation covers only
   genuine deviations, never re-asks a rule.

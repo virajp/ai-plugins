@@ -11,6 +11,10 @@
     },
     {
       "marketplace": "virajp-plugins",
+      "name": "github-actions"
+    },
+    {
+      "marketplace": "virajp-plugins",
       "name": "markdown"
     },
     {

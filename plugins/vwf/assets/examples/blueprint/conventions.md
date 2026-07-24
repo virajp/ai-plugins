@@ -60,8 +60,13 @@ deviating doc and as an `enforcement.rules` waiver:
     exponential backoff + jitter, bounded attempts.
 11. `baseline/tolerant-reader` — event contracts versioned; consumers ignore
     unknown fields.
-12. `baseline/structured-logs-no-pii` — structured logs, opaque ids, no PII.
-13. `baseline/integer-money` — money as integer minor units with a currency
+12. `baseline/stateless-processes` — no state in process memory across requests;
+    every service/worker safe at N replicas.
+13. `baseline/graceful-shutdown` — drain on termination; acknowledged work is
+    never lost to a shutdown.
+14. `baseline/structured-logs-no-pii` — structured logs, opaque ids, no PII;
+    logs, traces, and metrics via OpenTelemetry.
+15. `baseline/integer-money` — money as integer minor units with a currency
     field.
 
 Active waiver: `baseline/write-versioning/entities/customer` — profile fields

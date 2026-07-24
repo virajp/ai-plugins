@@ -350,14 +350,18 @@ stand.
   only when a pass actually touches an API surface.
 - **Conventions & environment (yours)** — update `docs/blueprint/conventions.md`
   for any cross-cutting decision raised, and `environment.md` per the rule
-  below. On the **first touch** of `conventions.md` in a repo (or when its
-  `#baseline` anchor is missing), seed the **engineering baseline** per
-  `${CLAUDE_PLUGIN_ROOT}/assets/engineering-baseline.md` — the 13 default
-  technical rules as canonical contract lines, omitting any covered by a
-  product-wide `enforcement.rules` waiver. These are enforced defaults, not
-  elicitation material: never ask the user whether to adopt one; a deviation
-  arrives only when the user raises it, and lands as the doc note + scoped
-  waiver pair.
+  below. On the **first touch** of `conventions.md` in a repo (or when the
+  anchor is missing), seed the **engineering baseline** per
+  `${CLAUDE_PLUGIN_ROOT}/assets/engineering-baseline.md` (`#baseline` — the 15
+  default technical rules) and the **delivery pipeline** per
+  `${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md` (`#pipeline` — the
+  canonical environment table and tag-triggered deploy rules), each omitting any
+  rule covered by a product-wide `enforcement.rules` waiver. These are enforced
+  defaults, not elicitation material: never ask the user whether to adopt one; a
+  deviation arrives only when the user raises it, and lands as the doc note +
+  scoped waiver pair. An environment named by a synonym (`dev`/`test`/`prod`
+  etc.) anywhere in the docs or config is drift — propose the canonical name,
+  never normalize silently.
 
 Read only the template a surface you write yourself needs — never all eight up
 front.
