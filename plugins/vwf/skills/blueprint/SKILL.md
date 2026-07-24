@@ -147,9 +147,10 @@ is missing).
 every flow, entity, and API file and returns only the ordered worklist, so the
 scan never lands in your context. Pass it **paths and name lists, not
 contents**: the `docs/blueprint/` root, the goal-anchor list (names only), the
-product doc's slice priority, the registry `projects:` block, and the current
-`blueprint.remaining` list. It returns `COVERAGE:` plus the ordered `WORKLIST:`
-— consume that as given.
+product doc's slice priority, the registry `projects:` block, the current
+`blueprint.remaining` list, and any `enforcement.rules` waivers with a
+`standard-flows/` prefix. It returns `COVERAGE:` plus the ordered `WORKLIST:` —
+consume that as given.
 
 Whole-product coverage holds when, all at once:
 
@@ -165,6 +166,10 @@ Whole-product coverage holds when, all at once:
 - every flow with a Screens section has passed its **visual review** (§6a) — a
   recorded skip (`screens/<project>/<NNN>-<flow>` in `remaining:`) is an open
   hole;
+- every UI project carries its **mandatory standard flows** per
+  `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (conditional slugs resolved
+  from the registry's auth capabilities; waivers in `enforcement.rules`
+  honored);
 - the whole-product **coherence review** (§8) returned `NO GAPS` since the last
   content change.
 
@@ -175,6 +180,17 @@ entities, schemas, and API operations are derived from the flows that need them,
 never authored speculatively. Deciding whether a goal genuinely needs a *new*
 flow (vs. an existing one extended) is elicitation, not inference — so the
 surveyor's `UNSERVED GOALS:` list is a prompt to **ask**, never to author.
+
+Handle the surveyor's `SYNONYM CANDIDATES:` before working the worklist: each is
+an existing flow whose journey may match a missing standard slug (per the
+standard-flows asset). One MCQ per candidate — **rename** to the standard slug
+(a §7 rename reconcile in that flow's pass: inbound links, catalogs, and canvas
+join keys move together), **keep** (it is genuinely a different journey; the
+standard flow stays on the worklist as missing), or **waive** (record
+`standard-flows/<project>/<slug>` under `enforcement.rules` with the user's
+reason — never re-asked). A missing mandatory standard flow with no synonym is
+worked like any other worklist hole: elicited (§3) — including where its number
+slots in the device's execution order — then authored (§4).
 
 If `$ARGUMENTS` named a flow or entity, start there (prepend it to the
 worklist); otherwise start at the top. An empty worklist with a named unit means
@@ -272,6 +288,10 @@ Blueprint-specific notes layered on the protocol:
   rule; MCQ only when both placements are defensible), and the runtime-settings
   keys the flow reads. Foundations expand into existing sections — never new
   mandatory structure.
+- **Standard slugs:** when the journey being elicited matches an entry in
+  `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (splash, signin, home,
+  onboarding, settings, notifications, profile, delete-account,
+  recover-account), the flow takes that exact slug — never a synonym.
 - **Approaches (protocol §5):** where a flow, data-model, or API shape has
   competing designs (e.g. embed vs reference, sync vs async surface), present
   the options before committing.

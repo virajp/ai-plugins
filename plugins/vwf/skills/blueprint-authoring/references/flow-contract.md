@@ -13,6 +13,13 @@ entities/APIs/screens the flow touches. A flow is a process that spans entities
 **or projects** — a single-entity journey that crosses projects (app → service →
 datastore) is a flow too; the cross- project boundary is what makes it one.
 
+**Standard slugs are exact.** A journey matching the standard-flows vocabulary
+(`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` — splash, signin, home,
+onboarding, settings, notifications, profile, delete-account, recover-account)
+takes that exact slug, never a synonym (`login`, `account`, …). The vocabulary
+also sets which of these are mandatory per UI project type — a coverage
+condition the blueprint sweep enforces, waivable only under `enforcement.rules`.
+
 **In-car flows are subset flows.** A `carplay` / `android-auto` journey is
 always a limited subset of a phone journey — different screens, fewer features —
 authored as its **own flow** carrying the in-car `device:` value, never as

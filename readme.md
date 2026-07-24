@@ -505,17 +505,32 @@ connect instructions (`/mcp`); there is no offline authoring mode.
 Maintain the desired end state of the **whole product**. A run is a **sweep**:
 it derives a coverage worklist (every product goal served by a flow, every flow
 reviewed, every entity/schema/API operation a flow references authored and
-reviewed, every registry surface represented) and works through it **flow by
-flow** until whole-product coverage holds and a **whole-product coherence
-review** passes — then stamps `blueprint.coverage: complete` in
-`.config/vwf.yaml`. `plan` refuses to run until that stamp is complete, so a
-half-blueprinted product can't leak gaps into code. Stopping early is fine — the
-stamp records what remains, and the next run picks it up.
+reviewed, every registry surface represented, every UI project carrying its
+**mandatory standard flows** — see below) and works through it **flow by flow**
+until whole-product coverage holds and a **whole-product coherence review**
+passes — then stamps `blueprint.coverage: complete` in `.config/vwf.yaml`.
+`plan` refuses to run until that stamp is complete, so a half-blueprinted
+product can't leak gaps into code. Stopping early is fine — the stamp records
+what remains, and the next run picks it up.
 
 ```text
 /vwf:blueprint                # sweep from the top of the worklist
 /vwf:blueprint place-order    # start the sweep at one flow (or entity)
 ```
+
+**Standard flows.** UI projects carry a canonical flow vocabulary with exact
+slugs — `splash`, `signin`, `home`, `onboarding`, `settings`, `notifications`,
+`profile`, `delete-account`, `recover-account` — with per-type mandates: a
+mobile app (`frontend`) must have `splash` and `home`; a console must have
+`home` (`splash` optional); a site must have `home`. A project whose registry
+entry carries an **Auth & identity capability** must additionally have `signin`
+— and with it `profile`, `delete-account`, and `recover-account` (an account you
+can sign into can be viewed, recovered, and deleted). A missing mandatory
+standard flow is a coverage hole like any other — waivable per flow under
+`enforcement.rules` in `.config/vwf.yaml`, with a reason, never re-asked. The
+slugs are exact: a `login` or `account` flow whose journey matches is proposed
+for a consent-gated rename (links, catalogs, and canvas join keys move
+together), never renamed silently.
 
 Flows live **grouped by the registry project that owns the journey** and
 **numbered in execution order** — `flows/<project>/<NNN>-<flow>/`

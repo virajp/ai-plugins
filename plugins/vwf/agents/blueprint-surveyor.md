@@ -26,9 +26,11 @@ You receive **paths and name lists, not contents**:
 - the `docs/blueprint/` root;
 - the product goal-anchor list (`#goal-<slug>` names only);
 - the product doc's **slice priority** order;
-- the registry `projects:` block (for per-project surface expectations and each
-  project's `doc_unit`);
-- the current `.config/vwf.yaml` `blueprint.remaining` list, if any.
+- the registry `projects:` block (for per-project surface expectations, each
+  project's `doc_unit`, and — for the standard-flows check — each UI project's
+  `type` and capability tokens);
+- the current `.config/vwf.yaml` `blueprint.remaining` list, if any, and any
+  `enforcement.rules` entries with a `standard-flows/` prefix (waivers).
 
 Read what you need on demand. Judge only what is on the pages — no conversation
 context, no source code.
@@ -54,6 +56,18 @@ condition; a unit may fail more than one (report the most blocking).
 6. **Unreviewed screens** — a flow with a `## Screens` section listed under
    `blueprint.remaining` as `screens/<project>/<NNN>-<flow>`.
 7. **Stale coherence** — `coherence` present in the passed `remaining` list.
+8. **Missing mandatory standard flow** — per
+   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: for each UI project, every
+   slug the vocabulary marks mandatory for its `type` — including the
+   conditional ones, resolved from the registry's capability tokens (an Auth &
+   identity capability requires `signin`, and with it `profile`,
+   `delete-account`, `recover-account`) — that has no flow folder on the
+   project's primary device number line. Skip any slug waived in the passed
+   `enforcement.rules` (`standard-flows/<project>/<slug>`). Report as a missing
+   flow, named without a number (`flows/<project>/<slug>` — it takes its NNN
+   when authored). While checking, also note **synonym candidates**: an existing
+   flow whose slug matches the asset's synonym table for a missing standard
+   slug.
 
 ## Ordering
 
@@ -89,7 +103,12 @@ WORKLIST:
 2. ...
 UNSERVED GOALS:
 - <#goal-slug> (or "none")
+SYNONYM CANDIDATES:
+- <flows/<project>/<NNN>-<slug>> → <standard slug> (or "none")
 ```
+
+A synonym candidate is a proposal for the orchestrator to confirm with the user
+— never report it as a hole itself, and never suggest the rename as decided.
 
 Cap the worklist at 40 entries; if more fail, list the first 40 in order and add
 a final line `... and <N> more` so the orchestrator knows the list was bounded.
