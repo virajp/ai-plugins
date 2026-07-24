@@ -199,7 +199,7 @@ flowchart TD
     P --> B["/vwf:blueprint — after any foundation change<br/>(sweeps back to whole-product coverage, re-stamps it)"]:::user
     A --> B
     DS --> B
-    B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(HTML mockups on claude.ai/design)"]:::user
+    B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(local HTML mockups in docs/scratchpad)"]:::user
     B e9@-. "design-first screens" .-> SC["/vwf:screens<br/>(prompt → canvas → import)"]:::user
     SC e10@-. "accepted deltas → blueprint pass" .-> B
     B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + chained dependency plans)"]:::user
@@ -414,7 +414,7 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                         |
 | `/vwf:design-system`    | Import the product's Claude Design design system into the contract (mandatory once UI exists)                   |
 | `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
-| `/vwf:mockups [flow]`   | Batch re-render/push of screen mockups (blueprint passes render screens in-pass)                                |
+| `/vwf:mockups [flow]`   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                        |
 | `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint              |
 | `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
 | `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
@@ -519,11 +519,10 @@ execute ux gate, and the coder consume without network or claude.ai auth —
 elicits only what a canvas never decides (the accessibility conformance target;
 the **Terminal UX** section when a project declares platform `cli`), runs the
 **reviewer subagent** gate until `NO GAPS`, and pins `design.design_system_id`
-in `.config/vwf.yaml` (**universal**: one per product, bound by every mockup
-push regardless of which per-project canvas the mockups land on). Like the
-blueprint, the doc stays code-independent: token *values* and *scales*, never
-the component library, CSS framework, or design file. Every flow's Screens
-reference it; `blueprint` halts on a flow with screens until it exists.
+in `.config/vwf.yaml` (**universal**: one per product). Like the blueprint, the
+doc stays code-independent: token *values* and *scales*, never the component
+library, CSS framework, or design file. Every flow's Screens reference it;
+`blueprint` halts on a flow with screens until it exists.
 
 **Drift is one-way.** The canvas is the source; the doc is its distillation.
 Change the design system on claude.ai/design and re-run the import — the doc is
@@ -595,16 +594,15 @@ catalog, and the product-wide ER diagram. Screens point at the design system;
 **You see every screen before you approve it.** A flow pass that authored or
 changed Screens **gates on a render & review**: the pass renders that flow's
 screens as static HTML mockups — the happy path *and* every pinned sad path
-(error and empty states are mandatory pins per screen) — pushes them to the
-design project pinned for the flow's UI project and platform
-(`design.projects.<project>.<platform>` — one canvas per platform, never shared
-across platforms), and your remarks route straight back into the Screens
-contract before the pass closes. Offline, a local render (files you open in a
-browser) satisfies the gate. Prefer the canvas to *design* the screens instead?
-The pass can defer design-first to [`/vwf:screens`](#vwfscreens) — brief out,
-canvas designs, import folds back. You can also explicitly skip — the skip is
-recorded honestly as `screens/<project>/<NNN>-<flow>` in `blueprint.remaining`,
-which keeps coverage `partial` like any other hole.
+(error and empty states are mandatory pins per screen) — into the repo's
+gitignored `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` tree (**never
+pushed to Claude Design**), you open them in your browser, and your remarks
+route straight back into the Screens contract before the pass closes. Prefer the
+canvas to *design* the screens instead? The pass can defer design-first to
+[`/vwf:screens`](#vwfscreens) — brief out, canvas designs, import folds back.
+You can also explicitly skip — the skip is recorded honestly as
+`screens/<project>/<NNN>-<flow>` in `blueprint.remaining`, which keeps coverage
+`partial` like any other hole.
 
 Complicated contracts are **drawn, not just tabled**: every flow carries a
 mermaid sequence diagram (failure branch included), an entity lifecycle with
@@ -635,34 +633,26 @@ everything after a design-system change, refresh a repo blueprinted before
 in-pass rendering existed, or redo one flow post-hoc. Never a gate for `plan`.
 It renders each flow's Screens contract as **self-contained static HTML
 mockups** (one page per screen plus each pinned state variant, styled from the
-design system's tokens) and pushes them to a **claude.ai/design design-system
-project** via Claude Code's built-in DesignSync tool — or the claude-design
-plugin's MCP server where DesignSync doesn't exist (OpenCode). Pushes bind the
-pinned design system (when `/vwf:design-system` imported one) and self-check a
-sample of the pushed cards with a server-side render before handing you the
-links.
+design system's tokens) into the repo's **gitignored `docs/scratchpad/` tree** —
+`docs/scratchpad/<project>/<device>/<NNN>-<flow>/<screen>[--<state>].html` —
+which you open directly in your browser. Mockups are **never pushed to Claude
+Design**; the scratchpad is the only render surface, and vwf adds the
+`.gitignore` line itself when it's missing.
 
 ```text
 /vwf:mockups                # sweep every flow with a Screens section
 /vwf:mockups place-order    # just one flow's screens
 ```
 
-Mockups are **realizations, never contract**: they are generated in an ephemeral
-build directory (never committed — the design project is the store of record)
-and regenerated at will. Canvas refinements never flow back **as files** — a
-refinement that changes what a screen should *be* routes through
-`/vwf:blueprint` or `/vwf:design-system` (run `/vwf:feedback canvas` to harvest
-your canvas review remarks into those routes), then the mockups are regenerated.
-Each registry UI project pins its own design project **per platform** under
-`design.projects.<project>.<platform>` in `.config/vwf.yaml` — two platforms
-never share a canvas (each carries its own conventions CLAUDE.md), while the
-same platform of two registry projects may — so later runs ask nothing; pushed
-flows are recorded in `design.flows_pushed` (what `plan`'s soft canvas-review
-advisory reads — and what `blueprint` drops when a flow's Screens change
-unrendered), stale cards for screens the blueprint dropped are cleaned up
-(scope-bounded), and the push happens only behind an explicit approval gate. If
-neither DesignSync nor the claude-design MCP server is available in your session
-(or you're not logged in to claude.ai), it offers local-only generation instead.
+Mockups are **realizations, never contract**: each flow's folder is overwritten
+in place on re-render (stable, bookmarkable paths — the tree always shows the
+latest render of every flow), stale files for screens the blueprint dropped are
+pruned, and nothing under `docs/scratchpad/` is ever committed. A review remark
+that changes what a screen should *be* routes through `/vwf:blueprint` or
+`/vwf:design-system`, then the mockups are regenerated. Rendered flows are
+recorded in `design.flows_rendered` in `.config/vwf.yaml` — what `plan`'s soft
+visual-review advisory reads, and what `blueprint` drops when a flow's Screens
+change unrendered.
 
 ### /vwf:screens
 
@@ -773,8 +763,8 @@ to trip on. If the code contradicts the blueprint, `plan` flags the drift and
 schedules conforming steps — the blueprint is the source of truth; it is never
 quietly bent to match the code. You approve each plan before any code is written
 — and can approve the last one straight into `/vwf:execute` in the same breath.
-One soft nudge at that gate: a flow slice whose screens were never pushed for
-canvas review (`design.flows_pushed`) gets a note offering `/vwf:mockups` — or a
+One soft nudge at that gate: a flow slice whose screens have no current visual
+render (`design.flows_rendered`) gets a note offering `/vwf:mockups` — or a
 pending `/vwf:screens import` — first. Advisory only, never a halt.
 
 ### /vwf:execute

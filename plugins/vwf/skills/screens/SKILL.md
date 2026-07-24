@@ -272,12 +272,13 @@ product states pinned where the screen has them).
      automatically).
    - **Rejected deltas** → list them in the report as canvas rework (the next
      canvas session fixes the pages; re-import after).
-7. **Canvas currency.** After the blueprint pass lands a flow whose contract now
-   matches its canvas pages, record the flow in `design.flows_pushed` (entries
-   `<project>/<NNN>-<flow>`) — the canvas is the current render; nothing needs
-   re-pushing. Where an `adapt` verdict moved the contract beyond what the
-   canvas shows, leave the flow out and say so — the §6a render (or a follow-up
-   `prompt`) restores currency.
+7. **Visual currency.** After the blueprint pass lands a flow whose contract now
+   matches its canvas pages, record the flow in `design.flows_rendered` (entries
+   `<project>/<NNN>-<flow>`) — the user has reviewed current visuals for this
+   contract (the canvas pages), so no scratchpad re-render is owed. Where an
+   `adapt` verdict moved the contract beyond what the canvas shows, leave the
+   flow out and say so — the §6a local render (or a follow-up `prompt`) restores
+   currency.
 8. **Report & persist.** Per flow: pages matched, deltas
    accepted/rejected/adapted, index-stitch state per platform, conventions
    folded (step 5), blueprint passes run or queued, new flows scaffolded,
