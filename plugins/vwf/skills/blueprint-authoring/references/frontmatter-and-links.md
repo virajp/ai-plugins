@@ -44,60 +44,65 @@ status: draft                                      # required — draft | review
 
 ### `type` vocabulary
 
-| `type`              | Doc                                                |
-| ------------------- | -------------------------------------------------- |
-| `vwf-product`       | `product.md`                                       |
-| `vwf-architecture`  | `architecture.md`                                  |
-| `vwf-conventions`   | `conventions.md`                                   |
-| `vwf-design-system` | `design-system.md`                                 |
-| `vwf-environment`   | `environment.md`                                   |
-| `vwf-flow`          | a flow doc `flows/<project>/<NNN>-<flow>/index.md` |
-| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)    |
-| `vwf-entity`        | an entity doc `entities/<entity>/index.md`         |
-| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)     |
-| `vwf-plan`          | a `docs/plans/` cycle plan                         |
-| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)     |
+| `type`              | Doc                                                                 |
+| ------------------- | ------------------------------------------------------------------- |
+| `vwf-product`       | `product.md`                                                        |
+| `vwf-architecture`  | `architecture.md`                                                   |
+| `vwf-conventions`   | `conventions.md`                                                    |
+| `vwf-design-system` | `design-system.md`                                                  |
+| `vwf-environment`   | `environment.md`                                                    |
+| `vwf-flow`          | a flow contract `flows/<project>/<NNN>-<flow>/index.md`             |
+| `vwf-flow-platform` | a flow's platform file `flows/<project>/<NNN>-<flow>/<platform>.md` |
+| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)                     |
+| `vwf-entity`        | an entity doc `entities/<entity>/index.md`                          |
+| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)                      |
+| `vwf-plan`          | a `docs/plans/` cycle plan                                          |
+| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)                      |
 
 Every flow is a **folder** (`docs/blueprint/flows/<project>/<NNN>-<flow>/` — one
-uniform depth for UI and non-UI projects alike) holding `index.md` alone
-(`type: vwf-flow`). Every entity is a **folder**
+uniform depth for UI and non-UI projects alike) holding `index.md` (the
+platform-agnostic contract, `type: vwf-flow`) plus **one `<platform>.md` per
+implemented platform** (`type: vwf-flow-platform`) carrying that platform's
+screens. A non-UI flow is `index.md` alone. Every entity is a **folder**
 (`docs/blueprint/entities/<entity>/`) holding exactly `index.md`
 (`type: vwf-entity`) + `schema.yaml`. The reviewer treats a folder as one
 concept.
 
-## The `device:` key (which device a flow is for)
+## The `platform:` key (which platform a flow file renders)
 
-A flow doc belonging to a **UI project** carries one more key beside `status:`
-and `implementation:`:
+A flow's **platform file** carries one more key beside `status:` and
+`implementation:`:
 
 ```yaml
-device: mobile # mobile | web | carplay | android-auto
+platform: mobile # mobile | tablet | desktop | web | auto
 ```
 
-Since **format 14** the flow path carries no device segment — every flow sits
-directly under its registry project — so this key is the **sole carrier** of the
-device type. Everything that used to read the device from the path reads it
-here: `/vwf:screens` (which platform briefs a flow gets, and the canvas page
-suffix), `/vwf:blueprint` (the in-car subset-flow rules), `/vwf:mockups` (the
-push path), and `flows/index.md`'s per-device catalog grouping.
+Since **format 15** the platform lives in the **filename** (`mobile.md`,
+`auto.md`, …); this key restates it so the file is self-describing, and the
+reviewer checks the two agree. The old `device:` key on `index.md` is
+**retired** — a flow contract is platform-agnostic, and in-car journeys are no
+longer separate flows.
 
 Rules the reviewer enforces:
 
-- **Required** on every flow of a UI project (registry `type` `site`,
-  `frontend`, or `console`); **omitted** on a non-UI project's flows.
-- The value comes from the fixed vocabulary above and must be one the registry
-  project actually declares (its `type` + `platforms:`).
-- `carplay` / `android-auto` mark **in-car subset flows** — each is its own flow
-  and must carry the mandatory `Subset of:` link to its parent phone flow (now a
-  sibling folder, `../<NNN>-<flow>/index.md`).
-- `NNN` is gap-numbered in steps of 10 **per device**, so two devices' flows may
-  share a number inside one project folder; the folder names still differ.
+- **Required** on every platform file; **never** on `index.md` (a `device:` or
+  `platform:` key there is format-14 drift).
+- The value comes from the fixed vocabulary above, must match the filename, and
+  must be one the registry project actually declares (`platforms:`).
+- Every platform file links its contract — `Flow contract: [<name>](./index.md)`
+  — and appears as a row in `index.md`'s **Platforms** table. One without the
+  other is a gap.
+- `auto` covers **CarPlay and Android Auto together**; their template
+  differences are deviations inside `auto.md`, never separate files. The old
+  `Subset of:` parent link is retired with the in-car subset flows.
+- Screen **codes** are shared across a flow's platform files — `100a` is one
+  screen concept; a platform lacking it omits the row, and a platform-only
+  screen takes the next letter free across the whole flow.
 
-Note the vocabulary is deliberately **not** the same as the *platform* set
-(`mobile` | `tablet` | `desktop` | `carplay` | `android-auto`) used for screen
-brief filenames and canvas page suffixes: one device groups the platforms it
-renders on (a `mobile` flow yields `mobile.md` and, where the registry declares
-it, `tablet.md`).
+The platform vocabulary is now **the same everywhere** — flow files, the
+`docs/prompts/screens/` briefs, canvas page suffixes, `design.projects` pins,
+and the `docs/scratchpad/` render tree — which is what the split `device:` vs
+*platform* vocabularies before format 15 made impossible.
 
 ## YAML artifacts are typed by path
 
@@ -180,7 +185,7 @@ completeness bars.
 A small, format-valid bundle lives at
 `${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/` — a commerce slice where
 every edge resolves. Read
-[`flows/web/010-place-order/index.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/flows/web/010-place-order/index.md)
+[`flows/web/110-place-order/index.md`](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/flows/web/110-place-order/index.md)
 as the entry point: it `Serves:` a product goal, its steps link
 `entities/order/index.md` and name operationIds in `apis/api.openapi.yaml`, and
 its Screens defer visual language to `design-system.md`. The

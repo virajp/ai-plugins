@@ -25,8 +25,8 @@ You receive:
   and contract-pinned content), plus any recorded deviations beneath it.
 - **Design-system doc(s)** — paths to `docs/blueprint/design-system.md` or every
   file of the folder form. Read them fully.
-- **Render directory** — the absolute path of this flow's scratchpad dir
-  (`docs/scratchpad/<project>/<device>/<NNN>-<flow>/`). Write only there,
+- **Render directory** — the absolute path of this flow platform's scratchpad
+  dir (`docs/scratchpad/<project>/<NNN>-<flow>/<platform>/`). Write only there,
   **overwriting existing files in place** — the dir always holds the latest
   render, never an accumulation of runs.
 

@@ -7,8 +7,8 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 8
-blueprint_format: 14
+config_format: 9
+blueprint_format: 15
 topology: monorepo # or polyrepo | workspace
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -422,6 +422,61 @@ the current format and apply the delta:
   7. Bump the stamp to `14` and `config_format` to `7` (per the vwf-config asset
      — the `6 → 7` migration is exactly this entry-format rewrite). No content
      changes: `status:` and `implementation:` stamps are preserved.
+
+- **`14 → 15`** → the **platform-file restructure + designated numbering**. The
+  largest migration since 9; do it in this order, halting on any collision
+  rather than guessing:
+
+  1. **Renumber to the bands** (per
+     `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`). Per registry project,
+     map each flow to its new number: standard slugs take their **designated**
+     number (`010` splash, `020` signin, `030` recover-account, `040`
+     onboarding, `100` home, `910` profile, `920` settings, `930` notifications,
+     `940` delete-account); every other flow is renumbered into `110`–`890`
+     **preserving its existing relative order**, gap-numbered by 10. A slug that
+     is a **synonym** of a standard one (`login`, `dashboard`, …) is surfaced
+     for a consent-gated rename first — never renamed silently. `git mv` each
+     folder to `<NNN>-<slug>`; **halt** if two flows of one project resolve to
+     the same number (a pre-15 per-device collision) and ask which keeps it.
+  2. **Fold in-car flows into their parent.** A pre-15 flow carrying
+     `device: carplay` or `device: android-auto` is **not** its own flow any
+     more: `git mv` its body into the parent flow's folder (the one its
+     `Subset of:` line names) as **`auto.md`**, merging a CarPlay and an Android
+     Auto flow of the same parent into one file with their differences recorded
+     under **Platform deviations**. **Halt** if an in-car flow has no
+     `Subset of:` parent — it needs a human decision (usually: it becomes its
+     own flow with only an `auto.md`).
+  3. **Split every remaining flow** into `index.md` + platform files. Move the
+     `## Screens` section and its Components blocks out of `index.md` into
+     `<platform>.md`, where `<platform>` comes from the old `device:` key
+     rewritten to the new vocabulary (`mobile` → `mobile`, `web` → `web`;
+     `carplay`/`android-auto` were handled in step 2). Where the registry
+     declared `tablet` and the flow's screens recorded tablet deviations, split
+     those into `tablet.md`. Give each platform file its frontmatter
+     (`type: vwf-flow-platform`, `platform:`, `status:`/`implementation:` copied
+     from the flow) and its `Flow contract:` link; **delete the `device:` key**
+     from `index.md` and add its **Platforms** table.
+  4. **Re-code screens** to the flow's new number (`010a` → `100a` when
+     `010-home` became `100-home`), keeping letters and order. Codes stay shared
+     across the platform files.
+  5. **Rename the standard flows' primary screens** to their flow slug
+     (`Dashboard` → `home`) — consent-gated per screen, like the slug renames.
+  6. `git mv` the prompt tree to match
+     (`docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md`), renaming
+     `carplay.md`/`android-auto.md` → `auto.md` (merging if both exist) and
+     `desktop.md` → `web.md` for `site`/`console` projects.
+  7. **Rewrite every inbound link** — `flows/index.md` (now one section per
+     project with a Platforms column, no device headings), entity `Used by:`
+     lines, plan `covers:` frontmatter, and cross-flow links. Verify every edge
+     resolves; a dangling link is a failed migration.
+  8. **Canvas rename is required** (unlike `13 → 14`): page names carry the flow
+     number and platform (`010-signin--mobile` → `020-signin--mobile`,
+     `--carplay` → `--auto`). List the renames for the user to apply on the
+     canvas — vwf does not rename canvas pages itself.
+  9. Bump the stamp to `15` and `config_format` to `9` (per the vwf-config asset
+     — flow identifiers gain a `<platform>` leaf and the platform vocabulary is
+     rewritten). Content is otherwise preserved: `status:` and `implementation:`
+     stamps carry over per file.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

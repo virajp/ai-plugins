@@ -56,16 +56,14 @@ their own conventions.
 - **desktop** — every screen renders at a **1440×900** viewport in a
   browser-chrome frame, toggleable via the `frame` tweak (default on); theme via
   `darkMode` (default on).
-- **carplay** — every screen renders at **800×480** (landscape, the CarPlay base
-  resolution) in the in-car display frame (`frame` default on). Screens are
-  **template-constrained by the OS** (list / grid / map / now-playing) and
-  glanceable — minimal interaction while driving; the design system reaches only
-  as far as the platform allows.
-- **android-auto** — every screen renders at **1280×720** (landscape, the common
-  head-unit resolution) in the in-car display frame (`frame` default on).
-  Screens are **template-constrained by the OS** (list / grid / map / media) and
-  glanceable — minimal interaction while driving; the design system reaches only
-  as far as the platform allows.
+- **auto** (in-car — CarPlay and Android Auto together) — every screen renders
+  at **800×480** landscape (the CarPlay base resolution; Android Auto head units
+  are commonly 1280×720 — same layout, more pixels) in the in-car display frame
+  (`frame` default on). Screens are **template-constrained by the OS** (list /
+  grid / map / now-playing) and glanceable — minimal interaction while driving;
+  the design system reaches only as far as the platform allows. Where CarPlay
+  and Android Auto genuinely diverge, the flow's `auto.md` records it as a
+  deviation.
 
 ## Behavior conventions
 

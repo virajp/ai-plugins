@@ -8,10 +8,10 @@ stacks, capabilities) lives in the registry in `docs/blueprint/architecture.md`;
 this file holds only how vwf treats it. Since **blueprint-format 6** it replaces
 the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 8)
+## Schema (config_format 9)
 
 ```yaml
-config_format: 8 # this file's own schema version — setup migrates it
+config_format: 9 # this file's own schema version — setup migrates it
 blueprint_format: 14 # the docs/blueprint format stamp
 
 product:
@@ -19,7 +19,7 @@ product:
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
-  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow> (skipped visual review), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
+  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
 topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
@@ -30,7 +30,7 @@ projects: # per-project NUANCES only — no type/path/stack keys, ever
     platforms: [
       <target>,
       <...>,
-    ] # extensions beyond the reference stack (e.g. flutter: ios, android, macos, windows; `cli` marks a terminal surface — requires the design system's Terminal UX section; `carplay`/`android-auto` mark in-car surfaces — frontend projects only, each admitting flows under flows/<project>/ that carry that `device:` value, whose journeys are subset flows of the phone app)
+    ] # the platforms this project implements, from the one vocabulary: mobile | tablet | desktop | web | auto (assets/standard-flows.md) — each admits a <platform>.md file on a flow. `auto` = in-car, CarPlay and Android Auto together, frontend projects only. `cli` may also appear: a terminal surface, which has no screens but requires the design system's Terminal UX section
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -65,8 +65,8 @@ design: # claude.ai/design pins & canvas state — ids and flow names only, neve
   design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
   projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
-      <platform>: <uuid> # mobile | tablet | desktop | carplay | android-auto
-  flows_rendered: [] # flows whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>; recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/<device>/<NNN>-<flow>/ tree, NEVER on the canvas
+      <platform>: <uuid> # mobile | tablet | desktop | web | auto — the one vocabulary (assets/standard-flows.md)
+  flows_rendered: [] # flow PLATFORMS whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>/<platform> (format 15: platform granularity, so a flow rendered for mobile but not auto is visibly partial); recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/<NNN>-<flow>/<platform>/ tree, NEVER on the canvas
 
 memory:
   wing: <wing-name> # explicit mempalace wing; defaults to product.name
@@ -172,3 +172,16 @@ earlier than 65/90/80), never loosen.
   unchanged. Readers honor a legacy `flows_pushed` key as the same list — its
   presence is `7` drift. The `design.projects` pins stay: they serve
   `/vwf:screens` and `/vwf:feedback canvas`, no longer mockups.
+- **`8 → 9` migration** (performed by `/vwf:setup`, alongside the blueprint
+  `14 → 15` delta): every flow identifier stored in this file **gains a
+  `<platform>` leaf**, since format 15 moved screens into per-platform files.
+  `design.flows_rendered` entries go `<project>/<NNN>-<flow>` →
+  `<project>/<NNN>-<flow>/<platform>` (one entry per platform file the flow
+  has), and `blueprint.remaining` `screens/…` entries do the same. The
+  **platform vocabulary is rewritten** everywhere it appears (`design.projects`
+  pins, `projects.<name>.platforms`): `carplay` and `android-auto` collapse to
+  **`auto`** — two pins that collapse onto one platform are surfaced for
+  re-pinning, never silently merged — and a `site`/`console` project's `desktop`
+  pin becomes `web`. Flow numbers are renumbered by the blueprint migration; the
+  entries here are rewritten to match. Readers honor a legacy entry without a
+  platform leaf by matching the flow prefix — its presence is `8` drift.

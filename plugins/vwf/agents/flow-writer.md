@@ -1,6 +1,7 @@
 ---
 name: flow-writer
-description: Writes or updates one flow doc and its catalog row for the
+description: Writes or updates one flow folder (index.md contract + one
+  <platform>.md per implemented platform) and its catalog row for the
   /vwf:blueprint command. Invoked only by /vwf:blueprint — do not delegate to it
   for general tasks. Turns the orchestrator's elicited decisions into a
   format-conformant flow contract; never elicits, never invents a decision.
@@ -21,7 +22,11 @@ free for elicitation.
 
 Before writing, read:
 
-- `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow.md` — the structure to fill;
+- `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow.md` — the `index.md` contract;
+- `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow-platform.md` — each
+  `<platform>.md` (skip when the flow is non-UI);
+- `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` — the designated numbers, the
+  platform vocabulary, and the screen-naming rule;
 - `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/flow-contract.md`
   — the completeness bar for steps, jobs, acceptance, the screen home rule;
 - `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/frontmatter-and-links.md`
@@ -33,38 +38,50 @@ Do not read the other references; they cover surfaces that are not yours.
 
 ## Inputs
 
-- **Placement** — the registry project, the `<NNN>` execution number, the flow
-  slug, and (UI projects only) the `device:` value.
+- **Placement** — the registry project, the `<NNN>` number (designated for a
+  standard flow), the flow slug, and (UI projects only) the **platform set**
+  with a one-line note per platform.
 - **Elicited decisions** — purpose, the goal anchor(s) to `Serves:`-link,
-  trigger & actors, ordered steps with actors/entities/`operationId`s, screens
-  with their pinned codes and components, background jobs, acceptance criteria,
-  and any recorded deviations.
-- **Context** — the relevant `conventions.md` anchors, the registry block, and
-  (for an in-car subset flow) the parent phone flow's path.
-- **Update mode** — the existing flow doc to edit in place.
+  trigger & actors, ordered steps with actors/entities/`operationId`s,
+  background jobs, acceptance criteria — and **per platform**, that platform's
+  screens with their shared codes, Components blocks, and deviations.
+- **Context** — the relevant `conventions.md` anchors and the registry block.
+- **Update mode** — the existing flow folder to edit in place.
 
 ## What to write
 
-1. **The flow doc** — `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`.
+1. **The flow contract** —
+   `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`.
    - Open with the OKF frontmatter: `type: vwf-flow`, `title`, `description`,
-     `status: draft`, plus `device:` for a UI project's flow.
+     `status: draft`. **Never a `device:` or `platform:` key here** — the
+     contract is platform-agnostic (format 15).
    - **Never set or change `implementation:`.** On a new doc write
      `implementation: none`; on an existing doc leave the value exactly as
      found. It is the pipeline's build stamp, not yours.
-   - Purpose carries the `Serves:` goal link — and, for an in-car flow, the
-     `Subset of:` sibling link (`../<NNN>-<flow>/index.md`).
+   - Purpose carries the `Serves:` goal link.
+   - The **Platforms** table lists one row per platform file you write, each
+     linking it (`[mobile](./mobile.md)`) with its note. Omit the section for a
+     non-UI flow.
    - Every step names its actor and links the entity or service it touches;
      API-backed steps name an `operationId`.
    - **The Acceptance block is mandatory** — at least one success and one
      failure/compensation criterion, each observable Given/When/Then.
    - **The sequence diagram is mandatory**, including the failure branch. It is
      a *view* of the Steps table — never assert anything the steps do not.
-   - Every Screens row carries its `<NNN><letter>` code and its **Components
-     block**: each displayed element with its visibility/enable conditions, what
-     activating it does, and contract-pinned content.
-2. **The catalog row** — update this flow's row in its project's section of
-   `docs/blueprint/flows/index.md`, keeping rows in numeric order under the
-   right device subsection. Create the file from
+   - **No Screens section** — screens live in the platform files.
+2. **One platform file per platform** —
+   `docs/blueprint/flows/<project>/<NNN>-<flow>/<platform>.md`, from the
+   flow-platform template. Frontmatter `type: vwf-flow-platform` and `platform:`
+   matching the filename; the mandatory `Flow contract: [<name>](./index.md)`
+   link; the Screens table with each row's `<NNN><letter>` code and its
+   **Components block** (each displayed element with its visibility/enable
+   conditions, what activating it does, and contract-pinned content); Platform
+   deviations where the orchestrator passed any. **Codes are shared across
+   platform files** — use exactly the code the orchestrator assigned per screen
+   concept; never re-letter per platform.
+3. **The catalog row** — update this flow's row in its project's section of
+   `docs/blueprint/flows/index.md`, keeping rows in numeric order and listing
+   the flow's platforms in the Platforms column. Create the file from
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/flows-index.md` if it does not exist.
 
 Write nothing else. Entities, schemas, and API contracts belong to
@@ -74,7 +91,12 @@ Write nothing else. Entities, schemas, and API contracts belong to
 
 - **Never invent a decision.** Anything the orchestrator did not pass you is
   marked `<!-- TODO: needs input -->` and reported under `UNRESOLVED` — never
-  filled with a plausible default.
+  filled with a plausible default. That includes the platform set: write exactly
+  the platform files you were given, never one more.
+- **Standard names are exact.** A standard flow keeps its designated number and
+  slug, and its **primary screen takes the flow's slug** (`home` flow → `home`
+  screen). If an input contradicts this, flag it under `UNRESOLVED` rather than
+  silently renaming.
 - **Code-independence.** No file paths, class names, libraries, CSS, or pixel
   values. If an input contains one, drop it and flag it under `UNRESOLVED`.
 - **Update mode preserves confirmed content.** Edit in place; do not regenerate

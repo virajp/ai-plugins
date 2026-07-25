@@ -4,14 +4,13 @@ title: Order cancellation & refund
 description: A paid order is cancelled and its payment refunded, promptly and
   exactly once.
 status: reviewed
-device: web
 implementation: complete
 tags: [ commerce, refunds ]
 ---
 
 # Flow: Order cancellation & refund
 
-<!-- Conformance example (blueprint-format 14). A worked, format-valid flow doc
+<!-- Conformance example (blueprint-format 15). A worked, format-valid flow doc
      with an operator actor, a background job, and a compensation branch. -->
 
 ## Purpose
@@ -21,6 +20,12 @@ the payment is refunded in full without manual intervention. The refund is
 prompt and issued exactly once, so shoppers trust the shop enough to reorder.
 
 Serves: [Trusted refunds](../../../product.md#goal-trusted-refunds)
+
+## Platforms
+
+| Platform | File            | Notes                                   |
+| -------- | --------------- | --------------------------------------- |
+| web      | [web](./web.md) | Customer-facing cancellation and status |
 
 ## Trigger & Actors
 
@@ -85,26 +90,6 @@ sequenceDiagram
     end
 ```
 
-## Screens → web
-
-| Code | Screen       | Route        | Reads (operationId)       | States (loading/error/empty) | Actions          | Form validation |
-| ---- | ------------ | ------------ | ------------------------- | ---------------------------- | ---------------- | --------------- |
-| 020a | Order detail | /orders/{id} | `getOrder`, `cancelOrder` | loading skeleton · error · — | Cancel (confirm) | —               |
-
-<!-- Home flow for the Order detail screen. Cancel is destructive: it uses the
-     design-system `danger` role behind a confirmation overlay. Visual language
-     comes from ../../../design-system.md; record only deviations here. -->
-
-### 020a — Order detail components
-
-| Component             | Rules                                                                                              |
-| --------------------- | -------------------------------------------------------------------------------------------------- |
-| Order summary (info)  | Items, total, and current order state from `getOrder`                                              |
-| Cancel order (button) | Visible only while the order reads `paid` and is unfulfilled; click opens the confirmation overlay |
-| Confirmation overlay  | Confirm → `cancelOrder`; states the refund is issued to the original payment method; dismissible   |
-| Refund status (info)  | Shown after cancellation: refunded, or visibly failed/pending when the provider is down            |
-| Load error (banner)   | Shown when `getOrder` fails; offers retry                                                          |
-
 ## Background Jobs → worker
 
 | Job    | Trigger                        | Timer / Retry                  | Activities                                               | On failure                                              |
@@ -126,7 +111,7 @@ sequenceDiagram
 - [api API contract](../../../apis/api.openapi.yaml) — for `cancelOrder` /
   `getOrder`
 - [auth](../../../conventions.md#auth), [errors](../../../conventions.md#errors)
-- [design-system](../../../design-system.md) — this flow has Screens
+- [design-system](../../../design-system.md) — this flow has platform files
 
 ## Open Questions
 

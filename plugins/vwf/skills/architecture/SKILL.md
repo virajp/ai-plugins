@@ -118,13 +118,16 @@ scripts. For each that does, record `cli` under `projects.<name>.platforms` in
 what makes the design system's **Terminal UX** section required — it is not a
 registry `type` and never triggers Screens or mockups.
 
-**Automotive surfaces.** For each **`frontend` (mobile) project**, ask (once)
-whether the app must run **in-car** — Apple CarPlay, Android Auto, or both.
-Record `carplay` / `android-auto` under `projects.<name>.platforms` (confirmed,
-per the vwf-config asset) — valid **only on `frontend` projects**; never offer
-them for other types. These platforms extend the blueprint's Screens elicitation
-(which flows are available in-car, and each in-car screen's template-constrained
-variant) and the `/vwf:screens` design briefs.
+**Platforms.** Record each project's implemented surfaces under
+`projects.<name>.platforms` (confirmed, per the vwf-config asset) from the one
+vocabulary in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: **`mobile`**,
+**`tablet`**, **`desktop`** (a natively installed app), **`web`**
+(browser-delivered — the default for `site` / `console`), and **`auto`** (in-car
+— CarPlay and Android Auto together; ask once per `frontend` project whether the
+app must run in-car, and offer `auto` **only** for `frontend` projects). The
+vocabulary names form factors, not vendors — `mobile` already hides iOS/Android,
+so `auto` hides CarPlay/Android Auto the same way. These platforms decide which
+`<platform>.md` files a flow may carry, and the `/vwf:screens` design briefs.
 
 **Reference stacks are enforced.** Every project type has a reference stack doc
 at `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md` — read it and record that
