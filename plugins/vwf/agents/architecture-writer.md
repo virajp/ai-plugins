@@ -80,14 +80,14 @@ edit that file only.
 
 ## Project Types
 
-| Type       | What it is                                 | Default `doc_unit` | Hosted on |
-| ---------- | ------------------------------------------ | ------------------ | --------- |
-| `service`  | API backend                                | `entity`           | cloud     |
-| `worker`   | Background-task processor                  | `entity`           | cloud     |
-| `packages` | Shared libraries used by others            | `module`           | n/a (lib) |
-| `site`     | Website                                    | `page`             | cloud     |
-| `console`  | Operator/back-office web UI                | `page`             | cloud     |
-| `frontend` | Client-side application (mobile apps only) | `entity`           | device    |
+| Type       | What it is                                                 | Default `doc_unit` | Hosted on |
+| ---------- | ---------------------------------------------------------- | ------------------ | --------- |
+| `service`  | API backend                                                | `entity`           | cloud     |
+| `worker`   | Background-task processor                                  | `entity`           | cloud     |
+| `packages` | Shared libraries used by others                            | `module`           | n/a (lib) |
+| `site`     | Website                                                    | `page`             | cloud     |
+| `console`  | Operator/back-office web UI                                | `page`             | cloud     |
+| `frontend` | Client-side application (mobile / tablet / desktop / auto) | `entity`           | device    |
 
 `service`, `worker`, `packages`, `site`, and `console` are cloud-hosted;
 `frontend` runs on the client and ships through whatever distribution channel

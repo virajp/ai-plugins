@@ -61,6 +61,13 @@ each other lives in `bundle`, so no cross-flow gap is lost to sharding.
       `apis/<project>.openapi.yaml`.
 - [ ] Screens defer visual language to `design-system.md`; a screen defined in
       more than one flow (the home rule) is a gap.
+- [ ] Across the flow's **platform files**: a screen code means one concept in
+      all of them, no two screens share a code, every file is listed in
+      `index.md`'s Platforms table (and vice versa), and every listed platform
+      is one the registry project declares.
+- [ ] Standard flows sit at their **designated numbers** (`100` home, `020`
+      signin, …) and product flows inside `110`–`890`; a standard flow's primary
+      screen carries the flow's slug.
 
 **3. Cross-flow consistency**
 

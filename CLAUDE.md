@@ -129,42 +129,41 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   canvas is the source, doc hand-edits resolve by re-import, never a publish
   back), `blueprint` (a **full-product, flow-first sweep** — a run works a
   coverage worklist flow by flow, deriving the entities/schemas/API operations
-  each flow stands on; a flow pass with Screens **gates on an in-pass render &
-  review** (§6a: per-flow `mockup-generator` into the gitignored
-  `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` tree — **never pushed to
+  each flow stands on; a flow pass with screens **gates on an in-pass render &
+  review** (§6a: per-platform `mockup-generator` into the gitignored
+  `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` tree — **never pushed to
   Claude Design** — the user sees the screens, happy and sad paths, in their own
   browser before approving the pass; the user may instead defer **design-first**
   to `/vwf:screens` (brief out, canvas designs, import folds back); an explicit
-  skip records `screens/<project>/<NNN>-<flow>` in `blueprint.remaining`;
-  `carplay`/`android-auto` platforms get their journeys as **own subset flows**
-  carrying the in-car `device:` value, `Subset of:`-linked to the parent phone
-  flow) — until whole-product coverage holds **and the whole-product coherence
-  review passes**, then stamps `blueprint.coverage` in `.config/vwf.yaml` and
-  offers `/vwf:plan`), `mockups` (the **batch re-render / regeneration tool** —
-  blueprint passes render screens in-pass, so this sweeps or refreshes: after a
-  design-system change, for a legacy repo, or one flow post-hoc; per-flow
-  `mockup-generator` subagents writing into
-  `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` — gitignored (auto-added
-  when missing), overwritten in place per flow, stale files pruned, never
-  committed, **never pushed to Claude Design** — and records
+  skip records `screens/<project>/<NNN>-<flow>` in `blueprint.remaining`; the
+  `auto` platform (CarPlay + Android Auto together) is a **platform file** of
+  the same flow, never a separate journey) — until whole-product coverage holds
+  **and the whole-product coherence review passes**, then stamps
+  `blueprint.coverage` in `.config/vwf.yaml` and offers `/vwf:plan`), `mockups`
+  (the **batch re-render / regeneration tool** — blueprint passes render screens
+  in-pass, so this sweeps or refreshes: after a design-system change, for a
+  legacy repo, or one flow post-hoc; per-flow `mockup-generator` subagents
+  writing into `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` — gitignored
+  (auto-added when missing), overwritten in place per flow, stale files pruned,
+  never committed, **never pushed to Claude Design** — and records
   `design.flows_rendered` in `.config/vwf.yaml`; never a gate for `plan`),
   `screens` (the **two-way screen sync**: `prompt <flow>` writes **one compact
   wireframe-level design brief per platform**
   (`docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md` — `mobile.md`,
-  `tablet.md`, `carplay.md`, …), each **always the flow's full screen blueprint,
+  `tablet.md`, `auto.md`, …), each **always the flow's full screen blueprint,
   regenerated in place, never a change note** — **the files are the
   deliverable**, pasted into the canvas chat by the user, never run against the
   Claude Design MCP; `prompt` never touches the canvas — each commissioning
   **one interactive page, never static mockups**, named `<flow>--<platform>`
   (`020-signin--mobile`; the flow folder name is the join key, machine- and
   human-reconcilable; platforms from the registry project's `type` +
-  `platforms:` — `mobile`/`tablet`/`desktop`/`carplay`/`android-auto`, an in-car
-  suffix resolving to the in-car `device:` subset flows), its frames named by
-  the Screens rows' pinned **codes** (`020a`, `020b`, … — the per-screen sync
-  key), its happy path stitched into the platform canvas project's
-  **`index--<platform>`** page (the whole happy-flow mockup, walkable from the
-  index alone); the **standing conventions live in the canvas project's own
-  CLAUDE.md, whose repo-side source `prompt` generates and maintains**
+  `platforms:` — `mobile`/`tablet`/`desktop`/`web`/`auto`, read straight off the
+  flow's platform files), its frames named by the Screens rows' pinned **codes**
+  (`020a`, `020b`, … — the per-screen sync key), its happy path stitched into
+  the platform canvas project's **`index--<platform>`** page (the whole
+  happy-flow mockup, walkable from the index alone); the **standing conventions
+  live in the canvas project's own CLAUDE.md, whose repo-side source `prompt`
+  generates and maintains**
   (`docs/prompts/screens/<project>/CLAUDE--<platform>.md` from the canvas-claude
   template, one per pinned design project — naming contract incl. frame codes +
   index stitch, revise-in-place, the interactive-journey mandate, the platform's
@@ -536,28 +535,29 @@ product-wide `design-system.md`, the per-project env-var/secret catalog
 `environment.md`; **one flow folder per flow, grouped by primary registry
 project and numbered in execution order** —
 `flows/<project>/<NNN>-<flow>/index.md` at one uniform depth for UI and non-UI
-projects alike, a UI project's flow declaring its device in the **`device:`
-frontmatter key** (`mobile`/`web`/`carplay`/`android-auto`; in-car journeys are
-their own subset flows, `Subset of:`-linked to the parent phone flow — now a
-sibling folder) and a non-UI project's omitting it (NNN gap-numbered in steps of
-10 **per device**, so one project folder may hold two flows sharing a number),
-each carrying its Screens (rows coded `<NNN><letter>`, each with its per-screen
-Components block), Jobs, and Acceptance block — with `flows/index.md` the
-catalog (per-project sections then per-device, read from the `device:` keys,
-numeric order) + inter-service contracts; **one entity folder per entity** —
-`entities/<entity>/` holding exactly `index.md` + `schema.yaml` — with
-`entities/index.md` the catalog + product-wide erDiagram; and the API contracts
-`apis/<project>.openapi.yaml` + the frozen `apis/released/` snapshots; the
-blueprint root holds only the system docs), `docs/plans/`
-(`<date>-<time>-<slice>.md`, with `archived/`), and `docs/prompts/`
-(`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
-prompt type → registry project → flow, one brief per platform regenerated in
-place (the filename carries the platform, so no device directory level exists),
-plus the per-design-project canvas conventions files
+projects alike — `index.md` holding the **platform-agnostic contract** (trigger,
+actors, steps, diagram, jobs, acceptance; no screens) beside one
+**`<platform>.md` per implemented platform** (`mobile`/`tablet`/`desktop`/
+`web`/`auto`) carrying that platform's Screens (rows coded `<NNN><letter>`,
+codes **shared across platform files**, each with its per-screen Components
+block); a non-UI flow is `index.md` alone. Numbers are **designated** — `100` is
+always `home`, `010` splash / `020` signin / `030` recover-account / `040`
+onboarding, `110`–`890` product flows, `910`–`940` the account screens — on one
+number line per project. `flows/index.md` is the catalog (per-project sections,
+numeric order, a Platforms column) + inter-service contracts; **one entity
+folder per entity** — `entities/<entity>/` holding exactly `index.md` +
+`schema.yaml` — with `entities/index.md` the catalog + product-wide erDiagram;
+and the API contracts `apis/<project>.openapi.yaml` + the frozen
+`apis/released/` snapshots; the blueprint root holds only the system docs),
+`docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`), and
+`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design
+briefs grouped by prompt type → registry project → flow, one brief per platform
+regenerated in place (the filename carries the platform, mirroring the flows
+tree exactly), plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
 committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 (**gitignored, never committed** — the mockup render tree,
-`<project>/<device>/<NNN>-<flow>/<screen-slug>[--<state>].html`, written by
+`<project>/<NNN>-<flow>/<platform>/<screen-slug>[--<state>].html`, written by
 `/vwf:mockups` and blueprint §6a, overwritten in place per flow; vwf auto-adds
 the `.gitignore` line when missing). Superseded commands/agents/templates are
 archived under `archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
@@ -639,7 +639,28 @@ so one project folder may hold two flows sharing a number — migrated by `setup
 mechanically (`git mv` + link rewrite + frontmatter injection, with a halt if
 two devices held a same-named flow folder) alongside the config `6 → 7` entry
 rewrite that drops the device segment from `design.flows_pushed` and
-`blueprint.remaining`.
+`blueprint.remaining`; **format 15** the **platform-file + designated-numbering
+restructure** — the flow folder splits into `index.md` (the platform-agnostic
+contract: purpose, trigger, steps, diagram, jobs, acceptance — **no screens**)
+plus one **`<platform>.md` per implemented platform** carrying that platform's
+Screens + Components, so the flows tree and the `docs/prompts/screens/` tree
+finally have the **same shape and the same filenames**; the `device:` key is
+retired (the filename carries the platform) and with it the in-car **subset
+flow** and its `Subset of:` link — `carplay`/`android-auto` collapse into one
+**`auto`** platform file, and `desktop`/`web` split by delivery (native app vs
+browser), giving one five-name vocabulary (`mobile`/`tablet`/`desktop`/`web`/
+`auto`) everywhere; flow numbers become **designated** (`010` splash, `020`
+signin, `030` recover-account, `040` onboarding, **`100` home** — the anchor
+every UI project carries — `110`–`890` product flows, `910` profile, `920`
+settings, `930` notifications, `940` delete-account) on one number line per
+project, screen codes are **shared across a flow's platform files**, and a
+standard flow's **primary screen takes the flow's slug** (`home`, never
+"Dashboard") — migrated by `setup` in ordered mechanical steps (renumber → fold
+in-car flows into `auto.md` → split screens out of `index.md` → re-code screens
+→ consent-gated screen renames → move the prompts tree → rewrite links; canvas
+page renames are listed for the user to apply) alongside the config `8 → 9`
+rewrite that gives every flow identifier a `<platform>` leaf and rewrites the
+platform vocabulary.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,

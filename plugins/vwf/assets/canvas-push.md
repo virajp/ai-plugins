@@ -30,14 +30,13 @@ never burnt on a push that cannot happen.
 ## 2. Resolve the project (pin-first, per registry UI project + platform)
 
 Every mockup push targets the design project of a specific **registry UI project
-and platform** (`mobile` / `tablet` / `desktop` / `carplay` / `android-auto`) —
-one canvas project per platform, since each platform canvas carries its own
-conventions CLAUDE.md (device frame, layout — written by `/vwf:screens`); **two
-platforms never share a canvas project**. A flow's `device:` frontmatter key
-names the platform (`mobile` → `mobile`, `web` → `desktop`, an in-car device →
-its in-car platform). (The design system itself lives in the
-`design.design_system_id` project — `/vwf:design-system` imports *from* it;
-nothing in vwf pushes to it.)
+and platform** (`mobile` / `tablet` / `desktop` / `web` / `auto`) — one canvas
+project per platform, since each platform canvas carries its own conventions
+CLAUDE.md (device frame, layout — written by `/vwf:screens`); **two platforms
+never share a canvas project**. A flow's `device:` frontmatter key names the
+platform (`mobile` → `mobile`, `web` → `desktop`, an in-car device → its in-car
+platform). (The design system itself lives in the `design.design_system_id`
+project — `/vwf:design-system` imports *from* it; nothing in vwf pushes to it.)
 
 1. Read `design.projects.<registry-project>.<platform>` from `.config/vwf.yaml`.
    Legacy fallbacks — a flat `design.projects.<registry-project>` uuid

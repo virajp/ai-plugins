@@ -1,35 +1,40 @@
 # Flow Contract
 
 Flows are the **primary blueprint unit**. One flow per folder —
-`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`, one uniform depth for UI
-and non-UI projects alike (type `vwf-flow`, always `index.md` only — a flow too
-big for one file is several flows). A **UI** project's flow additionally
-declares its device in the `device:` frontmatter key: the journey's primary
-surface (`mobile` for `frontend`, `web` for `site`/`console`) or one of the
-project's declared in-car platforms (`carplay` / `android-auto`). Numbering runs
-per device, so one project folder may hold two flows sharing an `<NNN>`. The
-goal-traceability spine runs product goal → flow (`Serves:`) → the
-entities/APIs/screens the flow touches. A flow is a process that spans entities
-**or projects** — a single-entity journey that crosses projects (app → service →
-datastore) is a flow too; the cross- project boundary is what makes it one.
+`docs/blueprint/flows/<project>/<NNN>-<flow>/`, one uniform depth for UI and
+non-UI projects alike. Since **format 15** the folder holds two kinds of file:
 
-**Standard slugs are exact.** A journey matching the standard-flows vocabulary
-(`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` — splash, signin, home,
-onboarding, settings, notifications, profile, delete-account, recover-account)
-takes that exact slug, never a synonym (`login`, `account`, …). The vocabulary
-also sets which of these are mandatory per UI project type — a coverage
-condition the blueprint sweep enforces, waivable only under `enforcement.rules`.
+- **`index.md`** (type `vwf-flow`) — the **platform-agnostic contract**: what
+  the journey is, who triggers it, its steps, diagram, jobs, and acceptance.
+  **No screens.**
+- **`<platform>.md`** (type `vwf-flow-platform`) — one per platform that
+  implements the journey (`mobile` | `tablet` | `desktop` | `web` | `auto`),
+  holding **only** that platform's Screens + Components + deviations.
 
-**In-car flows are subset flows.** A `carplay` / `android-auto` journey is
-always a limited subset of a phone journey — different screens, fewer features —
-authored as its **own flow** carrying the in-car `device:` value, never as
-per-platform variants on the phone flow's Screens rows. Its Purpose carries a
-mandatory **`Subset of:`** line linking the parent phone flow (an OKF edge the
-reviewer verifies) alongside `Serves:`.
+A non-UI flow is `index.md` alone. The goal-traceability spine runs product goal
+→ flow (`Serves:`) → the entities/APIs/screens the flow touches. A flow is a
+process that spans entities **or projects** — a single-entity journey that
+crosses projects (app → service → datastore) is a flow too.
+
+**Slugs and numbers are exact.** A journey matching the standard-flows
+vocabulary (`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`) takes that exact
+slug **and its designated number** — `home` is always `100`, `signin` always
+`020`; never a synonym (`login`, `dashboard`, …) and never another number. That
+asset also sets which flows are mandatory per project type and which numbers
+each band holds — coverage conditions the sweep enforces, waivable only under
+`enforcement.rules`. One number line per project, since a flow folder covers
+every platform.
+
+**Platforms are files, not flows.** An in-car take on a journey is
+`<flow>/auto.md`, not a separate flow — the pre-format-15 "in-car subset flow"
+with its `Subset of:` parent link is retired, and `auto` covers CarPlay and
+Android Auto together. Which platforms implement a flow is elicited and recorded
+in `index.md`'s **Platforms** table; steps and acceptance are **never forked**
+per platform (a platform that cannot perform a step omits its screens and says
+so in its note).
 
 Fill every applicable section to the **no-two-reasonable-answers** bar. Omit
-Screens if the registry has no UI project; omit Background Jobs if it has no
-worker.
+Background Jobs if the registry has no worker.
 
 ## Per-flow sections
 
@@ -37,8 +42,11 @@ worker.
   it exists, plus a mandatory `Serves:` line linking at least one `product.md`
   goal anchor (`[<goal>](../../../product.md#goal-<slug>)` — one depth for every
   flow, UI or not). This is the OKF edge the blueprint-reviewer verifies; a flow
-  no goal justifies is scope drift. An in-car flow adds the mandatory
-  `Subset of:` parent link (above).
+  no goal justifies is scope drift.
+- **Platforms** — the table of platform files this flow has, each linking its
+  file, with a one-line note on how that platform's take differs. Its rows must
+  be a subset of the registry project's declared `platforms:`, and must match
+  the `<platform>.md` files actually on disk. Omitted for a non-UI flow.
 - **Trigger & Actors** — a table of who/what can start the flow, with
   **Authorization** and **Audit-recorded** columns. This absorbs the
   authorization contract formerly on the entity's Actors & Actions surface;
@@ -56,28 +64,35 @@ worker.
 - **Failure handling** — compensation or rollback per failure point.
 - **Idempotency** — of the flow as a whole and of retried steps.
 - **Diagram** — the mandatory `sequenceDiagram` (below).
-- **Screens** — the UI journey this flow traverses (below).
 - **Background Jobs** — the jobs this flow requires (below).
 - **Acceptance** — observable Given/When/Then outcomes (below).
 - **References** — markdown links (OKF edges), each resolving: the API contract
   for the operationIds the steps name, the `conventions.md` anchors the flow
-  relies on, `design-system.md` for any flow with Screens.
+  relies on, `design-system.md` for any flow with platform files.
 - **Open Questions** — genuinely-open items, dated; never silent assumptions.
 
-## Screens live on the flow (the home rule)
+## Screens live on the flow's platform files (the home rule)
 
 Screens moved from the entity to the flow: process orientation puts a UI journey
 on the process that owns it, not scattered across the data entities it reads.
-Pin per screen — its **Code** (`<NNN><letter>`: the flow's number plus `a`, `b`,
-`c`, … in step order — the per-screen sync key canvas frames are named by and
-`/vwf:screens import` matches on; stable once assigned, an inserted screen takes
-the next free letter, never a re-letter), route, the operations it reads
-(`operationId`), its states (loading/error/empty), actions, and form validation
-— plus, one **Components block** per row (format 12), headed by its code: the
-elements the screen displays (text, info, error surfaces, buttons, inputs,
-lists, media), each with its rules — visibility/enable conditions, what
-activating it does, and contract-pinned content (see the
-[UI/UX contract](./ui-ux-contract.md)).
+Since format 15 they sit one level further in — on the flow's **platform file**
+— because a screen only exists on a platform: a mobile home screen and an auto
+home screen are the same *concept* (one shared code), rendered differently.
+
+**Codes are shared across platform files.** `100a` is one screen concept
+wherever it appears; a platform that lacks it omits the row, and a platform-only
+screen takes the next letter free across the whole flow. **A standard flow's
+primary screen takes the flow's slug** — the `home` flow's main screen is named
+`home`, never "Dashboard". Pin per screen — its **Code** (`<NNN><letter>`: the
+flow's number plus `a`, `b`, `c`, … in step order — the per-screen sync key
+canvas frames are named by and `/vwf:screens import` matches on; stable once
+assigned, an inserted screen takes the next free letter, never a re-letter),
+route, the operations it reads (`operationId`), its states
+(loading/error/empty), actions, and form validation — plus, one **Components
+block** per row (format 12), headed by its code: the elements the screen
+displays (text, info, error surfaces, buttons, inputs, lists, media), each with
+its rules — visibility/enable conditions, what activating it does, and
+contract-pinned content (see the [UI/UX contract](./ui-ux-contract.md)).
 
 **Home rule.** Every screen is defined in exactly **one** flow — its home
 journey. Another flow that touches the same screen **links the home flow's row**

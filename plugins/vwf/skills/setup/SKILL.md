@@ -250,9 +250,9 @@ run diffs against, and how every vwf command operates in this repo:
 - any **`enforcement:`** entries recorded during this run (structure/stack
   declines, rule waivers);
 - **per-project nuances** the run surfaced (e.g. a Flutter project's
-  `platforms:` beyond ios/android — including in-car support, `carplay` /
-  `android-auto`, offered only for `frontend` projects — elicit when ambiguous,
-  never assume);
+  `platforms:` from the one vocabulary — `mobile` / `tablet` / `desktop` / `web`
+  / `auto`, with `auto` (in-car: CarPlay and Android Auto together) offered only
+  for `frontend` projects — elicit when ambiguous, never assume);
 - leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
   them.
 

@@ -9,20 +9,21 @@ status: reviewed
 
 # Flows & Cross-Flow Contracts
 
-<!-- Conformance example (blueprint-format 14). Deliberately thin: per-flow
-     contracts live in flows/<project>/<NNN>-<flow>/index.md — this
-     file holds only the catalog and what is cross-flow by nature. -->
+<!-- Conformance example (blueprint-format 15). Deliberately thin: per-flow
+     contracts live in flows/<project>/<NNN>-<flow>/index.md with each
+     platform's screens in a sibling <platform>.md — this file holds only the
+     catalog and what is cross-flow by nature. One section per project, no
+     device headings (format 15). -->
 
 ## Flow catalog
 
 ### web
 
-#### web
-
-| #   | Flow                                                            | Serves goal                                               | Entities touched                                                               | Status   |
-| --- | --------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
-| 010 | [Place order](./web/010-place-order/index.md)                   | [Reliable ordering](../product.md#goal-reliable-ordering) | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
-| 020 | [Order cancellation & refund](./web/020-cancel-refund/index.md) | [Trusted refunds](../product.md#goal-trusted-refunds)     | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
+| #   | Flow                                                            | Platforms | Serves goal                                               | Entities touched                                                               | Status   |
+| --- | --------------------------------------------------------------- | --------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
+| 100 | [Home](./web/100-home/index.md)                                 | web       | [Reliable ordering](../product.md#goal-reliable-ordering) | [Order](../entities/order/index.md)                                            | reviewed |
+| 110 | [Place order](./web/110-place-order/index.md)                   | web       | [Reliable ordering](../product.md#goal-reliable-ordering) | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
+| 120 | [Order cancellation & refund](./web/120-cancel-refund/index.md) | web       | [Trusted refunds](../product.md#goal-trusted-refunds)     | [Order](../entities/order/index.md), [Customer](../entities/customer/index.md) | reviewed |
 
 ## Inter-Service Contracts
 

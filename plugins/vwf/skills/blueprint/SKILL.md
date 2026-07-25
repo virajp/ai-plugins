@@ -25,26 +25,24 @@ are **supporting data contracts** the flows stand on.
 
 The doc units:
 
-- **Flow** — `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`, one uniform
-  depth for UI and non-UI projects alike (always `index.md` only; a flow too big
-  for one file is several flows). Flows are **grouped by their primary registry
-  project** — the project that owns the journey (the UI project of its Screens;
-  for a UI-less flow, the service/worker whose trigger starts it; ambiguous →
-  ask, never guess). That is the **only** grouping the path carries: since
-  format 14 a UI project's flows sit directly under the project and each
-  declares its **device** in the `device:` frontmatter key — the project's
-  primary surface (`mobile` for `frontend`, `web` for `site`/`console`) or one
-  of its declared in-car platforms (`carplay`, `android-auto`), whose journeys
-  are their **own subset flows** (§2 Automotive). Within a **device** (or a
-  non-UI project group) flows are **numbered in execution order** (`010-splash`,
-  `020-signin`, …): three digits, **gap numbering** in steps of 10 so an insert
-  takes a number between its neighbors (`015-onboarding`) without renumbering;
-  only when no integer remains between neighbors is the local tail renumbered
-  (via the §7 rename reconcile). Because each device has its own number line,
-  one project folder may hold two flows sharing an `<NNN>` — their full folder
-  names still differ, and that full name is the join key. `flows/index.md` is
-  the thin catalog — grouped per project, then per device (read from the
-  `device:` keys), rows in numeric order — plus the cross-flow contracts.
+- **Flow** — `docs/blueprint/flows/<project>/<NNN>-<flow>/`, one uniform depth
+  for UI and non-UI projects alike. The folder holds **`index.md`** — the
+  platform-agnostic contract (purpose, trigger, steps, diagram, jobs,
+  acceptance; **no screens**) — plus **one `<platform>.md` per implemented
+  platform** (`mobile` | `tablet` | `desktop` | `web` | `auto`) carrying only
+  that platform's Screens + Components. A non-UI flow is `index.md` alone. Flows
+  are **grouped by their primary registry project** — the project that owns the
+  journey (the UI project of its Screens; for a UI-less flow, the service/worker
+  whose trigger starts it; ambiguous → ask, never guess). Since format 15 the
+  platform lives in the **filename**, so there is no `device:` key and **one
+  number line per project**. `<NNN>` is **designated** per
+  `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: `010` splash, `020` signin,
+  `030` recover-account, `040` onboarding, **`100` home** (the anchor, every UI
+  project), `110`–`890` product flows (gap-numbered by 10), `910` profile, `920`
+  settings, `930` notifications, `940` delete-account. The folder name
+  (`<NNN>-<flow>`) is the join key. `flows/index.md` is the thin catalog — one
+  section per project, rows in numeric order with a Platforms column — plus the
+  cross-flow contracts.
 - **Entity** — `docs/blueprint/entities/<entity>/`: always exactly `index.md`
   (lifecycle, relationships, invariants, concurrency) + `schema.yaml` (the
   authoritative data model). `entities/index.md` is the catalog plus the
@@ -85,27 +83,29 @@ surface without ambiguity. Surface open decisions rather than guessing.
 
 ## Doc Paths
 
-| Doc              | Path                                                                                                               |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Product          | `docs/blueprint/product.md`                                                                                        |
-| Registry         | `docs/blueprint/architecture.md`                                                                                   |
-| Conventions      | `docs/blueprint/conventions.md`                                                                                    |
-| Design system    | `docs/blueprint/design-system.md`                                                                                  |
-| Environment      | `docs/blueprint/environment.md`                                                                                    |
-| Flow             | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (device in the `device:` frontmatter key, UI projects only) |
-| Flow catalog     | `docs/blueprint/flows/index.md`                                                                                    |
-| Entity           | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                                                          |
-| Entity catalog   | `docs/blueprint/entities/index.md`                                                                                 |
-| API contract     | `docs/blueprint/apis/<project>.openapi.yaml`                                                                       |
-| Released APIs    | `docs/blueprint/apis/released/`                                                                                    |
-| Flow template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow.md`                                                                   |
-| Flow-cat. templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/flows-index.md`                                                            |
-| Entity template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/entity.md`                                                                 |
-| Ent.-cat. templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/entities-index.md`                                                         |
-| Schema template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/schema.yaml`                                                               |
-| OpenAPI template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/openapi.yaml`                                                              |
-| Conv. template   | `${CLAUDE_PLUGIN_ROOT}/assets/templates/conventions.md`                                                            |
-| Env. template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`                                                            |
+| Doc              | Path                                                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Product          | `docs/blueprint/product.md`                                                                                          |
+| Registry         | `docs/blueprint/architecture.md`                                                                                     |
+| Conventions      | `docs/blueprint/conventions.md`                                                                                      |
+| Design system    | `docs/blueprint/design-system.md`                                                                                    |
+| Environment      | `docs/blueprint/environment.md`                                                                                      |
+| Flow contract    | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (platform-agnostic; no screens)                               |
+| Flow platform    | `docs/blueprint/flows/<project>/<NNN>-<flow>/<platform>.md` (`mobile`/`tablet`/`desktop`/`web`/`auto`; screens only) |
+| Flow catalog     | `docs/blueprint/flows/index.md`                                                                                      |
+| Entity           | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                                                            |
+| Entity catalog   | `docs/blueprint/entities/index.md`                                                                                   |
+| API contract     | `docs/blueprint/apis/<project>.openapi.yaml`                                                                         |
+| Released APIs    | `docs/blueprint/apis/released/`                                                                                      |
+| Flow template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow.md`                                                                     |
+| Platform templ.  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow-platform.md`                                                            |
+| Flow-cat. templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/flows-index.md`                                                              |
+| Entity template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/entity.md`                                                                   |
+| Ent.-cat. templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/entities-index.md`                                                           |
+| Schema template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/schema.yaml`                                                                 |
+| OpenAPI template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/openapi.yaml`                                                                |
+| Conv. template   | `${CLAUDE_PLUGIN_ROOT}/assets/templates/conventions.md`                                                              |
+| Env. template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`                                                              |
 
 Doctrine: the **blueprint-authoring** skill — a **router**. Read only the
 reference its own "when to read" table names for the surface you are currently
@@ -117,9 +117,9 @@ the orchestrator's to carry. API contracts likewise apply the
 reach the API surface.
 
 Reserved names: `product`, `architecture`, `conventions`, `design-system`,
-`environment`, `flows`, `entities`, `apis`, the device names (`mobile`, `web`,
-`carplay`, `android-auto`), and `index` inside a flow group / `entities/` — a
-flow or entity folder never takes one of these.
+`environment`, `flows`, `entities`, `apis`, the platform names (`mobile`,
+`tablet`, `desktop`, `web`, `auto`), and `index` inside a flow group /
+`entities/` — a flow or entity folder never takes one of these.
 
 ---
 
@@ -164,8 +164,8 @@ Whole-product coverage holds when, all at once:
 - every registry project's surfaces are represented per its `doc_unit`
   (`N/A — <reason>` counts as represented);
 - every flow with a Screens section has passed its **visual review** (§6a) — a
-  recorded skip (`screens/<project>/<NNN>-<flow>` in `remaining:`) is an open
-  hole;
+  recorded skip (`screens/<project>/<NNN>-<flow>/<platform>` in `remaining:`) is
+  an open hole;
 - every UI project carries its **mandatory standard flows** per
   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (conditional slugs resolved
   from the registry's auth capabilities; waivers in `enforcement.rules`
@@ -190,7 +190,9 @@ standard flow stays on the worklist as missing), or **waive** (record
 `standard-flows/<project>/<slug>` under `enforcement.rules` with the user's
 reason — never re-asked). A missing mandatory standard flow with no synonym is
 worked like any other worklist hole: elicited (§3) — including where its number
-slots in the device's execution order — then authored (§4).
+slots in the project's number line — then authored (§4). A standard flow takes
+its **designated number** (standard-flows asset); only a product flow is placed
+by elicitation, inside the `110`–`890` band.
 
 If `$ARGUMENTS` named a flow or entity, start there (prepend it to the
 worklist); otherwise start at the top. An empty worklist with a named unit means
@@ -218,21 +220,25 @@ stack's default, the Screens elicitation covers what genuinely differs per
 platform — navigation/input idiom, window/layout behavior, platform-specific
 states — and records only the differences, never a per-platform copy.
 
-**Automotive (`carplay` / `android-auto`).** In-car surfaces are a **subset of
-the mobile app** — always different screens and a limited feature set, never the
-phone journey re-rendered. When a UI project declares an in-car platform,
-**elicit which phone flows have an in-car subset** — a product decision; most do
-not. Each in-car journey is authored as its **own flow** alongside the project's
-other flows (`flows/<project>/<NNN>-<flow>/`) carrying
-`device: carplay | android-auto`, numbered in its own in-car execution order (so
-its numbers may repeat the phone flows'), with a mandatory **`Subset of:`** line
-— now a sibling link, `../<NNN>-<flow>/index.md` — in Purpose linking the parent
-phone flow (an OKF edge the reviewer verifies) alongside its `Serves:` goal
-link. Its Screens elicitation pins the in-car specifics per screen: the platform
-**template** it maps to (list / grid / map / now-playing / …), the glanceable
-content subset vs the parent phone screen, and the driver-distraction
-constraints. In-car UIs are template-constrained by the OS; custom layout does
-not apply there.
+**Which platforms implement this flow.** A journey is one flow; each platform
+that implements it gets a `<platform>.md`. **Elicit the platform set per flow**
+— a product decision, bounded by the registry project's declared `platforms:`.
+Most flows implement the project's primary platform only; `auto` in particular
+is selective (signing in or onboarding while driving makes no sense). Record the
+set in `index.md`'s **Platforms** table with a one-line note per platform on how
+its take differs. Steps, acceptance, and jobs stay in `index.md` and are **never
+forked per platform** — a platform that cannot perform a step omits the screens
+for it and says so in its note.
+
+**In-car (`auto`).** `auto` covers **CarPlay and Android Auto together** (the
+vocabulary names form factors, not vendors). An in-car take is a *platform
+file*, not its own flow — the pre-format-15 "in-car subset flow" with its
+`Subset of:` link is retired. Its Screens elicitation pins the in-car specifics
+per screen: the OS **template** it maps to (list / grid / map / now-playing /
+…), the glanceable content subset vs the phone screen, and the
+driver-distraction constraints — recorded under the platform file's **Platform
+deviations**, noting any CarPlay-vs-Android-Auto difference there. In-car UIs
+are template-constrained by the OS; custom layout does not apply.
 
 **Doc unit.** Each registry project declares a `doc_unit` (`entity` / `page` /
 `module`). Under format 9 these map as: `page` doc units (typically a `site` or
@@ -296,10 +302,14 @@ Blueprint-specific notes layered on the protocol:
   `default — per conventions#baseline`; API operations assume the idempotency /
   error-envelope / cursor-pagination rules. Elicitation spends its questions on
   what is genuinely open, not on the baseline.
-- **Standard slugs:** when the journey being elicited matches an entry in
-  `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (splash, signin, home,
-  onboarding, settings, notifications, profile, delete-account,
-  recover-account), the flow takes that exact slug — never a synonym.
+- **Standard slugs, numbers & screen names:** when the journey being elicited
+  matches an entry in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (splash,
+  signin, recover-account, onboarding, home, profile, settings, notifications,
+  delete-account), the flow takes that exact slug **and its designated number**
+  — never a synonym, never another number (`home` is always `100`). Its
+  **primary screen takes the flow's slug** too: the `home` flow's main screen is
+  named `home`, never "Dashboard" or "Main Feed". Secondary screens stay
+  free-named.
 - **Approaches (protocol §5):** where a flow, data-model, or API shape has
   competing designs (e.g. embed vs reference, sync vs async surface), present
   the options before committing.
@@ -326,15 +336,17 @@ never elicit and never invent. Anything they could not fill comes back under
 stand.
 
 - **The flow** → one `flow-writer`. Pass the placement (project, `<NNN>`, slug,
-  and the `device:` value for a UI project), the elicited decisions (purpose and
-  goal anchors, trigger & actors, ordered steps with actors/entities/
-  `operationId`s, screens with their pinned `<NNN><letter>` codes and Components
-  blocks, jobs, acceptance criteria, deviations), the relevant `conventions.md`
-  anchors and registry block, and — for an in-car subset flow — the parent phone
-  flow's path. It writes the flow doc **and** its `flows/index.md` catalog row.
-  A **new** flow takes the next gap number in that device's execution order;
-  elicit where it slots when not obvious — the number is a product statement
-  about when the journey runs, so it is yours to decide, not the writer's.
+  and the platform set), the contract decisions (purpose and goal anchors,
+  trigger & actors, ordered steps with actors/entities/`operationId`s, jobs,
+  acceptance criteria) **and, per platform, that platform's screens** with their
+  shared `<NNN><letter>` codes, Components blocks, and deviations, plus the
+  relevant `conventions.md` anchors and registry block. It writes `index.md`,
+  **one `<platform>.md` per platform**, and the `flows/index.md` catalog row. A
+  **new** standard flow takes its **designated** number; a product flow takes
+  the next gap number in the `110`–`890` band — elicit where it slots when not
+  obvious, since the number states when the journey runs. Screen codes are
+  **shared across the platform files**: assign a code per screen concept, and a
+  platform-only screen takes the next letter free across the whole flow.
 - **What it stands on** — for each entity a step references, dispatch one
   `entity-writer`. Entities in a pass are independent: **dispatch them all in a
   single message so they run concurrently.** Each writes its
@@ -448,11 +460,11 @@ slice picks up the delta. (State-stamp edits are the only frontmatter the sweep
 changes outside `status:`.)
 
 **Drop the render stamp.** If this pass changed a flow's `## Screens` section
-and `.config/vwf.yaml` lists that flow under `design.flows_rendered`, remove it
-— the scratchpad render no longer shows the contract. Normally §6a's re-render
-re-lists it within this same pass; when §6a was explicitly skipped, the drop
-stands and a later `/vwf:mockups <flow>` re-renders it. (Like the build stamp: a
-state-only edit, riding the same commit.)
+and `.config/vwf.yaml` lists that flow's platform under `design.flows_rendered`,
+remove those entries — the scratchpad render no longer shows the contract.
+Normally §6a's re-render re-lists it within this same pass; when §6a was
+explicitly skipped, the drop stands and a later `/vwf:mockups <flow>` re-renders
+it. (Like the build stamp: a state-only edit, riding the same commit.)
 
 **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store this pass's
 durable decisions and their rationale, plus any drift flagged, to mempalace
@@ -469,15 +481,19 @@ approving the flow.
 1. **Render (local, never canvas).** Ensure `docs/scratchpad/` is gitignored
    (`git check-ignore -q docs/scratchpad`; if not, append `docs/scratchpad/` to
    `.gitignore` — the line rides this pass's commit). Dispatch a fresh
-   `mockup-generator` subagent for this flow (its Screens table + Components
-   blocks + deviations, the design-system doc(s), and the flow's render dir
-   `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` — overwritten in place) —
-   the default view plus **every pinned state**; the ui-ux-contract bar makes
-   error and empty pins mandatory, so the sad paths are always in the set.
-   `frontend` (Flutter) screens render as HTML approximations at the design
-   system's device viewport. Mockups are **never pushed to Claude Design**.
+   `mockup-generator` subagent **per platform file** the pass touched (that
+   platform's Screens table + Components blocks + deviations, the design-system
+   doc(s), and its render dir
+   `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` — overwritten in place;
+   dispatch them in a single message to run concurrently) — the default view
+   plus **every pinned state**; the ui-ux-contract bar makes error and empty
+   pins mandatory, so the sad paths are always in the set. `frontend` (Flutter)
+   screens render as HTML approximations at the design system's viewport for
+   that platform. Mockups are **never pushed to Claude Design**.
 2. **Hand over.** Give the user the absolute file paths to open in a browser,
-   then record the flow in `design.flows_rendered` (the render-currency stamp).
+   grouped per platform, then record each rendered platform in
+   `design.flows_rendered` as `<project>/<NNN>-<flow>/<platform>` (the
+   render-currency stamp).
 3. **Review.** The user reviews the rendered screens. Remarks route **now**:
    screen-level → the Screens table / recorded deviations (re-elicit, update the
    doc; a material contract change re-runs the per-doc reviewer (§5) and
@@ -486,15 +502,15 @@ approving the flow.
    when out of this pass's scope.
 4. **Design-first (alternative to 1–3).** The user may prefer Claude Design to
    *design* these screens rather than review vwf's contract-derived render: run
-   `/vwf:screens prompt <flow>` (it writes the per-device-type briefs under
+   `/vwf:screens prompt <flow>` (it writes the per-platform briefs under
    `docs/prompts/` — files the user pastes into the canvas chat), record
-   `screens/<project>/<NNN>-<flow>` in `blueprint.remaining` — deferred by
-   design, not skipped — and continue the sweep. The later
+   `screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining` —
+   deferred by design, not skipped — and continue the sweep. The later
    `/vwf:screens import <flow>` closes it through a targeted pass here, folding
    what the canvas decided into the contract delta-by-delta.
 5. **Skip (escape hatch).** The user may explicitly decline the review. Record
    it honestly: one line in the flow doc's Open Questions ("screens not yet
-   visually reviewed") and `screens/<project>/<NNN>-<flow>` in
+   visually reviewed") and `screens/<project>/<NNN>-<flow>/<platform>` in
    `blueprint.remaining` at stamp time (§9) — coverage stays `partial` while any
    `screens/` entry remains, exactly like any other hole.
 
@@ -563,7 +579,7 @@ Record the sweep's result in `.config/vwf.yaml` (per the vwf-config asset):
 ```yaml
 blueprint:
   coverage: complete # or partial
-  remaining: [] # when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>, coherence
+  remaining: [] # when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform>, coherence
 ```
 
 Stamp after **every** run — a targeted update that opened a hole (or skipped the

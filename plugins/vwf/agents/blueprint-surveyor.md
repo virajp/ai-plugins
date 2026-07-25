@@ -43,7 +43,8 @@ condition; a unit may fail more than one (report the most blocking).
 1. **Unserved goal** — a goal anchor in the passed list that no flow
    `Serves:`-links. Report as a missing flow against that goal, not against an
    existing doc.
-2. **Unreviewed flow** — a flow doc whose frontmatter is not `status: reviewed`.
+2. **Unreviewed flow** — a flow whose `index.md` — or any of its `<platform>.md`
+   files — is not `status: reviewed`.
 3. **Missing or unreviewed entity** — an entity a flow step, screen, or
    relationship points at that lacks `index.md` or `schema.yaml`, or whose
    `status` is not `reviewed`. A `schema.yaml` reading `N/A — <reason>` on a
@@ -53,8 +54,8 @@ condition; a unit may fail more than one (report the most blocking).
 5. **Unrepresented registry surface** — a registry project with no unit
    representing it per its `doc_unit`. An explicit `N/A — <reason>` counts as
    represented.
-6. **Unreviewed screens** — a flow with a `## Screens` section listed under
-   `blueprint.remaining` as `screens/<project>/<NNN>-<flow>`.
+6. **Unreviewed screens** — a flow platform listed under `blueprint.remaining`
+   as `screens/<project>/<NNN>-<flow>/<platform>`.
 7. **Stale coherence** — `coherence` present in the passed `remaining` list.
 8. **Missing mandatory standard flow** — per
    `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: for each UI project, every
@@ -62,12 +63,18 @@ condition; a unit may fail more than one (report the most blocking).
    conditional ones, resolved from the registry's capability tokens (an Auth &
    identity capability requires `signin`, and with it `profile`,
    `delete-account`, `recover-account`) — that has no flow folder on the
-   project's primary device number line. Skip any slug waived in the passed
-   `enforcement.rules` (`standard-flows/<project>/<slug>`). Report as a missing
-   flow, named without a number (`flows/<project>/<slug>` — it takes its NNN
-   when authored). While checking, also note **synonym candidates**: an existing
-   flow whose slug matches the asset's synonym table for a missing standard
-   slug.
+   project. Skip any slug waived in the passed `enforcement.rules`
+   (`standard-flows/<project>/<slug>`). Report as a missing flow at its
+   **designated number** (`flows/<project>/<NNN>-<slug>`). While checking, also
+   note **synonym candidates**: an existing flow whose slug matches the asset's
+   synonym table for a missing standard slug.
+9. **Misnumbered flow** — a standard slug not at its designated number, or a
+   product flow outside the `110`–`890` band (waivers honored). Report the flow
+   with the number it should take.
+10. **Structural drift** — a flow folder with no `index.md`, a `device:` key on
+    an `index.md`, a `<platform>.md` with no Platforms row (or the reverse), or
+    a platform outside the vocabulary (`mobile` / `tablet` / `desktop` / `web` /
+    `auto`). These are format-15 holes; name the file.
 
 ## Ordering
 
@@ -99,7 +106,7 @@ Otherwise:
 ```text
 COVERAGE: partial
 WORKLIST:
-1. <flows/<project>/<NNN>-<flow> | entities/<entity> | apis/<project> | screens/<project>/<NNN>-<flow> | coherence> — <which condition fails, one clause>
+1. <flows/<project>/<NNN>-<flow> | entities/<entity> | apis/<project> | screens/<project>/<NNN>-<flow>/<platform> | coherence> — <which condition fails, one clause>
 2. ...
 UNSERVED GOALS:
 - <#goal-slug> (or "none")

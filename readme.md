@@ -271,14 +271,15 @@ docs/
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
 │   ├── environment.md           # per-project env-var/secret catalog (names, never values)
 │   ├── flows/                   # the PRIMARY unit — grouped by project, numbered
-│   │   ├── index.md             # flow catalog (per-project/device sections) + inter-service contracts
+│   │   ├── index.md             # flow catalog (per-project sections) + inter-service contracts
 │   │   └── <project>/           # one group per registry project owning the journeys
-│   │       └── <NNN>-<flow>/    # NNN = execution order (gap-numbered per device: 010, 020, …)
-│   │           └── index.md     # device: frontmatter key (UI projects only —
-│   │                            # mobile, web, carplay, android-auto), trigger,
-│   │                            # actors, steps, screens (coded rows + per-screen
-│   │                            # components blocks), jobs, sequence diagram,
-│   │                            # acceptance criteria
+│   │       └── <NNN>-<flow>/    # NNN designated: 100 = home, 010/020/030/040 entry,
+│   │           │                #   110–890 product, 910–940 account screens
+│   │           ├── index.md     # the PLATFORM-AGNOSTIC contract: trigger, actors,
+│   │           │                #   steps, jobs, sequence diagram, acceptance
+│   │           └── <platform>.md # one per implemented platform (mobile, tablet,
+│   │                            #   desktop, web, auto) — screens (coded rows +
+│   │                            #   per-screen components blocks) only
 │   ├── entities/                # the supporting data contracts
 │   │   ├── index.md             # entity catalog + product-wide ER diagram
 │   │   └── <entity>/            # index.md (lifecycle, relationships, invariants)
@@ -300,8 +301,9 @@ docs/
             │                         # on regeneration)
             └── <NNN>-<flow>/    # the flow the briefs commission
                 └── <platform>.md # ONE brief per platform (mobile.md, tablet.md,
-                                  # carplay.md, …) — always the flow's full
-                                  # blueprint, regenerated in place
+                                  # desktop.md, web.md, auto.md) — mirrors the
+                                  # flow folder's platform files; always the
+                                  # flow's full blueprint, regenerated in place
 ```
 
 Each flow doc holds one journey end to end — who triggers it, the steps across
@@ -561,24 +563,36 @@ slugs are exact: a `login` or `account` flow whose journey matches is proposed
 for a consent-gated rename (links, catalogs, and canvas join keys move
 together), never renamed silently.
 
-Flows live **grouped by the registry project that owns the journey** and
-**numbered in execution order** — `flows/<project>/<NNN>-<flow>/`
-(`flows/app/010-splash/`, `flows/app/020-signin/`, …), one uniform depth for UI
-and non-UI projects alike. The device a flow runs on is carried by a required
-**`device:` frontmatter key** on a UI project's flow docs (`mobile`, `web`,
-`carplay`, `android-auto`; non-UI flows omit it) — the sole carrier of the
-device. Numbering is gap-numbered in steps of 10 **per device**, so an insert
-slots between neighbors without renumbering and two devices of one project may
-share a number (`010-splash` with `device: mobile` beside `010-connect` with
-`device: carplay`); the **full folder name**, never the number, is the canvas
-join key. A product with a mobile app, a website, and a console keeps each
-surface's flows distinguishable, each catalog section reading top-to-bottom in
-the order the journeys run. **CarPlay and Android Auto are subset surfaces**: an
-in-car journey is always a limited subset of the phone app — different screens,
-fewer features — so it is blueprinted as its **own flow**
-(`flows/app/010-now-playing/` with `device: carplay`), carrying a `Subset of:`
-link to the parent phone flow, now a sibling folder
-(`../<NNN>-<flow>/index.md`).
+Flows live **grouped by the registry project that owns the journey**, and a flow
+folder holds two kinds of file: **`index.md`** — the platform-agnostic contract
+(purpose, trigger, steps, diagram, jobs, acceptance; **no screens**) — plus one
+**`<platform>.md`** per platform that implements the journey, carrying only that
+platform's screens. A non-UI flow is `index.md` alone. Because the platform is
+the *filename*, the flows tree and the design-brief tree have the **same shape
+and the same names**.
+
+**Numbers are designated, not invented.** One number line per project:
+
+```text
+010 splash · 020 signin · 030 recover-account · 040 onboarding
+100 home          ← the anchor: every UI project, always
+110 … 890         ← the product's own journeys, gap-numbered by 10
+910 profile · 920 settings · 930 notifications · 940 delete-account
+```
+
+So `home` is `100` in every product you ever blueprint, and its screens are
+always coded `100a`, `100b`, … Deviating takes a waiver, like any other enforced
+rule.
+
+**Five platforms, one vocabulary** — `mobile`, `tablet`, `desktop` (a natively
+installed app), `web` (browser-delivered), and `auto` (in-car). The names are
+form factors, not vendors: `mobile` already hides iOS/Android, so **`auto`
+covers CarPlay and Android Auto together**, with their template differences
+recorded as deviations inside `auto.md`. An in-car journey is therefore a
+*platform file of the same flow* — `100-home/auto.md`, same number, same steps,
+its own screens — not a separate subset flow. Which platforms a flow implements
+is elicited per flow (signing in while driving makes no sense) and listed in the
+contract's Platforms table.
 
 Per flow, `blueprint` elicits the journey with you under the
 **`blueprint-authoring`** doctrine — trigger and actors, the ordered steps,
@@ -595,7 +609,7 @@ catalog, and the product-wide ER diagram. Screens point at the design system;
 changed Screens **gates on a render & review**: the pass renders that flow's
 screens as static HTML mockups — the happy path *and* every pinned sad path
 (error and empty states are mandatory pins per screen) — into the repo's
-gitignored `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` tree (**never
+gitignored `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` tree (**never
 pushed to Claude Design**), you open them in your browser, and your remarks
 route straight back into the Screens contract before the pass closes. Prefer the
 canvas to *design* the screens instead? The pass can defer design-first to
@@ -634,7 +648,7 @@ in-pass rendering existed, or redo one flow post-hoc. Never a gate for `plan`.
 It renders each flow's Screens contract as **self-contained static HTML
 mockups** (one page per screen plus each pinned state variant, styled from the
 design system's tokens) into the repo's **gitignored `docs/scratchpad/` tree** —
-`docs/scratchpad/<project>/<device>/<NNN>-<flow>/<screen>[--<state>].html` —
+`docs/scratchpad/<project>/<NNN>-<flow>/<platform>/<screen>[--<state>].html` —
 which you open directly in your browser. Mockups are **never pushed to Claude
 Design**; the scratchpad is the only render surface, and vwf adds the
 `.gitignore` line itself when it's missing.
@@ -666,7 +680,7 @@ offers this as its design-first option):
 ```
 
 `prompt` writes **one compact wireframe-level design brief per platform**
-(`mobile.md`, `tablet.md`, `carplay.md`, …) from the blueprint's context — **the
+(`mobile.md`, `tablet.md`, `auto.md`, …) from the blueprint's context — **the
 files are the deliverable**: you paste each into the canvas chat yourself; vwf
 never runs a brief against the Claude Design MCP, and `prompt` never touches the
 canvas. A brief is **always the flow's full screen blueprint**, regenerated in
@@ -691,22 +705,21 @@ sections are regenerated in place; a **canvas-owned section** holds the
 conventions you discover while designing, preserved across regenerations and
 folded back by `import`. The brief never restates the standing conventions — it
 carries **only the per-flow payload**: the page name (`<flow>--<platform>`, e.g.
-`020-signin--mobile`, where `<flow>` is exactly the numbered folder name under
+`100-home--mobile`, where `<flow>` is exactly the numbered folder name under
 `docs/blueprint/flows/<project>/` — the sync key `import` matches pages back by,
-with the flow's device read from its `device:` frontmatter key and the platforms
-it renders on derived from the UI project's `type` + `platforms:`), a one-line
-goal, the flow's steps and entry points, and each screen — headed by its pinned
-**code** (`020a`, `020b`, …, the frame name on the canvas and the per-screen
-sync key) — with purpose, navigation, form fields + validation timing, its
-**components and their rules** (transcribed from the flow doc's Components
-block: every element the screen displays — text, info, errors, buttons, inputs —
-with when it's visible or clickable, what it does, and its contract-pinned
-content), and the pinned states its tweaks must cover. Nothing that would steer
-the *visual* design goes in — no tokens, type, spacing, or component styling:
-Claude Design picks the visual language up from its Design System project, and
-the canvas chat is where you make the design yours; what a screen shows and how
-it behaves, though, is contract — transcribed, never left to the canvas. Iterate
-on the canvas as long as you like.
+one brief per platform file the flow has), a one-line goal, the flow's steps and
+entry points, and each screen — headed by its pinned **code** (`100a`, `100b`,
+…, the frame name on the canvas and the per-screen sync key) — with purpose,
+navigation, form fields + validation timing, its **components and their rules**
+(transcribed from the flow doc's Components block: every element the screen
+displays — text, info, errors, buttons, inputs — with when it's visible or
+clickable, what it does, and its contract-pinned content), and the pinned states
+its tweaks must cover. Nothing that would steer the *visual* design goes in — no
+tokens, type, spacing, or component styling: Claude Design picks the visual
+language up from its Design System project, and the canvas chat is where you
+make the design yours; what a screen shows and how it behaves, though, is
+contract — transcribed, never left to the canvas. Iterate on the canvas as long
+as you like.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new

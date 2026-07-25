@@ -3,30 +3,38 @@ type: vwf-flow
 title: <Flow name>
 description: <one-line outcome this flow delivers>
 status: draft # draft | reviewed | stable
-device: mobile # mobile | web | carplay | android-auto — UI-project flows only; omit for a non-UI flow
 implementation: none # none | partial | complete — written by the pipeline only (see frontmatter-and-links)
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---
 
 # Flow: <Flow name>
 
-<!-- One flow per FOLDER: docs/blueprint/flows/<project>/<NNN>-<flow>/index.md —
-     always index.md only (a flow too big for one file is several flows). The
-     path carries no device segment (format 14): a UI project's flows all sit
-     directly under the project, and the DEVICE FRONTMATTER KEY carries the
-     device type (mobile | web | carplay | android-auto). Non-UI flows omit the
-     key. NNN is gap-numbered in steps of 10 PER DEVICE, so two devices' flows
-     may share a number in the same directory — the folder names still differ.
+<!-- One flow per FOLDER: docs/blueprint/flows/<project>/<NNN>-<flow>/ —
+     THIS file (index.md) is the PLATFORM-AGNOSTIC CONTRACT: what the journey
+     is, who triggers it, what it does, and how it is verified. It holds NO
+     screens. Each platform that implements the journey adds its own
+     <platform>.md beside this file (mobile.md | tablet.md | desktop.md |
+     web.md | auto.md — from the flow-platform template) carrying only that
+     platform's Screens + Components. A NON-UI flow is index.md alone.
+     There is no `device:` frontmatter key (format 15): the platform lives in
+     the FILENAME, and `auto` covers CarPlay and Android Auto alike.
+
+     NNN is DESIGNATED for standard flows and banded for the rest — see the
+     standard-flows asset: 010 splash, 020 signin, 030 recover-account,
+     040 onboarding, 100 home (the anchor, every product), 110–890 product
+     flows (gap-numbered by 10), 910 profile, 920 settings, 930 notifications,
+     940 delete-account. One number line per project — a flow folder covers
+     every platform, so numbers never repeat within a project.
+
      Flows are the PRIMARY blueprint unit: the goal-traceability spine runs
-     product goal → flow → entity/API/screen. See the blueprint-authoring skill
-     (flow-contract). Every flow sits at the same depth, so the link depths
-     below hold for UI and non-UI flows alike.
+     product goal → flow → entity/API/screen. See the blueprint-authoring
+     skill (flow-contract).
 
      Stack-agnostic and code-independent: name entities, services (by registry
      project name), and operationIds — never queues, libraries, classes, or
      transports. Section→project mapping resolves via the Project Registry in
-     docs/blueprint/architecture.md (by project `type`). Omit Screens if the
-     registry has no UI project; omit Background Jobs if it has no worker. -->
+     docs/blueprint/architecture.md (by project `type`). Omit Background Jobs
+     if the registry has no worker. -->
 
 ## Purpose
 
@@ -35,12 +43,20 @@ One paragraph. The observable outcome this flow delivers and why it exists.
 Serves: [<goal name>](../../../product.md#goal-<slug>)
 
 <!-- Every flow serves at least one product.md goal — the OKF edge the
-     blueprint-reviewer verifies. A flow no goal justifies is scope drift.
-     An in-car flow (device: carplay | android-auto) additionally carries a
-     mandatory parent link — it is always a subset of a phone journey, and the
-     parent is now a SIBLING folder:
+     blueprint-reviewer verifies. A flow no goal justifies is scope drift. -->
 
-     Subset of: [<parent flow>](../<NNN>-<flow>/index.md) -->
+## Platforms
+
+| Platform | File | Notes |
+| -------- | ---- | ----- |
+
+<!-- One row per platform that implements this journey, each linking its file
+     (e.g. [mobile](./mobile.md)). Which platforms implement a flow is a
+     PRODUCT DECISION, elicited — a project declaring `auto` need not carry an
+     auto file for every flow (signing in while driving makes no sense). The
+     rows must be a subset of the registry project's declared `platforms:`.
+     Notes carry the one-line "how this platform's take differs" (e.g.
+     "glanceable subset; no text entry"). Omit this section for a NON-UI flow. -->
 
 ## Trigger & Actors
 
@@ -63,7 +79,9 @@ Serves: [<goal name>](../../../product.md#goal-<slug>)
      as `operationId` (defined in docs/blueprint/apis/<project>.openapi.yaml —
      link the contract once under References). Mark audit-recorded steps
      `(audit-recorded)`. A step that changes an entity's state must match a
-     transition in that entity's Lifecycle table. -->
+     transition in that entity's Lifecycle table. Steps are the SAME across
+     platforms — a platform that cannot perform a step omits the screens for it
+     and says so in its Platforms row; it never forks the journey. -->
 
 ## Consistency boundary
 
@@ -94,44 +112,6 @@ sequenceDiagram
     end
 ```
 
-## Screens → <UI project(s), from registry>
-
-| Code | Screen | Route | Reads (operationId) | States (loading/error/empty) | Actions | Form validation |
-| ---- | ------ | ----- | ------------------- | ---------------------------- | ------- | --------------- |
-
-<!-- The screens this flow traverses. Code = <NNN><letter> (020a, 020b, … in
-     step order) — the per-screen sync key: canvas frames are named by it and
-     /vwf:screens import matches on it. Stable once assigned: an inserted
-     screen takes the next free letter, never a re-letter. HOME RULE: every
-     screen is defined in exactly one flow (its home journey); another flow
-     that touches it links the home flow's row instead of redefining it. Error
-     and empty are MANDATORY pins per screen (or an explicit "n/a — <why>") —
-     sad paths are contract; so are the CONDITIONAL product states the screen
-     genuinely has (empty data, an entity-state variant). The blueprint pass
-     renders every pinned state for visual review. Visual
-     language (tokens, type, spacing, motion, component behavior) comes from
-     docs/blueprint/design-system.md — reference it; record only deviations.
-     An optional screen-navigation mermaid flowchart is allowed only when the
-     flow has 3+ screens with branching navigation — a judgement, not a bar. -->
-
-### `<code>` — `<Screen>` components
-
-| Component | Rules |
-| --------- | ----- |
-
-<!-- One Components block per Screens row (format 12), headed by the row's
-     Code. Component = each element the screen displays — text, info, error
-     surfaces, buttons, inputs, lists, media — named with its kind. Rules =
-     the behavior contract where more than one reasonable answer exists: when
-     the component is visible or enabled (e.g. a button clickable only once
-     the form validates), what activating it does (naming the operationId it
-     calls or the coded screen it navigates to), and its content where the
-     wording is a product decision (error messages, empty-state copy, CTA
-     labels). Every entry in the row's Actions cell appears as a component;
-     rules must agree with the row's States and the flow's steps.
-     Code-independent: kinds and behavior only — never component-library
-     names, CSS, or pixels. -->
-
 ## Background Jobs → <worker project(s), from registry>
 
 | Job | Trigger | Timer / Retry | Activities | On failure |
@@ -144,8 +124,10 @@ sequenceDiagram
 
 <!-- Observable Given/When/Then outcomes — what a user or system can verify
      from the outside once the flow ran. At least one success and one
-     failure/compensation criterion. Code-independent: name observable state,
-     never test files, fixtures, or tooling. Verified end-to-end by execute's
+     failure/compensation criterion. Platform-agnostic: the journey's outcome
+     is the same everywhere; a criterion that only holds on one platform names
+     that platform explicitly. Code-independent: name observable state, never
+     test files, fixtures, or tooling. Verified end-to-end by execute's
      acceptance stage and re-run by /vwf:verify against deployed environments. -->
 
 - Given <initial state>, when <trigger>, then <observable outcome>
@@ -159,7 +141,7 @@ sequenceDiagram
   operationIds the steps name
 - [auth](../../../conventions.md#auth), [errors](../../../conventions.md#errors)
   (only the cross-cutting sections this flow relies on)
-- [design-system](../../../design-system.md) — for any flow with Screens
+- [design-system](../../../design-system.md) — for any flow with platform files
 
 ## Open Questions
 

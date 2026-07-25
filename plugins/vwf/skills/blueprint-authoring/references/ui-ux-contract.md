@@ -40,15 +40,15 @@ Pin per screen / surface (each has more than one reasonable answer):
   live or on refresh (the UX expectation, not the transport).
 - **Content** — error messages, empty-state copy, and CTA labels where the
   wording is a product decision.
-- **In-car screens** (screens of a `carplay` / `android-auto` **subset flow** —
-  in-car journeys are their own flows carrying the in-car `device:` value, never
-  variants on the phone flow's rows; see the
-  [flow-contract](./flow-contract.md)) — per in-car screen: the platform
-  **template** it maps to (list / grid / map / now-playing / …), the glanceable
-  content subset vs the parent phone screen, and interaction limits while
-  driving. In-car UIs are template-constrained by the OS — custom layout and
-  visual language do not apply; the design system reaches only as far as the
-  platform allows (icons, accent color).
+- **In-car screens** (screens in a flow's `auto.md` platform file — the in-car
+  take is a platform file of the same flow, never a separate flow; see the
+  [flow-contract](./flow-contract.md)) — per in-car screen: the OS **template**
+  it maps to (list / grid / map / now-playing / …), the glanceable content
+  subset vs the phone screen, interaction limits while driving, and any
+  CarPlay-vs-Android-Auto difference (both live in `auto.md`). In-car UIs are
+  template-constrained by the OS — custom layout and visual language do not
+  apply; the design system reaches only as far as the platform allows (icons,
+  accent color).
 
 Out (realization): the component library, CSS, exact pixels — and anything
 already fixed by the design system. If a screen must break the design system,

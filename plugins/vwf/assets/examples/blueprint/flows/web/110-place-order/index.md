@@ -3,16 +3,16 @@ type: vwf-flow
 title: Place order
 description: A shopper turns a cart into a paid order in one checkout sitting.
 status: reviewed
-device: web
 implementation: partial
 tags: [ commerce, checkout ]
 ---
 
 # Flow: Place order
 
-<!-- Conformance example (blueprint-format 14). A worked, format-valid flow doc:
-     the goal-traceability spine runs product goal → this flow → entity/API/screen.
-     Code-independent: names entities, the `api` service, and operationIds only. -->
+<!-- Conformance example (blueprint-format 15). The PLATFORM-AGNOSTIC contract:
+     no screens — they live in web.md beside this file. The goal-traceability
+     spine runs product goal → this flow → entity/API/screen. Code-independent:
+     names entities, the `api` service, and operationIds only. -->
 
 ## Purpose
 
@@ -21,6 +21,12 @@ receiving a confirmed order they can revisit later. This is the primary path by
 which an Order comes into being, so it carries the "no lost orders" promise.
 
 Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
+
+## Platforms
+
+| Platform | File            | Notes                         |
+| -------- | --------------- | ----------------------------- |
+| web      | [web](./web.md) | The only surface for checkout |
 
 ## Trigger & Actors
 
@@ -79,34 +85,6 @@ sequenceDiagram
     end
 ```
 
-## Screens → web
-
-| Code | Screen        | Route     | Reads (operationId) | States (loading/error/empty)          | Actions     | Form validation                 |
-| ---- | ------------- | --------- | ------------------- | ------------------------------------- | ----------- | ------------------------------- |
-| 010a | Checkout      | /checkout | `placeOrder`        | loading · error (decline inline) · —  | Place order | Cart non-empty; payment details |
-| 010b | Order history | /orders   | `getOrder`          | loading · error · empty (first order) | Open detail | —                               |
-
-<!-- Home flow for the Checkout and Order history screens; the Order detail
-     screen is homed by the cancel-refund flow. Visual language comes from
-     ../../../design-system.md; record only deviations here. -->
-
-### 010a — Checkout components
-
-| Component              | Rules                                                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Cart summary (info)    | Lists the items and total being ordered; read-only on this screen                                                  |
-| Payment details form   | Fields per Form validation; validates on blur                                                                      |
-| Place order (button)   | Enabled only when the cart is non-empty and payment details validate; click → `placeOrder`; disabled while placing |
-| Decline error (inline) | Shown when payment declines; states that no order was placed and the cart is intact                                |
-
-### 010b — Order history components
-
-| Component           | Rules                                                                           |
-| ------------------- | ------------------------------------------------------------------------------- |
-| Order list          | One row per order, newest first; row click → Order detail (020a, cancel-refund) |
-| Empty state (info)  | Shown before the first order; invites the customer to start shopping            |
-| Load error (banner) | Shown when `getOrder` fails; offers retry                                       |
-
 ## Acceptance
 
 - Given a signed-in customer with a non-empty cart, when they check out and
@@ -121,7 +99,7 @@ sequenceDiagram
 - [api API contract](../../../apis/api.openapi.yaml) — for `placeOrder` /
   `getOrder`
 - [auth](../../../conventions.md#auth), [errors](../../../conventions.md#errors)
-- [design-system](../../../design-system.md) — this flow has Screens
+- [design-system](../../../design-system.md) — this flow has platform files
 
 ## Open Questions
 

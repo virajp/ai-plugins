@@ -39,7 +39,7 @@ and nothing under `docs/scratchpad/` is ever committed.
 | Registry      | `docs/blueprint/architecture.md`                                                                                                        |
 | Design system | `docs/blueprint/design-system.md`, or the folder form `docs/blueprint/design-system/` (read every split file)                           |
 | Flow screens  | the `## Screens` section of `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (home rule: a screen is defined in exactly one flow) |
-| Render target | `docs/scratchpad/<project>/<device>/<NNN>-<flow>/` (gitignored; overwritten in place per flow)                                          |
+| Render target | `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` (gitignored; overwritten in place per platform)                                    |
 | Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                                              |
 
 Doctrine: the **blueprint-authoring** skill's `ui-ux-contract` reference (what a
@@ -84,9 +84,9 @@ fully (either form). Build the worklist: flow → screens → the **default
 populated view always, plus only the states the row pins**
 (`${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` — no speculative variant catalog).
 Flows without a Screens section are skipped silently in sweep mode; `$ARGUMENTS`
-present → the scope is that one flow. Each flow's render target is
-`docs/scratchpad/<project>/<device>/<NNN>-<flow>/` — `<project>` its registry
-project group, `<device>` its `device:` frontmatter key.
+present → the scope is that one flow (every platform file it has). The unit of
+work is a **flow platform**: each `<platform>.md`'s Screens render into
+`docs/scratchpad/<project>/<NNN>-<flow>/<platform>/`.
 
 ### 3. Recall (mempalace)
 
@@ -96,35 +96,36 @@ must not over-promise). Skip silently if mempalace is unavailable.
 
 ### 4. Generate (delegated, per flow)
 
-For each in-scope flow, dispatch a **fresh `mockup-generator` subagent**
-(stateless; flows are independent, so dispatch them all in a single message to
-run concurrently) with: the flow's Screens table + deviations, the design-system
-doc(s), the flow's **absolute render-target dir**, and the flow name. The
-generator owns the file spec (filenames, self-containment rules), overwrites the
-dir's contents in place, and returns **only a manifest** (one line per file:
-`path | screen | state`) — the HTML never enters this conversation's context.
+For each in-scope **flow platform**, dispatch a **fresh `mockup-generator`
+subagent** (stateless and independent, so dispatch them all in a single message
+to run concurrently) with: that platform file's Screens table + Components +
+deviations, the design-system doc(s), its **absolute render-target dir**, and
+the flow + platform names. The generator owns the file spec (filenames,
+self-containment rules), overwrites the dir's contents in place, and returns
+**only a manifest** (one line per file: `path | screen | state`) — the HTML
+never enters this conversation's context.
 
 ### 5. Prune stale files
 
-Within each rendered flow's dir, delete files absent from its manifest (screens
-or states the blueprint no longer pins). A **sweep** additionally removes
-scratchpad flow dirs whose blueprint flow no longer exists (or no longer has
-Screens); a flow-scoped run never touches another flow's dir. Deletes never
-reach outside `docs/scratchpad/`.
+Within each rendered platform's dir, delete files absent from its manifest
+(screens or states the blueprint no longer pins). A **sweep** additionally
+removes scratchpad dirs whose flow or platform file no longer exists; a
+flow-scoped run never touches another flow's dirs. Deletes never reach outside
+`docs/scratchpad/`.
 
 ### 6. Report, stamp, persist
 
-Report per flow: the screens and state variants rendered, and the **absolute
-file paths** to open in a browser (the entry point per flow is its first
-screen's default view). Include the standing reminder that mockup remarks never
-flow back as files — contract changes route through `/vwf:blueprint <flow>` or
-`/vwf:design-system`, then re-render.
+Report per flow, grouped by platform: the screens and state variants rendered,
+and the **absolute file paths** to open in a browser (the entry point per
+platform is its first screen's default view). Include the standing reminder that
+mockup remarks never flow back as files — contract changes route through
+`/vwf:blueprint <flow>` or `/vwf:design-system`, then re-render.
 
-**Stamp `flows_rendered`.** Record the rendered flows in the config's
-`design.flows_rendered` list — a sweep sets it to exactly the flows rendered; a
-flow-scoped run adds its flow. This is the render-currency state `/vwf:plan`'s
-soft advisory reads (and `/vwf:blueprint` drops when a flow's Screens change
-unrendered).
+**Stamp `flows_rendered`.** Record each rendered flow platform in the config's
+`design.flows_rendered` list as `<project>/<NNN>-<flow>/<platform>` — a sweep
+sets it to exactly what was rendered; a flow-scoped run adds its flow's
+platforms. This is the render-currency state `/vwf:plan`'s soft advisory reads
+(and `/vwf:blueprint` drops when a flow's Screens change unrendered).
 
 **Persist.** Store the run outcome to mempalace room `decisions` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`. Skip silently if mempalace is

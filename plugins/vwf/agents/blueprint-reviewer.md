@@ -37,25 +37,42 @@ pipeline's build-state stamp — its presence and value are **never** a gap.
 
 ## Flow mode — checklist
 
-The doc is `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — one uniform
-depth for UI and non-UI projects alike (type `vwf-flow`). Verify:
+The unit is the **flow folder** `docs/blueprint/flows/<project>/<NNN>-<flow>/`:
+`index.md` (the platform-agnostic contract, type `vwf-flow`) plus one
+`<platform>.md` per implemented platform (type `vwf-flow-platform`). The
+orchestrator passes both. Verify the contract and every platform file:
 
-- [ ] **Frontmatter `device:`** — a flow of a **UI** project (registry `type`
-      `site` / `frontend` / `console`) carries `device:` with one of `mobile` /
-      `web` / `carplay` / `android-auto`, and the value is a device the registry
-      project actually declares. Missing on a UI flow is a gap; a value outside
-      the vocabulary is a gap; a `device:` key on a **non-UI** project's flow is
-      a gap.
+- [ ] **No `device:` or `platform:` key on `index.md`** — the contract is
+      platform-agnostic (format 15); either key there is a gap.
+- [ ] **Designated number** — a standard-flow slug carries its designated number
+      (`010` splash, `020` signin, `030` recover-account, `040` onboarding,
+      `100` home, `910` profile, `920` settings, `930` notifications, `940`
+      delete-account); a product flow sits in `110`–`890`. A standard slug at
+      another number, or a product flow outside its band, is a gap unless the
+      orchestrator passed a matching waiver.
+- [ ] **Platforms table** — a UI project's flow carries one row per
+      `<platform>.md` on disk, each a resolving link, each platform declared by
+      the registry project, each from the vocabulary (`mobile` / `tablet` /
+      `desktop` / `web` / `auto`). A file with no row, a row with no file, an
+      undeclared platform, or a Platforms section on a **non-UI** flow is a gap.
+- [ ] **Each platform file** carries `type: vwf-flow-platform`, a `platform:`
+      key matching its filename, and a resolving
+      `Flow contract: [<name>](./index.md)` link. A missing link or a
+      filename/key mismatch is a gap.
 - [ ] The Purpose section carries a **Serves:** line with at least one markdown
       link to a `product.md` goal anchor, and every linked anchor is in the
       goal-anchor list the orchestrator passed (a link to a nonexistent goal is
       a gap; a missing Serves line is a gap).
-- [ ] An in-car flow (`device: carplay` / `android-auto`) additionally carries a
-      **Subset of:** line whose markdown link resolves to a parent flow of the
-      same project carrying `device: mobile` — the parent is a **sibling
-      folder** (`../<NNN>-<flow>/index.md`), so a link that still climbs through
-      a device directory is a gap, as is a missing or dangling one. A
-      `Subset of:` line on a non-in-car flow is a gap.
+- [ ] **No `Subset of:` line anywhere** — in-car journeys are platform files
+      (`auto.md`), not subset flows, since format 15; the line is retired and
+      its presence is a gap.
+- [ ] **Screen codes are shared across platform files** — a code means one
+      screen concept in every file it appears in (same screen name and purpose),
+      and no two different screens share a code across the flow. A platform-only
+      screen takes a letter free across the whole flow.
+- [ ] **Standard screen naming** — a standard flow's primary screen is named
+      with the flow's slug (`home` flow → `home` screen, `signin` → `signin`); a
+      synonym (`dashboard`, `main`, `landing`) is a gap.
 - [ ] Trigger & Actors: every actor that may start the flow is listed with an
       explicit Authorization entry; operator and destructive triggers are marked
       audit-recorded (or their absence is explained).
