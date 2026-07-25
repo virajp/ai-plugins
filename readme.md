@@ -1187,9 +1187,12 @@ to `~/.claude/scripts/` and writing the chosen key(s) into
 pnpx @askviraj/ai-plugins --statusline
 ```
 
-Installing the statusline (`--statusline`) also wires a **context & rate-limit
-caps hook** — it pauses long `/vwf:execute` runs at budget thresholds (context
-over 65%, 5-hour over 90%, 7-day over 80%) by triggering a handoff.
+It also comes along with `--all`, which installs the whole toolkit; pass
+`--no-statusline` there to skip it.
+
+Installing the statusline also wires a **context & rate-limit caps hook** — it
+pauses long `/vwf:execute` runs at budget thresholds (context over 65%, 5-hour
+over 90%, 7-day over 80%) by triggering a handoff.
 
 See **[docs/statusline.md](./docs/statusline.md)** for setup and the full
 configuration reference.
@@ -1209,10 +1212,10 @@ one it finds.
 
 ```sh
 # Everything: all user-scoped plugins + the statusline, for every detected platform
-pnpx @askviraj/ai-plugins --all --statusline
+pnpx @askviraj/ai-plugins --all
 
 # Just the user-scoped plugins (no statusline)
-pnpx @askviraj/ai-plugins --all
+pnpx @askviraj/ai-plugins --all --no-statusline
 
 # Named plugins, at user or project scope (flutter is project-scoped)
 pnpx @askviraj/ai-plugins --user vwf --project flutter
@@ -1227,11 +1230,11 @@ pnpx @askviraj/ai-plugins --version
 pnpx @askviraj/ai-plugins --upgrade
 
 # Idempotent install + upgrade — safe to drop in a setup script
-pnpx @askviraj/ai-plugins --all --statusline --upgrade
+pnpx @askviraj/ai-plugins --all --upgrade
 
 # Uninstall (mirrors the install flags)
 pnpx @askviraj/ai-plugins --uninstall --user vwf
-pnpx @askviraj/ai-plugins --uninstall --all --statusline
+pnpx @askviraj/ai-plugins --uninstall --all
 ```
 
 Notes:
@@ -1240,6 +1243,9 @@ Notes:
   — install it explicitly with `--project flutter` from within the project that
   needs it. `andrej-karpathy-skills` is **opt-in** (external) — also excluded
   from `--all`; install it with `--user`/`--project andrej-karpathy-skills`.
+- `--all` means the whole toolkit, so it **includes the statusline** (Claude
+  Code only) — pass `--no-statusline` for a plugins-only run. The same applies
+  in reverse: `--uninstall --all` removes the statusline too.
 - Scope is chosen by the flag: `--user <name>` installs at user scope,
   `--project <name>` at project scope (you can mix both in one run). The
   marketplace add is always user-scoped.

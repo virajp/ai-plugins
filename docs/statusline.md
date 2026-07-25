@@ -30,6 +30,9 @@ Run the installer with `npx` (or `pnpm dlx`) — no global install needed:
 npx @askviraj/ai-plugins --statusline
 ```
 
+`--all` installs the whole toolkit and so brings the statusline with it; pass
+`--no-statusline` alongside it for a plugins-only run.
+
 The CLI:
 
 - copies the statusline script into `~/.claude/scripts/` (made executable),
@@ -38,7 +41,7 @@ The CLI:
   preserved),
 - writes the requested key(s) into `~/.claude/settings.json`, leaving any other
   settings untouched, and
-- with `--statusline`, installs the
+- whenever the main bar is installed, wires the
   [context & rate-limit caps hook](#context--rate-limit-caps-vwf).
 
 If a target key already exists, the CLI prints the current value and asks before

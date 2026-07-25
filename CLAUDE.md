@@ -817,7 +817,9 @@ Layout:
 - `test/` — `node --test` suites run by `i:test` (and thus in `release.yml`):
   `utils.test.mjs` (cmpVer/cmpPre/deepMerge incl. prototype-pollution keys),
   `statusline.test.mjs` (hermetic smoke tests for both render surfaces + the
-  usage-file contract `context-caps.js` reads), and `opencode.test.mjs`
+  usage-file contract `context-caps.js` reads), `claude.test.mjs` (pure
+  `resolvePlan` cases — plugin selection/scope and the `--all` ⇒ statusline
+  implication with its `--no-statusline` opt-out), and `opencode.test.mjs`
   (hermetic OpenCode installs into a temp `$HOME` with
   `AI_PLUGINS_SOURCE_DIR=<checkout>`: render/rewrite, wrapper emission, config
   idempotency + foreign-key preservation, uninstall symmetry). Not shipped in
@@ -857,32 +859,35 @@ that installs **both** the main bar `statusLine` and the subagent panel
 seeds the bundled defaults into `~/.config/statusline.json` (deep-merging
 missing settings if it already exists, preserving user edits), and writes both
 keys into `~/.claude/settings.json` (preserving other keys; prompting before
-overwrite unless `--yes`). `--all` installs plugins only — pair it with
-`--statusline` for the bar. Installing the statusline additionally wires the
-**context/rate-limit caps** `PostToolUse` hook (`installContextCaps`): it copies
-`tools/statusline/context-caps.js` into `~/.claude/hooks/`, sets
-`env.AI_PLUGINS_USAGE_DIR` (`${HOME}/.claude/usage`), and appends the hook entry
-(idempotently, preserving other env keys / PostToolUse hooks). The statusline's
-`writeUsageFile` mirrors each session's `context_window`/`rate_limits` to that
-dir — the only surface those numbers appear on — and the hook reads them and, at
-the caps (context over 65%, 5-hour over 90%, 7-day over 80%), tells the agent to
-`/vwf:handoff` then halt. It is bundled with the `statusLine` key (not the
-subagent panel) because that main-bar writer is its sensor, and is inert until
-the bar runs. **Versions:** `--version`/`-v` prints the CLI version (vs the
-latest on npm), the bundled statusline version, and each plugin's installed
-version (from `claude plugin list`) vs the latest in the **remote** marketplace
-manifest on GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:**
-`--upgrade` runs **after** any install phase — it `claude plugin update`s every
-installed virajp-plugins plugin that's outdated, refreshes the statusline, and
-notes a newer CLI; combine with `--all --statusline` for an idempotent
-install+upgrade fit for a setup script. `--version`/`--upgrade` need the network
-and `claude`, and error out (non-zero) if either is unavailable. **Uninstall:**
-`--uninstall` reuses the same selection flags but removes —
-`claude plugin uninstall`s the selected plugins (matching their install scope)
-and/or strips the statusline keys from `settings.json`, deleting the installed
-script once no statusline key remains. Uninstalling the statusline also runs
-`uninstallContextCaps` — it strips the caps hook entry and
-`AI_PLUGINS_USAGE_DIR` from `settings.json` and deletes
+overwrite unless `--yes`). The flag is **tri-state** (`allowNo`): `--statusline`
+asks for it, `--no-statusline` refuses it, and an unset flag defers to `--all` —
+which means the whole toolkit, so a bare `--all` installs the bar too (and
+`--uninstall --all` removes it). Only an **explicit** `--statusline` on an
+opencode-only run prints the Claude-only skip note. Installing the statusline
+additionally wires the **context/rate-limit caps** `PostToolUse` hook
+(`installContextCaps`): it copies `tools/statusline/context-caps.js` into
+`~/.claude/hooks/`, sets `env.AI_PLUGINS_USAGE_DIR` (`${HOME}/.claude/usage`),
+and appends the hook entry (idempotently, preserving other env keys /
+PostToolUse hooks). The statusline's `writeUsageFile` mirrors each session's
+`context_window`/`rate_limits` to that dir — the only surface those numbers
+appear on — and the hook reads them and, at the caps (context over 65%, 5-hour
+over 90%, 7-day over 80%), tells the agent to `/vwf:handoff` then halt. It is
+bundled with the `statusLine` key (not the subagent panel) because that main-bar
+writer is its sensor, and is inert until the bar runs. **Versions:**
+`--version`/`-v` prints the CLI version (vs the latest on npm), the bundled
+statusline version, and each plugin's installed version (from
+`claude plugin list`) vs the latest in the **remote** marketplace manifest on
+GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:** `--upgrade`
+runs **after** any install phase — it `claude plugin update`s every installed
+virajp-plugins plugin that's outdated, refreshes the statusline, and notes a
+newer CLI; combine with `--all` for an idempotent install+upgrade fit for a
+setup script. `--version`/`--upgrade` need the network and `claude`, and error
+out (non-zero) if either is unavailable. **Uninstall:** `--uninstall` reuses the
+same selection flags but removes — `claude plugin uninstall`s the selected
+plugins (matching their install scope) and/or strips the statusline keys from
+`settings.json`, deleting the installed script once no statusline key remains.
+Uninstalling the statusline also runs `uninstallContextCaps` — it strips the
+caps hook entry and `AI_PLUGINS_USAGE_DIR` from `settings.json` and deletes
 `~/.claude/hooks/context-caps.js` (leaving other hooks/env keys intact). It
 leaves the seeded `~/.config/statusline.json` (it may hold user edits) and never
 touches external tools (the CLI never installed those).

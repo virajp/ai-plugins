@@ -560,7 +560,10 @@ class ClaudeCode {
   // Turn the parsed flags into a concrete plan: the plugins to act on (each with
   // its scope) and whether to touch the statusline. --all selects every
   // user-scoped plugin (at user scope); --user/--project name plugins at the
-  // matching scope. --statusline drives both statusline keys (one merged flag).
+  // matching scope. --statusline drives both statusline keys (one merged flag),
+  // and --all means the whole toolkit, so it implies the statusline unless the
+  // run says otherwise: the flag is tri-state (--statusline / --no-statusline /
+  // unset), and only an unset flag falls back to --all.
   resolvePlan(flags) {
     let plugins;
     if (flags.all) {
@@ -622,10 +625,11 @@ class ClaudeCode {
       const seen = new Set();
       plugins = named.filter(p => !seen.has(p.name) && seen.add(p.name));
     }
+    const statusline = flags.statusline ?? Boolean(flags.all);
     return {
       plugins,
-      statusLine: flags.statusline,
-      subagentStatusLine: flags.statusline,
+      statusLine: statusline,
+      subagentStatusLine: statusline,
     };
   }
 

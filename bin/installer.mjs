@@ -3,7 +3,7 @@
  * plugins + the powerline statusline) for Claude Code and/or OpenCode.
  *
  * Single-command oclif CLI, plain JS (no build step). Run via:
- *   npx @askviraj/ai-plugins --all --statusline [--yes]
+ *   npx @askviraj/ai-plugins --all [--yes]
  *
  * This file is only the CLI entrypoint: it parses flags and dispatches to one
  * tool per targeted platform. Claude-specific behavior lives in ./claude.mjs
@@ -77,9 +77,10 @@ class Installer extends Command {
       return;
     }
 
-    // The statusline is a Claude Code surface (it lives in ~/.claude); flag a
-    // request that can't be honored because claude isn't targeted.
-    if (flags.statusline && !platforms.includes("claude")) {
+    // The statusline is a Claude Code surface (it lives in ~/.claude); flag an
+    // EXPLICIT request that can't be honored because claude isn't targeted (the
+    // implicit one --all carries is not worth a note on an opencode-only run).
+    if (flags.statusline === true && !platforms.includes("claude")) {
       this.log(
         yellow(
           "Note: --statusline is Claude Code-only — skipped (claude is not a targeted platform).",
@@ -162,8 +163,8 @@ Installer.summary =
 // Users invoke this via pnpx (npx works too), never the bare `ai-plugins` bin,
 // so spell the runnable command out rather than using <%= config.bin %>.
 Installer.examples = [
-  "pnpx @askviraj/ai-plugins --all --statusline",
   "pnpx @askviraj/ai-plugins --all",
+  "pnpx @askviraj/ai-plugins --all --no-statusline",
   "pnpx @askviraj/ai-plugins --user vwf --user markdown",
   "pnpx @askviraj/ai-plugins --project flutter",
   "pnpx @askviraj/ai-plugins --user vwf --project flutter",
@@ -172,7 +173,7 @@ Installer.examples = [
   "pnpx @askviraj/ai-plugins --statusline --yes",
   "pnpx @askviraj/ai-plugins --all --upgrade",
   "pnpx @askviraj/ai-plugins --uninstall --user vwf",
-  "pnpx @askviraj/ai-plugins --uninstall --all --statusline",
+  "pnpx @askviraj/ai-plugins --uninstall --all",
   "pnpx @askviraj/ai-plugins --version",
 ];
 
@@ -201,7 +202,7 @@ Installer.flags = {
   all: Flags.boolean({
     description: `Install every user-scoped plugin (${
       USER_SCOPED.join(", ")
-    }) at user scope; add --statusline for the status bar. Project-scoped plugins (${
+    }) at user scope, plus the statusline (pass --no-statusline to skip it). Project-scoped plugins (${
       [...PROJECT_SCOPED].join(", ")
     }) are excluded — install them with --project`,
     exclusive: ["user", "project"],
@@ -221,8 +222,9 @@ Installer.flags = {
       }`,
   }),
   statusline: Flags.boolean({
+    allowNo: true,
     description:
-      "Install the statusline — both the main bar (`statusLine`) and the subagent panel (`subagentStatusLine`) — in ~/.claude/settings.json (Claude Code only)",
+      "Install the statusline — both the main bar (`statusLine`) and the subagent panel (`subagentStatusLine`) — in ~/.claude/settings.json (Claude Code only). Implied by --all; pass --no-statusline to opt out",
   }),
   yes: Flags.boolean({
     char: "y",
