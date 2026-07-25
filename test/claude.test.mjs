@@ -67,8 +67,17 @@ test("--user --statusline selects both", () => {
 
 // --no-statusline must parse (allowNo) and, on its own, select nothing — so the
 // CLI exits non-zero with "Nothing to do" rather than an unknown-flag error.
+// --platform is explicit because a CI runner has neither binary on PATH, and
+// auto-detection would error out before the selection check is ever reached.
 test("--no-statusline parses and selects nothing", () => {
-  const res = spawnSync("node", [CLI, "--no-statusline"], { encoding: "utf8" });
+  const res = spawnSync("node", [
+    CLI,
+    "--platform",
+    "claude",
+    "--no-statusline",
+  ], {
+    encoding: "utf8",
+  });
   const out = `${res.stdout}${res.stderr}`;
   assert.notEqual(res.status, 0);
   assert.match(out, /Nothing to do/);
