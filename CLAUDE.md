@@ -222,26 +222,31 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   through the same classification, so canvas review flows back as contract
   intent, never as files), internal `git-workflow`, and `handoff`/`recall`
   (mempalace-backed session handoff — wing=`<project>`, room=`handoff`,
-  drawer=`<name>`). `execute` runs one approved plan to completion
-  **autonomously** in a dedicated worktree: dependency-ordered steps, `code`
-  then `review` ‖ `security` **concurrently** per step — the two are independent
-  read-only passes over the same diff, and their findings merge into **one**
-  loop-back to `code` (so a round counts once, and the coder never fixes the
-  same lines twice) — (security findings always fixed; **breaking-released-API
-  findings gate the same way** — cap-exempt, always fixed; other review findings
-  loop ≤4 rounds then become documented gaps) plus one `acceptance + ux` pass
-  after all steps (same 4-round cap), gaps mirrored to the plan doc's "Gaps
-  surfaced during execution" section + mempalace room `gaps`, mid-run pauses
-  only on hard halts, the statusline resource caps, an all-blocking gap, or an
-  uncovered irreversible decision — then **one final human gate** (run report,
-  gap list, and the `implementation:` stamps written) behind which the
-  merge/push happens, gap reconciliation is offered (blueprint/plan loop-backs),
-  archive is offered once no gaps remain, and the next chained plan is offered
-  when one is unblocked. Its Reconcile step **stamps `implementation:` on each
-  doc the plan `covers:`** — the single sanctioned blueprint edit (state only,
-  never content); everywhere else the blueprint is the source of truth code
-  follows, drift surfaced and never silently absorbed. (The former `autopilot`
-  command is merged into this behavior and retired.)
+  drawer=`<name>`; the **reserved `next`** name is the default when no argument
+  is given — a singleton written to **both** the drawer and a committed
+  `docs/handoffs/next.md`, overwritten in place, whose Next prompt
+  `/vwf:recall next` runs **without a gate**, and which reports "nothing further
+  to continue" rather than inventing one when the session had no next action).
+  `execute` runs one approved plan to completion **autonomously** in a dedicated
+  worktree: dependency-ordered steps, `code` then `review` ‖ `security`
+  **concurrently** per step — the two are independent read-only passes over the
+  same diff, and their findings merge into **one** loop-back to `code` (so a
+  round counts once, and the coder never fixes the same lines twice) — (security
+  findings always fixed; **breaking-released-API findings gate the same way** —
+  cap-exempt, always fixed; other review findings loop ≤4 rounds then become
+  documented gaps) plus one `acceptance + ux` pass after all steps (same 4-round
+  cap), gaps mirrored to the plan doc's "Gaps surfaced during execution"
+  section + mempalace room `gaps`, mid-run pauses only on hard halts, the
+  statusline resource caps, an all-blocking gap, or an uncovered irreversible
+  decision — then **one final human gate** (run report, gap list, and the
+  `implementation:` stamps written) behind which the merge/push happens, gap
+  reconciliation is offered (blueprint/plan loop-backs), archive is offered once
+  no gaps remain, and the next chained plan is offered when one is unblocked.
+  Its Reconcile step **stamps `implementation:` on each doc the plan `covers:`**
+  — the single sanctioned blueprint edit (state only, never content); everywhere
+  else the blueprint is the source of truth code follows, drift surfaced and
+  never silently absorbed. (The former `autopilot` command is merged into this
+  behavior and retired.)
 - `agents/` — subagents the workflow skills delegate to. Delegation here is a
   **latency and context strategy as much as a quality one**: read-heavy scans
   and mechanical writing run in a subagent so their file loads never enter the
@@ -497,7 +502,8 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   Gaps are also mirrored to a durable "Gaps surfaced during execution" section
   in the plan doc, so they survive a mempalace outage and feed the
   blueprint/plan fixes. The skip-silently-when-down rule carves out
-  `handoff`/`recall`, which fall back to `docs/handoffs/<name>.md` instead
+  `handoff`/`recall`, which fall back to `docs/handoffs/<name>.md` instead (the
+  reserved `next` handoff writes that file unconditionally, not just on outage)
 - `assets/graphify.md` — the **code-intelligence protocol**: when a repo carries
   a knowledge graph (`graphify-out/graph.json`), codebase-understanding
   questions go graph-first (`graphify query`/`path`/`explain`) with file reads
@@ -871,7 +877,8 @@ and appends the hook entry (idempotently, preserving other env keys /
 PostToolUse hooks). The statusline's `writeUsageFile` mirrors each session's
 `context_window`/`rate_limits` to that dir — the only surface those numbers
 appear on — and the hook reads them and, at the caps (context over 65%, 5-hour
-over 90%, 7-day over 80%), tells the agent to `/vwf:handoff` then halt. It is
+over 90%, 7-day over 80%), tells the agent to run a bare `/vwf:handoff` (the
+reserved `next` handoff) then halt, resuming via `/vwf:recall next`. It is
 bundled with the `statusLine` key (not the subagent panel) because that main-bar
 writer is its sensor, and is inert until the bar runs. **Versions:**
 `--version`/`-v` prints the CLI version (vs the latest on npm), the bundled

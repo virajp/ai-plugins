@@ -85,19 +85,20 @@ on its stdin payload — numbers a hook never sees. The script mirrors them, per
 session, to `$AI_PLUGINS_USAGE_DIR/<session_id>.json` (the installer sets
 `AI_PLUGINS_USAGE_DIR` to `${HOME}/.claude/usage`). After each tool call the
 hook reads that file and, when a cap is breached, tells the agent to snapshot
-via `/vwf:handoff` and halt:
+via `/vwf:handoff` — with no argument, so it writes the reserved `next` handoff
+to both mempalace and `docs/handoffs/next.md` — and halt:
 
-| Cap            | Threshold | Action                                                 |
-| -------------- | --------- | ------------------------------------------------------ |
-| Context window | > 65%     | handoff, then `/clear` (or `/compact`) + `/vwf:recall` |
+| Cap            | Threshold | Action                                                          |
+| -------------- | --------- | --------------------------------------------------------------- |
+| Context window | > 65%     | handoff, then `/clear` (or `/compact`) + `/vwf:recall next`     |
+| 5-hour limit   | > 90%     | handoff, then pause until reset; resume with `/vwf:recall next` |
+| 7-day limit    | > 80%     | handoff, then stop with the reset time                          |
 
 A repo may **tighten** (never loosen) these thresholds via its vwf config —
 `.config/vwf.yaml`, keys `pipeline.execute_caps.context` / `.five_hour` /
 `.seven_day` (the legacy `pipeline.autopilot_caps` name is still honored) — the
 hook reads the session's working directory and clamps any value above the
-shipped defaults. | 5-hour limit | > 90% | handoff, then pause until reset;
-resume with `/vwf:recall` | | 7-day limit | > 80% | handoff, then stop with the
-reset time |
+shipped defaults.
 
 A hook can't clear context or invoke slash commands, so resuming is one
 keystroke from you. The hook is **inert** until the main bar runs (no usage file

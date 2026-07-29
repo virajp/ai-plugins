@@ -3,8 +3,10 @@ name: handoff
 description: Capture the current session as a handoff document and file it to
   mempalace
   (wing=<project>, room=handoff, drawer=<name>) so work can resume in a fresh
-  session. Use when the context window grows beyond ~60%.
-argument-hint: "<name>"
+  session. With no argument — or `next` — it writes the reserved `next`
+  handoff, to mempalace and to docs/handoffs/next.md, which /vwf:recall
+  resumes automatically. Use when the context window grows beyond ~60%.
+argument-hint: "[<name> | next]"
 model: sonnet
 effort: medium
 disable-model-invocation: false
@@ -22,14 +24,32 @@ session still reasons clearly — is worth far more than one squeezed out at 95%
 
 ## Inputs
 
-| Input       | Source                                                         |
-| ----------- | -------------------------------------------------------------- |
-| `<name>`    | `$ARGUMENTS` — the drawer name for this handoff. **Required.** |
-| `<project>` | the **wing**, resolved from the repo (see step 3)              |
-| Template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/handoff.md`            |
+| Input       | Source                                                       |
+| ----------- | ------------------------------------------------------------ |
+| `<name>`    | `$ARGUMENTS` — the drawer name. Empty → the reserved `next`. |
+| `<project>` | the **wing**, resolved from the repo (see step 3)            |
+| Template    | `${CLAUDE_PLUGIN_ROOT}/assets/templates/handoff.md`          |
 
-If `$ARGUMENTS` is empty, ask the user for a short `<name>` (kebab-case, e.g.
-`auth-refactor`) and wait. Do not invent one.
+`$ARGUMENTS` is a short kebab-case name (e.g. `auth-refactor`). **If it is
+empty, the name is `next`** — never ask for one, never invent one.
+
+## The `next` handoff
+
+`next` is a **reserved name**: the single "resume where I left off" handoff for
+this repo, and the default when no name is given. It differs from a named
+handoff in exactly three ways:
+
+- **Written to both surfaces, always.** mempalace *and* `docs/handoffs/next.md`,
+  committed to the repo — not disk-only-on-failure like a named handoff's
+  fallback. Either surface alone is enough to resume.
+- **A singleton, overwritten in place.** Each run replaces the file and
+  supersedes the drawer. There is never more than one live `next`.
+- **It must carry a continuation.** `next` exists to be resumed, so its **Next
+  prompt** section is required. If the session has no clear next action, say so
+  plainly rather than padding it — see step 5.
+
+Named handoffs (`/vwf:handoff auth-refactor`) keep their existing behavior
+throughout: mempalace, with the disk copy only as a fallback.
 
 ---
 
@@ -105,6 +125,13 @@ If a clear single next action exists, fill the **Next prompt** section with a
 not rely on this session's context. If there is no obvious next step, delete
 that section entirely (don't pad it).
 
+**For `next`, this section is the point of the handoff.** If the session has no
+continuable work — the thread finished, or the next move is the user's to choose
+— do **not** invent one. Write the handoff without the section and **tell the
+user there is nothing further to continue until they give a direction**;
+`/vwf:recall next` will report the same and wait. A `next` that auto-runs a
+made-up prompt is worse than one that admits it is done.
+
 ### 6. File it to mempalace
 
 Store the completed document verbatim:
@@ -129,8 +156,25 @@ skip, the document is the whole point): write the handoff to
 `docs/handoffs/<name>.md` instead, tell the user it went to disk because
 mempalace was unreachable, and that `/vwf:recall` will read the disk copy.
 
+### 6a. Write the repo copy (`next` only)
+
+For the reserved `next`, the disk copy is not a fallback — write it **in
+addition** to the drawer, and commit it so it travels with the branch:
+
+1. Write the same document verbatim to `docs/handoffs/next.md`, overwriting any
+   previous one in place (never a second file, never a dated variant).
+2. Stage and commit it — `docs: record the next handoff`. The step-2 checkpoint
+   already ran, so this is a small follow-up commit; respect pre-commit hooks
+   exactly as step 2 does (on failure, fix and make a **new** commit).
+
+If mempalace was unreachable, step 6's fallback and this step converge on the
+same file — write it once, commit it, and report the drawer as skipped.
+
 ### 7. Report
 
-Confirm where it was filed (wing / room / `<name>`, or the disk path), and state
-in one line that a fresh session can resume with `/vwf:recall <name>`. Mention
-whether a next prompt was included.
+Confirm where it was filed (wing / room / `<name>`, plus `docs/handoffs/next.md`
+for `next`, or the disk path when mempalace was down), and state in one line
+that a fresh session can resume with `/vwf:recall <name>` — `/vwf:recall next`
+for the reserved one, noting it will run the next prompt without asking. Say
+whether a next prompt was included; for `next` without one, say plainly that
+there is nothing further to continue until the user gives a direction.

@@ -13,7 +13,8 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
 > **Exception: `/vwf:handoff` and `/vwf:recall`.** The handoff *is* the
 > deliverable, not a side memory — so when mempalace is unavailable they do
 > **not** skip; they fall back to `docs/handoffs/<name>.md` on disk (write on
-> handoff, read on recall).
+> handoff, read on recall). The reserved **`next`** handoff writes that file
+> unconditionally, alongside the drawer, so both surfaces always carry it.
 
 ## Scope (wing + room)
 
@@ -103,8 +104,8 @@ sequence and, per step, its status (pending/done), commit ref, review/security
 round counts, and gap tags. The orchestrator writes it when it derives the order
 and updates it as each step completes (`mempalace_add_drawer` then
 `mempalace_update_drawer`). Because an autonomous run's primary pause is a
-resource cap (`/vwf:handoff` → later `/vwf:recall`), a resumed run reads this
-journal to skip finished steps and pick up at the current one — without it,
+resource cap (`/vwf:handoff` → later `/vwf:recall next`), a resumed run reads
+this journal to skip finished steps and pick up at the current one — without it,
 resume would re-implement completed work. Skip silently if mempalace is
 unavailable; the worktree's commits are the fallback record. This room is
 execute-specific; blueprint/plan do not use it.

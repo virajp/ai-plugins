@@ -3,8 +3,10 @@ name: recall
 description: Retrieve a handoff document from mempalace (wing=<project>,
   room=handoff,
   drawer=<name>) to resume work in a fresh session, and optionally run its
-  next prompt. Use to continue after a session that exceeded ~60% context.
-argument-hint: "<name>"
+  next prompt. With no argument — or `next` — it resumes the reserved `next`
+  handoff and runs its continuation without asking. Use to continue after a
+  session that exceeded ~60% context.
+argument-hint: "[<name> | next]"
 model: haiku
 effort: medium
 disable-model-invocation: false
@@ -20,10 +22,23 @@ continue the work in **this fresh session**.
 
 ## Inputs
 
-| Input       | Source                                            |
-| ----------- | ------------------------------------------------- |
-| `<name>`    | `$ARGUMENTS` — the handoff drawer name.           |
-| `<project>` | the **wing**, resolved from the repo (see step 1) |
+| Input       | Source                                                  |
+| ----------- | ------------------------------------------------------- |
+| `<name>`    | `$ARGUMENTS` — the handoff drawer name. Empty → `next`. |
+| `<project>` | the **wing**, resolved from the repo (see step 1)       |
+
+## The `next` handoff
+
+`next` is the reserved "resume where I left off" handoff `/vwf:handoff` writes
+by default. Recalling it differs from a named recall in two ways:
+
+- **It lives on both surfaces** — the mempalace drawer and the committed
+  `docs/handoffs/next.md`. Read whichever resolves; if both do and they
+  disagree, the **more recent `Date`** wins.
+- **Its continuation runs without a gate** — step 4 executes the Next prompt
+  instead of asking. That is the whole point of `next`: one command resumes the
+  work. It is **left in place** afterwards; the following `/vwf:handoff` (or
+  `/vwf:handoff next`) overwrites it.
 
 ---
 
@@ -45,7 +60,8 @@ recalling a handoff from the wrong project.
 
 ### 2. Find the handoff
 
-If `$ARGUMENTS` named no `<name>`, list what's available:
+If `$ARGUMENTS` named no `<name>`, resolve to **`next`** and look for it as
+below. Only if no `next` exists on either surface, list what's available:
 `mempalace_list_drawers(wing=<project>, room="handoff")` → show the names (from
 each `# Handoff: <name>` header) and ask which to recall.
 
@@ -62,6 +78,10 @@ With a `<name>`, retrieve it:
 **If mempalace is unavailable or has no match**, read `docs/handoffs/<name>.md`
 from disk (the `/vwf:handoff` fallback). If neither yields anything, say so and
 stop — don't guess the prior state.
+
+For **`next`**, the disk copy is a first-class surface, not a fallback: read
+`docs/handoffs/next.md` even when the drawer resolved, and take the copy with
+the more recent `Date` if they differ.
 
 ### Format check
 
@@ -88,15 +108,22 @@ don't silently proceed as if the work vanished — resolve by the branch:
 - **Neither** (branch absent, nothing merged) → say so and stop; the work can't
   be located.
 
-### 4. Offer the next prompt
+### 4. Run or offer the next prompt
 
-If the handoff has a **Next prompt** section, show it and **ask the user whether
-to run it now**:
+**For a named handoff**, if it has a **Next prompt** section, show it and **ask
+the user whether to run it now**:
 
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
   command — `blueprint` / `plan` / `execute` — when it names one). Resuming a
   cap-paused `/vwf:execute` run is the primary use of this command.
 - **No** → stop after the summary; the user drives from here.
 
+**For `next`, do not ask** — show the summary, then execute the Next prompt
+straight away (routing through the matching `/vwf:` command the same way). The
+handoff **stays in place**: leave the drawer and `docs/handoffs/next.md` alone,
+so a re-run resumes the same point until the next `/vwf:handoff` overwrites it.
+
 If there is no next prompt, end with the summary and the open items, and wait
-for direction.
+for direction. For `next` this means the previous session recorded no
+continuable work — say that plainly ("nothing further to continue — give me a
+direction") rather than picking an open item and running with it.

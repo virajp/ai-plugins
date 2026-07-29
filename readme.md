@@ -423,8 +423,8 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
 | `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                  |
 | `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests the claude.ai/design review chat) |
-| `/vwf:handoff <name>`   | Capture the session so work resumes in a fresh one                                                              |
-| `/vwf:recall <name>`    | Resume from a handoff in a fresh session                                                                        |
+| `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                         |
+| `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                     |
 | `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
 
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
@@ -953,6 +953,31 @@ you left off, and offers to run the captured next prompt. If mempalace is
 unavailable, `handoff` falls back to `docs/handoffs/<name>.md` and `recall`
 reads it from there.
 
+#### The `next` handoff
+
+Naming every handoff is friction you don't want at 65% context. Omit the name —
+or pass the reserved `next` — and you get the repo's single "resume where I left
+off" handoff:
+
+```text
+/vwf:handoff                    # → the `next` handoff
+# ...new session...
+/vwf:recall next                # rebuild context, then continue — no prompt
+```
+
+`next` differs from a named handoff in three ways. It is written to **both**
+surfaces every time — the mempalace drawer *and* a committed
+`docs/handoffs/next.md` — so either one alone can resume the work. It is a
+**singleton**, overwritten in place, so there is never a stale pile to choose
+from. And `recall` **runs its next prompt without asking**, leaving the handoff
+in place until the next `/vwf:handoff` replaces it.
+
+The one thing it won't do is invent work: if the session had no continuable next
+action, `handoff` says so instead of padding the prompt, and `recall` reports
+the same and waits for your direction. This is also the pair the **context-caps
+hook** drives when an autonomous `/vwf:execute` run hits a budget — snapshot
+with a bare `/vwf:handoff`, then `/clear` and `/vwf:recall next`.
+
 ### /vwf:git-workflow
 
 Internal — you rarely invoke it directly. The other commands route **all** git
@@ -1004,7 +1029,8 @@ project (the **wing**) and split into rooms:
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds — except `handoff`/`recall`, which fall back to
-`docs/handoffs/<name>.md` (the handoff *is* the deliverable). Gaps are also
+`docs/handoffs/<name>.md` (the handoff *is* the deliverable); the reserved
+`next` handoff writes that file unconditionally, outage or not. Gaps are also
 mirrored into the plan doc, so they survive a memory outage. See
 **[docs/mempalace.md](./docs/mempalace.md)**.
 

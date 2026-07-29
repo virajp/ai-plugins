@@ -142,9 +142,10 @@ section**.
 These are the **only** stops before the final gate. On any pause: ensure the
 worktree is committed, update the plan doc's gap section, state precisely what
 is needed, **emit the exact resume command**, and stop — do not guess past it.
-The resume command is `/vwf:recall <handoff-name>` after a **resource-cap**
-pause (which ran `/vwf:handoff` first), and `/vwf:execute <plan>` for every
-other pause (it resumes from the run journal per the Resume check).
+The resume command is `/vwf:recall next` after a **resource-cap** pause (which
+ran a bare `/vwf:handoff` first, writing the reserved `next` handoff), and
+`/vwf:execute <plan>` for every other pause (it resumes from the run journal per
+the Resume check).
 
 **Always on**
 
@@ -161,8 +162,8 @@ other pause (it resumes from the run journal per the Resume check).
   cannot measure its own context window, so this signal is **delivered by the
   statusline caps hook** (install via `@askviraj/ai-plugins --statusline`); for
   autonomous runs, install it or this pause will not fire. On the injected cap
-  directive, run `/vwf:handoff` to snapshot state, then stop; resume later with
-  `/vwf:recall`.
+  directive, run `/vwf:handoff` with no argument to snapshot state as the
+  reserved `next` handoff, then stop; resume later with `/vwf:recall next`.
 
 **Judgment**
 
@@ -189,8 +190,8 @@ Pass the wing to every subagent.
 `<plan>`). If a prior run for this plan is recorded, read which steps are
 already done and their commits, reconcile against the worktree, and **resume at
 the current step** — do not re-implement finished steps. This is how a run
-paused at a resource cap (`/vwf:handoff` → `/vwf:recall`) picks up where it left
-off.
+paused at a resource cap (`/vwf:handoff` → `/vwf:recall next`) picks up where it
+left off.
 
 **Tie-break — the worktree is authoritative.** If the journal marks a step
 **done** but its commit is **absent** from the worktree, trust the worktree and

@@ -10,14 +10,15 @@
  *   $AI_PLUGINS_USAGE_DIR/<session_id>.json
  * (see tools/statusline/statusline → writeUsageFile). This hook reads that file
  * after each tool call and, when a cap is breached, injects a directive telling
- * the agent to snapshot via vwf:handoff and then halt. A hook cannot clear the
- * context or invoke slash commands, so "continue" is a one-keystroke resume by
- * the user (/clear, or wait for reset, then /vwf:recall).
+ * the agent to snapshot via vwf:handoff (no argument — it writes the reserved
+ * `next` handoff) and then halt. A hook cannot clear the context or invoke
+ * slash commands, so "continue" is a one-keystroke resume by the user (/clear,
+ * or wait for reset, then /vwf:recall next).
  *
  * Caps (most severe wins):
  *   7-day   > 80%  -> handoff, then STOP (weekly limit nearly exhausted)
  *   5-hour  > 90%  -> handoff, then PAUSE until the window resets
- *   context > 65%  -> handoff, then /clear + /vwf:recall in a fresh session
+ *   context > 65%  -> handoff, then /clear + /vwf:recall next in a fresh session
  *
  * Inert (no output) when AI_PLUGINS_USAGE_DIR is unset or no usage file exists.
  * Level-debounced per session (state file) so the directive fires once per
@@ -152,8 +153,10 @@ function main() {
       + `${
         humanIn(u.sevenDayResetsAt)
       }. Finish ONLY the current step, then: (1) invoke the vwf:handoff `
-      + `skill to snapshot state to mempalace; (2) STOP and tell the user the 7-day limit is nearly `
-      + `exhausted and work is halted until it resets. Do NOT start a new vwf stage or keep coding.`;
+      + `skill with NO argument (it writes the reserved \`next\` handoff to mempalace and `
+      + `docs/handoffs/next.md); (2) STOP and tell the user the 7-day limit is nearly exhausted and `
+      + `work is halted until it resets — resume with /vwf:recall next. Do NOT start a new vwf stage `
+      + `or keep coding.`;
   }
   else if ((u.fiveHourPct ?? 0) > fiveHCap) {
     level = 2;
@@ -162,10 +165,10 @@ function main() {
       + `${
         humanIn(u.fiveHourResetsAt)
       }. Finish ONLY the current step, then: (1) invoke the vwf:handoff `
-      + `skill to snapshot state; (2) STOP and tell the user work is paused until the 5-hour window `
-      + `resets (~${
+      + `skill with NO argument (it writes the reserved \`next\` handoff); (2) STOP and tell the user `
+      + `work is paused until the 5-hour window resets (~${
         humanIn(u.fiveHourResetsAt)
-      }) — resume with /vwf:recall after reset. Do NOT continue now.`;
+      }) — resume with /vwf:recall next after reset. Do NOT continue now.`;
   }
   else if ((u.ctxPct ?? 0) > ctxCap) {
     level = 1;
@@ -174,9 +177,10 @@ function main() {
         u.ctxPct,
       )
     }% (cap ${ctxCap}%). Finish ONLY the `
-      + `current step, then: (1) invoke the vwf:handoff skill to snapshot state to mempalace; (2) STOP and `
-      + `tell the user to run /clear (or /compact) then /vwf:recall in a fresh session to continue — the `
-      + `context cannot be cleared from inside this session. Do NOT start a new vwf stage.`;
+      + `current step, then: (1) invoke the vwf:handoff skill with NO argument (it writes the reserved `
+      + `\`next\` handoff to mempalace and docs/handoffs/next.md); (2) STOP and tell the user to run `
+      + `/clear (or /compact) then /vwf:recall next in a fresh session to continue — the context cannot `
+      + `be cleared from inside this session. Do NOT start a new vwf stage.`;
   }
 
   if (level === 0) {
