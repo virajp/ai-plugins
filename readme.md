@@ -1038,6 +1038,13 @@ protocol**:
   anything; never ask what the registry or code already answers.
 - **One decision per round** — multiple-choice with an "Other" escape hatch;
   each answer shapes the next question.
+- **Every question says what it's about** — the registry project it concerns
+  (and its type: `service`, `frontend`, `console`, …), the platform when the
+  decision is platform-specific (`app`·`mobile` vs `app`·`auto`), or "the whole
+  product" when it really is product-wide. A sweep crosses several projects in
+  one sitting and you're looking at a conversation, not at the file being
+  written — "should this retry?" is only answerable once you know whether *this*
+  is the worker or the console.
 - **Only real decisions** — if exactly one idiomatic answer exists, it proceeds
   without asking. It never guesses an open decision — it records it instead.
 - **Out-of-scope answers are parked, not lost** — when your answer raises

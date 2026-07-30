@@ -295,8 +295,16 @@ unavailable.
 
 Adopt the authoring persona and elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` (explore → scope-check → one
-question at a time → propose 2-3 approaches → present in sections → gate →
-self-review). Elicit the flow first — trigger, actors, steps to the observable
+question at a time, **each naming its scope** → propose 2-3 approaches → present
+in sections → gate → self-review).
+
+**Scope matters more here than anywhere.** A sweep crosses projects and
+platforms in one sitting, so per §3a every question carries the registry project
+(and its `type` on first mention) in the text and `<project>` — or
+`<project>·<platform>` for a screens decision — in the `header`. The user is
+looking at a conversation, not at the flow folder you are writing: "should this
+retry?" is answerable only once they know whether "this" is the `worker` or the
+`console`. Elicit the flow first — trigger, actors, steps to the observable
 outcome, consistency, failure/compensation, screens, jobs, acceptance — then pin
 down what it stands on (entity shapes, API operations). Where a cross-cutting
 decision surfaces, fill the conventions skeleton.
