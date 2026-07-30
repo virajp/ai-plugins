@@ -43,8 +43,8 @@ unvalidated boundaries are a security surface.
    entity genuinely deviates.
 2. **`baseline/atomic-multi-write`** — a write spanning more than one
    document/row/aggregate happens in **one transaction or batch**; partial
-   multi-doc state is never observable. Flows declare the boundary in
-   Consistency boundary; this rule sets the default for what "atomic" means.
+   multi-doc state is never observable. Flows declare the boundary in their
+   Guarantees table; this rule sets the default for what "atomic" means.
 3. **`baseline/server-time`** — timestamps are **server-authoritative UTC**; a
    client clock never writes time. Client-supplied times are payload data (e.g.
    a user-entered date), never record timestamps.

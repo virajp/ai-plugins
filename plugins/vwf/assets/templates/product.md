@@ -39,6 +39,27 @@ status: draft # draft | reviewed | stable
 - Metric: <what is measured> — target <value> within <horizon>
 - Measured via: <analytics event / store metric / support volume / ...>
 
+## Tiers & entitlements
+
+<!-- Include ONLY when the product gates capability by plan, tier, role, or
+     licence — omit the whole section otherwise. This is the single source for
+     "who can do what"; flows LINK here (product.md#tiers) and never restate a
+     tier's rules, which is how the same matrix ends up contradicting itself in
+     four flow docs.
+
+     One column per tier, one row per gated capability. Cells are `yes` / `no` /
+     a limit (`3 / month`) — never a sentence. A capability every tier has is
+     not gated: leave it out. Name tiers as the product names them; pricing is
+     not contract and does not belong here. -->
+
+| Capability | Free | <Tier> | <Tier> |
+| ---------- | ---- | ------ | ------ |
+|            | no   | yes    | yes    |
+
+<!-- Note below the table only what a cell cannot carry: how a tier is acquired
+     or lost, and what happens to entitlements on downgrade or lapse. One line
+     each. The lifecycle itself belongs to the subscription/licence entity. -->
+
 ## Slice priority
 
 <!-- The ordered "build next" list — flows first (the primary blueprint unit),

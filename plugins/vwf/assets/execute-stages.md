@@ -34,16 +34,18 @@ so one boot of the local stack serves both. Each is conditional — skipped
 Per-stage dispatch contract:
 
 - **code** — dispatch `execute-coder` with the plan (or the plan step), the
-  **blueprint slice** it implements, the registry stack, the project wing, the
-  **slice name** and **round number** (for its gap tags), and any recall hits.
-  It implements under strict TDD — RED → GREEN → REFACTOR for every change — and
-  runs the suite to the coverage gate, returning the coverage report: `100%`,
-  `<100%` with the uncovered `file:line` list, or `n/a` when the project has no
-  coverage tooling. The coder never blocks on coverage — the **orchestrator
-  decides**: a residual below the configured target is documented as a gap and
-  reported at the final gate (never a silent pass). On a fix loop-back, pass the
-  review findings **tag** (not the text) — the coder recalls the detail from
-  mempalace before fixing.
+  **blueprint slice** it implements, the **resolved stack** (from
+  `.config/vwf.yaml` `projects.<name>.stack`, defaulting to the type's reference
+  stack — the blueprint carries none), the project wing, the **slice name** and
+  **round number** (for its gap tags), and any recall hits. It implements under
+  strict TDD — RED → GREEN → REFACTOR for every change — and runs the suite to
+  the coverage gate, returning the coverage report: `100%`, `<100%` with the
+  uncovered `file:line` list, or `n/a` when the project has no coverage tooling.
+  The coder never blocks on coverage — the **orchestrator decides**: a residual
+  below the configured target is documented as a gap and reported at the final
+  gate (never a silent pass). On a fix loop-back, pass the review findings
+  **tag** (not the text) — the coder recalls the detail from mempalace before
+  fixing.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
   **slice** and **round number** for its recall tag). It reviews the code
   adversarially against the **plan, the blueprint, conventions, and the registry
@@ -199,7 +201,7 @@ shape: one record per node **execution**.
 
 1. **Architecture.** If the implementation introduced a topology change (new
    project, dependency, or capability), update the **registry block** in
-   `docs/blueprint/architecture.md` to match what was actually built — via
+   `docs/blueprint/registry.yaml` to match what was actually built — via
    `/vwf:architecture` for non-trivial changes. Edit the registry precisely; do
    not rewrite prose unless topology genuinely changed.
 2. **Environment.** If the change introduced a **new secret or env var** (an

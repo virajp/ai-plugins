@@ -18,8 +18,16 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
      Decisions vs mechanics: if a choice has more than one reasonable answer, it
      belongs here or in schema.yaml. If it has exactly one idiomatic answer
-     given architecture.md + conventions.md, leave it to `execute` at codegen
-     time. -->
+     given registry.yaml + conventions.md, leave it to `execute` at codegen
+     time.
+
+     Never a product or vendor name — "the datastore", not the database's brand
+     (assets/capability-vocabulary.md). The registry carries no stack, so a
+     brand name here came from outside the contract.
+
+     DENSITY: budget ~120 lines. Invariants and Concurrency are the two sections
+     that reliably run away — one line per rule, and no rule that restates a
+     schema constraint or a lifecycle guard already stated above. -->
 
 ## Purpose
 
@@ -48,7 +56,12 @@ Used by: [<Flow name>](../../flows/<project>/<NNN>-<flow>/index.md)
      checks the two agree. With three or more states, or any branching, also
      draw the lifecycle as a mermaid stateDiagram-v2 below the table — same
      states and transitions as the table (which stays authoritative), nothing
-     more. Delete the block for a trivial (≤2-state, linear) lifecycle. -->
+     more. Delete the block for a trivial (≤2-state, linear) lifecycle.
+
+     Diagram labels are TERMS, not sentences — the trigger's name, not its
+     description. A guard that only appears in a label belongs in the table. If
+     every transition shares a guard, state it ONCE above the table rather than
+     on each row or each edge. -->
 
 ```mermaid
 stateDiagram-v2
@@ -58,7 +71,12 @@ stateDiagram-v2
 
 ## Invariants
 
-- Business rules that must never be violated.
+<!-- One line per rule, numbered so flows can cite them ("invariant 4"). A rule
+     already enforced by schema.yaml (a type, an enum, `required`) or by a
+     Lifecycle guard is NOT an invariant — it is a second copy that will drift.
+     Only rules no other artifact can express belong here. -->
+
+1. Business rules that must never be violated.
 
 ## Data Model
 
@@ -101,5 +119,8 @@ Authoritative schema: [schema.yaml](./schema.yaml)
   relies on)
 
 ## Open Questions
+
+<!-- ONLY what blocks THIS entity's contract. Anything else goes to mempalace
+     room `gaps` per assets/elicitation.md. Omit the section when empty. -->
 
 - [ ] item + date

@@ -26,9 +26,9 @@ You receive **paths and name lists, not contents**:
 - the `docs/blueprint/` root;
 - the product goal-anchor list (`#goal-<slug>` names only);
 - the product doc's **slice priority** order;
-- the registry `projects:` block (for per-project surface expectations, each
-  project's `doc_unit`, and — for the standard-flows check — each UI project's
-  `type` and capability tokens);
+- the `docs/blueprint/registry.yaml` `projects:` block (for per-project surface
+  expectations, each project's `doc_unit`, and — for the standard-flows check —
+  each UI project's `type` and capability tokens);
 - the current `.config/vwf.yaml` `blueprint.remaining` list, if any, and any
   `enforcement.rules` entries with a `standard-flows/` prefix (waivers).
 

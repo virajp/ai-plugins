@@ -48,23 +48,12 @@ Serves: [Trusted refunds](../../../product.md#goal-trusted-refunds)
 3. The [Customer](../../../entities/customer/index.md) is notified of the refund
    result.
 
-## Consistency boundary
+## Guarantees
 
-- The state move to `cancelled` is atomic (single system of record); the refund
-  and the customer notification are eventual.
-
-## Failure handling
-
-- A failed refund never reverts the cancellation — the order stays `cancelled`
-  with the refund marked failed/pending for staff retry, and the customer is
-  told the refund is delayed, not silently dropped.
-
-## Idempotency
-
-- Cancelling an already-`cancelled` order is a no-op returning the current
-  order.
-- The refund request carries the order id as its idempotency key, so a retry
-  never issues a second refund.
+| Step / group              | Consistency                      | On failure                                                                                                                                                                                                | Idempotency                                                                                             |
+| ------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1 cancellation            | atomic — single system of record | —                                                                                                                                                                                                         | cancelling an already-`cancelled` order is a no-op returning the current order                          |
+| 2-3 refund + notification | eventual                         | A failed refund never reverts the cancellation: the order stays `cancelled` with the refund marked failed/pending for staff retry, and the customer is told the refund is delayed, never silently dropped | the refund request carries the order id as its idempotency key, so a retry never issues a second refund |
 
 ## Diagram
 

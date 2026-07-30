@@ -86,7 +86,7 @@ surface without ambiguity. Surface open decisions rather than guessing.
 | Doc              | Path                                                                                                                 |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Product          | `docs/blueprint/product.md`                                                                                          |
-| Registry         | `docs/blueprint/architecture.md`                                                                                     |
+| Registry         | `docs/blueprint/registry.yaml`                                                                                       |
 | Conventions      | `docs/blueprint/conventions.md`                                                                                      |
 | Design system    | `docs/blueprint/design-system.md`                                                                                    |
 | Environment      | `docs/blueprint/environment.md`                                                                                      |
@@ -133,9 +133,15 @@ trace to." Hold its goal anchors (`#goal-<slug>`) and slice priority: goals
 anchor every flow's Purpose; the priority list is what you suggest when the user
 asks what to blueprint next.
 
-Read `docs/blueprint/architecture.md`. **Halt if it does not exist:** "No
-registry found. Run `/vwf:architecture` first to bootstrap
-`docs/blueprint/architecture.md`."
+Read `docs/blueprint/registry.yaml` — the machine-readable system description.
+**Halt if it does not exist:** "No registry found. Run `/vwf:architecture` first
+to bootstrap `docs/blueprint/registry.yaml`."
+
+Read the registry, **not** `architecture.md`: the prose doc is the human view of
+the same facts and carries nothing you need. The registry has no `stack` key by
+design — you author a contract that holds whatever the stack is, and naming a
+technology in a blueprint doc is a reviewer failure (see the prose nouns in
+`${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md`).
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
@@ -447,10 +453,10 @@ optimization, never a reason to blow the context budget mid-sweep.
 
 If the blueprint's project or capability shape changed (a new project,
 capability, or cross-cutting decision implied by this pass), update the
-**registry block** in `docs/blueprint/architecture.md` precisely — via
-`/vwf:architecture` if the change is non-trivial. When this pass added a
-cross-cutting decision to `conventions.md`, check the registry's `cross_cutting`
-block covers it and reconcile any mismatch.
+**registry** `docs/blueprint/registry.yaml` precisely — via `/vwf:architecture`
+if the change is non-trivial. When this pass added a cross-cutting decision to
+`conventions.md`, check the registry's `cross_cutting` block covers it and
+reconcile any mismatch.
 
 **Demote the build stamp.** If this pass **materially changed the contract
 content** of a flow or entity doc whose frontmatter reads

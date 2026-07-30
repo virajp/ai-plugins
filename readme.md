@@ -266,7 +266,8 @@ blueprint is the desired state; the plans are the changes you apply to reach it.
 docs/
 ├── blueprint/                   # the always-current blueprint (desired state)
 │   ├── product.md               # problem, users, measurable goals, slice priority
-│   ├── architecture.md          # system shape + machine-readable Project Registry
+│   ├── registry.yaml            # machine-readable Project Registry (what every command parses)
+│   ├── architecture.md          # system shape, in prose + a diagram (its human view)
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
 │   ├── environment.md           # per-project env-var/secret catalog (names, never values)
@@ -311,11 +312,18 @@ entities and services, the screens and jobs it needs, and the acceptance
 criteria that prove it. Each entity doc is the data contract under those flows
 (`Used by:` links them), with its authoritative shape in `schema.yaml`. Flow and
 entity docs carry an `implementation:` frontmatter stamp the pipeline maintains
-— the blueprint always knows what's built. The **Project Registry** in
-`architecture.md` is a yaml block that `blueprint` and `plan` parse to map a
-flow's sections to the right project by `type` — the command mechanics are
-registry-driven, while the stacks themselves come from the enforced reference
-stacks below (recorded deviations aside).
+— the blueprint always knows what's built. The **Project Registry** is its own
+file, `registry.yaml`, which `blueprint` and `plan` parse to map a flow's
+sections to the right project by `type`; `architecture.md` is the prose view of
+the same facts and no command reads it.
+
+The registry carries **no stack**. Which technology each project is built with
+lives in `.config/vwf.yaml`, defaulting to the enforced reference stack for its
+type (recorded deviations aside). That split is not bookkeeping: it means no
+blueprint-authoring or reviewing surface can see a technology name, so a
+blueprint that mentions your database, cloud, or payment vendor fails review by
+construction. Docs say "the datastore" and "the payment provider", and stay true
+when you swap either.
 
 ## The structure & stacks it enforces
 
@@ -354,9 +362,11 @@ enforcement works:
   written recommendation.
 - **The escape hatch.** An explicit objection is always honored — recorded under
   `enforcement:` in `.config/vwf.yaml` (the vwf config: choice + reason) and
-  never re-asked. The registry keeps describing the system as it *is*; the
-  config records how vwf treats it. The stack table grows through vwf updates,
-  not per-repo improvisation.
+  never re-asked — a stack deviation is recorded as the stack itself, in
+  `.config/vwf.yaml`, so the value and the opt-out are one entry rather than
+  two. The registry keeps describing the system as it *is*; the config records
+  what it is built with and how vwf treats it. The stack table grows through vwf
+  updates, not per-repo improvisation.
 
 Two placement rules ride along with the shape — seeded into each repo's
 `conventions.md` and enforced by the execute reviewers:
@@ -493,9 +503,10 @@ from the [enforced reference stacks](#the-structure--stacks-it-enforces)
 (stated, not offered as a menu; an explicit override becomes an `enforcement:`
 entry in `.config/vwf.yaml`), walks the **product-foundations checklist** (see
 [vwf skills](#vwf-skills) — one accept/adapt/skip question per foundation,
-recorded as cross-cutting tokens), and writes `docs/blueprint/architecture.md`,
-including the machine-readable Project Registry the other commands depend on and
-a system-shape mermaid diagram kept in sync with it. Re-run it any time the
+recorded as cross-cutting tokens), and writes **both**
+`docs/blueprint/registry.yaml` — the machine-readable registry every other
+command depends on — and `docs/blueprint/architecture.md`, its prose view with a
+system-shape mermaid diagram kept in sync with it. Re-run it any time the
 topology changes; it asks only about genuine deltas, never re-eliciting what's
 confirmed.
 
@@ -628,16 +639,28 @@ missing.
 
 A fresh **reviewer subagent** checks each written doc against its completeness
 checklist (flow or entity mode), plus a **code-independence guardrail** that
-flags any file/class/library/CSS leakage, and returns `NO GAPS` or a numbered
-list — gaps loop back to you for the specific open decisions until the doc
-passes. When the worklist empties, a **coherence reviewer** walks every flow
-end-to-end across entities, schemas, and API contracts — the cross-doc gaps
-per-doc review can't see (a step whose state change no lifecycle allows, data no
-schema holds, an operation no contract defines, a breaking change to a released
-API) — and coverage stamps complete only after it returns clean. The blueprint
-is permanent and product-wide; it is never feature-scoped. Renaming or deleting
-a flow or entity triggers an inbound-link reconcile, so no other doc is left
-pointing at a doc that moved.
+flags any file/class/library/CSS leakage or vendor name, and returns `NO GAPS`
+or a numbered list — gaps loop back to you for the specific open decisions until
+the doc passes.
+
+It also enforces **density**, which is the only bar that asks for *less*. A
+completeness checklist can only ever demand more text, so left alone it is a
+ratchet: docs grow until someone notices. Each doc type has a line budget and a
+set of anti-patterns — rationale, revision history ("X was renamed to Y" — git
+records that), restating what a link already says, prose where a table was
+meant, sentence-length diagram labels, Open Questions used as a parking lot —
+and a doc that is long without deciding more fails review exactly as a thin one
+does. The test for any line is whether `plan` or `execute` would do something
+different without it. Contract is never cut to hit a budget: acceptance
+criteria, failure paths, lifecycle transitions, invariants, and authorization
+rows stay at any length. When the worklist empties, a **coherence reviewer**
+walks every flow end-to-end across entities, schemas, and API contracts — the
+cross-doc gaps per-doc review can't see (a step whose state change no lifecycle
+allows, data no schema holds, an operation no contract defines, a breaking
+change to a released API) — and coverage stamps complete only after it returns
+clean. The blueprint is permanent and product-wide; it is never feature-scoped.
+Renaming or deleting a flow or entity triggers an inbound-link reconcile, so no
+other doc is left pointing at a doc that moved.
 
 ### /vwf:mockups
 

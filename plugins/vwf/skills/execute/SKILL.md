@@ -62,7 +62,7 @@ the pause rules — never migrate autonomously.
 | Doc           | Path                                                      |
 | ------------- | --------------------------------------------------------- |
 | Plan          | `docs/plans/<plan>.md`                                    |
-| Registry      | `docs/blueprint/architecture.md`                          |
+| Registry      | `docs/blueprint/registry.yaml`                            |
 | Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`    |
 | Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
 | API contract  | `docs/blueprint/apis/<project>.openapi.yaml`              |
@@ -224,8 +224,10 @@ silently if mempalace is unavailable.
 ## Setup
 
 1. **LSP check (interactive — the user is still present at invocation).**
-   Identify the plan's primary language(s) from the registry `stack` fields and
-   check active LSP plugins (`claude plugin list --scope project`). If a
+   Identify the plan's primary language(s) from each project's **stack** —
+   `.config/vwf.yaml` `projects.<name>.stack`, defaulting to the reference stack
+   for the registry `type` (`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`) —
+   and check active LSP plugins (`claude plugin list --scope project`). If a
    language's LSP server is missing, ask and **wait**:
 
    > "No LSP server detected for `<language>`. Without it, type errors may not
@@ -257,7 +259,7 @@ journal):
    prior decisions instead of re-deriving them. Skip silently if mempalace is
    down.
 2. **code** — dispatch `execute-coder` per the stage contract in
-   `execute-stages.md` (plan step, registry stack, wing, recall hits). A
+   `execute-stages.md` (plan step, the resolved stack, wing, recall hits). A
    sub-100% coverage result against the configured target (`.config/vwf.yaml`
    `pipeline.coverage_target`, default 100) is documented as a gap — never a
    silent pass.

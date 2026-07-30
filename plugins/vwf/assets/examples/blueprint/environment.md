@@ -17,8 +17,10 @@ tags: [ config, secrets ]
 <!-- Conformance example (blueprint-format 14). A worked, format-valid catalog:
      mandatory frontmatter, rows grouped by consuming project, every row
      classified, the config mechanism linked (not restated), and no values.
-     This bundle omits architecture.md for brevity, so project names (api, web,
-     ci) are illustrative registry names, not live links. -->
+     Project names resolve against ./registry.yaml, which this bundle carries;
+     architecture.md (its prose view) is omitted for brevity. `ci` is not a
+     registry project — it is the pipeline, listed here because it consumes
+     secrets. -->
 
 ## What belongs here
 

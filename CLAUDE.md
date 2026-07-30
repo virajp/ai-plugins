@@ -309,11 +309,13 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   on Trigger & Actors/steps, sync/async placement on the flow's Jobs table),
   execute's docs-sync drafts app changelog entries; realizations live in
   `assets/stacks/`); `blueprint-authoring` (the contract-vs-realization
-  doctrine + per-surface completeness bars — the **flow-contract** bar (steps,
-  Acceptance block **and sequence diagram**, the screen home rule), the slimmed
-  **entity-contract** bar (lifecycle state-diagram, `Used by:` flow edge), and
-  **api-and-schema-contracts** (the `schema.yaml` / OpenAPI bars, YAML
-  path-typing, the released-snapshot additive-only rule) — + the doc-unit
+  doctrine, the **density** bars — per-doc line budgets, the delete test, and
+  the anti-patterns that inflate a contract; the one bar that can fail a doc for
+  being *long* — + per-surface completeness bars — the **flow-contract** bar
+  (steps, Acceptance block **and sequence diagram**, the screen home rule), the
+  slimmed **entity-contract** bar (lifecycle state-diagram, `Used by:` flow
+  edge), and **api-and-schema-contracts** (the `schema.yaml` / OpenAPI bars,
+  YAML path-typing, the released-snapshot additive-only rule) — + the doc-unit
   doctrine, auto-applies on `docs/blueprint/**` and — for frontmatter/link
   hygiene only — `docs/plans/**`); `design-system-authoring` (the
   UX/visual-contract doctrine — tokens, typography, spacing, motion,
@@ -368,17 +370,20 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   CLAUDE.md), `handoff` (stack-agnostic; section→project mapping resolved from
   the registry). All blueprint markdown templates open with the OKF frontmatter
   block; flow/entity templates carry `implementation: none`
-- `assets/examples/blueprint/` — a **format-12 conformance bundle**
-  (`flows/web/010-place-order/` + `flows/web/020-cancel-refund/` +
-  `flows/index.md`, `entities/order/` + `entities/customer/` (`index.md` +
-  `schema.yaml` each) + `entities/index.md`, `apis/api.openapi.yaml`, plus
-  `product.md`, `conventions.md`, `design-system.md`, `environment.md`): a
-  worked, format-valid slice where every relationship/reference/goal link
-  resolves, each flow carries a worked Acceptance block + sequence diagram +
-  per-screen Components blocks, the order lifecycle its state diagram, and the
-  entity catalog its erDiagram. Referenced from the blueprint-authoring skill as
-  the concrete "what good looks like"; its asset-refs and relative links (`.md`
-  and `.yaml`) are covered by `plugins:check`
+- `assets/examples/blueprint/` — a **format-16 conformance bundle**
+  (`registry.yaml`, `flows/web/100-home/` + `110-place-order/` +
+  `120-cancel-refund/` + `flows/index.md`, `entities/order/` +
+  `entities/customer/` (`index.md` + `schema.yaml` each) + `entities/index.md`,
+  `apis/api.openapi.yaml`, plus `product.md`, `conventions.md`,
+  `design-system.md`, `environment.md`): a worked, format-valid slice where
+  every relationship/reference/goal link resolves, each flow carries a worked
+  Acceptance block + sequence diagram + per-screen Components blocks + a merged
+  `Guarantees` table, the order lifecycle its state diagram, and the entity
+  catalog its erDiagram. Every doc sits inside the density budget and names no
+  vendor — the bundle demonstrates both new bars, not just the structural ones.
+  Referenced from the blueprint-authoring skill as the concrete "what good looks
+  like"; its asset-refs and relative links (`.md` and `.yaml`) are covered by
+  `plugins:check`
 - `assets/elicitation.md` — the shared questioning protocol referenced by
   `product`, `blueprint`, `plan`, `architecture`, `design-system`, `setup`, and
   `feedback`; incl. the **parked-scope rule** — an answer that goes beyond the
@@ -406,7 +411,11 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   end-of-run reconcile (architecture/environment/harness/docs + the
   implementation stamps)
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
-  shared by `/vwf:architecture` elicitation and the `architecture-writer`
+  shared by `/vwf:architecture` elicitation and the `architecture-writer`, plus
+  (format 16) the **prose-noun mapping** every blueprint doc writes against —
+  capability token → the generic noun ("the datastore", "the payment provider")
+  that replaces a product name. The two carve-outs where a real name *is* the
+  contract are `environment.md` issuers and `conventions.md#integrations`
 - `assets/engineering-baseline.md` — the **15 centralized technical rules**
   every product follows by default, enforced not elicited (stack-agnostic
   contracts; realizations in `assets/stacks/`): write-versioning (optimistic, a
@@ -505,10 +514,12 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   (`packages`, `service`, `worker`, `site`, `console`, `frontend`) plus
   `monorepo.md` (backend monorepo tooling), distilled from the 95octane
   reference implementation. Read by `/vwf:setup` (onboarding) and
-  `/vwf:architecture` (registry `stack` — stated, not elicited; an override
-  becomes a config `enforcement:` entry). The common-package placement rules
-  (`rules/schemas-in-common`, `rules/integrations-via-common`) are seeded into
-  each repo's `conventions.md#patterns` and enforced by the execute reviewers
+  `/vwf:architecture` — the stack is **stated, not elicited**, and since format
+  16 is recorded in `.config/vwf.yaml` (`projects.<name>.stack`, absent when it
+  matches the type's reference) rather than in the registry, which carries no
+  stack at all. The common-package placement rules (`rules/schemas-in-common`,
+  `rules/integrations-via-common`) are seeded into each repo's
+  `conventions.md#patterns` and enforced by the execute reviewers
 - `assets/memory.md` — the shared mempalace memory protocol (recall before work,
   persist durable decisions, findings memory for loop-backs, and **gap memory**:
   blueprint/plan holes surfaced during execution + out-of-scope points parked
@@ -556,10 +567,11 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 Docs the commands maintain live under `docs/blueprint/` (the outcome contract
 `product.md` — problem/users/goals/slice-priority + the `/vwf:feedback`-owned
-Metric readings appendix — registry `architecture.md`, `conventions.md`, the
-product-wide `design-system.md`, the per-project env-var/secret catalog
-`environment.md`; **one flow folder per flow, grouped by primary registry
-project and numbered in execution order** —
+Metric readings appendix + the optional Tiers & entitlements matrix — the
+machine-readable registry `registry.yaml` beside its prose view
+`architecture.md`, `conventions.md`, the product-wide `design-system.md`, the
+per-project env-var/secret catalog `environment.md`; **one flow folder per flow,
+grouped by primary registry project and numbered in execution order** —
 `flows/<project>/<NNN>-<flow>/index.md` at one uniform depth for UI and non-UI
 projects alike — `index.md` holding the **platform-agnostic contract** (trigger,
 actors, steps, diagram, jobs, acceptance; no screens) beside one
@@ -686,7 +698,27 @@ in-car flows into `auto.md` → split screens out of `index.md` → re-code scre
 → consent-gated screen renames → move the prompts tree → rewrite links; canvas
 page renames are listed for the user to apply) alongside the config `8 → 9`
 rewrite that gives every flow identifier a `<platform>` leaf and rewrites the
-platform vocabulary.
+platform vocabulary; **format 16** the **registry split, stack removal, and
+density bars** — the machine-readable Project Registry moves out of
+`architecture.md` into its own `docs/blueprint/registry.yaml` (which every
+command parses; the prose doc becomes purely the human view, and the duplicated
+cross-cutting table is deleted since nothing could check the two copies), the
+registry's `stack` field is **retired** in favour of `.config/vwf.yaml`
+`projects.<name>.stack` (defaulting to the type's reference stack, an explicit
+differing value being its own opt-out record — which retires
+`enforcement.stacks`), each flow's `Consistency boundary` / `Failure handling` /
+`Idempotency` sections merge into **one `Guarantees` table**, `product.md` gains
+an optional **Tiers & entitlements** matrix (the single source flows link rather
+than restate), and the blueprint-authoring skill gains a **density** reference
+whose per-doc budgets and anti-patterns the `blueprint-reviewer` now enforces —
+the first bar in vwf that can fail a doc for being *long* rather than thin.
+Because the registry no longer carries a stack, no authoring or reviewing
+surface can reach one, making a product/vendor name in a blueprint doc a
+reviewer failure by construction rather than by discipline. Migrated by `setup`
+mechanically (registry extraction, duplicate-table deletion, guarantee-section
+merge, link rewrite) alongside the config `9 → 10` stack move; the prose
+condensation is **deliberately not mechanical** and is deferred per doc to the
+next `/vwf:blueprint` touch, with `density` recorded in `blueprint.remaining`.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,
