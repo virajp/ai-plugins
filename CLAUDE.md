@@ -30,15 +30,19 @@ The plugins have two test tasks, run **locally via pre-commit** (never in
   `plugins/*`: manifest JSON validity, `plugin.json` `name`↔dir, registration in
   `marketplace.json` with the right `./plugins/<name>` source (both directions),
   `plugin.json`↔marketplace dependency sync, `${CLAUDE_PLUGIN_ROOT}` asset-ref
-  resolution, agent `name:`↔filename (for plugins with an `agents/` dir), skill
-  frontmatter (`name:`↔dir + `description:` + plausible `model:` when pinned),
-  cross-plugin skill-name uniqueness (OpenCode installs skills into one flat
-  namespace), `hooks.json` validity + script existence/executability, relative
-  links under `assets/examples/**`, and the installer sync assertion
-  (`bin/claude.mjs` `PLUGINS` ≡ marketplace names, `PROJECT_SCOPED`/`OPT_IN` ⊆
-  `PLUGINS`, `PLUGIN_DEPS` ≡ the marketplace dependency lists). url-sourced
-  entries (e.g. `mempalace`) are covered only for JSON validity. Scoped to fire
-  when anything under `plugins/` or the marketplace manifest changes.
+  resolution, agent `name:`↔filename (for plugins with an `agents/` dir),
+  **agent cross-reference resolution** (every role-shaped `` `token` `` in a
+  plugin's own prose — the suffix set derived from its own `agents/` dir — names
+  a real agent, and every declared agent is referenced at least once; the two
+  directions cover each other on a rename), skill frontmatter (`name:`↔dir +
+  `description:` + plausible `model:` when pinned), cross-plugin skill-name
+  uniqueness (OpenCode installs skills into one flat namespace), `hooks.json`
+  validity + script existence/executability, relative links under
+  `assets/examples/**`, and the installer sync assertion (`bin/claude.mjs`
+  `PLUGINS` ≡ marketplace names, `PROJECT_SCOPED`/`OPT_IN` ⊆ `PLUGINS`,
+  `PLUGIN_DEPS` ≡ the marketplace dependency lists). url-sourced entries (e.g.
+  `mempalace`) are covered only for JSON validity. Scoped to fire when anything
+  under `plugins/` or the marketplace manifest changes.
 - **`vwf:test`** — table-tests the `vwf` `npm-to-pnpm.sh` hook through the
   system sed (the BSD-sed portability guarantee); vwf-specific since it is the
   only plugin shipping a hook. Scoped to `plugins/vwf/hooks/`.
@@ -235,15 +239,23 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   findings always fixed; **breaking-released-API findings gate the same way** —
   cap-exempt, always fixed; other review findings loop ≤4 rounds then become
   documented gaps) plus one `acceptance + ux` pass after all steps (same 4-round
-  cap), gaps mirrored to the plan doc's "Gaps surfaced during execution"
-  section + mempalace room `gaps`, mid-run pauses only on hard halts, the
-  statusline resource caps, an all-blocking gap, or an uncovered irreversible
-  decision — then **one final human gate** (run report, gap list, and the
-  `implementation:` stamps written) behind which the merge/push happens, gap
-  reconciliation is offered (blueprint/plan loop-backs), archive is offered once
-  no gaps remain, and the next chained plan is offered when one is unblocked.
-  Its Reconcile step **stamps `implementation:` on each doc the plan `covers:`**
-  — the single sanctioned blueprint edit (state only, never content); everywhere
+  cap). Every finding loop runs under a **convergence guard**: a round that
+  doesn't strictly reduce the finding count, or that resurfaces a finding an
+  earlier round resolved, ends the loop early as an **oscillation** gap rather
+  than burning the cap — the diagnosis is the loop, not the contract, so it is
+  never filed as "blueprint/plan wasn't thorough enough" (a guard trip on a
+  cap-exempt finding can't become a gap at all, and pauses instead). Gaps are
+  mirrored to the plan doc's "Gaps surfaced during execution" section +
+  mempalace room `gaps`, mid-run pauses only on hard halts, the statusline
+  resource caps, an all-blocking gap, a non-converging cap-exempt finding, or an
+  uncovered irreversible decision — then **one final human gate** that **renders
+  the run journal** rather than recalling the run (node records, gap list, and
+  the `implementation:` stamps written; a report reconstructed because mempalace
+  was down says so) and behind which the merge/push happens, gap reconciliation
+  is offered (blueprint/plan loop-backs), archive is offered once no gaps
+  remain, and the next chained plan is offered when one is unblocked. Its
+  Reconcile step **stamps `implementation:` on each doc the plan `covers:`** —
+  the single sanctioned blueprint edit (state only, never content); everywhere
   else the blueprint is the source of truth code follows, drift surfaced and
   never silently absorbed. (The former `autopilot` command is merged into this
   behavior and retired.)
@@ -381,10 +393,18 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   final gate), per-stage subagent contracts (incl. the slice/round tags, the
   coverage-report policy, and the acceptance/ux `n/a` gap policy), shared stage
   rules (model enforcement, terse output, loop-on-findings — both reviewers'
-  tags merged into one `code` dispatch, with the recall-miss fallback — gap
-  capture, the blueprint-is-source-of-truth drift rule with its single
-  `implementation:`-stamp carve-out), and the end-of-run reconcile
-  (architecture/environment/harness/docs + the implementation stamps)
+  tags merged into one `code` dispatch, with the recall-miss fallback — the
+  **convergence guard** on every finding loop (no strict decrease, or a
+  resurfaced finding, ends the loop as an oscillation gap; cap-exempt findings
+  pause instead — the review-loop form of `elicitation.md` §9), gap capture, the
+  blueprint-is-source-of-truth drift rule with its single
+  `implementation:`-stamp carve-out), the **Run journal** shape (one fixed-shape
+  record per node *execution* — step/node/round/model/outcome/detail/commit, and
+  a required `why` on a `skipped` or `blocked` record — so round counts are
+  counted not remembered, a skip is discharged by its record existing, and the
+  final gate renders the journal instead of recalling the run), and the
+  end-of-run reconcile (architecture/environment/harness/docs + the
+  implementation stamps)
 - `assets/capability-vocabulary.md` — the stack-agnostic capability tokens
   shared by `/vwf:architecture` elicitation and the `architecture-writer`
 - `assets/engineering-baseline.md` — the **15 centralized technical rules**

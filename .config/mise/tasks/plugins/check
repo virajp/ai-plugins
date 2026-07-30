@@ -8,6 +8,9 @@
 #  - dependency lists are identical in plugin.json and the marketplace entry.
 #  - every ${CLAUDE_PLUGIN_ROOT}/... reference resolves to a real path (file or dir).
 #  - each agent's `name:` frontmatter matches its filename (plugins with agents/).
+#  - agent cross-references resolve: every role-shaped `token` in a plugin's own
+#    prose names a real agent, and every declared agent is referenced at least
+#    once (the two directions cover each other on a rename).
 #  - each skill has frontmatter with a `name:` (matching its dir), a
 #    `description:`, and — when present — a plausible `model:`.
 #  - skill names are unique across all local plugins (OpenCode installs them
@@ -45,6 +48,9 @@ REF_RE = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
 MODEL_RE = re.compile(r"^(sonnet|opus|haiku|inherit|claude[\w.\[\]-]+)$", re.I)
 # Relative markdown link target (./ or ../), stripping any #anchor.
 LINK_RE = re.compile(r"\]\((\.{1,2}/[^)\s#]+\.(?:md|ya?ml))(?:#[^)\s]*)?\)")
+# A bare kebab-case code span — how skills and assets name the agents they
+# dispatch (e.g. `execute-coder`).
+TOKEN_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`")
 failed = False
 
 KEY_RE = re.compile(r"^([A-Za-z0-9_-]+):\s*(.*?)\s*$")
@@ -116,6 +122,19 @@ def asset_refs(plugin_dir):
                 continue  # skip binaries / unreadable
             found.update(REF_RE.findall(text))
     return sorted(found)
+
+def backticked_tokens(plugin_dir):
+    """All distinct bare kebab-case code spans under a plugin dir."""
+    found = set()
+    for base, _, files in os.walk(plugin_dir):
+        for fn in files:
+            path = os.path.join(base, fn)
+            try:
+                text = open(path, encoding="utf-8").read()
+            except (UnicodeDecodeError, OSError):
+                continue  # skip binaries / unreadable
+            found.update(TOKEN_RE.findall(text))
+    return found
 
 header("Checking local plugins ...")
 skill_names = {}  # skill name -> [SKILL.md paths] across all local plugins
@@ -204,6 +223,22 @@ for pdir in plugin_dirs:
                 elif not os.access(sp, os.X_OK):
                     errs.append(f"hook script {token} is not executable")
 
+    # 8. agent cross-references resolve, and no declared agent is orphaned.
+    #    Agent names are role-suffixed (`…-coder`, `…-reviewer`, `…-writer`), and
+    #    the suffix set is derived from the plugin's own agents/ dir — so any
+    #    role-shaped token in its prose must name a real agent. The orphan side
+    #    covers the case the forward side cannot: a rename that takes the last
+    #    holder of a suffix with it leaves the new name referenced by nothing.
+    if agent_files:
+        declared = {os.path.basename(af)[:-3] for af in agent_files}
+        roles = {d.rsplit("-", 1)[-1] for d in declared}
+        tokens = backticked_tokens(pdir)
+        for tok in sorted(t for t in tokens if t.rsplit("-", 1)[-1] in roles):
+            if tok not in declared:
+                errs.append(f"reference `{tok}` names no agent under {pdir}agents/")
+        for orphan in sorted(declared - tokens):
+            errs.append(f"agent '{orphan}' is referenced by no skill or asset")
+
     if errs:
         failed = True
         bad(name_dir)
@@ -211,7 +246,7 @@ for pdir in plugin_dirs:
             print(f"{RED}         - {e}{OFF}")
     else:
         ok(f"{name_dir} — manifest, name, registered, deps, refs({len(refs)}), "
-           f"agents({len(agent_files)}), skills({len(skill_files)})")
+           f"agents({len(agent_files)}, refs resolve), skills({len(skill_files)})")
 
 header("Checking skill names are unique across plugins ...")
 dupes = {n: ps for n, ps in skill_names.items() if len(ps) > 1}

@@ -115,6 +115,28 @@ Per-stage dispatch contract:
   terse FINDINGS block it already holds from that reviewer's return — the loop
   never stalls on a recall miss. The invoking command sets the gating and round
   policy.
+- **Convergence guard** — a round cap bounds how long a loop runs; it cannot
+  tell *converging slowly* from *not converging at all*. Before dispatching each
+  new round, compare this round's findings with the previous round's — matching
+  on the `file:line` + rule in the terse FINDINGS block (the recall tag
+  identifies the round, not the finding). The loop is **not converging** when
+  either holds:
+  - the finding count did not **strictly decrease**;
+  - a finding an earlier round resolved has **resurfaced**.
+
+  Do not spend the remaining rounds proving it. Stop the loop where it stands
+  and record the contested findings as an **oscillation** gap naming them and
+  the rounds tried. The diagnosis is the loop — the coder trading one reviewer's
+  fix against the other's, or regressing an earlier one — so it is never filed
+  as "blueprint/plan was not thorough enough", which sends the reconciliation at
+  the far end to rewrite a contract that was never at fault. (This is the review
+  loop's form of the convergence guard `elicitation.md` §9 puts on review loops
+  during authoring — same idea, different loop.)
+
+  **Cap-exempt findings never take this exit.** Security and `[breaking-api]`
+  findings must be fixed and can never be downgraded to gaps, so a guard trip on
+  one is not a gap at all — it is a decision the rules do not cover, and the
+  invoking command pauses on it.
 - **Capture blueprint/plan gaps as they surface** — a *gap* (a hole in the
   blueprint or plan, distinct from a code finding) reported by any stage is
   never silently worked around. The subagent files the full gap to mempalace
@@ -132,6 +154,46 @@ Per-stage dispatch contract:
   blueprint to match: the contradiction is surfaced (a finding when the plan
   pinned it, a gap otherwise) and resolved by conforming the code or by the user
   consciously amending the contract via `/vwf:blueprint`.
+
+## Run journal (the record the gate renders)
+
+The run journal — mempalace room `runs`, drawer `<plan>` — is the pipeline's
+checkpoint. A resumed run reads it to skip finished work, and the final gate
+**renders** it instead of recalling a long autonomous run from context, which is
+exactly the context most likely to have been compacted or handed off. Both uses
+fail the same way if the journal is loose prose, so its entries take a fixed
+shape: one record per node **execution**.
+
+| Field     | Value                                                                     |
+| --------- | ------------------------------------------------------------------------- |
+| `step`    | `<n>/<total> <title>` — or `acceptance`, `ux`, `reconcile`                |
+| `node`    | the stage that ran: `code`, `review`, `security`, `acceptance`, `ux`      |
+| `round`   | `1` on the first pass, incremented per fix loop                           |
+| `model`   | the tier it ran on, `(downgraded from <default>)` when config overrode it |
+| `outcome` | `pass` / `findings(<n>)` / `fail(<n>)` / `skipped` / `blocked`            |
+| `detail`  | terse — coverage vs target, per-criterion counts, finding tags            |
+| `commit`  | the commit ref for a `code` node; `—` otherwise                           |
+| `why`     | **required** when `outcome` is `skipped` or `blocked`                     |
+
+- **The drawer opens with the step sequence** written at Setup — every step
+  pending — and accumulates node records beneath it. A step is done when its
+  `code` node carries a commit and its reviewers' last round is clean.
+- **One record per execution, not per stage.** A step whose findings looped
+  three times writes three `review` records. The round count is then the number
+  of records, and the convergence guard compares two records — never two numbers
+  the orchestrator is holding in its head.
+- **A skip is a record.** The conditional stages' "skipped explicitly, never
+  silently" rule is discharged *by the record existing*, with its `why`. A stage
+  with no record did not run, and the gate reports it that way.
+- **Downgrades are recorded where they happened** — on the node that ran under
+  the weaker model, not summarized at the end.
+- **Write on return.** Append the record when the node returns, before
+  dispatching the next. This is the checkpoint: a record written late is a step
+  a resumed run repeats.
+- **When mempalace is down**, the journal degrades with every other memory
+  surface — but the final gate must then say the report was **reconstructed**,
+  not rendered. Whoever approves the merge needs to know which one they are
+  reading.
 
 ## Reconcile (end of run)
 

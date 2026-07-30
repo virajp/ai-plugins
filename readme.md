@@ -824,6 +824,16 @@ What it does, by rule:
   with acceptance criteria; `ux` when it changes screens in a UI project (web
   gets the full screenshot review; Flutter a code-level pass) — each skip
   explicit, never silent.
+- **Loops stop when they stop converging.** A round cap bounds how long a fix
+  loop runs, but it can't tell *converging slowly* from *not converging at all*.
+  Every finding loop also runs under a **convergence guard**: a round that
+  doesn't strictly reduce the finding count, or that resurfaces a finding an
+  earlier round already fixed, ends the loop right there instead of burning the
+  remaining rounds. The residual is recorded as an **oscillation** gap that says
+  so — the loop failed to settle, which is a different problem from a contract
+  that left something open, and points you somewhere different when you go to
+  fix it. A security or breaking-API finding can never become a gap, so if one
+  of *those* stops converging the run pauses for you instead.
 - **No unapproved dependencies.** The coder installs only the third-party
   packages the approved plan names — the plan's approval gate is where you
   consent to each new dependency. One the plan missed is captured as a gap,
@@ -840,7 +850,8 @@ What it does, by rule:
 It **pauses** mid-run only on: a hard halt (no plan/blueprint, a test harness
 that can't run, an unresolvable git conflict); a **resource cap** — context >
 65%, 5-hour > 90%, or 7-day > 80% — where it hands off and stops (resume with
-`/vwf:recall`); a gap that blocks *all* remaining work; or a decision the rules
+`/vwf:recall`); a gap that blocks *all* remaining work; a security or
+breaking-API finding whose fix loop isn't converging; or a decision the rules
 don't cover that is irreversible.
 
 ```mermaid
@@ -855,7 +866,15 @@ flowchart TD
 
 At the final gate it presents everything: per-step commits, coverage, the
 acceptance and ux results, the implementation stamps written, and the
-consolidated gap list. Whatever you decide about the merge, it then offers to
+consolidated gap list. It **reads this back out of the run journal** rather than
+recalling the run — by then the run may have spanned dozens of dispatches, a
+compaction, or a handoff-and-resume, and the journal is the only account that
+survived all three. Each stage execution left a record there when it returned
+(which step, which round, what outcome, and *why* if it was skipped), so round
+counts are counted rather than remembered and a skipped stage is visible as a
+record instead of an absence. If memory was down for part of the run it tells
+you the report is **reconstructed** — you should know whether you're approving a
+record or a recollection. Whatever you decide about the merge, it then offers to
 close each gap at the source — fix the blueprint (`/vwf:blueprint`, which
 re-stamps coverage) or re-derive the plan (`/vwf:plan`) — and reconciles **the
 repo's human docs**: any README/CLAUDE.md claim the landed change falsified is
@@ -1018,14 +1037,14 @@ on the last instead of re-deriving it. It recalls prior decisions and findings
 before working, and persists durable outcomes after. Memory is keyed by your
 project (the **wing**) and split into rooms:
 
-| Room        | Holds                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| `decisions` | design/architecture decisions and the *why*                                    |
-| `problems`  | review and security findings and how they were resolved                        |
-| `planning`  | plan rationale and deferred options                                            |
-| `gaps`      | blueprint/plan holes from execution + points parked as out-of-scope during Q&A |
-| `runs`      | execute's per-plan run journal (what a resumed run reads)                      |
-| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                          |
+| Room        | Holds                                                                                |
+| ----------- | ------------------------------------------------------------------------------------ |
+| `decisions` | design/architecture decisions and the *why*                                          |
+| `problems`  | review and security findings and how they were resolved                              |
+| `planning`  | plan rationale and deferred options                                                  |
+| `gaps`      | blueprint/plan holes from execution + points parked as out-of-scope during Q&A       |
+| `runs`      | execute's per-plan run journal — what a resumed run reads and the final gate renders |
+| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds — except `handoff`/`recall`, which fall back to

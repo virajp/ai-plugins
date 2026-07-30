@@ -107,11 +107,23 @@ section**.
   `docs/blueprint/apis/released/`) gates exactly like a security finding: loop
   back to `code` until the `API COMPAT:` line reads clean — exempt from the
   review round cap, never downgraded to a gap, never configurable off.
-- **Review findings: capped rounds.** For `review` (non-security) findings, loop
-  `code → review` up to the configured cap (`.config/vwf.yaml`
-  `pipeline.review_round_cap`, default **4**). Any review finding still
-  unresolved after the capped round is **documented as a gap** ("blueprint/plan
-  was not thorough enough") and execution continues — it does not block.
+- **Review findings: capped rounds, guarded for convergence.** For `review`
+  (non-security) findings, loop `code → review` up to the configured cap
+  (`.config/vwf.yaml` `pipeline.review_round_cap`, default **4**) — and apply
+  the **convergence guard** in `execute-stages.md` before each new round. A
+  round that did not strictly reduce the finding count, or that resurfaced a
+  finding an earlier round resolved, is not converging: end the loop there
+  rather than burning the remaining rounds, and record the contested findings as
+  an **oscillation** gap naming them and the rounds tried.
+  - Any review finding still unresolved when the loop ends — at the cap, or
+    early at the guard — is **documented as a gap** and execution continues; it
+    does not block.
+  - The gap's diagnosis differs by exit. At the **cap**, "blueprint/plan was not
+    thorough enough" — the contract left something open. At the **guard**, the
+    contract is not the suspect and must not be named as one: the loop itself
+    failed to settle, and reconciliation should look there first.
+  - A guard trip on a **cap-exempt** finding (security or `[breaking-api]`) is
+    not a gap — those must be fixed. It is a pause; see Pause Conditions.
 - **Gaps: document and continue.** Every gap (a blueprint/plan hole, not a code
   finding) is mirrored into the plan doc's "Gaps surfaced during execution"
   section and filed to mempalace room `gaps`, then execution continues. A
@@ -130,9 +142,12 @@ section**.
   **recall per step** (decisions/problems/gaps/runs for that slice) before
   dispatching the coder, not only before step 1; pass the wing **and** the
   recall hits to every subagent; **persist incrementally** — store each step's
-  durable decisions and update the **run journal** (room `runs`, drawer
-  `<plan>`) as each step completes, not only at reconcile. The run journal is
-  what a resumed run reads after a pause. The execute subagents file their own
+  durable decisions and append a **run-journal** record (room `runs`, drawer
+  `<plan>`) as each *node* returns, not only at reconcile, in the fixed shape
+  the Run journal section of `execute-stages.md` defines. That journal is what a
+  resumed run reads after a pause **and** what the final gate renders — so a
+  record skipped under context pressure is work a resumed run repeats and a
+  result the gate cannot vouch for. The execute subagents file their own
   findings and gaps directly (rich detail bypasses your context) and recall them
   on fix loop-backs. Skip silently if mempalace is down — the worktree commits
   and the plan doc's gap section are the fallback.
@@ -170,6 +185,11 @@ the Resume check).
 - **All-blocking gap** — a blocking gap that halts **every** remaining step (no
   independent work is left). Document it and pause. (An isolated blocking gap
   does *not* pause — skip + document + continue per the rules above.)
+- **Non-converging cap-exempt finding** — a security or `[breaking-api]` finding
+  that trips the convergence guard (the fix isn't holding, or keeps trading
+  against another finding). These can never be downgraded to gaps, so the loop
+  has nowhere to exit to. Pause with the finding, the rounds tried, and what
+  each round changed.
 - **Uncovered irreversible decision** — any decision the rules above do not
   cover that is irreversible or outward-facing. Pause and ask.
 
@@ -220,10 +240,11 @@ silently if mempalace is unavailable.
    post-commit prompt; never merge/push). All subsequent work and commits happen
    here.
 3. **Dependency order.** Read the plan's "Delta — ordered steps", build the
-   dependency order, and record the sequence you will execute. **Write the run
-   journal** to mempalace (room `runs`, drawer `<plan>`): the ordered sequence
-   with every step marked pending. This is the resumable record the loop updates
-   as it goes.
+   dependency order, and record the sequence you will execute. **Open the run
+   journal** in mempalace (room `runs`, drawer `<plan>`) with that ordered
+   sequence, every step pending. The loop appends a node record beneath it per
+   the Run journal section of `execute-stages.md`; this is both the resumable
+   record and what the final gate renders.
 
 ## Execute (loop over steps, no human gates)
 
@@ -252,17 +273,21 @@ journal):
    per-stage: every security finding and every `[breaking-api]` finding **must**
    be fixed (cap-exempt); other review findings loop **per the round-cap rule**
    (residuals after the cap → documented as gaps). A round counts once, even
-   though it ran two reviewers.
+   though it ran two reviewers. Before each new round, apply the **convergence
+   guard** — the merged loop-back is what *keeps* the two reviewers from
+   fighting over the same lines, and the guard is what catches it when that
+   fails.
 5. **gaps** — any stage's gap pointer → mirror into the plan doc's "Gaps
    surfaced during execution" section and file to mempalace room `gaps`. Decide
    blocking vs non-blocking and act per the rules.
 6. **commit** — commit the step's work via `/vwf:git-workflow`, **per the
    commit-only preference**.
 7. **persist & journal** — store the step's durable decisions to room
-   `decisions`, then update the run journal (room `runs`, drawer `<plan>`): mark
-   this step **done** with its commit ref, the review/security round counts, and
-   any gap tags. This incremental write is what a resumed run reads to skip
-   completed steps.
+   `decisions`, and mark the step **done** in the run journal. The node records
+   themselves are written **as each node returns** (steps 2-4), not batched
+   here: one record per execution, in the fixed shape, so the round count is the
+   record count and a skip carries its `why`. Batching them to the end of the
+   step is what makes a resumed run repeat work and the gate report from memory.
 
 ## Acceptance & UX (once, after all steps)
 
@@ -276,16 +301,21 @@ ux when the plan changes no screens in a UI project. Autonomous policy:
   the step that owns the flow/screen (dispatch `execute-coder` with the **tag**;
   the fix is the code, the missing E2E test, or the style/state correction),
   re-commit, re-verify the affected stage — **up to 4 rounds** (the review-cap
-  rule). Residuals after the 4th round are documented as gaps and the run
-  proceeds to the final gate; a residual is never silently dropped.
+  rule), under the same **convergence guard**: a round that doesn't strictly
+  reduce the failures, or that re-breaks a criterion an earlier round fixed,
+  ends the loop early as an oscillation gap. Residuals — at the cap or at the
+  guard — are documented as gaps and the run proceeds to the final gate; a
+  residual is never silently dropped.
 - **Acceptance `n/a — no harness`**, or **ux `RENDERED: n/a` on a web slice** →
   record it as a gap (what harness/capture is missing, in the harness-contract
   vocabulary) and proceed — never scaffold infrastructure beyond the plan's own
   steps.
 - **Untestable criteria / unpinned states** (`SPEC/PLAN GAPS` / `SPEC GAPS`) →
   plan-doc gap section + room `gaps`, per the gap rules.
-- Journal both stages in the run journal (room `runs`) like steps — a resumed
-  run must know whether they already passed.
+- Journal both stages like any other node — a record per execution, and a
+  `skipped` record with its `why` when the condition didn't hold. A resumed run
+  must know whether they already passed, and the gate reports each skip from the
+  record rather than from recollection.
 
 ## Reconcile (in the worktree, before the final gate)
 
@@ -308,14 +338,32 @@ ux when the plan changes no screens in a UI project. Autonomous policy:
 
 ## Final gate & merge
 
-Present the whole run at **one** human gate: steps completed, per-step commits,
-final coverage vs the configured target, the **acceptance result**
-(per-criterion pass/fail, or why it was skipped/n-a), the **ux result**
-(findings/a11y summary, or why it was skipped), any configured model downgrades
-that applied, the **implementation stamps written** (each `covers:` doc and the
-state it was set to, with why anything short of `complete`), the consolidated
-**gap list** from the plan doc's "Gaps surfaced during execution" section, and
-the **worktree path**. Then wait.
+Present the whole run at **one** human gate. **Read the run journal back and
+render it** — do not reconstruct the run from what you remember of it. By this
+point the run may have spanned dozens of dispatches, a compaction, or a
+resource-cap handoff, and the journal is the only account that survived all
+three intact. Recall room `runs`, drawer `<plan>`, and present:
+
+- **The node records**, grouped by step — each step's commit, and every
+  execution beneath it with its round, outcome, and any `skipped`/`blocked`
+  `why`. Round counts are **counted from the records**, never recalled.
+- **Coverage** vs the configured target, and the **acceptance** (per-criterion
+  pass/fail) and **ux** (findings + a11y) results — each from its record, or its
+  `skipped` record's `why`.
+- **Model downgrades**, named on the nodes that ran under them.
+- **The implementation stamps written** — each `covers:` doc and the state it
+  was set to, with why anything is short of `complete`.
+- **The consolidated gap list** from the plan doc's "Gaps surfaced during
+  execution" section, marking which came from a **cap** and which from the
+  **convergence guard** — they point reconciliation at different places.
+- **The worktree path.**
+
+If the journal is unavailable — mempalace was down for part or all of the run —
+say so plainly and mark the report **reconstructed**. An approver needs to know
+whether they are reading a record or a recollection; a reconstructed report is a
+valid thing to approve, an undisclosed one is not.
+
+Then wait.
 
 - **Approve** → hand off to `/vwf:git-workflow` for the merge/push sequence
   behind its own approval gate.
