@@ -653,14 +653,24 @@ and a doc that is long without deciding more fails review exactly as a thin one
 does. The test for any line is whether `plan` or `execute` would do something
 different without it. Contract is never cut to hit a budget: acceptance
 criteria, failure paths, lifecycle transitions, invariants, and authorization
-rows stay at any length. When the worklist empties, a **coherence reviewer**
-walks every flow end-to-end across entities, schemas, and API contracts — the
-cross-doc gaps per-doc review can't see (a step whose state change no lifecycle
-allows, data no schema holds, an operation no contract defines, a breaking
-change to a released API) — and coverage stamps complete only after it returns
-clean. The blueprint is permanent and product-wide; it is never feature-scoped.
-Renaming or deleting a flow or entity triggers an inbound-link reconcile, so no
-other doc is left pointing at a doc that moved.
+rows stay at any length.
+
+Docs that are already over budget don't wait for someone to notice. The coverage
+survey counts lines like any other condition, and each over-budget doc becomes a
+worklist entry the sweep clears by dispatching a **condenser** subagent — a
+rewrite that cuts commentary and carries every decision through unchanged.
+Because condensation *decides* nothing, it needs no elicitation: the sweep works
+the queue unattended, and the only things that reach you are the contract holes
+a cut exposes (a guard that lived only in a diagram label, say). A doc whose
+every remaining line is load-bearing is reported as honestly over budget and
+clears — it never holds the coverage stamp hostage. When the worklist empties, a
+**coherence reviewer** walks every flow end-to-end across entities, schemas, and
+API contracts — the cross-doc gaps per-doc review can't see (a step whose state
+change no lifecycle allows, data no schema holds, an operation no contract
+defines, a breaking change to a released API) — and coverage stamps complete
+only after it returns clean. The blueprint is permanent and product-wide; it is
+never feature-scoped. Renaming or deleting a flow or entity triggers an
+inbound-link reconcile, so no other doc is left pointing at a doc that moved.
 
 ### /vwf:mockups
 

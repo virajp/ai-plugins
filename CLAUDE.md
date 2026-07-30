@@ -283,17 +283,21 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   the orchestrator; they never elicit, never invent, and report anything
   unfilled under `UNRESOLVED:`; several `entity-writer`s run concurrently and
   each touches only its own catalog row and erDiagram edges),
-  `design-system-reviewer`, `product-reviewer`, `execute-coder`,
-  `execute-code-reviewer` (incl. the released-contract compatibility dimension
-  and its `API COMPAT:` return line), `execute-security-reviewer`,
-  `execute-acceptance-verifier` (independent criteria→E2E-test mapping + run;
-  also `/vwf:verify`'s environment mode), `execute-ux-reviewer` (renders changed
-  screens via dev server + Playwright screenshots, judges against
-  design-system + the flow Screens contract, axe a11y scan; code-level-only for
-  Flutter), `architecture-writer`, `mockup-generator` (per-flow: Screens
-  contract + design-system tokens → self-contained HTML mockups written into the
-  flow's gitignored `docs/scratchpad/` dir, overwritten in place; returns only a
-  manifest)
+  `blueprint-condenser` (the density pass: one over-budget flow or entity doc →
+  a lossless-of-contract rewrite, cutting commentary and never a decision;
+  returns the before/after counts plus what it could not cut, the rationale
+  worth persisting, the out-of-scope questions to park, and any contract hole
+  the cut exposed), `design-system-reviewer`, `product-reviewer`,
+  `execute-coder`, `execute-code-reviewer` (incl. the released-contract
+  compatibility dimension and its `API COMPAT:` return line),
+  `execute-security-reviewer`, `execute-acceptance-verifier` (independent
+  criteria→E2E-test mapping + run; also `/vwf:verify`'s environment mode),
+  `execute-ux-reviewer` (renders changed screens via dev server + Playwright
+  screenshots, judges against design-system + the flow Screens contract, axe
+  a11y scan; code-level-only for Flutter), `architecture-writer`,
+  `mockup-generator` (per-flow: Screens contract + design-system tokens →
+  self-contained HTML mockups written into the flow's gitignored
+  `docs/scratchpad/` dir, overwritten in place; returns only a manifest)
 - `skills/` (doctrine, auto-applying) — `rest-api-design`; `product-foundations`
   (the twelve foundational concerns every product decides — users & operators,
   observability (OTel→Grafana), audit logs (privileged+destructive baseline),
@@ -717,8 +721,14 @@ surface can reach one, making a product/vendor name in a blueprint doc a
 reviewer failure by construction rather than by discipline. Migrated by `setup`
 mechanically (registry extraction, duplicate-table deletion, guarantee-section
 merge, link rewrite) alongside the config `9 → 10` stack move; the prose
-condensation is **deliberately not mechanical** and is deferred per doc to the
-next `/vwf:blueprint` touch, with `density` recorded in `blueprint.remaining`.
+condensation stays out of the migration (it needs judgment) but is **queued, not
+deferred** — the migration line-counts every doc and records one
+`density/<unit>` entry per over-budget doc in `blueprint.remaining`, which the
+next `/vwf:blueprint` sweep clears by dispatching a `blueprint-condenser` per
+entry. Condensation is **never elicited** (it decides nothing), so the sweep
+works the queue unattended; only the contract holes a cut exposes reach the
+user, and a doc whose every remaining line is load-bearing clears as an honest
+over-budget rather than blocking the coverage stamp.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,

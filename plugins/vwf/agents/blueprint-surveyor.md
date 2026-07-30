@@ -56,7 +56,15 @@ condition; a unit may fail more than one (report the most blocking).
    represented.
 6. **Unreviewed screens** — a flow platform listed under `blueprint.remaining`
    as `screens/<project>/<NNN>-<flow>/<platform>`.
-7. **Stale coherence** — `coherence` present in the passed `remaining` list.
+7. **Stale coherence** — `coherence` present in the passed `remaining` list. 7a.
+   **Over-budget doc (density)** — a flow `index.md` over **120** lines, a
+   `<platform>.md` over **100**, or an entity `index.md` over **120**, per
+   `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/density.md`.
+   Count lines only — do **not** judge whether the content is padded; that is
+   the condenser's and the reviewer's call, and reading every doc to decide it
+   would defeat the point of delegating the survey. Report as `density/<unit>`
+   with the count, e.g.
+   `density/flows/app/110-subscribe — 355 lines (budget 120)`.
 8. **Missing mandatory standard flow** — per
    `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: for each UI project, every
    slug the vocabulary marks mandatory for its `type` — including the
@@ -106,7 +114,7 @@ Otherwise:
 ```text
 COVERAGE: partial
 WORKLIST:
-1. <flows/<project>/<NNN>-<flow> | entities/<entity> | apis/<project> | screens/<project>/<NNN>-<flow>/<platform> | coherence> — <which condition fails, one clause>
+1. <flows/<project>/<NNN>-<flow> | entities/<entity> | apis/<project> | screens/<project>/<NNN>-<flow>/<platform> | density/<unit> | coherence> — <which condition fails, one clause>
 2. ...
 UNSERVED GOALS:
 - <#goal-slug> (or "none")

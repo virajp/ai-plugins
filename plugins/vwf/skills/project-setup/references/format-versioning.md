@@ -509,18 +509,24 @@ the current format and apply the delta:
      `architecture.md#project-registry` (or reading "the registry block") now
      points at `registry.yaml`; links to the three merged flow sections point at
      `#guarantees`. A dangling link is a failed migration.
-  5. **Condense to the density bars — deferred, per doc, on next touch.** The
-     new bars in
-     `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/density.md`
-     (and the vendor-name rule the stack removal now makes enforceable) cannot
-     be applied mechanically: deciding which lines are contract and which are
-     commentary is exactly the judgment a reviewer makes. Do **not** attempt it
-     during migration. Instead record `density` in `blueprint.remaining` and
-     leave `blueprint.coverage: partial`; each doc is condensed by the reviewer
-     gate the next time `/vwf:blueprint` touches it, and the sweep clears the
-     entry when no doc is left over budget. Report at the end of the migration
-     how many docs are over budget, so the size of the deferred work is visible
-     rather than discovered later.
+  5. **Queue the density pass — the sweep performs it.** Do not condense during
+     the migration: the cuts need judgment (which lines are contract, which are
+     commentary), and a migration stays mechanical and reviewable. Do not leave
+     it to chance either. Line-count every flow `index.md` (budget 120), every
+     `<platform>.md` (100), and every entity `index.md` (120), and record one
+     **`density/<unit>`** entry in `blueprint.remaining` per doc over budget,
+     leaving `blueprint.coverage: partial`.
+
+     The next `/vwf:blueprint` run clears the queue: the surveyor reports each
+     as a coverage condition, and each dispatches a `blueprint-condenser`
+     subagent — a lossless-of-contract rewrite, gated by the same reviewer as
+     any other doc. Condensation is **not** elicited (it decides nothing), so
+     the sweep works the queue without a user in the loop; the only items that
+     reach the user are the contract holes a cut exposes.
+
+     Report the count at the end of the migration ("N docs queued for
+     condensation") so the size of the pass is visible before it runs rather
+     than discovered during it.
   6. Bump the stamp to `16` and `config_format` to `10`.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add

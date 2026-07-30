@@ -208,6 +208,30 @@ holes, e.g. a step referencing a not-yet-authored entity), and re-run coherence
 
 ### 2. Determine surfaces
 
+**Density items short-circuit this.** A worklist entry of the form
+`density/<unit>` is not an authoring pass: the unit's contract is already
+decided and merely over-written. Skip §§2–4 entirely, dispatch a fresh
+`blueprint-condenser` for that unit (pass the doc path, its budget and current
+count, and the `conventions.md` anchors it references), then go straight to the
+**§5 reviewer loop** — the reviewer's density bars are what confirm the pass
+landed.
+
+There is **no elicitation** on a density item. Condensation removes commentary
+and decides nothing, so there is nothing to ask; that is precisely why the sweep
+can clear these without a user in the loop. Handle the condenser's return:
+
+- **`PERSIST:`** — file each to mempalace room `decisions` (the rationale leaves
+  the contract but is not lost).
+- **`PARKED:`** — file each to room `gaps` per the parked-scope rule, and mirror
+  a terse line where the doc kept one.
+- **`GAPS:`** — a contract hole the cut exposed (a guard that lived only in a
+  diagram label, a rule with nowhere to live). This **does** need you: fold it
+  into the normal per-flow pass (§§3–4) rather than leaving it, since a hole
+  found while condensing is a hole either way.
+- **`HELD:`** — the doc is still over budget with every line load-bearing.
+  Accept it, report it at the end of the sweep, and **clear the entry** — an
+  honest over-budget doc must not block the coverage stamp forever.
+
 From the flow's nature and the registry, determine which sections apply. Map
 **by project `type`, never by literal technology**:
 
@@ -585,12 +609,18 @@ Record the sweep's result in `.config/vwf.yaml` (per the vwf-config asset):
 ```yaml
 blueprint:
   coverage: complete # or partial
-  remaining: [] # when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform>, coherence
+  remaining: [] # when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform>, density/<unit>, coherence
 ```
 
 Stamp after **every** run — a targeted update that opened a hole (or skipped the
 coherence re-run, or skipped a §6a visual review) downgrades a `complete` stamp
 to `partial`. This stamp is what `/vwf:plan` gates on.
+
+A `density/<unit>` entry clears when the unit is within budget **or** the
+condenser returned `HELD:` for it (every remaining line load-bearing). Report
+both counts at the end of a sweep that condensed anything — how many docs came
+under budget, and how many are honestly over. An over-budget doc whose every
+line is contract is not a hole, and must never hold the stamp hostage.
 
 ### 10. Commit (git-workflow)
 
