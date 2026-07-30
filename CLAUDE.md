@@ -600,6 +600,38 @@ potentially compromised — releases.
   push + `workflow_call` publish. Prefer releasing via CI over local `i:publish`
   so every version keeps the strongest npm trust level (trusted publisher).
 
+### GitHub Releases
+
+Every `vX.Y.Z` tag carries a **GitHub Release** with a generated changelog. The
+tag is the npm-publish trigger; the Release is the human-readable record beside
+it. Backfilled for all 30 historical tags (`v1.2.1` … `v2.7.2`) on 2026-07-30;
+**cut one for every release from here on**, right after `i:release` pushes the
+tag.
+
+```sh
+gh release create vX.Y.Z --title vX.Y.Z --notes-file <notes> --verify-tag
+```
+
+- **`v*` is the installer CLI's namespace**, matching `package.json` — not a
+  plugin version. Marketplace plugin versions are **not** separately tagged;
+  they ride the CLI release that carries them, and the notes record which moved.
+- **Creating a Release never publishes.** `release.yml` triggers on
+  `push: tags: v*`; no workflow listens for `release` events. `--verify-tag`
+  keeps it that way by refusing to invent a tag (which *would* push and
+  publish).
+- **Notes follow `.config/git-conventional-commits.yaml`** — the same config the
+  repo already uses: only `feat`/`fix`/`refactor`/`perf` plus breaking changes,
+  `includeInvalidCommits: false` (so `ops:`/`docs:`/`chore:` are excluded), WIP
+  skipped, scopes bolded, each entry linking its commit via the `commitUrl`
+  pattern. Do not invent a second changelog format.
+- **Shape of a release note:** an optional `**Plugin versions:**` line (only the
+  marketplace entries whose version changed since the previous tag), the
+  changelog sections, and a `**Full Changelog**` compare link. A tag with no
+  eligible commits still gets a Release, saying it is a maintenance release —
+  the tag→Release mapping stays 1:1, so a missing Release means a missed step.
+- **`--latest`** resolves by publish date, so a normal forward release is
+  correct by default. Pass `--latest=false` when backfilling out of order.
+
 ## Hooks
 
 `vwf` ships two `PreToolUse` / `Bash` hooks (declared in `hooks/hooks.json`):
