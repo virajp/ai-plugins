@@ -713,46 +713,34 @@ offers this as its design-first option):
 ```
 
 `prompt` writes **one compact wireframe-level design brief per platform**
-(`mobile.md`, `tablet.md`, `auto.md`, …) from the blueprint's context — **the
-files are the deliverable**: you paste each into the canvas chat yourself; vwf
-never runs a brief against the Claude Design MCP, and `prompt` never touches the
-canvas. A brief is **always the flow's full screen blueprint**, regenerated in
-place — never a change note; the canvas reconciles its existing pages against
-the latest brief. The **standing conventions live in the canvas project's own
-CLAUDE.md — and `prompt` generates and maintains its repo-side source**
+(`mobile.md`, `tablet.md`, `auto.md`, …). **The files are the deliverable**: you
+paste each into the canvas chat yourself — vwf never runs a brief against the
+Claude Design MCP. Each brief is always the flow's **full** screen blueprint,
+regenerated in place, never a change note.
+
+The standing conventions don't live in the briefs. They live in the canvas
+project's own CLAUDE.md, whose repo-side source `prompt` also maintains
 (`docs/prompts/screens/<project>/CLAUDE--<platform>.md`, one per pinned design
-project — you set it as the canvas project's CLAUDE.md whenever it's new or
-changed): one interactive page per flow per platform (never static mockups), the
-naming contract, revise-in-place for existing pages, wired navigation with the
-happy path clickable end to end and **stitched into `index--<platform>`** (each
-platform canvas's one index page chaining every flow's happy path in execution
-order — the whole happy-flow mockup, walkable from the index alone), the
-platform's **device-frame layout** (the mobile/tablet frame with the camera
-notch/cutout, a browser frame on desktop, the OS display frame with its template
-constraints in-car), and the **standing tweak set on every frame**: `darkMode`
-(default on), the device `frame` (default on), one tweak per pinned **sad
-state**, and one tweak per pinned **conditional product state** (empty data,
-entity-state variants) — plus stub treatment for out-of-flow screens, the
-product one-liner, and the goal vocabulary from `product.md`. Its generated
-sections are regenerated in place; a **canvas-owned section** holds the
-conventions you discover while designing, preserved across regenerations and
-folded back by `import`. The brief never restates the standing conventions — it
-carries **only the per-flow payload**: the page name (`<flow>--<platform>`, e.g.
-`100-home--mobile`, where `<flow>` is exactly the numbered folder name under
-`docs/blueprint/flows/<project>/` — the sync key `import` matches pages back by,
-one brief per platform file the flow has), a one-line goal, the flow's steps and
-entry points, and each screen — headed by its pinned **code** (`100a`, `100b`,
-…, the frame name on the canvas and the per-screen sync key) — with purpose,
-navigation, form fields + validation timing, its **components and their rules**
-(transcribed from the flow doc's Components block: every element the screen
-displays — text, info, errors, buttons, inputs — with when it's visible or
-clickable, what it does, and its contract-pinned content), and the pinned states
-its tweaks must cover. Nothing that would steer the *visual* design goes in — no
-tokens, type, spacing, or component styling: Claude Design picks the visual
-language up from its Design System project, and the canvas chat is where you
-make the design yours; what a screen shows and how it behaves, though, is
-contract — transcribed, never left to the canvas. Iterate on the canvas as long
-as you like.
+project — set it as the canvas project's CLAUDE.md when it changes): the naming
+contract, one **interactive** page per flow per platform revised in place, the
+happy path clickable end to end and stitched into an `index--<platform>` page
+that chains every flow in execution order, the platform's device frame, and the
+standing tweak set (dark mode, device frame, one tweak per pinned sad and
+conditional state). Its generated sections regenerate; a **canvas-owned
+section** holds what you discover while designing, preserved across
+regenerations and folded back by `import`.
+
+So a brief carries only the per-flow payload: the page name `<flow>--<platform>`
+(`100-home--mobile` — the sync key `import` matches back by), a one-line goal,
+the steps and entry points, and each screen under its pinned **code** (`100a`,
+`100b`, … — the canvas frame name) with its purpose, navigation, form fields and
+validation timing, the **components and their rules** transcribed from the flow
+doc, and the states its tweaks must cover.
+
+Nothing that steers the *visual* design goes in — no tokens, type, spacing, or
+component styling. Claude Design resolves those from its Design System project,
+and the canvas chat is where you make the design yours. What a screen **shows**
+and how it **behaves** is contract, transcribed rather than left to the canvas.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
@@ -1170,30 +1158,21 @@ they auto-apply and inform how Claude writes and reviews:
 
 - **`product-foundations`** — the twelve foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
-  & operators (two user classes, document-based RBAC,
-  claims-for-account-status-only, no impersonation), observability
-  (OpenTelemetry → Grafana Cloud, trace-correlated logs), audit logs
-  (append-only, privileged + destructive actions), change logs (Keep-a-Changelog
-  → fastlane store metadata, drafted by execute), background processes
-  (sync/async per action; durable → worker, ephemeral → service; ask only on
-  ambiguity), data retention & PII (delete by default, pseudonymised legal-basis
-  retention), notifications, runtime settings (one cached settings doc; flags
-  are settings), rate limiting (endpoint classes, uniform 429), reliability
-  targets (per-service availability/latency SLOs with an error-budget stance),
-  disaster recovery & backup (RPO/RTO per datastore, automated backups, restore
-  drills), and cost guardrails (one budget with alerts, per-service scaling
-  caps, metered expensive operations). `architecture` walks the checklist
-  (accept / adapt / skip per foundation); `blueprint` expands accepted ones into
-  contracts.
+  & operators, observability, audit logs, change logs, background processes,
+  data retention & PII, notifications, runtime settings, rate limiting,
+  reliability targets, disaster recovery & backup, and cost guardrails. Each
+  ships with an opinionated default (e.g. audit logs are append-only over
+  privileged and destructive actions; durable work goes to a worker, ephemeral
+  to a service). `architecture` walks the checklist — accept / adapt / skip per
+  foundation — and `blueprint` expands the accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
-  the blueprint vs `plan`) plus the per-surface completeness bars: the flow
-  contract (steps, screens, jobs, observable acceptance criteria), the entity
-  data contract (lifecycle, relationships, concurrency, `schema.yaml`), and the
-  API/schema bars (OpenAPI + JSON Schema, the released-snapshot additive-only
-  rule) — including the doc-unit doctrine (entity / page / module) and the
-  goal-traceability edges (every flow `Serves:` a product goal; every entity
-  `Used by:` a flow). Auto-applies whenever a `docs/blueprint/` doc is edited
-  (and on `docs/plans/` for frontmatter/link hygiene only).
+  the blueprint vs `plan`), the **density** bars (per-doc budgets, the delete
+  test, the anti-patterns that inflate a contract), and the per-surface
+  completeness bars: the flow contract, the entity data contract, and the
+  API/schema bars including the released-snapshot additive-only rule. Also the
+  doc-unit doctrine and the goal-traceability edges — every flow `Serves:` a
+  product goal, every entity is `Used by:` a flow. Auto-applies on any
+  `docs/blueprint/` edit (and on `docs/plans/` for frontmatter/link hygiene).
 - **`design-system-authoring`** — the UX/visual-contract doctrine (semantic
   tokens, typography, spacing, motion, accessibility, component behaviors,
   anti-patterns, and Terminal UX for products that ship a CLI) behind
