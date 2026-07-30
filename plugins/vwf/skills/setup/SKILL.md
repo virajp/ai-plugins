@@ -25,7 +25,7 @@ throughout.
 
 | Doc               | Path                                                         |
 | ----------------- | ------------------------------------------------------------ |
-| Registry          | `docs/blueprint/architecture.md`                             |
+| Registry          | `docs/blueprint/registry.yaml`                               |
 | Environment       | `docs/blueprint/environment.md`                              |
 | Env. template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`      |
 | vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`) |

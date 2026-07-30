@@ -8,12 +8,15 @@ status: draft # draft | reviewed | stable
 
 # <System Name> — Architecture
 
-> **Source of truth for system structure.** Lives at
-> `docs/blueprint/architecture.md`. Read by humans and by documentation tooling.
-> `blueprint` and `plan` parse the **Project Registry** block at the bottom of
-> this file to resolve stack vocabulary and the entity→project mapping. Keep the
-> prose and the registry in sync: every project in the registry must appear in
-> the prose, and vice versa.
+> **The human-readable system shape.** Lives at
+> `docs/blueprint/architecture.md`. The machine-readable **Project Registry** is
+> its own file — `docs/blueprint/registry.yaml` — which is what `blueprint`,
+> `plan`, and `execute` parse; they never read this doc. Every registry project
+> appears here as prose and as a diagram node, and nothing appears here that the
+> registry does not have.
+>
+> Budget ~100 lines: this doc explains shape to a person. Anything a tool needs
+> belongs in the registry.
 
 ## System Overview
 
@@ -54,63 +57,13 @@ move between projects). A simple text diagram is welcome. -->
 <!-- Where each project runs and how it ships. For cloud projects: the platform
 and region. For the mobile app: the stores and release channel. -->
 
-## Cross-cutting Decisions
+## Registry
 
-<!-- One-line selections for system-wide engineering concerns. These are the
-inputs `blueprint` expands into canonical contracts under docs/blueprint/conventions.md.
-Record the *decision* (the selection) here; the *contract* (the full blueprint) lives
-in conventions.md. Include only concerns the system actually has; omit the rest.
-Keep this table in sync with the `cross_cutting` block in the registry below. -->
+The machine-readable system description lives in
+[registry.yaml](./registry.yaml) — projects, capabilities, dependencies, and the
+cross-cutting selections. It is authoritative; this doc is its prose view.
 
-| Concern       | Decision            |
-| ------------- | ------------------- |
-| auth          | <selection>         |
-| errors        | <selection>         |
-| observability | <selection>         |
-| config        | <selection>         |
-| testing       | <selection>         |
-| integrations  | <selection or none> |
-
-## Project Registry
-
-> Machine-readable. `blueprint` and `plan` parse this block to resolve each
-> entity section's target project, stack vocabulary, and capabilities. Keep it
-> accurate.
->
-> - `type` ∈ `service` | `worker` | `packages` | `site` | `frontend` | `console`
-> - `doc_unit` ∈ `entity` | `page` | `module`
-> - `capabilities` — see the Capability Vocabulary in the architecture phase;
->   extensible.
-> - `cross_cutting` — one-line decision per system-wide concern; the input to
->   `blueprint`'s conventions.md. Include only the concerns that exist.
-> - Enforcement opt-outs (structure/stack/rule deviations) do **not** live here
->   — they are vwf operating config, recorded under `enforcement:` in
->   `.config/vwf.yaml`. The registry describes the system as it **is** (the
->   actual stack, even a deviated one), with no waiver metadata.
-
-```yaml
-projects:
-  - name: <project-name>
-    type: <service|worker|packages|site|frontend|console>
-    path: <repo-or-directory>
-    stack: [ <language>, <framework>, <...> ]
-    capabilities: [ <capability>, <...> ]
-    depends_on: [ <project-name>, <...> ] # or []
-    doc_unit: <entity|page|module>
-
-cross_cutting: # system-wide concerns → blueprint's conventions.md
-  auth: <selection> # e.g. firebase-id-token, jwt, session-cookie, none
-  errors: <selection> # e.g. coded-envelope, http-status-only
-  observability: <selection> # e.g. opentelemetry-grafana, structured-json-logs, none
-  config: <selection> # e.g. env-vars, secrets-manager
-  testing: <selection> # e.g. vitest-unit-integration, none
-  integrations: [ <service-name>, <...> ] # external services, or []
-  # foundation tokens (product-foundations skill) — present only when accepted:
-  # audit: privileged-destructive
-  # notifications: [ push, email ]
-  # background: durable-worker-ephemeral-service
-  # data-retention: gdpr-dpdpa
-  # runtime_settings: cached-settings-doc
-  # rate_limiting: endpoint-classes
-  # changelog: keepachangelog-fastlane
-```
+<!-- Do NOT restate the registry here. A cross-cutting decisions table, a
+project/stack table, or a capability list duplicated into this doc is a format-16
+gap: it was the one thing in the old single-file architecture doc guaranteed to
+drift, since nothing could check the two copies against each other. -->

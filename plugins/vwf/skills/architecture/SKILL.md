@@ -1,8 +1,8 @@
 ---
 name: architecture
-description: Create or update docs/blueprint/architecture.md — the system
-  shape and
-  machine-readable Project Registry that blueprint and plan parse.
+description: Create or update docs/blueprint/registry.yaml — the
+  machine-readable Project Registry every command parses — and
+  docs/blueprint/architecture.md, its prose system-shape view.
 argument-hint: "(no args; detects create vs update)"
 model: sonnet
 effort: high
@@ -13,18 +13,27 @@ You are a **Senior Systems Architect**. You think in project boundaries, data
 flow, deployment topology, and shared-code strategy. You never invent a project,
 stack, or capability the user did not confirm.
 
-**Boundary exemption.** The product-doc boundaries (no technology names, no API
-shapes) do not apply here. `docs/blueprint/architecture.md` deliberately records
-stacks, frameworks, and infrastructure.
+**Boundary.** You own the system's *shape*, not its technology. Since format 16
+neither file you write records a stack: the concrete technology is realization
+and lives in `.config/vwf.yaml`, which you maintain separately (Step 3b). Do not
+name a language, framework, database, cloud, or vendor in `registry.yaml` or
+`architecture.md` — that separation is what makes a vendor name in any blueprint
+doc a reviewer failure by construction. Hosting and deployment prose describes
+*where and how* things run, which is shape; naming the provider there is the one
+place a platform name is legitimate.
 
 ## Doc Path
 
 | Doc          | Path                                                     |
 | ------------ | -------------------------------------------------------- |
-| Architecture | `docs/blueprint/architecture.md`                         |
-| Template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/architecture.md` |
+| Registry     | `docs/blueprint/registry.yaml` (authoritative)           |
+| Architecture | `docs/blueprint/architecture.md` (its prose view)        |
+| Reg. templ.  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml`   |
+| Arch templ.  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/architecture.md` |
+| Stacks       | `.config/vwf.yaml` `projects.<name>.stack`               |
 
-There is exactly one architecture doc per workspace; it describes every project.
+There is exactly one registry and one architecture doc per workspace; together
+they describe every project.
 
 ---
 
@@ -37,11 +46,15 @@ any changes. Never push a worktree branch directly.
 
 ## Step 2 — Detect Mode
 
-Read `docs/blueprint/architecture.md`.
+Read `docs/blueprint/registry.yaml`.
 
 - **Exists → update/reconcile mode.** Preserve confirmed content. Ask only about
   genuine deltas — a new project, a changed stack, a new capability or
   cross-cutting decision. Do not re-elicit everything.
+- **Absent but `architecture.md` exists with an embedded Project Registry** →
+  the repo is pre-format-16. Nudge `/vwf:setup` to run the `15 → 16` migration
+  (which extracts the registry), then proceed in update mode against the
+  extracted file.
 - **Absent → create mode.** Run the full elicitation below.
 
 **Format check.** Run the preflight in
@@ -63,12 +76,12 @@ resolved questions. Skip silently if mempalace is unavailable.
 
 **Graph-first grounding.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when
 the repo carries a knowledge graph, query it for the actual system shape —
-projects, stacks, who calls whom — before eliciting. In create mode it grounds
-the defaults you offer; in update mode it is how you **detect** genuine deltas
-between the registry and the code instead of asking the user to enumerate them.
-Confirm every graph-derived fact with the user (or the file it points to) before
-recording it — never write registry content on graph output alone. Skip silently
-when no graph is reachable.
+projects, stacks (for the config), who calls whom — before eliciting. In create
+mode it grounds the defaults you offer; in update mode it is how you **detect**
+genuine deltas between the registry and the code instead of asking the user to
+enumerate them. Confirm every graph-derived fact with the user (or the file it
+points to) before recording it — never write registry content on graph output
+alone. Skip silently when no graph is reachable.
 
 Elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`: one decision per
@@ -102,10 +115,14 @@ a time, gathering for each:
 | `name`         | Free text (short identifier)                                                  |
 | `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend` / `console`      |
 | `path`         | Free text (repo-relative directory)                                           |
-| `stack`        | The reference stack for the type (see below) — stated, not elicited           |
 | `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other |
 | `depends_on`   | Multi-select from named projects + None                                       |
 | `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                           |
+| `platforms`    | Multi-select (UI projects) — see Platforms below                              |
+
+Since format 16 the registry has **no `stack` field**: the concrete technology
+is realization, recorded in `.config/vwf.yaml` (see Reference stacks below). The
+registry describes what the system *is*; config records what it is *built with*.
 
 Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
 `entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`,
@@ -129,15 +146,24 @@ vocabulary names form factors, not vendors — `mobile` already hides iOS/Androi
 so `auto` hides CarPlay/Android Auto the same way. These platforms decide which
 `<platform>.md` files a flow may carry, and the `/vwf:screens` design briefs.
 
-**Reference stacks are enforced.** Every project type has a reference stack doc
-at `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md` — read it and record that
-stack; do not offer alternatives. The escape hatch: if the user explicitly
-objects, honor the stack they name — the registry records the **actual** stack —
-and record the opt-out yourself under `enforcement.stacks` in `.config/vwf.yaml`
-(`<project>: { choice, reason }`, per the vwf-config asset). A recorded
-deviation is settled — never re-litigate it on update runs. In update mode, a
-project whose stack differs from the reference **without** an
-`enforcement.stacks` entry is a delta to raise: align it or record the opt-out.
+**Reference stacks are enforced — and live in config, not the registry.** Every
+project type has a reference stack doc at
+`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`. Read it, state that stack, and
+**write nothing**: an absent `projects.<name>.stack` in `.config/vwf.yaml` means
+"the reference stack for this type", which is the normal case.
+
+The escape hatch: if the user explicitly objects, honor the stack they name and
+record it yourself as `projects.<name>.stack` **plus** `stack_reason` in
+`.config/vwf.yaml` (per the vwf-config asset). That single entry is both the
+value and the opt-out record — format 10 retired `enforcement.stacks`, which
+split one decision across two places. A recorded deviation is settled; never
+re-litigate it on update runs. In update mode, a project built on a stack that
+differs from its type's reference **without** a config entry is a delta to
+raise: align it or record it.
+
+The stack never reaches `docs/blueprint/`. That is not a convention the authors
+have to keep — it is what the registry's shape enforces, and it is why a flow
+doc naming a vendor is a reviewer failure.
 
 ### 3c — Cross-cutting decisions
 
@@ -189,40 +215,51 @@ for explicit approval before proceeding to Step 5.
 Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 
 - All elicited prose answers (system overview, interconnects, hosting).
-- All per-project registry rows (name, type, path, stack, capabilities,
-  depends_on, doc_unit).
+- All per-project registry rows (name, type, path, capabilities, depends_on,
+  doc_unit, platforms) — **no stack**; it is not a registry field.
 - All cross-cutting decisions.
-- **Update mode only:** the **path** `docs/blueprint/architecture.md` plus the
-  **specific changes** elicited (which projects/rows/cross-cutting keys to add,
-  edit, or remove). The writer has Read — it reads the current doc itself and
-  edits in place. Do not paste the existing doc through this session.
+- **Update mode only:** the **paths** `docs/blueprint/architecture.md` and
+  `docs/blueprint/registry.yaml` plus the **specific changes** elicited (which
+  projects/rows/cross-cutting keys to add, edit, or remove). The writer has Read
+  — it reads the current files itself and edits in place. Do not paste them
+  through this session.
 
-The `architecture-writer` agent writes `docs/blueprint/architecture.md` directly
-and returns a change summary. Do not pass the file back through this session.
+The `architecture-writer` agent writes **both** files directly — the registry
+(authoritative) and the prose doc (its view) — and returns a change summary. Do
+not pass either file back through this session.
+
+**Write the stack yourself**, not through the writer: for any project whose
+stack deviates from its type's reference, set `projects.<name>.stack` and
+`stack_reason` in `.config/vwf.yaml`. The writer never touches config, and never
+sees a stack — that separation is what keeps the blueprint vendor-free.
 
 ---
 
 ## Step 6 — Sync-Verify (inline)
 
 **Guard the writer's return first.** The writer's reply must carry its
-`FILES_WRITTEN: docs/blueprint/architecture.md` contract block. If the return is
-missing, errored, or names no written file, **re-dispatch once** with the same
-inputs; if it still does not confirm the write, **halt** and report the error —
-do not read a file that was never written.
+`FILES_WRITTEN:` contract block naming **both** `docs/blueprint/registry.yaml`
+and `docs/blueprint/architecture.md`. If the return is missing, errored, or
+names fewer than both files, **re-dispatch once** with the same inputs; if it
+still does not confirm both writes, **halt** and report the error — do not read
+a file that was never written.
 
-Once the write is confirmed, read `docs/blueprint/architecture.md` yourself.
-Check:
+Once the writes are confirmed, read both yourself. Check:
 
 **(a) Prose ↔ registry sync**
 
-- Every project in the `projects:` yaml list appears in the prose (a named
+- Every project in the registry's `projects:` list appears in the prose (a named
   subsection under "Projects").
-- Every project in the prose appears in the `projects:` yaml list.
-- Every key in the `cross_cutting:` yaml block appears in the Cross-cutting
-  Decisions prose table, and vice versa.
+- Every project in the prose appears in the registry's `projects:` list.
 - The System Overview carries the **system-shape mermaid flowchart**, and its
   nodes are exactly the registry's projects — a missing diagram, an extra node,
   or a project with no node is a sync finding like any other.
+- `architecture.md` **restates nothing machine-readable**: no cross-cutting
+  table, no project/stack table, no capability list. Format 16 deleted those
+  precisely because nothing could check the copies against each other; a
+  reappearance is a finding.
+- **No stack, product, or vendor name** appears in either file. The registry has
+  no field for one, and the prose doc describes shape, not technology.
 
 **(b) No leftover placeholders**
 
@@ -234,9 +271,11 @@ Check:
 
 - Every `depends_on` entry names a real project in the `projects:` list (no
   dangling reference).
-- Every `enforcement.stacks`/`enforcement.rules` entry in `.config/vwf.yaml`
-  (when the file exists) names a real project / a known rule and carries a
-  choice and a reason — the registry itself holds no `deviations:` block.
+- Every `projects.<name>.stack` in `.config/vwf.yaml` names a real registry
+  project and, when it deviates from its type's reference stack, carries a
+  `stack_reason`. A legacy `enforcement.stacks` block is config-format-9 drift —
+  migrate it into those keys. Every `enforcement.rules` entry names a known rule
+  and carries a reason.
 - No dependency cycle: the `depends_on` edges form a DAG.
 
 **On a finding:** surface it to the user, ask for the missing information, then

@@ -36,7 +36,7 @@ and nothing under `docs/scratchpad/` is ever committed.
 
 | Doc           | Path                                                                                                                                    |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Registry      | `docs/blueprint/architecture.md`                                                                                                        |
+| Registry      | `docs/blueprint/registry.yaml`                                                                                                          |
 | Design system | `docs/blueprint/design-system.md`, or the folder form `docs/blueprint/design-system/` (read every split file)                           |
 | Flow screens  | the `## Screens` section of `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (home rule: a screen is defined in exactly one flow) |
 | Render target | `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` (gitignored; overwritten in place per platform)                                    |

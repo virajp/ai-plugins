@@ -478,6 +478,57 @@ the current format and apply the delta:
      rewritten). Content is otherwise preserved: `status:` and `implementation:`
      stamps carry over per file.
 
+- **`15 → 16`** → the **registry split, stack removal, and density pass**. Steps
+  1-4 are mechanical and land in one migration commit; step 5 is deliberately
+  **not** mechanical and is deferred, on the `9` precedent (coverage stays
+  `partial` until it is done).
+
+  1. **Extract the registry.** Move the `## Project Registry` YAML block out of
+     `docs/blueprint/architecture.md` into a new `docs/blueprint/registry.yaml`
+     (the registry template), adding `vwf_registry: 1`. Carry `projects[]` and
+     `cross_cutting` across verbatim **except** each project's `stack:`, which
+     is dropped here and lands in `.config/vwf.yaml` (the `9 → 10` config
+     migration, run in the same pass). Fold each project's `platforms:` from
+     `.config/vwf.yaml` into its registry entry — the registry now describes the
+     system, config carries only realization and vwf's own operating state.
+  2. **Strip the duplicates from `architecture.md`.** Delete the
+     `## Cross-cutting Decisions` table (now `cross_cutting` in the registry)
+     and replace the `## Project Registry` section with the `## Registry`
+     pointer to `./registry.yaml`. Prose sections and the mermaid flowchart stay
+     as they are. **Halt** if the deleted table and the YAML block disagree —
+     the two had no checker, so a conflict is a real decision the user must
+     settle, not something to resolve by picking one.
+  3. **Merge the flow guarantee sections.** In every `flows/**/index.md`,
+     replace `## Consistency boundary`, `## Failure handling`, and
+     `## Idempotency` with one `## Guarantees` table, one row per step group
+     whose guarantees differ (`all` when the whole journey shares them). Content
+     is carried, not rewritten: each old section's bullets become the matching
+     column's cells. Where a bullet is a paragraph, put it in the cell as-is and
+     leave it for step 5 — never drop it.
+  4. **Rewrite inbound references.** Any doc pointing at
+     `architecture.md#project-registry` (or reading "the registry block") now
+     points at `registry.yaml`; links to the three merged flow sections point at
+     `#guarantees`. A dangling link is a failed migration.
+  5. **Queue the density pass — the sweep performs it.** Do not condense during
+     the migration: the cuts need judgment (which lines are contract, which are
+     commentary), and a migration stays mechanical and reviewable. Do not leave
+     it to chance either. Line-count every flow `index.md` (budget 120), every
+     `<platform>.md` (100), and every entity `index.md` (120), and record one
+     **`density/<unit>`** entry in `blueprint.remaining` per doc over budget,
+     leaving `blueprint.coverage: partial`.
+
+     The next `/vwf:blueprint` run clears the queue: the surveyor reports each
+     as a coverage condition, and each dispatches a `blueprint-condenser`
+     subagent — a lossless-of-contract rewrite, gated by the same reviewer as
+     any other doc. Condensation is **not** elicited (it decides nothing), so
+     the sweep works the queue without a user in the loop; the only items that
+     reach the user are the contract holes a cut exposes.
+
+     Report the count at the end of the migration ("N docs queued for
+     condensation") so the size of the pass is visible before it runs rather
+     than discovered during it.
+  6. Bump the stamp to `16` and `config_format` to `10`.
+
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.
 

@@ -59,10 +59,14 @@ Background Jobs if the registry has no worker.
   `docs/blueprint/apis/<project>.openapi.yaml` (link the contract once under
   References). A step that changes an entity's state must match a transition in
   that entity's Lifecycle table — the coherence reviewer checks the two agree.
-- **Consistency boundary** — which step groups are atomic vs eventually
-  consistent.
-- **Failure handling** — compensation or rollback per failure point.
-- **Idempotency** — of the flow as a whole and of retried steps.
+- **Guarantees** — one table, one row per step group whose guarantees differ
+  (`all` when the whole journey shares them): consistency (atomic | eventual),
+  what happens on failure (the compensation or rollback, or
+  `none — <why safe>`), and the key a retry is idempotent under (or `n/a`).
+  Format 16 merged the former Consistency boundary / Failure handling /
+  Idempotency sections: three one-bullet sections that grew into essays and then
+  cross-referenced each other, so one decision ended up split across three
+  places.
 - **Diagram** — the mandatory `sequenceDiagram` (below).
 - **Background Jobs** — the jobs this flow requires (below).
 - **Acceptance** — observable Given/When/Then outcomes (below).

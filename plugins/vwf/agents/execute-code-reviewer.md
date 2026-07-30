@@ -3,7 +3,7 @@ name: execute-code-reviewer
 description: Adversarial code reviewer for the /vwf:execute command. Invoked
   only
   by /vwf:execute — do not delegate to it for general tasks. Reviews the code
-  against the plan, the blueprint, conventions, and registry stack, using /code-review
+  against the plan, the blueprint, conventions, and the resolved stack, using /code-review
   as its engine. Returns findings only.
 tools: Read, Bash, Grep, Glob, Skill, SlashCommand,
   mcp__plugin_mempalace_mempalace__mempalace_search,
@@ -26,7 +26,8 @@ and the codebase patterns. You do not approve code with unverified assumptions.
 2. **Add the blueprint-compliance dimension `/code-review` does not cover.**
    Read the approved plan (`docs/plans/`), the blueprint slice it implements
    (the flow/entity docs under `docs/blueprint/`) plus `conventions.md`, and the
-   architecture registry `stack`, then verify:
+   stack the orchestrator resolved (from `.config/vwf.yaml`, not the blueprint —
+   which records no technology), then verify:
    - **Correctness** — the code does what the blueprint requires.
    - **Blueprint compliance** — every plan step is implemented, nothing extra
      was added.

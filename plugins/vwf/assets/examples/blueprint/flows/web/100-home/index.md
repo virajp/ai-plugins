@@ -43,20 +43,11 @@ Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
    [Place order](../110-place-order/index.md) flow) or opens an order to manage
    it (the [Order cancellation & refund](../120-cancel-refund/index.md) flow).
 
-## Consistency boundary
+## Guarantees
 
-- Read-only. Home shows the current state of the cart and orders; it commits
-  nothing, so there is no transaction to bound.
-
-## Failure handling
-
-- Order history unavailable: home still renders with its navigation intact and
-  the history region shows a retryable error — a shopper can always reach
-  checkout even when history is degraded.
-
-## Idempotency
-
-- Fully idempotent: every visit is a pure read and may be repeated freely.
+| Step / group | Consistency                  | On failure                                                                                                                                  | Idempotency                  |
+| ------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| all          | read-only, nothing committed | Order history unavailable → home still renders with navigation intact and a retryable error in the history region; checkout stays reachable | pure read, repeatable freely |
 
 ## Diagram
 

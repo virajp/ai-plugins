@@ -21,7 +21,10 @@ job is to absorb it and hand back conclusions.
 ## Inputs
 
 - the **slice** — the flow or entity doc path(s) it covers;
-- the registry `projects:` block (paths, types, stacks);
+- the registry `projects:` block (paths, types, capabilities) and each project's
+  **stack**, which the orchestrator resolves from `.config/vwf.yaml`
+  (`projects.<name>.stack`, defaulting to the type's reference stack) — the
+  registry itself carries none;
 - `docs/blueprint/conventions.md` anchors relevant to the slice;
 - the API contract path(s) the slice references, when any.
 

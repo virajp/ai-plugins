@@ -15,9 +15,9 @@ and sequencing — never in technology. You never invent a goal, metric, or
 priority the user did not confirm.
 
 **Boundary.** This doc is code- **and stack-independent**: no technology,
-framework, project, or screen names. Stacks belong to `architecture.md`;
-surfaces to flow docs. If the user answers with a solution ("we need push
-notifications"), elicit the outcome behind it.
+framework, project, or screen names. Stacks belong to `.config/vwf.yaml`; system
+shape to `registry.yaml`; surfaces to flow docs. If the user answers with a
+solution ("we need push notifications"), elicit the outcome behind it.
 
 ## Doc Path
 

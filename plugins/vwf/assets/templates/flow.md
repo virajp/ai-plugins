@@ -32,9 +32,13 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
      Stack-agnostic and code-independent: name entities, services (by registry
      project name), and operationIds — never queues, libraries, classes, or
-     transports. Section→project mapping resolves via the Project Registry in
-     docs/blueprint/architecture.md (by project `type`). Omit Background Jobs
-     if the registry has no worker. -->
+     transports, and never a product or vendor name (use the prose noun from
+     assets/capability-vocabulary.md — "the datastore", not the database's
+     brand). Section→project mapping resolves via docs/blueprint/registry.yaml
+     (by project `type`). Omit Background Jobs if the registry has no worker.
+
+     DENSITY: budget ~120 lines. Every line must change what plan or execute
+     builds — see the blueprint-authoring density reference. -->
 
 ## Purpose
 
@@ -81,26 +85,38 @@ Serves: [<goal name>](../../../product.md#goal-<slug>)
      `(audit-recorded)`. A step that changes an entity's state must match a
      transition in that entity's Lifecycle table. Steps are the SAME across
      platforms — a platform that cannot perform a step omits the screens for it
-     and says so in its Platforms row; it never forks the journey. -->
+     and says so in its Platforms row; it never forks the journey.
 
-## Consistency boundary
+     ONE LINE PER STEP. A step needing a paragraph is either several steps, or
+     is carrying a guarantee (→ Guarantees), a screen rule (→ the platform file)
+     or a rationale (→ nothing; rationale is not contract). Never restate what a
+     linked doc says — the link is the reference. -->
 
-- Atomic vs eventual, per step group.
+## Guarantees
 
-## Failure handling
+| Step / group | Consistency | On failure | Idempotency |
+| ------------ | ----------- | ---------- | ----------- |
 
-- Compensation / rollback per failure point.
-
-## Idempotency
-
-- Of the flow as a whole and of retried steps.
+<!-- One row per step or step group whose guarantees differ — not one per step.
+     Consistency: atomic | eventual. On failure: the compensation or rollback,
+     or `none — <why safe>`. Idempotency: the key a retry is safe under, or
+     `n/a`. A flow whose whole journey shares one set of guarantees is ONE row
+     covering `all`. Prose belongs here only when a cell genuinely cannot hold
+     the decision. (Format 16 merged the former Consistency boundary / Failure
+     handling / Idempotency sections — they were three one-bullet sections that
+     grew into essays and cross-referenced each other.) -->
 
 ## Diagram
 
 <!-- Every flow carries a mermaid sequenceDiagram of its steps — participants
      are the entities/services named above; the failure/compensation path is an
      alt/else branch. A view of the steps, never the contract: it must not add
-     or contradict them. Code-independent participant names. -->
+     or contradict them. Code-independent participant names.
+
+     Labels are TERMS, not sentences ("cancel order", not "the customer cancels
+     the order before fulfilment, which"). A label carrying a condition the
+     Steps or Guarantees do not is a sign THOSE are incomplete — fix them, not
+     the label. -->
 
 ```mermaid
 sequenceDiagram
@@ -144,5 +160,10 @@ sequenceDiagram
 - [design-system](../../../design-system.md) — for any flow with platform files
 
 ## Open Questions
+
+<!-- ONLY what blocks THIS flow's contract. Anything else — a future feature, a
+     neighbouring flow's behaviour, a scope change — goes to mempalace room
+     `gaps` per the parked-scope rule in assets/elicitation.md, never here.
+     Omit the section entirely when empty. -->
 
 - [ ] item + date

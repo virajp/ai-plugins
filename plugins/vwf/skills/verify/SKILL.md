@@ -44,7 +44,7 @@ stop).
 
 ### 1. Resolve the target
 
-Read the registry (`docs/blueprint/architecture.md`) for the deployed projects
+Read the registry (`docs/blueprint/registry.yaml`) for the deployed projects
 (cloud types: `service`, `worker`, `site`, `console`) and the Acceptance blocks
 of every flow under `docs/blueprint/flows/*/*/index.md`. Resolve each project's
 base URL for the named environment from the **`environments:` block in

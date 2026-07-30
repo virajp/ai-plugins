@@ -32,9 +32,16 @@ answer** AND is **true regardless of how the code is written today**. Everything
 else belongs to `plan` (code-aware realization) or `execute` (mechanical). Read
 **Contract vs realization** first — it is the line the whole skill turns on.
 
+Two bars, not one. Completeness asks *"is this decided?"* and can only ask for
+more; **Density** asks *"does this line change what gets built?"* and is the
+only thing that asks for less. A doc fails review for being long exactly as it
+fails for being thin. Every audience for these docs is an agent that re-reads
+them on every turn — write for that reader, not for a human skimming a spec.
+
 | Topic                                                                                                             | When to read                                                                                                            |
 | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | [Contract vs realization](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/contract-vs-realization.md) | **Read first.** Sorting any decision into blueprint / plan / execute; the code-independence test                        |
+| [Density](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/density.md)                                 | **Read with it.** Per-doc line budgets, the delete test, and the anti-patterns that inflate a contract                  |
 | [Flow contract](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/flow-contract.md)                     | The primary unit: per-flow sections, the screen home rule, jobs, the sequence diagram, acceptance, and `flows/index.md` |
 | [Entity contract](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/entity-contract.md)                 | The slimmed entity: lifecycle, invariants, relationships, `Used by:`, the schema link — and what moved to flows         |
 | [API & schema contracts](${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/api-and-schema-contracts.md) | The YAML artifacts: `schema.yaml` and `apis/<project>.openapi.yaml` bars, path-typing, released-snapshot additive rule  |

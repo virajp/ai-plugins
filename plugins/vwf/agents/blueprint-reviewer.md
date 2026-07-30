@@ -85,8 +85,10 @@ orchestrator passes both. Verify the contract and every platform file:
       `operationId` exists in the `apis/*.openapi.yaml` the orchestrator passed
       (Grep — existence only), where the operation documents its error cases and
       idempotency.
-- [ ] Consistency boundary, failure handling (compensation/rollback), and
-      idempotency are stated; none implied but unlisted.
+- [ ] A **Guarantees** table states consistency, on-failure behaviour, and
+      idempotency for every step group; none implied but unlisted. Separate
+      `## Consistency boundary` / `## Failure handling` / `## Idempotency`
+      sections are pre-format-16 drift — flag them for merging.
 - [ ] The flow carries a mermaid `sequenceDiagram` whose participants are the
       entities/services its steps name, including the failure/compensation
       branch. A missing diagram is a gap; a diagram that adds or contradicts a
@@ -134,8 +136,16 @@ orchestrator passes both. Verify the contract and every platform file:
 - [ ] No realization leaked (code-independence): no file path, class/function
       name, library/framework, queue/transport, CSS, or pixel value — those
       belong in `plan`, not the blueprint.
-- [ ] Section-to-project mappings match the registry; no hardcoded stack names
-      leaked into a generic template.
+- [ ] **No product or vendor name.** The registry carries no stack (format 16),
+      so a named database, cloud platform, SDK, store, or third-party service is
+      a gap: replace it with the prose noun in
+      `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md` ("the datastore",
+      "the payment provider"). The only carve-outs are `environment.md` issuers
+      and `conventions.md#integrations` — neither of which is a flow doc.
+- [ ] Section-to-project mappings match the registry (by project **name** and
+      `type` — the registry has no stack to match against).
+- [ ] **Density** — apply the bars in
+      `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every step, screen, and job
       traces to a **linked product-doc goal** (the Serves line) or a stated
       invariant — flag anything added "just in case". Never flag a surface a
@@ -186,6 +196,11 @@ The doc is `docs/blueprint/entities/<entity>/` — **always** `index.md` +
 - [ ] No placeholder text remains except under Open Questions.
 - [ ] No realization leaked (code-independence): no file path, class/function
       name, library/framework, storage/ORM/index detail, CSS, or pixel value.
+- [ ] **No product or vendor name** — as in flow mode: the prose noun from
+      `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md`, never the
+      product.
+- [ ] **Density** — apply the bars in
+      `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every field, state, and
       relationship traces to a linked flow (the Used-by line) or a stated
       invariant. Never flag a surface a safety guardrail requires.
@@ -203,6 +218,26 @@ entity) doc, a surface written as `N/A — <reason>` is a **pass** for that
 surface's items when the reason holds for the unit (e.g. no `schema.yaml` body
 for a stateless module) — but a bare `N/A` with no reason, or an `N/A`
 contradicted elsewhere in the doc, is a gap.
+
+## Reporting density gaps
+
+Density is the one bar that asks for **less**, so it reports differently from
+the completeness items:
+
+- **One gap per pattern, not per line.** "Steps 1, 3, 7 carry rationale — cut to
+  the decision" is one gap. Never enumerate every sentence.
+- **Name the cut.** A density gap says which lines go and what survives. "Too
+  long" is not actionable; "Purpose ¶2-3 restate the linked goal — keep ¶1" is.
+- **Budget alone is never a gap.** A doc over budget whose every line changes
+  what gets built passes; say so and move on. Report a budget overrun only
+  together with the pattern causing it.
+- **Never propose cutting contract.** Acceptance criteria, failure paths,
+  lifecycle transitions, invariants, authorization rows, audit markers, and
+  `UNRESOLVED:` markers stay at any length. If the only way under budget is
+  through one of those, the doc passes and you say nothing.
+- **Cap it.** At most **three** density gaps per doc, worst first. Density is a
+  ratchet-breaker, not the review's main event — a doc with a real completeness
+  hole and mild padding gets the hole reported first.
 
 ## Return contract
 

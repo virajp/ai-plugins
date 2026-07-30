@@ -12,9 +12,23 @@ Cross-cutting decisions referenced by entity docs. Define once; entity docs link
 to the relevant anchors rather than repeating.
 
 <!-- Maintained by `blueprint`. Mirrors the `cross_cutting` block in
-     docs/blueprint/architecture.md: record the decision here as the canonical
+     docs/blueprint/registry.yaml: record the decision here as the canonical
      contract; the registry holds the one-line selection. Include only the
-     concerns the system actually has; omit the rest. -->
+     concerns the system actually has; omit the rest.
+
+     DENSITY: budget ~60 lines PER ANCHOR. This file is loaded whole every time
+     any doc links one of its anchors, so it is the most expensive doc in the
+     bundle to let grow — in a measured real bundle it reached 1,574 lines.
+     An anchor states the DECISION and the rule that follows from it; it is not
+     a tutorial, a rationale, or a code sample. If an anchor needs more than a
+     screen, the decision underneath it is really several — split it into
+     sibling anchors that docs can link individually, so a doc referencing one
+     rule does not drag in twenty.
+
+     `#integrations` is the ONE anchor that names external services by product
+     name (see assets/capability-vocabulary.md) — it is the reason every other
+     doc can say "the payment provider" and stay true when the provider
+     changes. -->
 
 ## Auth {#auth}
 
@@ -87,7 +101,8 @@ to the relevant anchors rather than repeating.
      `enforcement.rules` waiver in `.config/vwf.yaml` covers one —
      1. All shared schemas live in the common package (under its schema export
         subpaths); no other project defines a shared data schema.
-     2. All Firebase and other third-party integrations go through the common
-        package's wrappers/layers; no other project imports a third-party SDK
-        directly (client-side sign-in is the one allowed exception).
+     2. All third-party integrations go through the common package's
+        wrappers/layers; no other project imports a third-party SDK directly
+        (client-side sign-in is the one allowed exception). Name the providers
+        under #integrations, not here.
      Entity docs link these anchors; the execute reviewers enforce them. -->

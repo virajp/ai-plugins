@@ -46,6 +46,9 @@ Do not read the other references; they cover surfaces that are not yours.
   background jobs, acceptance criteria — and **per platform**, that platform's
   screens with their shared codes, Components blocks, and deviations.
 - **Context** — the relevant `conventions.md` anchors and the registry block.
+  The registry carries **no stack**: never name a language, framework, database,
+  cloud, or vendor in a flow doc — use the prose noun from
+  `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md` ("the datastore").
 - **Update mode** — the existing flow folder to edit in place.
 
 ## What to write

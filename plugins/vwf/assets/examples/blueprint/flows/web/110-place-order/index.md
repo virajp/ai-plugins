@@ -44,24 +44,12 @@ Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
 3. Customer reviews the confirmed order and their past orders — reads
    [Order](../../../entities/order/index.md) via `getOrder`.
 
-## Consistency boundary
+## Guarantees
 
-- Checkout is atomic: the order is committed only once payment authorizes. A
-  declined payment rolls the placement back, so no order persists and the cart
-  is left untouched. Everything after confirmation (fulfilment, notifications)
-  is eventual.
-
-## Failure handling
-
-- Payment declined: the placement transaction rolls back — no `placed` order is
-  retained and the customer's cart is intact for a retry.
-- Provider timeout: treated as a decline for this attempt; a retry with the same
-  `Idempotency-Key` never creates a second order.
-
-## Idempotency
-
-- `placeOrder` carries an `Idempotency-Key` header; a retried submission of the
-  same checkout returns the original order rather than creating a duplicate.
+| Step / group             | Consistency                                             | On failure                                                                                                       | Idempotency                                                        |
+| ------------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 1-3 placement + payment  | atomic — the order commits only once payment authorizes | Declined or provider timeout → placement rolls back, no `placed` order is retained, cart left intact for a retry | `placeOrder` `Idempotency-Key`; a retry returns the original order |
+| 4-5 fulfilment + notices | eventual                                                | Retried by the owning job; the order stays `placed`                                                              | per-job, keyed on the order id                                     |
 
 ## Diagram
 

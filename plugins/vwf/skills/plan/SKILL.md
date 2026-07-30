@@ -38,7 +38,7 @@ it. When a planning decision is genuinely open, elicit it following the
 
 | Doc            | Path                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
-| Registry       | `docs/blueprint/architecture.md`                                                    |
+| Registry       | `docs/blueprint/registry.yaml`                                                      |
 | Conventions    | `docs/blueprint/conventions.md`                                                     |
 | Flow (slice)   | `docs/blueprint/flows/<project>/<NNN>-<flow>/` (`index.md` + `<platform>.md` files) |
 | Entity (slice) | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                           |
@@ -89,7 +89,8 @@ Derive the slice's dependency graph from the blueprint's typed links:
   to a precondition flow; an entity's Relationships links to entities.
 - **Not dependencies:** `Used by:` back-links (they invert the edge and would
   make every pair a cycle) and links to `conventions.md`, `design-system.md`,
-  `product.md`, or `architecture.md` (references, not buildable units).
+  `product.md`, `architecture.md`, or `registry.yaml` (references, not buildable
+  units).
 
 Traverse **transitively**. Prune every reached doc whose frontmatter reads
 `implementation: complete` — and stop traversing through it (its own

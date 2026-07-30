@@ -266,7 +266,8 @@ blueprint is the desired state; the plans are the changes you apply to reach it.
 docs/
 ├── blueprint/                   # the always-current blueprint (desired state)
 │   ├── product.md               # problem, users, measurable goals, slice priority
-│   ├── architecture.md          # system shape + machine-readable Project Registry
+│   ├── registry.yaml            # machine-readable Project Registry (what every command parses)
+│   ├── architecture.md          # system shape, in prose + a diagram (its human view)
 │   ├── design-system.md         # product-wide UX/visual contract (if UI)
 │   ├── conventions.md           # cross-cutting decisions (auth, errors, …)
 │   ├── environment.md           # per-project env-var/secret catalog (names, never values)
@@ -311,11 +312,18 @@ entities and services, the screens and jobs it needs, and the acceptance
 criteria that prove it. Each entity doc is the data contract under those flows
 (`Used by:` links them), with its authoritative shape in `schema.yaml`. Flow and
 entity docs carry an `implementation:` frontmatter stamp the pipeline maintains
-— the blueprint always knows what's built. The **Project Registry** in
-`architecture.md` is a yaml block that `blueprint` and `plan` parse to map a
-flow's sections to the right project by `type` — the command mechanics are
-registry-driven, while the stacks themselves come from the enforced reference
-stacks below (recorded deviations aside).
+— the blueprint always knows what's built. The **Project Registry** is its own
+file, `registry.yaml`, which `blueprint` and `plan` parse to map a flow's
+sections to the right project by `type`; `architecture.md` is the prose view of
+the same facts and no command reads it.
+
+The registry carries **no stack**. Which technology each project is built with
+lives in `.config/vwf.yaml`, defaulting to the enforced reference stack for its
+type (recorded deviations aside). That split is not bookkeeping: it means no
+blueprint-authoring or reviewing surface can see a technology name, so a
+blueprint that mentions your database, cloud, or payment vendor fails review by
+construction. Docs say "the datastore" and "the payment provider", and stay true
+when you swap either.
 
 ## The structure & stacks it enforces
 
@@ -354,9 +362,11 @@ enforcement works:
   written recommendation.
 - **The escape hatch.** An explicit objection is always honored — recorded under
   `enforcement:` in `.config/vwf.yaml` (the vwf config: choice + reason) and
-  never re-asked. The registry keeps describing the system as it *is*; the
-  config records how vwf treats it. The stack table grows through vwf updates,
-  not per-repo improvisation.
+  never re-asked — a stack deviation is recorded as the stack itself, in
+  `.config/vwf.yaml`, so the value and the opt-out are one entry rather than
+  two. The registry keeps describing the system as it *is*; the config records
+  what it is built with and how vwf treats it. The stack table grows through vwf
+  updates, not per-repo improvisation.
 
 Two placement rules ride along with the shape — seeded into each repo's
 `conventions.md` and enforced by the execute reviewers:
@@ -493,9 +503,10 @@ from the [enforced reference stacks](#the-structure--stacks-it-enforces)
 (stated, not offered as a menu; an explicit override becomes an `enforcement:`
 entry in `.config/vwf.yaml`), walks the **product-foundations checklist** (see
 [vwf skills](#vwf-skills) — one accept/adapt/skip question per foundation,
-recorded as cross-cutting tokens), and writes `docs/blueprint/architecture.md`,
-including the machine-readable Project Registry the other commands depend on and
-a system-shape mermaid diagram kept in sync with it. Re-run it any time the
+recorded as cross-cutting tokens), and writes **both**
+`docs/blueprint/registry.yaml` — the machine-readable registry every other
+command depends on — and `docs/blueprint/architecture.md`, its prose view with a
+system-shape mermaid diagram kept in sync with it. Re-run it any time the
 topology changes; it asks only about genuine deltas, never re-eliciting what's
 confirmed.
 
@@ -628,16 +639,38 @@ missing.
 
 A fresh **reviewer subagent** checks each written doc against its completeness
 checklist (flow or entity mode), plus a **code-independence guardrail** that
-flags any file/class/library/CSS leakage, and returns `NO GAPS` or a numbered
-list — gaps loop back to you for the specific open decisions until the doc
-passes. When the worklist empties, a **coherence reviewer** walks every flow
-end-to-end across entities, schemas, and API contracts — the cross-doc gaps
-per-doc review can't see (a step whose state change no lifecycle allows, data no
-schema holds, an operation no contract defines, a breaking change to a released
-API) — and coverage stamps complete only after it returns clean. The blueprint
-is permanent and product-wide; it is never feature-scoped. Renaming or deleting
-a flow or entity triggers an inbound-link reconcile, so no other doc is left
-pointing at a doc that moved.
+flags any file/class/library/CSS leakage or vendor name, and returns `NO GAPS`
+or a numbered list — gaps loop back to you for the specific open decisions until
+the doc passes.
+
+It also enforces **density**, which is the only bar that asks for *less*. A
+completeness checklist can only ever demand more text, so left alone it is a
+ratchet: docs grow until someone notices. Each doc type has a line budget and a
+set of anti-patterns — rationale, revision history ("X was renamed to Y" — git
+records that), restating what a link already says, prose where a table was
+meant, sentence-length diagram labels, Open Questions used as a parking lot —
+and a doc that is long without deciding more fails review exactly as a thin one
+does. The test for any line is whether `plan` or `execute` would do something
+different without it. Contract is never cut to hit a budget: acceptance
+criteria, failure paths, lifecycle transitions, invariants, and authorization
+rows stay at any length.
+
+Docs that are already over budget don't wait for someone to notice. The coverage
+survey counts lines like any other condition, and each over-budget doc becomes a
+worklist entry the sweep clears by dispatching a **condenser** subagent — a
+rewrite that cuts commentary and carries every decision through unchanged.
+Because condensation *decides* nothing, it needs no elicitation: the sweep works
+the queue unattended, and the only things that reach you are the contract holes
+a cut exposes (a guard that lived only in a diagram label, say). A doc whose
+every remaining line is load-bearing is reported as honestly over budget and
+clears — it never holds the coverage stamp hostage. When the worklist empties, a
+**coherence reviewer** walks every flow end-to-end across entities, schemas, and
+API contracts — the cross-doc gaps per-doc review can't see (a step whose state
+change no lifecycle allows, data no schema holds, an operation no contract
+defines, a breaking change to a released API) — and coverage stamps complete
+only after it returns clean. The blueprint is permanent and product-wide; it is
+never feature-scoped. Renaming or deleting a flow or entity triggers an
+inbound-link reconcile, so no other doc is left pointing at a doc that moved.
 
 ### /vwf:mockups
 
@@ -680,46 +713,34 @@ offers this as its design-first option):
 ```
 
 `prompt` writes **one compact wireframe-level design brief per platform**
-(`mobile.md`, `tablet.md`, `auto.md`, …) from the blueprint's context — **the
-files are the deliverable**: you paste each into the canvas chat yourself; vwf
-never runs a brief against the Claude Design MCP, and `prompt` never touches the
-canvas. A brief is **always the flow's full screen blueprint**, regenerated in
-place — never a change note; the canvas reconciles its existing pages against
-the latest brief. The **standing conventions live in the canvas project's own
-CLAUDE.md — and `prompt` generates and maintains its repo-side source**
+(`mobile.md`, `tablet.md`, `auto.md`, …). **The files are the deliverable**: you
+paste each into the canvas chat yourself — vwf never runs a brief against the
+Claude Design MCP. Each brief is always the flow's **full** screen blueprint,
+regenerated in place, never a change note.
+
+The standing conventions don't live in the briefs. They live in the canvas
+project's own CLAUDE.md, whose repo-side source `prompt` also maintains
 (`docs/prompts/screens/<project>/CLAUDE--<platform>.md`, one per pinned design
-project — you set it as the canvas project's CLAUDE.md whenever it's new or
-changed): one interactive page per flow per platform (never static mockups), the
-naming contract, revise-in-place for existing pages, wired navigation with the
-happy path clickable end to end and **stitched into `index--<platform>`** (each
-platform canvas's one index page chaining every flow's happy path in execution
-order — the whole happy-flow mockup, walkable from the index alone), the
-platform's **device-frame layout** (the mobile/tablet frame with the camera
-notch/cutout, a browser frame on desktop, the OS display frame with its template
-constraints in-car), and the **standing tweak set on every frame**: `darkMode`
-(default on), the device `frame` (default on), one tweak per pinned **sad
-state**, and one tweak per pinned **conditional product state** (empty data,
-entity-state variants) — plus stub treatment for out-of-flow screens, the
-product one-liner, and the goal vocabulary from `product.md`. Its generated
-sections are regenerated in place; a **canvas-owned section** holds the
-conventions you discover while designing, preserved across regenerations and
-folded back by `import`. The brief never restates the standing conventions — it
-carries **only the per-flow payload**: the page name (`<flow>--<platform>`, e.g.
-`100-home--mobile`, where `<flow>` is exactly the numbered folder name under
-`docs/blueprint/flows/<project>/` — the sync key `import` matches pages back by,
-one brief per platform file the flow has), a one-line goal, the flow's steps and
-entry points, and each screen — headed by its pinned **code** (`100a`, `100b`,
-…, the frame name on the canvas and the per-screen sync key) — with purpose,
-navigation, form fields + validation timing, its **components and their rules**
-(transcribed from the flow doc's Components block: every element the screen
-displays — text, info, errors, buttons, inputs — with when it's visible or
-clickable, what it does, and its contract-pinned content), and the pinned states
-its tweaks must cover. Nothing that would steer the *visual* design goes in — no
-tokens, type, spacing, or component styling: Claude Design picks the visual
-language up from its Design System project, and the canvas chat is where you
-make the design yours; what a screen shows and how it behaves, though, is
-contract — transcribed, never left to the canvas. Iterate on the canvas as long
-as you like.
+project — set it as the canvas project's CLAUDE.md when it changes): the naming
+contract, one **interactive** page per flow per platform revised in place, the
+happy path clickable end to end and stitched into an `index--<platform>` page
+that chains every flow in execution order, the platform's device frame, and the
+standing tweak set (dark mode, device frame, one tweak per pinned sad and
+conditional state). Its generated sections regenerate; a **canvas-owned
+section** holds what you discover while designing, preserved across
+regenerations and folded back by `import`.
+
+So a brief carries only the per-flow payload: the page name `<flow>--<platform>`
+(`100-home--mobile` — the sync key `import` matches back by), a one-line goal,
+the steps and entry points, and each screen under its pinned **code** (`100a`,
+`100b`, … — the canvas frame name) with its purpose, navigation, form fields and
+validation timing, the **components and their rules** transcribed from the flow
+doc, and the states its tweaks must cover.
+
+Nothing that steers the *visual* design goes in — no tokens, type, spacing, or
+component styling. Claude Design resolves those from its Design System project,
+and the canvas chat is where you make the design yours. What a screen **shows**
+and how it **behaves** is contract, transcribed rather than left to the canvas.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
@@ -824,6 +845,16 @@ What it does, by rule:
   with acceptance criteria; `ux` when it changes screens in a UI project (web
   gets the full screenshot review; Flutter a code-level pass) — each skip
   explicit, never silent.
+- **Loops stop when they stop converging.** A round cap bounds how long a fix
+  loop runs, but it can't tell *converging slowly* from *not converging at all*.
+  Every finding loop also runs under a **convergence guard**: a round that
+  doesn't strictly reduce the finding count, or that resurfaces a finding an
+  earlier round already fixed, ends the loop right there instead of burning the
+  remaining rounds. The residual is recorded as an **oscillation** gap that says
+  so — the loop failed to settle, which is a different problem from a contract
+  that left something open, and points you somewhere different when you go to
+  fix it. A security or breaking-API finding can never become a gap, so if one
+  of *those* stops converging the run pauses for you instead.
 - **No unapproved dependencies.** The coder installs only the third-party
   packages the approved plan names — the plan's approval gate is where you
   consent to each new dependency. One the plan missed is captured as a gap,
@@ -840,7 +871,8 @@ What it does, by rule:
 It **pauses** mid-run only on: a hard halt (no plan/blueprint, a test harness
 that can't run, an unresolvable git conflict); a **resource cap** — context >
 65%, 5-hour > 90%, or 7-day > 80% — where it hands off and stops (resume with
-`/vwf:recall`); a gap that blocks *all* remaining work; or a decision the rules
+`/vwf:recall`); a gap that blocks *all* remaining work; a security or
+breaking-API finding whose fix loop isn't converging; or a decision the rules
 don't cover that is irreversible.
 
 ```mermaid
@@ -855,7 +887,15 @@ flowchart TD
 
 At the final gate it presents everything: per-step commits, coverage, the
 acceptance and ux results, the implementation stamps written, and the
-consolidated gap list. Whatever you decide about the merge, it then offers to
+consolidated gap list. It **reads this back out of the run journal** rather than
+recalling the run — by then the run may have spanned dozens of dispatches, a
+compaction, or a handoff-and-resume, and the journal is the only account that
+survived all three. Each stage execution left a record there when it returned
+(which step, which round, what outcome, and *why* if it was skipped), so round
+counts are counted rather than remembered and a skipped stage is visible as a
+record instead of an absence. If memory was down for part of the run it tells
+you the report is **reconstructed** — you should know whether you're approving a
+record or a recollection. Whatever you decide about the merge, it then offers to
 close each gap at the source — fix the blueprint (`/vwf:blueprint`, which
 re-stamps coverage) or re-derive the plan (`/vwf:plan`) — and reconciles **the
 repo's human docs**: any README/CLAUDE.md claim the landed change falsified is
@@ -1018,14 +1058,14 @@ on the last instead of re-deriving it. It recalls prior decisions and findings
 before working, and persists durable outcomes after. Memory is keyed by your
 project (the **wing**) and split into rooms:
 
-| Room        | Holds                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| `decisions` | design/architecture decisions and the *why*                                    |
-| `problems`  | review and security findings and how they were resolved                        |
-| `planning`  | plan rationale and deferred options                                            |
-| `gaps`      | blueprint/plan holes from execution + points parked as out-of-scope during Q&A |
-| `runs`      | execute's per-plan run journal (what a resumed run reads)                      |
-| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                          |
+| Room        | Holds                                                                                |
+| ----------- | ------------------------------------------------------------------------------------ |
+| `decisions` | design/architecture decisions and the *why*                                          |
+| `problems`  | review and security findings and how they were resolved                              |
+| `planning`  | plan rationale and deferred options                                                  |
+| `gaps`      | blueprint/plan holes from execution + points parked as out-of-scope during Q&A       |
+| `runs`      | execute's per-plan run journal — what a resumed run reads and the final gate renders |
+| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds — except `handoff`/`recall`, which fall back to
@@ -1118,30 +1158,21 @@ they auto-apply and inform how Claude writes and reviews:
 
 - **`product-foundations`** — the twelve foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
-  & operators (two user classes, document-based RBAC,
-  claims-for-account-status-only, no impersonation), observability
-  (OpenTelemetry → Grafana Cloud, trace-correlated logs), audit logs
-  (append-only, privileged + destructive actions), change logs (Keep-a-Changelog
-  → fastlane store metadata, drafted by execute), background processes
-  (sync/async per action; durable → worker, ephemeral → service; ask only on
-  ambiguity), data retention & PII (delete by default, pseudonymised legal-basis
-  retention), notifications, runtime settings (one cached settings doc; flags
-  are settings), rate limiting (endpoint classes, uniform 429), reliability
-  targets (per-service availability/latency SLOs with an error-budget stance),
-  disaster recovery & backup (RPO/RTO per datastore, automated backups, restore
-  drills), and cost guardrails (one budget with alerts, per-service scaling
-  caps, metered expensive operations). `architecture` walks the checklist
-  (accept / adapt / skip per foundation); `blueprint` expands accepted ones into
-  contracts.
+  & operators, observability, audit logs, change logs, background processes,
+  data retention & PII, notifications, runtime settings, rate limiting,
+  reliability targets, disaster recovery & backup, and cost guardrails. Each
+  ships with an opinionated default (e.g. audit logs are append-only over
+  privileged and destructive actions; durable work goes to a worker, ephemeral
+  to a service). `architecture` walks the checklist — accept / adapt / skip per
+  foundation — and `blueprint` expands the accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
-  the blueprint vs `plan`) plus the per-surface completeness bars: the flow
-  contract (steps, screens, jobs, observable acceptance criteria), the entity
-  data contract (lifecycle, relationships, concurrency, `schema.yaml`), and the
-  API/schema bars (OpenAPI + JSON Schema, the released-snapshot additive-only
-  rule) — including the doc-unit doctrine (entity / page / module) and the
-  goal-traceability edges (every flow `Serves:` a product goal; every entity
-  `Used by:` a flow). Auto-applies whenever a `docs/blueprint/` doc is edited
-  (and on `docs/plans/` for frontmatter/link hygiene only).
+  the blueprint vs `plan`), the **density** bars (per-doc budgets, the delete
+  test, the anti-patterns that inflate a contract), and the per-surface
+  completeness bars: the flow contract, the entity data contract, and the
+  API/schema bars including the released-snapshot additive-only rule. Also the
+  doc-unit doctrine and the goal-traceability edges — every flow `Serves:` a
+  product goal, every entity is `Used by:` a flow. Auto-applies on any
+  `docs/blueprint/` edit (and on `docs/plans/` for frontmatter/link hygiene).
 - **`design-system-authoring`** — the UX/visual-contract doctrine (semantic
   tokens, typography, spacing, motion, accessibility, component behaviors,
   anti-patterns, and Terminal UX for products that ship a CLI) behind

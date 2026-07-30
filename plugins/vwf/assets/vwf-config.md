@@ -4,29 +4,40 @@
 workspace topology; submodules never get their own), written by `/vwf:setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
 of the system description**: what the product *is* (projects, types, paths,
-stacks, capabilities) lives in the registry in `docs/blueprint/architecture.md`;
-this file holds only how vwf treats it. Since **blueprint-format 6** it replaces
-the old stamp at `docs/blueprint/.vwf.yml`.
+capabilities) lives in `docs/blueprint/registry.yaml`; this file holds how vwf
+treats it — plus, since **format 10**, the one fact about the product that is
+realization rather than description: each project's **stack**. That lives here
+precisely so no blueprint-authoring or reviewing surface can reach it, which is
+what makes a vendor name in a blueprint doc structurally impossible rather than
+merely discouraged. Since **blueprint-format 6** this file replaces the old
+stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 9)
+## Schema (config_format 10)
 
 ```yaml
-config_format: 9 # this file's own schema version — setup migrates it
-blueprint_format: 14 # the docs/blueprint format stamp
+config_format: 10 # this file's own schema version — setup migrates it
+blueprint_format: 16 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
-  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
+  remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), density/<unit> (over its line budget — cleared by the sweep's condenser pass, or when the condenser reports every remaining line load-bearing), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
 topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
 integrations: true # external integration/secret exists → environment.md required
 
-projects: # per-project NUANCES only — no type/path/stack keys, ever
+projects: # per-project REALIZATION + nuances — no type/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
+    stack: [
+      <language>,
+      <framework>,
+      <...>,
+    ] # format 10: the CONCRETE technology, moved out of the registry so the blueprint is structurally incapable of naming a vendor — no authoring or reviewing surface reads this file. OMIT it to accept the reference stack for the project's `type` (assets/stacks/<type>.md), which is the normal case. An explicit stack that DIFFERS from the reference IS the opt-out record — it replaces the old `enforcement.stacks` entry, so the deviation and its value live in one place instead of two
+    stack_reason: <one
+      line> # required when `stack` deviates from the type's reference stack; omitted when it matches or is absent
     platforms: [
       <target>,
       <...>,
@@ -46,7 +57,7 @@ harness: # workspace-level capability inventory (see the harness contract)
 
 enforcement: # vwf's enforcement opt-outs — moved here from the registry in format 6
   structure: enforced # or { deviated: <choice>, reason: <one line> }
-  stacks: {} # <project>: { choice: <stack>, reason: <one line> }
+  # `stacks:` was retired in format 10 — a stack deviation is now recorded where the stack itself lives, as projects.<name>.stack + stack_reason. A legacy `stacks:` block reads as drift and migrates into those keys.
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
 
 pipeline: # bounded knobs — see the hard floor below
@@ -79,19 +90,19 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 
 ## Semantics — who reads/writes what
 
-| Section              | Written by                                                                                                                                | Read by                                                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| stamp keys           | `setup`                                                                                                                                   | every command's format check                                                      |
-| `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                   |
-| `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                        |
-| `projects.*`         | `setup` / `architecture` (`platforms`, consented); `execute` reconcile                                                                    | `blueprint` (platforms), `design-system` (`cli`), `plan`, the verifiers           |
-| `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`                               |
-| `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                               |
-| `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, the statusline caps hook                                               |
-| `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                          |
-| `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                |
-| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) |
-| `docs_sync`          | the user (hand-edited)                                                                                                                    | the docs-sync step                                                                |
+| Section              | Written by                                                                                                                                | Read by                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                |
+| `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                                             |
+| `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                  |
+| `projects.*`         | `setup` / `architecture` (`platforms` + `stack`, consented); `execute` reconcile                                                          | `blueprint` (platforms **only** — never `stack`), `design-system` (`cli`), `plan`, `execute`, the verifiers |
+| `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`                                                         |
+| `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                         |
+| `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, the statusline caps hook                                                                         |
+| `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                    |
+| `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                          |
+| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory)                           |
+| `docs_sync`          | the user (hand-edited)                                                                                                                    | the docs-sync step                                                                                          |
 
 ## The hard floor (never configurable)
 
@@ -185,3 +196,22 @@ earlier than 65/90/80), never loosen.
   pin becomes `web`. Flow numbers are renumbered by the blueprint migration; the
   entries here are rewritten to match. Readers honor a legacy entry without a
   platform leaf by matching the flow prefix — its presence is `8` drift.
+- **`9 → 10` migration** (performed by `/vwf:setup`, alongside the blueprint
+  `15 → 16` delta): the **stack moves here from the registry**. For each project
+  in the old `architecture.md` Project Registry, compare its `stack:` to the
+  reference stack for its `type` (`assets/stacks/<type>.md`):
+  - **matches the reference** → write nothing. The absent key means "the
+    reference stack", which is the normal case and keeps this file small.
+  - **differs** → write `projects.<name>.stack` with the actual value, and
+    `projects.<name>.stack_reason` taken from the matching legacy
+    `enforcement.stacks.<project>.reason` (or `migrated — reason not recorded`
+    when the legacy entry carried none).
+
+  Then **drop `enforcement.stacks` entirely** — a deviation is now recorded
+  once, where the stack lives, instead of as a value in the registry plus a
+  waiver here. Readers honor a legacy `enforcement.stacks` block as `9` drift
+  and read its `choice` as the project's stack.
+
+  Nothing else reads a stack from the blueprint afterwards: `registry.yaml` has
+  no `stack` key at all, which is what makes a vendor name in a blueprint doc a
+  reviewer failure rather than a matter of authoring discipline.
