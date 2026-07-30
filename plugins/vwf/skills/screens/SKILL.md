@@ -245,6 +245,14 @@ product states pinned where the screen has them).
    Present **one MCQ per delta** — accept (the design is right; the contract
    follows) / reject (the contract stands; the canvas should change) / adapt
    (take part; say which). Batch the verdicts per flow.
+
+   **Scope every question** per §3a of
+   `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. This surface needs it most: an
+   import run walks several flows across several platforms, and "should the
+   sign-out button move?" is a different decision on `app`·`mobile` than on
+   `app`·`auto`. Carry `<project>·<platform>` in the `header` and name the flow
+   and screen **code** in the question text (`020b`), so a delta is unambiguous
+   even when three platforms of one flow are under review together.
 5. **Conventions fold.** Diff each canvas project's CLAUDE.md (step 3) against
    its repo-side `CLAUDE--<platform>.md`. A canvas-side addition — a convention
    discovered while designing, absent from the repo file — gets one MCQ: fold it
