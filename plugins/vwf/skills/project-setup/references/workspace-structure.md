@@ -1,11 +1,15 @@
 # Workspace Structure
 
-The shape and stacks vwf **enforces** for a multi-project product — applied when
-onboarding a new/empty repo, proposed (consent-gated) as a migration for an
-existing repo that does not match. Structure and stacks each carry one escape
-hatch: an explicit user objection is honored and recorded under `enforcement:`
-in `.config/vwf.yaml` (the choice and reason — see the vwf-config asset). A
-recorded deviation is settled — never re-asked or re-proposed.
+The shape vwf **enforces** for a multi-project product — applied when onboarding
+a new/empty repo, proposed (consent-gated) as a migration for an existing repo
+that does not match. Structure carries one escape hatch: an explicit user
+objection is honored and recorded under `enforcement:` in `.config/vwf.yaml`
+(the choice and reason — see the vwf-config asset). A recorded deviation is
+settled — never re-asked or re-proposed.
+
+**Stacks are not enforced.** They are a menu of templates the user picks from —
+see Stack templates below. Structure and stack were one doctrine until
+`config_format` 11 split them; only the structure half remains enforced.
 
 ## The shape
 
@@ -32,7 +36,7 @@ workspace/            # parent repo — vwf lives here
   run here.
 - **backend** is a monorepo: deployable projects under `projects/`, shared
   libraries under `packages/` — tooling per the
-  [monorepo stack](${CLAUDE_PLUGIN_ROOT}/assets/stacks/monorepo.md).
+  [pnpm-turbo repo template](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md).
 - **frontend** is a single-package app repo — mobile apps are never monorepos.
 - Not every project must exist: a product may have no `console`, no `web`, or no
   `frontend` yet. Absence is fine; a project that exists under another layout is
@@ -55,24 +59,36 @@ a written recommendation, per
 A decline is recorded in `.config/vwf.yaml` (`enforcement.structure`) and not
 re-proposed on later runs.
 
-## Reference stacks (enforced)
+## Stack templates (a menu)
 
-Each project type has exactly one reference stack, detailed in its stack doc:
+Each project type has one or more templates under
+`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/`. What ships today:
 
-| Project    | Type       | Reference stack                                | Stack doc                                                   |
-| ---------- | ---------- | ---------------------------------------------- | ----------------------------------------------------------- |
-| `common`   | `packages` | TypeScript · Effect-TS                         | [packages](${CLAUDE_PLUGIN_ROOT}/assets/stacks/packages.md) |
-| `service`  | `service`  | TypeScript · Hono · Effect-TS                  | [service](${CLAUDE_PLUGIN_ROOT}/assets/stacks/service.md)   |
-| `worker`   | `worker`   | TypeScript · Temporal · Effect-TS              | [worker](${CLAUDE_PLUGIN_ROOT}/assets/stacks/worker.md)     |
-| `web`      | `site`     | TypeScript · Astro (SSR) · React               | [site](${CLAUDE_PLUGIN_ROOT}/assets/stacks/site.md)         |
-| `console`  | `console`  | TypeScript · Hono + Effect-TS · React + Refine | [console](${CLAUDE_PLUGIN_ROOT}/assets/stacks/console.md)   |
-| `frontend` | `frontend` | Dart · Flutter                                 | [frontend](${CLAUDE_PLUGIN_ROOT}/assets/stacks/frontend.md) |
+| Type       | Template                                                                                               | Stack                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `packages` | [typescript-effect](${CLAUDE_PLUGIN_ROOT}/assets/stacks/packages/typescript-effect.md)                 | TypeScript · Effect-TS                         |
+| `service`  | [typescript-effect-hono](${CLAUDE_PLUGIN_ROOT}/assets/stacks/service/typescript-effect-hono.md)        | TypeScript · Hono · Effect-TS                  |
+| `worker`   | [typescript-effect-temporal](${CLAUDE_PLUGIN_ROOT}/assets/stacks/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
+| `site`     | [typescript-astro-react](${CLAUDE_PLUGIN_ROOT}/assets/stacks/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
+| `console`  | [typescript-hono-refine](${CLAUDE_PLUGIN_ROOT}/assets/stacks/console/typescript-hono-refine.md)        | TypeScript · Hono + Effect-TS · React + Refine |
+| `frontend` | [dart-flutter](${CLAUDE_PLUGIN_ROOT}/assets/stacks/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
+| repo-level | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md)                                   | pnpm · Turborepo                               |
 
-The stacks are **fixed, not defaults**: state them (from the stack docs), do not
-elicit alternatives. The escape hatch: an explicit user objection is honored —
-record the stack they name plus an `enforcement.stacks` entry in
-`.config/vwf.yaml`. The table is what vwf ships today; more options arrive by
-extending vwf, not by per-repo improvisation.
+**One entry per type is not a default.** `/vwf:architecture` presents the menu
+for the project's type and the user picks, always — plus an **other (describe)**
+option that records `template: custom` and the axes they give. A stack matching
+no template is a normal answer: there is no deviation, no `enforcement` entry,
+and nothing to justify.
+
+Each template's frontmatter carries the four axes (`languages` /
+`optional_languages` / `frameworks` / `dependencies`) that land in
+`.config/vwf.yaml` and that `/vwf:doctor` checks the repo against; its prose
+carries the layout, testing and deployment conventions `plan` and `execute`
+read. Languages come from the closed vocabulary in
+[stack-vocabulary](${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md).
+
+Adding a stack option means **adding a template file** — a new slug under the
+type's directory. Nothing else changes.
 
 `console` is the **operator/back-office control panel** — the internal,
 privileged counterpart to `web`, and the **sole holder of admin capabilities**

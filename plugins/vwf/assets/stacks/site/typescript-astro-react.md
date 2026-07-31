@@ -1,4 +1,13 @@
-# Web (site) — Reference Stack
+---
+type: site
+name: TypeScript · Astro (SSR) · React
+languages: [ typescript ]
+optional_languages: []
+frameworks: [ astro, react, effect ]
+dependencies: [ tailwindcss, radix-ui, vitest ]
+---
+
+# Web (site) — TypeScript · Astro (SSR) · React
 
 `web` is the public website: an [Astro](https://astro.build) **SSR** app (server
 output on the Node adapter) with [React](https://react.dev) islands for the

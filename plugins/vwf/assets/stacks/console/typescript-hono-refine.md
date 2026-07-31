@@ -1,4 +1,13 @@
-# Console — Reference Stack
+---
+type: console
+name: TypeScript · Hono + Effect · React + Refine
+languages: [ typescript ]
+optional_languages: []
+frameworks: [ hono, effect, react, refine ]
+dependencies: [ ant-design, vite ]
+---
+
+# Console — TypeScript · Hono + Effect · React + Refine
 
 `console` is the internal admin panel used by the product's operators. It is a
 single Hono application that serves both the operator API and an embedded web

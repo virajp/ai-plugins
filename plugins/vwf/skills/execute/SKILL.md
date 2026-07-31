@@ -223,12 +223,14 @@ silently if mempalace is unavailable.
 
 ## Setup
 
-1. **LSP check (interactive — the user is still present at invocation).**
-   Identify the plan's primary language(s) from each project's **stack** —
-   `.config/vwf.yaml` `projects.<name>.stack`, defaulting to the reference stack
-   for the registry `type` (`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`) —
-   and check active LSP plugins (`claude plugin list --scope project`). If a
-   language's LSP server is missing, ask and **wait**:
+1. **Preflight (interactive — the user is still present at invocation).** Run
+   `/vwf:doctor` scoped to the plan's projects. It reads each project's
+   `stack.languages` from `.config/vwf.yaml` and checks LSP servers, toolchains,
+   manifests, and the harness.
+
+   **Gate on the LSP findings only** — everything else doctor reports is noted
+   and carried into the run's gap list, not blocked on. If a language's LSP
+   server is missing, ask and **wait**:
 
    > "No LSP server detected for `<language>`. Without it, type errors may not
    > surface until runtime. Continue without LSP?"
@@ -236,6 +238,9 @@ silently if mempalace is unavailable.
    - **Yes** → proceed. **No** → halt; install via `/plugin` (Discover) then
      retry. On a **resumed** run, don't re-ask — note it as a gap (degraded
      type-safety) and continue.
+   - A language doctor reports as **unavailable** (no LSP ships in this
+     marketplace) or **unknown** is not a gate — there is nothing to install.
+     Note it as a gap and proceed.
 
 2. **Worktree.** Invoke `/vwf:git-workflow` to create the dedicated worktree,
    passing the declared preferences (isolate without prompting; commit-only, no

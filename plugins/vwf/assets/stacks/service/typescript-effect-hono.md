@@ -1,4 +1,13 @@
-# Service — Reference Stack
+---
+type: service
+name: TypeScript · Hono · Effect
+languages: [ typescript ]
+optional_languages: []
+frameworks: [ effect, hono ]
+dependencies: [ temporal-client, opentelemetry, vitest ]
+---
+
+# Service — TypeScript · Hono · Effect
 
 `service` is the public API: a [Hono](https://hono.dev) +
 [Effect](https://effect.website) REST server, deployed as one Cloud Run service.

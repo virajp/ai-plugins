@@ -121,7 +121,7 @@ a time, gathering for each:
 | `platforms`    | Multi-select (UI projects) — see Platforms below                              |
 
 Since format 16 the registry has **no `stack` field**: the concrete technology
-is realization, recorded in `.config/vwf.yaml` (see Reference stacks below). The
+is realization, recorded in `.config/vwf.yaml` (see the stack menu below). The
 registry describes what the system *is*; config records what it is *built with*.
 
 Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
@@ -146,20 +146,34 @@ vocabulary names form factors, not vendors — `mobile` already hides iOS/Androi
 so `auto` hides CarPlay/Android Auto the same way. These platforms decide which
 `<platform>.md` files a flow may carry, and the `/vwf:screens` design briefs.
 
-**Reference stacks are enforced — and live in config, not the registry.** Every
-project type has a reference stack doc at
-`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`. Read it, state that stack, and
-**write nothing**: an absent `projects.<name>.stack` in `.config/vwf.yaml` means
-"the reference stack for this type", which is the normal case.
+**The stack is a menu — elicited, and it lives in config, not the registry.**
+Each project type has one or more templates under
+`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/`. Present them for the project's
+`type` as one elicitation round (per `assets/elicitation.md` — one decision, the
+menu plus an **other (describe)** option), and record the answer as the
+structured `projects.<name>.stack` block in `.config/vwf.yaml` (per the
+vwf-config asset). **Always write it**, for every project: the block is what
+`/vwf:doctor` checks the repo against, and it cannot check what was never
+recorded.
 
-The escape hatch: if the user explicitly objects, honor the stack they name and
-record it yourself as `projects.<name>.stack` **plus** `stack_reason` in
-`.config/vwf.yaml` (per the vwf-config asset). That single entry is both the
-value and the opt-out record — format 10 retired `enforcement.stacks`, which
-split one decision across two places. A recorded deviation is settled; never
-re-litigate it on update runs. In update mode, a project built on a stack that
-differs from its type's reference **without** a config entry is a delta to
-raise: align it or record it.
+vwf ships no default and marks no template recommended. Picking a template fills
+the four axes from its frontmatter; **other (describe)** records
+`template: custom` and the axes the user gives. `languages` must come from the
+closed vocabulary in `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md` — offer
+the nearest token when the user names something outside it, and record it
+verbatim only if they insist (doctor will flag it as unknown, which is the
+honest outcome).
+
+There is nothing to justify: a stack matching no template is a normal answer,
+not a deviation, and gets **no** `enforcement` entry. Use the optional `note`
+only when the reason isn't obvious from the template name. A recorded stack is
+settled — never re-litigate it on update runs. In update mode, a project whose
+manifest has clearly moved away from its recorded stack is a delta to raise:
+align the config or ask.
+
+Elicit the **repo-level** `repo.stack` block the same way, once, from
+`${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/` — filtered to templates whose
+`topologies` include this repo's.
 
 The stack never reaches `docs/blueprint/`. That is not a convention the authors
 have to keep — it is what the registry's shape enforces, and it is why a flow
@@ -228,10 +242,10 @@ The `architecture-writer` agent writes **both** files directly — the registry
 (authoritative) and the prose doc (its view) — and returns a change summary. Do
 not pass either file back through this session.
 
-**Write the stack yourself**, not through the writer: for any project whose
-stack deviates from its type's reference, set `projects.<name>.stack` and
-`stack_reason` in `.config/vwf.yaml`. The writer never touches config, and never
-sees a stack — that separation is what keeps the blueprint vendor-free.
+**Write the stack yourself**, not through the writer: set the structured
+`projects.<name>.stack` block in `.config/vwf.yaml` for **every** project, plus
+the repo-level `repo.stack`. The writer never touches config, and never sees a
+stack — that separation is what keeps the blueprint vendor-free.
 
 ---
 
@@ -271,11 +285,12 @@ Once the writes are confirmed, read both yourself. Check:
 
 - Every `depends_on` entry names a real project in the `projects:` list (no
   dangling reference).
-- Every `projects.<name>.stack` in `.config/vwf.yaml` names a real registry
-  project and, when it deviates from its type's reference stack, carries a
-  `stack_reason`. A legacy `enforcement.stacks` block is config-format-9 drift —
-  migrate it into those keys. Every `enforcement.rules` entry names a known rule
-  and carries a reason.
+- Every registry project has a `projects.<name>.stack` block in
+  `.config/vwf.yaml` — the block is mandatory since config-format 11, and every
+  `languages` token comes from the closed vocabulary
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). A flat list, an absent
+  block, or a legacy `enforcement.stacks` block is drift — migrate it. Every
+  `enforcement.rules` entry names a known rule and carries a reason.
 - No dependency cycle: the `depends_on` edges form a DAG.
 
 **On a finding:** surface it to the user, ask for the missing information, then

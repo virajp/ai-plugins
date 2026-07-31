@@ -1,4 +1,13 @@
-# Worker — Reference Stack
+---
+type: worker
+name: TypeScript · Temporal · Effect
+languages: [ typescript ]
+optional_languages: []
+frameworks: [ effect, temporal ]
+dependencies: [ opentelemetry, vitest ]
+---
+
+# Worker — TypeScript · Temporal · Effect
 
 `worker` is the durable background processor: a [Temporal](https://temporal.io)
 worker with [Effect](https://effect.website) inside activities, deployed as one

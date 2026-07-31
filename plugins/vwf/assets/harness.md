@@ -47,8 +47,8 @@ harness:
 ## Provision & repair
 
 - **New/empty repos** — `/vwf:setup` scaffolds the harness as part of the
-  enforced workspace structure (it is part of the reference stacks), in the same
-  consent-gated migration plan.
+  enforced workspace structure (the selected stack templates describe it), in
+  the same consent-gated migration plan.
 - **Existing repos** — `/vwf:plan` runs a **harness preflight**: read the stamp,
   re-verify just the capabilities this slice's gates will need (the repo may
   have changed since stamping), and **inject a bootstrap step** into the plan

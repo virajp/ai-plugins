@@ -1,4 +1,13 @@
-# Frontend — Reference Stack
+---
+type: frontend
+name: Dart · Flutter
+languages: [ dart ]
+optional_languages: [ kotlin, swift ]
+frameworks: [ flutter ]
+dependencies: [ firebase, intl ]
+---
+
+# Frontend — Dart · Flutter
 
 `frontend` is the on-device app: **Dart · [Flutter](https://flutter.dev)**, a
 single-package repo (mobile apps are never monorepos) living as its own
