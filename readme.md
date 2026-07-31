@@ -452,7 +452,7 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
 | `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
 | `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
-| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, stamps                        |
+| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, stamps             |
 | `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                  |
 | `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests the claude.ai/design review chat) |
 | `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                         |

@@ -272,8 +272,8 @@ run diffs against, and how every vwf command operates in this repo:
 
 **Write the mempalace config.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`,
 write a `mempalace.yaml` to **each repo root** — the parent and every submodule
-— all naming the single confirmed `memory.wing`. Seed the five rooms this
-protocol writes to (`handoff`, `decisions`, `problems`, `gaps`, `runs`), then
+— all naming the single confirmed `memory.wing`. Seed all seven protocol rooms
+(`decisions`, `problems`, `planning`, `gaps`, `runs`, `doctor`, `handoff`), then
 add path-derived rooms per repo from its actual top-level directories. Give the
 parent `exclude_patterns` for the submodule paths so a root mine does not
 double-file their contents.

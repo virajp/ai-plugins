@@ -3,7 +3,8 @@ name: doctor
 description: Check that the repo actually matches what .config/vwf.yaml declares
   — per-language
   LSP servers and toolchains, each project's frameworks and dependencies against
-  its manifest, the harness task names, health endpoints, and format-stamp drift.
+  its manifest, the harness task names, health endpoints, the mempalace wing and
+  room set, and format-stamp drift.
   Reports; never writes without consent. Run it after setup, before execute, or
   any time the repo and the config might have drifted apart.
 argument-hint: "[project ...]"
@@ -30,6 +31,8 @@ project in the registry.
 | Stack vocabulary | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`     |
 | Stack templates  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/<slug>.md` |
 | Harness contract | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`              |
+| Memory protocol  | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`               |
+| mempalace config | `mempalace.yaml` (one per repo — parent + submodules)  |
 | Format stamp     | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`        |
 
 ## Hard Rules
@@ -58,6 +61,12 @@ Note each project's `type` (registry) and `stack` block (config). A project the
 registry declares with **no `stack` block** is a finding in itself
 (`config_format` 10 drift — the block is mandatory since 11); report it, nudge
 `/vwf:setup`, and check what you can from its type's templates meanwhile.
+
+**Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall room `doctor`
+for this repo's prior findings. Anything still present that a previous run
+already reported is marked **known** in §8 rather than presented as new — the
+same treatment `/vwf:verify` gives a criterion it already knows is failing. Skip
+silently if mempalace is unavailable; §7 then reports the outage itself.
 
 ### 2. Stamps
 
@@ -127,16 +136,57 @@ defaulting to `/health`) is actually registered in that project's routing. Do
 this by reading the routing surface, not by making a request — doctor never
 starts a server or calls a deployed environment; that is `/vwf:verify`'s job.
 
-### 7. Report
+### 7. Memory config (mempalace)
+
+The room vocabulary is a **closed set of seven** and mempalace creates a room
+implicitly on first write — so a mistyped room name never errors, it just makes
+every later recall come back empty. Nothing else in vwf catches that; this
+section is where it gets caught. Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`,
+check:
+
+- **A `mempalace.yaml` at every repo root** — the parent and each submodule.
+  Missing → finding; that repo's files are never mined.
+- **One wing across all of them**, equal to `memory.wing` in `.config/vwf.yaml`
+  (or `product.name` when the key is absent). A file naming a different wing is
+  the highest-value finding here: writes and recalls silently address different
+  palaces, and nothing else would ever surface it.
+- **All seven protocol rooms present** in each file — `decisions`, `problems`,
+  `planning`, `gaps`, `runs`, `doctor`, `handoff`. Report a missing one as
+  drift; report a room whose name is a **near-miss** of a protocol room
+  (`decision`, `run`, `handoffs`) as its own finding, since that is the typo
+  case the closed set exists to catch.
+- **No shadowing keyword** — routing walks path parts outermost-first and
+  returns on the first match, so a room keyed on a directory that contains
+  another room's path swallows it (`documentation` keyed on `docs` captures
+  `docs/handoffs/` before `handoff` is tested). Flag every such pair.
+- **The parent's `exclude_patterns`** covers each submodule path, or the parent
+  mine double-files their contents into the shared wing.
+- **Cross-repo room-name collisions** where the same name means different things
+  (a backend `configuration` of `deploy/` versus a frontend `configuration` of
+  `config/`). The wing is shared, so those merge into one room. Report as drift
+  to reconcile — not an error; merging `documentation` is usually right.
+
+If the mempalace server itself is unreachable, still check the **files** (they
+are on disk) and report the outage as context, not as a finding.
+
+### 8. Report & persist
 
 One table, findings first, grouped by kind — **drift** (config and repo
 disagree), **missing** (something declared has no install), **unavailable**
-(nothing shipped here to install), **unknown** (outside the vocabulary). State
-the count of checks that passed rather than listing them.
+(nothing shipped here to install), **unknown** (outside the vocabulary). Mark
+anything the §1 recall already carried as **known**, so a repeat run reads as a
+diff rather than a re-accusation. State the count of checks that passed rather
+than listing them.
 
 Close with the remedies, each as a runnable line, and offer to apply only the
-ones that are pure config edits (a stale `stack` entry, a harness task rename).
-Anything that installs, or that changes code, is reported and left to the user.
+ones that are pure config edits (a stale `stack` entry, a harness task rename, a
+missing room in a `mempalace.yaml`). Anything that installs, or that changes
+code, is reported and left to the user.
+
+**Persist.** File this run's findings to room `doctor` — one compressed line per
+finding per the memory asset's AAAK style, plus what was fixed if the user
+accepted a remedy. That is what lets the next run say **known**. Skip silently
+if mempalace is unavailable.
 
 **Callers.** `/vwf:setup` step 10 runs this over the whole repo and records what
 it finds. `/vwf:execute` runs it scoped to the plan's projects and gates on the
