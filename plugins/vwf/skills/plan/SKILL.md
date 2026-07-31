@@ -185,8 +185,8 @@ that has platform files and any of them is **not** listed under
 `<project>/<NNN>-<flow>/<platform>` (or the block is absent — a legacy
 `flows_pushed` key, or an entry without a platform leaf, read as drift), note it
 for the §8 gate naming the unrendered platforms: those screens have no current
-visual render — offer `/vwf:mockups <flow>` (a local scratchpad render), or
-`/vwf:screens import <flow>` when a
+visual render — recommend the user run `/vwf:mockups <flow>` (a local scratchpad
+render), or `/vwf:screens import <flow>` when a
 `docs/prompts/screens/<project>/<NNN>-<flow>/` brief has a design session
 pending, before approving. Advisory only: planning and approval proceed
 regardless (neither is ever a gate here).

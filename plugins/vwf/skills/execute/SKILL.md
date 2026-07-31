@@ -389,9 +389,10 @@ later cycle's recall sees it as closed.
 
 ## Archive
 
-After a merge with no open gaps, offer to archive the completed plan via
-`/vwf:archive`. While gaps remain open, don't offer it — the plan doc is still
-the working record of what needs reconciling.
+After a merge with no open gaps, **tell the user to run `/vwf:archive`** to
+retire the completed plan. `/vwf:archive` is user-only — you cannot invoke it,
+so recommend it by name and stop there. While gaps remain open, don't recommend
+it — the plan doc is still the working record of what needs reconciling.
 
 **Chain forward.** Scan the active plans under `docs/plans/` for any whose
 `requires:` frontmatter lists the plan just completed. If one is now unblocked

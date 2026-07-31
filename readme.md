@@ -459,6 +459,16 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                     |
 | `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
 
+**Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
+carry `disable-model-invocation: true`, so Claude never fires them on its own;
+you decide when a migration, a post-deploy check, a re-render, a plan retirement
+or a session resume happens. The rest stay model-invocable because the workflow
+**delegates to them by name** — `recall` resumes a paused run *through*
+`blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`, and
+`setup` orchestrates `product`/`architecture`/`design-system`/`doctor`. Marking
+one of those user-only would silently break the chain: the flag blocks
+programmatic invocation, not just auto-triggering.
+
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
 `blueprint`, `plan`, and `execute` (the only unattended command), plus the

@@ -8,6 +8,10 @@ description: The foundational concerns every product must decide — users &
   /vwf:architecture (the foundations checklist) and /vwf:blueprint (expanding
   accepted foundations into contracts); read the reference matching the
   foundation being decided or expanded.
+user-invocable: false
+paths:
+  - "docs/blueprint/architecture.md"
+  - "docs/blueprint/conventions.md"
 ---
 
 # Product Foundations

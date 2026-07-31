@@ -7,7 +7,7 @@ description: Onboard a repo into vwf's format and keep it current — detect or 
   migrates when the vwf format evolves.
 model: sonnet
 effort: high
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # setup — Onboard & Keep a Repo in vwf Format

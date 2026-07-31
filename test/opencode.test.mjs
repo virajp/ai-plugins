@@ -120,22 +120,30 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   ]);
   assert.equal(res.status, 0, res.stderr || res.stdout);
 
-  // Skills + assets landed under virajp-plugins/vwf. vwf's skills are all
-  // model-invocable (disable-model-invocation: false), so they stay under
-  // skills/ where OpenCode's **/SKILL.md discovery lists them — no commands/
-  // segregation.
+  // Skills + assets landed under virajp-plugins/vwf. Model-invocable skills
+  // (disable-model-invocation: false) stay under skills/ where OpenCode's
+  // **/SKILL.md discovery lists them.
   const vwfDir = join(configDir, "virajp-plugins", "vwf");
   assert.ok(existsSync(join(vwfDir, "skills", "blueprint", "SKILL.md")));
-  assert.ok(!existsSync(join(vwfDir, "commands")));
   assert.ok(
     existsSync(join(vwfDir, "skills", "blueprint-authoring", "SKILL.md")),
   );
   // User-only workflow skills (disable-model-invocation: true) ARE segregated
-  // to commands/<n>/index.md, outside skill discovery — markdown's readme
-  // skill (a vwf dep) exercises that path.
+  // to commands/<n>/index.md, outside skill discovery. vwf has five: setup,
+  // verify, mockups, archive, recall — nothing delegates to them, so blocking
+  // programmatic invocation costs nothing.
+  for (const s of ["setup", "verify", "mockups", "archive", "recall"]) {
+    assert.ok(
+      existsSync(join(vwfDir, "commands", s, "index.md")),
+      `${s} segregated to commands/`,
+    );
+    assert.ok(!existsSync(join(vwfDir, "skills", s)), `${s} not under skills/`);
+  }
+  // markdown's readme is model-invocable — /vwf:setup orchestrates it — so it
+  // stays a skill and gets no commands/ entry.
   const mdDir = join(configDir, "virajp-plugins", "markdown");
-  assert.ok(existsSync(join(mdDir, "commands", "readme", "index.md")));
-  assert.ok(!existsSync(join(mdDir, "skills", "readme")));
+  assert.ok(existsSync(join(mdDir, "skills", "readme", "SKILL.md")));
+  assert.ok(!existsSync(join(mdDir, "commands")));
   assert.ok(existsSync(join(vwfDir, "assets", "templates", "entity.md")));
   assert.ok(existsSync(join(vwfDir, ".version")));
   // Claude-only surfaces are not rendered.
@@ -184,14 +192,24 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
   assert.ok(blueprint.includes(vwfDir), "rewritten refs point at install dir");
 
   // Command wrappers exist exactly for the disable-model-invocation skills:
-  // vwf has none, markdown's readme gets one.
+  // vwf's five user-only workflow skills, and nothing else.
   const commandDir = join(configDir, "command");
   const wrappers = readdirSync(commandDir);
-  assert.deepEqual(wrappers.filter(f => f.startsWith("vwf-")), []);
-  assert.ok(wrappers.includes("markdown-readme.md"));
-  // Model-invocable skills get no wrapper.
+  assert.deepEqual(
+    wrappers.filter(f => f.startsWith("vwf-")).sort(),
+    [
+      "vwf-archive.md",
+      "vwf-mockups.md",
+      "vwf-recall.md",
+      "vwf-setup.md",
+      "vwf-verify.md",
+    ],
+  );
+  // Model-invocable skills get no wrapper — including markdown's readme, which
+  // /vwf:setup must be able to invoke.
+  assert.ok(!wrappers.includes("markdown-readme.md"));
   assert.ok(!wrappers.includes("markdown-documentation-standards.md"));
-  const wrapper = readFileSync(join(commandDir, "markdown-readme.md"), "utf8");
+  const wrapper = readFileSync(join(commandDir, "vwf-setup.md"), "utf8");
   assert.ok(wrapper.includes("$ARGUMENTS"));
   assert.ok(wrapper.startsWith("---\ndescription:"));
 

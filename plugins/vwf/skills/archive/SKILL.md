@@ -6,7 +6,7 @@ description: Move completed cycle plans out of the active set into
 argument-hint: "[plan-file]"
 model: haiku
 effort: low
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # archive — Retire Completed Plans
