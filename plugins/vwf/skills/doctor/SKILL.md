@@ -4,7 +4,7 @@ description: Check that the repo actually matches what .config/vwf.yaml declares
   — per-language
   LSP servers and toolchains, each project's frameworks and dependencies against
   its manifest, the harness task names, health endpoints, the mempalace wing and
-  room set, and format-stamp drift.
+  room set, the graphify CLI/graph/hook, and format-stamp drift.
   Reports; never writes without consent. Run it after setup, before execute, or
   any time the repo and the config might have drifted apart.
 argument-hint: "[project ...]"
@@ -24,23 +24,27 @@ project in the registry.
 
 ## Doc Paths
 
-| Doc              | Path                                                   |
-| ---------------- | ------------------------------------------------------ |
-| vwf config       | `.config/vwf.yaml`                                     |
-| Registry         | `docs/blueprint/registry.yaml`                         |
-| Stack vocabulary | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`     |
-| Stack templates  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/<slug>.md` |
-| Harness contract | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`              |
-| Memory protocol  | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`               |
-| mempalace config | `mempalace.yaml` (one per repo — parent + submodules)  |
-| Format stamp     | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`        |
+| Doc               | Path                                                   |
+| ----------------- | ------------------------------------------------------ |
+| vwf config        | `.config/vwf.yaml`                                     |
+| Registry          | `docs/blueprint/registry.yaml`                         |
+| Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`     |
+| Stack templates   | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/<slug>.md` |
+| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`              |
+| Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`               |
+| mempalace config  | `mempalace.yaml` (one per repo — parent + submodules)  |
+| Graphify protocol | `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`             |
+| Knowledge graph   | `graphify-out/graph.json` (workspace root)             |
+| Format stamp      | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`        |
 
 ## Hard Rules
 
 - **Read-only by default.** Every fix is offered, never applied unprompted, and
   each is its own consent — never a batch "fix all".
-- **Never install anything.** Report the command; the user runs it. This matches
-  the installer CLI's own rule and keeps doctor safe to run anywhere.
+- **Never install anything, and never build anything.** Report the command; the
+  user runs it. This matches the installer CLI's own rule and keeps doctor safe
+  to run anywhere — and it is why §8 never triggers a graph build, which is a
+  long LLM-driven job reserved for `/vwf:setup`.
 - **Unavailable ≠ missing.** A language with no LSP shipped in this marketplace
   is reported as *unavailable* with no suggested command. Only a language that
   *has* a plugin and isn't installed is a finding.
@@ -64,7 +68,7 @@ registry declares with **no `stack` block** is a finding in itself
 
 **Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall room `doctor`
 for this repo's prior findings. Anything still present that a previous run
-already reported is marked **known** in §8 rather than presented as new — the
+already reported is marked **known** in §9 rather than presented as new — the
 same treatment `/vwf:verify` gives a criterion it already knows is failing. Skip
 silently if mempalace is unavailable; §7 then reports the outage itself.
 
@@ -169,14 +173,44 @@ check:
 If the mempalace server itself is unreachable, still check the **files** (they
 are on disk) and report the outage as context, not as a finding.
 
-### 8. Report & persist
+### 8. Code intelligence (graphify)
+
+Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, graphify is vwf's
+code-intelligence layer: `plan`'s surveyor, the code/security reviewers, the
+coder, `architecture`, `feedback` and docs-sync all orient graph-first. None of
+them **gates** on it — every one falls back to Read/Grep/Glob — so everything
+here is reported as a **degradation**, never a blocker. Check:
+
+- **The `graphify` CLI on `PATH`.** Missing → finding, remedy
+  `mise use -g pipx:graphifyy@latest` (the double-`y` is the real package name,
+  not a typo). This is *missing*, not *unavailable* — there is a command to
+  suggest.
+- **A graph at the workspace root** (`graphify-out/graph.json`). Resolve it the
+  way the asset does: current checkout first, then the **main checkout** via
+  `git rev-parse --git-common-dir`, since vwf runs in worktrees where the
+  untracked `graphify-out/` does not exist. Absent in both → finding, remedy
+  `/vwf:setup` (the only command that builds one, behind consent).
+- **The post-commit refresh hook** (`graphify hook install`). Without it the
+  graph freezes at whatever commit last rebuilt it and silently decays into
+  wrong answers — worse than no graph, because nothing signals staleness.
+- **Staleness.** Compare `graph.json`'s mtime to the last commit date of the
+  checkout that holds it. Behind → report how far, with `graphify update` as the
+  remedy for the user to run.
+
+**Never build or refresh a graph.** `/graphify`, `graphify extract` and
+`graphify update` are long, LLM-driven builds; the asset reserves them for
+`/vwf:setup` behind explicit consent. Doctor reports and stops — offering to run
+one here would turn a read-only check into a multi-minute job nobody asked for.
+
+### 9. Report & persist
 
 One table, findings first, grouped by kind — **drift** (config and repo
 disagree), **missing** (something declared has no install), **unavailable**
-(nothing shipped here to install), **unknown** (outside the vocabulary). Mark
-anything the §1 recall already carried as **known**, so a repeat run reads as a
-diff rather than a re-accusation. State the count of checks that passed rather
-than listing them.
+(nothing shipped here to install), **unknown** (outside the vocabulary),
+**degraded** (something optional is absent and a fallback is carrying the work).
+Mark anything the §1 recall already carried as **known**, so a repeat run reads
+as a diff rather than a re-accusation. State the count of checks that passed
+rather than listing them.
 
 Close with the remedies, each as a runnable line, and offer to apply only the
 ones that are pure config edits (a stale `stack` entry, a harness task rename, a
