@@ -58,15 +58,71 @@ the plugin, including its skills, stays installed. The toggle is per project.
 Confirm with `/mcp` that exactly **one** mempalace server is connected.
 
 **Keeping it alive.** The property that matters is restart-on-crash, since a
-dead daemon is the failure you are trying to design out:
+dead daemon is the failure you are designing out. Docker gives it with one key
+(`restart: unless-stopped`); `launchd` gives it on macOS with `KeepAlive`;
+[pitchfork](https://pitchfork.jdx.dev) has the nicest ergonomics (`run` / `list`
+/ `logs` / `stop`) but its quickstart documents **no supervision**, and its
+shell hook starts daemons on *directory entry* — the wrong shape for an
+always-on service, so verify before relying on it. Upstream also ships
+`deploy/mempalace-server.service` for systemd (Linux only).
 
-| Option                                 | Restart on crash               | Notes                                                                                                                                                                                                                                 |
-| -------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `launchd` (macOS)                      | yes, with `KeepAlive`          | Lightest native option; no extra runtime                                                                                                                                                                                              |
-| Docker                                 | yes, `restart: unless-stopped` | Upstream ships `deploy/docker-compose.server.yml`, but it is **team mode** — Qdrant, `0.0.0.0`, bearer token. Trim it for a local single-user bind                                                                                    |
-| [pitchfork](https://pitchfork.jdx.dev) | **unverified**                 | Great ergonomics (`pitchfork run` / `list` / `logs` / `stop`), but its quickstart documents no supervision, and its shell hook starts daemons on *directory entry* — wrong shape for an always-on service. Check before relying on it |
+### Docker (local, single user)
 
-Upstream also ships `deploy/mempalace-server.service` for systemd (Linux only).
+Upstream's `deploy/docker-compose.server.yml` is **team mode** — Qdrant,
+`0.0.0.0`, bearer token. Solo and local, none of that is needed:
+
+```yaml
+services:
+  mempalace:
+    image: ghcr.io/mempalace/mempalace:latest
+    restart: unless-stopped
+    command: [ serve, --host, "0.0.0.0", --port, "8765", --allow-insecure ]
+    ports:
+      - "127.0.0.1:8765:8765" # loopback only — unreachable off this host
+    volumes:
+      - ${HOME}/.mempalace:/data/.mempalace # the existing palace
+      - mempalace-cache:/data/.cache # embedding model, else re-downloads
+    healthcheck:
+      test: [
+        CMD,
+        python,
+        -c,
+        "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8765/healthz').read().strip()==b'ok' else sys.exit(1)",
+      ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  mempalace-cache:
+```
+
+Three things that are easy to get wrong:
+
+- **Mount to `/data/.mempalace`, not `/data`.** The image sets `HOME=/data`, so
+  the palace lives at `$HOME/.mempalace`. Mounting at `/data` yields a silently
+  **empty** palace with the real one nested a level too deep.
+- **`--allow-insecure` is required here, and is safe.** Docker port publishing
+  only works if the process binds `0.0.0.0` *inside* the container, and
+  mempalace refuses a non-loopback bind without a token unless this is passed.
+  The actual boundary is `127.0.0.1:8765:8765` — nothing off the host can reach
+  it, the same exposure as the palace already readable at `~/.mempalace`. A
+  token would mean committing a secret to `plugin.json`, which is worse.
+- **The cache volume is not optional in practice.** The embedding model (~80 MB,
+  ChromaDB's `minilm`) lazy-downloads under `$HOME/.cache` on first use; without
+  a volume it re-downloads on every container recreate.
+
+Run **one** server: stop any host-side `mempalace serve`, keep the mempalace
+plugin's stdio server toggled off, and mine through the container
+(`docker compose exec mempalace mempalace mine …`) rather than from the host, so
+nothing else touches the palace while the server holds its writer lease.
+
+If `docker pull` returns 401, the published image isn't reachable — build from a
+clone instead (`docker build -t mempalace .`; the upstream `Dockerfile` is a
+standard multi-stage uv build) and point `image:` at your local tag. The
+container runs as uid 1000, which is transparent under VirtioFS on macOS but is
+the first thing to check if writes fail.
 
 ## How vwf uses it
 
