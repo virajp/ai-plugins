@@ -14,6 +14,11 @@ reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 > never block on it, and **never build or update a graph mid-run** (`/graphify`,
 > `graphify extract`, `graphify update` are long, LLM-driven builds). Only
 > `/vwf:setup` builds graphs, behind explicit consent.
+>
+> `/vwf:doctor` §8 is where a missing CLI, absent graph, uninstalled refresh
+> hook, or stale graph gets surfaced — as a **degradation**, never a blocker,
+> exactly matching the fallback rule above. It reports and stops; it never
+> builds.
 
 ## How to query
 
