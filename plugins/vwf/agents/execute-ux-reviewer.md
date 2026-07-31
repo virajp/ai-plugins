@@ -7,7 +7,9 @@ description: UX-conformance reviewer for the /vwf:execute command. Invoked only
   design-system.md and the flow Screens contract, and runs an axe
   accessibility scan. Returns findings only.
 tools: Read, Bash, Grep, Glob,
+  mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
+  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: opus
 effort: high

@@ -32,6 +32,42 @@ safety save after compaction, honoring the same opt-out
 `~/.mempalace/config.json`). The Claude `SessionEnd` hook has no OpenCode
 equivalent — the interval saves cover it.
 
+## Running the server (HTTP daemon)
+
+`vwf` declares mempalace over **HTTP**, not stdio — see its `mcpServers` block
+in `plugins/vwf/.claude-plugin/plugin.json`. You run the server yourself:
+
+```sh
+mempalace serve --host 127.0.0.1 --port 8765   # loopback bind needs no token
+curl http://127.0.0.1:8765/healthz             # -> ok
+```
+
+Why not stdio: an stdio server is a **child process of Claude Code**, so when it
+dies the connection stays dead for the rest of the session. Over HTTP it
+reconnects, survives session restarts, and one daemon serves **every** Claude
+Code instance at once — all repos, all worktrees, in parallel (mempalace
+serializes concurrent writes). Its logs are also yours to read, which is what
+makes a flaky memory layer diagnosable.
+
+**Turn the plugin's own stdio server off.** The upstream `mempalace` plugin
+bundles `{"command": "mempalace-mcp"}`, and mempalace holds a **single writer
+lease** — its docs are explicit that two server processes must not point at the
+same backend. Toggle it off in `/mcp`; Claude Code records that in
+`~/.claude.json` under `disabledMcpServers` (which covers plugin servers) and
+the plugin, including its skills, stays installed. The toggle is per project.
+Confirm with `/mcp` that exactly **one** mempalace server is connected.
+
+**Keeping it alive.** The property that matters is restart-on-crash, since a
+dead daemon is the failure you are trying to design out:
+
+| Option                                 | Restart on crash               | Notes                                                                                                                                                                                                                                 |
+| -------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `launchd` (macOS)                      | yes, with `KeepAlive`          | Lightest native option; no extra runtime                                                                                                                                                                                              |
+| Docker                                 | yes, `restart: unless-stopped` | Upstream ships `deploy/docker-compose.server.yml`, but it is **team mode** — Qdrant, `0.0.0.0`, bearer token. Trim it for a local single-user bind                                                                                    |
+| [pitchfork](https://pitchfork.jdx.dev) | **unverified**                 | Great ergonomics (`pitchfork run` / `list` / `logs` / `stop`), but its quickstart documents no supervision, and its shell hook starts daemons on *directory entry* — wrong shape for an always-on service. Check before relying on it |
+
+Upstream also ships `deploy/mempalace-server.service` for systemd (Linux only).
+
 ## How vwf uses it
 
 `vwf` uses mempalace as cross-session memory: each cycle recalls prior context
@@ -46,7 +82,14 @@ rooms:
 | `planning`  | plan rationale and deferred options (written by `/vwf:plan`)                                                                               |
 | `gaps`      | blueprint/plan holes — surfaced during execution, routed in by `/vwf:verify`/`/vwf:feedback`, or parked as out-of-scope during elicitation |
 | `runs`      | the `/vwf:execute` run journal — step order and per-step progress, for resuming a paused run                                               |
+| `doctor`    | `/vwf:doctor` findings per run, so a still-present one reports as *known* instead of being rediscovered                                    |
 | `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                                                                      |
+
+That set is **closed at seven**. mempalace creates a room implicitly on first
+write, so a mistyped name succeeds silently and every later recall against the
+real room comes back empty — which is why `/vwf:doctor` §7 checks each repo's
+`mempalace.yaml` for exactly these, and flags near-misses (`decision`, `run`,
+`handoffs`) as their own finding.
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds. The one exception is `/vwf:handoff` and `/vwf:recall` — the
