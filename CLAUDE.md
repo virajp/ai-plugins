@@ -54,13 +54,13 @@ design (a plugin may hold skills versioned on their own cadence).
 
 | Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                                                            |
 | ------------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`                    | `./plugins/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, and an npm→pnpm hook                                                                                                                                                                                                                   |
+| `vwf`                    | `./plugins/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, an npm→pnpm hook, and the mempalace MCP server over **HTTP** (see mempalace: skills from the plugin, MCP from vwf)                                                                                                                     |
 | `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` skill that scans a repo and writes/updates its README                                                                                                                                                                               |
 | `typescript`             | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/effect-runtime/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`)                              |
 | `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                                                    |
 | `claude-design`          | `./plugins/claude-design`  | Claude Design MCP server (Anthropic's remote endpoint `https://api.anthropic.com/v1/design/mcp`); a vwf dep                                                                                                                                                                                                                 |
 | `flutter`                | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)                                       |
-| `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep)                                                                                                                                                                                                                                                                   |
+| `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep). Kept **for its skills** — its bundled stdio MCP server is toggled off, since vwf declares the same server over HTTP                                                                                                                                              |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                                                     |
 | `mise`                   | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` skill                                                                                                                                                                |
 | `github-actions`         | `./plugins/github-actions` | A `/github-actions:workflow` skill that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy); generates deploy workflows conforming to vwf's delivery-pipeline contract (tag-triggered, branch-validated) — a vwf dep |
@@ -343,6 +343,40 @@ auto-enables** these dependencies at the same scope. Key rules:
 - **Auto-enable is event-driven**, firing only when the parent (`vwf`) is
   enabled — not on a continuous reconcile. If a dependency is later disabled on
   its own, re-enable it directly or toggle `vwf` off/on.
+
+#### mempalace: skills from the plugin, MCP from vwf
+
+The `mempalace` dependency is kept **for its skills**, not its MCP server. vwf
+declares its own mempalace server in `plugin.json` — `type: http` against
+`http://127.0.0.1:8765/mcp` — so the memory layer is a **long-lived process you
+run yourself**, not a stdio subprocess Claude Code owns:
+
+```sh
+mempalace serve --host 127.0.0.1 --port 8765   # loopback needs no token
+```
+
+Why: an stdio server is a child of the client, so when it dies the connection
+stays dead for the rest of the session. Over HTTP it reconnects, it survives
+session restarts, one daemon serves **every** Claude Code instance (all repos,
+all worktrees, in parallel — mempalace serializes concurrent writes), and its
+logs are yours to read.
+
+**The mempalace plugin's own stdio server must be turned off**, or two processes
+contend for mempalace's single writer lease (its docs: *"don't point two server
+processes at the same backend collection"*). Toggle it off in `/mcp` — Claude
+Code records that in `~/.claude.json` under `disabledMcpServers`, which covers
+plugin servers, and the plugin (and its skills) stays installed. The toggle is
+recorded **per project**. Confirm with `/mcp` that exactly one mempalace server
+is connected.
+
+**Tool names are scoped to whichever plugin declares the server**, so the
+execute subagents' `tools:` lists carry **both** —
+`mcp__plugin_vwf_mempalace__*` (this manifest) and
+`mcp__plugin_mempalace_mempalace__*` (the upstream plugin's stdio server). An
+allowlist entry for a server that isn't connected is inert, so carrying both
+means vwf works under either wiring. **Drop one and the subagents silently lose
+memory**: the orchestrator still has it, so recall keeps working while the
+findings loop-back quietly stops persisting.
 
 ## The installer & statusline CLI
 

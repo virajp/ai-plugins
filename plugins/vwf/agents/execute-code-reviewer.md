@@ -6,7 +6,9 @@ description: Adversarial code reviewer for the /vwf:execute command. Invoked
   against the plan, the blueprint, conventions, and the resolved stack, using /code-review
   as its engine. Returns findings only.
 tools: Read, Bash, Grep, Glob, Skill, SlashCommand,
+  mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
+  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: opus
 effort: high

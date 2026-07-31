@@ -6,7 +6,9 @@ description: Code-stage implementer for the /vwf:execute command. Invoked only
   plan under strict TDD and verifies the coverage gate before handoff to code
   review. Returns the coverage report.
 tools: Read, Write, Edit, Bash, Grep, Glob,
+  mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
+  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: opus
 effort: high

@@ -7,7 +7,9 @@ description: Acceptance-stage verifier for the /vwf:execute command. Invoked
   runs the suite against the local stack, and returns per-criterion
   pass/fail/not-covered. Never writes tests or code.
 tools: Read, Bash, Grep, Glob,
+  mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
+  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: sonnet
 effort: high

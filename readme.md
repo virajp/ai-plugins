@@ -72,8 +72,9 @@ adopting it.
   the `rtk hook claude` Bash hook fails without `rtk`. Dependency
   auto-install/enable needs Claude Code ≥ 2.1.143. See
   [Prerequisites](#prerequisites).
-- **Memory degrades silently.** `vwf` recalls and persists through `mempalace`.
-  If it's unavailable, every memory step is skipped by design — no error, but
+- **Memory degrades silently.** `vwf` recalls and persists through `mempalace`,
+  which it expects as an **HTTP daemon you run** (`mempalace serve`). If it's
+  unavailable, every memory step is skipped by design — no error, but
   cross-cycle recall is lost (surfaced gaps still survive in the plan doc).
 - **Leans on review engines.** `execute`'s code- and security-review stages run
   on the `/code-review` and `/security-review` engines, falling back to their
@@ -128,7 +129,15 @@ checks for each and prints the exact command for anything missing.
 | Claude Code CLI | hosts the commands                       | `mise use -g claude-code@latest`      |
 | rtk             | the `rtk hook claude` Bash hook          | `brew install --formulae rtk`         |
 | graphify        | knowledge graph the commands rely on     | `mise use -g pipx:graphifyy@latest`   |
-| uv              | runs the `mempalace` memory server       | `mise use -g uv@latest`               |
+| uv              | installs the `mempalace` memory server   | `mise use -g uv@latest`               |
+
+**The memory server runs as your own daemon.** `vwf` declares mempalace over
+**HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
+with `mempalace serve --host 127.0.0.1 --port 8765` (loopback needs no token).
+One daemon serves every Claude Code instance at once, survives session restarts,
+and reconnects instead of dying with the session. Toggle the mempalace
+**plugin's** own stdio server off in `/mcp` — two servers would contend for
+mempalace's single writer lease. See [docs/mempalace.md](./docs/mempalace.md).
 
 `vwf` also depends on six plugins — `claude-design`, `context7`,
 `github-actions`, `markdown`, `mempalace`, and `mise` — all resolved from the
