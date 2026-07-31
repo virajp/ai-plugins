@@ -24,13 +24,21 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
   `mempalace_status`, else the first write creates it) and passes it to every
   subagent it dispatches. Subagents never resolve the wing themselves — they use
   the wing they were given.
-- **room** — `decisions` (design/architecture decisions + the *why*), `problems`
-  (review/security findings + how they were resolved), `planning` (plan
-  rationale and deferred options), `gaps` (blueprint/plan holes surfaced
-  **during execution** + how they were reconciled, and out-of-scope points
-  **parked during elicitation** — see below), and `runs` (the **execute** run
-  journal — dependency order and per-step progress, for resuming a paused run;
-  see below).
+- **room** — a **closed set of seven**. `decisions` (design/architecture
+  decisions + the *why*), `problems` (review/security findings + how they were
+  resolved), `planning` (plan rationale and deferred options), `gaps`
+  (blueprint/plan holes surfaced **during execution** + how they were
+  reconciled, and out-of-scope points **parked during elicitation** — see
+  below), `runs` (the **execute** run journal — dependency order and per-step
+  progress, for resuming a paused run; see below), `doctor` (`/vwf:doctor`'s
+  findings per run, so a later run reports a known one as **known** rather than
+  rediscovering it), and `handoff` (session handoffs — the one room
+  `/vwf:handoff` and `/vwf:recall` own).
+
+  **Never invent an eighth.** mempalace creates a room implicitly on first
+  write, so a mistyped name (`decision` for `decisions`) succeeds, returns no
+  error, and every later recall against the real room comes back empty. That
+  silence is why the set is closed and why `/vwf:doctor` checks it.
 
 ## Repo config — `mempalace.yaml`
 
@@ -41,8 +49,8 @@ gets one per repo (the parent and every submodule), not one for the product.
 **One wing per product.** Every one of those files names the **same** wing (the
 `memory.wing` resolved above). Submodules are not their own wings: recall would
 otherwise have to guess which of three wings holds an answer, and vwf's own
-rooms (`decisions`, `problems`, `gaps`, `runs`, `handoff`) are product-wide by
-nature — a decision about the API contract is not a `backend` fact.
+rooms are product-wide by nature — a decision about the API contract is not a
+`backend` fact.
 
 ```yaml
 wing: <memory.wing>
@@ -58,11 +66,12 @@ rooms:
     keywords: []
 ```
 
-**The rooms vwf requires.** Seed `handoff`, `decisions`, `problems`, `gaps`, and
-`runs` — the five this protocol writes to — in **every** repo's file, then add
-path-derived rooms for what that repo actually holds (`documentation`,
-`testing`, `configuration`, …). Without the seed, the first `/vwf:handoff` in a
-fresh palace creates its room implicitly and a `mine` routes nothing to it.
+**The rooms vwf requires.** Seed **all seven** protocol rooms — `decisions`,
+`problems`, `planning`, `gaps`, `runs`, `doctor`, `handoff` — in **every**
+repo's file, then add path-derived rooms for what that repo actually holds
+(`documentation`, `testing`, `configuration`, …). Without the seed, the first
+write creates the room implicitly, with no keywords, so a `mine` routes nothing
+to it and the room only ever holds what vwf put there by hand.
 
 **Room routing walks path parts outermost-first and returns on the first
 match.** So a broad keyword shadows every narrower room beneath it: a
