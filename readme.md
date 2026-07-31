@@ -105,13 +105,13 @@ adopting it.
   slice to a project in the architecture registry and read its code (submodules
   included). You model the codebase with `/vwf:architecture` first; it won't
   operate on an ad-hoc folder.
-- **Enforced structure & stacks.** `vwf` prescribes a workspace shape (parent
-  repo + backend/frontend submodules) and **one reference stack per project
-  type** — see
-  [The structure & stacks it enforces](#the-structure--stacks-it-enforces). You
-  can opt out of any piece — an explicit objection is recorded as a registry
-  deviation and never re-asked — but if you want to pick a different stack per
-  repo, this is the wrong plugin.
+- **Enforced structure; stacks are a menu.** `vwf` prescribes a workspace shape
+  (parent repo + backend/frontend submodules) — see
+  [The structure it enforces](#the-structure-it-enforces). You can opt out — an
+  explicit objection is recorded as a deviation and never re-asked. The **stack
+  is yours to pick**: vwf ships templates per project type and
+  `/vwf:architecture` presents them as a menu, with an *other (describe)* path
+  for anything it doesn't ship.
 - **Solo / small-team focus.** It is highly opinionated — one workflow, one set
   of conventions. Great for a solo dev or small team; not a configurable
   framework for a large org.
@@ -318,18 +318,18 @@ sections to the right project by `type`; `architecture.md` is the prose view of
 the same facts and no command reads it.
 
 The registry carries **no stack**. Which technology each project is built with
-lives in `.config/vwf.yaml`, defaulting to the enforced reference stack for its
-type (recorded deviations aside). That split is not bookkeeping: it means no
-blueprint-authoring or reviewing surface can see a technology name, so a
-blueprint that mentions your database, cloud, or payment vendor fails review by
-construction. Docs say "the datastore" and "the payment provider", and stay true
-when you swap either.
+lives in `.config/vwf.yaml`, as a structured block naming the template you
+picked plus its languages, frameworks and key dependencies. That split is not
+bookkeeping: it means no blueprint-authoring or reviewing surface can see a
+technology name, so a blueprint that mentions your database, cloud, or payment
+vendor fails review by construction. Docs say "the datastore" and "the payment
+provider", and stay true when you swap either.
 
-## The structure & stacks it enforces
+## The structure it enforces
 
-`vwf` is opinionated about more than process: it enforces a **workspace shape**
-and **one reference stack per project type**, both distilled from a production
-reference implementation.
+`vwf` is opinionated about more than process: it enforces a **workspace shape**,
+distilled from a production reference implementation. The **stack** is a
+separate, unenforced choice — see [Stack templates](#stack-templates) below.
 
 ```text
 workspace/            # parent repo — vwf lives here
@@ -342,31 +342,52 @@ workspace/            # parent repo — vwf lives here
 └── frontend/         # submodule — single-package Flutter app
 ```
 
-| Project    | Type       | Reference stack                                |
-| ---------- | ---------- | ---------------------------------------------- |
-| `common`   | `packages` | TypeScript · Effect-TS                         |
-| `service`  | `service`  | TypeScript · Hono · Effect-TS                  |
-| `worker`   | `worker`   | TypeScript · Temporal · Effect-TS              |
-| `web`      | `site`     | TypeScript · Astro (SSR) · React               |
-| `console`  | `console`  | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend` | `frontend` | Dart · Flutter                                 |
-
 Not every project must exist — a product may have no `console` or `web` yet. How
 enforcement works:
 
-- **New/empty repos** get the shape and stacks applied as the default — one
-  confirmation, no per-project stack menu.
+- **New/empty repos** get the shape applied as the default — one confirmation.
 - **Existing repos** that don't match get a **consent-gated restructure
   proposal** from `/vwf:setup`: in-repo layout moves as reviewable batches;
   anything crossing a repo boundary (like a submodule split) only ever as a
   written recommendation.
 - **The escape hatch.** An explicit objection is always honored — recorded under
-  `enforcement:` in `.config/vwf.yaml` (the vwf config: choice + reason) and
-  never re-asked — a stack deviation is recorded as the stack itself, in
-  `.config/vwf.yaml`, so the value and the opt-out are one entry rather than
-  two. The registry keeps describing the system as it *is*; the config records
-  what it is built with and how vwf treats it. The stack table grows through vwf
-  updates, not per-repo improvisation.
+  `enforcement:` in `.config/vwf.yaml` (choice + reason) and never re-asked. The
+  registry keeps describing the system as it *is*; the config records what it is
+  built with and how vwf treats it.
+
+### Stack templates
+
+The stack is **not** enforced. Each project type ships one or more templates
+under `assets/stacks/<type>/`, and `/vwf:architecture` presents them as a menu —
+one round per project, plus an *other (describe)* option for anything vwf
+doesn't ship.
+
+| Type       | Template ships today         | Stack                                          |
+| ---------- | ---------------------------- | ---------------------------------------------- |
+| `packages` | `typescript-effect`          | TypeScript · Effect-TS                         |
+| `service`  | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                  |
+| `worker`   | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS              |
+| `site`     | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
+| `console`  | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
+| `frontend` | `dart-flutter`               | Dart · Flutter                                 |
+| repo-level | `pnpm-turbo`                 | pnpm · Turborepo                               |
+
+Each template is a markdown file: YAML frontmatter carrying the four axes
+(**languages**, **frameworks**, **dependencies**, plus the optional languages a
+template admits — Flutter's Kotlin and Swift), and prose carrying the layout,
+testing and deployment conventions `plan` and `execute` read. Picking one fills
+those axes into `.config/vwf.yaml`; you can then customize any of them.
+
+Languages come from a **closed vocabulary** so the tooling can act on them —
+which is the point of recording all this. `/vwf:doctor` reads the block back and
+checks the repo agrees: an LSP server and toolchain per declared language, every
+framework and dependency present in the project's manifest, the repo's package
+manager and tooling, harness task names, health paths. It reports drift in both
+directions, including a framework doing obvious structural work that your config
+never mentions.
+
+Adding a stack option means adding a template file. One entry per type today is
+a starting point, not a default.
 
 Two placement rules ride along with the shape — seeded into each repo's
 `conventions.md` and enforced by the execute reviewers:
@@ -431,11 +452,22 @@ plugin under `assets/stacks/` and drive what `/vwf:setup` and
 | `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
 | `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
 | `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
+| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, stamps                        |
 | `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                  |
 | `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests the claude.ai/design review chat) |
 | `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                         |
 | `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                     |
 | `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
+
+**Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
+carry `disable-model-invocation: true`, so Claude never fires them on its own;
+you decide when a migration, a post-deploy check, a re-render, a plan retirement
+or a session resume happens. The rest stay model-invocable because the workflow
+**delegates to them by name** — `recall` resumes a paused run *through*
+`blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`, and
+`setup` orchestrates `product`/`architecture`/`design-system`/`doctor`. Marking
+one of those user-only would silently break the chain: the flag blocks
+programmatic invocation, not just auto-triggering.
 
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
@@ -461,22 +493,25 @@ it after upgrading vwf to migrate to the latest format. It detects your topology
 (monorepo, polyrepo, or the workspace shape; project types; stacks) and confirms
 it with you via MCQ, then produces a **dry-run migration plan** — every doc to
 scaffold and every source move to make, including a restructure proposal toward
-the [enforced workspace shape](#the-structure--stacks-it-enforces) when the repo
-doesn't match (declining records a deviation, not a fight). On a new/empty repo
-it applies the workspace structure and reference stacks as the default. Nothing
-is written until you approve; it works in a worktree, restructures code only
-with per-batch consent, and never deletes. It orchestrates the rest (mise,
-`product`, `architecture`, and `design-system` if you have a UI), merges a vwf
-section into your `CLAUDE.md`, writes the README, detects the repo's
-verification-harness capabilities (dev server, E2E, staging mode), and stamps
-the **vwf config** at `.config/vwf.yaml` — the blueprint format version, harness
-inventory, enforcement opt-outs, and per-project nuances (e.g. a Flutter app's
-extra `platforms:` like macos/windows) — so a later run can detect drift and
-migrate the delta, and every command knows how vwf operates in this repo
-(pipeline knobs, verify environments, the mempalace wing). Every workflow
-command also runs a quick format check against that stamp and nudges you to
-re-run `/vwf:setup` when a repo falls behind — so a single user-level vwf
-upgrade reaches each repo on next use.
+the [enforced workspace shape](#the-structure-it-enforces) when the repo doesn't
+match (declining records a deviation, not a fight). On a new/empty repo it
+applies the workspace structure as the default and elicits each project's stack
+from the [template menu](#stack-templates). It also writes each repo's
+`mempalace.yaml` — one wing for the product, with the rooms vwf's memory
+protocol uses seeded in the parent and every submodule. Nothing is written until
+you approve; it works in a worktree, restructures code only with per-batch
+consent, and never deletes. It orchestrates the rest (mise, `product`,
+`architecture`, and `design-system` if you have a UI), merges a vwf section into
+your `CLAUDE.md`, writes the README, detects the repo's verification-harness
+capabilities (dev server, E2E, staging mode), and stamps the **vwf config** at
+`.config/vwf.yaml` — the blueprint format version, harness inventory,
+enforcement opt-outs, and per-project nuances (e.g. a Flutter app's extra
+`platforms:` like macos/windows) — so a later run can detect drift and migrate
+the delta, and every command knows how vwf operates in this repo (pipeline
+knobs, verify environments, the mempalace wing). Every workflow command also
+runs a quick format check against that stamp and nudges you to re-run
+`/vwf:setup` when a repo falls behind — so a single user-level vwf upgrade
+reaches each repo on next use.
 
 ### /vwf:product
 
@@ -499,11 +534,11 @@ delta). Retired goals reconcile their inbound links, never dangle.
 
 Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
-from the [enforced reference stacks](#the-structure--stacks-it-enforces)
-(stated, not offered as a menu; an explicit override becomes an `enforcement:`
-entry in `.config/vwf.yaml`), walks the **product-foundations checklist** (see
-[vwf skills](#vwf-skills) — one accept/adapt/skip question per foundation,
-recorded as cross-cutting tokens), and writes **both**
+by presenting the [stack templates](#stack-templates) for its type as a menu
+(one round per project, plus *other (describe)*; the answer lands as a
+structured block in `.config/vwf.yaml`), walks the **product-foundations
+checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
+foundation, recorded as cross-cutting tokens), and writes **both**
 `docs/blueprint/registry.yaml` — the machine-readable registry every other
 command depends on — and `docs/blueprint/architecture.md`, its prose view with a
 system-shape mermaid diagram kept in sync with it. Re-run it any time the
@@ -1185,8 +1220,8 @@ they auto-apply and inform how Claude writes and reviews:
   anti-patterns, and Terminal UX for products that ship a CLI) behind
   `/vwf:design-system`.
 - **`project-setup`** — the onboarding/migration doctrine behind `/vwf:setup`:
-  topology detection, the enforced workspace structure + reference stacks (and
-  the deviation escape hatch), harness-capability detection, consent-gated
+  topology detection, the enforced workspace structure (and its deviation escape
+  hatch), the stack-template menu, harness-capability detection, consent-gated
   dry-run migration, and the blueprint format-version + drift map.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or

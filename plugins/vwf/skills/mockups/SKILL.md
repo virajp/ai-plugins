@@ -8,7 +8,7 @@ description: Render the blueprint's screens as self-contained static HTML
 argument-hint: "[flow, e.g. checkout — omit to sweep all screens]"
 model: sonnet
 effort: medium
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # mockups — Render Screen Mockups Locally
@@ -61,7 +61,7 @@ semantics). No template — this command authors no repo doc.
 
 Run the preflight in `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; nudge
 `/vwf:setup` on drift (proceed unless the Screens/design-system artifacts this
-command consumes are missing — then offer `/vwf:setup` and stop).
+command consumes are missing — then tell the user to run `/vwf:setup` and stop).
 
 ## Pipeline
 

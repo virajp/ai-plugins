@@ -1,4 +1,13 @@
-# Common Package — Reference Stack
+---
+type: packages
+name: TypeScript · Effect
+languages: [ typescript ]
+optional_languages: []
+frameworks: [ effect ]
+dependencies: [ opentelemetry, vitest ]
+---
+
+# Common Package — TypeScript · Effect
 
 `packages/common` is the shared kernel of the backend monorepo — the one place
 schemas are defined and the one place third-party SDKs are touched. TypeScript

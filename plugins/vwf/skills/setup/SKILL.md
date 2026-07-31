@@ -7,7 +7,7 @@ description: Onboard a repo into vwf's format and keep it current — detect or 
   migrates when the vwf format evolves.
 model: sonnet
 effort: high
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # setup — Onboard & Keep a Repo in vwf Format
@@ -31,7 +31,10 @@ throughout.
 | vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`) |
 | Config schema     | `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                 |
 | CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md`   |
-| Reference stacks  | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>.md`              |
+| Stack templates   | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/<slug>.md`       |
+| Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`           |
+| Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`                     |
+| mempalace config  | `mempalace.yaml` (parent **and** each submodule)             |
 | Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                    |
 
 Doctrine: the **project-setup** skill — a router. Read each reference at the
@@ -109,11 +112,18 @@ types, stacks, and **whether a UI surface exists** (it makes the design system
 mandatory). Never assume UI — confirm it.
 
 **New/empty repo.** When detection finds no manifests and no source, apply the
-**workspace structure** and its reference stacks per the project-setup skill
-(workspace-structure) — the structure as one confirmation, the stacks stated
-(from the per-type stack docs), not elicited. Both are enforced with an escape
-hatch: an explicit objection is honored, recorded under `enforcement:` in
-`.config/vwf.yaml`, and never re-asked.
+**workspace structure** per the project-setup skill (workspace-structure) as one
+confirmation. The structure stays enforced with an escape hatch: an explicit
+objection is honored, recorded under `enforcement:` in `.config/vwf.yaml`, and
+never re-asked.
+
+**Stacks are elicited, never stated.** For each project, present the templates
+under `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/` as a menu with an **other
+(describe)** option, plus the repo-level menu from `assets/stacks/repo/`. vwf
+ships no default and nothing to object to, so there is no `enforcement` entry
+for a stack. `/vwf:architecture` owns this elicitation — hand off to it at step
+7 rather than duplicating it here; what this step needs is only enough detection
+to populate the menu's starting point.
 
 **Existing non-conforming repo.** When an existing repo does not match the
 workspace shape, fold a consent-gated restructure proposal toward it into the
@@ -253,8 +263,29 @@ run diffs against, and how every vwf command operates in this repo:
   `platforms:` from the one vocabulary — `mobile` / `tablet` / `desktop` / `web`
   / `auto`, with `auto` (in-car: CarPlay and Android Auto together) offered only
   for `frontend` projects — elicit when ambiguous, never assume);
+- the **`stack` block for every project** and the repo-level **`repo.stack`**,
+  as `/vwf:architecture` elicited them at step 7 — write them out in full, for
+  every project the registry declares. An absent block is not "the default"; it
+  is what leaves `/vwf:doctor` with nothing to check;
 - leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
   them.
+
+**Write the mempalace config.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`,
+write a `mempalace.yaml` to **each repo root** — the parent and every submodule
+— all naming the single confirmed `memory.wing`. Seed the five rooms this
+protocol writes to (`handoff`, `decisions`, `problems`, `gaps`, `runs`), then
+add path-derived rooms per repo from its actual top-level directories. Give the
+parent `exclude_patterns` for the submodule paths so a root mine does not
+double-file their contents.
+
+Two things to get right, both from the memory asset: room routing returns on the
+**first** path-part match, so never key a room on a directory that contains
+another room's path (`docs` on `documentation` shadows `docs/handoffs/`); and
+because the wing is shared, a room name reused across repos **merges** — propose
+a distinguishing name wherever the same name would mean two different things.
+Present the files as part of the step-4 dry-run and confirm the wing (one MCQ)
+before writing; an existing `mempalace.yaml` is **merged, never overwritten** —
+preserve rooms and patterns the user added.
 
 On the `5 → 6` migration, `git mv` the legacy stamp to the new path first (move,
 never delete), then restructure — per format-versioning. Also migrate any
@@ -278,7 +309,15 @@ relationship/reference link resolves to an existing doc/anchor — per the
 project-setup skill (format-versioning) and the blueprint-authoring
 frontmatter-and-links reference. Confirm every YAML artifact the migration wrote
 (`entities/*/schema.yaml`, `apis/*.openapi.yaml`) parses. Confirm
-`environment.md` carries **no secret values**. Report anything still open.
+`environment.md` carries **no secret values**.
+
+Then run **`/vwf:doctor`** over the whole repo — it checks the config just
+written against what the repo actually is (LSP servers and toolchains per
+declared language, frameworks/dependencies against each manifest, repo tooling,
+harness task names, health paths). Setup **records** what it reports and never
+gates on it: a missing LSP plugin or an unbuilt harness capability is a normal
+state for a freshly onboarded repo. Fold anything it finds into the step-11
+summary. Report anything still open.
 
 ### 11. Approval gate & commit
 

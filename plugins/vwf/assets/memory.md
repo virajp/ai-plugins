@@ -32,6 +32,52 @@ their own findings directly, so that detail bypasses the orchestrator entirely.
   journal — dependency order and per-step progress, for resuming a paused run;
   see below).
 
+## Repo config — `mempalace.yaml`
+
+`mempalace mine` reads a `mempalace.yaml` at each **repo root** — so a workspace
+gets one per repo (the parent and every submodule), not one for the product.
+`/vwf:setup` writes them all.
+
+**One wing per product.** Every one of those files names the **same** wing (the
+`memory.wing` resolved above). Submodules are not their own wings: recall would
+otherwise have to guess which of three wings holds an answer, and vwf's own
+rooms (`decisions`, `problems`, `gaps`, `runs`, `handoff`) are product-wide by
+nature — a decision about the API contract is not a `backend` fact.
+
+```yaml
+wing: <memory.wing>
+exclude_patterns: # parent repo only — each submodule files its own files
+  - backend/
+  - frontend/
+rooms:
+  - name: handoff
+    description: Session handoffs from docs/handoffs/
+    keywords: [ handoff, handoffs, session ]
+  - name: general
+    description: Files that don't fit other rooms
+    keywords: []
+```
+
+**The rooms vwf requires.** Seed `handoff`, `decisions`, `problems`, `gaps`, and
+`runs` — the five this protocol writes to — in **every** repo's file, then add
+path-derived rooms for what that repo actually holds (`documentation`,
+`testing`, `configuration`, …). Without the seed, the first `/vwf:handoff` in a
+fresh palace creates its room implicitly and a `mine` routes nothing to it.
+
+**Room routing walks path parts outermost-first and returns on the first
+match.** So a broad keyword shadows every narrower room beneath it: a
+`documentation` room keyed on `docs` swallows `docs/handoffs/` before the
+`handoff` room is ever tested. Key `documentation` on `documentation`,
+`blueprint`, `plans`, `prompts` — never on the bare parent directory that
+contains another room's path.
+
+**Collisions merge.** Because the wing is shared, a room name used in two repos
+is one room holding both repos' files. That is right for `documentation` and
+harmless for `general`; it is misleading where the same name means different
+things (a backend `configuration` of `deploy/` versus a frontend `configuration`
+of `config/`). Propose a distinguishing name in that case — never silently merge
+two unrelated meanings.
+
 ## Recall — before work
 
 Before deriving anything, `mempalace_search` (or `mempalace_kg_query`) scoped to

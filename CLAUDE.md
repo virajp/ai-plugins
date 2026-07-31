@@ -116,12 +116,14 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
 
 `vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
 
-- `skills/` (workflow) — the `/vwf:` slash- **and** model-invocable workflow
-  skills (each `skills/<name>/SKILL.md`, `disable-model-invocation: false`),
-  implementing the Product → Blueprint → Plan → Execute model. **Each SKILL.md
-  is the authoritative description of its own behavior**; the table below is an
-  index, not a second copy — the previous prose version of it drifted twice in a
-  single session before being cut.
+- `skills/` (workflow) — the `/vwf:` workflow skills (each
+  `skills/<name>/SKILL.md`), implementing the Product → Blueprint → Plan →
+  Execute model. Most are slash- **and** model-invocable
+  (`disable-model-invocation: false`) because **other skills delegate to them by
+  name**; five are **user-only** (`true`) — see Invocation policy below. **Each
+  SKILL.md is the authoritative description of its own behavior**; the table
+  below is an index, not a second copy — the previous prose version of it
+  drifted twice in a single session before being cut.
 
   | Skill                | What it does                                                                                                                                                                                                       | Halts / gates                                                                       |
   | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
@@ -137,6 +139,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   | `verify`             | Post-deploy environment check; a clean **production** run offers to freeze each service's OpenAPI contract into `apis/released/`                                                                                   | vwf never deploys                                                                   |
   | `feedback`           | Production-feedback front door: classifies bug/hole/metric/UX/idea and routes each into the doc + command that fixes it; `canvas` harvests claude.ai/design review conversations                                   | —                                                                                   |
   | `archive`            | Moves completed cycle plans into `docs/plans/archived/`; never deletes                                                                                                                                             | —                                                                                   |
+  | `doctor`             | Checks the repo against `.config/vwf.yaml` — per-language LSP + toolchain, frameworks/deps vs each manifest, `repo.stack`, harness task names, health paths, format-stamp drift. Reports; never writes uninvited   | never halts — callers decide (`execute` gates on LSP only)                          |
   | `git-workflow`       | Internal: worktree isolation, commits, merges, pushes — every other skill delegates git here                                                                                                                       | —                                                                                   |
   | `handoff` / `recall` | mempalace-backed session handoff; the reserved **`next`** handoff is the argument-less default, is mirrored to `docs/handoffs/next.md`, and `recall next` resumes without a gate                                   | —                                                                                   |
 
@@ -176,7 +179,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   | `blueprint-authoring`     | `docs/blueprint/**` — the contract-vs-realization line, the **density** bars (budgets, the delete test, the anti-patterns), the per-surface completeness bars (flow-contract, entity-contract, api-and-schema-contracts), and the OKF frontmatter/link doctrine. Also `docs/plans/**`, for frontmatter + link hygiene only                                                                                                 |
   | `product-foundations`     | The twelve foundational concerns every product decides (users & operators, observability, audit logs, change logs, background processes, data retention & PII, notifications, runtime settings, rate limiting, reliability targets, disaster recovery, cost guardrails) as **elicited defaults** — walked by `/vwf:architecture` step 3c, expanded by `/vwf:blueprint` into `conventions.md` anchors and per-flow surfaces |
   | `design-system-authoring` | `docs/blueprint/design-system` — tokens, typography, spacing, motion, accessibility, component behaviors/anti-patterns, and terminal-ux (required when a project declares platform `cli`)                                                                                                                                                                                                                                  |
-  | `project-setup`           | Onboarding + migration: topology detection incl. the **enforced** workspace shape, the **enforced reference stacks**, harness-capability detection, consent-gated dry-run migration, and the format-version drift map. Used by `/vwf:setup`                                                                                                                                                                                |
+  | `project-setup`           | Onboarding + migration: topology detection incl. the **enforced** workspace shape, the **stack-template menu** (not enforced — `architecture` presents it), harness-capability detection, consent-gated dry-run migration, and the format-version drift map. Used by `/vwf:setup`                                                                                                                                          |
   | `rest-api-design`         | API contract depth — resources, methods, errors, pagination, idempotency, versioning                                                                                                                                                                                                                                                                                                                                       |
 - `assets/` — the shared doctrine and data every skill and agent reads. **Each
   file is authoritative for its own subject**; this is a map of which one owns
@@ -193,10 +196,11 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   | `delivery-pipeline.md`                 | The canonical environment vocabulary (`development`/`staging`/`production`) + CI/CD contract (mise-built, tag-triggered, branch-validated). Read by `blueprint`, `verify`, and the **github-actions** plugin                                                                                                                                                       |
   | `standard-flows.md`                    | The canonical flow-slug vocabulary per project type, the designated numbers, the auth-capability signal, and the synonym table (rename proposals, never automatic)                                                                                                                                                                                                 |
   | `canvas-push.md`                       | The shared claude.ai/design push protocol — used by `design-system` and `screens`, **never** by `mockups` (which renders only into the gitignored scratchpad)                                                                                                                                                                                                      |
-  | `vwf-config.md`                        | The `.config/vwf.yaml` doctrine (currently `config_format` **10**): stamp keys, the coverage stamp, per-project nuances **and stacks**, `harness:`, `enforcement:`, bounded `pipeline` knobs, `verify` environments, the `design:` pins, and the hard floor config can never disable                                                                               |
+  | `vwf-config.md`                        | The `.config/vwf.yaml` doctrine (currently `config_format` **11**): stamp keys, the coverage stamp, per-project nuances **and the structured `stack` block**, the repo-level `repo.stack`, `harness:`, `enforcement:`, bounded `pipeline` knobs, `verify` environments, the `design:` pins, and the hard floor config can never disable                            |
   | `harness.md`                           | The harness contract — the verification capabilities a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`, `health`, `screenshots`) and their canonical task names                                                                                                                                                                         |
-  | `stacks/`                              | The **enforced reference stack** per project type + `monorepo.md`, distilled from 95octane. Read by `setup` and `architecture`; a deviation is recorded in `.config/vwf.yaml`, never in the blueprint                                                                                                                                                              |
-  | `memory.md`                            | The mempalace protocol: recall before work, persist decisions, findings memory for loop-backs, and **gap memory**. Carves out `handoff`/`recall`, which fall back to `docs/handoffs/`                                                                                                                                                                              |
+  | `stacks/<type>/<slug>.md`              | The **stack template menu** — one file per variant, frontmatter carrying the four axes + prose carrying that variant's layout/testing/deploy conventions. Plus `stacks/repo/` for repo-level tooling. A menu, not a default: `architecture` presents it and the user picks. Adding an option means adding a file                                                   |
+  | `stack-vocabulary.md`                  | The **closed language vocabulary** and its per-language facts (LSP plugin, manifest, mise tool) that `doctor` checks against; the template frontmatter contract; why frameworks/dependencies stay open                                                                                                                                                             |
+  | `memory.md`                            | The mempalace protocol: recall before work, persist decisions, findings memory for loop-backs, **gap memory**, and the per-repo **`mempalace.yaml`** contract (one wing per product, the seeded rooms, the first-match routing trap). Carves out `handoff`/`recall`, which fall back to `docs/handoffs/`                                                           |
   | `graphify.md`                          | The code-intelligence protocol — graph-first for codebase questions, file reads as verification. Absence never blocks; only `setup` builds a graph                                                                                                                                                                                                                 |
   | `docs-sync.md`                         | The docs-ship-with-the-change rule for runs that change reality (`execute`, `architecture`/`product` update mode). `blueprint`/`plan` are exempt — they document intent                                                                                                                                                                                            |
   | `format-check.md` + `blueprint-format` | The format-drift preflight: compare the repo's stamp to the shipped integer (**16**) and nudge `/vwf:setup`. Since vwf is user-scoped, this usage-time check is what reaches each repo                                                                                                                                                                             |
@@ -266,7 +270,7 @@ the per-format history here.** What each past format changed is git's job and
 `format-versioning`'s; a second narrative copy is precisely the drift the
 density doctrine warns about, and it was 105 lines of this file before
 format 16. The *current* shape is what this section describes throughout; the
-paired `config_format` (currently **10**) is described under
+paired `config_format` (currently **11**) is described under
 `assets/vwf-config.md`.
 
 **Foundations & ordering.** The workflow is
@@ -661,12 +665,45 @@ Things to know when editing hooks here:
 ## Adding a vwf Skill
 
 Create `plugins/vwf/skills/<name>/SKILL.md` — no other registration is needed
-(auto-discovered). Workflow skills (what used to be commands) stay slash- AND
-model-invocable — set `disable-model-invocation: false` like the existing ones;
-`true` is reserved for skills that must stay user-only (none in vwf today). For
-auto-applying doctrine, set `user-invocable: false` + `paths:` scoping. Skill
-names must be unique across **all** local plugins (`plugins:check` enforces this
-— OpenCode installs them into one flat namespace).
+(auto-discovered). For auto-applying doctrine, set `user-invocable: false` +
+`paths:` scoping. Skill names must be unique across **all** local plugins
+(`plugins:check` enforces this — OpenCode installs them into one flat
+namespace). Then pick the invocation mode per the policy below.
+
+### Invocation policy
+
+`disable-model-invocation: true` does **not** merely stop Claude auto-triggering
+a skill — it *"removes the skill from Claude's context entirely"* and *"blocks
+programmatic invocation"* (Claude Code docs, Control who invokes a skill). A
+skill flipped to `true` **cannot be invoked by another skill**, and the failure
+is silent: the delegating skill simply can't see it.
+
+That makes the vwf mesh the deciding constraint — every workflow skill is
+delegated to by name somewhere. The rule:
+
+- **`false` (model-invocable) when anything delegates to it.** `git-workflow`
+  (every skill commits through it), `blueprint` / `plan` / `execute`
+  (`/vwf:recall` routes its continuation through all three — resuming a
+  cap-paused run is recall's primary use), `product` / `architecture` /
+  `design-system` / `doctor` (`setup` orchestrates them), `handoff` (`execute`
+  runs it at a resource cap, and the statusline caps hook instructs it),
+  `feedback` (`verify` routes failures through it), `screens` (`feedback canvas`
+  routes into it).
+- **`true` (user-only) when nothing does**, and the user owns the timing:
+  `setup`, `verify`, `mockups`, `archive`, `recall`. Every reference to these
+  from another skill must read as a **recommendation to the user**, never an
+  invocation — `execute` tells the user to run `/vwf:archive`, it does not call
+  it.
+
+Before flipping a skill to `true`, grep for `/vwf:<name>` across
+`plugins/vwf/skills/` and `plugins/vwf/agents/` and confirm every hit is prose
+addressed to the user. Adding a delegation to a user-only skill is the reverse
+trap: it will never fire.
+
+This applies across plugins too — `mise:scaffold` and `markdown:readme` are
+`false` **because `/vwf:setup` orchestrates them**, per its own "orchestrate,
+don't reimplement" rule. `github-actions:workflow` stays `true`: nothing
+delegates to it.
 
 ## Installation (end-user)
 

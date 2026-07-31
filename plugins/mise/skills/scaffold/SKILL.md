@@ -7,7 +7,7 @@ description: Scaffold the mise three-file split (mise.toml / mise.dev.toml /
 argument-hint: "[target-dir]"
 model: sonnet
 effort: high
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # mise:scaffold — Scaffold the mise config & task library

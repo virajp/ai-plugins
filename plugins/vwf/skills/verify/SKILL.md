@@ -10,7 +10,7 @@ description: Verify a deployed environment against the blueprint —
 argument-hint: "[environment, e.g. staging]"
 model: sonnet
 effort: medium
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # verify — Check a Deployed Environment Against the Blueprint
@@ -37,8 +37,8 @@ compatibility is enforced.
 
 Run the preflight in `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; nudge
 `/vwf:setup` on drift (proceed unless the needed Acceptance blocks are missing —
-a pre-format-4 repo has nothing to verify flows against; offer `/vwf:setup` then
-stop).
+a pre-format-4 repo has nothing to verify flows against; tell the user to run
+`/vwf:setup` then stop).
 
 ## Pipeline
 

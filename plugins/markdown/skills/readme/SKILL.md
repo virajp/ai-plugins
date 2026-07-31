@@ -10,7 +10,7 @@ description: Create or update the repository's README — scan the codebase and
 argument-hint: "[target-dir]"
 model: sonnet
 effort: high
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # markdown:readme — Document the repo in its README

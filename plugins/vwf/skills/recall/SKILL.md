@@ -9,7 +9,7 @@ description: Retrieve a handoff document from mempalace (wing=<project>,
 argument-hint: "[<name> | next]"
 model: haiku
 effort: medium
-disable-model-invocation: false
+disable-model-invocation: true
 ---
 
 # recall — Resume Work from a Handoff
