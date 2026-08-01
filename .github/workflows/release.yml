@@ -1,37 +1,30 @@
 name: Release
 
-# Publishes @askviraj/ai-plugins to npm. Triggered three ways:
+# Publishes @askviraj/ai-plugins to npm. Triggered two ways:
 #   1. a pushed version tag (v*)   — the normal manual release path
-#   2. workflow_dispatch           — manual re-publish of whatever is on the ref
-#   3. workflow_call               — invoked by deps-update.yml after it cuts the
-#                                    monthly patch release
+#   2. workflow_dispatch           — manual re-publish, and how deps-update.yml
+#                                    publishes its monthly release (`--ref <tag>`)
 # Auth is OIDC "trusted publishing" (no stored token) — npm verifies this repo +
 # workflow's GitHub identity and adds provenance automatically. npm allows only
-# ONE Trusted Publisher per package, and OIDC's job_workflow_ref resolves to THIS
-# file even when it is called from deps-update.yml — so the single Trusted
-# Publisher (release.yml) authorizes both paths. One-time setup: on npmjs.com add
-# this repo + `release.yml` as the package's Trusted Publisher. To release
-# manually: bump the version, then push a matching tag (e.g. v1.2.0).
+# ONE Trusted Publisher per package, and it validates the ENTRY-POINT workflow's
+# filename — so every publish path must enter through THIS file. `workflow_call`
+# is therefore unusable: when deps-update.yml called this workflow, npm saw
+# `deps-update.yml`, matched nothing, and failed with ENEEDAUTH. One-time setup:
+# on npmjs.com add this repo + `release.yml` as the package's Trusted Publisher.
+# To release manually: bump the version, then push a matching tag (e.g. v1.2.0).
 on:
   push:
     tags:
       - "v*"
   workflow_dispatch: {}
-  workflow_call:
-    inputs:
-      ref:
-        description: "Git ref (tag) to check out and publish"
-        required: true
-        type: string
 
-# id-token: write is required for OIDC trusted publishing. When this workflow is
-# called by deps-update.yml, the effective token is bounded by the caller's grant.
+# id-token: write is required for OIDC trusted publishing.
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: release-${{ inputs.ref || github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -41,17 +34,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      # On a tag push / dispatch, inputs.ref is empty and this falls back to the
-      # triggering ref. When called by deps-update.yml, it is the freshly pushed
-      # release tag, so we publish that exact commit.
+      # The triggering ref: the pushed tag, or whatever ref the dispatch named
+      # (deps-update.yml dispatches this workflow on the tag it just pushed).
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ github.ref }}
 
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
 
-      # Only meaningful for a direct tag push; dispatch/called runs skip it.
+      # Runs whenever the ref is a tag — a tag push, or a dispatch on a tag.
+      # A dispatch on a branch skips it.
       - name: Verify the tag matches package.json version
         if: github.ref_type == 'tag'
         run: |
