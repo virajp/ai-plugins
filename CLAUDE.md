@@ -590,28 +590,39 @@ environment-specific tools in the matching env file.
 ### Workflows (`.github/workflows/`)
 
 - **`release.yml`** — publishes `@askviraj/ai-plugins` to npm via **OIDC trusted
-  publishing** (no stored token, provenance automatic). Triggered three ways: a
-  pushed `v*` tag, `workflow_dispatch`, or **`workflow_call`** (invoked by
-  `deps-update.yml`). It sets up mise (`MISE_ENV=ci`), checks out the target ref
-  (the `ref` input when called, else the triggering ref), verifies the tag
-  matches `package.json` (tag pushes only), `pnpm install --frozen-lockfile`,
-  **osv-scans** the lockfile, **runs the tests** (`mise run i:test`), verifies
-  the package (`mise run i:build`), then `npm publish`. The publish step is
-  **idempotent** — it skips (does not fail) if that version is already on npm,
-  so tag re-points, dispatch retries, and re-runs are safe. **Publishing uses
-  the npm CLI; everything else stays pnpm.** The local `i:publish` task mirrors
-  the gates + `npm publish`.
+  publishing** (no stored token, provenance automatic). Triggered two ways: a
+  pushed `v*` tag, or `workflow_dispatch` — which is also how `deps-update.yml`
+  publishes. **Every publish path must enter through this file** (see below). It
+  sets up mise (`MISE_ENV=ci`), checks out the triggering ref, verifies the tag
+  matches `package.json` (whenever that ref is a tag),
+  `pnpm install --frozen-lockfile`, **osv-scans** the lockfile, **runs the
+  tests** (`mise run i:test`), verifies the package (`mise run i:build`), then
+  `npm publish`. The publish step is **idempotent** — it skips (does not fail)
+  if that version is already on npm, so tag re-points, dispatch retries, and
+  re-runs are safe. **Publishing uses the npm CLI; everything else stays pnpm.**
+  The local `i:publish` task mirrors the gates + `npm publish`.
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
   (bounded by the cooldown below); if anything changed, `osv-scanner` gates on
   any known-vulnerable package, then it cuts a **patch release**
   (`mise run i:release --ci` → tests + bump + commit + tag, no push/watch) and
   pushes the refresh + bump + tag to `main`. It then **delegates the npm publish
-  to `release.yml` via `workflow_call`** (passing the new tag as `ref`) rather
-  than publishing inline: npm allows only **one Trusted Publisher per package**,
-  and OIDC's `job_workflow_ref` resolves to `release.yml` even when called — so
-  the single `release.yml` Trusted Publisher authorizes this path too. (A tag
-  pushed with the workflow's `GITHUB_TOKEN` would not trigger `release.yml` on
-  its own, so it is called directly.)
+  by dispatching `release.yml` on the new tag**
+  (`gh workflow run release.yml
+  --ref <tag>`, using the built-in
+  `GITHUB_TOKEN` and the job's `actions: write` grant) rather than publishing
+  inline.
+
+  **Why a dispatch and not `workflow_call`.** npm allows only **one Trusted
+  Publisher per package**, and it validates the **entry-point** workflow's
+  filename — not the workflow that actually runs `npm publish`. `workflow_call`
+  therefore does *not* work: this repo shipped it that way for two months and
+  both monthly runs died at the publish step with `ENEEDAUTH`, because npm saw
+  `deps-update.yml` and matched nothing. A dispatch makes `release.yml` the
+  entry point, so the single Trusted Publisher authorizes it. The tag push alone
+  cannot trigger `release.yml` — refs pushed with `GITHUB_TOKEN` don't start
+  workflow runs — but **`workflow_dispatch` and `repository_dispatch` are
+  explicit exceptions to that rule**, so no PAT or GitHub App token is needed.
+  The dispatch is fire-and-forget: the `release.yml` run is the publish record.
 
 ### Supply-chain settings
 
@@ -625,8 +636,8 @@ potentially compromised — releases.
   for `@askviraj/ai-plugins` (enables OIDC). The workflow-filename field takes a
   **single file** and a package has **exactly one** Trusted Publisher — set it
   to `release.yml` only (not a comma-separated list, and not `deps-update.yml`,
-  which publishes *through* `release.yml`). A mismatch surfaces only at publish
-  time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
+  which publishes by *dispatching* `release.yml`). A mismatch surfaces only at
+  publish time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
 - To cut a release: run **`mise run i:release`** (`--minor`/`--major` to choose
   the bump) — it requires a clean tree, runs the tests, bumps the version,
   commits, and creates the `vX.Y.Z` tag, then (interactively) **pushes the
@@ -635,8 +646,8 @@ potentially compromised — releases.
   --exit-status`), so the task only succeeds if the npm-publish
   pipeline does (needs `gh` installed + authenticated). **Passing `--ci` stops
   after the tag** (no push/watch) — `deps-update.yml` passes it and does its own
-  push + `workflow_call` publish. Prefer releasing via CI over local `i:publish`
-  so every version keeps the strongest npm trust level (trusted publisher).
+  push + dispatch publish. Prefer releasing via CI over local `i:publish` so
+  every version keeps the strongest npm trust level (trusted publisher).
 
 ### GitHub Releases
 
