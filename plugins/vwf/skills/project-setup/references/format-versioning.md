@@ -29,14 +29,25 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 14.** (13 is deliberately **skipped** — no format ever
-carried it; a repo stamped 13 is impossible and would be treated as 12.) Format
-14 = format 12 **plus** the **device-out-of-path** restructure (the `12 → 14`
-delta below): a UI project's flows no longer nest under a device-type subgroup —
-every flow sits directly at `flows/<project>/<NNN>-<flow>/`, UI and non-UI
-alike, and the device type moves into a **`device:` frontmatter key** (`mobile`
-| `web` | `carplay` | `android-auto`, required for UI-project flows, omitted for
-non-UI). The same segment drops out of the prompts tree
+**Current format = 18.** (13 and 17 are deliberately **skipped** — no format
+ever carried either; a repo stamped 13 is impossible and would be treated as 12,
+one stamped 17 as 16.) Format 18 = format 16 **plus** the **project-scoped
+release tags** delta (the `16 → 18` delta below): the seeded
+`conventions.md#pipeline` anchor moves from the `stage-*` / `prod-*` tag globs
+to `<project>-<env>-v<semver>` (`api-prod-v1.2.3`) and gains the
+`pipeline/tested-before-release` rule. Format 16 = format 15 **plus** the
+**registry split, stack removal, and density pass** (the `15 → 16` delta below):
+the `## Project Registry` block leaves `architecture.md` for a standalone
+`registry.yaml`, per-project `stack:` moves to `.config/vwf.yaml`, the three
+flow guarantee sections merge into one `## Guarantees` table, and every doc gets
+a line budget. Format 15 = format 14 **plus** the **platform-file restructure +
+designated numbering** (the `14 → 15` delta below). Format 14 = format 12
+**plus** the **device-out-of-path** restructure (the `12 → 14` delta below): a
+UI project's flows no longer nest under a device-type subgroup — every flow sits
+directly at `flows/<project>/<NNN>-<flow>/`, UI and non-UI alike, and the device
+type moves into a **`device:` frontmatter key** (`mobile` | `web` | `carplay` |
+`android-auto`, required for UI-project flows, omitted for non-UI). The same
+segment drops out of the prompts tree
 (`docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md`, with
 `CLAUDE--<platform>.md` at the project root). NNN stays gap-numbered **per
 device**, so one project folder may hold two flows sharing a number. Format 12 =
@@ -528,6 +539,29 @@ the current format and apply the delta:
      condensation") so the size of the pass is visible before it runs rather
      than discovered during it.
   6. Bump the stamp to `16` and `config_format` to `10`.
+
+- **`16 → 18`** → **project-scoped release tags** (17 is skipped, on the `13`
+  precedent). A one-anchor, fully mechanical migration — no doc moves, no
+  frontmatter changes, `config_format` unchanged.
+
+  1. **Re-seed `conventions.md#pipeline`** from
+     `${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`, replacing the two tag
+     lines: deploys are now triggered by `<project>-stage-v<semver>` (→
+     `staging`, from `develop`) and `<project>-prod-v<semver>` (→ `production`,
+     from `main`) instead of the bare `stage-*` / `prod-*` globs, where
+     `<project>` names the registry project released and a polyrepo uses the
+     repo name. Add the new **`pipeline/tested-before-release`** rule. The other
+     rules, and any product-wide `enforcement.rules` waiver, carry over
+     unchanged — a repo waiving `pipeline/tag-triggered-deploys` keeps that
+     waiver, since the rule id is unchanged.
+  2. **Report existing release workflows, do not rewrite them.** List any
+     `.github/workflows/*` matching on `stage-*` / `prod-*` and tell the user
+     they now contradict the re-seeded anchor — regenerating them is
+     `/github-actions:workflow`'s job, not the migration's, and the old tags
+     keep deploying until it runs. Rewriting CI from a doc migration is exactly
+     the unreviewable change this file avoids.
+  3. Bump the stamp to `18`. `config_format` stays as it is — nothing in
+     `.config/vwf.yaml`'s schema changes.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

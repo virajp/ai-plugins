@@ -89,8 +89,9 @@ to the relevant anchors rather than repeating.
 <!-- Seeded by `blueprint` on first touch from the vwf delivery-pipeline asset:
      the canonical environment table (development / staging / production, with
      synonyms normalized) and the pipeline rules (mise-built CI, tag-triggered
-     deploys — stage-* → staging from develop, prod-* → production from main,
-     branch-validated — and staging-is-not-a-release), each with its
+     deploys — <project>-stage-v<x.y.z> → staging from develop,
+     <project>-prod-v<x.y.z> → production from main, branch-validated —
+     staging-is-not-a-release, and tested-before-release), each with its
      pipeline/<rule> id. The github-actions plugin generates conforming
      workflows from this anchor. -->
 

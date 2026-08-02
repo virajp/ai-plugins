@@ -51,6 +51,12 @@ Inspect the target repo before writing — do not assume:
   available (`mise tasks`) — these become the step commands.
 - **Runtime/tools** declared under `[tools]`, so you know what mise provides.
 - Existing `.github/workflows/` — don't clobber; pick a non-colliding filename.
+- For a **release** workflow: the vwf pipeline contract
+  (`docs/blueprint/conventions.md#pipeline`), the registry project names
+  (`docs/blueprint/registry.yaml`), how the workspace answers "who depends on
+  this package" (`pnpm --filter '<pkg>...'`, `cargo tree`, `go list`, melos,
+  turbo/nx), and how far the subprojects' deploy needs actually diverge — that
+  last one decides the sub-workflow count.
 
 If there is **no mise config**, stop and tell the user to run `/mise:scaffold`
 first (the workflow depends on mise providing the toolchain). Only proceed with
@@ -58,9 +64,12 @@ a minimal `mise.toml` if they insist.
 
 ## 2. Ask (one batched round — only what you cannot infer)
 
-1. **Which workflow?** CI (lint/test/build), release/publish, deploy, or custom
-   — and its **triggers** (events: `push` / `pull_request` / tag /
-   `workflow_dispatch`; which branches or tag globs).
+1. **Which workflow?** CI (lint/test/build), release/deploy, or custom — and its
+   **triggers** (events: `push` / `pull_request` / tag / `workflow_dispatch`;
+   which branches or tag globs). **Skip the trigger question entirely for a
+   release/deploy workflow in a repo carrying the vwf pipeline contract** — it
+   pins the trigger, tag scheme, branch validation and test gate (see Release
+   workflows below).
 2. **Steps source.** If a mise task library exists, confirm which tasks map to
    the workflow's phases (e.g. `code:lint`, `test`, `build`, `i:release`). If
    none exists, fall back to inline `mise exec -- <cmd>` and confirm the
@@ -162,50 +171,151 @@ user.
 
 Keep the YAML minimal — only the jobs/steps the chosen workflow needs.
 
-### Deploy workflows (the vwf delivery-pipeline contract)
+### Release workflows (the vwf delivery-pipeline contract)
 
-Before generating a **deploy** workflow, check whether the repo carries the vwf
-pipeline contract — `docs/blueprint/conventions.md#pipeline` (or a vwf plugin
+For a **server-side project deployed to cloud or a data center**, releases are
+not elicited — they follow a fixed architecture. Check whether the repo carries
+the vwf pipeline contract (`docs/blueprint/conventions.md#pipeline`, or a vwf
 installation providing `assets/delivery-pipeline.md`). When it does, the
-contract **pins the trigger shape and you do not ask about it**; ask only what
-it leaves open (runner, secrets/OIDC, deploy commands, job shape):
+contract **pins the trigger, the tag scheme, the branch validation and the test
+gate — do not ask about any of them**; ask only what it leaves open (runner,
+secrets/OIDC, the deploy commands inside the release task, job shape).
 
-- **Tag-triggered only.** `stage-*` tags deploy to `staging`, `prod-*` tags to
-  `production`. Never generate a branch-push deploy trigger, and never a deploy
-  targeting `development` (that environment is the developer's machine).
-- **Branch-validated.** The first job step after checkout verifies the tagged
-  commit is reachable from the required branch and fails otherwise — `develop`
-  for `stage-*`, `main` for `prod-*`:
+**The shape: one main workflow, as few sub-workflows as the repo allows.** The
+main workflow owns everything common to every subproject — tag parsing, branch
+validation, the test gate — and then calls a reusable (`workflow_call`)
+sub-workflow that performs the deploy.
 
-  ```yaml
-  on:
-    push:
-      tags: [ "stage-*", "prod-*" ]
-  jobs:
-    deploy:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v7
-          with: { fetch-depth: 0 }
-        - name: Validate tag branch
-          run: |
-            case "${GITHUB_REF_NAME}" in
-              stage-*) BRANCH=develop; ENV=staging ;;
-              prod-*)  BRANCH=main;    ENV=production ;;
-            esac
-            git merge-base --is-ancestor "${GITHUB_SHA}" "origin/${BRANCH}" \
-              || { echo "::error::${GITHUB_REF_NAME} is not on ${BRANCH}"; exit 1; }
-            echo "DEPLOY_ENV=${ENV}" >> "$GITHUB_ENV"
-        - uses: jdx/mise-action@v4
-        - run: mise run deploy:${DEPLOY_ENV} # or the repo's deploy task
-  ```
+**Tags are `<project>-<env>-v<semver>`** — `api-prod-v1.2.3`,
+`web-stage-v0.4.0`. `env` is `stage` (→ `staging`, from `develop`) or `prod` (→
+`production`, from `main`); `<project>` names the registry project released, so
+one tag releases exactly one project. A **polyrepo uses the repo name**
+(`myservice-prod-v1.2.3`) so the shape never varies by layout. Parse
+**right-to-left** — project names contain hyphens.
 
-- **Staging is not a release.** A `stage-*` workflow never publishes packages,
-  creates GitHub releases, or updates changelogs — those belong only to the
-  `prod-*` path (and the release *record* itself belongs to `/vwf:verify`, not
-  CI).
+```yaml
+name: release
+on:
+  push:
+    tags: [
+      "*-stage-v*",
+      "*-prod-v*",
+    ] # the glob is coarse; the job re-validates
+env:
+  MISE_ENV: ci
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false # never interrupt an in-flight deploy
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      project: ${{ steps.tag.outputs.project }}
+      environment: ${{ steps.tag.outputs.environment }}
+      version: ${{ steps.tag.outputs.version }}
+      test-projects: ${{ steps.deps.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0 } # branch validation needs full history
+      - id: tag
+        name: Parse and branch-validate the tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          [[ "$TAG" =~ ^[a-z0-9][a-z0-9-]*-(stage|prod)-v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+            || { echo "::error::malformed tag '$TAG' — want <project>-<stage|prod>-v<semver>"; exit 1; }
+          VERSION="${TAG##*-v}" #  1.2.3
+          REST="${TAG%-v*}"     #  payment-api-prod
+          SHORT="${REST##*-}"   #  prod
+          PROJECT="${REST%-*}"  #  payment-api
+          case "$SHORT" in
+            stage) BRANCH=develop; ENVIRONMENT=staging ;;
+            prod)  BRANCH=main;    ENVIRONMENT=production ;;
+          esac
+          git merge-base --is-ancestor "$GITHUB_SHA" "origin/$BRANCH" \
+            || { echo "::error::$TAG is not reachable from $BRANCH"; exit 1; }
+          { echo "project=$PROJECT"; echo "environment=$ENVIRONMENT"
+            echo "version=$VERSION"; } >>"$GITHUB_OUTPUT"
+      - uses: jdx/mise-action@v4
+      - id: deps
+        name: Resolve the tagged project and its dependents
+        run: | # pnpm shown — use the detected workspace's own graph query
+          mise exec -- pnpm ls -r --depth -1 --json \
+            --filter "${{ steps.tag.outputs.project }}..." \
+            | jq -c '[.[].name]' | sed 's/^/projects=/' >>"$GITHUB_OUTPUT"
 
-Without the contract, deploy triggers are elicited as normal (§2) — but offer
+  test: # the gate — pipeline/tested-before-release
+    needs: resolve
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        project: ${{ fromJSON(needs.resolve.outputs.test-projects) }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v4
+      - run: mise run ${{ matrix.project }}:test
+
+  release:
+    needs: [ resolve, test ] # every matrix leg must pass before this runs
+    uses: ./.github/workflows/release-service.yml
+    with:
+      project: ${{ needs.resolve.outputs.project }}
+      environment: ${{ needs.resolve.outputs.environment }}
+      version: ${{ needs.resolve.outputs.version }}
+    secrets: inherit
+```
+
+The sub-workflow is the only place a deploy happens:
+
+```yaml
+# .github/workflows/release-service.yml
+on:
+  workflow_call:
+    inputs:
+      project: { required: true, type: string }
+      environment: { required: true, type: string }
+      version: { required: true, type: string }
+env:
+  MISE_ENV: ci
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }} # GitHub env → approvals + scoped secrets
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v4
+      - run: mise run ${{ inputs.project }}:release:${{ inputs.environment }}
+        env: { VERSION: ${{ inputs.version }} }
+```
+
+**Release task naming.** `mise run <project>:release:<environment>` in a
+monorepo, `mise run release:<environment>` in a polyrepo — the environment is
+the **canonical** name (`staging` / `production`), never the tag's short form.
+Tests are `<project>:test` / `test` the same way. Confirm these tasks exist
+(`mise tasks`); if the workspace's package identifiers differ from the mise task
+prefixes, ask for the mapping rather than guessing it.
+
+**Polyrepo delta.** There is one project and no dependents: drop the `deps` step
+and the `test` matrix, run `mise run test` in a single job, and pass no
+`project` input. Everything else is identical.
+
+**How many sub-workflows.** Emit **one**, and split only when two subprojects
+differ in something GitHub itself must express — a different OIDC provider,
+registry login, or environment protection rule. Differences in *build or deploy
+commands* are not a reason: those live in the mise task, which already varies
+per project. The cost of a split is structural — `jobs.<id>.uses` accepts **no
+expressions**, so the sub-workflow path must be a literal. A second sub-workflow
+means a second `release-*` job in the main workflow guarded by
+`if: needs.resolve.outputs.project == '…'`, and that guard list grows with every
+project added. Detect the actual variation across the subprojects first; if they
+are uniform, one sub-workflow is the answer and the split never happens.
+
+**Staging is not a release.** A `*-stage-v*` run never publishes packages,
+creates GitHub Releases, or updates changelogs — those belong only to the
+`*-prod-v*` path, and the release *record* itself belongs to `/vwf:verify`, not
+CI.
+
+Without the contract, release triggers are elicited as normal (§2) — but offer
 this shape as the recommended default.
 
 ## 4. Report

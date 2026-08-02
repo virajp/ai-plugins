@@ -432,11 +432,16 @@ Alongside it sits the **delivery-pipeline contract**
 developer's machine, any branch, never deployed), `staging` (testers only, built
 from `develop` only), `production` (customers, built from `main` only) — with
 `dev`/`test`/`prod`-style synonyms treated as drift, and deploys that are
-**tag-triggered only** (`stage-*` → staging, `prod-*` → production) with
-**branch validation** in the workflow (a prod tag on a feature branch can never
-deploy). A staging deploy is never a release — production releases are recorded
-only by `/vwf:verify`. The `github-actions` plugin (now a vwf dependency)
-generates deploy workflows conforming to this contract.
+**tag-triggered only** (`<project>-stage-v<x.y.z>` → staging,
+`<project>-prod-v<x.y.z>` → production, one project per tag; a polyrepo uses the
+repo name) with **branch validation** in the workflow (a prod tag on a feature
+branch can never deploy) and **no deploy step before the tagged project's and
+its dependents' tests pass in the same run**. A staging deploy is never a
+release — production releases are recorded only by `/vwf:verify`. The
+`github-actions` plugin (now a vwf dependency) generates release workflows
+conforming to this contract: one main workflow owning tag parsing, branch
+validation and the test gate, calling as few reusable sub-workflows as the
+repo's variation allows.
 
 `console` deserves a note: it is the internal admin panel — a single Hono +
 Effect app serving both the operator API and an embedded React + Refine UI, and
