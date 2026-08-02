@@ -189,7 +189,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
   | `templates/`                           | Every doc skeleton vwf writes: `flow` + `flow-platform`, `flows-index`, `entity` + `entities-index` + `schema.yaml`, `registry.yaml`, `openapi.yaml`, `conventions`, `plan`, `product`, `architecture`, `design-system`, `environment`, `screen-prompt`, `canvas-claude`, `project-claude`, `handoff`. All blueprint markdown opens with the OKF frontmatter block                                                                                                                                                                                                                 |
   | `examples/blueprint/`                  | The **format-19 conformance bundle** — a worked, format-valid slice where every link resolves, each flow carries Acceptance + sequence diagram + Components blocks + a Guarantees table, every doc sits inside the density budget, and nothing names a vendor. The concrete "what good looks like", link-checked by `plugins:check`                                                                                                                                                                                                                                                |
-  | `elicitation.md`                       | The shared questioning protocol (one decision per round, **§3a — every question names its scope**: the registry project + `roles`, the platform when platform-specific, or "the whole product"; the hard gate before writing, the convergence guard, the **parked-scope rule**)                                                                                                                                                                                                                                                                                                    |
+  | `elicitation.md`                       | The shared questioning protocol (one decision per round, **§3a — every question names its scope**: the registry project + `role`, the platform when platform-specific, or "the whole product"; the hard gate before writing, the convergence guard, the **parked-scope rule**)                                                                                                                                                                                                                                                                                                     |
   | `execute-stages.md`                    | The execute stage pipeline: the stage table + Runs column, per-stage subagent contracts, shared stage rules (model enforcement, loop-on-findings, the **convergence guard**), the **run journal** shape, and the end-of-run reconcile                                                                                                                                                                                                                                                                                                                                              |
   | `capability-vocabulary.md`             | The stack-agnostic capability tokens **and** the prose-noun mapping (`document-datastore` → "the datastore") every blueprint doc writes against                                                                                                                                                                                                                                                                                                                                                                                                                                    |
   | `engineering-baseline.md`              | The **15 centralized technical rules** every product follows by default — enforced, never elicited; seeded into `conventions.md#baseline`, waived only via `enforcement.rules`                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -289,23 +289,24 @@ registry) are both unconditionally required before `blueprint` — every
 goals transitively via their `Used by:` flow links), which the
 `blueprint-reviewer` verifies and the minimalism check traces to.
 `design-system` is a second foundation, **required once the registry has a UI
-project** (some project's `roles` include `site` or `frontend`): `blueprint`
-halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
-missing. `environment.md` (the per-project env-var/secret catalog, type
-`vwf-environment`) is a third foundation, **required once the registry declares
-an external integration or a secrets-manager `config`** — `setup` bootstraps it
-from the repo's existing env-var/secret usage (names only, never values) and
-`blueprint` maintains it as flows add integrations, with `conventions.md#config`
-holding only the injection mechanism. **Everything up to `blueprint` is done in
-full before planning**: a blueprint run sweeps until whole-product coverage
-holds (every goal served by a flow, every referenced entity/schema/API operation
-authored + reviewed, every registry surface represented, the coherence review
-clean) and stamps it; `plan` hard-halts on a partial stamp and chains its
-slice's unimplemented dependencies as their own plans, so per-slice execution
-never builds on an unblueprinted or unbuilt dependency. The blueprint is a
-**code-independent technical contract** — it records only decisions that have
-more than one reasonable answer *and* are true regardless of how the code is
-written today; reuse/placement/ordering/library choices are `plan`'s job. The
+project** (some project's `role` is `site`, `fullstack` or `frontend`):
+`blueprint` halts on a flow with a Screens surface if
+`docs/blueprint/design-system.md` is missing. `environment.md` (the per-project
+env-var/secret catalog, type `vwf-environment`) is a third foundation,
+**required once the registry declares an external integration or a
+secrets-manager `config`** — `setup` bootstraps it from the repo's existing
+env-var/secret usage (names only, never values) and `blueprint` maintains it as
+flows add integrations, with `conventions.md#config` holding only the injection
+mechanism. **Everything up to `blueprint` is done in full before planning**: a
+blueprint run sweeps until whole-product coverage holds (every goal served by a
+flow, every referenced entity/schema/API operation authored + reviewed, every
+registry surface represented, the coherence review clean) and stamps it; `plan`
+hard-halts on a partial stamp and chains its slice's unimplemented dependencies
+as their own plans, so per-slice execution never builds on an unblueprinted or
+unbuilt dependency. The blueprint is a **code-independent technical contract** —
+it records only decisions that have more than one reasonable answer *and* are
+true regardless of how the code is written today;
+reuse/placement/ordering/library choices are `plan`'s job. The
 `blueprint-reviewer` gate enforces the per-doc completeness bars (flow steps,
 acceptance, screens, jobs; entity lifecycle, relationships, concurrency, schema;
 API errors + idempotency), the goal-traceability bars (`Serves:` on flows,

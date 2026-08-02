@@ -369,22 +369,22 @@ Not every project must exist — a product may have no operator back-office or
 
 The stack is **not** enforced. Each role ships one or more templates under
 `assets/stacks/<role>/`, and `/vwf:architecture` presents them as a menu — one
-round **per role**, plus an *other (describe)* option for anything vwf doesn't
-ship. A multi-role project picks one template per role, and the **first** role's
-template wins on any conflicting section (layout, testing, deploy).
+round per project, plus an *other (describe)* option for anything vwf doesn't
+ship. Each project carries exactly one role, so it picks exactly one template
+and there is nothing to merge.
 
-| Role       | Template ships today         | Stack                             |
-| ---------- | ---------------------------- | --------------------------------- |
-| `packages` | `typescript-effect`          | TypeScript · Effect-TS            |
-| `service`  | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS     |
-| `worker`   | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS |
-| `site`     | `typescript-astro-react`     | TypeScript · Astro (SSR) · React  |
-| `frontend` | `dart-flutter`               | Dart · Flutter                    |
-| repo-level | `pnpm-turbo`                 | pnpm · Turborepo                  |
+| Role        | Template ships today         | Stack                                          |
+| ----------- | ---------------------------- | ---------------------------------------------- |
+| `packages`  | `typescript-effect`          | TypeScript · Effect-TS                         |
+| `service`   | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                  |
+| `worker`    | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS              |
+| `site`      | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
+| `fullstack` | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
+| `frontend`  | `dart-flutter`               | Dart · Flutter                                 |
+| repo-level  | `pnpm-turbo`                 | pnpm · Turborepo                               |
 
-An operator back-office (`roles: [site, service]`) picks a `site` template and a
-`service` template. The former `console` template is being split across those
-two directories.
+`infra` ships no template yet. An operator back-office is `role: fullstack` plus
+the `operator-rbac` capability, and picks the `fullstack` template.
 
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
@@ -449,10 +449,10 @@ validation and the test gate, calling as few reusable sub-workflows as the
 repo's variation allows.
 
 The **operator back-office** deserves a note. Since format 19 it is not its own
-role: it is `roles: [site, service]` plus the `operator-rbac` capability — a
-single app serving both the operator API and an embedded UI, and the **sole
-holder of admin capabilities** (the public `service` exposes no admin routes).
-The capability, not a type name, is what marks it.
+role: it is `role: fullstack` plus the `operator-rbac` capability — a single app
+serving both the operator API and an embedded UI, and the **sole holder of admin
+capabilities** (the public `service` exposes no admin routes). The capability,
+not a type name, is what marks it.
 
 The full per-type stack docs — patterns, testing, deployment — ship inside the
 plugin under `assets/stacks/` and drive what `/vwf:setup` and
@@ -571,10 +571,10 @@ blueprint deliberately doesn't.
 ### /vwf:design-system
 
 A second foundation, **mandatory once the registry has a UI project** (some
-project's `roles` include `site` or `frontend`) — and **import-only**: Claude
-Design owns design-system authoring. You pick or build the design system on
-claude.ai/design (its stock systems are strong, and visual language is judged on
-a canvas, not as hex values in chat); the command imports it:
+project's `role` is `site`, `fullstack` or `frontend`) — and **import-only**:
+Claude Design owns design-system authoring. You pick or build the design system
+on claude.ai/design (its stock systems are strong, and visual language is judged
+on a canvas, not as hex values in chat); the command imports it:
 
 ```text
 /vwf:design-system                  # resolve: pin → pick from your design systems
@@ -1094,12 +1094,12 @@ protocol**:
 - **One decision per round** — multiple-choice with an "Other" escape hatch;
   each answer shapes the next question.
 - **Every question says what it's about** — the registry project it concerns
-  (and its `roles`: `[service]`, `[frontend]`, `[site, service]`, …), the
-  platform when the decision is platform-specific (`app`·`mobile` vs
-  `app`·`auto`), or "the whole product" when it really is product-wide. A sweep
-  crosses several projects in one sitting and you're looking at a conversation,
-  not at the file being written — "should this retry?" is only answerable once
-  you know whether *this* is the worker or the console.
+  (and its `role`: `service`, `frontend`, `fullstack`, …), the platform when the
+  decision is platform-specific (`app`·`mobile` vs `app`·`auto`), or "the whole
+  product" when it really is product-wide. A sweep crosses several projects in
+  one sitting and you're looking at a conversation, not at the file being
+  written — "should this retry?" is only answerable once you know whether *this*
+  is the worker or the console.
 - **Only real decisions** — if exactly one idiomatic answer exists, it proceeds
   without asking. It never guesses an open decision — it records it instead.
 - **Out-of-scope answers are parked, not lost** — when your answer raises

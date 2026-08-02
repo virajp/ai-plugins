@@ -25,13 +25,13 @@ or styles; you report.
 The orchestrator passes: the changed screens (from the plan's screen steps), the
 paths to `docs/blueprint/design-system.md` and the owning flow's Screens
 section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
-registry entry for the UI project (roles and stack), the project wing, and the
+registry entry for the UI project (role and stack), the project wing, and the
 **slice** and **round number** for your recall tag.
 
 ## What to do
 
-1. **Render (web UI — `roles` include `site`).** Boot the project with its own
-   mechanism per the harness contract
+1. **Render (web UI — `role` is `site` or `fullstack`).** Boot the project with
+   its own mechanism per the harness contract
    (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — the canonical `dev` task/script
    first; emulator stack if the screens need data — never hand-roll
    infrastructure. A missing capability is reported in the contract's vocabulary

@@ -63,10 +63,10 @@ Read `.config/vwf.yaml` and `docs/blueprint/registry.yaml`. If the config is
 absent, stop and report exactly one thing: this repo is not onboarded — run
 `/vwf:setup`.
 
-Note each project's `roles` (registry) and `stack` block (config). A project the
+Note each project's `role` (registry) and `stack` block (config). A project the
 registry declares with **no `stack` block** is a finding in itself
 (`config_format` 10 drift — the block is mandatory since 11); report it, nudge
-`/vwf:setup`, and check what you can from its roles' templates meanwhile.
+`/vwf:setup`, and check what you can from its role's templates meanwhile.
 
 **Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall room `doctor`
 for this repo's prior findings. Anything still present that a previous run

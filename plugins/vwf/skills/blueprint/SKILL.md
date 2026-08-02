@@ -233,14 +233,14 @@ can clear these without a user in the loop. Handle the condenser's return:
   honest over-budget doc must not block the coverage stamp forever.
 
 From the flow's nature and the registry, determine which sections apply. Map
-**by project `roles`, never by literal technology**:
+**by project `role`, never by literal technology**:
 
-| Flow section    | Resolves to (registry `roles`)                       |
-| --------------- | ---------------------------------------------------- |
-| Steps (API ops) | service/API project(s) — via `apis/<project>`        |
-| Background Jobs | worker project(s)                                    |
-| Screens         | UI project(s) (`roles` include `site` or `frontend`) |
-| Entity schemas  | the schema/contract package                          |
+| Flow section    | Resolves to (registry `role`)                               |
+| --------------- | ----------------------------------------------------------- |
+| Steps (API ops) | service/API project(s) — via `apis/<project>`               |
+| Background Jobs | worker project(s)                                           |
+| Screens         | UI project(s) (`role` is `site`, `fullstack` or `frontend`) |
+| Entity schemas  | the schema/contract package                                 |
 
 If no project carries the relevant role, **omit** that section for this flow.
 
@@ -279,7 +279,7 @@ module has no data shape. The same section structure and completeness bars
 apply; an inapplicable surface is `N/A — <reason>`, never silently omitted.
 
 **Design-system gate.** If the flow has a **Screens** section (some registry
-project's `roles` include `site` or `frontend`),
+project's `role` is `site`, `fullstack` or `frontend`),
 `docs/blueprint/design-system.md` must exist. **Halt if it does not:** "This
 flow has UI but no design system. Run `/vwf:design-system` first." Screens
 reference the design system; they never re-decide visual language.
@@ -300,7 +300,7 @@ in sections → gate → self-review).
 
 **Scope matters more here than anywhere.** A sweep crosses projects and
 platforms in one sitting, so per §3a every question carries the registry project
-(and its `roles` on first mention) in the text and `<project>` — or
+(and its `role` on first mention) in the text and `<project>` — or
 `<project>·<platform>` for a screens decision — in the `header`. The user is
 looking at a conversation, not at the flow folder you are writing: "should this
 retry?" is answerable only once they know whether "this" is the `worker` or the
@@ -511,10 +511,10 @@ durable decisions and their rationale, plus any drift flagged, to mempalace
 ### 6a. Render & review the screens (gates the pass — flows with Screens)
 
 When this pass authored or materially changed a flow's `## Screens` section (UI
-projects whose `roles` include `site` or `frontend` — a `cli` platform has no
-screens), the pass approval (§7) **gates on a visual review** of those screens.
-Screens are contracts with happy *and* sad paths; the user must see them before
-approving the flow.
+projects whose `role` is `site`, `fullstack` or `frontend` — a `cli` platform
+has no screens), the pass approval (§7) **gates on a visual review** of those
+screens. Screens are contracts with happy *and* sad paths; the user must see
+them before approving the flow.
 
 1. **Render (local, never canvas).** Ensure `docs/scratchpad/` is gitignored
    (`git check-ignore -q docs/scratchpad`; if not, append `docs/scratchpad/` to

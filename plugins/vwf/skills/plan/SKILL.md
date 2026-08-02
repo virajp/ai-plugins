@@ -121,7 +121,7 @@ own plan doc behind its own approval gate.
   element consumes external credentials/env vars —
   `docs/blueprint/environment.md`.
 - **Actual:** the real code in the submodule(s) the registry maps this element
-  to (resolve section→project by `roles` and `doc_unit`, as in `blueprint` §2).
+  to (resolve section→project by `role` and `doc_unit`, as in `blueprint` §2).
 
 **Delegate the survey.** Dispatch a fresh `plan-surveyor` subagent per chain
 element rather than reading the codebase yourself — this is the largest inline

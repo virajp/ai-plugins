@@ -10,15 +10,14 @@
 
 vwf_registry: 1
 
-# `roles` is a LIST and its ORDER IS PRECEDENCE — the first role owns the
-# project's layout, testing and deploy conventions. Every project here happens
-# to carry exactly one role; a multi-role project is written the same way, e.g.
-# an operator back-office is `roles: [ site, service ]` plus the
-# `operator-rbac` capability (format 19 dissolved the old `console` type).
+# Each project carries exactly ONE `role`. `web` is a `site` (UI only, calls
+# the api project); a project publishing its own API alongside a UI would be
+# `fullstack`, which is also what an operator back-office is — `fullstack` plus
+# the `operator-rbac` capability (format 19 dissolved the old `console` type).
 
 projects:
   - name: web
-    roles: [ site ]
+    role: site
     path: apps/web
     capabilities: [ ssr, seo ]
     depends_on: [ api ]
@@ -26,14 +25,14 @@ projects:
     platforms: [ web ]
 
   - name: api
-    roles: [ service ]
+    role: service
     path: services/api
     capabilities: [ relational-datastore, payments-subscriptions, audit-log ]
     depends_on: []
     doc_unit: entity
 
   - name: worker
-    roles: [ worker ]
+    role: worker
     path: services/worker
     capabilities: [ scheduled-jobs, message-queue, email ]
     depends_on: [ api ]

@@ -53,10 +53,10 @@ components-and-anti-patterns, terminal-ux, checklist).
 
 Read `docs/blueprint/registry.yaml`. **Halt if it does not exist:** "No registry
 found. Run `/vwf:architecture` first." If the registry has **no** UI-surface
-project (no project whose `roles` include `site` or `frontend`), tell the user a
-design system may not be needed and ask whether to (a) **add the UI project to
-the registry first** via `/vwf:architecture` (then return here), or (b) proceed
-anyway.
+project (no project whose `role` is `site`, `fullstack` or `frontend`), tell the
+user a design system may not be needed and ask whether to (a) **add the UI
+project to the registry first** via `/vwf:architecture` (then return here), or
+(b) proceed anyway.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format

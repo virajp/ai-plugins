@@ -37,11 +37,11 @@ today and is expected to grow as templates and LSP coverage arrive.
 
 ## Template frontmatter
 
-Every project template at `assets/stacks/<type>/<slug>.md` opens with:
+Every project template at `assets/stacks/<role>/<slug>.md` opens with:
 
 ```yaml
 ---
-role: <registry role> # service | worker | packages | site | frontend | infra
+role: <registry role> # service | worker | packages | site | fullstack | frontend | infra
 name: <display name> # what the menu shows
 languages: [<token>] # closed vocabulary above; always at least one
 optional_languages: [] # admitted by the template, not required — e.g. flutter's kotlin/swift
@@ -81,8 +81,8 @@ The split only matters for how doctor checks a project, so keep it mechanical:
 ## What is deliberately absent
 
 There is no "recommended" or "default" marker on any template. vwf ships a menu:
-`/vwf:architecture` presents every template for each of a project's `roles` and
-the user picks, with an **other (describe)** path that records free-text axes
-and `template: custom`. A repo whose stack matches nothing shipped is a normal
+`/vwf:architecture` presents every template for a project's `role` and the user
+picks, with an **other (describe)** path that records free-text axes and
+`template: custom`. A repo whose stack matches nothing shipped is a normal
 outcome, not a deviation — there is no `enforcement` entry for it and nothing to
 justify.

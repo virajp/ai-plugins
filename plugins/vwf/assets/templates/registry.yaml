@@ -19,17 +19,16 @@ vwf_registry: 1 # registry schema version
 
 projects:
   - name: <project-name>
-    # ROLES IS A LIST, AND ORDER IS PRECEDENCE. The first role owns the
-    # project's layout, testing and deploy conventions; later roles add gates
-    # and contribute only non-conflicting sections. [site, service] and
-    # [service, site] are therefore DIFFERENT projects — order is a decision,
-    # never incidental. An operator back-office is [site, service] plus the
+    # Exactly ONE role per project. `site` is a UI that calls someone else's
+    # API; `fullstack` publishes its own API and therefore REQUIRES
+    # apis/<name>.openapi.yaml plus a health endpoint. SSR does not make a site
+    # fullstack. An operator back-office is `fullstack` plus the
     # `operator-rbac` capability (there is no `console` role since format 19).
-    roles: [ <service|worker|packages|site|frontend|infra>, <...> ]
+    role: <service|worker|packages|site|fullstack|frontend|infra>
     path: <repo-or-directory>
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
     depends_on: [ <project-name>, <...> ] # or []
-    doc_unit: <entity|page|module> # defaults from the FIRST role
+    doc_unit: <entity|page|module> # defaults by role
     platforms: [ <mobile|tablet|desktop|web|auto>, <...> ] # UI roles only
 
 # System-wide concerns → the anchors blueprint expands in conventions.md.

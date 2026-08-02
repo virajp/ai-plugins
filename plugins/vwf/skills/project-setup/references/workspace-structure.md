@@ -22,13 +22,13 @@ workspace/            # parent repo — vwf lives here
 ├── .config/          # mise config (workspace tooling)
 ├── backend/          # submodule — monorepo
 │   ├── projects/
-│   │   ├── service/  # type: service
-│   │   ├── worker/   # roles: [worker]
-│   │   ├── web/      # roles: [site]
-│   │   └── console/  # roles: [site, service] + operator-rbac capability
+│   │   ├── service/  # role: service
+│   │   ├── worker/   # role: worker
+│   │   ├── web/      # role: site
+│   │   └── console/  # role: fullstack + operator-rbac capability
 │   └── packages/
-│       └── common/   # type: packages
-└── frontend/         # submodule — single-package on-device app (type: frontend)
+│       └── common/   # role: packages
+└── frontend/         # submodule — single-package on-device app (role: frontend)
 ```
 
 - The **workspace parent** holds everything product-wide: `docs/blueprint/`,
@@ -61,21 +61,21 @@ re-proposed on later runs.
 
 ## Stack templates (a menu)
 
-Each project type has one or more templates under
-`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/`. What ships today:
+Each role has one or more templates under
+`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<role>/`. What ships today:
 
-| Type       | Template                                                                                               | Stack                                          |
-| ---------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
-| `packages` | [typescript-effect](${CLAUDE_PLUGIN_ROOT}/assets/stacks/packages/typescript-effect.md)                 | TypeScript · Effect-TS                         |
-| `service`  | [typescript-effect-hono](${CLAUDE_PLUGIN_ROOT}/assets/stacks/service/typescript-effect-hono.md)        | TypeScript · Hono · Effect-TS                  |
-| `worker`   | [typescript-effect-temporal](${CLAUDE_PLUGIN_ROOT}/assets/stacks/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
-| `site`     | [typescript-astro-react](${CLAUDE_PLUGIN_ROOT}/assets/stacks/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
-| `console`  | [typescript-hono-refine](${CLAUDE_PLUGIN_ROOT}/assets/stacks/console/typescript-hono-refine.md)        | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend` | [dart-flutter](${CLAUDE_PLUGIN_ROOT}/assets/stacks/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
-| repo-level | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md)                                   | pnpm · Turborepo                               |
+| Role        | Template                                                                                               | Stack                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `packages`  | [typescript-effect](${CLAUDE_PLUGIN_ROOT}/assets/stacks/packages/typescript-effect.md)                 | TypeScript · Effect-TS                         |
+| `service`   | [typescript-effect-hono](${CLAUDE_PLUGIN_ROOT}/assets/stacks/service/typescript-effect-hono.md)        | TypeScript · Hono · Effect-TS                  |
+| `worker`    | [typescript-effect-temporal](${CLAUDE_PLUGIN_ROOT}/assets/stacks/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
+| `site`      | [typescript-astro-react](${CLAUDE_PLUGIN_ROOT}/assets/stacks/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
+| `fullstack` | [typescript-hono-refine](${CLAUDE_PLUGIN_ROOT}/assets/stacks/fullstack/typescript-hono-refine.md)      | TypeScript · Hono + Effect-TS · React + Refine |
+| `frontend`  | [dart-flutter](${CLAUDE_PLUGIN_ROOT}/assets/stacks/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
+| repo-level  | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md)                                   | pnpm · Turborepo                               |
 
-**One entry per type is not a default.** `/vwf:architecture` presents the menu
-for the project's type and the user picks, always — plus an **other (describe)**
+**One entry per role is not a default.** `/vwf:architecture` presents the menu
+for the project's role and the user picks, always — plus an **other (describe)**
 option that records `template: custom` and the axes they give. A stack matching
 no template is a normal answer: there is no deviation, no `enforcement` entry,
 and nothing to justify.
@@ -88,9 +88,9 @@ read. Languages come from the closed vocabulary in
 [stack-vocabulary](${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md).
 
 Adding a stack option means **adding a template file** — a new slug under the
-type's directory. Nothing else changes.
+role's directory. Nothing else changes.
 
-The **operator back-office** — `roles: [site, service]` with the `operator-rbac`
+The **operator back-office** — `role: fullstack` with the `operator-rbac`
 capability, no longer a `console` type — is the internal, privileged counterpart
 to `web`, and the **sole holder of admin capabilities** (the public `service`
 exposes no admin routes). It is a single deployable: one server app serving both

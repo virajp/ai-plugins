@@ -563,30 +563,30 @@ the current format and apply the delta:
   3. Bump the stamp to `18`. `config_format` stays as it is — nothing in
      `.config/vwf.yaml`'s schema changes.
 
-- **`18 → 19`** → **project roles replace project type**. Confined to
-  `registry.yaml` and the config; no doc moves and no frontmatter changes, but
-  it is **not** purely mechanical — step 2 needs a decision from the user.
+- **`18 → 19`** → **project role replaces project type**. Confined to
+  `registry.yaml` and the config; no doc moves, no frontmatter changes, and
+  fully mechanical — nothing here needs a decision from the user.
 
-  1. **`type` → `roles` in `registry.yaml`.** For every project, replace
-     `type: <t>` with `roles: [ <t> ]`. Normalize any synonym on the way in:
-     `api` → `service`, `web` → `site`, `app` → `frontend`, `library` →
-     `packages`. A project already using a token outside the six is reported,
-     not guessed at.
-  2. **Dissolve `console` — ask, do not assume.** Every `type: console` project
-     becomes `roles: [ site, service ]` plus the **`operator-rbac`** capability
-     (added to its `capabilities` if absent). Because **role order is
-     precedence** — the first role owns layout, testing and deploy — ask the
-     user which owns this project before writing: *"Your `<name>` console is now
-     both a web UI and an API. Which owns its layout and test setup?"* Default
-     to `[ site, service ]` only if they decline to choose, and say so. This is
-     the one question in the migration; everything else is mechanical.
-  3. **`infra` is available but never inferred.** Do not retype any existing
+  1. **`type` → `role` in `registry.yaml`.** For every project, rename the key.
+     Normalize any synonym on the way in: `api` → `service`, `web` → `site`,
+     `app` → `frontend`, `library` → `packages`. A project already using a token
+     outside the seven is reported, not guessed at.
+  2. **`console` → `fullstack`.** Every `type: console` project becomes
+     `role: fullstack` plus the **`operator-rbac`** capability (added to its
+     `capabilities` if absent). A console was by definition one deployable
+     serving both an operator API and its UI, which is exactly what `fullstack`
+     means — so this is a rename, not a re-modelling.
+  3. **`site` projects that publish their own API become `fullstack`.** Check
+     each `type: site` project for an `apis/<name>.openapi.yaml`. If one exists
+     the project owns an API contract and is `fullstack`; if not it stays
+     `site`. Report each reclassification. SSR is not an API.
+  4. **`infra` is available but never inferred.** Do not retype any existing
      project to `infra`. Mention that IaC projects can now be registered (exempt
      from blueprint coverage) and let the user add them via `/vwf:architecture`.
-  4. **Re-point role-keyed prose.** In `architecture.md`, rewrite any "type"
-     wording to "roles" so the prose view matches the registry it describes.
-     Flow and entity docs are untouched — they never named a project type.
-  5. Bump the stamp to `19`. `config_format` moves in the same release; see the
+  5. **Re-point role-keyed prose.** In `architecture.md`, rewrite any "type"
+     wording to "role" so the prose view matches the registry it describes. Flow
+     and entity docs are untouched — they never named a project type.
+  6. Bump the stamp to `19`. `config_format` moves in the same release; see the
      `11 → 12` entry in the vwf-config asset for the paired config migration.
 
   **What does not change:** flow paths stay `flows/<project>/<NNN>-<flow>/`

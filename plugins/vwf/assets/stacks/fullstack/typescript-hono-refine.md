@@ -1,5 +1,5 @@
 ---
-type: console
+role: fullstack
 name: TypeScript · Hono + Effect · React + Refine
 languages: [ typescript ]
 optional_languages: []
@@ -7,12 +7,15 @@ frameworks: [ hono, effect, react, refine ]
 dependencies: [ ant-design, vite ]
 ---
 
-# Console — TypeScript · Hono + Effect · React + Refine
+# Fullstack — TypeScript · Hono + Effect · React + Refine
 
-`console` is the internal admin panel used by the product's operators. It is a
-single Hono application that serves both the operator API and an embedded web
-UI, deployed as one private Cloud Run service. The public `service` exposes no
-admin routes; `console` is the sole holder of admin capabilities.
+A `fullstack` project serving an operator back-office: one Hono application
+exposing both its own API and an embedded web UI, deployed as a single private
+Cloud Run service. Declaring the `operator-rbac` capability is what makes it the
+**sole holder of admin capabilities** — the public `service` then exposes no
+admin routes. The same template fits any fullstack project that publishes its
+own API contract alongside a UI; the operator framing is just its most common
+use.
 
 ## Stack
 
