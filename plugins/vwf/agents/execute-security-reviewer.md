@@ -31,11 +31,12 @@ high-severity issues.
    injection/authorization for datastores, signed-URL handling for file storage,
    webhook signing for integrations, entitlement bypass for payments).
    Threat-model the diff against those surfaces. When the registry declares a
-   `packages` common project or a `console` project (and no `enforcement.rules`
-   waiver in `.config/vwf.yaml` covers it), treat chokepoint bypasses as
-   surfaces too: third-party or datastore access that skips the common package's
-   layers (dodging their audit/authz wrapping), and privileged/admin capability
-   implemented outside the console project.
+   `packages` common project or a project carrying the `operator-rbac`
+   capability (and no `enforcement.rules` waiver in `.config/vwf.yaml` covers
+   it), treat chokepoint bypasses as surfaces too: third-party or datastore
+   access that skips the common package's layers (dodging their audit/authz
+   wrapping), and privileged/admin capability implemented outside the project
+   that declares `operator-rbac`.
 3. **Trace real call paths.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`,
    when a knowledge graph is reachable (this worktree or the main checkout per
    that asset's Worktrees rule), ground the threat model in actual reachability:

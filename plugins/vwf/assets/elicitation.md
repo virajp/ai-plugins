@@ -55,7 +55,7 @@ State the scope in **both** places `AskUserQuestion` gives you:
   (`app·mobile`, `app·auto`). Reserve the topic for the question text; the chip
   is for *where*.
 - **the question text** — the full scope, up front, because the header
-  truncates. Name the registry project **and its `type`** the first time it
+  truncates. Name the registry project **and its `roles`** the first time it
   appears in a pass, then the project alone: "In `api` (a `service`), when a
   refund request times out …".
 

@@ -233,16 +233,16 @@ can clear these without a user in the loop. Handle the condenser's return:
   honest over-budget doc must not block the coverage stamp forever.
 
 From the flow's nature and the registry, determine which sections apply. Map
-**by project `type`, never by literal technology**:
+**by project `roles`, never by literal technology**:
 
-| Flow section    | Resolves to (registry `type`)                    |
-| --------------- | ------------------------------------------------ |
-| Steps (API ops) | service/API project(s) — via `apis/<project>`    |
-| Background Jobs | worker project(s)                                |
-| Screens         | UI project(s) (`site`, `frontend`, or `console`) |
-| Entity schemas  | the schema/contract package                      |
+| Flow section    | Resolves to (registry `roles`)                       |
+| --------------- | ---------------------------------------------------- |
+| Steps (API ops) | service/API project(s) — via `apis/<project>`        |
+| Background Jobs | worker project(s)                                    |
+| Screens         | UI project(s) (`roles` include `site` or `frontend`) |
+| Entity schemas  | the schema/contract package                          |
 
-If a type is absent from the registry, **omit** that section for this flow.
+If no project carries the relevant role, **omit** that section for this flow.
 
 **Platform extensions.** Read `.config/vwf.yaml` `projects.<name>.platforms`
 (per the vwf-config asset). When a UI project declares targets beyond its
@@ -271,18 +271,18 @@ deviations**, noting any CarPlay-vs-Android-Auto difference there. In-car UIs
 are template-constrained by the OS; custom layout does not apply.
 
 **Doc unit.** Each registry project declares a `doc_unit` (`entity` / `page` /
-`module`). Under format 9 these map as: `page` doc units (typically a `site` or
-`console`) are authored as **flows** — a page journey is a flow; `module` doc
-units (typically `packages`) stay under `entities/` — a module boundary is a
+`module`). Under format 9 these map as: `page` doc units (typically a project
+carrying `site`) are authored as **flows** — a page journey is a flow; `module`
+doc units (typically `packages`) stay under `entities/` — a module boundary is a
 supporting contract, with `schema.yaml` written as `N/A — <reason>` when the
 module has no data shape. The same section structure and completeness bars
 apply; an inapplicable surface is `N/A — <reason>`, never silently omitted.
 
-**Design-system gate.** If the flow has a **Screens** section (the registry has
-a `site`, `frontend`, or `console` project), `docs/blueprint/design-system.md`
-must exist. **Halt if it does not:** "This flow has UI but no design system. Run
-`/vwf:design-system` first." Screens reference the design system; they never
-re-decide visual language.
+**Design-system gate.** If the flow has a **Screens** section (some registry
+project's `roles` include `site` or `frontend`),
+`docs/blueprint/design-system.md` must exist. **Halt if it does not:** "This
+flow has UI but no design system. Run `/vwf:design-system` first." Screens
+reference the design system; they never re-decide visual language.
 
 ### 3. Interactive elicitation (orchestrator)
 
@@ -300,14 +300,14 @@ in sections → gate → self-review).
 
 **Scope matters more here than anywhere.** A sweep crosses projects and
 platforms in one sitting, so per §3a every question carries the registry project
-(and its `type` on first mention) in the text and `<project>` — or
+(and its `roles` on first mention) in the text and `<project>` — or
 `<project>·<platform>` for a screens decision — in the `header`. The user is
 looking at a conversation, not at the flow folder you are writing: "should this
 retry?" is answerable only once they know whether "this" is the `worker` or the
-`console`. Elicit the flow first — trigger, actors, steps to the observable
-outcome, consistency, failure/compensation, screens, jobs, acceptance — then pin
-down what it stands on (entity shapes, API operations). Where a cross-cutting
-decision surfaces, fill the conventions skeleton.
+operator back-office. Elicit the flow first — trigger, actors, steps to the
+observable outcome, consistency, failure/compensation, screens, jobs, acceptance
+— then pin down what it stands on (entity shapes, API operations). Where a
+cross-cutting decision surfaces, fill the conventions skeleton.
 
 Blueprint-specific notes layered on the protocol:
 
@@ -511,7 +511,7 @@ durable decisions and their rationale, plus any drift flagged, to mempalace
 ### 6a. Render & review the screens (gates the pass — flows with Screens)
 
 When this pass authored or materially changed a flow's `## Screens` section (UI
-projects of type `site`, `console`, or `frontend` — a `cli` platform has no
+projects whose `roles` include `site` or `frontend` — a `cli` platform has no
 screens), the pass approval (§7) **gates on a visual review** of those screens.
 Screens are contracts with happy *and* sad paths; the user must see them before
 approving the flow.

@@ -41,7 +41,7 @@ project — `/vwf:design-system` imports *from* it; nothing in vwf pushes to it.
 1. Read `design.projects.<registry-project>.<platform>` from `.config/vwf.yaml`.
    Legacy fallbacks — a flat `design.projects.<registry-project>` uuid
    (config_format 5) acts as the pin for the project's **primary platform**
-   (`mobile` for a `frontend`, `desktop` for a `site`/`console`); a single
+   (`mobile` for a `frontend` role, `desktop` for a `site` role); a single
    `design.project_id` (4) or `mockups.project_id` (3) as that shared
    primary-platform pin for every UI project — honor them and nudge `/vwf:setup`
    for the config migration. If a pin is present, verify with `get_project`: it

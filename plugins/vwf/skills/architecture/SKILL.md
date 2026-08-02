@@ -110,48 +110,70 @@ grouped tokens are the multi-select options you offer for the `capabilities`
 field. Then ask the user to enumerate all projects, and walk the projects one at
 a time, gathering for each:
 
-| Field          | How to elicit                                                                 |
-| -------------- | ----------------------------------------------------------------------------- |
-| `name`         | Free text (short identifier)                                                  |
-| `type`         | MCQ: `service` / `worker` / `packages` / `site` / `frontend` / `console`      |
-| `path`         | Free text (repo-relative directory)                                           |
-| `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other |
-| `depends_on`   | Multi-select from named projects + None                                       |
-| `doc_unit`     | MCQ: `entity` / `page` / `module` (default by type)                           |
-| `platforms`    | Multi-select (UI projects) — see Platforms below                              |
+| Field          | How to elicit                                                                   |
+| -------------- | ------------------------------------------------------------------------------- |
+| `name`         | Free text (short identifier)                                                    |
+| `roles`        | Multi-select: `service` / `worker` / `packages` / `site` / `frontend` / `infra` |
+| role order     | MCQ, **only when more than one role** — see Role order below                    |
+| `path`         | Free text (repo-relative directory)                                             |
+| `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other   |
+| `depends_on`   | Multi-select from named projects + None                                         |
+| `doc_unit`     | MCQ: `entity` / `page` / `module` (default from the **first** role)             |
+| `platforms`    | Multi-select (UI roles) — see Platforms below                                   |
 
 Since format 16 the registry has **no `stack` field**: the concrete technology
 is realization, recorded in `.config/vwf.yaml` (see the stack menu below). The
 registry describes what the system *is*; config records what it is *built with*.
 
-Offer the type defaults for `doc_unit`: `service` → `entity`, `worker` →
-`entity`, `packages` → `module`, `site` → `page`, `frontend` → `entity`,
-`console` → `page`.
+Offer the role defaults for `doc_unit`, resolved from the **first** role:
+`service` → `entity`, `worker` → `entity`, `packages` → `module`, `site` →
+`page`, `frontend` → `entity`, `infra` → `module`.
+
+**Role order — always ask, never infer.** When a project carries more than one
+role, the **first** role owns its layout, testing and deploy conventions; the
+rest add gates and contribute only non-conflicting sections. So
+`[site,
+service]` and `[service, site]` are different projects. Ask it as its
+own question — *"This project is both a web UI and an API. Which one owns its
+layout and test setup?"* — and record the answer as the list order. **Never let
+the order fall out of the sequence the user happened to name the roles in**: the
+consequence is real but invisible in the YAML, so an unasked order is a silent
+wrong answer, not a harmless default.
+
+**No `console`.** An operator back-office is `roles: [site, service]` plus the
+`operator-rbac` capability. When a user describes an admin panel, offer exactly
+that rather than inventing a role. **Synonyms** normalize on the way in: `api` →
+`service`, `web` → `site`, `app` → `frontend`, `library` → `packages`.
+
+**`infra`** is registered but exempt from blueprint coverage — it has no flows,
+screens or API contracts. Record it, then skip it in every coverage question.
 
 **Terminal surfaces.** While walking the projects, ask (once) whether any
 project exposes a **CLI/TUI** — a shipped command-line tool, not internal dev
 scripts. For each that does, record `cli` under `projects.<name>.platforms` in
 `.config/vwf.yaml` (confirmed, per the vwf-config asset). A `cli` platform is
 what makes the design system's **Terminal UX** section required — it is not a
-registry `type` and never triggers Screens or mockups.
+registry role and never triggers Screens or mockups.
 
 **Platforms.** Record each project's implemented surfaces under
 `projects.<name>.platforms` (confirmed, per the vwf-config asset) from the one
 vocabulary in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: **`mobile`**,
 **`tablet`**, **`desktop`** (a natively installed app), **`web`**
-(browser-delivered — the default for `site` / `console`), and **`auto`** (in-car
-— CarPlay and Android Auto together; ask once per `frontend` project whether the
-app must run in-car, and offer `auto` **only** for `frontend` projects). The
+(browser-delivered — the default for a `site` role), and **`auto`** (in-car —
+CarPlay and Android Auto together; ask once per project carrying `frontend`
+whether the app must run in-car, and offer `auto` **only** for those). The
 vocabulary names form factors, not vendors — `mobile` already hides iOS/Android,
 so `auto` hides CarPlay/Android Auto the same way. These platforms decide which
 `<platform>.md` files a flow may carry, and the `/vwf:screens` design briefs.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.**
-Each project type has one or more templates under
-`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/`. Present them for the project's
-`type` as one elicitation round (per `assets/elicitation.md` — one decision, the
-menu plus an **other (describe)** option), and record the answer as the
-structured `projects.<name>.stack` block in `.config/vwf.yaml` (per the
+Each role has one or more templates under
+`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<role>/`. Present them **per role** — a
+multi-role project picks one template for each of its roles, and the **first**
+role's template wins on any conflicting section (layout, testing, deploy).
+Present each as one elicitation round (per `assets/elicitation.md` — one
+decision, the menu plus an **other (describe)** option), and record the answer
+as the structured `projects.<name>.stack` block in `.config/vwf.yaml` (per the
 vwf-config asset). **Always write it**, for every project: the block is what
 `/vwf:doctor` checks the repo against, and it cannot check what was never
 recorded.
@@ -229,7 +251,7 @@ for explicit approval before proceeding to Step 5.
 Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 
 - All elicited prose answers (system overview, interconnects, hosting).
-- All per-project registry rows (name, type, path, capabilities, depends_on,
+- All per-project registry rows (name, roles, path, capabilities, depends_on,
   doc_unit, platforms) — **no stack**; it is not a registry field.
 - All cross-cutting decisions.
 - **Update mode only:** the **paths** `docs/blueprint/architecture.md` and

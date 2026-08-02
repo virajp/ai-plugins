@@ -1,5 +1,5 @@
 ---
-type: worker
+role: worker
 name: TypeScript · Temporal · Effect
 languages: [ typescript ]
 optional_languages: []

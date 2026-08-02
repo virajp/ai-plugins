@@ -111,7 +111,7 @@ adopting it.
   (parent repo + backend/frontend submodules) — see
   [The structure it enforces](#the-structure-it-enforces). You can opt out — an
   explicit objection is recorded as a deviation and never re-asked. The **stack
-  is yours to pick**: vwf ships templates per project type and
+  is yours to pick**: vwf ships templates per project role and
   `/vwf:architecture` presents them as a menu, with an *other (describe)* path
   for anything it doesn't ship.
 - **Solo / small-team focus.** It is highly opinionated — one workflow, one set
@@ -352,8 +352,8 @@ workspace/            # parent repo — vwf lives here
 └── frontend/         # submodule — single-package Flutter app
 ```
 
-Not every project must exist — a product may have no `console` or `web` yet. How
-enforcement works:
+Not every project must exist — a product may have no operator back-office or
+`web` yet. How enforcement works:
 
 - **New/empty repos** get the shape applied as the default — one confirmation.
 - **Existing repos** that don't match get a **consent-gated restructure
@@ -367,20 +367,24 @@ enforcement works:
 
 ### Stack templates
 
-The stack is **not** enforced. Each project type ships one or more templates
-under `assets/stacks/<type>/`, and `/vwf:architecture` presents them as a menu —
-one round per project, plus an *other (describe)* option for anything vwf
-doesn't ship.
+The stack is **not** enforced. Each role ships one or more templates under
+`assets/stacks/<role>/`, and `/vwf:architecture` presents them as a menu — one
+round **per role**, plus an *other (describe)* option for anything vwf doesn't
+ship. A multi-role project picks one template per role, and the **first** role's
+template wins on any conflicting section (layout, testing, deploy).
 
-| Type       | Template ships today         | Stack                                          |
-| ---------- | ---------------------------- | ---------------------------------------------- |
-| `packages` | `typescript-effect`          | TypeScript · Effect-TS                         |
-| `service`  | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                  |
-| `worker`   | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS              |
-| `site`     | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
-| `console`  | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend` | `dart-flutter`               | Dart · Flutter                                 |
-| repo-level | `pnpm-turbo`                 | pnpm · Turborepo                               |
+| Role       | Template ships today         | Stack                             |
+| ---------- | ---------------------------- | --------------------------------- |
+| `packages` | `typescript-effect`          | TypeScript · Effect-TS            |
+| `service`  | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS     |
+| `worker`   | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS |
+| `site`     | `typescript-astro-react`     | TypeScript · Astro (SSR) · React  |
+| `frontend` | `dart-flutter`               | Dart · Flutter                    |
+| repo-level | `pnpm-turbo`                 | pnpm · Turborepo                  |
+
+An operator back-office (`roles: [site, service]`) picks a `site` template and a
+`service` template. The former `console` template is being split across those
+two directories.
 
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
@@ -444,10 +448,11 @@ conforming to this contract: one main workflow owning tag parsing, branch
 validation and the test gate, calling as few reusable sub-workflows as the
 repo's variation allows.
 
-`console` deserves a note: it is the internal admin panel — a single Hono +
-Effect app serving both the operator API and an embedded React + Refine UI, and
-the **sole holder of admin capabilities** (the public `service` exposes no admin
-routes).
+The **operator back-office** deserves a note. Since format 19 it is not its own
+role: it is `roles: [site, service]` plus the `operator-rbac` capability — a
+single app serving both the operator API and an embedded UI, and the **sole
+holder of admin capabilities** (the public `service` exposes no admin routes).
+The capability, not a type name, is what marks it.
 
 The full per-type stack docs — patterns, testing, deployment — ship inside the
 plugin under `assets/stacks/` and drive what `/vwf:setup` and
@@ -505,7 +510,7 @@ conversation calls for one, and the same artifact installs into OpenCode via the
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
 it after upgrading vwf to migrate to the latest format. It detects your topology
-(monorepo, polyrepo, or the workspace shape; project types; stacks) and confirms
+(monorepo, polyrepo, or the workspace shape; project roles; stacks) and confirms
 it with you via MCQ, then produces a **dry-run migration plan** — every doc to
 scaffold and every source move to make, including a restructure proposal toward
 the [enforced workspace shape](#the-structure-it-enforces) when the repo doesn't
@@ -565,11 +570,11 @@ blueprint deliberately doesn't.
 
 ### /vwf:design-system
 
-A second foundation, **mandatory once the registry has a UI project** (type
-`site`, `frontend`, or `console`) — and **import-only**: Claude Design owns
-design-system authoring. You pick or build the design system on claude.ai/design
-(its stock systems are strong, and visual language is judged on a canvas, not as
-hex values in chat); the command imports it:
+A second foundation, **mandatory once the registry has a UI project** (some
+project's `roles` include `site` or `frontend`) — and **import-only**: Claude
+Design owns design-system authoring. You pick or build the design system on
+claude.ai/design (its stock systems are strong, and visual language is judged on
+a canvas, not as hex values in chat); the command imports it:
 
 ```text
 /vwf:design-system                  # resolve: pin → pick from your design systems
@@ -1089,12 +1094,12 @@ protocol**:
 - **One decision per round** — multiple-choice with an "Other" escape hatch;
   each answer shapes the next question.
 - **Every question says what it's about** — the registry project it concerns
-  (and its type: `service`, `frontend`, `console`, …), the platform when the
-  decision is platform-specific (`app`·`mobile` vs `app`·`auto`), or "the whole
-  product" when it really is product-wide. A sweep crosses several projects in
-  one sitting and you're looking at a conversation, not at the file being
-  written — "should this retry?" is only answerable once you know whether *this*
-  is the worker or the console.
+  (and its `roles`: `[service]`, `[frontend]`, `[site, service]`, …), the
+  platform when the decision is platform-specific (`app`·`mobile` vs
+  `app`·`auto`), or "the whole product" when it really is product-wide. A sweep
+  crosses several projects in one sitting and you're looking at a conversation,
+  not at the file being written — "should this retry?" is only answerable once
+  you know whether *this* is the worker or the console.
 - **Only real decisions** — if exactly one idiomatic answer exists, it proceeds
   without asking. It never guesses an open decision — it records it instead.
 - **Out-of-scope answers are parked, not lost** — when your answer raises

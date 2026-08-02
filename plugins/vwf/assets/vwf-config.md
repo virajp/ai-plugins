@@ -172,7 +172,7 @@ earlier than 65/90/80), never loosen.
   one canvas project per platform, since each platform canvas carries its own
   conventions CLAUDE.md (device frame, layout; written by `/vwf:screens`). An
   existing flat uuid becomes the pin for the project's **primary platform**
-  (`mobile` for a `frontend`, `desktop` for a `site`/`console`); other declared
+  (`mobile` for a `frontend` role, `desktop` for a `site` role); other declared
   platforms are pinned on next use (canvas-push §2). Readers fall back to a flat
   `design.projects.<registry-project>` uuid as that primary-platform pin — its
   presence is `5` drift. Two platforms must never share a uuid; a shared uuid
@@ -203,8 +203,8 @@ earlier than 65/90/80), never loosen.
   **platform vocabulary is rewritten** everywhere it appears (`design.projects`
   pins, `projects.<name>.platforms`): `carplay` and `android-auto` collapse to
   **`auto`** — two pins that collapse onto one platform are surfaced for
-  re-pinning, never silently merged — and a `site`/`console` project's `desktop`
-  pin becomes `web`. Flow numbers are renumbered by the blueprint migration; the
+  re-pinning, never silently merged — and a `site`-role project's `desktop` pin
+  becomes `web`. Flow numbers are renumbered by the blueprint migration; the
   entries here are rewritten to match. Readers honor a legacy entry without a
   platform leaf by matching the flow prefix — its presence is `8` drift.
 - **`9 → 10` migration** (performed by `/vwf:setup`, alongside the blueprint

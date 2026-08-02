@@ -27,9 +27,9 @@ so one boot of the local stack serves both. Each is conditional — skipped
 
 - `acceptance` — only when the plan's "Acceptance criteria (from blueprint)"
   section carries criteria (skip on `none — no flow touched`).
-- `ux` — only when the slice changes screens in a UI project (registry type
-  `site`, `console`, or `frontend`). Web UI gets the full rendered review;
-  `frontend` (Flutter) gets the code-level review only (`RENDERED: n/a`).
+- `ux` — only when the slice changes screens in a UI project (`roles` include
+  `site` or `frontend`). Web UI gets the full rendered review; `frontend`
+  (Flutter) gets the code-level review only (`RENDERED: n/a`).
 
 Per-stage dispatch contract:
 

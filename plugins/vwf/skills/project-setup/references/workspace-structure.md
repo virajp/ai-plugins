@@ -23,9 +23,9 @@ workspace/            # parent repo — vwf lives here
 ├── backend/          # submodule — monorepo
 │   ├── projects/
 │   │   ├── service/  # type: service
-│   │   ├── worker/   # type: worker
-│   │   ├── web/      # type: site
-│   │   └── console/  # type: console
+│   │   ├── worker/   # roles: [worker]
+│   │   ├── web/      # roles: [site]
+│   │   └── console/  # roles: [site, service] + operator-rbac capability
 │   └── packages/
 │       └── common/   # type: packages
 └── frontend/         # submodule — single-package on-device app (type: frontend)
@@ -38,9 +38,9 @@ workspace/            # parent repo — vwf lives here
   libraries under `packages/` — tooling per the
   [pnpm-turbo repo template](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md).
 - **frontend** is a single-package app repo — mobile apps are never monorepos.
-- Not every project must exist: a product may have no `console`, no `web`, or no
-  `frontend` yet. Absence is fine; a project that exists under another layout is
-  what triggers the migration proposal below.
+- Not every project must exist: a product may have no operator back-office, no
+  `web`, or no `frontend` yet. Absence is fine; a project under another layout
+  is what triggers the migration proposal below.
 
 ## Existing repos
 
@@ -90,15 +90,15 @@ read. Languages come from the closed vocabulary in
 Adding a stack option means **adding a template file** — a new slug under the
 type's directory. Nothing else changes.
 
-`console` is the **operator/back-office control panel** — the internal,
-privileged counterpart to `web`, and the **sole holder of admin capabilities**
-(the public `service` exposes no admin routes). It is a single deployable: one
-server app serving both the operator API and an embedded web UI from the same
-origin. Operators authenticate with the product's auth under a dedicated
-operator role; privileged operations go through the shared package and hand
-long-running actions to the `worker`. It therefore typically carries
-`depends_on: [common, worker]` and richer capabilities (auth, datastore, RBAC,
-audit) than `web`.
+The **operator back-office** — `roles: [site, service]` with the `operator-rbac`
+capability, no longer a `console` type — is the internal, privileged counterpart
+to `web`, and the **sole holder of admin capabilities** (the public `service`
+exposes no admin routes). It is a single deployable: one server app serving both
+the operator API and an embedded web UI from the same origin. Operators
+authenticate with the product's auth under a dedicated operator role; privileged
+operations go through the shared package and hand long-running actions to the
+`worker`. It therefore typically carries `depends_on: [common, worker]` and
+richer capabilities (auth, datastore, RBAC, audit) than `web`.
 
 ## The common-package rules
 

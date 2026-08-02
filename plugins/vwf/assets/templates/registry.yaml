@@ -8,9 +8,9 @@
 #
 # What is NOT here:
 #   - `stack` — the concrete technology per project lives in `.config/vwf.yaml`
-#     under `projects.<name>.stack`, defaulting to the reference stack for the
-#     project's `type` (assets/stacks/<type>.md). Keeping it out is what makes
-#     the blueprint structurally incapable of naming a vendor: no authoring or
+#     under `projects.<name>.stack`, selected from the template menu for the
+#     project's roles (assets/stacks/). Keeping it out is what makes the
+#     blueprint structurally incapable of naming a vendor: no authoring or
 #     reviewing surface reads it.
 #   - enforcement opt-outs — vwf operating config, `.config/vwf.yaml`.
 #   - prose, rationale, or hosting narrative — architecture.md.
@@ -19,12 +19,18 @@ vwf_registry: 1 # registry schema version
 
 projects:
   - name: <project-name>
-    type: <service|worker|packages|site|frontend|console>
+    # ROLES IS A LIST, AND ORDER IS PRECEDENCE. The first role owns the
+    # project's layout, testing and deploy conventions; later roles add gates
+    # and contribute only non-conflicting sections. [site, service] and
+    # [service, site] are therefore DIFFERENT projects — order is a decision,
+    # never incidental. An operator back-office is [site, service] plus the
+    # `operator-rbac` capability (there is no `console` role since format 19).
+    roles: [ <service|worker|packages|site|frontend|infra>, <...> ]
     path: <repo-or-directory>
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
     depends_on: [ <project-name>, <...> ] # or []
-    doc_unit: <entity|page|module>
-    platforms: [ <mobile|tablet|desktop|web|auto>, <...> ] # UI projects only
+    doc_unit: <entity|page|module> # defaults from the FIRST role
+    platforms: [ <mobile|tablet|desktop|web|auto>, <...> ] # UI roles only
 
 # System-wide concerns → the anchors blueprint expands in conventions.md.
 # One token per concern; include only the concerns the system actually has.

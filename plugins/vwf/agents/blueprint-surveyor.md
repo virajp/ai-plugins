@@ -28,7 +28,7 @@ You receive **paths and name lists, not contents**:
 - the product doc's **slice priority** order;
 - the `docs/blueprint/registry.yaml` `projects:` block (for per-project surface
   expectations, each project's `doc_unit`, and — for the standard-flows check —
-  each UI project's `type` and capability tokens);
+  each UI project's `roles` and capability tokens);
 - the current `.config/vwf.yaml` `blueprint.remaining` list, if any, and any
   `enforcement.rules` entries with a `standard-flows/` prefix (waivers).
 
@@ -67,7 +67,7 @@ condition; a unit may fail more than one (report the most blocking).
    `density/flows/app/110-subscribe — 355 lines (budget 120)`.
 8. **Missing mandatory standard flow** — per
    `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: for each UI project, every
-   slug the vocabulary marks mandatory for its `type` — including the
+   slug the vocabulary marks mandatory for its `roles` — including the
    conditional ones, resolved from the registry's capability tokens (an Auth &
    identity capability requires `signin`, and with it `profile`,
    `delete-account`, `recover-account`) — that has no flow folder on the

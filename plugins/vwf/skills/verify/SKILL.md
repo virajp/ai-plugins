@@ -45,16 +45,16 @@ a pre-format-4 repo has nothing to verify flows against; tell the user to run
 ### 1. Resolve the target
 
 Read the registry (`docs/blueprint/registry.yaml`) for the deployed projects
-(cloud types: `service`, `worker`, `site`, `console`) and the Acceptance blocks
-of every flow under `docs/blueprint/flows/*/*/index.md`. Resolve each project's
-base URL for the named environment from the **`environments:` block in
-`.config/vwf.yaml`** first (per the vwf-config asset); fall back to the repo's
-own configuration (deploy manifests, env files by **name** via
-`docs/blueprint/environment.md`, mise tasks) — ask the user for anything
-unresolvable, never guess a hostname, and **offer to pin what was resolved/asked
-into the config** so the next run asks nothing. Health probes honor any
-per-project override (`projects.<name>.harness.health` — a declared `n/a` is
-reported as such, not "unverifiable").
+(any project whose `roles` include `service`, `worker`, `site` or `infra`) and
+the Acceptance blocks of every flow under `docs/blueprint/flows/*/*/index.md`.
+Resolve each project's base URL for the named environment from the
+**`environments:` block in `.config/vwf.yaml`** first (per the vwf-config
+asset); fall back to the repo's own configuration (deploy manifests, env files
+by **name** via `docs/blueprint/environment.md`, mise tasks) — ask the user for
+anything unresolvable, never guess a hostname, and **offer to pin what was
+resolved/asked into the config** so the next run asks nothing. Health probes
+honor any per-project override (`projects.<name>.harness.health` — a declared
+`n/a` is reported as such, not "unverifiable").
 
 **Environment names are canonical** per
 `${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`: `development` / `staging` /

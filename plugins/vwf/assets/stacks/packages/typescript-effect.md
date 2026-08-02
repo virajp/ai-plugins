@@ -1,5 +1,5 @@
 ---
-type: packages
+role: packages
 name: TypeScript · Effect
 languages: [ typescript ]
 optional_languages: []

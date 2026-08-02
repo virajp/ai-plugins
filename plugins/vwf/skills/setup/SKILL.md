@@ -92,8 +92,9 @@ Per the project-setup skill (topology-detection), read repo signals —
 `build.gradle(.kts)`, `Package.swift`, `.gitmodules`, dir layout — plus any
 existing `docs/blueprint/` or legacy `docs/specs/`. Infer: monorepo vs polyrepo
 vs **workspace** (a parent repo with submodule children — classify each child on
-its own signals), the project types present (schema/contract, service/API,
-worker, frontend/app, console/admin UI), and the stack per project.
+its own signals), the project **roles** present (`service`, `worker`,
+`packages`, `site`, `frontend`, `infra` — a list per project, order
+significant), and the stack per project.
 
 **Harness detection.** Detect the repo's verification-harness capabilities per
 `${CLAUDE_PLUGIN_ROOT}/assets/harness.md` (dev task, local E2E + stack, staging

@@ -9,14 +9,14 @@ re-verified cheaply when a cycle needs it.
 
 ## Capabilities
 
-| Capability    | Required when                                | Canonical convention                                         |
-| ------------- | -------------------------------------------- | ------------------------------------------------------------ |
-| `dev`         | a UI project (`site`/`console`) exists       | a `dev` task/script that boots the project locally           |
-| `e2e_local`   | any flow carries acceptance criteria         | a `test:e2e` task/script running E2E against the local stack |
-| `local_stack` | `e2e_local` needs backing services           | Docker-composed emulators + `wait-on` readiness gates        |
-| `e2e_staging` | flows have criteria **and** a deploy target  | a `test:e2e:staging` task/script targeting a deployed env    |
-| `health`      | a cloud project (`service`/`site`/`console`) | a `GET /health` (or documented readiness) endpoint           |
-| `screenshots` | a **web** UI project (`site`/`console`)      | Playwright runnable via `pnpm dlx playwright`                |
+| Capability    | Required when                                   | Canonical convention                                         |
+| ------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| `dev`         | a UI project exists (`site` or `frontend` role) | a `dev` task/script that boots the project locally           |
+| `e2e_local`   | any flow carries acceptance criteria            | a `test:e2e` task/script running E2E against the local stack |
+| `local_stack` | `e2e_local` needs backing services              | Docker-composed emulators + `wait-on` readiness gates        |
+| `e2e_staging` | flows have criteria **and** a deploy target     | a `test:e2e:staging` task/script targeting a deployed env    |
+| `health`      | a cloud project (`service` or `site` role)      | a `GET /health` (or documented readiness) endpoint           |
+| `screenshots` | a **web** UI project (`site` role)              | Playwright runnable via `pnpm dlx playwright`                |
 
 Reference implementations live in the stack docs — the monorepo tooling doc
 (compose stack, wait-on, task library) and the per-type docs (service test

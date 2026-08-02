@@ -30,15 +30,22 @@ outside that set (a Go or Rust codebase) will **not** be detected and must be
 described by the user — deliberate for now, and expected to widen as the
 vocabulary does.
 
-**Project types** (map to the registry `type`, never literal tech):
+**Project roles** — six tokens, never literal tech. A project carries a **list**
+of them in the registry's `roles` field, and order is precedence: the first owns
+layout, testing and deploy.
 
-- **schema/contract** — shared schema/contract package, proto, OpenAPI.
-- **service/API** — an HTTP/RPC server.
-- **worker** — a background / queue / cron processor.
-- **frontend/app** — a web or mobile UI. **Its presence makes the design system
-  mandatory** — confirm it explicitly.
-- **console/admin UI** — a web-based back-office/admin app, cloud-hosted beside
-  the service. A UI surface: **it too makes the design system mandatory**.
+- **`packages`** — shared schema/contract or library package, proto, OpenAPI.
+- **`service`** — an HTTP/RPC server. Synonym: `api`.
+- **`worker`** — a background / queue / cron processor.
+- **`site`** — a web UI. **Its presence makes the design system mandatory** —
+  confirm it explicitly. Synonym: `web`.
+- **`frontend`** — a client-side app (mobile / tablet / desktop / auto). Also
+  makes the design system mandatory. Synonym: `app`.
+- **`infra`** — an IaC project (Pulumi, Terraform, …). Registered, but exempt
+  from blueprint coverage.
+
+An **operator back-office** is not its own role: record it as
+`roles: [site, service]` plus the `operator-rbac` capability.
 
 **Stacks** — read each manifest (`package.json` deps, `pubspec.yaml`,
 `build.gradle(.kts)`, `Package.swift`) and record the stack per project for the

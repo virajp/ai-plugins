@@ -1,5 +1,5 @@
 ---
-type: site
+role: site
 name: TypeScript · Astro (SSR) · React
 languages: [ typescript ]
 optional_languages: []

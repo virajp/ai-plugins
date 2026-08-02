@@ -1,5 +1,5 @@
 ---
-type: frontend
+role: frontend
 name: Dart · Flutter
 languages: [ dart ]
 optional_languages: [ kotlin, swift ]

@@ -1,5 +1,5 @@
 ---
-type: service
+role: service
 name: TypeScript · Hono · Effect
 languages: [ typescript ]
 optional_languages: []

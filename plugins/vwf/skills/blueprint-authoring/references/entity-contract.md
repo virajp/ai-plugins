@@ -103,7 +103,7 @@ does not restate it.
 The commands still route each registry project onto a **doc unit**, but format 9
 splits where each is authored:
 
-- **page** / user-journey units (typically a `site` or `console` project) are
+- **page** / user-journey units (typically a project carrying `site`) are
   authored as **flows** under `docs/blueprint/flows/` — a page *is* a UI
   journey, and journeys live on flows now, so there is no separate page entity
   doc.

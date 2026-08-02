@@ -30,7 +30,7 @@ You receive:
 
 - **Elicited prose** — system overview, project interconnects,
   hosting/deployment details confirmed by the user.
-- **Per-project registry rows** — name, type, path, capabilities, depends_on,
+- **Per-project registry rows** — name, roles, path, capabilities, depends_on,
   doc_unit, and (UI projects) platforms for every project. There is no `stack`
   row; it is not a registry field.
 - **Cross-cutting decisions** — one-line selections for system-wide concerns
@@ -62,7 +62,7 @@ You receive:
    the `## Registry` pointer to `./registry.yaml`. Budget ~100 lines: this doc
    explains shape to a person.
 2. **System-shape diagram** — the mermaid `flowchart` in System Overview: one
-   node per registry project (labelled `name (type)`), edges from `depends_on`
+   node per registry project (labelled `name (roles)`), edges from `depends_on`
    and the elicited interconnects. Regenerate it whenever the registry changes —
    a stale diagram is a sync violation like any prose/registry mismatch.
 3. **Registry** (`registry.yaml`) — `vwf_registry: 1`, the `projects:` list (one
@@ -92,20 +92,42 @@ confirm — and never a stack, which is not yours to record at all.
 There is exactly one `docs/blueprint/registry.yaml` and one
 `docs/blueprint/architecture.md` per workspace. Write or edit those two only.
 
-## Project Types
+## Project Roles
 
-| Type       | What it is                                                 | Default `doc_unit` | Hosted on |
+A project carries **`roles`, a list** — not a single `type`. Six tokens:
+
+| Role       | What it is                                                 | Default `doc_unit` | Hosted on |
 | ---------- | ---------------------------------------------------------- | ------------------ | --------- |
 | `service`  | API backend                                                | `entity`           | cloud     |
 | `worker`   | Background-task processor                                  | `entity`           | cloud     |
 | `packages` | Shared libraries used by others                            | `module`           | n/a (lib) |
-| `site`     | Website                                                    | `page`             | cloud     |
-| `console`  | Operator/back-office web UI                                | `page`             | cloud     |
+| `site`     | Web UI                                                     | `page`             | cloud     |
 | `frontend` | Client-side application (mobile / tablet / desktop / auto) | `entity`           | device    |
+| `infra`    | Infrastructure-as-code (Pulumi, Terraform, …)              | `module`           | n/a       |
 
-`service`, `worker`, `packages`, `site`, and `console` are cloud-hosted;
-`frontend` runs on the client and ships through whatever distribution channel
-the project uses.
+`service`, `worker`, `packages`, `site` and `infra` are cloud-hosted or
+cloud-targeting; `frontend` runs on the client and ships through whatever
+distribution channel the project uses.
+
+**Order is precedence.** The first role owns the project's layout, testing and
+deploy conventions; later roles add gates and contribute only non-conflicting
+sections. `doc_unit` defaults from the **first** role. Never reorder a `roles`
+list you are editing — the order is a decision the orchestrator elicited, and
+silently changing it changes which conventions the project follows.
+
+**There is no `console` role.** An operator back-office is
+`roles: [site, service]` plus the `operator-rbac` capability — one deployable
+serving both an operator API and its UI. The capability, not a type name, is
+what marks the admin surface, and it remains the **sole** holder of admin
+routes.
+
+**`infra` is registered but exempt from blueprint coverage** — it carries no
+flows, screens or API contracts, and the coverage stamp ignores it. Record it so
+`plan`, `doctor` and `execute` can see it.
+
+**Synonyms** are recognized and normalized, never stored: `api` → `service`,
+`web` → `site`, `app` → `frontend`, `library` → `packages`. Write the canonical
+token.
 
 ## Capability Vocabulary
 

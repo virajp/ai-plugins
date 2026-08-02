@@ -52,8 +52,8 @@ semantics). No template — this command authors no repo doc.
   `/vwf:blueprint` first." Stop.
 - No design system (neither file nor folder form) → "Screens reference the
   design system; run `/vwf:design-system` first." Stop.
-- The registry has **no UI-surface project** (no `site`, `frontend`, or
-  `console` type) → no flow can have a Screens surface; say so and stop.
+- The registry has **no UI-surface project** (no project whose `roles` include
+  `site` or `frontend`) → no flow can have a Screens surface; say so and stop.
 - `$ARGUMENTS` names a flow that does not exist **or** has no Screens section →
   say so, list the flows that *do* have Screens, and stop.
 

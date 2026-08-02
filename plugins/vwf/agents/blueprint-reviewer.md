@@ -143,7 +143,7 @@ orchestrator passes both. Verify the contract and every platform file:
       "the payment provider"). The only carve-outs are `environment.md` issuers
       and `conventions.md#integrations` — neither of which is a flow doc.
 - [ ] Section-to-project mappings match the registry (by project **name** and
-      `type` — the registry has no stack to match against).
+      `roles` — the registry has no stack to match against).
 - [ ] **Density** — apply the bars in
       `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every step, screen, and job

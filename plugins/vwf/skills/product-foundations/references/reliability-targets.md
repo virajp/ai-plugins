@@ -8,11 +8,11 @@ token: `reliability: slo`.
 
 ## Default contract
 
-- **One availability SLO and one latency SLO per deployed `service` and
-  `console`** (e.g. `99.9% of requests succeed over 30 days`,
-  `p95 < 400ms on API reads`), stated per service, not product-wide — the
-  console may run laxer targets than the public API. A `worker` states a
-  **freshness/completion SLO** instead (e.g.
+- **One availability SLO and one latency SLO per deployed project carrying
+  `service` or `site`** (e.g. `99.9% of requests succeed over 30 days`,
+  `p95 < 400ms on API reads`), stated per project, not product-wide — an
+  operator back-office may run laxer targets than the public API. A `worker`
+  states a **freshness/completion SLO** instead (e.g.
   `95% of jobs done within 5m of trigger`).
 - **Measured from existing telemetry** — the SLIs come from the observability
   foundation's traces/metrics (request success ratio, latency histograms, queue

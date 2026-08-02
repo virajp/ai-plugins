@@ -53,17 +53,17 @@ Notes:
 
 ## The slug vocabulary
 
-| Slug              | `frontend` (app) | `console` / `site` | Mandate                                                     |
-| ----------------- | ---------------- | ------------------ | ----------------------------------------------------------- |
-| `splash`          | **mandatory**    | optional           | —                                                           |
-| `signin`          | conditional      | conditional        | required when the project has an Auth & identity capability |
-| `recover-account` | conditional      | conditional        | required with `signin`                                      |
-| `onboarding`      | optional         | optional           | —                                                           |
-| `home`            | **mandatory**    | **mandatory**      | every UI project                                            |
-| `profile`         | conditional      | conditional        | required with `signin`                                      |
-| `settings`        | optional         | optional           | —                                                           |
-| `notifications`   | optional         | optional           | —                                                           |
-| `delete-account`  | conditional      | conditional        | required with `signin`                                      |
+| Slug              | `frontend` (app) | `site` (web)  | Mandate                                                     |
+| ----------------- | ---------------- | ------------- | ----------------------------------------------------------- |
+| `splash`          | **mandatory**    | optional      | —                                                           |
+| `signin`          | conditional      | conditional   | required when the project has an Auth & identity capability |
+| `recover-account` | conditional      | conditional   | required with `signin`                                      |
+| `onboarding`      | optional         | optional      | —                                                           |
+| `home`            | **mandatory**    | **mandatory** | every UI project                                            |
+| `profile`         | conditional      | conditional   | required with `signin`                                      |
+| `settings`        | optional         | optional      | —                                                           |
+| `notifications`   | optional         | optional      | —                                                           |
+| `delete-account`  | conditional      | conditional   | required with `signin`                                      |
 
 - **mandatory** — required for coverage; absence is a hole (waivable, above).
 - **conditional (auth)** — `signin` is required when the project carries an
@@ -95,7 +95,7 @@ and the `docs/scratchpad/` render tree:
 | `mobile`  | Phone app or phone-sized layout                 | `frontend`           |
 | `tablet`  | Tablet layout (master-detail, multi-column)     | `frontend`           |
 | `desktop` | Natively installed desktop application          | `frontend`           |
-| `web`     | Browser-delivered app                           | `site`, `console`    |
+| `web`     | Browser-delivered app                           | `site`               |
 | `auto`    | In-car head unit — **CarPlay and Android Auto** | `frontend`           |
 
 The vocabulary names **form factors, not vendors** — `mobile` already hides
