@@ -48,8 +48,10 @@ project in the registry.
 - **Unavailable ≠ missing.** A language with no LSP shipped in this marketplace
   is reported as *unavailable* with no suggested command. Only a language that
   *has* a plugin and isn't installed is a finding.
-- **Never halt.** Doctor always finishes and reports. Callers decide what a
-  finding means — `execute` gates on the LSP check, `setup` only records.
+- **Never halt.** Doctor always finishes and reports, even when everything is
+  broken — a mandate is expressed as a **blocking finding**, never as doctor
+  stopping early. Callers decide what a finding means: `setup` and `execute`
+  both halt on `blocking`, `execute` additionally gates on the LSP check.
 
 ---
 
@@ -122,10 +124,17 @@ the truth and the config is what needs updating.
 
 ### 5. Repo tooling
 
-Check `repo.stack`: the `package_manager` resolves (lockfile present, tool on
-`PATH` or in mise config) and each entry in `tools` has its expected marker — a
-config file, a mise tool, or a manifest dependency. Absent `repo.stack` block →
-`10` drift; report and nudge `/vwf:setup`.
+**mise is mandatory** — it is both vwf's task runner (every worktree init,
+pre-commit and merge goes through it) and the toolchain manager the §3 checks
+resolve against. Missing from `PATH` → **blocking**, remedy
+`curl https://mise.run | sh`. A repo with no `.config/mise*.toml` at all is the
+same finding one level up: report it and nudge `/vwf:setup`, which delegates to
+`mise:scaffold`.
+
+Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
+on `PATH` or in mise config) and each entry in `tools` has its expected marker —
+a config file, a mise tool, or a manifest dependency. Absent `repo.stack` block
+→ `10` drift; report and nudge `/vwf:setup`.
 
 ### 6. Harness and health
 
@@ -177,19 +186,22 @@ are on disk) and report the outage as context, not as a finding.
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, graphify is vwf's
 code-intelligence layer: `plan`'s surveyor, the code/security reviewers, the
-coder, `architecture`, `feedback` and docs-sync all orient graph-first. None of
-them **gates** on it — every one falls back to Read/Grep/Glob — so everything
-here is reported as a **degradation**, never a blocker. Check:
+coder, `architecture`, `feedback` and docs-sync all orient graph-first. graphify
+is **mandatory**, so the first two checks below are **blocking** and the last
+two remain **degradations**. Check:
 
-- **The `graphify` CLI on `PATH`.** Missing → finding, remedy
+- **The `graphify` CLI on `PATH`.** Missing → **blocking**, remedy
   `mise use -g pipx:graphifyy@latest` (the double-`y` is the real package name,
   not a typo). This is *missing*, not *unavailable* — there is a command to
-  suggest.
+  suggest. Its Python/uv toolchain is a prerequisite of that remedy, not a
+  separate finding.
 - **A graph at the workspace root** (`graphify-out/graph.json`). Resolve it the
   way the asset does: current checkout first, then the **main checkout** via
-  `git rev-parse --git-common-dir`, since vwf runs in worktrees where the
-  untracked `graphify-out/` does not exist. Absent in both → finding, remedy
-  `/vwf:setup` (the only command that builds one, behind consent).
+  `git rev-parse --git-common-dir`. Absent in **both** → **blocking**, remedy
+  `/vwf:setup` (the only command that builds one, behind consent). A worktree
+  that resolves to the main checkout's graph is **not** a finding — that is the
+  normal path, and reporting it would halt every `execute` run, since worktrees
+  never carry a graph of their own.
 - **The post-commit refresh hook** (`graphify hook install`). Without it the
   graph freezes at whatever commit last rebuilt it and silently decays into
   wrong answers — worse than no graph, because nothing signals staleness.
@@ -204,13 +216,14 @@ one here would turn a read-only check into a multi-minute job nobody asked for.
 
 ### 9. Report & persist
 
-One table, findings first, grouped by kind — **drift** (config and repo
-disagree), **missing** (something declared has no install), **unavailable**
-(nothing shipped here to install), **unknown** (outside the vocabulary),
-**degraded** (something optional is absent and a fallback is carrying the work).
-Mark anything the §1 recall already carried as **known**, so a repeat run reads
-as a diff rather than a re-accusation. State the count of checks that passed
-rather than listing them.
+One table, findings first, grouped by kind — **blocking** (something *mandatory*
+is absent: mise, the graphify CLI, a workspace-root graph; callers must halt),
+**drift** (config and repo disagree), **missing** (something declared has no
+install), **unavailable** (nothing shipped here to install), **unknown**
+(outside the vocabulary), **degraded** (something optional is absent and a
+fallback is carrying the work). Mark anything the §1 recall already carried as
+**known**, so a repeat run reads as a diff rather than a re-accusation. State
+the count of checks that passed rather than listing them.
 
 Close with the remedies, each as a runnable line, and offer to apply only the
 ones that are pure config edits (a stale `stack` entry, a harness task rename, a
@@ -223,5 +236,7 @@ accepted a remedy. That is what lets the next run say **known**. Skip silently
 if mempalace is unavailable.
 
 **Callers.** `/vwf:setup` step 10 runs this over the whole repo and records what
-it finds. `/vwf:execute` runs it scoped to the plan's projects and gates on the
-LSP findings only.
+it finds. `/vwf:execute` runs it scoped to the plan's projects. **Both halt on
+any `blocking` finding** — the mandated tooling is what the pipeline is built
+on, so proceeding without it produces a run that fails later and less clearly.
+`/vwf:execute` additionally gates on the LSP findings, as it always has.

@@ -88,12 +88,12 @@ the projects present, their stacks, and who depends on whom — then confirm wha
 it reports against the manifests below; fall back silently when no graph exists.
 
 Per the project-setup skill (topology-detection), read repo signals —
-`package.json`, `pnpm-workspace.yaml`, `pubspec.yaml`, `go.mod`, `Cargo.toml`,
-`.gitmodules`, dir layout — plus any existing `docs/blueprint/` or legacy
-`docs/specs/`. Infer: monorepo vs polyrepo vs **workspace** (a parent repo with
-submodule children — classify each child on its own signals), the project types
-present (schema/contract, service/API, worker, frontend/app, console/admin UI),
-and the stack per project.
+`package.json`, `pnpm-workspace.yaml`, `bun.lock`, `pubspec.yaml`,
+`build.gradle(.kts)`, `Package.swift`, `.gitmodules`, dir layout — plus any
+existing `docs/blueprint/` or legacy `docs/specs/`. Infer: monorepo vs polyrepo
+vs **workspace** (a parent repo with submodule children — classify each child on
+its own signals), the project types present (schema/contract, service/API,
+worker, frontend/app, console/admin UI), and the stack per project.
 
 **Harness detection.** Detect the repo's verification-harness capabilities per
 `${CLAUDE_PLUGIN_ROOT}/assets/harness.md` (dev task, local E2E + stack, staging
@@ -314,10 +314,21 @@ frontmatter-and-links reference. Confirm every YAML artifact the migration wrote
 Then run **`/vwf:doctor`** over the whole repo — it checks the config just
 written against what the repo actually is (LSP servers and toolchains per
 declared language, frameworks/dependencies against each manifest, repo tooling,
-harness task names, health paths). Setup **records** what it reports and never
-gates on it: a missing LSP plugin or an unbuilt harness capability is a normal
-state for a freshly onboarded repo. Fold anything it finds into the step-11
-summary. Report anything still open.
+harness task names, health paths). Setup **records** most of what it reports and
+does not gate on it: a missing LSP plugin or an unbuilt harness capability is a
+normal state for a freshly onboarded repo. Fold anything it finds into the
+step-11 summary. Report anything still open.
+
+**Halt on a `blocking` finding.** Mandated tooling — mise, the graphify CLI — is
+what the whole pipeline runs on, and by this step everything setup can fix has
+already been attempted. A remaining blocking finding means the repo cannot run
+vwf: report it with its remedy and stop, rather than stamping a config that
+describes a repo nothing can execute against.
+
+**One exception: a declined graph build.** The graph step offers and the user
+may refuse; a recorded decline is a settled choice, not an unmet mandate. Note
+it as a degradation and finish normally — halting there would override consent
+the user already gave.
 
 ### 11. Approval gate & commit
 

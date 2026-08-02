@@ -24,6 +24,14 @@ modes, site dev server). A repo may satisfy a capability under a **non-canonical
 name**; detection records what it found — the convention is the default, not a
 straitjacket.
 
+**`local_stack` is the one exception.** Its *task name* may vary like any other,
+but its *mechanism* may not: when a repo needs a local stack at all, it must be
+**Docker-composed services behind `wait-on` readiness gates**. An alternative
+container runtime or an ad-hoc readiness sleep is a finding, not a recorded
+variant — the acceptance verifier's reliability depends on a deterministic ready
+signal. A product whose `e2e_local` needs no backing services never needs a
+local stack, and Docker is not required of it.
+
 ## Detection (used by `/vwf:setup`)
 
 Per capability: check mise tasks (`mise tasks`) and package scripts for the

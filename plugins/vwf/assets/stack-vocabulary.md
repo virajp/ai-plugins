@@ -16,25 +16,24 @@ toolchain lookups below can never miss on a spelling.
 | `dart`       | `flutter` plugin    | `pubspec.yaml`                      | `flutter` |
 | `kotlin`     | `flutter` plugin    | `build.gradle` / `build.gradle.kts` | `java`    |
 | `swift`      | `flutter` plugin    | `Package.swift` / `ios/Podfile`     | —         |
-| `go`         | none                | `go.mod`                            | `go`      |
-| `rust`       | none                | `Cargo.toml`                        | `rust`    |
-| `python`     | none                | `pyproject.toml`                    | `python`  |
-| `java`       | none                | `build.gradle` / `pom.xml`          | `java`    |
-| `ruby`       | none                | `Gemfile`                           | `ruby`    |
-| `csharp`     | none                | `*.csproj`                          | —         |
-| `php`        | none                | `composer.json`                     | `php`     |
-| `shell`      | none                | —                                   | —         |
+
+**The table is scoped to what this marketplace actually supports.** Every row
+ships an LSP; there are no dead rows. `kotlin` and `swift` are **standalone
+project languages**, not merely Flutter's `optional_languages` — a native
+Android or iOS app is a `frontend` project in its own right. `swift` has no mise
+tool because its toolchain comes from Xcode, which mise does not manage.
 
 **"LSP shipped here"** names the `virajp-plugins` plugin whose `lspServers`
 block covers the language — the thing `/vwf:doctor` looks for in
-`claude plugin list`. A `none` is **not a failure**: doctor reports it as
-*unavailable in this marketplace* rather than *missing*, because there is no
-install command to suggest. `swift` and `csharp` have no mise tool because their
-toolchains come from Xcode / the .NET SDK, which mise does not manage.
+`claude plugin list`. A future row may carry `none`; that is **not a failure**,
+and doctor reports it as *unavailable in this marketplace* rather than
+*missing*, because there is no install command to suggest.
 
 A language outside this table is recorded verbatim and reported by doctor as
-**unknown** — it checks nothing for it, and says so. Extending vwf means adding
-a row here, not improvising a token per repo.
+**unknown** — it checks nothing for it, and says so. That fallback is what keeps
+an unsupported language usable rather than blocked. Extending vwf means adding a
+row here, not improvising a token per repo; the table is deliberately narrow
+today and is expected to grow as templates and LSP coverage arrive.
 
 ## Template frontmatter
 

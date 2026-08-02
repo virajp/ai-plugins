@@ -8,17 +8,26 @@ to the graph **first**; raw file reading is reserved for verification and for
 the change itself. This keeps large surveys (a plan's actual-state read, a
 reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 
-> The `graphify` CLI is an installer-guaranteed dependency of vwf, but a **graph
-> is per-repo**. If no graph is reachable (see Worktrees) or the CLI is missing,
-> skip every graph step **silently** and fall back to direct Read/Grep/Glob —
-> never block on it, and **never build or update a graph mid-run** (`/graphify`,
+> **graphify is mandatory**, and the mandate is enforced at the **entry gate**,
+> never mid-run. Two different things are being checked:
+>
+> - **The CLI** is a hard requirement. Missing → `/vwf:doctor` §8 reports it as
+>   **blocking**, and `/vwf:setup` and `/vwf:execute` halt on it the way
+>   `execute` already halts on a missing LSP.
+> - **A graph is per-repo**, and its absence *at the workspace root* is equally
+>   blocking — `/vwf:setup` is what resolves it, behind consent.
+>
+> **A worktree with no local `graphify-out/` is not an absence.** Resolving to
+> the main checkout's graph (see Worktrees) is the normal, expected path and is
+> never reported. Were it treated as missing, every `execute` run would halt,
+> since worktrees never carry a graph of their own.
+>
+> **Mid-run, still degrade rather than crash.** Once past the gate, a graph that
+> turns out to be unreachable means falling back to direct Read/Grep/Glob — the
+> gate exists so this is rare, not so a long-running pipeline dies in the
+> middle. And **never build or update a graph mid-run** (`/graphify`,
 > `graphify extract`, `graphify update` are long, LLM-driven builds). Only
 > `/vwf:setup` builds graphs, behind explicit consent.
->
-> `/vwf:doctor` §8 is where a missing CLI, absent graph, uninstalled refresh
-> hook, or stale graph gets surfaced — as a **degradation**, never a blocker,
-> exactly matching the fallback rule above. It reports and stops; it never
-> builds.
 
 ## How to query
 

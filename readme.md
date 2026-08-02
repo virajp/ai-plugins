@@ -68,10 +68,11 @@ adopting it.
 
 **Dependencies**
 
-- **Hard external prerequisites.** `rtk` and `graphify` must be on your `PATH` —
-  the `rtk hook claude` Bash hook fails without `rtk`. Dependency
-  auto-install/enable needs Claude Code ≥ 2.1.143. See
-  [Prerequisites](#prerequisites).
+- **Hard external prerequisites.** `mise` and `graphify` must be on your `PATH`
+  — both are mandatory, and `/vwf:setup` and `/vwf:execute` halt without them.
+  `rtk` is **optional**: its Bash hook is guarded, so it is skipped when absent
+  and `/vwf:doctor` notes it. Dependency auto-install/enable needs Claude Code ≥
+  2.1.143. See [Prerequisites](#prerequisites).
 - **Memory degrades silently.** `vwf` recalls and persists through `mempalace`,
   which it expects as an **HTTP daemon you run** (`mempalace serve`). If it's
   unavailable, every memory step is skipped by design — no error, but
@@ -122,14 +123,14 @@ adopting it.
 `vwf` shells out to a few external tools. Install them first — the installer
 checks for each and prints the exact command for anything missing.
 
-| Tool            | Why                                      | Install                               |
-| --------------- | ---------------------------------------- | ------------------------------------- |
-| mise            | resolves the toolchain                   | `brew install mise`                   |
-| node + pnpm     | `context7` MCP server; the npm→pnpm hook | `mise use -g node@latest pnpm@latest` |
-| Claude Code CLI | hosts the commands                       | `mise use -g claude-code@latest`      |
-| rtk             | the `rtk hook claude` Bash hook          | `brew install --formulae rtk`         |
-| graphify        | knowledge graph the commands rely on     | `mise use -g pipx:graphifyy@latest`   |
-| uv              | installs the `mempalace` memory server   | `mise use -g uv@latest`               |
+| Tool            | Required?    | Why                                                  | Install                               |
+| --------------- | ------------ | ---------------------------------------------------- | ------------------------------------- |
+| mise            | **required** | task runner + resolves the toolchain                 | `brew install mise`                   |
+| graphify        | **required** | knowledge graph the commands rely on                 | `mise use -g pipx:graphifyy@latest`   |
+| node + pnpm     | **required** | `context7` MCP server; the npm→pnpm hook             | `mise use -g node@latest pnpm@latest` |
+| Claude Code CLI | **required** | hosts the commands                                   | `mise use -g claude-code@latest`      |
+| uv              | **required** | installs the `mempalace` memory server               | `mise use -g uv@latest`               |
+| rtk             | optional     | the `rtk hook claude` Bash hook; skipped when absent | `brew install --formulae rtk`         |
 
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
@@ -1143,10 +1144,14 @@ evidence. The graph reflects the last commit (graphify's post-commit hook keeps
 it fresh), so the uncommitted diff is always read directly, and execute's
 worktrees reach back to the main checkout's graph for pre-change context.
 
-This too is best-effort: no graph (or no CLI) means every surface falls back to
-direct reads silently — nothing blocks. `/vwf:setup` is the one command that
-builds a graph (consent-gated, at the end of onboarding) and installs the
-refresh hook.
+**graphify is mandatory**, and the check happens at the entry gate: a missing
+CLI, or no graph reachable from either the current checkout or the main one, is
+a blocking finding that `/vwf:setup` and `/vwf:execute` halt on. A worktree
+reaching back to the main checkout's graph is the normal path, not an absence.
+Past the gate it still degrades rather than crashes — an unreachable graph falls
+back to direct reads. `/vwf:setup` is the one command that builds a graph
+(consent-gated, at the end of onboarding) and installs the refresh hook; a
+recorded decline is a settled choice, not an unmet mandate.
 
 ## A worked walkthrough
 
