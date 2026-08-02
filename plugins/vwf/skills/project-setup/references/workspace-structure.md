@@ -62,17 +62,28 @@ re-proposed on later runs.
 ## Stack templates (a menu)
 
 Each role has one or more templates under
-`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<role>/`. What ships today:
+`${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/<role>/`. What ships today:
 
-| Role        | Template                                                                                               | Stack                                          |
-| ----------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
-| `packages`  | [typescript-effect](${CLAUDE_PLUGIN_ROOT}/assets/stacks/packages/typescript-effect.md)                 | TypeScript · Effect-TS                         |
-| `service`   | [typescript-effect-hono](${CLAUDE_PLUGIN_ROOT}/assets/stacks/service/typescript-effect-hono.md)        | TypeScript · Hono · Effect-TS                  |
-| `worker`    | [typescript-effect-temporal](${CLAUDE_PLUGIN_ROOT}/assets/stacks/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
-| `site`      | [typescript-astro-react](${CLAUDE_PLUGIN_ROOT}/assets/stacks/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
-| `fullstack` | [typescript-hono-refine](${CLAUDE_PLUGIN_ROOT}/assets/stacks/fullstack/typescript-hono-refine.md)      | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend`  | [dart-flutter](${CLAUDE_PLUGIN_ROOT}/assets/stacks/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
-| repo-level  | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md)                                   | pnpm · Turborepo                               |
+| Role        | Template                                                                                                       | Stack                                          |
+| ----------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `packages`  | [typescript-effect](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/packages/typescript-effect.md)                 | TypeScript · Effect-TS                         |
+| `service`   | [typescript-effect-hono](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/service/typescript-effect-hono.md)        | TypeScript · Hono · Effect-TS                  |
+| `worker`    | [typescript-effect-temporal](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
+| `site`      | [typescript-astro-react](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
+| `fullstack` | [typescript-hono-refine](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/fullstack/typescript-hono-refine.md)      | TypeScript · Hono + Effect-TS · React + Refine |
+| `frontend`  | [dart-flutter](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
+| `frontend`  | [kotlin-android](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/kotlin-android.md)                       | Kotlin · Jetpack Compose                       |
+| `frontend`  | [swift-ios](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/swift-ios.md)                                 | Swift · SwiftUI                                |
+| `infra`     | [typescript-pulumi](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/infra/typescript-pulumi.md)                    | TypeScript · Pulumi                            |
+| `infra`     | [terraform](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/infra/terraform.md)                                    | Terraform / OpenTofu                           |
+
+Three more axes compose with the project one — pick one of each:
+
+| Axis      | Ships today                                                                                                                                                             |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backing` | [firebase](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/firebase.md) · [postgres-object-storage](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/postgres-object-storage.md) |
+| `deploy`  | [cloud-run](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/cloud-run.md) · [container-generic](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/container-generic.md)             |
+| `repo`    | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md) · [bun](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/bun.md)                                           |
 
 **One entry per role is not a default.** `/vwf:architecture` presents the menu
 for the project's role and the user picks, always — plus an **other (describe)**
@@ -88,7 +99,7 @@ read. Languages come from the closed vocabulary in
 [stack-vocabulary](${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md).
 
 Adding a stack option means **adding a template file** — a new slug under the
-role's directory. Nothing else changes.
+role's directory, or under `backing/` or `deploy/`. Nothing else changes.
 
 The **operator back-office** — `role: fullstack` with the `operator-rbac`
 capability, no longer a `console` type — is the internal, privileged counterpart
@@ -111,13 +122,20 @@ reviewers flag violations unless an `enforcement.rules` waiver in
    data schemas are defined once, under the common package's schema export
    subpaths; no other project defines a shared data schema.
 2. **All third-party integrations go via `common`**
-   (`rules/integrations-via-common`) — Firebase and every other external service
-   are accessed only through the common package's wrappers/layers; no other
-   project imports a third-party SDK directly. Client-side sign-in is the one
-   allowed exception.
+   (`rules/integrations-via-common`) — **every** external service (the
+   datastore, the identity provider, maps, payments, telemetry) is accessed only
+   through the common package's wrappers/layers; no other project imports a
+   third-party SDK directly. Client-side sign-in is the one allowed exception.
 
-## Infrastructure defaults
+   This rule is what makes the **backing axis** swappable at all: the projects
+   depend on the common package's interface, not on any vendor, so changing the
+   backing template is a change in one package rather than everywhere.
 
-Alongside the stacks: Firebase (auth, data, messaging), mise (tool manager),
-Docker-run local emulators. Per-project infrastructure detail (hosting, secrets,
-testing modes) lives in each stack doc.
+## Infrastructure
+
+There is no infrastructure *default* — the backing and deploy axes are menus
+like the project axis, and `/vwf:architecture` presents them. What is fixed is
+the **shape**: one backing template naming the datastore/identity/queue/storage
+set, one deploy template naming the artifact and release path, and mise as the
+tool manager. Per-project detail (hosting, secrets, testing modes) lives in the
+selected templates, never here.

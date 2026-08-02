@@ -161,17 +161,38 @@ so `auto` hides CarPlay/Android Auto the same way. These platforms decide which
 `<platform>.md` files a flow may carry, and the `/vwf:screens` design briefs.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.**
-Each role has one or more templates under
-`${CLAUDE_PLUGIN_ROOT}/assets/stacks/<role>/`. Present the templates for the
-project's role as one elicitation round (per `assets/elicitation.md` — one
-decision, the menu plus an **other (describe)** option), and record the answer
-as the structured `projects.<name>.stack` block in `.config/vwf.yaml` (per the
-vwf-config asset). **Always write it**, for every project: the block is what
-`/vwf:doctor` checks the repo against, and it cannot check what was never
-recorded.
+Since format 19 a stack is composed from **four independent axes**
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`), each its own menu:
 
-vwf ships no default and marks no template recommended. Picking a template fills
-the four axes from its frontmatter; **other (describe)** records
+| Axis        | Scope        | Menu                            | Recorded as                      |
+| ----------- | ------------ | ------------------------------- | -------------------------------- |
+| **project** | per project  | `assets/stacks/project/<role>/` | `projects.<name>.stack.template` |
+| **backing** | product-wide | `assets/stacks/backing/`        | `backing.template`               |
+| **deploy**  | product-wide | `assets/stacks/deploy/`         | `deploy.template`                |
+| **repo**    | per repo     | `assets/stacks/repo/`           | `repo.stack.template`            |
+
+Elicit each as its **own** round (per `assets/elicitation.md` — one decision,
+the menu plus an **other (describe)** option):
+
+- **project** — once per project, filtered to that project's `role`.
+- **backing** and **deploy** — **once for the whole product**, not per project.
+  Every project talks to the same datastore/identity set and ships the same way
+  unless the user says otherwise; offer a per-project override only if they
+  raise one. Filter the backing menu by the capabilities the registry declares.
+- **repo** — once per repo, filtered to templates whose `topologies` include
+  this repo's.
+
+The axes are orthogonal by construction — a project template never names a
+vendor, a backing template never names a framework — so there is nothing to
+merge and no precedence to resolve. A `frontend` project has **no deploy axis**
+(it ships through a store): record `deploy_template: n/a`.
+
+Record all of it in `.config/vwf.yaml` per the vwf-config asset. **Always write
+the project block**, for every project: it is what `/vwf:doctor` checks the repo
+against, and it cannot check what was never recorded.
+
+vwf ships no default and marks no template recommended. Picking a project
+template fills its four frontmatter axes; **other (describe)** records
 `template: custom` and the axes the user gives. `languages` must come from the
 closed vocabulary in `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md` — offer
 the nearest token when the user names something outside it, and record it
@@ -184,10 +205,6 @@ only when the reason isn't obvious from the template name. A recorded stack is
 settled — never re-litigate it on update runs. In update mode, a project whose
 manifest has clearly moved away from its recorded stack is a delta to raise:
 align the config or ask.
-
-Elicit the **repo-level** `repo.stack` block the same way, once, from
-`${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/` — filtered to templates whose
-`topologies` include this repo's.
 
 The stack never reaches `docs/blueprint/`. That is not a convention the authors
 have to keep — it is what the registry's shape enforces, and it is why a flow

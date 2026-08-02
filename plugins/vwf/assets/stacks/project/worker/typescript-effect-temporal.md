@@ -10,9 +10,12 @@ dependencies: [ opentelemetry, vitest ]
 # Worker — TypeScript · Temporal · Effect
 
 `worker` is the durable background processor: a [Temporal](https://temporal.io)
-worker with [Effect](https://effect.website) inside activities, deployed as one
-Cloud Run service. The `service` (and `console`) start and signal its workflows;
-nothing else runs long-lived work.
+worker with [Effect](https://effect.website) inside activities. The `service`
+(and any `fullstack` project) start and signal its workflows; nothing else runs
+long-lived work.
+
+This doc covers the **project axis** only. What the worker talks to is the
+**backing** axis; where it ships is the **deploy** axis.
 
 ## Stack
 
@@ -28,16 +31,17 @@ nothing else runs long-lived work.
   with `Effect.runPromiseExit`, so the typed coded error is extracted from the
   `Cause` and domain failures rethrow as
   `ApplicationFailure.nonRetryable(message, code)`. Activities provide the
-  common package's aggregate services layer for Firebase et al.
+  common package's aggregate services layer for every external service.
 - **Layout**: `src/modules/<domain>/` with paired `*.workflow.ts` +
   `*.activity.ts` + tests; `workflows.ts` / `activities.ts` as the two flat
   registries; worker runtime plumbing under `_worker/`, config under `_shared/`.
-- **Firebase & third parties**: only via the common package's layers, caller
-  string on every datastore call.
+- **Third parties**: only via the common package's layers
+  (`rules/integrations-via-common`), caller string on every datastore call.
 - **Schemas**: from the common package's `schemas/*` subpaths; a local schema is
   allowed only for workflow↔activity-internal types.
-- **Config**: Effect `Config` + `Schema`, fail-fast; Doppler-injected secrets;
-  Temporal address/namespace/task-queue/TLS from env.
+- **Config**: Effect `Config` + `Schema`, fail-fast; secrets injected by
+  whatever the backing axis names; Temporal address/namespace/task-queue/TLS
+  from env.
 - **Observability**: OpenTelemetry via Effect; `withSpan` on activities.
 - **Retention & deletion** (product-foundations): the durable account-deletion
   workflow and retention-purge activities live here — the deletion workflow's
@@ -50,10 +54,5 @@ nothing else runs long-lived work.
   excluding `*.workflow.ts` (the Temporal isolate can't be v8-instrumented;
   workflows are verified by deterministic replay tests via
   `@temporalio/testing`) and type-only `*.schema.ts`.
-- Gated on the local emulator stack (Firebase emulators + Temporal dev server)
-  with `wait-on`.
-
-## Deployment
-
-The shared monorepo Dockerfile (`APP_NAME=worker`) → Artifact Registry → Cloud
-Run. See the monorepo stack doc for the pipeline.
+- Gated on the `local_stack` harness capability the backing axis provides,
+  behind its `wait-on` readiness gates.

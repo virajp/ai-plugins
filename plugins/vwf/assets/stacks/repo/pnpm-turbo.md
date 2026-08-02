@@ -3,7 +3,7 @@ scope: repo
 name: pnpm · Turborepo
 topologies: [ monorepo, workspace ]
 package_manager: pnpm
-tools: [ turborepo, dprint, eslint, mise, doppler, docker-compose ]
+tools: [ turborepo, dprint, eslint, mise, docker-compose ]
 ---
 
 # Backend Monorepo — pnpm · Turborepo
@@ -39,19 +39,19 @@ The tooling every backend monorepo (the `backend/` submodule) shares across its
   base runtime (`node`, `pnpm`), `dev` (formatters, linters, security tools, the
   local-dev env block), `ci` (production endpoints/overrides). File-based task
   library with per-project prefixes plus `all:*`, `code:*`, `release:*`.
-- **Doppler** injects secrets — every dev/test script runs under
-  `doppler run --`. Config reaches code as env vars, parsed with Effect
-  `Config` + `Schema` (invalid config fails startup).
+- **Secrets** are injected by the manager the backing axis names — every
+  dev/test script runs under its wrapper rather than reading a committed file.
+  Config reaches code as env vars, parsed with Effect `Config` + `Schema`
+  (invalid config fails startup).
 
-## Local dev & deployment
+## Local dev & build artifact
 
-- **Local emulators via Docker Compose**: the Firebase emulator suite (Auth,
-  Firestore, Storage), a Temporal dev server, and a Grafana OTel-LGTM stack —
-  tests gate on them with `wait-on`.
-- **Deploy target: Google Cloud Run.** One shared multi-stage Dockerfile for all
-  deployables (parameterized by `APP_NAME`; Chainguard node base; `turbo`
-  build + `pnpm deploy --prod`), built with Docker Buildx Bake, pushed to
-  Artifact Registry, released via `gcloud run deploy` (mise `release:*` tasks or
-  tag-triggered GitHub Actions).
-- **Observability**: OpenTelemetry from every project, exported to Grafana
-  Cloud.
+- **Local stack via Docker Compose** — the emulators/services the **backing**
+  axis defines, with `wait-on` readiness gates. This repo provides the compose
+  wiring; which services run in it is not this axis's choice.
+- **One shared multi-stage Dockerfile** for all deployables (parameterized by
+  `APP_NAME`; `turbo` build + `pnpm deploy --prod`), built with Docker Buildx
+  Bake. Where that image is pushed and how it is released is the **deploy**
+  axis.
+- **Observability**: OpenTelemetry from every project; the collector endpoint
+  comes from the backing axis.

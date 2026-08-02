@@ -9,7 +9,7 @@
 # What is NOT here:
 #   - `stack` — the concrete technology per project lives in `.config/vwf.yaml`
 #     under `projects.<name>.stack`, selected from the template menu for the
-#     project's roles (assets/stacks/). Keeping it out is what makes the
+#     project's role (assets/stacks/). Keeping it out is what makes the
 #     blueprint structurally incapable of naming a vendor: no authoring or
 #     reviewing surface reads it.
 #   - enforcement opt-outs — vwf operating config, `.config/vwf.yaml`.

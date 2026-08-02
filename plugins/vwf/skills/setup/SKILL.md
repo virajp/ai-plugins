@@ -23,19 +23,19 @@ throughout.
 
 ## Doc Paths
 
-| Doc               | Path                                                         |
-| ----------------- | ------------------------------------------------------------ |
-| Registry          | `docs/blueprint/registry.yaml`                               |
-| Environment       | `docs/blueprint/environment.md`                              |
-| Env. template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`      |
-| vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`) |
-| Config schema     | `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                 |
-| CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md`   |
-| Stack templates   | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/<slug>.md`       |
-| Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`           |
-| Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`                     |
-| mempalace config  | `mempalace.yaml` (parent **and** each submodule)             |
-| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                    |
+| Doc               | Path                                                           |
+| ----------------- | -------------------------------------------------------------- |
+| Registry          | `docs/blueprint/registry.yaml`                                 |
+| Environment       | `docs/blueprint/environment.md`                                |
+| Env. template     | `${CLAUDE_PLUGIN_ROOT}/assets/templates/environment.md`        |
+| vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`)   |
+| Config schema     | `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                   |
+| CLAUDE.md section | `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md`     |
+| Stack templates   | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/<role>/<slug>.md` |
+| Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`             |
+| Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`                       |
+| mempalace config  | `mempalace.yaml` (parent **and** each submodule)               |
+| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                      |
 
 Doctrine: the **project-setup** skill — a router. Read each reference at the
 step that needs it, not upfront: `topology-detection` + `workspace-structure` at
@@ -119,12 +119,12 @@ objection is honored, recorded under `enforcement:` in `.config/vwf.yaml`, and
 never re-asked.
 
 **Stacks are elicited, never stated.** For each project, present the templates
-under `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/` as a menu with an **other
-(describe)** option, plus the repo-level menu from `assets/stacks/repo/`. vwf
-ships no default and nothing to object to, so there is no `enforcement` entry
-for a stack. `/vwf:architecture` owns this elicitation — hand off to it at step
-7 rather than duplicating it here; what this step needs is only enough detection
-to populate the menu's starting point.
+under `${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/<role>/` as a menu with an
+**other (describe)** option, plus the repo-level menu from
+`assets/stacks/repo/`. vwf ships no default and nothing to object to, so there
+is no `enforcement` entry for a stack. `/vwf:architecture` owns this elicitation
+— hand off to it at step 7 rather than duplicating it here; what this step needs
+is only enough detection to populate the menu's starting point.
 
 **Existing non-conforming repo.** When an existing repo does not match the
 workspace shape, fold a consent-gated restructure proposal toward it into the

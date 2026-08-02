@@ -31,16 +31,27 @@ topology: workspace # workspace | monorepo | polyrepo
 ui: true # a UI project exists → design-system required
 integrations: true # external integration/secret exists → environment.md required
 
-repo: # format 11 — REPO-level tooling, the counterpart to a project's stack. One block per workspace; in workspace topology it describes the parent's shared tooling
+repo: # REPO-level tooling, the counterpart to a project's stack. One block per workspace; in workspace topology it describes the parent's shared tooling
   stack:
     template: repo/<slug> # a template under assets/stacks/repo/, or `custom`
-    package_manager: <tool> # pnpm | bun | npm | cargo | uv | …
-    tools: [] # open, lowercase-kebab — turborepo, dprint, mise, doppler, …
+    package_manager: <tool> # pnpm | bun ONLY, and only for JS/TS. A non-JS repo records its language's native tool (cargo, uv, pub), which was never a choice
+    tools: [] # open, lowercase-kebab — turborepo, dprint, mise, …
 
-projects: # per-project REALIZATION + nuances — no type/path keys, ever (those describe the system: registry.yaml)
+# The BACKING and DEPLOY axes are product-wide, not per-project: every project
+# talks to the same datastore/identity/queue set and ships the same way. A
+# project that genuinely differs overrides them in its own `stack` block.
+backing:
+  template: backing/<slug> # a template under assets/stacks/backing/, or `custom`
+deploy:
+  template: deploy/<slug> # a template under assets/stacks/deploy/, or `custom`
+
+projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
-    stack: # format 11: the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
-      template: <type>/<slug> # the selected template under assets/stacks/, or `custom` when the user described their own. NOT a default: /vwf:architecture presents the menu and the user picks
+    stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
+      template: project/<role>/<slug> # the PROJECT-axis template under assets/stacks/project/, or `custom`. NOT a default: /vwf:architecture presents the menu and the user picks
+      backing_template: <slug> # optional — overrides the product-wide `backing` pin for this project only
+      deploy_template: <slug> # optional — overrides the product-wide `deploy` pin. A `frontend` project sets this to `n/a`: it ships through a store, not a deploy target
+      package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing pnpm and bun projects
       languages: [
         <token>,
       ] # CLOSED vocabulary — assets/stack-vocabulary.md. At least one; drives doctor's LSP + toolchain checks

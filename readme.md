@@ -368,10 +368,22 @@ Not every project must exist — a product may have no operator back-office or
 ### Stack templates
 
 The stack is **not** enforced. Each role ships one or more templates under
-`assets/stacks/<role>/`, and `/vwf:architecture` presents them as a menu — one
-round per project, plus an *other (describe)* option for anything vwf doesn't
-ship. Each project carries exactly one role, so it picks exactly one template
-and there is nothing to merge.
+`assets/stacks/project/<role>/`, and `/vwf:architecture` presents them as a menu
+— one round per project, plus an *other (describe)* option for anything vwf
+doesn't ship. Each project carries exactly one role, so it picks exactly one
+template and there is nothing to merge.
+
+A stack is composed from **four independent axes** — you pick one of each, and
+they never merge because they never overlap:
+
+| Axis        | Scope        | Ships today                                                                                                                                    |
+| ----------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **project** | per project  | one or more per role — see below                                                                                                               |
+| **backing** | product-wide | `firebase` (Firestore · Auth · FCM · Temporal · OTel-LGTM) · `postgres-object-storage` (Postgres · S3-compatible · OIDC — fully self-hostable) |
+| **deploy**  | product-wide | `cloud-run` (Artifact Registry · Cloud Run · Zero Trust) · `container-generic` (OCI image · any registry · any container host)                 |
+| **repo**    | per repo     | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                       |
+
+Project-axis templates:
 
 | Role        | Template ships today         | Stack                                          |
 | ----------- | ---------------------------- | ---------------------------------------------- |
@@ -381,10 +393,22 @@ and there is nothing to merge.
 | `site`      | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
 | `fullstack` | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
 | `frontend`  | `dart-flutter`               | Dart · Flutter                                 |
-| repo-level  | `pnpm-turbo`                 | pnpm · Turborepo                               |
+| `frontend`  | `kotlin-android`             | Kotlin · Jetpack Compose                       |
+| `frontend`  | `swift-ios`                  | Swift · SwiftUI                                |
+| `infra`     | `typescript-pulumi`          | TypeScript · Pulumi                            |
+| `infra`     | `terraform`                  | Terraform / OpenTofu                           |
 
-`infra` ships no template yet. An operator back-office is `role: fullstack` plus
-the `operator-rbac` capability, and picks the `fullstack` template.
+**Why the split matters.** The same Hono + Effect service runs against Firebase
+or Postgres, on Cloud Run or any container host. Before format 19 all three were
+welded into one document, so picking `service` because you wanted Hono silently
+also bought you Firestore, Firebase Auth, Temporal and Cloud Run — none of it
+declared. Now a project template names no vendor and a backing template names no
+framework, so `postgres-object-storage` + `container-generic` is a completely
+vendor-free path through vwf.
+
+An operator back-office is `role: fullstack` plus the `operator-rbac`
+capability, and picks the `fullstack` template. A `frontend` project has no
+deploy axis — it ships through a store.
 
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
@@ -454,9 +478,8 @@ serving both the operator API and an embedded UI, and the **sole holder of admin
 capabilities** (the public `service` exposes no admin routes). The capability,
 not a type name, is what marks it.
 
-The full per-type stack docs — patterns, testing, deployment — ship inside the
-plugin under `assets/stacks/` and drive what `/vwf:setup` and
-`/vwf:architecture` record.
+The full stack docs ship inside the plugin under `assets/stacks/` and drive what
+`/vwf:setup` and `/vwf:architecture` record.
 
 ## Commands
 

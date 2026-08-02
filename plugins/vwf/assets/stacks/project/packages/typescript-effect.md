@@ -21,21 +21,22 @@ schemas are defined and the one place third-party SDKs are touched. TypeScript
    one directory per entity under a `./schemas/<entity>` export subpath,
    exported as a `Schema<Entity>` namespace. No other project defines a shared
    data schema.
-2. **All third-party integrations go via here** — `firebase-admin`, maps
-   clients, payment/subscription REST APIs, telemetry SDKs are dependencies of
-   this package **only**; every other project consumes the wrappers.
-   (Downstream, third-party SDKs appear at most as devDependencies for test
-   typing — never imported in `src/`.)
+2. **All third-party integrations go via here** — datastore/auth admin SDKs,
+   maps clients, payment/subscription REST APIs, telemetry SDKs are dependencies
+   of this package **only**; every other project consumes the wrappers. Which
+   vendors those are is the **backing** axis's choice; this package is the seam
+   that makes them swappable. (Downstream, third-party SDKs appear at most as
+   devDependencies for test typing — never imported in `src/`.)
 
 ## Shape
 
 - **`./effect`** — the Effect facade the whole codebase imports from: re-exports
   the Effect modules plus house helpers (`withSpan`, the centralized schema
   decoders mapping failures to the shared error type).
-- **Integration wrappers as Effect services** — one subpath per integration
-  (e.g. `./firebase`: app init, Firestore typed CRUD, Auth, FCM push; a maps
-  subpath per API; a REST wrapper per external vendor). Two idioms:
-  `Context.Tag` + `Layer.effect`, or `Effect.Service` classes with accessors.
+- **Integration wrappers as Effect services** — one subpath per integration (a
+  datastore subpath: init, typed CRUD, auth, push; a maps subpath per API; a
+  REST wrapper per external vendor). Two idioms: `Context.Tag` + `Layer.effect`,
+  or `Effect.Service` classes with accessors.
 - **`./services`** — the aggregate DI layer: one context tag bundling every
   wrapped integration, with a `make…Live(useEmulator)` constructor. Downstream
   projects provide this single layer and destructure what they need.

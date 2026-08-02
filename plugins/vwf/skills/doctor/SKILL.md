@@ -24,18 +24,18 @@ project in the registry.
 
 ## Doc Paths
 
-| Doc               | Path                                                   |
-| ----------------- | ------------------------------------------------------ |
-| vwf config        | `.config/vwf.yaml`                                     |
-| Registry          | `docs/blueprint/registry.yaml`                         |
-| Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`     |
-| Stack templates   | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/<type>/<slug>.md` |
-| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`              |
-| Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`               |
-| mempalace config  | `mempalace.yaml` (one per repo — parent + submodules)  |
-| Graphify protocol | `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`             |
-| Knowledge graph   | `graphify-out/graph.json` (workspace root)             |
-| Format stamp      | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`        |
+| Doc               | Path                                                           |
+| ----------------- | -------------------------------------------------------------- |
+| vwf config        | `.config/vwf.yaml`                                             |
+| Registry          | `docs/blueprint/registry.yaml`                                 |
+| Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`             |
+| Stack templates   | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/<role>/<slug>.md` |
+| Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                      |
+| Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`                       |
+| mempalace config  | `mempalace.yaml` (one per repo — parent + submodules)          |
+| Graphify protocol | `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`                     |
+| Knowledge graph   | `graphify-out/graph.json` (workspace root)                     |
+| Format stamp      | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`                |
 
 ## Hard Rules
 
@@ -123,6 +123,14 @@ Report both as *drift to reconcile*, never as an error — the manifest is alway
 the truth and the config is what needs updating.
 
 ### 5. Repo tooling
+
+**The four stack axes.** Since format 19 a stack is composed from four
+independent templates (`assets/stack-vocabulary.md`). Check each pin resolves to
+a file that exists: `projects.<name>.stack.template` (project axis),
+`backing.template`, `deploy.template`, and `repo.stack.template`. A pin naming a
+template that isn't there is **drift** — usually a template renamed under the
+user's feet. A `custom` pin is checked for its axes only, never for a file. A
+`frontend` project's `deploy_template: n/a` is correct, not missing.
 
 **mise is mandatory** — it is both vwf's task runner (every worktree init,
 pre-commit and merge goes through it) and the toolchain manager the §3 checks
