@@ -7,9 +7,9 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 9
-blueprint_format: 15
-topology: monorepo # or polyrepo | workspace
+config_format: 12
+blueprint_format: 19
+topology: monorepo # repo | monorepo | polyrepo
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
 # plus: product, projects (nuances), harness, enforcement, pipeline,
@@ -29,10 +29,15 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 18.** (13 and 17 are deliberately **skipped** — no format
+**Current format = 19.** (13 and 17 are deliberately **skipped** — no format
 ever carried either; a repo stamped 13 is impossible and would be treated as 12,
-one stamped 17 as 16.) Format 18 = format 16 **plus** the **project-scoped
-release tags** delta (the `16 → 18` delta below): the seeded
+one stamped 17 as 16.) Format 19 = format 18 **plus** the **role model** (the
+`18 → 19` delta below): a registry project carries a single `role` instead of a
+`type`, `console` becomes `fullstack` + the `operator-rbac` capability, and
+`infra` joins the vocabulary (registered, exempt from coverage). It ships with
+`config_format` 12, which splits the stack into four axes, turns topology into a
+menu, and adds `design.tool`. Format 18 = format 16 **plus** the
+**project-scoped release tags** delta (the `16 → 18` delta below): the seeded
 `conventions.md#pipeline` anchor moves from the `stage-*` / `prod-*` tag globs
 to `<project>-<env>-v<semver>` (`api-prod-v1.2.3`) and gains the
 `pipeline/tested-before-release` rule. Format 16 = format 15 **plus** the
@@ -586,8 +591,9 @@ the current format and apply the delta:
   5. **Re-point role-keyed prose.** In `architecture.md`, rewrite any "type"
      wording to "role" so the prose view matches the registry it describes. Flow
      and entity docs are untouched — they never named a project type.
-  6. Bump the stamp to `19`. `config_format` moves in the same release; see the
-     `11 → 12` entry in the vwf-config asset for the paired config migration.
+  6. Bump the stamp to `19`, **and `config_format` to `12` in the same run** —
+     see the `11 → 12` entry in the vwf-config asset. The two ship together; a
+     repo on one but not the other is a state neither migration expects.
 
   **What does not change:** flow paths stay `flows/<project>/<NNN>-<flow>/`
   (keyed on project *name*, never type), platform files, screen codes, entity

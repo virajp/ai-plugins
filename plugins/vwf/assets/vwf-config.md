@@ -14,11 +14,11 @@ selection plus the four axes `/vwf:doctor` checks the repo against — and is
 written for **every** project, always. Since **blueprint-format 6** this file
 replaces the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 11)
+## Schema (config_format 12)
 
 ```yaml
-config_format: 11 # this file's own schema version — setup migrates it
-blueprint_format: 16 # the docs/blueprint format stamp
+config_format: 12 # this file's own schema version — setup migrates it
+blueprint_format: 19 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -242,6 +242,40 @@ earlier than 65/90/80), never loosen.
   Nothing else reads a stack from the blueprint afterwards: `registry.yaml` has
   no `stack` key at all, which is what makes a vendor name in a blueprint doc a
   reviewer failure rather than a matter of authoring discipline.
+- **`11 → 12` migration** (performed by `/vwf:setup`): the config catches up
+  with blueprint-format 19. Five changes, all mechanical except where noted:
+
+  1. **`topology`** — `workspace` becomes `polyrepo` (the shape is unchanged: a
+     parent repo with submodule members). Add **`topology_reason`**, carrying
+     the existing `enforcement.structure` reason when one was recorded, else a
+     one-line summary of why this shape. Then **drop `enforcement.structure`**
+     entirely: topology is a menu now (`assets/topologies/`), so no choice
+     deviates from anything and none needs a waiver — the same retirement
+     `enforcement.stacks` got in format 11.
+  2. **The stack splits into four axes.** `projects.<name>.stack.template`
+     re-points from `<type>/<slug>` to `project/<role>/<slug>` (the templates
+     moved under `assets/stacks/project/`). Add the product-wide **`backing`**
+     and **`deploy`** blocks — this is the one step needing input, since the old
+     monolithic templates carried Firebase and Cloud Run implicitly. Default the
+     proposal to `backing: firebase` + `deploy: cloud-run` for a repo that was
+     on the old templates (that is what it was already running, undeclared), and
+     confirm rather than assume. A `frontend` project takes
+     `deploy_template: n/a` — it ships through a store.
+  3. **`repo.stack.package_manager`** narrows to `pnpm | bun`. A repo recording
+     `npm` is drift to fix; `cargo`/`uv`/`pub` were never a JS/TS choice and
+     move to being implied by the language. Optionally add a per-project
+     `package_manager` where a hybrid repo mixes the two.
+  4. **`design.tool`** is added, naming the adapter **plugin**. Default it to
+     `claude-design` for any repo carrying a `design.design_system_id` — that is
+     the tool it was already using. The pin itself stays, now adapter-scoped.
+  5. **`memory`** — nothing changes in the config, but `/vwf:setup` creates
+     `docs/memory/` and gitignores `handoff/`, `doctor/` and `runs/`, then moves
+     a pre-19 `docs/handoffs/next.md` to `docs/memory/handoff/next.md`.
+
+  Bump `config_format` to `12` and `blueprint_format` to `19` together — the two
+  migrations ship in one release and a repo on one but not the other is a state
+  neither migration expects.
+
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat
   `projects.<name>.stack` list becomes the structured block above. Per project:
