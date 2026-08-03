@@ -271,6 +271,14 @@ run diffs against, and how every vwf command operates in this repo:
 - leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
   them.
 
+**Write the memory tree.** Create `docs/memory/` with the seven room
+directories, and add the developer-specific ones to `.gitignore`
+(`docs/memory/handoff/`, `docs/memory/doctor/`, `docs/memory/runs/`) if absent —
+the same way the `docs/scratchpad/` line is added. Per
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, every memory write goes to both this
+tree and mempalace, which is what makes the daemon optional. A pre-format-19
+`docs/handoffs/next.md` moves to `docs/memory/handoff/next.md`.
+
 **Write the mempalace config.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`,
 write a `mempalace.yaml` to **each repo root** — the parent and every submodule
 — all naming the single confirmed `memory.wing`. Seed all seven protocol rooms
@@ -281,12 +289,12 @@ double-file their contents.
 
 Two things to get right, both from the memory asset: room routing returns on the
 **first** path-part match, so never key a room on a directory that contains
-another room's path (`docs` on `documentation` shadows `docs/handoffs/`); and
-because the wing is shared, a room name reused across repos **merges** — propose
-a distinguishing name wherever the same name would mean two different things.
-Present the files as part of the step-4 dry-run and confirm the wing (one MCQ)
-before writing; an existing `mempalace.yaml` is **merged, never overwritten** —
-preserve rooms and patterns the user added.
+another room's path (`docs` on `documentation` shadows `docs/memory/handoff/`);
+and because the wing is shared, a room name reused across repos **merges** —
+propose a distinguishing name wherever the same name would mean two different
+things. Present the files as part of the step-4 dry-run and confirm the wing
+(one MCQ) before writing; an existing `mempalace.yaml` is **merged, never
+overwritten** — preserve rooms and patterns the user added.
 
 On the `5 → 6` migration, `git mv` the legacy stamp to the new path first (move,
 never delete), then restructure — per format-versioning. Also migrate any

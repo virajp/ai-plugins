@@ -86,7 +86,7 @@ session, to `$AI_PLUGINS_USAGE_DIR/<session_id>.json` (the installer sets
 `AI_PLUGINS_USAGE_DIR` to `${HOME}/.claude/usage`). After each tool call the
 hook reads that file and, when a cap is breached, tells the agent to snapshot
 via `/vwf:handoff` — with no argument, so it writes the reserved `next` handoff
-to both mempalace and `docs/handoffs/next.md` — and halt:
+to both mempalace and `docs/memory/handoff/next.md` — and halt:
 
 | Cap            | Threshold | Action                                                          |
 | -------------- | --------- | --------------------------------------------------------------- |

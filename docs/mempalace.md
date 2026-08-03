@@ -150,10 +150,10 @@ real room comes back empty — which is why `/vwf:doctor` §7 checks each repo's
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds. The one exception is `/vwf:handoff` and `/vwf:recall` — the
 handoff *is* the deliverable, so when mempalace is down they fall back to
-`docs/handoffs/<name>.md` on disk instead of skipping. The reserved `next`
+`docs/memory/handoff/<name>.md` on disk instead of skipping. The reserved `next`
 handoff (written by a bare `/vwf:handoff`, resumed by `/vwf:recall next`) goes
 further: it always writes **both** the drawer and the committed
-`docs/handoffs/next.md`, so it survives an outage without a fallback path.
+`docs/memory/handoff/next.md`, so it survives an outage without a fallback path.
 
 ## See also
 

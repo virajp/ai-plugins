@@ -73,10 +73,12 @@ adopting it.
   `rtk` is **optional**: its Bash hook is guarded, so it is skipped when absent
   and `/vwf:doctor` notes it. Dependency auto-install/enable needs Claude Code ≥
   2.1.143. See [Prerequisites](#prerequisites).
-- **Memory degrades silently.** `vwf` recalls and persists through `mempalace`,
-  which it expects as an **HTTP daemon you run** (`mempalace serve`). If it's
-  unavailable, every memory step is skipped by design — no error, but
-  cross-cycle recall is lost (surfaced gaps still survive in the plan doc).
+- **Memory is written twice, so mempalace is optional.** Every memory write goes
+  to both `mempalace` (an **HTTP daemon you run** — `mempalace serve`) and a
+  markdown tree under `docs/memory/`. Without the daemon nothing is lost, but
+  recall degrades from semantic search to grep, and says so. `decisions`,
+  `planning`, `gaps` and `problems` are committed; `handoff`, `doctor` and
+  `runs` are gitignored, being one developer's state rather than the team's.
 - **Leans on review engines.** `execute`'s code- and security-review stages run
   on the `/code-review` and `/security-review` engines, falling back to their
   own manual review dimensions when an engine is unavailable.
@@ -1077,9 +1079,9 @@ mempalace under your project. In a new session:
 ```
 
 `recall` retrieves the handoff, reads the files it points to, summarizes where
-you left off, and offers to run the captured next prompt. If mempalace is
-unavailable, `handoff` falls back to `docs/handoffs/<name>.md` and `recall`
-reads it from there.
+you left off, and offers to run the captured next prompt. Every handoff is
+written to **both** memory stores, so `recall` works with or without the
+mempalace daemon.
 
 #### The `next` handoff
 
@@ -1094,11 +1096,12 @@ off" handoff:
 ```
 
 `next` differs from a named handoff in three ways. It is written to **both**
-surfaces every time — the mempalace drawer *and* a committed
-`docs/handoffs/next.md` — so either one alone can resume the work. It is a
-**singleton**, overwritten in place, so there is never a stale pile to choose
-from. And `recall` **runs its next prompt without asking**, leaving the handoff
-in place until the next `/vwf:handoff` replaces it.
+surfaces every time — the mempalace drawer *and* `docs/memory/handoff/next.md`
+(gitignored: a handoff is your session state, not the team's) — so either one
+alone can resume the work. It is a **singleton**, overwritten in place, so there
+is never a stale pile to choose from. And `recall` **runs its next prompt
+without asking**, leaving the handoff in place until the next `/vwf:handoff`
+replaces it.
 
 The one thing it won't do is invent work: if the session had no continuable next
 action, `handoff` says so instead of padding the prompt, and `recall` reports
@@ -1164,7 +1167,7 @@ project (the **wing**) and split into rooms:
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds — except `handoff`/`recall`, which fall back to
-`docs/handoffs/<name>.md` (the handoff *is* the deliverable); the reserved
+`docs/memory/handoff/<name>.md` (the handoff *is* the deliverable); the reserved
 `next` handoff writes that file unconditionally, outage or not. Gaps are also
 mirrored into the plan doc, so they survive a memory outage. See
 **[docs/mempalace.md](./docs/mempalace.md)**.

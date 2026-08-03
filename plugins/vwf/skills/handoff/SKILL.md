@@ -4,7 +4,7 @@ description: Capture the current session as a handoff document and file it to
   mempalace
   (wing=<project>, room=handoff, drawer=<name>) so work can resume in a fresh
   session. With no argument — or `next` — it writes the reserved `next`
-  handoff, to mempalace and to docs/handoffs/next.md, which /vwf:recall
+  handoff, to mempalace and to docs/memory/handoff/next.md, which /vwf:recall
   resumes automatically. Use when the context window grows beyond ~60%.
 argument-hint: "[<name> | next]"
 model: sonnet
@@ -39,9 +39,10 @@ empty, the name is `next`** — never ask for one, never invent one.
 this repo, and the default when no name is given. It differs from a named
 handoff in exactly three ways:
 
-- **Written to both surfaces, always.** mempalace *and* `docs/handoffs/next.md`,
-  committed to the repo — not disk-only-on-failure like a named handoff's
-  fallback. Either surface alone is enough to resume.
+- **Written to both surfaces, always.** mempalace *and*
+  `docs/memory/handoff/next.md`, committed to the repo — not
+  disk-only-on-failure like a named handoff's fallback. Either surface alone is
+  enough to resume.
 - **A singleton, overwritten in place.** Each run replaces the file and
   supersedes the drawer. There is never more than one live `next`.
 - **It must carry a continuation.** `next` exists to be resumed, so its **Next
@@ -153,7 +154,7 @@ file the new one anyway (it supersedes) — recall picks the most recent.
 
 **If mempalace tools are unavailable** (the server is down — do **not** silently
 skip, the document is the whole point): write the handoff to
-`docs/handoffs/<name>.md` instead, tell the user it went to disk because
+`docs/memory/handoff/<name>.md` instead, tell the user it went to disk because
 mempalace was unreachable, and that `/vwf:recall` will read the disk copy.
 
 ### 6a. Write the repo copy (`next` only)
@@ -161,8 +162,9 @@ mempalace was unreachable, and that `/vwf:recall` will read the disk copy.
 For the reserved `next`, the disk copy is not a fallback — write it **in
 addition** to the drawer, and commit it so it travels with the branch:
 
-1. Write the same document verbatim to `docs/handoffs/next.md`, overwriting any
-   previous one in place (never a second file, never a dated variant).
+1. Write the same document verbatim to `docs/memory/handoff/next.md`,
+   overwriting any previous one in place (never a second file, never a dated
+   variant).
 2. Stage and commit it — `docs: record the next handoff`. The step-2 checkpoint
    already ran, so this is a small follow-up commit; respect pre-commit hooks
    exactly as step 2 does (on failure, fix and make a **new** commit).
@@ -172,9 +174,10 @@ same file — write it once, commit it, and report the drawer as skipped.
 
 ### 7. Report
 
-Confirm where it was filed (wing / room / `<name>`, plus `docs/handoffs/next.md`
-for `next`, or the disk path when mempalace was down), and state in one line
-that a fresh session can resume with `/vwf:recall <name>` — `/vwf:recall next`
-for the reserved one, noting it will run the next prompt without asking. Say
-whether a next prompt was included; for `next` without one, say plainly that
-there is nothing further to continue until the user gives a direction.
+Confirm where it was filed (wing / room / `<name>`, plus
+`docs/memory/handoff/next.md` for `next`, or the disk path when mempalace was
+down), and state in one line that a fresh session can resume with
+`/vwf:recall <name>` — `/vwf:recall next` for the reserved one, noting it will
+run the next prompt without asking. Say whether a next prompt was included; for
+`next` without one, say plainly that there is nothing further to continue until
+the user gives a direction.

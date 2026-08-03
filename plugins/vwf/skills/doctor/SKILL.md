@@ -179,13 +179,20 @@ check:
 - **No shadowing keyword** — routing walks path parts outermost-first and
   returns on the first match, so a room keyed on a directory that contains
   another room's path swallows it (`documentation` keyed on `docs` captures
-  `docs/handoffs/` before `handoff` is tested). Flag every such pair.
+  `docs/memory/handoff/` before `handoff` is tested). Flag every such pair.
 - **The parent's `exclude_patterns`** covers each submodule path, or the parent
   mine double-files their contents into the shared wing.
 - **Cross-repo room-name collisions** where the same name means different things
   (a backend `configuration` of `deploy/` versus a frontend `configuration` of
   `config/`). The wing is shared, so those merge into one room. Report as drift
   to reconcile — not an error; merging `documentation` is usually right.
+
+**The markdown mirror.** Check `docs/memory/` exists with the seven room
+directories, and that `.gitignore` covers `docs/memory/handoff/`,
+`docs/memory/doctor/` and `docs/memory/runs/` — the developer-specific rooms. A
+missing directory is fine (nothing written there yet); a **committed** handoff,
+doctor or runs file is drift to report, since it puts one developer's session
+state in everyone's diff.
 
 If the mempalace server itself is unreachable, still check the **files** (they
 are on disk) and report the outage as context, not as a finding.

@@ -1,20 +1,81 @@
-# Memory Protocol (mempalace)
+# Memory Protocol
 
-vwf uses the **mempalace** MCP server as cross-session memory: each cycle
-recalls prior decisions and findings instead of re-deriving them, and review
-findings are filed once and recalled on fix loop-backs — so multi-round detail
-never piles up in the orchestrator's context. The orchestrator resolves the
-scope and persists durable decisions; the execute subagents persist and recall
-their own findings directly, so that detail bypasses the orchestrator entirely.
+vwf keeps cross-session memory in **two stores that are always written
+together**: the **mempalace** MCP server, and a **markdown tree on disk** under
+`docs/memory/`. Each cycle recalls prior decisions and findings instead of
+re-deriving them, and review findings are filed once and recalled on fix
+loop-backs — so multi-round detail never piles up in the orchestrator's context.
+The orchestrator resolves the scope and persists durable decisions; the execute
+subagents persist and recall their own findings directly, so that detail
+bypasses the orchestrator entirely.
 
-> mempalace is a hard dependency of vwf. If its tools are unavailable, skip
-> every memory step silently and proceed — never block on it.
->
-> **Exception: `/vwf:handoff` and `/vwf:recall`.** The handoff *is* the
-> deliverable, not a side memory — so when mempalace is unavailable they do
-> **not** skip; they fall back to `docs/handoffs/<name>.md` on disk (write on
-> handoff, read on recall). The reserved **`next`** handoff writes that file
-> unconditionally, alongside the drawer, so both surfaces always carry it.
+## The two stores
+
+**Every write goes to both.** The markdown tree is not a fallback that only
+fills up during an outage — it is a continuous mirror, which is what makes
+mempalace **optional** rather than required:
+
+| Store         | Path                             | Strength                                             |
+| ------------- | -------------------------------- | ---------------------------------------------------- |
+| **mempalace** | the MCP server                   | semantic search across everything, ranked by meaning |
+| **markdown**  | `docs/memory/<room>/<drawer>.md` | always present, greppable, survives without a daemon |
+
+**Recall reads mempalace first**, because semantic search finds things a keyword
+never would. When mempalace is unavailable, recall falls back to the markdown
+tree — and that fallback is honestly weaker: **grep-quality, not semantic**. It
+finds a drawer whose words you can guess, not one that merely means the same
+thing. Say so when it happens rather than presenting a degraded recall as a
+complete one.
+
+**Writes never block.** If mempalace is unreachable, write the markdown side and
+carry on — the reverse (markdown unwritable) is a real error, since it is the
+durable half.
+
+## The markdown tree
+
+One directory per room, one file per drawer, mirroring the room vocabulary
+exactly:
+
+```text
+docs/memory/
+├── decisions/<drawer>.md
+├── problems/<drawer>.md
+├── planning/<drawer>.md
+├── gaps/<drawer>.md
+├── runs/<drawer>.md
+├── doctor/<drawer>.md
+└── handoff/<drawer>.md      # includes the reserved next.md
+```
+
+Each file opens with the same AAAK-style line the drawer carries, then the
+detail. A drawer written to mempalace and a file written here are the **same
+content**, so either store alone is enough to resume work.
+
+### What is committed, and what is not
+
+The split follows one rule: **commit what every contributor needs; leave out
+what only one developer needs.**
+
+| Room                                        | Git        | Why                                                 |
+| ------------------------------------------- | ---------- | --------------------------------------------------- |
+| `decisions`, `planning`, `gaps`, `problems` | committed  | Durable product knowledge the whole team works from |
+| `handoff`, `doctor`, `runs`                 | gitignored | One developer's session state, machine, or run      |
+
+`/vwf:setup` writes the `.gitignore` entries (`docs/memory/handoff/`,
+`docs/memory/doctor/`, `docs/memory/runs/`) when they are missing, the same way
+it adds the `docs/scratchpad/` line.
+
+`doctor` is ignored because its findings are about *this machine's* toolchain,
+not the repo. `runs` is ignored because an execute journal is one developer's
+run record. Both still exist locally, and both still survive a mempalace outage
+— they just do not enter anyone else's diff.
+
+> **`/vwf:handoff` and `/vwf:recall` never skip.** The handoff *is* the
+> deliverable, not a side memory. The reserved **`next`** handoff writes
+> `docs/memory/handoff/next.md` unconditionally, alongside the drawer, so both
+> surfaces always carry it. (Before format 19 this file lived at
+> `docs/handoffs/next.md` and was committed; it now sits in the ignored half,
+> because a handoff is personal.)
 
 ## Scope (wing + room)
 
@@ -59,7 +120,7 @@ exclude_patterns: # parent repo only — each submodule files its own files
   - frontend/
 rooms:
   - name: handoff
-    description: Session handoffs from docs/handoffs/
+    description: Session handoffs from docs/memory/handoff/
     keywords: [ handoff, handoffs, session ]
   - name: general
     description: Files that don't fit other rooms
@@ -75,7 +136,7 @@ to it and the room only ever holds what vwf put there by hand.
 
 **Room routing walks path parts outermost-first and returns on the first
 match.** So a broad keyword shadows every narrower room beneath it: a
-`documentation` room keyed on `docs` swallows `docs/handoffs/` before the
+`documentation` room keyed on `docs` swallows `docs/memory/handoff/` before the
 `handoff` room is ever tested. Key `documentation` on `documentation`,
 `blueprint`, `plans`, `prompts` — never on the bare parent directory that
 contains another room's path.
@@ -95,13 +156,26 @@ Hits are **context, not truth**: the blueprint/plan/conventions docs on disk
 stay authoritative. Use recall to skip resolved questions and to check work
 against prior findings — never to replace reading a doc you must follow exactly.
 
+**When mempalace is unavailable**, grep `docs/memory/<room>/` for the same query
+terms. State that recall was degraded — a keyword sweep will miss a drawer that
+means the same thing in different words, and presenting it as a clean recall is
+how a resolved question gets re-asked.
+
 ## Persist — durable only
 
 Store only **durable** outcomes — decisions and their rationale, findings and
 how they were resolved, flagged drift — never transient chatter or text a doc
-already captures verbatim. Use `mempalace_add_drawer(wing, room, content)`; the
-orchestrator may use `mempalace_kg_add` for an atomic fact that may later change
-(and `mempalace_kg_invalidate` it when it does).
+already captures verbatim.
+
+**Write both stores, every time:** `mempalace_add_drawer(wing, room, content)`
+**and** `docs/memory/<room>/<drawer>.md` with the same content. The orchestrator
+may additionally use `mempalace_kg_add` for an atomic fact that may later change
+(and `mempalace_kg_invalidate` it when it does) — the knowledge graph has no
+markdown counterpart, so it is the one part that is lost without the daemon.
+
+If mempalace is unreachable, write the markdown side and proceed. If the
+markdown write fails, that is a real error worth surfacing: it is the half that
+survives.
 
 Keep entries compressed in the spirit of AAAK — tight, one fact per line,
 pipe-separated fields, ISO dates, importance ★1-5; skip the personal emotion
@@ -135,8 +209,8 @@ its return block. The orchestrator mirrors that terse line into a durable
 **"Gaps surfaced during execution"** section in the plan doc (the on-disk copy
 that survives a mempalace outage), and at reconcile recalls the `gaps` room to
 drive the blueprint/plan fixes. Because mempalace is skip-if-unavailable, the
-plan-doc line is the source of truth when recall is empty; the `gaps` room
-carries the rich detail when it is up.
+plan-doc line is the source of truth when recall is empty; the `gaps` room and
+`docs/memory/gaps/` carry the rich detail.
 
 **Parked scope — out-of-scope points raised during elicitation.** The same room
 also holds what a Q&A answer surfaces *beyond the current pass's scope* (per the

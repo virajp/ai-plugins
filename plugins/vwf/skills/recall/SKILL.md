@@ -33,7 +33,7 @@ continue the work in **this fresh session**.
 by default. Recalling it differs from a named recall in two ways:
 
 - **It lives on both surfaces** — the mempalace drawer and the committed
-  `docs/handoffs/next.md`. Read whichever resolves; if both do and they
+  `docs/memory/handoff/next.md`. Read whichever resolves; if both do and they
   disagree, the **more recent `Date`** wins.
 - **Its continuation runs without a gate** — step 4 executes the Next prompt
   instead of asking. That is the whole point of `next`: one command resumes the
@@ -75,13 +75,13 @@ With a `<name>`, retrieve it:
    (`mempalace_search(query="<name>", wing=<project>, room="handoff")`,
    optionally with `source_file="handoff/<name>.md"`, is an equivalent path.)
 
-**If mempalace is unavailable or has no match**, read `docs/handoffs/<name>.md`
-from disk (the `/vwf:handoff` fallback). If neither yields anything, say so and
-stop — don't guess the prior state.
+**If mempalace is unavailable or has no match**, read
+`docs/memory/handoff/<name>.md` from disk (the `/vwf:handoff` fallback). If
+neither yields anything, say so and stop — don't guess the prior state.
 
 For **`next`**, the disk copy is a first-class surface, not a fallback: read
-`docs/handoffs/next.md` even when the drawer resolved, and take the copy with
-the more recent `Date` if they differ.
+`docs/memory/handoff/next.md` even when the drawer resolved, and take the copy
+with the more recent `Date` if they differ.
 
 ### Format check
 
@@ -120,8 +120,9 @@ the user whether to run it now**:
 
 **For `next`, do not ask** — show the summary, then execute the Next prompt
 straight away (routing through the matching `/vwf:` command the same way). The
-handoff **stays in place**: leave the drawer and `docs/handoffs/next.md` alone,
-so a re-run resumes the same point until the next `/vwf:handoff` overwrites it.
+handoff **stays in place**: leave the drawer and `docs/memory/handoff/next.md`
+alone, so a re-run resumes the same point until the next `/vwf:handoff`
+overwrites it.
 
 If there is no next prompt, end with the summary and the open items, and wait
 for direction. For `next` this means the previous session recorded no
