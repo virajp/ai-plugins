@@ -38,11 +38,11 @@ throughout.
 | Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                      |
 
 Doctrine: the **project-setup** skill — a router. Read each reference at the
-step that needs it, not upfront: `topology-detection` + `workspace-structure` at
-§1, `migration-and-consent` at §4, `claude-md` at §8. Read
-**`format-versioning`** (~430 lines of per-version deltas) **only when §3 finds
-actual drift**, and only the deltas between the repo's stamp and the shipped
-format — an already-current repo never needs it.
+step that needs it, not upfront: `topology-detection` + `structure` at §1,
+`migration-and-consent` at §4, `claude-md` at §8. Read **`format-versioning`**
+(~430 lines of per-version deltas) **only when §3 finds actual drift**, and only
+the deltas between the repo's stamp and the shipped format — an already-current
+repo never needs it.
 
 ## Hard Rules
 
@@ -113,10 +113,10 @@ types, stacks, and **whether a UI surface exists** (it makes the design system
 mandatory). Never assume UI — confirm it.
 
 **New/empty repo.** When detection finds no manifests and no source, apply the
-**workspace structure** per the project-setup skill (workspace-structure) as one
-confirmation. The structure stays enforced with an escape hatch: an explicit
-objection is honored, recorded under `enforcement:` in `.config/vwf.yaml`, and
-never re-asked.
+**topology menu** per the project-setup skill (structure) as one confirmation —
+present the three templates and let the user pick, exactly as with stacks. There
+is no default and nothing to object to, so no `enforcement` entry: record
+`topology` and `topology_reason`.
 
 **Stacks are elicited, never stated.** For each project, present the templates
 under `${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/<role>/` as a menu with an
@@ -127,11 +127,11 @@ is no `enforcement` entry for a stack. `/vwf:architecture` owns this elicitation
 is only enough detection to populate the menu's starting point.
 
 **Existing non-conforming repo.** When an existing repo does not match the
-workspace shape, fold a consent-gated restructure proposal toward it into the
-step-4 migration plan (batched; moves that are risky or cross repo boundaries —
-e.g. a submodule split — become written recommendations instead, per
-migration-and-consent). A decline is recorded as a structure deviation in the
-registry and not re-proposed on later runs.
+selected topology template's suggested layout, fold a consent-gated restructure
+proposal into the step-4 migration plan (batched; moves that are risky or cross
+repo boundaries — e.g. a submodule split — become written recommendations
+instead, per migration-and-consent). A decline is recorded as a structure
+deviation in the registry and not re-proposed on later runs.
 
 ### 3. Reconcile format & legacy
 

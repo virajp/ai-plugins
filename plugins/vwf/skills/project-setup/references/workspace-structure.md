@@ -1,63 +1,60 @@
-# Workspace Structure
+# Structure
 
-The shape vwf **enforces** for a multi-project product — applied when onboarding
-a new/empty repo, proposed (consent-gated) as a migration for an existing repo
-that does not match. Structure carries one escape hatch: an explicit user
-objection is honored and recorded under `enforcement:` in `.config/vwf.yaml`
-(the choice and reason — see the vwf-config asset). A recorded deviation is
-settled — never re-asked or re-proposed.
+**Structure is a menu, not a mandate.** Since format 19 vwf ships three topology
+templates and `/vwf:setup` presents them, exactly as it presents stack
+templates. The user picks; the choice and its reason are recorded in
+`.config/vwf.yaml`. There is nothing to deviate *from*, so
+`enforcement.structure` is retired — a topology matching your product is a
+normal answer, not an exception to justify.
 
-**Stacks are not enforced.** They are a menu of templates the user picks from —
-see Stack templates below. Structure and stack were one doctrine until
-`config_format` 11 split them; only the structure half remains enforced.
+## The topology menu
 
-## The shape
+| Topology                                                          | What it is                                                    | `docs/blueprint/` lives |
+| ----------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
+| [`repo`](${CLAUDE_PLUGIN_ROOT}/assets/topologies/repo.md)         | One codebase, deployed as a whole                             | the repo root           |
+| [`monorepo`](${CLAUDE_PLUGIN_ROOT}/assets/topologies/monorepo.md) | One VCS repo, several independently-buildable projects        | the repo root           |
+| [`polyrepo`](${CLAUDE_PLUGIN_ROOT}/assets/topologies/polyrepo.md) | A group of repos, wired as submodules under a **parent** repo | the parent repo         |
 
-A parent **workspace** git repo whose children are **git submodules**:
+Each template carries its layout, when to choose it, and when to grow out of it.
+Read the one being proposed; do not summarize all three at the user.
 
-```text
-workspace/            # parent repo — vwf lives here
-├── .gitmodules       # backend + frontend
-├── docs/blueprint/   # the vwf bundle (one per workspace)
-├── .config/          # mise config (workspace tooling)
-├── backend/          # submodule — monorepo
-│   ├── projects/
-│   │   ├── service/  # role: service
-│   │   ├── worker/   # role: worker
-│   │   ├── web/      # role: site
-│   │   └── console/  # role: fullstack + operator-rbac capability
-│   └── packages/
-│       └── common/   # role: packages
-└── frontend/         # submodule — single-package on-device app (role: frontend)
-```
+**The deciding question** is not project count but whether the product's code
+can share **one dependency graph and one release cadence**. Yes → `monorepo` (or
+`repo`, if there is only one project). No → `polyrepo`.
 
-- The **workspace parent** holds everything product-wide: `docs/blueprint/`,
-  mise config, CI glue, local emulators. `/vwf:setup` and the other vwf commands
-  run here.
-- **backend** is a monorepo: deployable projects under `projects/`, shared
-  libraries under `packages/` — tooling per the
-  [pnpm-turbo repo template](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md).
-- **frontend** is a single-package app repo — mobile apps are never monorepos.
-- Not every project must exist: a product may have no operator back-office, no
-  `web`, or no `frontend` yet. Absence is fine; a project under another layout
-  is what triggers the migration proposal below.
+**A polyrepo is rooted at a submodule parent.** vwf needs one place for
+`docs/blueprint/`, and a group of unlinked repos has none. This is the one
+structural requirement left, and it carries a real onboarding cost for a product
+whose repos are not already submodules — the polyrepo template states it
+plainly.
 
-## Existing repos
+Adding a topology means **adding a template file** under
+`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`. Nothing else changes.
 
-A `.gitmodules` naming child repos (each child dir carrying its own `.git`) →
-**workspace** topology. Classify each child on its own signals per
+## Detecting and recording
+
+Classify the repo per
 [topology detection](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/topology-detection.md),
-and record the shape in the registry and the vwf config (`.config/vwf.yaml`)
-(`topology: workspace`).
+present the matching template for confirmation, and record `topology:` plus
+`topology_reason:` in `.config/vwf.yaml`. In a polyrepo, classify **each member
+on its own signals** — a member may be a `repo` or a `monorepo`, and each
+carries its own `repo.stack` block.
 
-A repo that does **not** conform gets a **restructure proposal** folded into the
-setup migration plan: in-repo layout moves (`projects/` / `packages/` grouping,
-project naming) as normal consent-gated batches; anything crossing a repo
-boundary — e.g. splitting a single repo into parent + submodules — only ever as
-a written recommendation, per
+A repo whose layout differs from its topology template's suggested grouping gets
+a **restructure proposal** folded into the setup migration plan: in-repo layout
+moves (`projects/` / `packages/` grouping, project naming) as normal
+consent-gated batches. Anything crossing a repo boundary — splitting a repo into
+parent + submodules — is only ever a **written recommendation**, per
 [migration & consent](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/migration-and-consent.md).
-A decline is recorded in `.config/vwf.yaml` (`enforcement.structure`) and not
-re-proposed on later runs.
+A decline is settled and not re-proposed.
+
+## Adding and removing repos or projects
+
+Both are **incremental** — `/vwf:setup` re-runs against the delta rather than
+re-onboarding. Adding is a registry entry (plus `git submodule add` in a
+polyrepo). Removing **archives** the removed unit's flows and entities under
+`docs/blueprint/archived/` — vwf never deletes a blueprint doc — deregisters its
+projects, and recomputes the coverage stamp without them.
 
 ## Stack templates (a menu)
 

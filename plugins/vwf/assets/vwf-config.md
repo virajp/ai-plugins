@@ -1,7 +1,7 @@
 # The vwf Config — `.config/vwf.yaml`
 
-**How vwf operates in this product.** One file per workspace (the parent repo in
-workspace topology; submodules never get their own), written by `/vwf:setup` and
+**How vwf operates in this product.** One file per product (the parent repo in
+polyrepo topology; submodules never get their own), written by `/vwf:setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
 of the system description**: what the product *is* (projects, types, paths,
 capabilities) lives in `docs/blueprint/registry.yaml`; this file holds how vwf
@@ -27,11 +27,13 @@ blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
   remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), density/<unit> (over its line budget — cleared by the sweep's condenser pass, or when the condenser reports every remaining line load-bearing), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
-topology: workspace # workspace | monorepo | polyrepo
+topology: polyrepo # repo | monorepo | polyrepo — a MENU since format 19 (assets/topologies/), not enforced
+topology_reason: <one
+  line> # why this shape; recorded so it is never re-litigated
 ui: true # a UI project exists → design-system required
 integrations: true # external integration/secret exists → environment.md required
 
-repo: # REPO-level tooling, the counterpart to a project's stack. One block per workspace; in workspace topology it describes the parent's shared tooling
+repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in polyrepo topology the parent and each member carry their own
   stack:
     template: repo/<slug> # a template under assets/stacks/repo/, or `custom`
     package_manager: <tool> # pnpm | bun ONLY, and only for JS/TS. A non-JS repo records its language's native tool (cargo, uv, pub), which was never a choice
@@ -76,9 +78,8 @@ harness: # workspace-level capability inventory (see the harness contract)
   health: true
   screenshots: true
 
-enforcement: # vwf's enforcement opt-outs — moved here from the registry in format 6
-  structure: enforced # or { deviated: <choice>, reason: <one line> }
-  # `stacks:` was retired in format 10 and there is nothing to replace it: since format 11 the stack is a MENU, so no choice deviates from anything and none needs a waiver. A legacy `stacks:` block reads as drift and migrates into projects.<name>.stack (its reason into `note`).
+enforcement: # vwf's enforcement opt-outs
+  # `structure:` was retired in format 19 and `stacks:` in format 10, for the same reason: both became MENUS (assets/topologies/, assets/stacks/), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `stacks:` block reads as drift — structure migrates into `topology` + `topology_reason`, stacks into projects.<name>.stack (its reason into `note`).
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
 
 pipeline: # bounded knobs — see the hard floor below

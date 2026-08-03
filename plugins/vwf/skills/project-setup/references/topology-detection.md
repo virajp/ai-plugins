@@ -3,20 +3,18 @@
 Infer the project shape from repo signals **before** asking — then confirm by
 MCQ.
 
-**Monorepo vs polyrepo vs workspace:**
+**Which topology** (`repo` | `monorepo` | `polyrepo`):
 
 - `pnpm-workspace.yaml`, a `workspaces` field (npm/yarn/bun), `turbo.json`, or
   `nx.json` → **monorepo**.
 - a single `package.json` / `pubspec.yaml` / `build.gradle(.kts)` /
-  `Package.swift` at the root with no workspace globs → **single-package** (a
-  polyrepo member).
-
+  `Package.swift` at the root with no workspace globs → **repo** (or, inside a
+  parent, a polyrepo member).
 - a `.gitmodules` naming child repos (child dirs carrying their own `.git`) →
-  **workspace**: a parent repo holding the vwf docs, with each child classified
-  on its own signals. See the
-  [workspace structure](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/workspace-structure.md)
-  reference — the enforced shape, what to apply for a new/empty repo, and the
-  restructure proposal a non-conforming existing repo gets.
+  **polyrepo**: a parent repo holding the vwf docs, with each child classified
+  on its own signals. See
+  [structure](${CLAUDE_PLUGIN_ROOT}/skills/project-setup/references/workspace-structure.md)
+  for the topology menu and how a choice is recorded.
 
 **Package manager** (JS/TS only, and only `pnpm` or `bun` — see the vwf-config
 asset): `pnpm-lock.yaml` → pnpm, `bun.lock` / `bun.lockb` → bun. The lockfile is
