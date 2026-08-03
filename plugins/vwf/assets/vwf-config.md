@@ -94,7 +94,8 @@ environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in 
 
 production_env: production # optional — names the release environment for /vwf:verify (default: the env literally named "production")
 
-design: # claude.ai/design pins & canvas state — ids and flow names only, never content
+design: # design-tool pins & canvas state — ids and flow names only, never content
+  tool: claude-design # the ADAPTER PLUGIN NAME (claude-design | lovable | stitch | …). vwf never talks to a design tool itself: it delegates to /<tool>:<tool>-import-screens and /<tool>:<tool>-import-design-system per assets/design-adapter.md. The named plugin must be installed — /vwf:design-system and /vwf:screens import PREFLIGHT that, because a missing adapter fails silently
   design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
   projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
@@ -185,10 +186,11 @@ earlier than 65/90/80), never loosen.
   conventions CLAUDE.md (device frame, layout; written by `/vwf:screens`). An
   existing flat uuid becomes the pin for the project's **primary platform**
   (`mobile` for a `frontend` role, `desktop` for a `site` role); other declared
-  platforms are pinned on next use (canvas-push §2). Readers fall back to a flat
-  `design.projects.<registry-project>` uuid as that primary-platform pin — its
-  presence is `5` drift. Two platforms must never share a uuid; a shared uuid
-  found during migration is surfaced for re-pinning, never silently kept.
+  platforms are pinned on next use (per the adapter contract). Readers fall back
+  to a flat `design.projects.<registry-project>` uuid as that primary-platform
+  pin — its presence is `5` drift. Two platforms must never share a uuid; a
+  shared uuid found during migration is surfaced for re-pinning, never silently
+  kept.
 - **`6 → 7` migration** (performed by `/vwf:setup`, alongside the blueprint
   `12 → 14` delta): every flow identifier stored in this file **drops its
   `<device>` segment**, since format 14 moved the device out of the flow path

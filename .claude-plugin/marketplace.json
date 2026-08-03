@@ -11,16 +11,6 @@
   "plugins": [
     {
       "category": "development",
-      "description": "AI memory system \u2014 mine projects and conversations into a searchable palace. 33 MCP tools, auto-save hooks, guided setup.",
-      "homepage": "https://github.com/MemPalace/mempalace.git",
-      "name": "mempalace",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/MemPalace/mempalace.git"
-      }
-    },
-    {
-      "category": "development",
       "description": "Behavioral guidelines to reduce common LLM coding mistakes, derived from Andrej Karpathy's observations \u2014 Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution. External; opt-in (not installed by --all).",
       "homepage": "https://github.com/multica-ai/andrej-karpathy-skills",
       "name": "andrej-karpathy-skills",
@@ -28,6 +18,24 @@
         "source": "url",
         "url": "https://github.com/multica-ai/andrej-karpathy-skills.git"
       }
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Claude Design MCP server plus the vwf design-adapter skills (import-screens, import-design-system) \u2014 connects the agent to claude.ai/design (https://api.anthropic.com/v1/design/mcp).",
+      "name": "claude-design",
+      "source": "./plugins/claude-design",
+      "strict": true,
+      "tags": [
+        "claude-design",
+        "mcp",
+        "design",
+        "mockups",
+        "vwf-design-adapter"
+      ],
+      "version": "0.1.0"
     },
     {
       "author": {
@@ -46,23 +54,6 @@
         "libraries"
       ],
       "version": "1.1.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
-      "description": "Claude Design MCP server \u2014 connects the agent to claude.ai/design (https://api.anthropic.com/v1/design/mcp) for creating and updating design projects programmatically.",
-      "name": "claude-design",
-      "source": "./plugins/claude-design",
-      "strict": true,
-      "tags": [
-        "claude-design",
-        "mcp",
-        "design",
-        "mockups"
-      ],
-      "version": "0.1.0"
     },
     {
       "author": {
@@ -96,11 +87,133 @@
         "name": "Viraj Patel"
       },
       "category": "development",
+      "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts \u2014 via the /github-actions:workflow skill.",
+      "name": "github-actions",
+      "source": "./plugins/github-actions",
+      "strict": true,
+      "tags": [
+        "github-actions",
+        "ci",
+        "cd",
+        "mise",
+        "workflow",
+        "monorepo",
+        "polyrepo",
+        "skills"
+      ],
+      "version": "0.5.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "vwf design adapter for Lovable \u2014 imports screens and the published .lovable/design-system.json via Lovable's MCP server.",
+      "name": "lovable",
+      "source": "./plugins/lovable",
+      "strict": true,
+      "tags": [
+        "lovable",
+        "design",
+        "vwf-design-adapter"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Opinionated Markdown & documentation standards \u2014 writing style, CHANGELOGs, and mermaid diagrams \u2014 that auto-apply to every Markdown file, plus a /markdown:readme skill that scans the repo and writes/updates its README.",
+      "name": "markdown",
+      "source": "./plugins/markdown",
+      "strict": true,
+      "tags": [
+        "markdown",
+        "documentation",
+        "writing",
+        "changelog",
+        "mermaid",
+        "skills"
+      ],
+      "version": "0.7.0"
+    },
+    {
+      "category": "development",
+      "description": "AI memory system \u2014 mine projects and conversations into a searchable palace. 33 MCP tools, auto-save hooks, guided setup.",
+      "homepage": "https://github.com/MemPalace/mempalace.git",
+      "name": "mempalace",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/MemPalace/mempalace.git"
+      }
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Opinionated mise plugin \u2014 the .config/ three-file split (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, tool/env placement, file-based tasks, and the CI node-gpg workaround. Skill auto-applies to mise configs; /mise:scaffold sets up a repo.",
+      "name": "mise",
+      "source": "./plugins/mise",
+      "strict": true,
+      "tags": [
+        "mise",
+        "toolchain",
+        "tasks",
+        "ci",
+        "devtools",
+        "skills"
+      ],
+      "version": "0.4.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "vwf design adapter for Google Stitch \u2014 imports generated screens and derives design tokens via @google/stitch-sdk.",
+      "name": "stitch",
+      "source": "./plugins/stitch",
+      "strict": true,
+      "tags": [
+        "stitch",
+        "design",
+        "vwf-design-adapter"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Opinionated TypeScript plugin where Effect is the house standard \u2014 a `typescript` router skill (lean SKILL.md routing to on-demand references: Effect-TS patterns, Effect runtime & layers, Vitest testing, the build pipeline for single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, and `lint-format`, and the TypeScript/JavaScript language server.",
+      "name": "typescript",
+      "source": "./plugins/typescript",
+      "strict": true,
+      "tags": [
+        "typescript",
+        "javascript",
+        "effect",
+        "pnpm",
+        "tsconfig",
+        "monorepo",
+        "build",
+        "vitest",
+        "testing",
+        "skills",
+        "language-server",
+        "lsp"
+      ],
+      "version": "0.6.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
       "dependencies": [
-        {
-          "marketplace": "virajp-plugins",
-          "name": "claude-design"
-        },
         {
           "marketplace": "virajp-plugins",
           "name": "context7"
@@ -146,90 +259,6 @@
         "git-workflow"
       ],
       "version": "13.0.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
-      "description": "Opinionated Markdown & documentation standards \u2014 writing style, CHANGELOGs, and mermaid diagrams \u2014 that auto-apply to every Markdown file, plus a /markdown:readme skill that scans the repo and writes/updates its README.",
-      "name": "markdown",
-      "source": "./plugins/markdown",
-      "strict": true,
-      "tags": [
-        "markdown",
-        "documentation",
-        "writing",
-        "changelog",
-        "mermaid",
-        "skills"
-      ],
-      "version": "0.7.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
-      "description": "Opinionated mise plugin \u2014 the .config/ three-file split (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, tool/env placement, file-based tasks, and the CI node-gpg workaround. Skill auto-applies to mise configs; /mise:scaffold sets up a repo.",
-      "name": "mise",
-      "source": "./plugins/mise",
-      "strict": true,
-      "tags": [
-        "mise",
-        "toolchain",
-        "tasks",
-        "ci",
-        "devtools",
-        "skills"
-      ],
-      "version": "0.4.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
-      "description": "Opinionated TypeScript plugin where Effect is the house standard \u2014 a `typescript` router skill (lean SKILL.md routing to on-demand references: Effect-TS patterns, Effect runtime & layers, Vitest testing, the build pipeline for single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, and `lint-format`, and the TypeScript/JavaScript language server.",
-      "name": "typescript",
-      "source": "./plugins/typescript",
-      "strict": true,
-      "tags": [
-        "typescript",
-        "javascript",
-        "effect",
-        "pnpm",
-        "tsconfig",
-        "monorepo",
-        "build",
-        "vitest",
-        "testing",
-        "skills",
-        "language-server",
-        "lsp"
-      ],
-      "version": "0.6.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
-      "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts \u2014 via the /github-actions:workflow skill.",
-      "name": "github-actions",
-      "source": "./plugins/github-actions",
-      "strict": true,
-      "tags": [
-        "github-actions",
-        "ci",
-        "cd",
-        "mise",
-        "workflow",
-        "monorepo",
-        "polyrepo",
-        "skills"
-      ],
-      "version": "0.5.0"
     }
   ]
 }

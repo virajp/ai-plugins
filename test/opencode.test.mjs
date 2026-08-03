@@ -228,11 +228,10 @@ test("install renders skills, rewrites plugin root, and wires config", () => {
     type: "local",
     command: ["mise", "x", "--", "mempalace-mcp"],
   });
-  // claude-design (a vwf dep) has no skills to render — only its remote MCP.
-  assert.deepEqual(config.mcp["claude-design"], {
-    type: "remote",
-    url: "https://api.anthropic.com/v1/design/mcp",
-  });
+  // claude-design is NOT a vwf dependency: vwf is decoupled from any design
+  // tool and delegates to whichever adapter `design.tool` names. Installing
+  // vwf alone must therefore not pull in Claude Design's remote MCP.
+  assert.equal(config.mcp["claude-design"], undefined);
   // Derived from plugins/typescript plugin.json lspServers (typescript-lsp →
   // the OpenCode built-in id "typescript") and stamped beside the render.
   assert.ok(

@@ -59,10 +59,11 @@ the contract of record; the canvas is where screens get good.
   every flow page's happy path in NNN execution order, so the complete happy
   flow for a platform is walkable from its index alone.
 
-**One canvas project per platform.** Every registry UI project pins a separate
-design project per platform (`design.projects.<registry-project>.<platform>` —
-canvas-push §2; two platforms never share one), because the conventions differ
-per platform: each canvas project carries its own CLAUDE.md.
+**One design project per platform.** Every registry UI project pins a separate
+design project per platform (`design.projects.<registry-project>.<platform>`;
+two platforms never share one), because the conventions differ per platform:
+each carries its own conventions doc. How those pins are resolved on the tool
+side is the **adapter's** business, not vwf's.
 
 Import matches by these names, and the same names make the canvas humanly
 reconcilable against the flows tree.
@@ -70,32 +71,31 @@ reconcilable against the flows tree.
 **Canvas conventions.** The standing rules live in the **canvas project's own
 CLAUDE.md** — and `prompt` writes and maintains its repo-side source,
 `docs/prompts/screens/<project>/CLAUDE--<platform>.md` (one per pinned design
-project, from the canvas-claude template): the naming contract (pages, frame
-codes, the `index--<platform>` stitch), the revise-in-place rule, the
-interactive-journey mandate (wired navigation, the happy path clickable end to
-end and stitched into its index — never a static page), the **standing tweak
-set** on every coded frame: `darkMode` (default **on**), `frame` (default
-**on**, the device frame matched to the platform — the mobile and tablet frames
-include the camera notch/cutout for a true visual, desktop a browser-chrome
-frame, the in-car platforms the OS display frame with its template constraints),
-one tweak per pinned **sad state**, and one tweak per pinned **conditional
-product state** (empty data, entity-state variants — product states, not sad
-paths) — plus stub treatment for out-of-flow screens, the product one-liner, and
-the goal vocabulary from `product.md`. Generated sections are **regenerated in
-place**; the **Project conventions (canvas-owned)** section — conventions
-discovered while designing — is preserved verbatim, with `import` folding
-canvas-side additions into it. The user sets the file as the canvas project's
-CLAUDE.md whenever it is new or its generated sections changed. **Briefs never
-restate the standing conventions** — a brief is the **wireframe-level, per-flow
-payload only**: the page name (the sync key), a goal line, the steps and entry
-points, and per-screen (by code) purpose/navigation/forms/**components with
-their rules** plus the pinned states its tweaks must cover. No design/visual
-instructions — no tokens, type, spacing, or styling: the canvas picks the design
-system up from its Design System project and decides visual treatment in its
-chat. What a screen **shows** and how it **behaves** is contract — the
-components, their clickability/visibility conditions, and their pinned content
-are transcribed from the flow doc's Components blocks, never left for the canvas
-to decide.
+project): the naming contract (pages, frame codes, the `index--<platform>`
+stitch), the revise-in-place rule, the interactive-journey mandate (wired
+navigation, the happy path clickable end to end and stitched into its index —
+never a static page), the **standing tweak set** on every coded frame:
+`darkMode` (default **on**), `frame` (default **on**, the device frame matched
+to the platform — the mobile and tablet frames include the camera notch/cutout
+for a true visual, desktop a browser-chrome frame, the in-car platforms the OS
+display frame with its template constraints), one tweak per pinned **sad
+state**, and one tweak per pinned **conditional product state** (empty data,
+entity-state variants — product states, not sad paths) — plus stub treatment for
+out-of-flow screens, the product one-liner, and the goal vocabulary from
+`product.md`. Generated sections are **regenerated in place**; the **Project
+conventions (canvas-owned)** section — conventions discovered while designing —
+is preserved verbatim, with `import` folding canvas-side additions into it. The
+user sets the file as the canvas project's CLAUDE.md whenever it is new or its
+generated sections changed. **Briefs never restate the standing conventions** —
+a brief is the **wireframe-level, per-flow payload only**: the page name (the
+sync key), a goal line, the steps and entry points, and per-screen (by code)
+purpose/navigation/forms/**components with their rules** plus the pinned states
+its tweaks must cover. No design/visual instructions — no tokens, type, spacing,
+or styling: the canvas picks the design system up from its Design System project
+and decides visual treatment in its chat. What a screen **shows** and how it
+**behaves** is contract — the components, their clickability/visibility
+conditions, and their pinned content are transcribed from the flow doc's
+Components blocks, never left for the canvas to decide.
 
 ## Doc Paths
 
@@ -106,17 +106,18 @@ to decide.
 | Prompts       | `docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md` — grouped by prompt type → registry project → flow; **one brief per flow per platform** (`mobile.md`, `tablet.md`, `desktop.md`, `web.md`, `auto.md`), regenerated in place — the tree mirrors the flows tree exactly (format 15) |
 | Prompt templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/screen-prompt.md`                                                                                                                                                                                                                                     |
 | Conventions   | `docs/prompts/screens/<project>/CLAUDE--<platform>.md` — the platform canvas project's CLAUDE.md source, one per pinned design project; generated sections regenerated in place, the canvas-owned section preserved                                                                           |
-| Conv. templ.  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/canvas-claude.md`                                                                                                                                                                                                                                     |
+| Conv. templ.  | the configured adapter plugin's conventions template (e.g. `claude-design`'s `assets/canvas-claude.md`)                                                                                                                                                                                       |
 | Design system | `docs/blueprint/design-system.md` (or folder form)                                                                                                                                                                                                                                            |
 | Registry      | `docs/blueprint/registry.yaml`                                                                                                                                                                                                                                                                |
 | Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                                                                                                                                                                                                    |
 
-Canvas mechanics: `${CLAUDE_PLUGIN_ROOT}/assets/canvas-push.md` (surface §1,
-per-project+platform pins §2, link hygiene §5) — used only by `import` to *read*
-the canvas, never to deliver or run a brief (`prompt` never touches the canvas).
-Doctrine: the blueprint-authoring skill's `ui-ux-contract` reference (what a
-Screens contract pins — error and empty states are mandatory pins, conditional
-product states pinned where the screen has them).
+Adapter contract: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md` — the payload
+`import` consumes, the delegation names, and the preflight. vwf never speaks a
+design tool's API: `import` delegates to `/<tool>:<tool>-import-screens` and
+diffs the payload it returns. `prompt` needs no adapter at all — the briefs are
+files. Doctrine: the blueprint-authoring skill's `ui-ux-contract` reference
+(what a Screens contract pins — error and empty states are mandatory pins,
+conditional product states pinned where the screen has them).
 
 ## Halt Conditions
 
@@ -174,10 +175,10 @@ product states pinned where the screen has them).
    described from the steps, with provisional codes in step order.
 3. **Maintain the canvas conventions file** — one per platform brief written:
    regenerate `docs/prompts/screens/<project>/CLAUDE--<platform>.md` from the
-   canvas-claude template (the product one-liner and goal vocabulary from
-   `product.md`, this platform's Layout block, the naming contract, behavior
-   conventions, and standing tweak set), **preserving the "Project conventions
-   (canvas-owned)" section verbatim** (seeded empty in a new file).
+   adapter's conventions template (the product one-liner and goal vocabulary
+   from `product.md`, this platform's Layout block, the naming contract,
+   behavior conventions, and standing tweak set), **preserving the "Project
+   conventions (canvas-owned)" section verbatim** (seeded empty in a new file).
 4. **Deliver the files — nothing else.** The brief files are the deliverable:
    say where they are and that the user pastes each into the canvas chat — and,
    when a `CLAUDE--<platform>.md` is new or its generated sections changed, that
@@ -194,7 +195,7 @@ product states pinned where the screen has them).
    under `docs/prompts/screens/` (the ledger of commissioned briefs — one
    directory per project/flow).
 2. **List & match.** Resolve the surface and each in-scope UI project's
-   **per-platform** pinned design projects (canvas-push §§1–2 —
+   **per-platform** pinned design projects (
    `design.projects.<registry-project>.<platform>`, one canvas project per
    platform); `list_files` each. Match every page by the naming contract: a root
    page named `<flow>--<platform>` — where `<flow>` ≡ a numbered flow folder

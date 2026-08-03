@@ -140,10 +140,16 @@ and reconnects instead of dying with the session. Toggle the mempalace
 **plugin's** own stdio server off in `/mcp` — two servers would contend for
 mempalace's single writer lease. See [docs/mempalace.md](./docs/mempalace.md).
 
-`vwf` also depends on six plugins — `claude-design`, `context7`,
-`github-actions`, `markdown`, `mempalace`, and `mise` — all resolved from the
-same `virajp-plugins` marketplace. Claude Code **auto-installs and
-auto-enables** them when you enable `vwf` (requires Claude Code ≥ 2.1.143).
+`vwf` also depends on five plugins — `context7`, `github-actions`, `markdown`,
+`mempalace`, and `mise` — all resolved from the same `virajp-plugins`
+marketplace. Claude Code **auto-installs and auto-enables** them when you enable
+`vwf` (requires Claude Code ≥ 2.1.143).
+
+**A design tool is not among them.** vwf is decoupled from any particular one:
+it delegates screen and design-system imports to whichever **adapter plugin**
+`design.tool` names — `claude-design` (the default, installed by `--all`),
+`lovable`, `stitch`, or one you write. Export needs no adapter at all, since
+`/vwf:screens prompt` just writes design briefs as files.
 
 ## Install
 
@@ -1324,7 +1330,9 @@ your stack. Each has a dedicated guide:
 | **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                         | `--user mise`                               |
 | **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` skill — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                     | `--user github-actions`                     |
 | **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                        | `--user context7`                           |
-| **[claude-design](./docs/claude-design.md)**                                       | The Claude Design MCP server — Anthropic's remote endpoint for claude.ai/design (also a `vwf` dependency)                                                                                          | `--user claude-design`                      |
+| **[claude-design](./docs/claude-design.md)**                                       | Claude Design MCP server + vwf design-adapter skills — the **default** design adapter                                                                                                              | `--user claude-design`                      |
+| **lovable**                                                                        | vwf design adapter for Lovable (opt-in — set `design.tool: lovable`)                                                                                                                               | `--user lovable`                            |
+| **stitch**                                                                         | vwf design adapter for Google Stitch (opt-in — set `design.tool: stitch`)                                                                                                                          | `--user stitch`                             |
 | **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                               | `--user mempalace`                          |
 | **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                             | `--user`/`--project andrej-karpathy-skills` |
 

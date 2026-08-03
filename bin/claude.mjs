@@ -114,6 +114,8 @@ const PLUGINS = [
   "mempalace",
   "mise",
   "github-actions",
+  "lovable",
+  "stitch",
   "andrej-karpathy-skills",
 ];
 
@@ -133,7 +135,11 @@ const USER_ONLY = new Set(["mempalace"]);
 // via --user or --project (scope is the user's choice — unlike PROJECT_SCOPED
 // they carry no forced default scope). Used for external, re-listed plugins that
 // shouldn't ride along with a bulk install (e.g. andrej-karpathy-skills).
-const OPT_IN = new Set(["andrej-karpathy-skills"]);
+// The vwf design adapters (lovable, stitch) are opt-in because a product
+// configures exactly ONE via `design.tool` — installing all three would be
+// noise. claude-design stays in the --all set as the documented default
+// adapter, so the common path works without naming anything.
+const OPT_IN = new Set(["andrej-karpathy-skills", "lovable", "stitch"]);
 
 // --all only acts on the user-scoped set: every plugin that is neither
 // project-scoped nor opt-in. Project-scoped and opt-in plugins are deliberate
@@ -172,7 +178,6 @@ const CORE_DEPS = ["claude"];
 // the OpenCode target expands them explicitly at plan time.
 const PLUGIN_DEPS = {
   vwf: [
-    "claude-design",
     "context7",
     "github-actions",
     "markdown",
@@ -188,6 +193,7 @@ const PLUGIN_DEPS = {
 const PLUGIN_EXTRA_DEPS = {
   vwf: ["rtk", "graphify", "mise", "pnpm", "uv"],
   typescript: ["mise", "pnpm"],
+  stitch: ["pnpm"],
   context7: ["pnpm"],
   flutter: ["mise", "kotlin-lsp", "sourcekit-lsp"],
   mempalace: ["uv", "mise"], // mise: the OpenCode target launches its MCP via `mise x`

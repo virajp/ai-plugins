@@ -15,7 +15,7 @@
      (darkMode on, device frame on with the mobile/tablet camera cutout, a
      tweak per pinned sad and conditional state), stub treatment — live in
      the canvas project's own CLAUDE.md (its repo-side source is the sibling
-     CLAUDE--<platform>.md, from the canvas-claude template) and are never
+     CLAUDE--<platform>.md, from the adapter's conventions template) and are never
      restated here; the brief carries only the per-flow payload. The page name
      and frame codes are the sync keys — /vwf:screens import matches by them;
      never rename them. Send no design/visual instructions (no tokens, type,

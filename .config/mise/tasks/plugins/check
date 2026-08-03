@@ -259,6 +259,44 @@ if dupes:
 else:
     ok(f"{len(skill_names)} skill names, no duplicates")
 
+header("Checking vwf design adapters ...")
+# A design adapter is a plugin tagged `vwf-design-adapter` in the marketplace.
+# vwf delegates to it by CONSTRUCTED name (assets/design-adapter.md), and the
+# failure mode is SILENT: a skill with disable-model-invocation: true is removed
+# from Claude's context and cannot be invoked programmatically, so a wrong name
+# or flag imports nothing and reports no error. Static checking is the only
+# place this is catchable.
+adapters = sorted(
+    name for name, entry in entries.items()
+    if "vwf-design-adapter" in (entry.get("tags") or [])
+)
+if not adapters:
+    ok("no design adapters declared")
+for name in adapters:
+    errs = []
+    for kind in ("import-screens", "import-design-system"):
+        skill = f"{name}-{kind}"
+        path = os.path.join("plugins", name, "skills", skill, "SKILL.md")
+        if not os.path.isfile(path):
+            errs.append(f"missing adapter skill: {path}")
+            continue
+        fm = frontmatter(path)
+        if fm.get("name") != skill:
+            errs.append(f"{path}: name is '{fm.get('name')}', expected '{skill}'")
+        dmi = str(fm.get("disable-model-invocation", "")).strip().lower()
+        if dmi != "false":
+            errs.append(
+                f"{path}: disable-model-invocation must be false "
+                f"(is '{dmi or 'unset'}') — vwf could not invoke it, silently"
+            )
+    if errs:
+        failed = True
+        bad(name)
+        for e in errs:
+            print(f"{RED}         - {e}{OFF}")
+    else:
+        ok(f"{name} — both adapter skills, correctly named and invocable")
+
 header("Cross-checking marketplace local sources resolve ...")
 for name, entry in entries.items():
     src = entry.get("source")
