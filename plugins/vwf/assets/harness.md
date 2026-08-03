@@ -15,8 +15,9 @@ re-verified cheaply when a cycle needs it.
 | `e2e_local`   | any flow carries acceptance criteria            | a `test:e2e` task/script running E2E against the local stack |
 | `local_stack` | `e2e_local` needs backing services              | Docker-composed emulators + `wait-on` readiness gates        |
 | `e2e_staging` | flows have criteria **and** a deploy target     | a `test:e2e:staging` task/script targeting a deployed env    |
-| `health`      | a cloud project (`service` or `site` role)      | a `GET /health` (or documented readiness) endpoint           |
+| `health`      | a cloud project (`service`/`fullstack` role)    | a `GET /health` (or documented readiness) endpoint           |
 | `screenshots` | a **web** UI project (`site`/`fullstack` role)  | Playwright runnable via the repo's package manager           |
+| `goldens`     | a **native** `frontend` project                 | golden/snapshot tests + the platform's a11y assertions       |
 
 Reference implementations live in the stack docs — the monorepo tooling doc
 (compose stack, wait-on, task library) and the per-type docs (service test
@@ -38,8 +39,10 @@ Per capability: check mise tasks (`mise tasks`) and package scripts for the
 canonical (then near-canonical) names; for `local_stack`, a compose file plus
 `wait-on`/readiness config; for `health`, a health route in the service's
 routing or deploy manifest; for `screenshots`, a web UI project on a stack where
-Playwright can run. Record each as `true` / `false` / `n/a` (not required for
-this topology) in the stamp:
+Playwright can run; for `goldens`, a golden/snapshot test target in the native
+project's test setup (`flutter test --tags golden`, a Compose screenshot task,
+an XCUITest snapshot scheme). Record each as `true` / `false` / `n/a` (not
+required for this topology) in the stamp:
 
 ```yaml
 # .config/vwf.yaml — the vwf config (see the vwf-config asset)

@@ -3,9 +3,9 @@ name: execute-ux-reviewer
 description: UX-conformance reviewer for the /vwf:execute command. Invoked only
   by /vwf:execute, and only for UI slices — do not
   delegate to it for general tasks. Renders the changed screens (screenshots
-  via the repo's own dev server + Playwright), judges them against
-  design-system.md and the flow Screens contract, and runs an axe
-  accessibility scan. Returns findings only.
+  via the repo's own dev server + Playwright; golden/snapshot tests for a
+  native frontend), judges them against design-system.md and the flow Screens
+  contract, and runs an accessibility scan. Returns findings only.
 tools: Read, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
@@ -54,14 +54,42 @@ registry entry for the UI project (role and stack), the project wing, and the
    `@axe-core/cli` / Playwright + axe). WCAG A/AA violations are findings.
    Additionally enforce whatever explicit accessibility standard
    `design-system.md` declares (contrast, focus order, touch-target size).
-4. **Code-level pass (always — and the whole review for Flutter).** Grep the
-   changed UI code for conformance the render can't prove: hardcoded
-   colors/px/font values where design-system tokens exist, missing state
-   handling, dead focus traps. For a **`frontend` (Flutter)** slice this
-   code-level pass is the review — check widget structure against the Screens
-   contract and semantics (Semantics widgets, labels, contrast tokens) — and set
-   `RENDERED: n/a — flutter (code-level review only)`. Never boot mobile
-   emulators.
+4. **Code-level pass (always).** Grep the changed UI code for conformance the
+   render can't prove: hardcoded colors/px/font values where design-system
+   tokens exist, missing state handling, dead focus traps.
+
+## Native `frontend` slices — the same two gates, different tools
+
+A `frontend` slice gets a **real visual and accessibility gate**, not a
+code-only read. Playwright and axe do not apply to a native surface, so each
+platform's own equivalents stand in. Still never boot an emulator interactively
+— these run headless as tests.
+
+**Flutter (`dart`):**
+
+- **Visual** — run the project's **golden tests** (`flutter test --tags golden`,
+  or the repo's canonical task). A golden diff on a changed screen is a finding;
+  a screen with no golden at all is a **spec gap**, not a pass. Read the failure
+  images the runner writes.
+- **Accessibility** — `flutter_test`'s accessibility guidelines API:
+  `meetsGuideline(textContrastGuideline)`,
+  `meetsGuideline(androidTapTargetGuideline)`,
+  `meetsGuideline(iOSTapTargetGuideline)`, and
+  `meetsGuideline(labeledTapTargetGuideline)`. A failed guideline is the
+  equivalent of a WCAG A/AA violation and forces `changes-required`.
+- Report `RENDERED: ok (golden)` when the goldens ran, or
+  `RENDERED: n/a — <why>` when they could not.
+
+**Kotlin / Android:** Compose UI tests plus screenshot tests for the visual
+gate; Compose semantics assertions (content descriptions, merged semantics,
+touch-target size) for a11y.
+
+**Swift / iOS:** XCUITest plus snapshot tests for the visual gate; accessibility
+label/trait/Dynamic-Type assertions for a11y.
+
+For any of these, a **missing test harness** is reported in the harness
+contract's vocabulary (`RENDERED: n/a — golden tests missing`) and surfaces at
+the orchestrator's gate — never silently downgraded to a code-only review.
 
 Screenshots are working artifacts: write them under the worktree's scratch/tmp
 area, never commit them.
@@ -90,7 +118,7 @@ block below:
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [severity] <screen>/<state> — <what deviates and from which contract>   # (or "none")
-RENDERED: ok   # or "n/a — <why>" (capture impossible / flutter code-level only)
+RENDERED: ok   # or "ok (golden)" for a native slice, or "n/a — <why>"
 A11Y: clean   # or "<n> violations (worst: <rule>)"
 SPEC GAPS: none   # states/behaviors no doc pins down: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
@@ -98,7 +126,8 @@ RECALL: <slice>/ux/<round>   # mempalace tag for FINDINGS detail (omit if not fi
 GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
-Any finding rated `[high]` or worse, or any WCAG A violation, forces
-`VERDICT: changes-required`. `RENDERED: n/a` on a web slice is presented at the
-orchestrator's gate — never a silent downgrade. Nothing before or after the
+Any finding rated `[high]` or worse, any WCAG A violation, or any failed
+platform accessibility guideline forces `VERDICT: changes-required`.
+`RENDERED: n/a` on **any** slice — web or native — is presented at the
+orchestrator's gate, never a silent downgrade. Nothing before or after the
 block.
