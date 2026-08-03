@@ -127,7 +127,7 @@ checks for each and prints the exact command for anything missing.
 | --------------- | ------------ | ---------------------------------------------------- | ------------------------------------- |
 | mise            | **required** | task runner + resolves the toolchain                 | `brew install mise`                   |
 | graphify        | **required** | knowledge graph the commands rely on                 | `mise use -g pipx:graphifyy@latest`   |
-| node + pnpm     | **required** | `context7` MCP server; the npm→pnpm hook             | `mise use -g node@latest pnpm@latest` |
+| node + pnpm     | **required** | `context7` MCP server; the npm-normalize hook        | `mise use -g node@latest pnpm@latest` |
 | Claude Code CLI | **required** | hosts the commands                                   | `mise use -g claude-code@latest`      |
 | uv              | **required** | installs the `mempalace` memory server               | `mise use -g uv@latest`               |
 | rtk             | optional     | the `rtk hook claude` Bash hook; skipped when absent | `brew install --formulae rtk`         |
@@ -1482,8 +1482,8 @@ maintainers. 🙏
   plugin.
 - **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the
   plugins and hooks depend on.
-- **[pnpm](https://pnpm.io/)** — the package manager the `npm→pnpm` hook and
-  `context7` rely on.
+- **[pnpm](https://pnpm.io/)** — the default package manager the normalizing
+  hook and `context7` rely on.
 - **[typescript-language-server](https://github.com/typescript-language-server/typescript-language-server)**,
   the **[Dart SDK](https://dart.dev/)**,
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and

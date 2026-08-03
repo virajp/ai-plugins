@@ -36,9 +36,9 @@ registry entry for the UI project (role and stack), the project wing, and the
    first; emulator stack if the screens need data — never hand-roll
    infrastructure. A missing capability is reported in the contract's vocabulary
    (`RENDERED: n/a — dev missing: no dev task`). Capture each changed screen
-   with Playwright (`pnpm dlx playwright screenshot`, or a short script via its
-   CLI) in every state you can drive: default, and where reachable empty /
-   loading / error / success. **Read the captured images** and judge them. If
+   with Playwright (`pnpm dlx` / `bunx playwright screenshot`, or a short script
+   via its CLI) in every state you can drive: default, and where reachable empty
+   / loading / error / success. **Read the captured images** and judge them. If
    the server or capture cannot run, fall back to the code-level pass below and
    set `RENDERED: n/a — <why>`.
 2. **Judge against the contracts.** For each screen and state:

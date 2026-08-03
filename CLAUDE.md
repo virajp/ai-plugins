@@ -43,9 +43,11 @@ The plugins have two test tasks, run **locally via pre-commit** (never in
   `PLUGIN_DEPS` ≡ the marketplace dependency lists). url-sourced entries (e.g.
   `mempalace`) are covered only for JSON validity. Scoped to fire when anything
   under `plugins/` or the marketplace manifest changes.
-- **`vwf:test`** — table-tests the `vwf` `npm-to-pnpm.sh` hook through the
-  system sed (the BSD-sed portability guarantee); vwf-specific since it is the
-  only plugin shipping a hook. Scoped to `plugins/vwf/hooks/`.
+- **`vwf:test`** — table-tests the `vwf` `npm-normalize.sh` hook through the
+  system sed (the BSD-sed portability guarantee), for **both** package managers:
+  each table runs in a temp dir seeded with the lockfile that selects pnpm or
+  bun, so resolution is exercised alongside the rewrite. vwf-specific since it
+  is the only plugin shipping a hook. Scoped to `plugins/vwf/hooks/`.
 
 Plugin/skill version numbers are **not** cross-checked — they are independent by
 design (a plugin may hold skills versioned on their own cadence).
@@ -54,7 +56,7 @@ design (a plugin may hold skills versioned on their own cadence).
 
 | Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`                    | `./plugins/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, an npm→pnpm hook, and the mempalace MCP server over **HTTP** (see mempalace: skills from the plugin, MCP from vwf)                                                                                                                                                                                                                       |
+| `vwf`                    | `./plugins/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, an npm→pnpm/bun normalizing hook, and the mempalace MCP server over **HTTP** (see mempalace: skills from the plugin, MCP from vwf)                                                                                                                                                                                                       |
 | `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` skill that scans a repo and writes/updates its README                                                                                                                                                                                                                                                                                 |
 | `typescript`             | `./plugins/typescript`     | Opinionated Effect-TS skills — a `typescript` router skill (lean SKILL.md → on-demand effect/effect-runtime/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`)                                                                                                                                |
 | `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -205,7 +207,7 @@ with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
   | `docs-sync.md`                         | The docs-ship-with-the-change rule for runs that change reality (`execute`, `architecture`/`product` update mode). `blueprint`/`plan` are exempt — they document intent                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
   | `format-check.md` + `blueprint-format` | The format-drift preflight: compare the repo's stamp to the shipped integer (**19**) and nudge `/vwf:setup`. Since vwf is user-scoped, this usage-time check is what reaches each repo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
   | `minimalism.md`                        | The Ponytail decision ladder — what gets **built** (scope). Prose density is a separate bar, in the blueprint-authoring skill                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-- `hooks/` — `hooks.json` + `npm-to-pnpm.sh`
+- `hooks/` — `hooks.json` + `npm-normalize.sh`
 
 Docs the commands maintain live under `docs/blueprint/` (the outcome contract
 `product.md` — problem/users/goals/slice-priority + the `/vwf:feedback`-owned
@@ -686,7 +688,15 @@ gh release create vX.Y.Z --title vX.Y.Z --notes-file <notes> --verify-tag
 
 `vwf` ships two `PreToolUse` / `Bash` hooks (declared in `hooks/hooks.json`):
 
-- `hooks/npm-to-pnpm.sh` — rewrites `npm`/`npx` commands to `pnpm`.
+- `hooks/npm-normalize.sh` — rewrites `npm`/`npx` to the repo's package manager.
+  vwf allows exactly two for JS/TS — **pnpm** and **bun** — and the hook
+  resolves which by walking up from cwd for a lockfile (`bun.lock`/`bun.lockb` →
+  bun, `pnpm-lock.yaml` → pnpm), then a `package_manager: bun` line in
+  `.config/vwf.yaml` (for a project scaffolded but not yet installed), then
+  defaulting to **pnpm**. The lockfile is ground truth because bun reuses npm's
+  `workspaces` field, so nothing else distinguishes them; the pnpm default
+  matters because vwf is user-scoped and this hook fires in every repo,
+  including ones that never heard of vwf.
 - `rtk hook claude` — **optional**. The entry is guarded
   (`command -v rtk >/dev/null 2>&1 && rtk hook claude || true`) so a missing
   `rtk` never blocks a Bash call; `/vwf:doctor` carries the warning instead of
@@ -701,7 +711,7 @@ Things to know when editing hooks here:
   Verify active hooks with `/hooks`, not by inspecting `settings.json`.
 - **Hook scripts must be portable to macOS BSD `sed`.** BSD `sed` does not
   support `\s` or `\b` — use POSIX classes (`[[:space:]]`) and explicit
-  boundaries instead. `npm-to-pnpm.sh` follows this.
+  boundaries instead. `npm-normalize.sh` follows this.
 
 ## Adding a Plugin
 
