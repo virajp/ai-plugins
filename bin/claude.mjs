@@ -116,6 +116,7 @@ const PLUGINS = [
   "github-actions",
   "lovable",
   "stitch",
+  "gcp",
   "andrej-karpathy-skills",
 ];
 
@@ -139,7 +140,10 @@ const USER_ONLY = new Set(["mempalace"]);
 // configures exactly ONE via `design.tool` — installing all three would be
 // noise. claude-design stays in the --all set as the documented default
 // adapter, so the common path works without naming anything.
-const OPT_IN = new Set(["andrej-karpathy-skills", "lovable", "stitch"]);
+// vwf STACK adapters (gcp) are opt-in for the same reason: a product names the
+// stack plugins it uses in `stacks:`, and GCP knowledge is noise to a product
+// running anywhere else.
+const OPT_IN = new Set(["andrej-karpathy-skills", "lovable", "stitch", "gcp"]);
 
 // --all only acts on the user-scoped set: every plugin that is neither
 // project-scoped nor opt-in. Project-scoped and opt-in plugins are deliberate
