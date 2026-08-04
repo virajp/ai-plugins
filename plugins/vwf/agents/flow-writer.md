@@ -64,7 +64,8 @@ Do not read the other references; they cover surfaces that are not yours.
    - Purpose carries the `Serves:` goal link.
    - The **Platforms** table lists one row per platform file you write, each
      linking it (`[mobile](./mobile.md)`) with its note. Omit the section for a
-     non-UI flow.
+     non-UI flow, and for a `cli` project's flow — a terminal surface has no
+     screens, so it takes no platform file.
    - Every step names its actor and links the entity or service it touches;
      API-backed steps name an `operationId`.
    - **The Acceptance block is mandatory** — at least one success and one

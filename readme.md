@@ -303,7 +303,8 @@ docs/
 │   │       ├── index.md         #   + schema.yaml (the data model, JSON Schema)
 │   │       └── schema.yaml
 │   └── apis/                    # authoritative API contracts (OpenAPI 3.1)
-│       ├── <project>.openapi.yaml
+│       ├── <project>.openapi.yaml  # one per API-publishing project
+│       │                           # (role service or fullstack)
 │       └── released/            # frozen production snapshots — the release
 │                                # record backward compatibility is enforced against
 ├── plans/                       # per-cycle plans (the diff to apply)
@@ -395,12 +396,12 @@ template and there is nothing to merge.
 A stack is composed from **four independent axes** — you pick one of each, and
 they never merge because they never overlap:
 
-| Axis        | Scope        | Ships today                                                                                                                                    |
-| ----------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **project** | per project  | one or more per role — see below                                                                                                               |
-| **backing** | product-wide | `firebase` (Firestore · Auth · FCM · Temporal · OTel-LGTM) · `postgres-object-storage` (Postgres · S3-compatible · OIDC — fully self-hostable) |
-| **deploy**  | product-wide | `cloud-run` (Artifact Registry · Cloud Run · Zero Trust) · `container-generic` (OCI image · any registry · any container host)                 |
-| **repo**    | per repo     | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                       |
+| Axis        | Scope        | Ships today                                                                                                                                                                                       |
+| ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **project** | per project  | one or more per role — see below                                                                                                                                                                  |
+| **backing** | product-wide | `firebase` (Firestore · Auth · FCM · Temporal · OTel-LGTM) · `postgres-object-storage` (Postgres · S3-compatible · OIDC — fully self-hostable)                                                    |
+| **deploy**  | product-wide | `cloud-run` (Artifact Registry · Cloud Run · Zero Trust) · `container-generic` (OCI image · any registry · any container host) · `npm-package` (published, not deployed — the CLI/library target) |
+| **repo**    | per repo     | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                                                                          |
 
 Project-axis templates:
 
@@ -414,6 +415,7 @@ Project-axis templates:
 | `frontend`  | `dart-flutter`               | Dart · Flutter                                 |
 | `frontend`  | `kotlin-android`             | Kotlin · Jetpack Compose                       |
 | `frontend`  | `swift-ios`                  | Swift · SwiftUI                                |
+| `frontend`  | `typescript-effect-cli`      | TypeScript · @effect/cli — platform `cli`      |
 | `infra`     | `typescript-pulumi`          | TypeScript · Pulumi                            |
 | `infra`     | `terraform`                  | Terraform / OpenTofu                           |
 
@@ -426,8 +428,9 @@ framework, so `postgres-object-storage` + `container-generic` is a completely
 vendor-free path through vwf.
 
 An operator back-office is `role: fullstack` plus the `operator-rbac`
-capability, and picks the `fullstack` template. A `frontend` project has no
-deploy axis — it ships through a store.
+capability, and picks the `fullstack` template. A `frontend` project on a screen
+platform has no deploy axis — it ships through a store. A `cli` frontend does
+have one: it ships through a package registry, so it pins `npm-package`.
 
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
@@ -567,7 +570,7 @@ if you have a UI), merges a vwf section into your `CLAUDE.md`, writes the
 README, detects the repo's verification-harness capabilities (dev server, E2E,
 staging mode), and stamps the **vwf config** at `.config/vwf.yaml` — the
 blueprint format version, harness inventory, enforcement opt-outs, and
-per-project nuances (e.g. a Flutter app's extra `platforms:` like macos/windows)
+per-project nuances (a coverage-target override, a non-conventional health path)
 — so a later run can detect drift and migrate the delta, and every command knows
 how vwf operates in this repo (pipeline knobs, verify environments, the
 mempalace wing). Every workflow command also runs a quick format check against
@@ -658,17 +661,18 @@ what remains, and the next run picks it up.
 
 **Standard flows.** UI projects carry a canonical flow vocabulary with exact
 slugs — `splash`, `signin`, `home`, `onboarding`, `settings`, `notifications`,
-`profile`, `delete-account`, `recover-account` — with per-type mandates: a
-mobile app (`frontend`) must have `splash` and `home`; a console must have
-`home` (`splash` optional); a site must have `home`. A project whose registry
-entry carries an **Auth & identity capability** must additionally have `signin`
-— and with it `profile`, `delete-account`, and `recover-account` (an account you
-can sign into can be viewed, recovered, and deleted). A missing mandatory
-standard flow is a coverage hole like any other — waivable per flow under
-`enforcement.rules` in `.config/vwf.yaml`, with a reason, never re-asked. The
-slugs are exact: a `login` or `account` flow whose journey matches is proposed
-for a consent-gated rename (links, catalogs, and canvas join keys move
-together), never renamed silently.
+`profile`, `delete-account`, `recover-account` — with per-role mandates: a
+mobile app (`frontend`) must have `splash` and `home`; a `site` or `fullstack`
+must have `home` (`splash` optional). A project whose only platform is `cli` is
+exempt — the standard slugs are screen journeys a terminal tool does not have. A
+project whose registry entry carries an **Auth & identity capability** must
+additionally have `signin` — and with it `profile`, `delete-account`, and
+`recover-account` (an account you can sign into can be viewed, recovered, and
+deleted). A missing mandatory standard flow is a coverage hole like any other —
+waivable per flow under `enforcement.rules` in `.config/vwf.yaml`, with a
+reason, never re-asked. The slugs are exact: a `login` or `account` flow whose
+journey matches is proposed for a consent-gated rename (links, catalogs, and
+canvas join keys move together), never renamed silently.
 
 Flows live **grouped by the registry project that owns the journey**, and a flow
 folder holds two kinds of file: **`index.md`** — the platform-agnostic contract
@@ -691,15 +695,18 @@ So `home` is `100` in every product you ever blueprint, and its screens are
 always coded `100a`, `100b`, … Deviating takes a waiver, like any other enforced
 rule.
 
-**Five platforms, one vocabulary** — `mobile`, `tablet`, `desktop` (a natively
-installed app), `web` (browser-delivered), and `auto` (in-car). The names are
-form factors, not vendors: `mobile` already hides iOS/Android, so **`auto`
-covers CarPlay and Android Auto together**, with their template differences
-recorded as deviations inside `auto.md`. An in-car journey is therefore a
-*platform file of the same flow* — `100-home/auto.md`, same number, same steps,
-its own screens — not a separate subset flow. Which platforms a flow implements
-is elicited per flow (signing in while driving makes no sense) and listed in the
-contract's Platforms table.
+**Six platforms, one vocabulary** — `mobile`, `tablet`, `desktop` (a natively
+installed app), `web` (browser-delivered), `auto` (in-car), and `cli` (a shipped
+command-line or TUI tool). The names are form factors, not vendors: `mobile`
+already hides iOS/Android, so **`auto` covers CarPlay and Android Auto
+together**, with their template differences recorded as deviations inside
+`auto.md`. `cli` is the one platform with **no screens**: it takes no platform
+file and never reaches the design canvas, mockups, or the scratchpad — what it
+requires instead is the design system's **Terminal UX** section. An in-car
+journey is therefore a *platform file of the same flow* — `100-home/auto.md`,
+same number, same steps, its own screens — not a separate subset flow. Which
+platforms a flow implements is elicited per flow (signing in while driving makes
+no sense) and listed in the contract's Platforms table.
 
 Per flow, `blueprint` elicits the journey with you under the
 **`blueprint-authoring`** doctrine — trigger and actors, the ordered steps,
@@ -1029,12 +1036,15 @@ operational, not filed as a blueprint gap.
 
 A clean run against the **production** environment (the env named `production`,
 or whatever `production_env` in `.config/vwf.yaml` names) offers to record a
-**release**: each deployed service's living OpenAPI contract is frozen into
-`docs/blueprint/apis/released/<project>@<version>.openapi.yaml` — the release
-record. From the first snapshot on, backward compatibility is enforced
-everywhere: the blueprint's coherence review hard-gates a breaking contract
-change without a major-version bump, and execute's code review treats a code
-change that would break the released contract like a security finding.
+**release**: each deployed `service` project's living OpenAPI contract is frozen
+into `docs/blueprint/apis/released/<project>@<version>.openapi.yaml` — the
+release record. A `fullstack` project owns a contract too but is never frozen:
+its API serves its own UI, shipped in the same deployable, so there is no
+independent consumer to protect. From the first snapshot on, backward
+compatibility is enforced everywhere: the blueprint's coherence review
+hard-gates a breaking contract change without a major-version bump, and
+execute's code review treats a code change that would break the released
+contract like a security finding.
 
 ### /vwf:feedback
 

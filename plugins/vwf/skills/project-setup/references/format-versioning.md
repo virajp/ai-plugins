@@ -33,10 +33,11 @@ upgrade does not re-run per repo.
 ever carried either; a repo stamped 13 is impossible and would be treated as 12,
 one stamped 17 as 16.) Format 19 = format 18 **plus** the **role model** (the
 `18 → 19` delta below): a registry project carries a single `role` instead of a
-`type`, `console` becomes `fullstack` + the `operator-rbac` capability, and
-`infra` joins the vocabulary (registered, exempt from coverage). It ships with
-`config_format` 12, which splits the stack into four axes, turns topology into a
-menu, and adds `design.tool`. Format 18 = format 16 **plus** the
+`type`, `console` becomes `fullstack` + the `operator-rbac` capability, `infra`
+joins the role vocabulary (registered, exempt from coverage), and `cli` joins
+the **platform** vocabulary (a terminal surface: no screens, no platform file).
+It ships with `config_format` 12, which splits the stack into four axes, turns
+topology into a menu, and adds `design.tool`. Format 18 = format 16 **plus** the
 **project-scoped release tags** delta (the `16 → 18` delta below): the seeded
 `conventions.md#pipeline` anchor moves from the `stage-*` / `prod-*` tag globs
 to `<project>-<env>-v<semver>` (`api-prod-v1.2.3`) and gains the
@@ -591,7 +592,28 @@ the current format and apply the delta:
   5. **Re-point role-keyed prose.** In `architecture.md`, rewrite any "type"
      wording to "role" so the prose view matches the registry it describes. Flow
      and entity docs are untouched — they never named a project type.
-  6. Bump the stamp to `19`, **and `config_format` to `12` in the same run** —
+  6. **`platforms` consolidates into the registry**, and **`cli` joins the
+     vocabulary.** The key was written to both `registry.yaml` and
+     `.config/vwf.yaml` with nothing checking the two against each other; the
+     registry wins (platforms are system shape, like every other registry
+     field). Merge each project's config list into its registry `platforms:` and
+     drop the config key — the `11 → 12` config migration performs the same
+     step, so run them together and report any project where the two disagreed.
+     `cli` was a config-only side channel that required the design system's
+     Terminal UX section; it is now a platform like the others, so a `cli` found
+     in config lands in the registry with the rest. Nothing else moves: a
+     terminal surface has no screens, so `cli` still takes no `<platform>.md`
+     file and no canvas project, and a project whose only platform is `cli` is
+     exempt from the standard-flows mandates.
+  7. **`fullstack` gets its mandate column back.** The `console` → `fullstack`
+     rename (step 2) dropped the standard-flows column instead of renaming it,
+     leaving fullstack projects with no mandates at all. The column is restored
+     as `console`'s was — `home` mandatory, `splash` optional — so a migrated
+     back-office is checked for `100-home` like any other UI project. A
+     `fullstack` also owns `apis/<name>.openapi.yaml` (it always did; three docs
+     said "service project" and meant "publishes an API"), but is **not**
+     snapshotted into `apis/released/` — its API serves its own UI.
+  8. Bump the stamp to `19`, **and `config_format` to `12` in the same run** —
      see the `11 → 12` entry in the vwf-config asset. The two ship together; a
      repo on one but not the other is a state neither migration expects.
 

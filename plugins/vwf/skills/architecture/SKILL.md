@@ -142,23 +142,35 @@ that rather than inventing a role. **Synonyms** normalize on the way in: `api` �
 **`infra`** is registered but exempt from blueprint coverage — it has no flows,
 screens or API contracts. Record it, then skip it in every coverage question.
 
+**Platforms.** Record each UI project's implemented surfaces under its
+`platforms:` in **`registry.yaml`** — the single source since format 19; the key
+no longer appears in `.config/vwf.yaml`. The one vocabulary is in
+`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`, and the project's `role`
+bounds what you offer:
+
+| Role                 | Offer                                                    |
+| -------------------- | -------------------------------------------------------- |
+| `site` / `fullstack` | **`web`** — browser-delivered, the only option           |
+| `frontend`           | **`mobile`**, **`tablet`**, **`desktop`**, `auto`, `cli` |
+| everything else      | none — platforms are a UI-role field                     |
+
+Ask once per `frontend` project whether the app must run in-car, and offer
+**`auto`** (CarPlay and Android Auto together) **only** for those; `cli` is a
+terminal surface — see below. A native client that talks to a `fullstack`
+project's API is its own `frontend` project, not a platform of the fullstack
+one. The vocabulary names form factors, not vendors — `mobile` already hides
+iOS/Android, so `auto` hides CarPlay/Android Auto the same way. These platforms
+decide which `<platform>.md` files a flow may carry, and the `/vwf:screens`
+design briefs.
+
 **Terminal surfaces.** While walking the projects, ask (once) whether any
 project exposes a **CLI/TUI** — a shipped command-line tool, not internal dev
-scripts. For each that does, record `cli` under `projects.<name>.platforms` in
-`.config/vwf.yaml` (confirmed, per the vwf-config asset). A `cli` platform is
-what makes the design system's **Terminal UX** section required — it is not a
-registry role and never triggers Screens or mockups.
-
-**Platforms.** Record each project's implemented surfaces under
-`projects.<name>.platforms` (confirmed, per the vwf-config asset) from the one
-vocabulary in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: **`mobile`**,
-**`tablet`**, **`desktop`** (a natively installed app), **`web`**
-(browser-delivered — the default for a `site` role), and **`auto`** (in-car —
-CarPlay and Android Auto together; ask once per project carrying `frontend`
-whether the app must run in-car, and offer `auto` **only** for those). The
-vocabulary names form factors, not vendors — `mobile` already hides iOS/Android,
-so `auto` hides CarPlay/Android Auto the same way. These platforms decide which
-`<platform>.md` files a flow may carry, and the `/vwf:screens` design briefs.
+scripts. For each that does, offer `cli` among its platforms. A terminal surface
+has no screens, so `cli` never admits a `cli.md` platform file and never
+triggers Screens, mockups, or the canvas; what it does require is the design
+system's **Terminal UX** section. A CLI-only tool is `role: frontend` with
+`platforms: [ cli ]` — and is exempt from the standard-flows mandates, since
+`splash` and `home` are screen journeys it does not have.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.**
 Since format 19 a stack is composed from **four independent axes**
@@ -184,8 +196,10 @@ the menu plus an **other (describe)** option):
 
 The axes are orthogonal by construction — a project template never names a
 vendor, a backing template never names a framework — so there is nothing to
-merge and no precedence to resolve. A `frontend` project has **no deploy axis**
-(it ships through a store): record `deploy_template: n/a`.
+merge and no precedence to resolve. A `frontend` project on a **screen**
+platform has **no deploy axis** (it ships through a store): record
+`deploy_template: n/a`. A `cli` frontend is the exception — it ships through a
+package registry, which *is* a deploy target: pin `deploy/npm-package`.
 
 Record all of it in `.config/vwf.yaml` per the vwf-config asset. **Always write
 the project block**, for every project: it is what `/vwf:doctor` checks the repo

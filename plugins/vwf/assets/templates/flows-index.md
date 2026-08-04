@@ -22,7 +22,8 @@ status: draft # draft | reviewed | stable
      project). Rows in numeric (execution) order. The Platforms column lists
      the platform files that exist for that flow (mobile / tablet / desktop /
      web / auto), which is how the catalog shows platform coverage at a glance;
-     it is empty for a non-UI project's flows.
+     it is empty for a non-UI project's flows and for a `cli` project's (a
+     terminal surface has no screens, so no platform file).
 
      Numbers are DESIGNATED for standard flows (see the standard-flows asset):
      010 splash, 020 signin, 030 recover-account, 040 onboarding, 100 home,

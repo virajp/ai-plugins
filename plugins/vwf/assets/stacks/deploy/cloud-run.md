@@ -43,5 +43,6 @@ capability requires; Cloud Run's own health checking is pointed at it.
 ## Client-distributed projects
 
 A `frontend` project does not deploy here — it ships through its platform's
-store or update channel. Record that channel in `architecture.md`; nothing in
-this axis applies to it.
+store or update channel. Record that channel in `architecture.md` and pin
+`deploy_template: n/a`. The one exception is a `cli` frontend, which ships to a
+package registry: it pins `deploy/npm-package` instead.

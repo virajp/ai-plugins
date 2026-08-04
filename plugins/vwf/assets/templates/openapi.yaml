@@ -1,7 +1,8 @@
 # docs/blueprint/apis/<project>.openapi.yaml — the AUTHORITATIVE API contract
-# for one registry `service` project (OpenAPI 3.1), named by registry project
-# name. Flows reference operations by operationId. See the blueprint-authoring
-# skill (api-and-schema-contracts) and the rest-api-design skill.
+# for one API-publishing project (role `service` or `fullstack`; OpenAPI 3.1),
+# named by registry project name. Flows reference operations by operationId.
+# See the blueprint-authoring skill (api-and-schema-contracts) and the
+# rest-api-design skill.
 #
 # Contract, not realization: paths, methods, schemas, errors, and auth roles
 # are contract; `servers:` blocks, hostnames, and gateway/framework detail are

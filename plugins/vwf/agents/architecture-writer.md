@@ -96,15 +96,15 @@ There is exactly one `docs/blueprint/registry.yaml` and one
 
 A project carries exactly one **`role`**. Seven tokens:
 
-| Role        | What it is                                                 | Default `doc_unit` | Hosted on |
-| ----------- | ---------------------------------------------------------- | ------------------ | --------- |
-| `service`   | API backend, no UI                                         | `entity`           | cloud     |
-| `worker`    | Background-task processor                                  | `entity`           | cloud     |
-| `packages`  | Shared libraries used by others                            | `module`           | n/a (lib) |
-| `site`      | Web UI that calls someone else's API                       | `page`             | cloud     |
-| `fullstack` | Web UI **and** its own API, one deployable                 | `page`             | cloud     |
-| `frontend`  | Client-side application (mobile / tablet / desktop / auto) | `entity`           | device    |
-| `infra`     | Infrastructure-as-code (Pulumi, Terraform, …)              | `module`           | n/a       |
+| Role        | What it is                                               | Default `doc_unit` | Hosted on |
+| ----------- | -------------------------------------------------------- | ------------------ | --------- |
+| `service`   | API backend, no UI                                       | `entity`           | cloud     |
+| `worker`    | Background-task processor                                | `entity`           | cloud     |
+| `packages`  | Shared libraries used by others                          | `module`           | n/a (lib) |
+| `site`      | Web UI that calls someone else's API                     | `page`             | cloud     |
+| `fullstack` | Web UI **and** its own API, one deployable               | `page`             | cloud     |
+| `frontend`  | Client-side app (mobile / tablet / desktop / auto / cli) | `entity`           | device    |
+| `infra`     | Infrastructure-as-code (Pulumi, Terraform, …)            | `module`           | n/a       |
 
 `service`, `worker`, `packages`, `site`, `fullstack` and `infra` are
 cloud-hosted or cloud-targeting; `frontend` runs on the client and ships through

@@ -71,16 +71,17 @@ Each role has one or more templates under
 | `frontend`  | [dart-flutter](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
 | `frontend`  | [kotlin-android](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/kotlin-android.md)                       | Kotlin · Jetpack Compose                       |
 | `frontend`  | [swift-ios](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/swift-ios.md)                                 | Swift · SwiftUI                                |
+| `frontend`  | [typescript-effect-cli](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/typescript-effect-cli.md)         | TypeScript · @effect/cli (platform `cli`)      |
 | `infra`     | [typescript-pulumi](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/infra/typescript-pulumi.md)                    | TypeScript · Pulumi                            |
 | `infra`     | [terraform](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/infra/terraform.md)                                    | Terraform / OpenTofu                           |
 
 Three more axes compose with the project one — pick one of each:
 
-| Axis      | Ships today                                                                                                                                                             |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `backing` | [firebase](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/firebase.md) · [postgres-object-storage](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/postgres-object-storage.md) |
-| `deploy`  | [cloud-run](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/cloud-run.md) · [container-generic](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/container-generic.md)             |
-| `repo`    | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md) · [bun](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/bun.md)                                           |
+| Axis      | Ships today                                                                                                                                                                                                                            |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backing` | [firebase](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/firebase.md) · [postgres-object-storage](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/postgres-object-storage.md)                                                                |
+| `deploy`  | [cloud-run](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/cloud-run.md) · [container-generic](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/container-generic.md) · [npm-package](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/npm-package.md) |
+| `repo`    | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md) · [bun](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/bun.md)                                                                                                          |
 
 **One entry per role is not a default.** `/vwf:architecture` presents the menu
 for the project's role and the user picks, always — plus an **other (describe)**

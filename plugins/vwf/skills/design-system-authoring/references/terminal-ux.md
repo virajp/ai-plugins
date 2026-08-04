@@ -1,11 +1,11 @@
 # Terminal UX
 
 The design system's contract for **terminal surfaces** — required when any
-registry project declares platform `cli` in `.config/vwf.yaml`
-(`projects.<name>.platforms`). A CLI is a UI: its output, colors, and error
-behavior deserve the same product-wide consistency as screens. No canvas
-rendering applies — this section is a text contract, enforced by the execute
-code reviewer (not the ux reviewer).
+project declares platform `cli` in `docs/blueprint/registry.yaml`
+(`projects[].platforms`). A CLI is a UI: its output, colors, and error behavior
+deserve the same product-wide consistency as screens. No canvas rendering
+applies — this section is a text contract, enforced by the execute code reviewer
+(not the ux reviewer).
 
 Pin (each has more than one reasonable answer):
 

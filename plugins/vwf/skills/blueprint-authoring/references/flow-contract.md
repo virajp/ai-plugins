@@ -11,10 +11,11 @@ non-UI projects alike. Since **format 15** the folder holds two kinds of file:
   implements the journey (`mobile` | `tablet` | `desktop` | `web` | `auto`),
   holding **only** that platform's Screens + Components + deviations.
 
-A non-UI flow is `index.md` alone. The goal-traceability spine runs product goal
-→ flow (`Serves:`) → the entities/APIs/screens the flow touches. A flow is a
-process that spans entities **or projects** — a single-entity journey that
-crosses projects (app → service → datastore) is a flow too.
+A non-UI flow is `index.md` alone — as is a flow of a project whose platform is
+`cli`, a terminal surface with no screens. The goal-traceability spine runs
+product goal → flow (`Serves:`) → the entities/APIs/screens the flow touches. A
+flow is a process that spans entities **or projects** — a single-entity journey
+that crosses projects (app → service → datastore) is a flow too.
 
 **Slugs and numbers are exact.** A journey matching the standard-flows
 vocabulary (`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`) takes that exact

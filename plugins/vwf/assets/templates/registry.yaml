@@ -29,7 +29,9 @@ projects:
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
     depends_on: [ <project-name>, <...> ] # or []
     doc_unit: <entity|page|module> # defaults by role
-    platforms: [ <mobile|tablet|desktop|web|auto>, <...> ] # UI roles only
+    # UI roles only. `cli` is the terminal surface: no screens, so it takes no
+    # <platform>.md file (see assets/standard-flows.md).
+    platforms: [ <mobile|tablet|desktop|web|auto|cli>, <...> ]
 
 # System-wide concerns → the anchors blueprint expands in conventions.md.
 # One token per concern; include only the concerns the system actually has.

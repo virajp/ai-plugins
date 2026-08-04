@@ -3,16 +3,17 @@
 **How vwf operates in this product.** One file per product (the parent repo in
 polyrepo topology; submodules never get their own), written by `/vwf:setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
-of the system description**: what the product *is* (projects, types, paths,
-capabilities) lives in `docs/blueprint/registry.yaml`; this file holds how vwf
-treats it — plus, since **format 10**, the one fact about the product that is
-realization rather than description: each project's **stack**. That lives here
-precisely so no blueprint-authoring or reviewing surface can reach it, which is
-what makes a vendor name in a blueprint doc structurally impossible rather than
-merely discouraged. Since **format 11** the stack is **structured** — a template
-selection plus the four axes `/vwf:doctor` checks the repo against — and is
-written for **every** project, always. Since **blueprint-format 6** this file
-replaces the old stamp at `docs/blueprint/.vwf.yml`.
+of the system description**: what the product *is* (projects, roles, paths,
+capabilities, platforms) lives in `docs/blueprint/registry.yaml`; this file
+holds how vwf treats it — plus, since **format 10**, the one fact about the
+product that is realization rather than description: each project's **stack**.
+That lives here precisely so no blueprint-authoring or reviewing surface can
+reach it, which is what makes a vendor name in a blueprint doc structurally
+impossible rather than merely discouraged. Since **format 11** the stack is
+**structured** — a template selection plus the four axes `/vwf:doctor` checks
+the repo against — and is written for **every** project, always. Since
+**blueprint-format 6** this file replaces the old stamp at
+`docs/blueprint/.vwf.yml`.
 
 ## Schema (config_format 12)
 
@@ -52,7 +53,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
       template: project/<role>/<slug> # the PROJECT-axis template under assets/stacks/project/, or `custom`. NOT a default: /vwf:architecture presents the menu and the user picks
       backing_template: <slug> # optional — overrides the product-wide `backing` pin for this project only
-      deploy_template: <slug> # optional — overrides the product-wide `deploy` pin. A `frontend` project sets this to `n/a`: it ships through a store, not a deploy target
+      deploy_template: <slug> # optional — overrides the product-wide `deploy` pin. A `frontend` project on a SCREEN platform sets this to `n/a`: it ships through a store, not a deploy target. A `cli` frontend sets `deploy/npm-package` — a package registry IS its target
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing pnpm and bun projects
       languages: [
         <token>,
@@ -61,10 +62,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
       dependencies: [] # open, lowercase-kebab; the few that characterize the stack
       note: <one
         line> # optional — why this stack, when the reason is not obvious from the template name
-    platforms: [
-      <target>,
-      <...>,
-    ] # the platforms this project implements, from the one vocabulary: mobile | tablet | desktop | web | auto (assets/standard-flows.md) — each admits a <platform>.md file on a flow. `auto` = in-car, CarPlay and Android Auto together, frontend projects only. `cli` may also appear: a terminal surface, which has no screens but requires the design system's Terminal UX section
+    # NO `platforms:` key — a project's implemented surfaces are a system-shape fact and live in docs/blueprint/registry.yaml, the single source (format 19). Config carries realization: the stack and the design pins
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -99,7 +97,7 @@ design: # design-tool pins & canvas state — ids and flow names only, never con
   design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /vwf:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
   projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
-      <platform>: <uuid> # mobile | tablet | desktop | web | auto — the one vocabulary (assets/standard-flows.md)
+      <platform>: <uuid> # mobile | tablet | desktop | web | auto — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
   flows_rendered: [] # flow PLATFORMS whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>/<platform> (format 15: platform granularity, so a flow rendered for mobile but not auto is visibly partial); recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/<NNN>-<flow>/<platform>/ tree, NEVER on the canvas
 
 memory:
@@ -113,20 +111,20 @@ setup_progress: [] # transient — /vwf:setup resume state, removed on completio
 
 ## Semantics — who reads/writes what
 
-| Section              | Written by                                                                                                                                | Read by                                                                                                               |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                          |
-| `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                                                       |
-| `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                            |
-| `projects.*`         | `setup` / `architecture` (`platforms` + `stack`, elicited); `execute` reconcile                                                           | `blueprint` (platforms **only** — never `stack`), `design-system` (`cli`), `plan`, `execute`, `doctor`, the verifiers |
-| `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                           |
-| `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                         |
-| `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                                   |
-| `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, the statusline caps hook                                                                                   |
-| `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                              |
-| `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                                    |
-| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory)                                     |
-| `docs_sync`          | the user (hand-edited)                                                                                                                    | the docs-sync step                                                                                                    |
+| Section              | Written by                                                                                                                                | Read by                                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                    |
+| `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                                                 |
+| `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
+| `projects.*`         | `setup` / `architecture` (`stack`, elicited); `execute` reconcile                                                                         | `plan`, `execute`, `doctor`, the verifiers — **never** `blueprint` or the reviewers, which must not see a stack |
+| `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
+| `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
+| `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                             |
+| `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, the statusline caps hook                                                                             |
+| `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
+| `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
+| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory)                               |
+| `docs_sync`          | the user (hand-edited)                                                                                                                    | the docs-sync step                                                                                              |
 
 ## The hard floor (never configurable)
 
@@ -243,7 +241,7 @@ earlier than 65/90/80), never loosen.
   no `stack` key at all, which is what makes a vendor name in a blueprint doc a
   reviewer failure rather than a matter of authoring discipline.
 - **`11 → 12` migration** (performed by `/vwf:setup`): the config catches up
-  with blueprint-format 19. Five changes, all mechanical except where noted:
+  with blueprint-format 19. Six changes, all mechanical except where noted:
 
   1. **`topology`** — `workspace` becomes `polyrepo` (the shape is unchanged: a
      parent repo with submodule members). Add **`topology_reason`**, carrying
@@ -271,6 +269,14 @@ earlier than 65/90/80), never loosen.
   5. **`memory`** — nothing changes in the config, but `/vwf:setup` creates
      `docs/memory/` and gitignores `handoff/`, `doctor/` and `runs/`, then moves
      a pre-19 `docs/handoffs/next.md` to `docs/memory/handoff/next.md`.
+  6. **`projects.<name>.platforms` is removed** — the registry is the single
+     source. Merge each project's config list into its `platforms:` in
+     `docs/blueprint/registry.yaml` (union, canonical vocabulary), then delete
+     the key here. The two were written together and read apart, with nothing
+     checking them against each other; a config-only platform surfaced as a
+     reviewer rejection and a config-only `cli` silently skipped the design
+     system's Terminal UX section. Report any project where the two lists
+     disagreed — that divergence is a real finding, not noise.
 
   Bump `config_format` to `12` and `blueprint_format` to `19` together — the two
   migrations ship in one release and a repo on one but not the other is a state

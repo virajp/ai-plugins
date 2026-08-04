@@ -55,6 +55,9 @@ orchestrator passes both. Verify the contract and every platform file:
       the registry project, each from the vocabulary (`mobile` / `tablet` /
       `desktop` / `web` / `auto`). A file with no row, a row with no file, an
       undeclared platform, or a Platforms section on a **non-UI** flow is a gap.
+      `cli` is a platform with no screens: it never takes a `cli.md` file and
+      never appears in a Platforms table, so a flow of a cli-only project is
+      reviewed as a non-UI flow.
 - [ ] **Each platform file** carries `type: vwf-flow-platform`, a `platform:`
       key matching its filename, and a resolving
       `Flow contract: [<name>](./index.md)` link. A missing link or a

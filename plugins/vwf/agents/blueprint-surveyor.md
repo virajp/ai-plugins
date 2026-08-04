@@ -71,18 +71,22 @@ condition; a unit may fail more than one (report the most blocking).
    conditional ones, resolved from the registry's capability tokens (an Auth &
    identity capability requires `signin`, and with it `profile`,
    `delete-account`, `recover-account`) — that has no flow folder on the
-   project. Skip any slug waived in the passed `enforcement.rules`
-   (`standard-flows/<project>/<slug>`). Report as a missing flow at its
-   **designated number** (`flows/<project>/<NNN>-<slug>`). While checking, also
-   note **synonym candidates**: an existing flow whose slug matches the asset's
-   synonym table for a missing standard slug.
+   project. Skip the whole check for a project whose **only** platform is `cli`
+   (the standard slugs are screen journeys), as for `infra`. Skip any slug
+   waived in the passed `enforcement.rules` (`standard-flows/<project>/<slug>`).
+   Report as a missing flow at its **designated number**
+   (`flows/<project>/<NNN>-<slug>`). While checking, also note **synonym
+   candidates**: an existing flow whose slug matches the asset's synonym table
+   for a missing standard slug.
 9. **Misnumbered flow** — a standard slug not at its designated number, or a
    product flow outside the `110`–`890` band (waivers honored). Report the flow
    with the number it should take.
 10. **Structural drift** — a flow folder with no `index.md`, a `device:` key on
     an `index.md`, a `<platform>.md` with no Platforms row (or the reverse), or
     a platform outside the vocabulary (`mobile` / `tablet` / `desktop` / `web` /
-    `auto`). These are format-15 holes; name the file.
+    `auto` / `cli`), or a `cli.md` file (a terminal surface has no screens, so
+    `cli` never takes a platform file). These are format-15 holes; name the
+    file.
 
 ## Ordering
 

@@ -260,10 +260,12 @@ run diffs against, and how every vwf command operates in this repo:
   `true`/`false`/`n/a`, plus any non-canonical task-name overrides found);
 - any **`enforcement:`** entries recorded during this run (structure/stack
   declines, rule waivers);
-- **per-project nuances** the run surfaced (e.g. a Flutter project's
-  `platforms:` from the one vocabulary — `mobile` / `tablet` / `desktop` / `web`
-  / `auto`, with `auto` (in-car: CarPlay and Android Auto together) offered only
-  for `frontend` projects — elicit when ambiguous, never assume);
+- **per-project nuances** the run surfaced — a `coverage_target` override, a
+  non-conventional `harness.health` path, a `package_manager` or
+  `deploy_template` override — elicited when ambiguous, never assumed. A
+  project's **`platforms:` is not one of them**: it is a system-shape fact and
+  lives only in `docs/blueprint/registry.yaml`, written by `/vwf:architecture`
+  (format 19 removed the duplicate key from this file);
 - the **`stack` block for every project** and the repo-level **`repo.stack`**,
   as `/vwf:architecture` elicited them at step 7 — write them out in full, for
   every project the registry declares. An absent block is not "the default"; it

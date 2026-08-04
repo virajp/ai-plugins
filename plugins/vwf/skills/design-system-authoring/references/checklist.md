@@ -17,7 +17,7 @@ The gate for `design-system.md`. The doc passes only when:
       feedback, and empty/loading/error states.
 - [ ] Anti-patterns listed.
 - [ ] Terminal UX (only when a project declares platform `cli` in
-      `.config/vwf.yaml`): output formatting, color semantics + no-color rule,
+      `registry.yaml`): output formatting, color semantics + no-color rule,
       progress conventions, error shape + exit codes, help/naming — all pinned.
 - [ ] No realization leaked: no component-library or CSS-framework names, no
       design-file references, no raw CSS.

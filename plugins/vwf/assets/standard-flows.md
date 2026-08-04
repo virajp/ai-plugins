@@ -53,17 +53,17 @@ Notes:
 
 ## The slug vocabulary
 
-| Slug              | `frontend` (app) | `site` (web)  | Mandate                                                     |
-| ----------------- | ---------------- | ------------- | ----------------------------------------------------------- |
-| `splash`          | **mandatory**    | optional      | —                                                           |
-| `signin`          | conditional      | conditional   | required when the project has an Auth & identity capability |
-| `recover-account` | conditional      | conditional   | required with `signin`                                      |
-| `onboarding`      | optional         | optional      | —                                                           |
-| `home`            | **mandatory**    | **mandatory** | every UI project                                            |
-| `profile`         | conditional      | conditional   | required with `signin`                                      |
-| `settings`        | optional         | optional      | —                                                           |
-| `notifications`   | optional         | optional      | —                                                           |
-| `delete-account`  | conditional      | conditional   | required with `signin`                                      |
+| Slug              | `frontend` (app) | `site` (web)  | `fullstack` (web) | Mandate                                                     |
+| ----------------- | ---------------- | ------------- | ----------------- | ----------------------------------------------------------- |
+| `splash`          | **mandatory**    | optional      | optional          | —                                                           |
+| `signin`          | conditional      | conditional   | conditional       | required when the project has an Auth & identity capability |
+| `recover-account` | conditional      | conditional   | conditional       | required with `signin`                                      |
+| `onboarding`      | optional         | optional      | optional          | —                                                           |
+| `home`            | **mandatory**    | **mandatory** | **mandatory**     | every UI project                                            |
+| `profile`         | conditional      | conditional   | conditional       | required with `signin`                                      |
+| `settings`        | optional         | optional      | optional          | —                                                           |
+| `notifications`   | optional         | optional      | optional          | —                                                           |
+| `delete-account`  | conditional      | conditional   | conditional       | required with `signin`                                      |
 
 - **mandatory** — required for coverage; absence is a hole (waivable, above).
 - **conditional (auth)** — `signin` is required when the project carries an
@@ -81,22 +81,40 @@ Notes:
   one of these, it takes the standard slug and number; the sweep never proposes
   them unprompted.
 
+`site` and `fullstack` carry the same profile — both are browser-delivered, so
+neither has a splash frame to gate. They stay separate columns because the roles
+diverge elsewhere (a `fullstack` owns an API contract, a `site` does not), and
+because an **operator back-office** is a `fullstack`: it needs `home` like any
+other UI project, `operator-rbac` notwithstanding.
+
 Non-UI projects (`service`, `worker`, `packages`) carry no standard flows and no
-platform files.
+platform files. Neither does a project whose **only** platform is `cli`: every
+standard slug is a screen journey (`splash` before the first frame, `home` as
+the center of the app), which a terminal tool does not have. Its flows are its
+commands, named by the product; the surveyor skips the mandate check for it the
+way it skips `infra`.
 
 ## The platform vocabulary
 
-Exactly five names, used **everywhere** — flow platform files, the
-`docs/prompts/screens/` briefs, canvas page suffixes, `design.projects` pins,
-and the `docs/scratchpad/` render tree:
+Exactly six names. Five are **screen platforms**, used everywhere a screen
+surface is — flow platform files, the `docs/prompts/screens/` briefs, canvas
+page suffixes, `design.projects` pins, and the `docs/scratchpad/` render tree:
 
 | Platform  | What it is                                      | Typical project type |
 | --------- | ----------------------------------------------- | -------------------- |
 | `mobile`  | Phone app or phone-sized layout                 | `frontend`           |
 | `tablet`  | Tablet layout (master-detail, multi-column)     | `frontend`           |
 | `desktop` | Natively installed desktop application          | `frontend`           |
-| `web`     | Browser-delivered app                           | `site`               |
+| `web`     | Browser-delivered app                           | `site` / `fullstack` |
 | `auto`    | In-car head unit — **CarPlay and Android Auto** | `frontend`           |
+
+The sixth is **`cli`** — a shipped command-line or TUI tool (`frontend`), not a
+repo's internal dev scripts. It is a platform like the others in the registry
+and in `.config/vwf.yaml`, and nowhere else: a terminal surface has **no
+screens**, so `cli` never admits a `cli.md` platform file and never reaches
+`/vwf:screens`, `/vwf:mockups`, the canvas, or the scratchpad. A flow of a
+cli-only project is `index.md` alone, like a service flow. What `cli` does
+require is the design system's **Terminal UX** section.
 
 The vocabulary names **form factors, not vendors** — `mobile` already hides
 iOS/Android and `desktop` hides Windows/macOS/Linux, so `auto` hides CarPlay and
@@ -105,9 +123,10 @@ now-playing and the driver-distraction rules) are recorded as deviations inside
 `auto.md`.
 
 A project's implemented platforms are declared in the registry
-(`projects.<name>.platforms`); a flow's `Platforms` table must be a subset of
-them. **In-car journeys are not separate flows** (they were, before format 15):
-`auto` is a platform file of the same flow, so the auto take on `100-home` is
+(`projects[].platforms`) and **only** there — since format 19 the key is gone
+from `.config/vwf.yaml`. A flow's `Platforms` table must be a subset of them.
+**In-car journeys are not separate flows** (they were, before format 15): `auto`
+is a platform file of the same flow, so the auto take on `100-home` is
 `100-home/auto.md` — same number, same steps, its own screens.
 
 ## Screen naming

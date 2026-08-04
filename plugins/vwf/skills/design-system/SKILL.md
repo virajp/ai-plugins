@@ -68,8 +68,8 @@ project to the registry first** via `/vwf:architecture` (then return here), or
 is behind what vwf ships, nudge `/vwf:setup` (proceed unless a needed artifact
 is missing).
 
-**Terminal surfaces.** Read `projects.<name>.platforms` in `.config/vwf.yaml`:
-any project declaring `cli` makes the doc's **Terminal UX** section required
+**Terminal surfaces.** Read `platforms:` in `docs/blueprint/registry.yaml`: any
+project declaring `cli` makes the doc's **Terminal UX** section required
 (design-system-authoring's terminal-ux reference) — always elicited in text
 (§5); the canvas neither designs nor imports it.
 

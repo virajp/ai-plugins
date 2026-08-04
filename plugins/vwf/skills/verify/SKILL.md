@@ -147,6 +147,11 @@ environment and has a living contract
      — do not overwrite a released snapshot, ever.
 3. Report what was frozen, per project.
 
+**`service` only.** A `fullstack` project owns a contract too, but its API
+serves its own UI shipped in the same deployable — there is no independent
+consumer for a freeze to protect, so it is never snapshotted and never carries
+the additive-only diff. Say so if the user asks why one was skipped.
+
 The snapshot dir **is** the release record — the latest release is the highest
 semver in the filenames; nothing is written to config. From the first snapshot
 on, the blueprint sweep's coherence review and execute's code-review compat

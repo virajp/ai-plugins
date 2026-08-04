@@ -224,20 +224,25 @@ actors, steps, diagram, jobs, acceptance; no screens) beside one
 **`<platform>.md` per implemented platform** (`mobile`/`tablet`/`desktop`/
 `web`/`auto`) carrying that platform's Screens (rows coded `<NNN><letter>`,
 codes **shared across platform files**, each with its per-screen Components
-block); a non-UI flow is `index.md` alone. Numbers are **designated** — `100` is
+block); a non-UI flow is `index.md` alone, as is a `cli` project's — the sixth
+platform is a terminal surface with no screens, so it takes no platform file and
+never reaches the canvas, mockups or the scratchpad, and a cli-only project is
+exempt from the standard-flows mandates. Numbers are **designated** — `100` is
 always `home`, `010` splash / `020` signin / `030` recover-account / `040`
 onboarding, `110`–`890` product flows, `910`–`940` the account screens — on one
 number line per project. `flows/index.md` is the catalog (per-project sections,
 numeric order, a Platforms column) + inter-service contracts; **one entity
 folder per entity** — `entities/<entity>/` holding exactly `index.md` +
 `schema.yaml` — with `entities/index.md` the catalog + product-wide erDiagram;
-and the API contracts `apis/<project>.openapi.yaml` + the frozen
-`apis/released/` snapshots; the blueprint root holds only the system docs),
-`docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`), and
-`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design
-briefs grouped by prompt type → registry project → flow, one brief per platform
-regenerated in place (the filename carries the platform, mirroring the flows
-tree exactly), plus the per-design-project canvas conventions files
+and the API contracts `apis/<project>.openapi.yaml` — one per API-publishing
+project, `role` `service` **or** `fullstack` — plus the frozen `apis/released/`
+snapshots, which `service` projects alone get (a fullstack's API serves its own
+UI, so no independent consumer needs the freeze); the blueprint root holds only
+the system docs), `docs/plans/` (`<date>-<time>-<slice>.md`, with `archived/`),
+and `docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas
+design briefs grouped by prompt type → registry project → flow, one brief per
+platform regenerated in place (the filename carries the platform, mirroring the
+flows tree exactly), plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
 committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 (**gitignored, never committed** — the mockup render tree,

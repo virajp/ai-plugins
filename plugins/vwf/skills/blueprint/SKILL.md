@@ -30,12 +30,13 @@ The doc units:
   platform-agnostic contract (purpose, trigger, steps, diagram, jobs,
   acceptance; **no screens**) — plus **one `<platform>.md` per implemented
   platform** (`mobile` | `tablet` | `desktop` | `web` | `auto`) carrying only
-  that platform's Screens + Components. A non-UI flow is `index.md` alone. Flows
-  are **grouped by their primary registry project** — the project that owns the
-  journey (the UI project of its Screens; for a UI-less flow, the service/worker
-  whose trigger starts it; ambiguous → ask, never guess). Since format 15 the
-  platform lives in the **filename**, so there is no `device:` key and **one
-  number line per project**. `<NNN>` is **designated** per
+  that platform's Screens + Components. A non-UI flow is `index.md` alone — and
+  so is a flow of a `cli` project, since a terminal surface has no screens.
+  Flows are **grouped by their primary registry project** — the project that
+  owns the journey (the UI project of its Screens; for a UI-less flow, the
+  service/worker whose trigger starts it; ambiguous → ask, never guess). Since
+  format 15 the platform lives in the **filename**, so there is no `device:` key
+  and **one number line per project**. `<NNN>` is **designated** per
   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: `010` splash, `020` signin,
   `030` recover-account, `040` onboarding, **`100` home** (the anchor, every UI
   project), `110`–`890` product flows (gap-numbered by 10), `910` profile, `920`
@@ -48,8 +49,10 @@ The doc units:
   authoritative data model). `entities/index.md` is the catalog plus the
   product-wide ER diagram.
 - **API contract** — `docs/blueprint/apis/<project>.openapi.yaml`, one per
-  registry `service` project; `apis/released/` holds the frozen production
-  snapshots `/vwf:verify` writes.
+  **API-publishing** project (`role` is `service` or `fullstack` — a fullstack
+  publishes its own API, which is exactly what separates it from a `site`);
+  `apis/released/` holds the frozen production snapshots `/vwf:verify` writes
+  for `service` projects.
 - The `docs/blueprint/` **root holds only the system docs** (product,
   architecture, conventions, design-system, environment). A root
   `integration.md` or a flat/root entity folder is pre-format-9 drift;
@@ -117,7 +120,7 @@ the orchestrator's to carry. API contracts likewise apply the
 reach the API surface.
 
 Reserved names: `product`, `architecture`, `conventions`, `design-system`,
-`environment`, `flows`, `entities`, `apis`, the platform names (`mobile`,
+`environment`, `flows`, `entities`, `apis`, the platform filenames (`mobile`,
 `tablet`, `desktop`, `web`, `auto`), and `index` inside a flow group /
 `entities/` — a flow or entity folder never takes one of these.
 
@@ -244,11 +247,12 @@ From the flow's nature and the registry, determine which sections apply. Map
 
 If no project carries the relevant role, **omit** that section for this flow.
 
-**Platform extensions.** Read `.config/vwf.yaml` `projects.<name>.platforms`
-(per the vwf-config asset). When a UI project declares targets beyond its
-stack's default, the Screens elicitation covers what genuinely differs per
-platform — navigation/input idiom, window/layout behavior, platform-specific
-states — and records only the differences, never a per-platform copy.
+**Platform extensions.** Read the registry project's `platforms:` — the single
+source (it is not in `.config/vwf.yaml`). When a UI project declares targets
+beyond its stack's default, the Screens elicitation covers what genuinely
+differs per platform — navigation/input idiom, window/layout behavior,
+platform-specific states — and records only the differences, never a
+per-platform copy.
 
 **Which platforms implement this flow.** A journey is one flow; each platform
 that implements it gets a `<platform>.md`. **Elicit the platform set per flow**

@@ -130,7 +130,9 @@ a file that exists: `projects.<name>.stack.template` (project axis),
 `backing.template`, `deploy.template`, and `repo.stack.template`. A pin naming a
 template that isn't there is **drift** — usually a template renamed under the
 user's feet. A `custom` pin is checked for its axes only, never for a file. A
-`frontend` project's `deploy_template: n/a` is correct, not missing.
+`frontend` project's `deploy_template: n/a` is correct, not missing — unless its
+platform is `cli`, which ships to a package registry and should pin
+`deploy/npm-package`.
 
 **mise is mandatory** — it is both vwf's task runner (every worktree init,
 pre-commit and merge goes through it) and the toolchain manager the §3 checks
