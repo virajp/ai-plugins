@@ -236,14 +236,13 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Opinionated TypeScript plugin where Effect is the house standard — a `typescript` router skill (lean SKILL.md routing to on-demand references: Effect-TS patterns, Effect runtime & layers, Vitest testing, the build pipeline for single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, and `lint-format`, and the TypeScript/JavaScript language server.",
+      "description": "Opinionated plain-TypeScript plugin — a `typescript` router skill (lean SKILL.md routing to on-demand references: the coding standards baseline, Vitest testing, the build pipeline for single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, and `lint-format`, and the TypeScript/JavaScript language server. Effect-TS doctrine lives in the separate `effect` plugin, which depends on this one.",
       "name": "typescript",
       "source": "./plugins/typescript",
       "strict": true,
       "tags": [
         "typescript",
         "javascript",
-        "effect",
         "pnpm",
         "tsconfig",
         "monorepo",
@@ -254,7 +253,7 @@
         "language-server",
         "lsp"
       ],
-      "version": "0.6.0"
+      "version": "1.0.0"
     },
     {
       "author": {
