@@ -144,7 +144,7 @@ sequenceDiagram
      is the same everywhere; a criterion that only holds on one platform names
      that platform explicitly. Code-independent: name observable state, never
      test files, fixtures, or tooling. Verified end-to-end by execute's
-     acceptance stage and re-run by /verify against deployed environments. -->
+     acceptance stage and re-run by /skill:verify against deployed environments. -->
 
 - Given <initial state>, when <trigger>, then <observable outcome>
 - Given <failure mid-flow>, when <...>, then <compensation observable>

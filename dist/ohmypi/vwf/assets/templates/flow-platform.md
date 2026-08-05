@@ -35,7 +35,7 @@ Flow contract: [<Flow name>](./index.md)
 
 <!-- Code = <NNN><letter> where NNN is the flow's number (100a, 100b, … in step
      order) — the per-screen sync key: canvas frames are named by it and
-     /screens import matches on it.
+     /skill:screens import matches on it.
 
      CODES ARE SHARED ACROSS PLATFORM FILES: 100a is the same screen concept
      everywhere it appears. A platform that does not have a screen simply omits

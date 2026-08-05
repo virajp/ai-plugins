@@ -6,7 +6,6 @@ description: Opinionated pnpm configuration for single-package repos and
   rules, .npmrc) plus the monorepo layout (package globs, workspace linking,
   catalogs, requiredScripts). Auto-applies when editing pnpm-workspace.yaml or
   .npmrc.
-hide: true
 globs:
   - "**/pnpm-workspace.yaml"
   - "**/.npmrc"

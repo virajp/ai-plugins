@@ -1,7 +1,7 @@
 ---
 name: stitch-import-design-system
 description: Derive a design system from Google Stitch's generated screens and
-  return it as a vwf design-system payload. Invoked by /design-system as
+  return it as a vwf design-system payload. Invoked by /skill:design-system as
   its configured design adapter — not a general-purpose skill.
 ---
 

@@ -1,7 +1,7 @@
-# Execute Stages (used by /execute)
+# Execute Stages (used by /skill:execute)
 
 The stage pipeline, per-stage subagent contracts, and shared stage rules used by
-`/execute`. The invoking command owns the orchestration policy — when to
+`/skill:execute`. The invoking command owns the orchestration policy — when to
 pause, how many rounds, what happens at the end; this file defines what the
 stages **are**.
 
@@ -114,7 +114,7 @@ Per-stage dispatch contract:
   or full file/dir dumps. The orchestrator reads files itself when it needs
   their contents.
 - **Loop on findings** — review/security issues loop back to `code` with the
-  **tag**, re-commit via `/git-workflow`, then re-review. Send **both**
+  **tag**, re-commit via `/skill:git-workflow`, then re-review. Send **both**
   reviewers' tags in a single `code` dispatch and re-run both concurrently: one
   merged fix pass keeps the two stages from rewriting each other's lines, and a
   round counts once even though two reviewers ran. If the coder's recall of a
@@ -160,7 +160,7 @@ Per-stage dispatch contract:
   contradicts the blueprint (not merely lags it), the pipeline never adjusts the
   blueprint to match: the contradiction is surfaced (a finding when the plan
   pinned it, a gap otherwise) and resolved by conforming the code or by the user
-  consciously amending the contract via `/blueprint`.
+  consciously amending the contract via `/skill:blueprint`.
 
 ## Run journal (the record the gate renders)
 
@@ -207,7 +207,7 @@ shape: one record per node **execution**.
 1. **Architecture.** If the implementation introduced a topology change (new
    project, dependency, or capability), update the **registry block** in
    `docs/blueprint/registry.yaml` to match what was actually built — via
-   `/architecture` for non-trivial changes. Edit the registry precisely; do
+   `/skill:architecture` for non-trivial changes. Edit the registry precisely; do
    not rewrite prose unless topology genuinely changed.
 2. **Environment.** If the change introduced a **new secret or env var** (an
    integration key, credential, or operational variable a project now reads),

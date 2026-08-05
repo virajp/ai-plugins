@@ -2,7 +2,7 @@
 name: gcp-stack-menu
 description: Return the Google Cloud stack templates this plugin offers, as a
   vwf
-  menu payload. Invoked by /architecture and /setup when `gcp` is listed
+  menu payload. Invoked by /skill:architecture and /skill:setup when `gcp` is listed
   in the config's `stacks:` — not a general-purpose skill.
 ---
 

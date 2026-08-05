@@ -26,7 +26,7 @@ changes when code lands, not when a contract is written.
    setup steps, project layout, badges/versions. A landed change that
    contradicts a README sentence means that sentence is updated **now**.
 2. **CLAUDE.md** — the repo's agent instructions: stack claims, task names,
-   layout, the vwf section (`/setup` owns its shape; this sync only fixes
+   layout, the vwf section (`/skill:setup` owns its shape; this sync only fixes
    claims the change falsified).
 3. **Other human docs** the change contradicts (`docs/` guides, per-project
    READMEs in a monorepo) — same rule.
@@ -49,7 +49,7 @@ changes when code lands, not when a contract is written.
   unchanged behavior — every edited line must trace to the change.
 - **Broad drift** (the README no longer resembles the repo): regenerate via
   `markdown:readme` instead of patching sentence by sentence.
-- **Same commit flow**: the sync lands through `/git-workflow` with the
+- **Same commit flow**: the sync lands through `/skill:git-workflow` with the
   run's other reconcile output (a `docs:` commit when standalone).
 - **Report it**: state at the run's final gate/report which docs were synced —
   or the explicit line `docs: nothing contradicted` — never a silent skip.

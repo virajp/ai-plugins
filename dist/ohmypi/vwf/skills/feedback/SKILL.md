@@ -16,19 +16,19 @@ a bug report, a metric reading, a user complaint, a feature idea — and routes 
 to where it gets **fixed**, not to a backlog. One intake at a time; every routed
 item lands in a durable doc, so nothing depends on memory being up.
 
-## Canvas harvest (`/feedback canvas`)
+## Canvas harvest (`/skill:feedback canvas`)
 
 When `$ARGUMENTS` is `canvas` (or the user asks to pull canvas review), the
 intake is the claude.ai/design review conversation instead of pasted text — what
-the user said to Claude Design while designing screens (`/screens`) or
+the user said to Claude Design while designing screens (`/skill:screens`) or
 iterating the design system:
 
 1. Gather every distinct pinned uuid from `.config/vwf.yaml`: the
    `design.projects.*.*` per-platform map, `design.design_system_id`, and the
    legacy fallbacks (flat `design.projects.*` uuids, `design.project_id`,
    `mockups.project_id`). No pins at all → "No design project pinned — nothing
-   on the canvas to harvest (pins come from `/screens` or
-   `/design-system`)." Stop.
+   on the canvas to harvest (pins come from `/skill:screens` or
+   `/skill:design-system`)." Stop.
 2. Load the claude-design MCP `get_conversation` tool via `ToolSearch`
    (`mcp__plugin_claude-design_claude-design__` prefix). Tool absent or
    unauthorized (the user may need `/mcp` to connect) → say exactly that and
@@ -79,25 +79,25 @@ One route per item — each ends in a **doc edit now** (durable) plus the **offe
 of the fixing command**:
 
 - **Behavior bug** → the blueprint is right, the code is wrong: file to room
-  `gaps` (tagged by flow/entity) and offer `/plan <slice>` for a fix cycle.
+  `gaps` (tagged by flow/entity) and offer `/skill:plan <slice>` for a fix cycle.
   Deferred → one line in the owning flow doc's **Open Questions**
   (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), or the entity doc
   under `docs/blueprint/entities/` when the hole is in the data contract: what
   production does vs what the doc promises.
 - **Blueprint hole** → file to room `gaps` and offer
-  `/blueprint
+  `/skill:blueprint
   <flow|entity>` to pin the behavior down. Deferred → the same
   Open Questions line.
 - **Metric reading** → append a dated row to the **Metric readings** appendix of
   `product.md` (create the appendix on first use — it is a log, not part of the
-  reviewed contract). A **miss against target** → offer `/product` to
+  reviewed contract). A **miss against target** → offer `/skill:product` to
   re-rank slices / revisit the goal; a hit → just recorded.
 - **UX issue** → record it against the screen's **home flow** — the `## Screens`
   row in `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` that defines it
   (a deviation or open question at the exact screen/state) — and offer
-  `/design-system` (language-level) or `/blueprint <flow>`
+  `/skill:design-system` (language-level) or `/skill:blueprint <flow>`
   (screen-level).
-- **Feature idea** → never straight to code: offer `/product` (does it serve
+- **Feature idea** → never straight to code: offer `/skill:product` (does it serve
   an existing goal? re-rank; a new goal? add it) — then the normal
   `blueprint → plan → execute` path. Deferred → a row in `product.md`'s Metric
   readings appendix is wrong for this; instead note it under the served goal's
@@ -109,17 +109,17 @@ Per `%%AI_PLUGINS_ROOT%%/assets/memory.md`: bugs/holes to room `gaps`,
 readings and routing decisions to room `decisions`. Skip silently if mempalace
 is down — the doc edits from step 2 are the durable record.
 
-Commit any doc edits via `/git-workflow` (`docs:` or `blueprint(...)`
+Commit any doc edits via `/skill:git-workflow` (`docs:` or `blueprint(...)`
 message). If the user accepted a fixing command, hand off to it now.
 
 ## Metric readings appendix (product.md)
 
-Maintained by this command (and read by `/product` on re-runs):
+Maintained by this command (and read by `/skill:product` on re-runs):
 
 ```markdown
 ## Metric readings
 
-<!-- Dated log, appended by /feedback — not part of the reviewed contract. -->
+<!-- Dated log, appended by /skill:feedback — not part of the reviewed contract. -->
 
 | Date         | Goal                   | Reading | Target  | Verdict  |
 | ------------ | ---------------------- | ------- | ------- | -------- |

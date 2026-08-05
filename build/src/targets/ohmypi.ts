@@ -79,19 +79,26 @@ export const ohmypi: Target = {
 
 /**
  * Oh-My-Pi has no `${CLAUDE_PLUGIN_ROOT}` equivalent, so both roots resolve to
- * the shared install-time tokens. `cmd` keeps Claude's `/<plugin>:<skill>`
- * spelling: a skill is the slash surface here too, and 54 descriptions name a
- * sibling command, so the spelling has to be one users can actually type.
+ * the shared install-time tokens. `cmd` has to spell a skill the way Oh-My-Pi
+ * actually parses one, since 54 descriptions name a sibling command and a
+ * spelling users cannot type is worse than no reference at all.
  */
 function contextFor(): Context {
   return {
     root: ROOT_TOKEN,
     pluginRoot: siblingRootToken,
-    // Bare name, not `/<plugin>:<skill>`. That spelling is Claude's plugin
-    // namespacing; Oh-My-Pi discovers skills from every provider into ONE flat
-    // namespace and dedups by name, so a `vwf:` prefix resolves to nothing.
-    // Cross-plugin skill names are already unique (the checker enforces it).
-    cmd: ref => `/${ref.slice(ref.indexOf(":") + 1)}`,
+    // `/skill:<name>` — verified against omp 17.2.9, which is strict about
+    // both halves of this:
+    //
+    // - The prefix is mandatory. Skills register under `skill:${name}` and the
+    //   trigger is `/(^|\s)\/skill:([^\s/]+)(\s|$)/`; the parser returns early
+    //   on any other `/`-prefixed input, so a bare `/plan` is not a failed
+    //   skill lookup, it is not a skill reference at all.
+    // - The suffix is bare. `vwf:plan` would leave `skill:vwf:plan`, and the
+    //   trigger's `[^\s/]+` aside, Oh-My-Pi discovers skills from every
+    //   provider into ONE flat namespace keyed by bare name. Cross-plugin
+    //   names are already unique (the checker enforces it).
+    cmd: ref => `/skill:${ref.slice(ref.indexOf(":") + 1)}`,
     target: { id: "ohmypi", caps: CAPABILITIES.ohmypi },
   };
 }
@@ -173,9 +180,23 @@ function renderPlugin(plugin: PluginSource): Emission {
  * place keeps the emitted order close to the authored file, so a reviewer
  * diffing two targets sees the vocabulary change and nothing else.
  *
- * The three-valued `invocation` splits back into the two independent booleans
- * every client encodes it with: `disableModelInvocation` hides it from the
- * model, `hide` takes it off the slash menu.
+ * The three-valued `invocation` collapses onto Oh-My-Pi's **single** axis.
+ * `hide` and `disableModelInvocation` are not two booleans here — they are
+ * aliases the loader ORs into one internal flag (verified against omp 17.2.9:
+ * `hide: fm?.hide === true || fm?.disableModelInvocation === true`, the same
+ * expression at all four skill-load sites). That flag is read in exactly one
+ * place, the system-prompt builder — `skills: enabled.filter(s => s.hide !==
+ * true)` — so it means "hidden from the model" and nothing else.
+ *
+ * Two consequences, both load-bearing:
+ *
+ * - `model` must emit **neither** key. Emitting `hide` would drop every
+ *   auto-applying doctrine skill out of the prompt, which is silent: the skill
+ *   still loads, still lists, and simply never fires.
+ * - There is no "off the slash menu" to express. The loader returns its list
+ *   unfiltered and `/skill:<name>` resolves by name alone, so a hidden skill
+ *   stays user-invocable — which is what makes `user` work, and why `model`
+ *   loses nothing by going bare.
  */
 function toOhMyPiSkill(doc: fm.Document): fm.Document {
   let out = doc;
@@ -189,8 +210,9 @@ function toOhMyPiSkill(doc: fm.Document): fm.Document {
 
   switch (readInvocation(doc)) {
     case "model":
-      out = fm.rename(out, "invocation", "hide");
-      out = fm.set(out, "hide", " true");
+      // Bare, deliberately: see above. Model visibility is the default, and
+      // Oh-My-Pi has no key that withholds a skill from the menu alone.
+      out = fm.omit(out, "invocation");
       break;
     case "user":
       out = fm.rename(out, "invocation", "disableModelInvocation");
@@ -469,6 +491,20 @@ function gapsFor(plugin: PluginSource, hooks: readonly Hook[]): Gap[] {
 
   // One gap per capability per plugin, not per skill: a coverage report listing
   // the same sentence 20 times is one nobody reads to the end.
+  const doctrine = named(s => s.meta.invocation === "model");
+  if (doctrine.length > 0) {
+    gaps.push({
+      plugin: name,
+      capability: "modelOnlyInvocation",
+      detail:
+        `Oh-My-Pi has one visibility axis (hide/disableModelInvocation are `
+        + `aliases for "hidden from the model"), so a skill cannot be kept out `
+        + `of the slash menu while staying model-visible. ${list(doctrine)} `
+        + `render bare and are therefore also user-invocable.`,
+      severity: "degraded",
+    });
+  }
+
   const scoped = named(s => s.meta.paths !== undefined);
   if (scoped.length > 0) {
     gaps.push({

@@ -6,7 +6,6 @@ description: Authoring discipline for a product's design system — the
   blueprint screen references. Auto-applies when editing
   docs/blueprint/design-system. Read the reference matching the layer you are
   defining.
-hide: true
 globs:
   - "docs/blueprint/design-system.md"
   - "docs/blueprint/design-system/**/*.md"
@@ -38,5 +37,5 @@ library, CSS framework, or design file — that mapping is realization (`plan`).
 | [Terminal UX](%%AI_PLUGINS_ROOT%%/skills/design-system-authoring/references/terminal-ux.md)                                 | CLI/TUI conventions — required when a project declares platform `cli` |
 | [Checklist](%%AI_PLUGINS_ROOT%%/skills/design-system-authoring/references/checklist.md)                                     | Pre-delivery gate for the design-system doc                           |
 
-Authored by `/design-system`, which elicits these decisions and writes
+Authored by `/skill:design-system`, which elicits these decisions and writes
 `docs/blueprint/design-system.md`.

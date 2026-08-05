@@ -1,7 +1,7 @@
 ---
 name: blueprint-condenser
-description: Stateless density pass for the /blueprint command. Invoked only
-  by /blueprint — do not delegate to it for general tasks. Rewrites one
+description: Stateless density pass for the /skill:blueprint command. Invoked only
+  by /skill:blueprint — do not delegate to it for general tasks. Rewrites one
   over-budget flow or entity doc to the density bars, cutting commentary while
   preserving every decision verbatim in meaning. Never elicits, never decides.
 tools: ["Read","Write","Edit","Grep","Glob"]

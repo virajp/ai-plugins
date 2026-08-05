@@ -6,7 +6,6 @@ description: Flutter & Dart development — the always-on coding baseline plus
   performance, data & networking, Firebase, media, monetization, native interop,
   and build tooling. Auto-applies when editing any Dart file. Use when writing or
   reviewing any Flutter/Dart code; read the reference matching your task.
-hide: true
 globs:
   - "**/*.dart"
 alwaysApply: false

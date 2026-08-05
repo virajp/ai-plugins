@@ -1,8 +1,8 @@
 ---
 name: execute-coder
-description: Code-stage implementer for the /execute command. Invoked only
+description: Code-stage implementer for the /skill:execute command. Invoked only
   by
-  /execute — do not delegate to it for general tasks. Implements the approved
+  /skill:execute — do not delegate to it for general tasks. Implements the approved
   plan under strict TDD and verifies the coverage gate before handoff to code
   review. Returns the coverage report.
 tools: ["Read","Write","Edit","Bash","Grep","Glob","mcp__plugin_vwf_mempalace__mempalace_search","mcp__plugin_mempalace_mempalace__mempalace_search","mcp__plugin_vwf_mempalace__mempalace_add_drawer","mcp__plugin_mempalace_mempalace__mempalace_add_drawer"]

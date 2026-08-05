@@ -32,7 +32,7 @@ deploy axis at all (it ships through a store, not a container host).
   hardcoded `Color` or spacing literal in a view.
 - **Package management**: Swift Package Manager (`Package.swift`). Note that
   `swift` has **no mise-managed toolchain** — it comes from Xcode, so
-  `/doctor` checks the LSP but not a toolchain version.
+  `/skill:doctor` checks the LSP but not a toolchain version.
 - **Client SDKs for the backing services** the product selected — identity,
   push, analytics, crash reporting. The app authenticates against the identity
   provider and calls the `service` API with the resulting token; business logic

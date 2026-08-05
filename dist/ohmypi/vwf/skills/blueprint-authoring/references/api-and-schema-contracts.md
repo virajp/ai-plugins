@@ -98,7 +98,7 @@ where they belong; do not add vwf frontmatter to either.
 ## The released-snapshot rule (additive-only)
 
 `docs/blueprint/apis/released/<project>@<version>.openapi.yaml` holds **frozen
-production snapshots**, written by `/verify` on a passing production run.
+production snapshots**, written by `/skill:verify` on a passing production run.
 Once a frozen snapshot exists for a service, changes to that service's living
 contract must be **additive-only** — or carry an explicit major-version bump
 (`info.version` major + a `/vN` path prefix). The breaking-change law — what

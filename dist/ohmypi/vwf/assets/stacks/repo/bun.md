@@ -18,7 +18,7 @@ anything bun does not cover natively.
 - **bun workspaces** globbing `projects/*` and `packages/*` via the root
   `package.json` `workspaces` field, with `bun.lock` committed. Note that bun
   reuses npm's `workspaces` key, so the **lockfile** is what identifies the
-  package manager — `/setup` detects it that way.
+  package manager — `/skill:setup` detects it that way.
 - **`bun run --filter`** orchestrates `build` / `check` / `dev` / `lint` across
   members. There is no separate task-graph tool: bun's own filtering plus mise
   tasks carry what Turborepo would.

@@ -61,7 +61,7 @@ what only one developer needs.**
 | `decisions`, `planning`, `gaps`, `problems` | committed  | Durable product knowledge the whole team works from |
 | `handoff`, `doctor`, `runs`                 | gitignored | One developer's session state, machine, or run      |
 
-`/setup` writes the `.gitignore` entries (`docs/memory/handoff/`,
+`/skill:setup` writes the `.gitignore` entries (`docs/memory/handoff/`,
 `docs/memory/doctor/`, `docs/memory/runs/`) when they are missing, the same way
 it adds the `docs/scratchpad/` line.
 
@@ -70,7 +70,7 @@ not the repo. `runs` is ignored because an execute journal is one developer's
 run record. Both still exist locally, and both still survive a mempalace outage
 — they just do not enter anyone else's diff.
 
-> **`/handoff` and `/recall` never skip.** The handoff *is* the
+> **`/skill:handoff` and `/skill:recall` never skip.** The handoff *is* the
 > deliverable, not a side memory. The reserved **`next`** handoff writes
 > `docs/memory/handoff/next.md` unconditionally, alongside the drawer, so both
 > surfaces always carry it. (Before format 19 this file lived at
@@ -91,21 +91,21 @@ run record. Both still exist locally, and both still survive a mempalace outage
   (blueprint/plan holes surfaced **during execution** + how they were
   reconciled, and out-of-scope points **parked during elicitation** — see
   below), `runs` (the **execute** run journal — dependency order and per-step
-  progress, for resuming a paused run; see below), `doctor` (`/doctor`'s
+  progress, for resuming a paused run; see below), `doctor` (`/skill:doctor`'s
   findings per run, so a later run reports a known one as **known** rather than
   rediscovering it), and `handoff` (session handoffs — the one room
-  `/handoff` and `/recall` own).
+  `/skill:handoff` and `/skill:recall` own).
 
   **Never invent an eighth.** mempalace creates a room implicitly on first
   write, so a mistyped name (`decision` for `decisions`) succeeds, returns no
   error, and every later recall against the real room comes back empty. That
-  silence is why the set is closed and why `/doctor` checks it.
+  silence is why the set is closed and why `/skill:doctor` checks it.
 
 ## Repo config — `mempalace.yaml`
 
 `mempalace mine` reads a `mempalace.yaml` at each **repo root** — so a workspace
 gets one per repo (the parent and every submodule), not one for the product.
-`/setup` writes them all.
+`/skill:setup` writes them all.
 
 **One wing per product.** Every one of those files names the **same** wing (the
 `memory.wing` resolved above). Submodules are not their own wings: recall would
@@ -226,14 +226,14 @@ losing it. Same fallback rule: the doc line survives a mempalace outage.
 
 ## Run journal — execute resumability (execute only)
 
-`/execute` keeps a single drawer per plan in room `runs` (drawer =
+`/skill:execute` keeps a single drawer per plan in room `runs` (drawer =
 `<plan>`): the result of the plan's `requires:` prerequisite check (each
 prerequisite plan and whether it is satisfied), the dependency-ordered step
 sequence and, per step, its status (pending/done), commit ref, review/security
 round counts, and gap tags. The orchestrator writes it when it derives the order
 and updates it as each step completes (`mempalace_add_drawer` then
 `mempalace_update_drawer`). Because an autonomous run's primary pause is a
-resource cap (`/handoff` → later `/recall next`), a resumed run reads
+resource cap (`/skill:handoff` → later `/skill:recall next`), a resumed run reads
 this journal to skip finished steps and pick up at the current one — without it,
 resume would re-implement completed work. Skip silently if mempalace is
 unavailable; the worktree's commits are the fallback record. This room is

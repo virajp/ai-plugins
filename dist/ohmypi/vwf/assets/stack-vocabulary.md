@@ -2,7 +2,7 @@
 
 The **closed language vocabulary** every stack template and every
 `.config/vwf.yaml` `stack.languages` entry draws from, plus the per-language
-facts `/doctor` checks against. Frameworks and dependencies are **open** —
+facts `/skill:doctor` checks against. Frameworks and dependencies are **open** —
 any lowercase-kebab token is valid — because no useful check exists for them
 beyond presence in a manifest. Languages are closed precisely so the LSP and
 toolchain lookups below can never miss on a spelling.
@@ -24,7 +24,7 @@ Android or iOS app is a `frontend` project in its own right. `swift` has no mise
 tool because its toolchain comes from Xcode, which mise does not manage.
 
 **"LSP shipped here"** names the `virajp-plugins` plugin whose `lspServers`
-block covers the language — the thing `/doctor` looks for in
+block covers the language — the thing `/skill:doctor` looks for in
 `claude plugin list`. A future row may carry `none`; that is **not a failure**,
 and doctor reports it as *unavailable in this marketplace* rather than
 *missing*, because there is no install command to suggest.
@@ -75,7 +75,7 @@ dependencies: [] # open, lowercase-kebab; the few that characterize the stack
 ```
 
 **Backing** templates declare which capability tokens they realize, so
-`/architecture` can match a project's declared capabilities against them:
+`/skill:architecture` can match a project's declared capabilities against them:
 
 ```yaml
 ---
@@ -128,7 +128,7 @@ only matters for how doctor checks a project — so keep it mechanical:
 ## What is deliberately absent
 
 There is no "recommended" or "default" marker on any template. vwf ships a menu:
-`/architecture` presents every template for a project's `role` and the user
+`/skill:architecture` presents every template for a project's `role` and the user
 picks, with an **other (describe)** path that records free-text axes and
 `template: custom`. A repo whose stack matches nothing shipped is a normal
 outcome, not a deviation — there is no `enforcement` entry for it and nothing to

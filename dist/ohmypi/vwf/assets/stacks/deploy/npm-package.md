@@ -61,7 +61,7 @@ here: publication *is* the exposure, so the access setting is the whole control.
 ## Health
 
 Not applicable — nothing is running to probe, so this project carries no entry
-under `environments:` and no `harness.health` path. `/verify` has no URL to
+under `environments:` and no `harness.health` path. `/skill:verify` has no URL to
 probe for it and says so rather than reporting a failure.
 
 The equivalent post-release check belongs in the pipeline, not in `verify`: an

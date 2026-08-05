@@ -25,7 +25,7 @@ versions the file's own schema instead).
 **Source of truth (shipped).** The format the installed vwf ships is the integer
 in `%%AI_PLUGINS_ROOT%%/assets/blueprint-format`. The workflow commands
 self-check the repo stamp against it via
-`%%AI_PLUGINS_ROOT%%/assets/format-check.md` and nudge `/setup` on drift —
+`%%AI_PLUGINS_ROOT%%/assets/format-check.md` and nudge `/skill:setup` on drift —
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
@@ -62,7 +62,7 @@ below): every Screens table row carries a **Components block** (headed by the
 row's code, per the flow template) — the elements the screen displays (text,
 info, error surfaces, buttons, inputs, lists, media), each with its rules:
 visibility/enable conditions, what activating it does, and content where the
-wording is a product decision. `/screens prompt` transcribes the block into
+wording is a product decision. `/skill:screens prompt` transcribes the block into
 the design brief; the blueprint-reviewer enforces it per row. Format 11 = format
 10 **plus** the **device-grouped flows and pinned screen codes** restructure
 (the `10 → 11` delta below): a UI project's flows nest under a **device-type
@@ -72,7 +72,7 @@ in-car journeys authored as their **own subset flows** with a `Subset of:`
 parent link; flows of non-UI projects keep `flows/<project>/<NNN>-<flow>/`), and
 every Screens table row carries a **Code** (`<NNN><letter>` — `020a`, `020b`, …
 in step order, stable once assigned) — the per-screen sync key the canvas frames
-and `/screens import` match on. Format 10 = format 9 **plus** the
+and `/skill:screens import` match on. Format 10 = format 9 **plus** the
 **project-grouped, execution-ordered flows** restructure (the `9 → 10` delta
 below). Format 9 = format 8 **plus** the **process-based restructure** — flows
 become the primary doc unit and structured contracts get structured formats:
@@ -101,7 +101,7 @@ become the primary doc unit and structured contracts get structured formats:
   authoritative OpenAPI 3.1 document per registry `service` project
   (`info.x-vwf.status` carries the review stamp; YAML artifacts are typed by
   path, not frontmatter). `apis/released/<project>@<version>.openapi.yaml` holds
-  the frozen production snapshots `/verify` writes; from the first snapshot
+  the frozen production snapshots `/skill:verify` writes; from the first snapshot
   on, living-contract changes are additive-only or take a major-version bump.
 - Flow and entity docs carry the **`implementation:`** frontmatter key
   (`none`/`partial`/`complete`) — the pipeline's build-state stamp (see the
@@ -145,7 +145,7 @@ Flutter `platforms`), pipeline knobs, verify environments, and the explicit
 mempalace wing.
 
 Format 5 = format 4 **plus** the **Product** foundation:
-`docs/blueprint/product.md` (type **`vwf-product`**, authored by `/product`)
+`docs/blueprint/product.md` (type **`vwf-product`**, authored by `/skill:product`)
 — problem, target users, goals with stable `#goal-<slug>` anchors and measurable
 metrics, slice priority, non-goals, risks. It is **required unconditionally**
 (like the registry — `blueprint` halts without it), and every entity doc's
@@ -232,10 +232,10 @@ the current format and apply the delta:
   at least one success and one failure/compensation criterion as observable
   Given/When/Then outcomes. No flows (or no `integration.md`) → no-op, not
   drift. Then bump the stamp to `4`.
-- **`4 → 5`** → author `docs/blueprint/product.md` via `/product` (elicit —
+- **`4 → 5`** → author `docs/blueprint/product.md` via `/skill:product` (elicit —
   never invent — the problem, users, goals/metrics, slice priority). Entity docs
   then gain their **Serves:** goal links **as each is next touched by
-  `/blueprint`** (the reviewer enforces it on touch) — the migration does
+  `/skill:blueprint`** (the reviewer enforces it on touch) — the migration does
   not retrofit every entity in one pass; a missing Serves line on an untouched
   entity is tolerated drift, a missing `product.md` is not. Then bump the stamp
   to `5`.
@@ -310,7 +310,7 @@ the current format and apply the delta:
 
   **Phase 2 — elicited fill** (not this migration): the scaffold cannot invent
   flow actors, missing goal links, triage placements, or acceptance criteria for
-  flows that never existed — offer `/blueprint` (consent-gated); coverage
+  flows that never existed — offer `/skill:blueprint` (consent-gated); coverage
   stamps `complete` only after that sweep, including the new whole-product
   coherence review.
 
@@ -336,7 +336,7 @@ the current format and apply the delta:
   5. Rewrite flow identifiers in `.config/vwf.yaml`: `design.flows_pushed`
      entries and `blueprint.remaining` `flows/…`/`screens/…` entries become
      `<project>/<NNN>-<flow>`. Note that pushed canvas folders still carry the
-     old names — the next `/mockups` sweep or `/screens` session renames
+     old names — the next `/skill:mockups` sweep or `/skill:screens` session renames
      them (drop stale `flows_pushed` entries if strictness is preferred; elicit
      once).
   6. Bump the stamp to `10`. No content changes — `status:` and
@@ -366,7 +366,7 @@ the current format and apply the delta:
      its **own flow** (`flows/<project>/<carplay|android-auto>/<NNN>-<flow>/`,
      Purpose carrying a `Subset of:` link to the parent phone flow). Flag each
      such deviation, downgrade `blueprint.coverage` to `partial` with the
-     pending in-car flows in `remaining:`, and offer `/blueprint`
+     pending in-car flows in `remaining:`, and offer `/skill:blueprint`
      (consent-gated) to elicit them — the migration never invents journeys.
   4. `git mv docs/prompts/screens/<project>/<NNN>-<flow>/ →
      docs/prompts/screens/<project>/<device>/<NNN>-<flow>/`
@@ -380,7 +380,7 @@ the current format and apply the delta:
      (`<project>/<device>/<NNN>-<flow>`). Canvas **page names**
      (`<NNN>-<flow>--<platform>`) are unchanged, so no canvas rename is needed;
      the `mockups/` card folder scheme gains the device segment on the next
-     `/mockups` sweep.
+     `/skill:mockups` sweep.
   6. Bump the stamp to `11`. Beyond the Code column, no content changes —
      `status:` and `implementation:` stamps are preserved.
 
@@ -388,7 +388,7 @@ the current format and apply the delta:
   **Components block** (per the flow template) — the elements the screen
   displays, each with its rules. Component rules are product decisions the
   migration must never invent: they are elicited **as each flow is next touched
-  by `/blueprint`** (the reviewer enforces the block on touch) — a missing
+  by `/skill:blueprint`** (the reviewer enforces the block on touch) — a missing
   Components block on an untouched flow is tolerated drift, never a coverage
   downgrade. The migration itself is a stamp bump to `12` plus the config
   `5 → 6` migration (per the vwf-config asset) — the per-device
@@ -534,7 +534,7 @@ the current format and apply the delta:
      **`density/<unit>`** entry in `blueprint.remaining` per doc over budget,
      leaving `blueprint.coverage: partial`.
 
-     The next `/blueprint` run clears the queue: the surveyor reports each
+     The next `/skill:blueprint` run clears the queue: the surveyor reports each
      as a coverage condition, and each dispatches a `blueprint-condenser`
      subagent — a lossless-of-contract rewrite, gated by the same reviewer as
      any other doc. Condensation is **not** elicited (it decides nothing), so
@@ -563,7 +563,7 @@ the current format and apply the delta:
   2. **Report existing release workflows, do not rewrite them.** List any
      `.github/workflows/*` matching on `stage-*` / `prod-*` and tell the user
      they now contradict the re-seeded anchor — regenerating them is
-     `/workflow`'s job, not the migration's, and the old tags
+     `/skill:workflow`'s job, not the migration's, and the old tags
      keep deploying until it runs. Rewriting CI from a doc migration is exactly
      the unreviewable change this file avoids.
   3. Bump the stamp to `18`. `config_format` stays as it is — nothing in
@@ -588,7 +588,7 @@ the current format and apply the delta:
      `site`. Report each reclassification. SSR is not an API.
   4. **`infra` is available but never inferred.** Do not retype any existing
      project to `infra`. Mention that IaC projects can now be registered (exempt
-     from blueprint coverage) and let the user add them via `/architecture`.
+     from blueprint coverage) and let the user add them via `/skill:architecture`.
   5. **Re-point role-keyed prose.** In `architecture.md`, rewrite any "type"
      wording to "role" so the prose view matches the registry it describes. Flow
      and entity docs are untouched — they never named a project type.

@@ -6,7 +6,6 @@ description: Authoring discipline for vwf blueprints — the code-independence
   cross-entity/integration, and UI/UX completeness bars. Auto-applies when
   editing any docs/blueprint file. Read the reference matching the surface you
   are pinning down.
-hide: true
 globs:
   - "docs/blueprint/**/*.md"
   - "docs/plans/**/*.md"

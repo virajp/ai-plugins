@@ -7,7 +7,7 @@ flow, its **home** journey; another flow that touches the screen links the home
 flow's row rather than redefining it. The product-wide visual and interaction
 *language* — tokens, typography, spacing, motion, accessibility standard, global
 component behaviors — lives in the **design system**
-(`docs/blueprint/design-system.md`, authored by `/design-system`). Reference
+(`docs/blueprint/design-system.md`, authored by `/skill:design-system`). Reference
 it; never re-decide visual language per screen.
 
 Pin per screen / surface (each has more than one reasonable answer):
@@ -21,7 +21,7 @@ Pin per screen / surface (each has more than one reasonable answer):
   how the user recovers), success, partial/pending. **Error and empty are
   mandatory pins for every screen** (or an explicit `n/a — <why>`): the sad
   paths are contract, not optional variants — they are what the blueprint flow
-  pass renders for visual review and `/mockups` draws. Pin equally the
+  pass renders for visual review and `/skill:mockups` draws. Pin equally the
   **conditional product states** the screen genuinely has — not sad paths but
   states of the product (empty data, an entity lifecycle-state variant): on the
   canvas each pinned sad and conditional state becomes a tweak on its screen.
@@ -34,7 +34,7 @@ Pin per screen / surface (each has more than one reasonable answer):
   validates), what activating it does (the operation called or the coded screen
   reached), and its content where the wording is a product decision. Recorded as
   the screen's **Components block** (format 12) under the Screens table, headed
-  by the row's code; `/screens prompt` transcribes it into the design brief.
+  by the row's code; `/skill:screens prompt` transcribes it into the design brief.
   Kinds and behavior only — the component library and styling stay realization.
 - **Feedback & realtime** — toast/banner/progress choice; whether data updates
   live or on refresh (the UX expectation, not the transport).

@@ -1,7 +1,7 @@
 ---
 name: stitch-import-screens
 description: Read a flow's generated screens back from Google Stitch and return
-  them as a vwf screens payload. Invoked by /screens import as its
+  them as a vwf screens payload. Invoked by /skill:screens import as its
   configured design adapter — not a general-purpose skill.
 ---
 
@@ -25,7 +25,7 @@ assumes.
 ## Why this adapter fits vwf well
 
 Stitch returns **HTML per screen**, and vwf already reasons about screens as
-self-contained HTML (that is what `/mockups` renders). Structure is
+self-contained HTML (that is what `/skill:mockups` renders). Structure is
 therefore directly legible — no code archaeology needed. Stitch's `generate`
 also takes a **platform** argument, which maps onto vwf's platform axis.
 
@@ -48,7 +48,7 @@ also takes a **platform** argument, which maps onto vwf's platform axis.
 ## Rules
 
 - Report what the markup contains, not what it appears intended to convey.
-  Interpreting a delta is `/screens import`'s job.
+  Interpreting a delta is `/skill:screens import`'s job.
 - Never regenerate a screen while importing. Import is a **read**; generating
   would silently replace the design under review.
 - Never write to `docs/blueprint/`.

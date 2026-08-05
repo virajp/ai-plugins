@@ -1,7 +1,7 @@
 # Structure
 
 **Structure is a menu, not a mandate.** Since format 19 vwf ships three topology
-templates and `/setup` presents them, exactly as it presents stack
+templates and `/skill:setup` presents them, exactly as it presents stack
 templates. The user picks; the choice and its reason are recorded in
 `.config/vwf.yaml`. There is nothing to deviate *from*, so
 `enforcement.structure` is retired — a topology matching your product is a
@@ -50,7 +50,7 @@ A decline is settled and not re-proposed.
 
 ## Adding and removing repos or projects
 
-Both are **incremental** — `/setup` re-runs against the delta rather than
+Both are **incremental** — `/skill:setup` re-runs against the delta rather than
 re-onboarding. Adding is a registry entry (plus `git submodule add` in a
 polyrepo). Removing **archives** the removed unit's flows and entities under
 `docs/blueprint/archived/` — vwf never deletes a blueprint doc — deregisters its
@@ -83,7 +83,7 @@ Three more axes compose with the project one — pick one of each:
 | `deploy`  | [cloud-run](%%AI_PLUGINS_ROOT%%/assets/stacks/deploy/cloud-run.md) · [container-generic](%%AI_PLUGINS_ROOT%%/assets/stacks/deploy/container-generic.md) · [npm-package](%%AI_PLUGINS_ROOT%%/assets/stacks/deploy/npm-package.md) |
 | `repo`    | [pnpm-turbo](%%AI_PLUGINS_ROOT%%/assets/stacks/repo/pnpm-turbo.md) · [bun](%%AI_PLUGINS_ROOT%%/assets/stacks/repo/bun.md)                                                                                                          |
 
-**One entry per role is not a default.** `/architecture` presents the menu
+**One entry per role is not a default.** `/skill:architecture` presents the menu
 for the project's role and the user picks, always — plus an **other (describe)**
 option that records `template: custom` and the axes they give. A stack matching
 no template is a normal answer: there is no deviation, no `enforcement` entry,
@@ -91,7 +91,7 @@ and nothing to justify.
 
 Each template's frontmatter carries the four axes (`languages` /
 `optional_languages` / `frameworks` / `dependencies`) that land in
-`.config/vwf.yaml` and that `/doctor` checks the repo against; its prose
+`.config/vwf.yaml` and that `/skill:doctor` checks the repo against; its prose
 carries the layout, testing and deployment conventions `plan` and `execute`
 read. Languages come from the closed vocabulary in
 [stack-vocabulary](%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md).
@@ -132,7 +132,7 @@ reviewers flag violations unless an `enforcement.rules` waiver in
 ## Infrastructure
 
 There is no infrastructure *default* — the backing and deploy axes are menus
-like the project axis, and `/architecture` presents them. What is fixed is
+like the project axis, and `/skill:architecture` presents them. What is fixed is
 the **shape**: one backing template naming the datastore/identity/queue/storage
 set, one deploy template naming the artifact and release path, and mise as the
 tool manager. Per-project detail (hosting, secrets, testing modes) lives in the

@@ -5,7 +5,6 @@ description: Opinionated pubspec.yaml standards for Flutter apps —
   versions pinned by the lock file, a pub.dev URL comment per package,
   dependencies vs dev_dependencies, SDK constraints, and code-gen packages.
   Auto-applies when editing pubspec.yaml or pubspec.lock.
-hide: true
 globs:
   - "**/pubspec.yaml"
   - "**/pubspec.lock"

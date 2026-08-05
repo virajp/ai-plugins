@@ -40,7 +40,7 @@ project in the registry.
 - **Never install anything, and never build anything.** Report the command; the
   user runs it. This matches the installer CLI's own rule and keeps doctor safe
   to run anywhere — and it is why §8 never triggers a graph build, which is a
-  long LLM-driven job reserved for `/setup`.
+  long LLM-driven job reserved for `/skill:setup`.
 - **Unavailable ≠ missing.** A language with no LSP shipped in this marketplace
   is reported as *unavailable* with no suggested command. Only a language that
   *has* a plugin and isn't installed is a finding.
@@ -57,24 +57,24 @@ project in the registry.
 
 Read `.config/vwf.yaml` and `docs/blueprint/registry.yaml`. If the config is
 absent, stop and report exactly one thing: this repo is not onboarded — run
-`/setup`.
+`/skill:setup`.
 
 Note each project's `role` (registry) and `stack` block (config). A project the
 registry declares with **no `stack` block** is a finding in itself
 (`config_format` 10 drift — the block is mandatory since 11); report it, nudge
-`/setup`, and check what you can from its role's templates meanwhile.
+`/skill:setup`, and check what you can from its role's templates meanwhile.
 
 **Recall.** Per `%%AI_PLUGINS_ROOT%%/assets/memory.md`, recall room `doctor`
 for this repo's prior findings. Anything still present that a previous run
 already reported is marked **known** in §9 rather than presented as new — the
-same treatment `/verify` gives a criterion it already knows is failing. Skip
+same treatment `/skill:verify` gives a criterion it already knows is failing. Skip
 silently if mempalace is unavailable; §7 then reports the outage itself.
 
 ### 2. Stamps
 
 Compare `config_format` and `blueprint_format` in the config to what this vwf
 ships (`assets/blueprint-format`, and the schema version in the vwf-config
-asset). Drift → report the delta and nudge `/setup`; it is never doctor's
+asset). Drift → report the delta and nudge `/skill:setup`; it is never doctor's
 job to migrate.
 
 ### 3. Languages — LSP and toolchain
@@ -134,26 +134,26 @@ platform is `cli`, which ships to a package registry and should pin
 pre-commit and merge goes through it) and the toolchain manager the §3 checks
 resolve against. Missing from `PATH` → **blocking**, remedy
 `curl https://mise.run | sh`. A repo with no `.config/mise*.toml` at all is the
-same finding one level up: report it and nudge `/setup`, which delegates to
+same finding one level up: report it and nudge `/skill:setup`, which delegates to
 `mise:scaffold`.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
 a config file, a mise tool, or a manifest dependency. Absent `repo.stack` block
-→ `10` drift; report and nudge `/setup`.
+→ `10` drift; report and nudge `/skill:setup`.
 
 ### 6. Harness and health
 
 Per `%%AI_PLUGINS_ROOT%%/assets/harness.md`, check every capability the
 config's `harness:` block marks `true` still resolves — its canonical task name
 exists (`mise tasks`), or the non-canonical override the config records does. A
-capability marked `false` is a **recorded gap, not a finding**: `/plan`
+capability marked `false` is a **recorded gap, not a finding**: `/skill:plan`
 injects its bootstrap when a cycle needs it.
 
 Then check each project's health path (`projects.<name>.harness.health`,
 defaulting to `/health`) is actually registered in that project's routing. Do
 this by reading the routing surface, not by making a request — doctor never
-starts a server or calls a deployed environment; that is `/verify`'s job.
+starts a server or calls a deployed environment; that is `/skill:verify`'s job.
 
 ### 7. Memory config (mempalace)
 
@@ -211,7 +211,7 @@ two remain **degradations**. Check:
 - **A graph at the workspace root** (`graphify-out/graph.json`). Resolve it the
   way the asset does: current checkout first, then the **main checkout** via
   `git rev-parse --git-common-dir`. Absent in **both** → **blocking**, remedy
-  `/setup` (the only command that builds one, behind consent). A worktree
+  `/skill:setup` (the only command that builds one, behind consent). A worktree
   that resolves to the main checkout's graph is **not** a finding — that is the
   normal path, and reporting it would halt every `execute` run, since worktrees
   never carry a graph of their own.
@@ -224,7 +224,7 @@ two remain **degradations**. Check:
 
 **Never build or refresh a graph.** `/graphify`, `graphify extract` and
 `graphify update` are long, LLM-driven builds; the asset reserves them for
-`/setup` behind explicit consent. Doctor reports and stops — offering to run
+`/skill:setup` behind explicit consent. Doctor reports and stops — offering to run
 one here would turn a read-only check into a multi-minute job nobody asked for.
 
 ### 9. Report & persist
@@ -248,8 +248,8 @@ finding per the memory asset's AAAK style, plus what was fixed if the user
 accepted a remedy. That is what lets the next run say **known**. Skip silently
 if mempalace is unavailable.
 
-**Callers.** `/setup` step 10 runs this over the whole repo and records what
-it finds. `/execute` runs it scoped to the plan's projects. **Both halt on
+**Callers.** `/skill:setup` step 10 runs this over the whole repo and records what
+it finds. `/skill:execute` runs it scoped to the plan's projects. **Both halt on
 any `blocking` finding** — the mandated tooling is what the pipeline is built
 on, so proceeding without it produces a run that fails later and less clearly.
-`/execute` additionally gates on the LSP findings, as it always has.
+`/skill:execute` additionally gates on the LSP findings, as it always has.

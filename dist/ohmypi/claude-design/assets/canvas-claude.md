@@ -1,12 +1,12 @@
 <!-- Template for the canvas project conventions file — written by
-     /screens prompt to
+     /skill:screens prompt to
      docs/prompts/screens/<project>/CLAUDE--<platform>.md, ONE per
      pinned design project (per registry UI project + platform; two platforms
      never share a canvas project). The file is a deliverable: the user sets
      it as the canvas project's own CLAUDE.md and keeps it current from here.
      Generated sections are REGENERATED IN PLACE on every prompt run; the
      "Project conventions (canvas-owned)" section is preserved verbatim —
-     /screens import folds canvas-side additions into it. Replace every
+     /skill:screens import folds canvas-side additions into it. Replace every
      backticked `<placeholder>` with plain prose; in Layout keep only the
      block matching this platform. A canvas brief companion, not a blueprint
      doc: no OKF frontmatter. -->
@@ -92,5 +92,5 @@ the outcome:
 ## Project conventions (canvas-owned)
 
 <!-- Conventions discovered while designing live here — added on the canvas
-     copy, folded back by /screens import. This section is preserved
+     copy, folded back by /skill:screens import. This section is preserved
      verbatim across regenerations; everything above it is regenerated. -->

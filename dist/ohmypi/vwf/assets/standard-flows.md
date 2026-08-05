@@ -1,9 +1,9 @@
 # Standard Flows, Numbering & Platforms
 
 The canonical flow **slugs**, their **designated numbers**, the **platform
-vocabulary**, and the **screen-naming rule**. Shared by `/blueprint`
+vocabulary**, and the **screen-naming rule**. Shared by `/skill:blueprint`
 (elicitation and the sweep's coverage gate via the `blueprint-surveyor`),
-`/screens` and `/mockups` (platform resolution), `/architecture`
+`/skill:screens` and `/skill:mockups` (platform resolution), `/skill:architecture`
 (the registry's `platforms:` values), and the blueprint-authoring
 **flow-contract** reference. Keep this the single source of truth; the surfaces
 read it rather than carrying their own copy.
@@ -71,7 +71,7 @@ Notes:
   `custom-claims-rbac`, or `operator-rbac`). The registry is the signal: an
   auth-capable UI project with no `signin` flow is a coverage hole. The inverse
   is registry drift — a `signin` flow in a project with no auth capability means
-  the registry is missing the capability; reconcile via `/architecture`,
+  the registry is missing the capability; reconcile via `/skill:architecture`,
   never by deleting the flow.
 - **conditional (signin)** — `profile`, `delete-account`, and `recover-account`
   are required exactly when `signin` is (an account that can be signed into can
@@ -112,7 +112,7 @@ The sixth is **`cli`** — a shipped command-line or TUI tool (`frontend`), not 
 repo's internal dev scripts. It is a platform like the others in the registry
 and in `.config/vwf.yaml`, and nowhere else: a terminal surface has **no
 screens**, so `cli` never admits a `cli.md` platform file and never reaches
-`/screens`, `/mockups`, the canvas, or the scratchpad. A flow of a
+`/skill:screens`, `/skill:mockups`, the canvas, or the scratchpad. A flow of a
 cli-only project is `index.md` alone, like a service flow. What `cli` does
 require is the design system's **Terminal UX** section.
 

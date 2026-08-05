@@ -1,7 +1,7 @@
 ---
 name: claude-design-import-design-system
 description: Read the product's design system back from claude.ai/design and
-  return it as a vwf design-system payload. Invoked by /design-system as
+  return it as a vwf design-system payload. Invoked by /skill:design-system as
   its configured design adapter — not a general-purpose skill.
 ---
 

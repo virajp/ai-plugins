@@ -4,14 +4,14 @@ description: Capture the current session as a handoff document and file it to
   mempalace
   (wing=<project>, room=handoff, drawer=<name>) so work can resume in a fresh
   session. With no argument — or `next` — it writes the reserved `next`
-  handoff, to mempalace and to docs/memory/handoff/next.md, which /recall
+  handoff, to mempalace and to docs/memory/handoff/next.md, which /skill:recall
   resumes automatically. Use when the context window grows beyond ~60%.
 ---
 
 # handoff — Capture Work for a Fresh Session
 
 Write a **handoff document** that lets a new session continue this work without
-the current context, and file it to **mempalace** so `/recall` can retrieve
+the current context, and file it to **mempalace** so `/skill:recall` can retrieve
 it later.
 
 **When to use:** when the context window grows **beyond ~60%**, or before
@@ -45,7 +45,7 @@ handoff in exactly three ways:
   prompt** section is required. If the session has no clear next action, say so
   plainly rather than padding it — see step 5.
 
-Named handoffs (`/handoff auth-refactor`) keep their existing behavior
+Named handoffs (`/skill:handoff auth-refactor`) keep their existing behavior
 throughout: mempalace, with the disk copy only as a fallback.
 
 ---
@@ -63,7 +63,7 @@ which one to hand off (one handoff = one coherent thread).
 Leave the repo clean and resumable before capturing, so the handoff describes
 **committed** state, not a dirty tree. This runs on the **outer (superproject)**
 repo and its submodules — never a submodule in isolation (the same outer-repo
-rule as `/git-workflow`). **Do not push** — commit only, honoring the
+rule as `/skill:git-workflow`). **Do not push** — commit only, honoring the
 never-push rule.
 
 1. **Commit pending work, everywhere.** In the current worktree and in each
@@ -109,7 +109,7 @@ exactly (it is the retrieval key).
 
 Fill the **Workspace** section from git: the worktree path
 (`git rev-parse --show-toplevel`, or the main checkout if not isolated) and the
-branch (`git branch --show-current`). `/recall` reads these to re-enter the
+branch (`git branch --show-current`). `/skill:recall` reads these to re-enter the
 work — a stale or missing path is how it detects the worktree is gone.
 
 If decisions/findings already live in mempalace or `docs/`, **reference** them
@@ -126,7 +126,7 @@ that section entirely (don't pad it).
 continuable work — the thread finished, or the next move is the user's to choose
 — do **not** invent one. Write the handoff without the section and **tell the
 user there is nothing further to continue until they give a direction**;
-`/recall next` will report the same and wait. A `next` that auto-runs a
+`/skill:recall next` will report the same and wait. A `next` that auto-runs a
 made-up prompt is worse than one that admits it is done.
 
 ### 6. File it to mempalace
@@ -144,14 +144,14 @@ mempalace_add_drawer(
 ```
 
 `room` is always the literal `handoff`; `source_file` and the
-`# Handoff: <name>` header are how `/recall` finds this drawer by `<name>`.
+`# Handoff: <name>` header are how `/skill:recall` finds this drawer by `<name>`.
 If a handoff for this `<name>` already exists and the tool reports a duplicate,
 file the new one anyway (it supersedes) — recall picks the most recent.
 
 **If mempalace tools are unavailable** (the server is down — do **not** silently
 skip, the document is the whole point): write the handoff to
 `docs/memory/handoff/<name>.md` instead, tell the user it went to disk because
-mempalace was unreachable, and that `/recall` will read the disk copy.
+mempalace was unreachable, and that `/skill:recall` will read the disk copy.
 
 ### 6a. Write the repo copy (`next` only)
 
@@ -173,7 +173,7 @@ same file — write it once, commit it, and report the drawer as skipped.
 Confirm where it was filed (wing / room / `<name>`, plus
 `docs/memory/handoff/next.md` for `next`, or the disk path when mempalace was
 down), and state in one line that a fresh session can resume with
-`/recall <name>` — `/recall next` for the reserved one, noting it will
+`/skill:recall <name>` — `/skill:recall next` for the reserved one, noting it will
 run the next prompt without asking. Say whether a next prompt was included; for
 `next` without one, say plainly that there is nothing further to continue until
 the user gives a direction.

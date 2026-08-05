@@ -18,7 +18,7 @@ this command only observes and verifies.
 
 Two passes: **health** (is every deployed project up) and **acceptance** (do the
 blueprint's flow criteria hold against the real environment). A failure here is
-production feedback — it routes exactly like `/feedback` input. A clean run
+production feedback — it routes exactly like `/skill:feedback` input. A clean run
 against **production** additionally offers to record a **release** (§5) —
 freezing each deployed service's API contract, the point from which backward
 compatibility is enforced.
@@ -33,9 +33,9 @@ compatibility is enforced.
 ## Format Check
 
 Run the preflight in `%%AI_PLUGINS_ROOT%%/assets/format-check.md`; nudge
-`/setup` on drift (proceed unless the needed Acceptance blocks are missing —
+`/skill:setup` on drift (proceed unless the needed Acceptance blocks are missing —
 a pre-format-4 repo has nothing to verify flows against; tell the user to run
-`/setup` then stop).
+`/skill:setup` then stop).
 
 ## Pipeline
 
@@ -106,12 +106,12 @@ harness is a gap).
 ### 4. Report & route
 
 Present: per-project health, then per-criterion results. Route every failure per
-the **feedback routing** (`/feedback`'s rules — this command's failures are
+the **feedback routing** (`/skill:feedback`'s rules — this command's failures are
 just automated feedback):
 
 - **Criterion FAIL** (behavior regression) → file to room `gaps`; offer the fix
-  path now — `/blueprint <flow|entity>` if the blueprint is wrong,
-  `/plan <slice>` for a fix cycle. Deferred → record one line in the owning
+  path now — `/skill:blueprint <flow|entity>` if the blueprint is wrong,
+  `/skill:plan <slice>` for a fix cycle. Deferred → record one line in the owning
   flow doc's **Open Questions** so it survives a mempalace outage.
 - **Health down / infra failure** → report precisely (project, probe, error);
   this is operational, not a blueprint gap — do not file it as one.
@@ -160,4 +160,4 @@ room `decisions`), and each gap to room `gaps`. Skip silently if mempalace is
 down — the routed doc edits are the durable record.
 
 If any doc was edited (deferred routings, release snapshots), commit via
-`/git-workflow`. Verify is otherwise read-only.
+`/skill:git-workflow`. Verify is otherwise read-only.

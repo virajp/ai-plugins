@@ -9,7 +9,6 @@ description:
   authentication schemes, or OpenAPI spec authoring — even if the user doesn't
   say "REST API" explicitly. This skill is the authoritative guide for all API
   design decisions.
-hide: true
 ---
 
 # REST API Design Principles

@@ -53,15 +53,15 @@ components-and-anti-patterns, terminal-ux, checklist).
 ### 1. Read the registry
 
 Read `docs/blueprint/registry.yaml`. **Halt if it does not exist:** "No registry
-found. Run `/architecture` first." If the registry has **no** UI-surface
+found. Run `/skill:architecture` first." If the registry has **no** UI-surface
 project (no project whose `role` is `site`, `fullstack` or `frontend`), tell the
 user a design system may not be needed and ask whether to (a) **add the UI
-project to the registry first** via `/architecture` (then return here), or
+project to the registry first** via `/skill:architecture` (then return here), or
 (b) proceed anyway.
 
 **Format check.** Run the preflight in
 `%%AI_PLUGINS_ROOT%%/assets/format-check.md`; if the repo's blueprint format
-is behind what vwf ships, nudge `/setup` (proceed unless a needed artifact
+is behind what vwf ships, nudge `/skill:setup` (proceed unless a needed artifact
 is missing).
 
 **Terminal surfaces.** Read `platforms:` in `docs/blueprint/registry.yaml`: any
@@ -154,14 +154,14 @@ and ask if the gap count does not strictly decrease.
 **Impact analysis (re-import).** When the import **renamed or removed** a token
 or component behavior, grep `docs/blueprint/` — the flow docs' Screens sections
 and References — for the old name and report every orphan; offer to fix them via
-`/blueprint`. Never edit a flow doc from here.
+`/skill:blueprint`. Never edit a flow doc from here.
 
 **Cross-cutting conventions.** A theming/dark-mode strategy or an i18n/RTL
 decision graduates to `conventions.md`; pure token/scale/behavior values never
 do.
 
 **Architecture reconcile.** A product-shape change surfaced here (e.g. a new UI
-project) routes through `/architecture` — never a by-hand registry edit.
+project) routes through `/skill:architecture` — never a by-hand registry edit.
 
 **Persist.** Store durable decisions and rationale to mempalace room `decisions`
 (skip what the doc captures verbatim; skip silently if down).
@@ -170,5 +170,5 @@ project) routes through `/architecture` — never a by-hand registry edit.
 
 Summarize what was imported/changed and wait for explicit approval. Then pin
 `design.design_system_id` in `.config/vwf.yaml` (confirmed, never silently) and
-hand **all** git actions to `/git-workflow` — the pin rides the same commit.
+hand **all** git actions to `/skill:git-workflow` — the pin rides the same commit.
 Use a `blueprint(design-system):` or `docs(design-system):` message.

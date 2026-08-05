@@ -16,7 +16,7 @@ HCL, or when the module ecosystem matters more than sharing a language with the
 application code.
 
 `languages` is empty on purpose: HCL is not in the closed language vocabulary
-(`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`), so `/doctor` performs
+(`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`), so `/skill:doctor` performs
 no LSP or toolchain check for it. That is a known gap, not an oversight.
 
 **`infra` is exempt from blueprint coverage.** It carries no flows, screens or
@@ -51,5 +51,5 @@ API contracts. It is registered so `plan`, `doctor` and `execute` can see it.
 Infrastructure changes are irreversible far more often than application changes,
 so an `infra` step in a plan states its **blast radius** and whether the apply
 is reversible — a plan that shows a resource replacement rather than an update
-is a halt for human confirmation. `/execute` treats an irreversible apply
+is a halt for human confirmation. `/skill:execute` treats an irreversible apply
 like any other irreversible decision.

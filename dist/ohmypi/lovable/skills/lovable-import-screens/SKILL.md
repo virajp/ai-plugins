@@ -1,7 +1,7 @@
 ---
 name: lovable-import-screens
 description: Read a flow's screens back from a Lovable project and return them
-  as a vwf screens payload. Invoked by /screens import as its configured
+  as a vwf screens payload. Invoked by /skill:screens import as its configured
   design adapter — not a general-purpose skill.
 ---
 
@@ -50,7 +50,7 @@ named frames. Reflect that honestly:
 ## Rules
 
 - Report what the code actually renders, not what it seems intended to.
-  Interpreting a delta is `/screens import`'s job.
+  Interpreting a delta is `/skill:screens import`'s job.
 - A conditional branch you cannot statically resolve is a `notes` line, not an
   assumed state.
 - Never write to the Lovable project, and never to `docs/blueprint/`.

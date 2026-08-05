@@ -3,7 +3,6 @@ name: documentation-standards
 description: Opinionated standards for writing and maintaining Markdown
   documentation — writing style, code blocks, tables, CHANGELOGs, and diagrams.
   Auto-applies when editing any Markdown file.
-hide: true
 globs:
   - "**/*.md"
 alwaysApply: false

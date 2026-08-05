@@ -55,7 +55,7 @@ Inspect the target repo before writing — do not assume:
   turbo/nx), and how far the subprojects' deploy needs actually diverge — that
   last one decides the sub-workflow count.
 
-If there is **no mise config**, stop and tell the user to run `/scaffold`
+If there is **no mise config**, stop and tell the user to run `/skill:scaffold`
 first (the workflow depends on mise providing the toolchain). Only proceed with
 a minimal `mise.toml` if they insist.
 
@@ -309,7 +309,7 @@ are uniform, one sub-workflow is the answer and the split never happens.
 
 **Staging is not a release.** A `*-stage-v*` run never publishes packages,
 creates GitHub Releases, or updates changelogs — those belong only to the
-`*-prod-v*` path, and the release *record* itself belongs to `/verify`, not
+`*-prod-v*` path, and the release *record* itself belongs to `/skill:verify`, not
 CI.
 
 Without the contract, release triggers are elicited as normal (§2) — but offer
@@ -323,6 +323,6 @@ the user must satisfy:
 - the mise config must declare every tool the steps need under `[tools]` (and a
   `mise.ci.toml` if `MISE_ENV: ci` was set);
 - any task names the steps call must exist (`mise tasks`); if no task library
-  exists, suggest `/scaffold`;
+  exists, suggest `/skill:scaffold`;
 - any secrets / OIDC / registries the workflow references must be configured in
   the repo settings.

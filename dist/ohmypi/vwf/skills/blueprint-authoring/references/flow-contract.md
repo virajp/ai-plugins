@@ -90,7 +90,7 @@ screen takes the next letter free across the whole flow. **A standard flow's
 primary screen takes the flow's slug** — the `home` flow's main screen is named
 `home`, never "Dashboard". Pin per screen — its **Code** (`<NNN><letter>`: the
 flow's number plus `a`, `b`, `c`, … in step order — the per-screen sync key
-canvas frames are named by and `/screens import` matches on; stable once
+canvas frames are named by and `/skill:screens import` matches on; stable once
 assigned, an inserted screen takes the next free letter, never a re-letter),
 route, the operations it reads (`operationId`), its states
 (loading/error/empty), actions, and form validation — plus, one **Components
@@ -138,7 +138,7 @@ outside once the flow ran. At least one **success** and one
 user, API caller, or operator can see) and code-independent — name the outcome,
 never the test file, fixture, or tool. These are the contract `plan` turns into
 E2E test steps and `execute`'s **acceptance stage** verifies end-to-end (and
-`/verify` re-runs against deployed environments).
+`/skill:verify` re-runs against deployed environments).
 
 ## What `flows/index.md` holds
 

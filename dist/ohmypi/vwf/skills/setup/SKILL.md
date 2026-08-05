@@ -99,7 +99,7 @@ significant), and the stack per project.
 E2E, health endpoints, screenshot capability) — recorded in the stamp at step 9.
 For a **new/empty repo**, the harness is scaffolded as part of the enforced
 structure (fold it into the step-4 migration plan); for an existing repo,
-missing capabilities are only **recorded** — `/plan` injects their bootstrap
+missing capabilities are only **recorded** — `/skill:plan` injects their bootstrap
 steps when a cycle first needs them.
 
 ### 2. Confirm & fill (MCQ)
@@ -120,7 +120,7 @@ is no default and nothing to object to, so no `enforcement` entry: record
 under `%%AI_PLUGINS_ROOT%%/assets/stacks/project/<role>/` as a menu with an
 **other (describe)** option, plus the repo-level menu from
 `assets/stacks/repo/`. vwf ships no default and nothing to object to, so there
-is no `enforcement` entry for a stack. `/architecture` owns this elicitation
+is no `enforcement` entry for a stack. `/skill:architecture` owns this elicitation
 — hand off to it at step 7 rather than duplicating it here; what this step needs
 is only enough detection to populate the menu's starting point.
 
@@ -167,7 +167,7 @@ format-versioning) performs the mechanical scaffold phase with `git mv` (move,
 never delete), splits `integration.md` into per-flow docs, extracts Data Model
 tables to `schema.yaml` and API tables to OpenAPI stubs, seeds the
 `implementation:` stamps, and downgrades coverage to `partial`; the follow-up
-`/blueprint` sweep (offered, consent-gated) does the elicited fill. YAML
+`/skill:blueprint` sweep (offered, consent-gated) does the elicited fill. YAML
 artifacts the scaffold writes must parse — validate them in step 10.
 
 ### 4. Build the migration plan (dry-run)
@@ -182,7 +182,7 @@ approval.**
 **Dirty-tree guard.** Before creating the worktree, run `git status`. If the
 working tree is dirty, **stop and ask** whether to commit, stash, or proceed —
 never migrate over uncommitted changes silently. Once clean (or the user
-consents), set up an isolated worktree via `/git-workflow`.
+consents), set up an isolated worktree via `/skill:git-workflow`.
 
 ### 5. Tooling
 
@@ -221,13 +221,13 @@ mechanism alone.
 Gate each foundation on the **step-3 delta** — a conforming repo runs neither,
 yielding an empty plan (the idempotence Hard Rule):
 
-- Run `/product` only if `docs/blueprint/product.md` is **missing** (the
+- Run `/skill:product` only if `docs/blueprint/product.md` is **missing** (the
   `4 → 5` delta) or the migration surfaced a product-level change. It comes
   **first** — the goals it pins anchor everything downstream.
-- Run `/architecture` only if the registry is **missing** or the delta
+- Run `/skill:architecture` only if the registry is **missing** or the delta
   requires a registry change (a new/changed project, capability, or
   cross-cutting decision).
-- Run `/design-system` only if the topology has a **UI surface**
+- Run `/skill:design-system` only if the topology has a **UI surface**
   (`ui: true`) **and** `docs/blueprint/design-system.md` is missing or stale. It
   **imports** the product's Claude Design design system (pick or build one on
   claude.ai/design first); with no surface connected it halts with connect
@@ -262,12 +262,12 @@ run diffs against, and how every vwf command operates in this repo:
   non-conventional `harness.health` path, a `package_manager` or
   `deploy_template` override — elicited when ambiguous, never assumed. A
   project's **`platforms:` is not one of them**: it is a system-shape fact and
-  lives only in `docs/blueprint/registry.yaml`, written by `/architecture`
+  lives only in `docs/blueprint/registry.yaml`, written by `/skill:architecture`
   (format 19 removed the duplicate key from this file);
 - the **`stack` block for every project** and the repo-level **`repo.stack`**,
-  as `/architecture` elicited them at step 7 — write them out in full, for
+  as `/skill:architecture` elicited them at step 7 — write them out in full, for
   every project the registry declares. An absent block is not "the default"; it
-  is what leaves `/doctor` with nothing to check;
+  is what leaves `/skill:doctor` with nothing to check;
 - leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
   them.
 
@@ -320,7 +320,7 @@ frontmatter-and-links reference. Confirm every YAML artifact the migration wrote
 (`entities/*/schema.yaml`, `apis/*.openapi.yaml`) parses. Confirm
 `environment.md` carries **no secret values**.
 
-Then run **`/doctor`** over the whole repo — it checks the config just
+Then run **`/skill:doctor`** over the whole repo — it checks the config just
 written against what the repo actually is (LSP servers and toolchains per
 declared language, frameworks/dependencies against each manifest, repo tooling,
 harness task names, health paths). Setup **records** most of what it reports and
@@ -344,7 +344,7 @@ the user already gave.
 Summarize everything created / moved / updated and wait for approval. On
 approval, **finalize resumability state**: remove the transient
 `setup_progress:` key from `.config/vwf.yaml` and delete the scratch
-`docs/blueprint/.vwf-migration-plan.md`. Then commit via `/git-workflow`
+`docs/blueprint/.vwf-migration-plan.md`. Then commit via `/skill:git-workflow`
 with a `chore(vwf):` or `docs:` message. Keep the worktree local; do not push.
 
 **Knowledge graph.** Per `%%AI_PLUGINS_ROOT%%/assets/graphify.md`, `setup` is
@@ -357,5 +357,5 @@ honored without re-asking this run; every other vwf surface falls back to direct
 reads when no graph exists, so absence never blocks anything.
 
 **Chain forward.** With the foundations in place, offer to continue straight
-into `/blueprint` (the full-product sweep — the next step of the pipeline);
+into `/skill:blueprint` (the full-product sweep — the next step of the pipeline);
 the user can decline and blueprint later.

@@ -4,7 +4,6 @@ description: TypeScript development — the always-on coding baseline plus deep
   references for Effect-TS patterns, Vitest testing, and the monorepo build
   pipeline. Auto-applies when editing any TypeScript file. Use when writing or
   reviewing any TypeScript code; read the reference matching your task.
-hide: true
 globs:
   - "**/*.ts"
   - "**/*.tsx"

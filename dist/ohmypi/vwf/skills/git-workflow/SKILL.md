@@ -26,7 +26,7 @@ description: Manage git workflows — worktree isolation, commits, merges, and
 ## Caller Preferences
 
 This command takes **no arguments** — callers parameterize its behavior through
-**declared preferences in the invocation text** (e.g. `/execute`: "isolate
+**declared preferences in the invocation text** (e.g. `/skill:execute`: "isolate
 without asking; commit only — never merge/push"). Honor any such declared
 preference: it drives the **Step 1** consent (skip the worktree prompt when
 isolation is pre-declared) and the **Step 4** post-commit choice (take the
@@ -232,7 +232,7 @@ Common types: `feat`, `fix`, `refactor`, `wip`, `blueprint`, `test`, `ops`,
 ## Step 4 — Post-Commit Action
 
 **Caller-declared preference.** If the invoker declared a post-commit action
-(e.g. `/execute`: "commit only — do not prompt, never merge or push"), honor
+(e.g. `/skill:execute`: "commit only — do not prompt, never merge or push"), honor
 it without asking: take that action and skip the prompt below. This is the only
 way the prompt is bypassed.
 

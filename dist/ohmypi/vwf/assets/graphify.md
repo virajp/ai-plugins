@@ -11,11 +11,11 @@ reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 > **graphify is mandatory**, and the mandate is enforced at the **entry gate**,
 > never mid-run. Two different things are being checked:
 >
-> - **The CLI** is a hard requirement. Missing → `/doctor` §8 reports it as
->   **blocking**, and `/setup` and `/execute` halt on it the way
+> - **The CLI** is a hard requirement. Missing → `/skill:doctor` §8 reports it as
+>   **blocking**, and `/skill:setup` and `/skill:execute` halt on it the way
 >   `execute` already halts on a missing LSP.
 > - **A graph is per-repo**, and its absence *at the workspace root* is equally
->   blocking — `/setup` is what resolves it, behind consent.
+>   blocking — `/skill:setup` is what resolves it, behind consent.
 >
 > **A worktree with no local `graphify-out/` is not an absence.** Resolving to
 > the main checkout's graph (see Worktrees) is the normal, expected path and is
@@ -27,7 +27,7 @@ reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 > gate exists so this is rare, not so a long-running pipeline dies in the
 > middle. And **never build or update a graph mid-run** (`/graphify`,
 > `graphify extract`, `graphify update` are long, LLM-driven builds). Only
-> `/setup` builds graphs, behind explicit consent.
+> `/skill:setup` builds graphs, behind explicit consent.
 
 ## How to query
 

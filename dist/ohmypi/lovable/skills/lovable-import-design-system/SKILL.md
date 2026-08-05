@@ -1,7 +1,7 @@
 ---
 name: lovable-import-design-system
 description: Read a Lovable project's published design system and return it as a
-  vwf design-system payload. Invoked by /design-system as its configured
+  vwf design-system payload. Invoked by /skill:design-system as its configured
   design adapter — not a general-purpose skill.
 ---
 

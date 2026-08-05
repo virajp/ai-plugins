@@ -5,7 +5,6 @@ description: The iOS-native (Swift) side of a Flutter app — the Swift/SwiftUI
   project/build workflows. Auto-applies when editing any Swift file. Use when
   writing native iOS code or working with the Xcode project; read the reference
   matching your task.
-hide: true
 globs:
   - "**/*.swift"
 alwaysApply: false

@@ -1,7 +1,7 @@
 ---
 name: plan-surveyor
-description: Stateless desired-vs-actual surveyor for the /plan command.
-  Invoked only by /plan — do not delegate to it for general tasks. Reads one
+description: Stateless desired-vs-actual surveyor for the /skill:plan command.
+  Invoked only by /skill:plan — do not delegate to it for general tasks. Reads one
   blueprint slice and surveys the codebase for what already satisfies it,
   returning the delta as terse findings with file:line pointers. Never writes
   code, tests, or plan docs.

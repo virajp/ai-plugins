@@ -30,7 +30,7 @@ never land or retire anything without the user.
 ## Halt Conditions
 
 Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
-`/plan` first." If `$ARGUMENTS` names no plan and more than one is active,
+`/skill:plan` first." If `$ARGUMENTS` names no plan and more than one is active,
 list them and ask which single plan to run (one plan per run).
 
 **Prerequisite order (chained plans).** Read the plan's `requires:` frontmatter.
@@ -38,10 +38,10 @@ For each required plan, read its `covers:` docs **from the current checkout**
 and halt unless every one reads `implementation: complete`:
 
 > "Prerequisite plan `<file>` has not been executed and merged (`<doc>` is
-> `implementation: <state>`). Run `/execute <file>` first."
+> `implementation: <state>`). Run `/skill:execute <file>` first."
 
-No override flag — if reality differs from the stamp, heal it via `/plan`
-(its stamp-heal offer) or amend the blueprint via `/blueprint`; never guess
+No override flag — if reality differs from the stamp, heal it via `/skill:plan`
+(its stamp-heal offer) or amend the blueprint via `/skill:blueprint`; never guess
 past the halt. Because stamps land in the merged Reconcile commit, an
 executed-but-unmerged prerequisite correctly halts too.
 
@@ -50,7 +50,7 @@ executed-but-unmerged prerequisite correctly halts too.
 Before the first step, run the preflight in
 `%%AI_PLUGINS_ROOT%%/assets/format-check.md`. Since the run is autonomous: if
 the format drift is **non-blocking**, log it and continue; if it is **blocking**
-(the run needs an artifact the old format lacks), **pause** for `/setup` per
+(the run needs an artifact the old format lacks), **pause** for `/skill:setup` per
 the pause rules — never migrate autonomously.
 
 ## Doc Paths
@@ -88,7 +88,7 @@ section**.
   fall back to the plan's **written TDD order** as-is; if even that is not
   executable, treat it as an **uncovered decision** and pause (per the Pause
   Conditions) — never invent an order.
-- **One plan, one worktree.** Via `/git-workflow`, create a dedicated
+- **One plan, one worktree.** Via `/skill:git-workflow`, create a dedicated
   isolated worktree for this plan — declared preference: **yes, isolate; do not
   prompt**. Implement everything there and **commit each step autonomously** (no
   consent). Merge/push happens **only behind the final gate**.
@@ -126,7 +126,7 @@ section**.
   *non-blocking* gap never stops the run. An *isolated blocking* gap (the step
   can't proceed without a human decision, but other steps can) → skip that step
   **and its dependents**, document, continue.
-- **All git via `/git-workflow`.** Never run raw git. On **every** mid-run
+- **All git via `/skill:git-workflow`.** Never run raw git. On **every** mid-run
   invocation, pass git-workflow these declared preferences so it never prompts:
   **isolate without asking** (its Step 1) and **commit only — do not prompt,
   never merge/push** (its Step 4). Without these, git-workflow's post-commit
@@ -153,9 +153,9 @@ section**.
 These are the **only** stops before the final gate. On any pause: ensure the
 worktree is committed, update the plan doc's gap section, state precisely what
 is needed, **emit the exact resume command**, and stop — do not guess past it.
-The resume command is `/recall next` after a **resource-cap** pause (which
-ran a bare `/handoff` first, writing the reserved `next` handoff), and
-`/execute <plan>` for every other pause (it resumes from the run journal per
+The resume command is `/skill:recall next` after a **resource-cap** pause (which
+ran a bare `/skill:handoff` first, writing the reserved `next` handoff), and
+`/skill:execute <plan>` for every other pause (it resumes from the run journal per
 the Resume check).
 
 **Always on**
@@ -173,8 +173,8 @@ the Resume check).
   cannot measure its own context window, so this signal is **delivered by the
   statusline caps hook** (install via `@askviraj/ai-plugins --statusline`); for
   autonomous runs, install it or this pause will not fire. On the injected cap
-  directive, run `/handoff` with no argument to snapshot state as the
-  reserved `next` handoff, then stop; resume later with `/recall next`.
+  directive, run `/skill:handoff` with no argument to snapshot state as the
+  reserved `next` handoff, then stop; resume later with `/skill:recall next`.
 
 **Judgment**
 
@@ -206,7 +206,7 @@ Pass the wing to every subagent.
 `<plan>`). If a prior run for this plan is recorded, read which steps are
 already done and their commits, reconcile against the worktree, and **resume at
 the current step** — do not re-implement finished steps. This is how a run
-paused at a resource cap (`/handoff` → `/recall next`) picks up where it
+paused at a resource cap (`/skill:handoff` → `/skill:recall next`) picks up where it
 left off.
 
 **Tie-break — the worktree is authoritative.** If the journal marks a step
@@ -220,7 +220,7 @@ silently if mempalace is unavailable.
 ## Setup
 
 1. **Preflight (interactive — the user is still present at invocation).** Run
-   `/doctor` scoped to the plan's projects. It reads each project's
+   `/skill:doctor` scoped to the plan's projects. It reads each project's
    `stack.languages` from `.config/vwf.yaml` and checks LSP servers, toolchains,
    manifests, and the harness.
 
@@ -243,7 +243,7 @@ silently if mempalace is unavailable.
      marketplace) or **unknown** is not a gate — there is nothing to install.
      Note it as a gap and proceed.
 
-2. **Worktree.** Invoke `/git-workflow` to create the dedicated worktree,
+2. **Worktree.** Invoke `/skill:git-workflow` to create the dedicated worktree,
    passing the declared preferences (isolate without prompting; commit-only, no
    post-commit prompt; never merge/push). All subsequent work and commits happen
    here.
@@ -288,7 +288,7 @@ journal):
 5. **gaps** — any stage's gap pointer → mirror into the plan doc's "Gaps
    surfaced during execution" section and file to mempalace room `gaps`. Decide
    blocking vs non-blocking and act per the rules.
-6. **commit** — commit the step's work via `/git-workflow`, **per the
+6. **commit** — commit the step's work via `/skill:git-workflow`, **per the
    commit-only preference**.
 7. **persist & journal** — store the step's durable decisions to room
    `decisions`, and mark the step **done** in the run journal. The node records
@@ -373,7 +373,7 @@ valid thing to approve, an undisclosed one is not.
 
 Then wait.
 
-- **Approve** → hand off to `/git-workflow` for the merge/push sequence
+- **Approve** → hand off to `/skill:git-workflow` for the merge/push sequence
   behind its own approval gate.
 - **Fix first** → the user names what to address → loop the affected steps back
   through the pipeline (code, then review + security concurrently; re-verify
@@ -383,19 +383,19 @@ Then wait.
 
 **Gap reconciliation (after the gate).** Whatever the merge decision, walk the
 consolidated gap list and offer to close each — **never silently rewrite either
-doc**: blueprint holes → `/blueprint` (the sweep re-stamps coverage); plan
-holes → `/plan` to re-derive the slice against the now-updated blueprint.
+doc**: blueprint holes → `/skill:blueprint` (the sweep re-stamps coverage); plan
+holes → `/skill:plan` to re-derive the slice against the now-updated blueprint.
 When a gap is reconciled, note its resolution back into the `gaps` room so a
 later cycle's recall sees it as closed.
 
 ## Archive
 
-After a merge with no open gaps, **tell the user to run `/archive`** to
-retire the completed plan. `/archive` is user-only — you cannot invoke it,
+After a merge with no open gaps, **tell the user to run `/skill:archive`** to
+retire the completed plan. `/skill:archive` is user-only — you cannot invoke it,
 so recommend it by name and stop there. While gaps remain open, don't recommend
 it — the plan doc is still the working record of what needs reconciling.
 
 **Chain forward.** Scan the active plans under `docs/plans/` for any whose
 `requires:` frontmatter lists the plan just completed. If one is now unblocked
 (every prerequisite's `covers:` docs read `implementation: complete`), offer
-`/execute <next-plan>` — chained plans land one focused run at a time.
+`/skill:execute <next-plan>` — chained plans land one focused run at a time.

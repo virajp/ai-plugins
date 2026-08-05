@@ -4,7 +4,6 @@ description: Opinionated TypeScript config layout for single-package repos and
   pnpm monorepos — a strict shared tsconfig.base.json, per-project tsconfig.json
   with the @/ path alias, a tsconfig.build.json emit variant, and (in a
   workspace) project references. Auto-applies when editing any tsconfig file.
-hide: true
 globs:
   - "**/tsconfig.json"
   - "**/tsconfig.*.json"

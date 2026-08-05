@@ -38,6 +38,6 @@ nothing else in the product to depend on.
 ## When to grow out of it
 
 The moment a second independently-buildable project appears, this becomes a
-**monorepo** — one repo, several projects. Re-run `/setup` to record the
+**monorepo** — one repo, several projects. Re-run `/skill:setup` to record the
 change; nothing in `docs/blueprint/` moves, since flows are keyed on project
 *name* and the first project keeps its name.

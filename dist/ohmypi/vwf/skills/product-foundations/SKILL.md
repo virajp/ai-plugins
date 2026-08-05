@@ -5,10 +5,9 @@ description: The foundational concerns every product must decide — users &
   retention & PII, notifications, runtime settings, rate limiting, reliability
   targets, disaster recovery & backup, cost guardrails. Elicited
   defaults distilled from the 95octane reference implementation. Used by
-  /architecture (the foundations checklist) and /blueprint (expanding
+  /skill:architecture (the foundations checklist) and /skill:blueprint (expanding
   accepted foundations into contracts); read the reference matching the
   foundation being decided or expanded.
-hide: true
 globs:
   - "docs/blueprint/architecture.md"
   - "docs/blueprint/conventions.md"
@@ -19,10 +18,10 @@ alwaysApply: false
 
 Twelve concerns every product hits sooner or later. Each has a **default
 contract** distilled from the 95octane reference implementation — proposed per
-product, never silently assumed: `/architecture` walks this checklist as
+product, never silently assumed: `/skill:architecture` walks this checklist as
 part of its cross-cutting elicitation (one MCQ per foundation: **accept the
 default / adapt it / not applicable**), records the selection as a
-`cross_cutting` token, and `/blueprint` expands accepted ones into the
+`cross_cutting` token, and `/skill:blueprint` expands accepted ones into the
 canonical contract in `conventions.md` plus the per-entity surfaces each
 reference names.
 
@@ -50,19 +49,19 @@ the reference-stack docs for the 95octane realization.
 
 ## How the workflow consumes this
 
-- **`/architecture` (step 3c)** — walks the checklist. For each foundation:
+- **`/skill:architecture` (step 3c)** — walks the checklist. For each foundation:
   present the default in one line, ask accept/adapt/skip, record the selection
   as a `cross_cutting` token (e.g. `audit: privileged-destructive`,
   `notifications: [push, email]`). Skipped foundations are omitted from the
   registry — that omission *is* the record.
-- **`/blueprint`** — for each accepted foundation, expand the contract into
+- **`/skill:blueprint`** — for each accepted foundation, expand the contract into
   `conventions.md` under its anchor (the reference names it) on first touch, and
   elicit the per-flow surface as flows are authored: audit markers on the flow's
   Trigger & Actors rows and steps for privileged/destructive actions,
   notification triggers, sync/async classification and placement (the flow's
   Background Jobs table), settings reads. Flow and entity docs link the anchors;
   they never restate the contract.
-- **`/plan` / `execute`** — consume the contracts like any other conventions
+- **`/skill:plan` / `execute`** — consume the contracts like any other conventions
   anchor; the change-logs reference additionally hooks execute's docs-sync step.
 
 Foundations expand into **existing** blueprint structures (conventions anchors,

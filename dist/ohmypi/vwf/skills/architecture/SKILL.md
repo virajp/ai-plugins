@@ -35,7 +35,7 @@ they describe every project.
 
 ## Step 1 — Setup
 
-Invoke `/git-workflow` to ensure an isolated local worktree before making
+Invoke `/skill:git-workflow` to ensure an isolated local worktree before making
 any changes. Never push a worktree branch directly.
 
 ---
@@ -48,15 +48,15 @@ Read `docs/blueprint/registry.yaml`.
   genuine deltas — a new project, a changed stack, a new capability or
   cross-cutting decision. Do not re-elicit everything.
 - **Absent but `architecture.md` exists with an embedded Project Registry** →
-  the repo is pre-format-16. Nudge `/setup` to run the `15 → 16` migration
+  the repo is pre-format-16. Nudge `/skill:setup` to run the `15 → 16` migration
   (which extracts the registry), then proceed in update mode against the
   extracted file.
 - **Absent → create mode.** Run the full elicitation below.
 
 **Format check.** Run the preflight in
 `%%AI_PLUGINS_ROOT%%/assets/format-check.md`; if the repo's blueprint format
-is behind what vwf ships, **nudge** `/setup` and **always proceed — never
-halt.** Architecture is a prerequisite of `/setup`'s own migration, so it
+is behind what vwf ships, **nudge** `/skill:setup` and **always proceed — never
+halt.** Architecture is a prerequisite of `/skill:setup`'s own migration, so it
 must not depend on it (this is the only foundation command that never blocks on
 the preflight).
 
@@ -156,7 +156,7 @@ terminal surface — see below. A native client that talks to a `fullstack`
 project's API is its own `frontend` project, not a platform of the fullstack
 one. The vocabulary names form factors, not vendors — `mobile` already hides
 iOS/Android, so `auto` hides CarPlay/Android Auto the same way. These platforms
-decide which `<platform>.md` files a flow may carry, and the `/screens`
+decide which `<platform>.md` files a flow may carry, and the `/skill:screens`
 design briefs.
 
 **Terminal surfaces.** While walking the projects, ask (once) whether any
@@ -198,7 +198,7 @@ platform has **no deploy axis** (it ships through a store): record
 package registry, which *is* a deploy target: pin `deploy/npm-package`.
 
 Record all of it in `.config/vwf.yaml` per the vwf-config asset. **Always write
-the project block**, for every project: it is what `/doctor` checks the repo
+the project block**, for every project: it is what `/skill:doctor` checks the repo
 against, and it cannot check what was never recorded.
 
 vwf ships no default and marks no template recommended. Picking a project
@@ -355,11 +355,11 @@ project added/removed, a stack or deviation recorded, hosting changed — apply
 CLAUDE.md's) claims about the system with the updated registry before
 committing. Report what was synced, or `docs: nothing contradicted`.
 
-**If this command was invoked as a sub-step of `/blueprint` or
-`/execute` (registry reconciliation):** return control to the parent run.
+**If this command was invoked as a sub-step of `/skill:blueprint` or
+`/skill:execute` (registry reconciliation):** return control to the parent run.
 The parent pipeline commits via `git-workflow`; do not double-commit.
 
-**Otherwise (standalone invocation):** commit via `/git-workflow`.
+**Otherwise (standalone invocation):** commit via `/skill:git-workflow`.
 
 Commit message format — use `docs(architecture):` prefix, imperative mood,
 lowercase, under 72 characters:

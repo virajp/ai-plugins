@@ -29,7 +29,7 @@ There is exactly one product doc per workspace. It is the **first** foundation:
 
 ## Step 1 — Setup
 
-Invoke `/git-workflow` to ensure an isolated local worktree before making
+Invoke `/skill:git-workflow` to ensure an isolated local worktree before making
 any changes. Never push a worktree branch directly.
 
 ## Step 2 — Detect Mode
@@ -39,12 +39,12 @@ Read `docs/blueprint/product.md`.
 - **Exists → update mode.** Preserve confirmed content. Ask only about genuine
   deltas — a pivot, a new/retired goal, a metric change, a re-ranked priority.
   Do not re-elicit everything. Read the **Metric readings** appendix (if
-  `/feedback` has been logging readings): a metric missing its target is a
+  `/skill:feedback` has been logging readings): a metric missing its target is a
   first-class re-rank prompt — raise it before asking anything else.
 - **Absent → create mode.** Run the full elicitation below.
 
 **Format check.** Run the preflight in
-`%%AI_PLUGINS_ROOT%%/assets/format-check.md`; on drift, **nudge** `/setup`
+`%%AI_PLUGINS_ROOT%%/assets/format-check.md`; on drift, **nudge** `/skill:setup`
 and **always proceed — never halt** (like `architecture`, this command is a
 prerequisite of setup's own migration).
 
@@ -121,7 +121,7 @@ problem, a goal added/retired, a re-ranked priority — apply
 what-this-is claims with the updated product doc before committing. Report what
 was synced, or `docs: nothing contradicted`.
 
-Commit via `/git-workflow` with a `blueprint(product):` message, e.g.:
+Commit via `/skill:git-workflow` with a `blueprint(product):` message, e.g.:
 
 ```text
 blueprint(product): create product doc — problem, goals, slice priority

@@ -133,7 +133,7 @@ implementation: none # none | partial | complete
 exhaustive writer list:
 
 - `execute`'s **Reconcile** step stamps what a run actually landed.
-- `/plan` **may heal** a stale value, with user confirmation.
+- `/skill:plan` **may heal** a stale value, with user confirmation.
 - A **blueprint sweep** that materially edits contract content demotes
   `complete` → `partial` (the built code no longer matches the contract).
 

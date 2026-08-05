@@ -15,7 +15,7 @@ description: Two-way screen sync with Claude Design. "prompt <flow>" writes one
   "import [flow]" reads the designed pages back as data, diffs them against
   the Screens contracts (components included), folds canvas-discovered
   conventions back into the conventions file, and routes every accepted
-  contract delta through /blueprint — this skill never edits a flow doc
+  contract delta through /skill:blueprint — this skill never edits a flow doc
   itself.
 ---
 
@@ -31,7 +31,7 @@ brief against the Claude Design MCP. A brief is **always the flow's full screen
 blueprint**, regenerated in place — never a delta note; the canvas reconciles
 its existing pages against the latest brief (revise-in-place). `import` brings
 the designed pages back and folds what they decided into the contract —
-**through `/blueprint`, one confirmed delta at a time**. The blueprint stays
+**through `/skill:blueprint`, one confirmed delta at a time**. The blueprint stays
 the contract of record; the canvas is where screens get good.
 
 **The naming contract is the join key.** Three levels:
@@ -118,7 +118,7 @@ conditional product states pinned where the screen has them).
 ## Halt Conditions
 
 - No design system (either form) → "Screens reference the design system; run
-  `/design-system` first." Stop.
+  `/skill:design-system` first." Stop.
 - `prompt` without a flow name, or naming a flow with no folder under
   `docs/blueprint/flows/` → say so, list the flows, stop (a brand-new journey is
   blueprinted first — even a draft flow doc — so the brief has steps to
@@ -126,7 +126,7 @@ conditional product states pinned where the screen has them).
 - The registry has no UI-surface project → no screens to design; stop.
 
 **Format check.** Run `%%AI_PLUGINS_ROOT%%/assets/format-check.md`; nudge
-`/setup` on drift.
+`/skill:setup` on drift.
 
 ## Mode: prompt <flow>
 
@@ -137,7 +137,7 @@ conditional product states pinned where the screen has them).
    the flow's UI project (type, platforms). **The flow's platform files** decide
    which briefs it gets: one brief per `<platform>.md` in the flow folder,
    listed in `index.md`'s Platforms table. A UI flow with no platform file is
-   format drift: say so and nudge `/setup`, then elicit the platform set for
+   format drift: say so and nudge `/skill:setup`, then elicit the platform set for
    this run. The exception is a project whose only platform is `cli` — a
    terminal surface has no screens and no canvas, so its flows get no briefs;
    say so and stop, do not treat it as drift. Recall parked UX points (mempalace
@@ -159,7 +159,7 @@ conditional product states pinned where the screen has them).
    from the flow's `Serves:` link. A flow doc without Components blocks yet
    (pre-format-12) gets them derived provisionally from its steps, states, and
    actions — flagged in the brief's Out of scope and nudging a
-   `/blueprint <flow>` pass to pin them. **A brief is the full flow
+   `/skill:blueprint <flow>` pass to pin them. **A brief is the full flow
    blueprint every time**: on a revision, regenerate the whole file in place
    (git history keeps the prior brief; the canvas reconciles its page against
    the latest brief per the revise-in-place convention) — never write a
@@ -182,10 +182,10 @@ conditional product states pinned where the screen has them).
    when a `CLAUDE--<platform>.md` is new or its generated sections changed, that
    they set it as that canvas project's CLAUDE.md. Never push anything via the
    Claude Design MCP, never `put_conversation`, never run a brief.
-5. **Commit** the prompt + conventions files via `/git-workflow`
+5. **Commit** the prompt + conventions files via `/skill:git-workflow`
    (`docs(prompts): screens brief for <flow>`).
 6. **Stop.** The canvas session is the user's — iterate as long as needed; when
-   satisfied, run `/screens import <flow>`.
+   satisfied, run `/skill:screens import <flow>`.
 
 ## Mode: import [flow]
 
@@ -203,7 +203,7 @@ conditional product states pinned where the screen has them).
    **stitch page**. Match on the **full folder name**, never the number alone. A
    page whose flow exists but lacks that platform file is a **proposed new
    platform** for the flow — one MCQ (add the platform file via
-   `/blueprint`, or discard). A page matching neither → one MCQ per page
+   `/skill:blueprint`, or discard). A page matching neither → one MCQ per page
    (show its `render_preview` screenshot + path): assign to an existing flow /
    treat its prefix as a **proposed new flow** / discard from this import. Never
    infer silently.
@@ -259,11 +259,11 @@ conditional product states pinned where the screen has them).
    it canvas-only. A canvas copy that is missing, or behind the repo file's
    generated sections, is reported as canvas upkeep (the user re-pastes). This
    fold is the **one edit import makes itself** — a prompts-tree artifact, never
-   a blueprint doc — committed via `/git-workflow`
+   a blueprint doc — committed via `/skill:git-workflow`
    (`docs(prompts): fold canvas conventions`).
 6. **Route — never edit here.**
    - **Accepted deltas** → hand each touched flow's verdict list to
-     `/blueprint <flow>` as that pass's input: the pass applies them under
+     `/skill:blueprint <flow>` as that pass's input: the pass applies them under
      its own elicitation, reviewer gate, build-stamp demotion, and approval.
      This skill writes no flow doc, ever.
    - **Proposed new flow** (confirmed in step 2 or 4) → scaffold a **draft**
@@ -271,7 +271,7 @@ conditional product states pinned where the screen has them).
      `implementation: none`, steps/acceptance left as the pass's work; plus one
      `<platform>.md` for the page's platform suffix with Screens seeded from the
      designed frames with fresh codes) and require a full
-     `/blueprint <flow>` pass — pixels carry no steps or acceptance
+     `/skill:blueprint <flow>` pass — pixels carry no steps or acceptance
      criteria; coverage stays `partial` until that pass lands (the worklist
      picks the draft up automatically).
    - **Rejected deltas** → list them in the report as canvas rework (the next

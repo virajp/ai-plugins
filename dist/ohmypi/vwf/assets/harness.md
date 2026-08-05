@@ -1,7 +1,7 @@
 # Harness Contract
 
 What a repo must be able to **run** for vwf's verification gates to do their job
-— the capabilities behind the `acceptance` and `ux` stages and `/verify`.
+— the capabilities behind the `acceptance` and `ux` stages and `/skill:verify`.
 One vocabulary for everyone: `setup` detects against it and stamps the result,
 `plan` injects repair steps against it, the verifiers name what is missing
 against it. A capability is never assumed — it is detected, stamped, and
@@ -33,7 +33,7 @@ variant — the acceptance verifier's reliability depends on a deterministic rea
 signal. A product whose `e2e_local` needs no backing services never needs a
 local stack, and Docker is not required of it.
 
-## Detection (used by `/setup`)
+## Detection (used by `/skill:setup`)
 
 Per capability: check mise tasks (`mise tasks`) and package scripts for the
 canonical (then near-canonical) names; for `local_stack`, a compose file plus
@@ -57,10 +57,10 @@ harness:
 
 ## Provision & repair
 
-- **New/empty repos** — `/setup` scaffolds the harness as part of the chosen
+- **New/empty repos** — `/skill:setup` scaffolds the harness as part of the chosen
   topology's layout (the selected stack templates describe it), in the same
   consent-gated migration plan.
-- **Existing repos** — `/plan` runs a **harness preflight**: read the stamp,
+- **Existing repos** — `/skill:plan` runs a **harness preflight**: read the stamp,
   re-verify just the capabilities this slice's gates will need (the repo may
   have changed since stamping), and **inject a bootstrap step** into the plan
   for each missing one — built by the coder under the normal

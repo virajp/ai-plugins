@@ -1,7 +1,7 @@
 # The vwf Config — `.config/vwf.yaml`
 
 **How vwf operates in this product.** One file per product (the parent repo in
-polyrepo topology; submodules never get their own), written by `/setup` and
+polyrepo topology; submodules never get their own), written by `/skill:setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
 of the system description**: what the product *is* (projects, roles, paths,
 capabilities, platforms) lives in `docs/blueprint/registry.yaml`; this file
@@ -10,7 +10,7 @@ product that is realization rather than description: each project's **stack**.
 That lives here precisely so no blueprint-authoring or reviewing surface can
 reach it, which is what makes a vendor name in a blueprint doc structurally
 impossible rather than merely discouraged. Since **format 11** the stack is
-**structured** — a template selection plus the four axes `/doctor` checks
+**structured** — a template selection plus the four axes `/skill:doctor` checks
 the repo against — and is written for **every** project, always. Since
 **blueprint-format 6** this file replaces the old stamp at
 `docs/blueprint/.vwf.yml`.
@@ -24,8 +24,8 @@ blueprint_format: 19 # the docs/blueprint format stamp
 product:
   name: <product-name> # display name; the default mempalace wing
 
-blueprint: # coverage stamp — written by /blueprint after every sweep
-  coverage: complete # complete | partial — /plan halts unless complete
+blueprint: # coverage stamp — written by /skill:blueprint after every sweep
+  coverage: complete # complete | partial — /skill:plan halts unless complete
   remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), density/<unit> (over its line budget — cleared by the sweep's condenser pass, or when the condenser reports every remaining line load-bearing), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
 topology: polyrepo # repo | monorepo | polyrepo — a MENU since format 19 (assets/topologies/), not enforced
@@ -50,8 +50,8 @@ deploy:
 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
-    stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /doctor cannot check what was never recorded
-      template: project/<role>/<slug> # the PROJECT-axis template under assets/stacks/project/, or `custom`. NOT a default: /architecture presents the menu and the user picks
+    stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /skill:doctor cannot check what was never recorded
+      template: project/<role>/<slug> # the PROJECT-axis template under assets/stacks/project/, or `custom`. NOT a default: /skill:architecture presents the menu and the user picks
       backing_template: <slug> # optional — overrides the product-wide `backing` pin for this project only
       deploy_template: <slug> # optional — overrides the product-wide `deploy` pin. A `frontend` project on a SCREEN platform sets this to `n/a`: it ships through a store, not a deploy target. A `cli` frontend sets `deploy/npm-package` — a package registry IS its target
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing pnpm and bun projects
@@ -86,15 +86,15 @@ pipeline: # bounded knobs — see the hard floor below
   models: {} # per-stage tier override, e.g. review: sonnet — ALWAYS reported at the gate as configured-vs-default
   execute_caps: {} # tighten-only: context/five_hour/seven_day below the shipped 65/90/80
 
-environments: # /verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value); keys use the CANONICAL names development/staging/production per assets/delivery-pipeline.md — a synonym key (dev/test/stage/prod) is drift to propose fixing
+environments: # /skill:verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value); keys use the CANONICAL names development/staging/production per assets/delivery-pipeline.md — a synonym key (dev/test/stage/prod) is drift to propose fixing
   <env-name>:
     <project-name>: <base-url>
 
-production_env: production # optional — names the release environment for /verify (default: the env literally named "production")
+production_env: production # optional — names the release environment for /skill:verify (default: the env literally named "production")
 
 design: # design-tool pins & canvas state — ids and flow names only, never content
-  tool: claude-design # the ADAPTER PLUGIN NAME (claude-design | lovable | stitch | …). vwf never talks to a design tool itself: it delegates to /<tool>:<tool>-import-screens and /<tool>:<tool>-import-design-system per assets/design-adapter.md. The named plugin must be installed — /design-system and /screens import PREFLIGHT that, because a missing adapter fails silently
-  design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
+  tool: claude-design # the ADAPTER PLUGIN NAME (claude-design | lovable | stitch | …). vwf never talks to a design tool itself: it delegates to /<tool>:<tool>-import-screens and /<tool>:<tool>-import-design-system per assets/design-adapter.md. The named plugin must be installed — /skill:design-system and /skill:screens import PREFLIGHT that, because a missing adapter fails silently
+  design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /skill:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
   projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
       <platform>: <uuid> # mobile | tablet | desktop | web | auto — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
@@ -106,7 +106,7 @@ memory:
 docs_sync:
   include: [] # extra human docs in the docs-sync scope (README/CLAUDE.md are always in)
 
-setup_progress: [] # transient — /setup resume state, removed on completion
+setup_progress: [] # transient — /skill:setup resume state, removed on completion
 ```
 
 ## Semantics — who reads/writes what
@@ -145,31 +145,31 @@ earlier than 65/90/80), never loosen.
 
 - Commands read `.config/vwf.yaml`; when absent, fall back to the legacy
   `docs/blueprint/.vwf.yml` — its presence **is** format drift (pre-6): nudge
-  `/setup`, which performs the move as the `5 → 6` migration.
+  `/skill:setup`, which performs the move as the `5 → 6` migration.
 - Unknown keys are preserved, never stripped; missing sections mean "the shipped
   default" — an empty file is valid. Exception: a missing `blueprint:` block
-  means **no sweep has stamped this repo** — `/plan` halts until
-  `/blueprint` runs (self-healing on repos configured before config_format
+  means **no sweep has stamped this repo** — `/skill:plan` halts until
+  `/skill:blueprint` runs (self-healing on repos configured before config_format
   2).
 - `config_format` versions this file's own schema; bump it (with a migration
   note here) when a key's shape changes.
-- **`1 → 2` migration** (performed by `/setup`): rename
+- **`1 → 2` migration** (performed by `/skill:setup`): rename
   `pipeline.autopilot_caps` → `pipeline.execute_caps` (same shape and
   semantics); the statusline caps hook reads both names during the transition.
-- **`2 → 3` migration** (performed by `/setup`): bump the number — no key is
+- **`2 → 3` migration** (performed by `/skill:setup`): bump the number — no key is
   reshaped. New semantics: the environment named `production` (or the one named
   by the new optional `production_env` key) is the **release environment** — a
-  clean `/verify` run against it offers to freeze each deployed service's
+  clean `/skill:verify` run against it offers to freeze each deployed service's
   OpenAPI contract into `docs/blueprint/apis/released/`; the frozen snapshots
   (not this file) are the release record. If your production environment is
   named differently, set `production_env`.
-- **`3 → 4` migration** (performed by `/setup`): rename `mockups:` →
+- **`3 → 4` migration** (performed by `/skill:setup`): rename `mockups:` →
   `design:` (`mockups.project_id` → `design.project_id`, same semantics — the
   pin now serves `design-system`, `mockups`, `feedback`, and `plan`, not just
   mockups). `design_system_id` and `flows_pushed` are new optional keys with no
   migration action. During the transition, readers fall back to the legacy
-  `mockups.project_id` and treat its presence as `3` drift (nudge `/setup`).
-- **`4 → 5` migration** (performed by `/setup`): the single
+  `mockups.project_id` and treat its presence as `3` drift (nudge `/skill:setup`).
+- **`4 → 5` migration** (performed by `/skill:setup`): the single
   `design.project_id` becomes the **per-registry-project map** `design.projects`
   — one entry per registry UI project, each keyed to the old shared uuid
   (sharing preserved; split later by re-pinning). The design system becomes
@@ -178,10 +178,10 @@ earlier than 65/90/80), never loosen.
   unchanged. Readers fall back to a legacy `design.project_id` (or the older
   `mockups.project_id`) as the shared pin for **every** UI project — its
   presence is `4` (or `3`) drift.
-- **`5 → 6` migration** (performed by `/setup`): each
+- **`5 → 6` migration** (performed by `/skill:setup`): each
   `design.projects.<registry-project>` entry becomes a **per-platform map** —
   one canvas project per platform, since each platform canvas carries its own
-  conventions CLAUDE.md (device frame, layout; written by `/screens`). An
+  conventions CLAUDE.md (device frame, layout; written by `/skill:screens`). An
   existing flat uuid becomes the pin for the project's **primary platform**
   (`mobile` for a `frontend` role, `desktop` for a `site` role); other declared
   platforms are pinned on next use (per the adapter contract). Readers fall back
@@ -189,7 +189,7 @@ earlier than 65/90/80), never loosen.
   pin — its presence is `5` drift. Two platforms must never share a uuid; a
   shared uuid found during migration is surfaced for re-pinning, never silently
   kept.
-- **`6 → 7` migration** (performed by `/setup`, alongside the blueprint
+- **`6 → 7` migration** (performed by `/skill:setup`, alongside the blueprint
   `12 → 14` delta): every flow identifier stored in this file **drops its
   `<device>` segment**, since format 14 moved the device out of the flow path
   and into the flow doc's `device:` frontmatter key. Concretely
@@ -198,15 +198,15 @@ earlier than 65/90/80), never loosen.
   entries do the same. Purely mechanical — no pin, stamp, or coverage value
   changes. Readers honor a legacy entry carrying a device segment by matching on
   the trailing `<project>/<NNN>-<flow>` — its presence is `6` drift.
-- **`7 → 8` migration** (performed by `/setup`): `design.flows_pushed` is
+- **`7 → 8` migration** (performed by `/skill:setup`): `design.flows_pushed` is
   **renamed to `design.flows_rendered`** — mockups no longer push to the canvas;
   they render into the repo's gitignored `docs/scratchpad/` tree, and the stamp
   now records visual-review currency regardless of surface (a local scratchpad
   render, or canvas pages a screens import confirmed current). Entries are
   unchanged. Readers honor a legacy `flows_pushed` key as the same list — its
   presence is `7` drift. The `design.projects` pins stay: they serve
-  `/screens` and `/feedback canvas`, no longer mockups.
-- **`8 → 9` migration** (performed by `/setup`, alongside the blueprint
+  `/skill:screens` and `/skill:feedback canvas`, no longer mockups.
+- **`8 → 9` migration** (performed by `/skill:setup`, alongside the blueprint
   `14 → 15` delta): every flow identifier stored in this file **gains a
   `<platform>` leaf**, since format 15 moved screens into per-platform files.
   `design.flows_rendered` entries go `<project>/<NNN>-<flow>` →
@@ -219,7 +219,7 @@ earlier than 65/90/80), never loosen.
   becomes `web`. Flow numbers are renumbered by the blueprint migration; the
   entries here are rewritten to match. Readers honor a legacy entry without a
   platform leaf by matching the flow prefix — its presence is `8` drift.
-- **`9 → 10` migration** (performed by `/setup`, alongside the blueprint
+- **`9 → 10` migration** (performed by `/skill:setup`, alongside the blueprint
   `15 → 16` delta): the **stack moves here from the registry**. For each project
   in the old `architecture.md` Project Registry, compare its `stack:` to the
   reference stack for its `type` (since format 11 the templates live at
@@ -240,7 +240,7 @@ earlier than 65/90/80), never loosen.
   Nothing else reads a stack from the blueprint afterwards: `registry.yaml` has
   no `stack` key at all, which is what makes a vendor name in a blueprint doc a
   reviewer failure rather than a matter of authoring discipline.
-- **`11 → 12` migration** (performed by `/setup`): the config catches up
+- **`11 → 12` migration** (performed by `/skill:setup`): the config catches up
   with blueprint-format 19. Six changes, all mechanical except where noted:
 
   1. **`topology`** — `workspace` becomes `polyrepo` (the shape is unchanged: a
@@ -266,7 +266,7 @@ earlier than 65/90/80), never loosen.
   4. **`design.tool`** is added, naming the adapter **plugin**. Default it to
      `claude-design` for any repo carrying a `design.design_system_id` — that is
      the tool it was already using. The pin itself stays, now adapter-scoped.
-  5. **`memory`** — nothing changes in the config, but `/setup` creates
+  5. **`memory`** — nothing changes in the config, but `/skill:setup` creates
      `docs/memory/` and gitignores `handoff/`, `doctor/` and `runs/`, then moves
      a pre-19 `docs/handoffs/next.md` to `docs/memory/handoff/next.md`.
   6. **`projects.<name>.platforms` is removed** — the registry is the single
@@ -282,7 +282,7 @@ earlier than 65/90/80), never loosen.
   migrations ship in one release and a repo on one but not the other is a state
   neither migration expects.
 
-- **`10 → 11` migration** (performed by `/setup`): stacks stop being
+- **`10 → 11` migration** (performed by `/skill:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat
   `projects.<name>.stack` list becomes the structured block above. Per project:
   - **had a `stack:` list** → map its entries onto the axes: tokens matching the

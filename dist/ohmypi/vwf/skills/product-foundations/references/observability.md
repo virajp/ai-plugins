@@ -25,7 +25,7 @@ Cross-cutting token: `observability: opentelemetry-grafana`.
   (standard OTel propagation, browser → API included).
 - **Request metrics** on API projects: total/success/failed counters at minimum.
 - **Health endpoints**: every cloud project serves `GET /health` (the harness
-  contract's `health` capability — `/verify` consumes it).
+  contract's `health` capability — `/skill:verify` consumes it).
 - **Config via environment**: `OTEL_EXPORTER_OTLP_ENDPOINT`,
   `OTEL_EXPORTER_API_KEY`, protocol — catalogued in `environment.md` per
   consuming project, never valued in docs.

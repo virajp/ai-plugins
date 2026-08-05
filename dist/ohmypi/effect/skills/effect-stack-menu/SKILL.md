@@ -1,7 +1,7 @@
 ---
 name: effect-stack-menu
 description: Return the Effect-TS stack templates this plugin offers, as a vwf
-  menu payload. Invoked by /architecture and /setup when `effect` is
+  menu payload. Invoked by /skill:architecture and /skill:setup when `effect` is
   listed in the config's `stacks:` — not a general-purpose skill.
 ---
 

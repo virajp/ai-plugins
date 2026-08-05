@@ -34,7 +34,7 @@ my-product/           # parent repo — vwf lives here
 ```
 
 The parent holds everything product-wide: the blueprint, mise config, CI glue,
-the local stack. `/setup` and every other vwf command run **there**.
+the local stack. `/skill:setup` and every other vwf command run **there**.
 
 Each member is classified on its own signals per
 [topology detection](%%AI_PLUGINS_ROOT%%/skills/project-setup/references/topology-detection.md)

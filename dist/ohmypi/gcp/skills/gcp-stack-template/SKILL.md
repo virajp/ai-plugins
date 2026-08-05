@@ -3,14 +3,14 @@ name: gcp-stack-template
 description: Return one Google Cloud stack template as a vwf template payload
   —
   its axis fields, per-capability harness mechanisms, and conventions. Invoked by
-  /architecture and /setup after the user picks from the gcp menu — not a
+  /skill:architecture and /skill:setup after the user picks from the gcp menu — not a
   general-purpose skill.
 ---
 
 # gcp-stack-template
 
 Return the template payload for the slug the caller names, per the stack-adapter
-contract. Valid slugs are the ones `/gcp-stack-menu` lists: `firebase`,
+contract. Valid slugs are the ones `/skill:gcp-stack-menu` lists: `firebase`,
 `cloud-sql`, `cloud-run`, `gke`. An unknown slug is an error, not a guess.
 
 > **`disable-model-invocation` must stay `false`** — see `gcp-stack-menu`.

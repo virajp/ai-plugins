@@ -45,5 +45,5 @@ API contracts, and the coverage stamp ignores it. It is registered so `plan`,
 
 Infrastructure changes are irreversible far more often than application changes,
 so an `infra` step in a plan states its **blast radius** and whether the apply
-is reversible. `/execute` treats an irreversible infrastructure apply as a
+is reversible. `/skill:execute` treats an irreversible infrastructure apply as a
 halt for human confirmation, like any other irreversible decision.

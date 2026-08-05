@@ -11,7 +11,7 @@ disableModelInvocation: true
 
 # recall — Resume Work from a Handoff
 
-Retrieve a handoff written by `/handoff` and reconstruct enough context to
+Retrieve a handoff written by `/skill:handoff` and reconstruct enough context to
 continue the work in **this fresh session**.
 
 **When to use:** at the start of a new session when the previous one grew
@@ -26,7 +26,7 @@ continue the work in **this fresh session**.
 
 ## The `next` handoff
 
-`next` is the reserved "resume where I left off" handoff `/handoff` writes
+`next` is the reserved "resume where I left off" handoff `/skill:handoff` writes
 by default. Recalling it differs from a named recall in two ways:
 
 - **It lives on both surfaces** — the mempalace drawer and the committed
@@ -34,8 +34,8 @@ by default. Recalling it differs from a named recall in two ways:
   disagree, the **more recent `Date`** wins.
 - **Its continuation runs without a gate** — step 4 executes the Next prompt
   instead of asking. That is the whole point of `next`: one command resumes the
-  work. It is **left in place** afterwards; the following `/handoff` (or
-  `/handoff next`) overwrites it.
+  work. It is **left in place** afterwards; the following `/skill:handoff` (or
+  `/skill:handoff next`) overwrites it.
 
 ---
 
@@ -43,7 +43,7 @@ by default. Recalling it differs from a named recall in two ways:
 
 ### 1. Resolve the project (wing)
 
-Resolve `<project>` from the repo identity **exactly as `/handoff` does**
+Resolve `<project>` from the repo identity **exactly as `/skill:handoff` does**
 (so they agree): prefer the `origin` remote repo name
 (`git remote get-url origin`, stripped of host/owner/`.git`), else the repo root
 basename (`git rev-parse --show-toplevel`); reconcile against existing wings
@@ -73,7 +73,7 @@ With a `<name>`, retrieve it:
    optionally with `source_file="handoff/<name>.md"`, is an equivalent path.)
 
 **If mempalace is unavailable or has no match**, read
-`docs/memory/handoff/<name>.md` from disk (the `/handoff` fallback). If
+`docs/memory/handoff/<name>.md` from disk (the `/skill:handoff` fallback). If
 neither yields anything, say so and stop — don't guess the prior state.
 
 For **`next`**, the disk copy is a first-class surface, not a fallback: read
@@ -84,7 +84,7 @@ with the more recent `Date` if they differ.
 
 Before rebuilding context off the blueprint, run the preflight in
 `%%AI_PLUGINS_ROOT%%/assets/format-check.md` (as the other consuming commands
-do); if the repo's blueprint format is behind what vwf ships, nudge `/setup`
+do); if the repo's blueprint format is behind what vwf ships, nudge `/skill:setup`
 (proceed unless a needed artifact is missing).
 
 ### 3. Rebuild context
@@ -101,7 +101,7 @@ don't silently proceed as if the work vanished — resolve by the branch:
 - **Branch merged** into the destination → the work landed; resume from the
   **main checkout**.
 - **Branch still exists, un-merged** → recreate the worktree for it via
-  `/git-workflow`, then continue there.
+  `/skill:git-workflow`, then continue there.
 - **Neither** (branch absent, nothing merged) → say so and stop; the work can't
   be located.
 
@@ -112,13 +112,13 @@ the user whether to run it now**:
 
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
   command — `blueprint` / `plan` / `execute` — when it names one). Resuming a
-  cap-paused `/execute` run is the primary use of this command.
+  cap-paused `/skill:execute` run is the primary use of this command.
 - **No** → stop after the summary; the user drives from here.
 
 **For `next`, do not ask** — show the summary, then execute the Next prompt
 straight away (routing through the matching `/vwf:` command the same way). The
 handoff **stays in place**: leave the drawer and `docs/memory/handoff/next.md`
-alone, so a re-run resumes the same point until the next `/handoff`
+alone, so a re-run resumes the same point until the next `/skill:handoff`
 overwrites it.
 
 If there is no next prompt, end with the summary and the open items, and wait

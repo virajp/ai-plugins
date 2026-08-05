@@ -4,7 +4,6 @@ description: Opinionated package.json standards for single-package repos and
   pnpm monorepos — pnpm as the only package manager, "latest" versions, ESM, the
   exports map, the standard build/check/clean/test scripts, and (in a workspace)
   workspace:* links. Auto-applies when editing any package.json.
-hide: true
 globs:
   - "**/package.json"
 alwaysApply: false

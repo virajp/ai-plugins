@@ -1,7 +1,7 @@
 ---
 name: claude-design-import-screens
 description: Read a flow's designed pages back from claude.ai/design and return
-  them as a vwf screens payload. Invoked by /screens import as its
+  them as a vwf screens payload. Invoked by /skill:screens import as its
   configured design adapter — not a general-purpose skill.
 ---
 
@@ -52,7 +52,7 @@ registry project and the pinned canvas project id for that project+platform
   key and a fabricated one silently maps a design onto the wrong contract row.
 - **Report, don't interpret.** A component the canvas shows but the contract
   does not mention is still reported — deciding whether it is an addition or a
-  mistake is `/screens import`'s job, and then `/blueprint`'s.
+  mistake is `/skill:screens import`'s job, and then `/skill:blueprint`'s.
 - **Never edit the canvas, and never write to `docs/blueprint/`.**
 
 ## Return contract

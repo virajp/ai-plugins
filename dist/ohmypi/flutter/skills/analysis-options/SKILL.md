@@ -6,7 +6,6 @@ description: Opinionated analysis_options.yaml for Flutter — extends
   automate trailing commas), analyzer error severities, and generated-code
   excludes. The concrete backing of the dart skill's style rules; a clean
   `flutter analyze` is the merge gate. Auto-applies when editing analysis_options.yaml.
-hide: true
 globs:
   - "**/analysis_options.yaml"
 alwaysApply: false

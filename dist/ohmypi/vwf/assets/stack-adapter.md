@@ -49,7 +49,7 @@ vwf invokes skills on each configured plugin, at **exactly** these names:
 | `/<plugin>:<plugin>-stack-template <slug>` | data   | a **template payload**      |
 | `/<plugin>:<plugin>-ux-gate <slice>`       | action | **UX findings** (UI stacks) |
 
-So `stacks: [ gcp ]` resolves to `/gcp-stack-menu`. vwf constructs every
+So `stacks: [ gcp ]` resolves to `/skill:gcp-stack-menu`. vwf constructs every
 name from the configured value — nothing is looked up or guessed.
 
 **Why the name repeats the plugin.** OpenCode installs skills into one flat
@@ -69,7 +69,7 @@ with no templates.
 
 ### vwf preflights, because the failure mode is silence
 
-Before delegating, `/architecture`, `/setup` and `/doctor` **verify
+Before delegating, `/skill:architecture`, `/skill:setup` and `/skill:doctor` **verify
 every plugin named in `stacks:` is installed** (`claude plugin list`). They do
 not attempt the call and infer from the result — that inference is impossible. A
 missing plugin is a **halt** with the install command, never an empty menu.
@@ -114,7 +114,7 @@ conventions: <prose> # layout, testing, placement — read by plan/execute
 
 The `harness` block is what replaces the tool names vwf used to carry. vwf asks
 "can this repo run `screenshots`?"; the plugin answers "yes — task `test:e2e`,
-via a browser driver". `/doctor` checks the task exists; it never checks
+via a browser driver". `/skill:doctor` checks the task exists; it never checks
 *which* tool.
 
 ## The UX gate

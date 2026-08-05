@@ -4,7 +4,6 @@ description: Writing the Android-native (Kotlin) side of a Flutter app for
   features Flutter can't reach — a MethodChannel handler registry, main-looper
   dispatch, notImplemented defaults, and Native↔Flutter invocation. Auto-applies
   when editing any Kotlin file.
-hide: true
 globs:
   - "**/*.kt"
 alwaysApply: false

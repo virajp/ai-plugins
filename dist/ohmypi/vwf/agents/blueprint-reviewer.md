@@ -1,8 +1,8 @@
 ---
 name: blueprint-reviewer
-description: Stateless completeness reviewer for the /blueprint command.
+description: Stateless completeness reviewer for the /skill:blueprint command.
   Invoked
-  only by /blueprint — do not delegate to it for general tasks. Checks a
+  only by /skill:blueprint — do not delegate to it for general tasks. Checks a
   written flow or entity doc against the completeness checklist for the mode
   the orchestrator names and returns NO GAPS or a numbered gap list. Pass only
   the doc plus the conventions anchors and registry block it references — no

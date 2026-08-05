@@ -47,21 +47,53 @@ describe("skills", () => {
     expect(fm.bool(doc, "alwaysApply")).toBe(false);
   });
 
-  it("splits `invocation` into Oh-My-Pi's two booleans", () => {
-    // user-only: reachable by slash, invisible to the model.
+  it("collapses `invocation` onto Oh-My-Pi's single visibility axis", () => {
+    // Verified against omp 17.2.9: `hide` and `disableModelInvocation` are
+    // aliases the loader ORs into one flag, and the only reader is the
+    // system-prompt builder. So the axis is "hidden from the model", and
+    // slash-reachability is unaffected by either key.
+
+    // user-only: withheld from the model, still reachable via `/skill:setup`.
     const user = front("vwf/skills/setup/SKILL.md");
     expect(fm.bool(user, "disableModelInvocation")).toBe(true);
-    expect(fm.get(user, "hide")).toBeUndefined();
 
-    // model-only doctrine: the inverse — off the slash menu, model-loadable.
+    // Doctrine must stay model-visible, so it carries NEITHER key. `hide` here
+    // would silently drop it from the prompt and stop it auto-applying — the
+    // regression this assertion exists to catch.
     const model = front("vwf/skills/blueprint-authoring/SKILL.md");
-    expect(fm.bool(model, "hide")).toBe(true);
+    expect(fm.get(model, "hide")).toBeUndefined();
     expect(fm.get(model, "disableModelInvocation")).toBeUndefined();
 
-    // The default carries no flag at all.
+    // The default carries no flag either.
     const both = front("vwf/skills/plan/SKILL.md");
     expect(fm.get(both, "hide")).toBeUndefined();
     expect(fm.get(both, "disableModelInvocation")).toBeUndefined();
+  });
+
+  it("spells cross-skill references `/skill:<name>`", () => {
+    // omp 17.2.9 triggers on /(^|\s)\/skill:([^\s/]+)(\s|$)/ and its parser
+    // returns early on any other `/`-prefixed input. A bare `/plan` is not a
+    // failed lookup — it is plain prose the model receives as a message.
+    const body = text("vwf/skills/execute/SKILL.md");
+
+    expect(body).toContain("/skill:plan");
+    expect(body).toContain("/skill:git-workflow");
+
+    // Neither Claude's namespaced spelling nor the bare one may survive.
+    expect(body).not.toContain("/vwf:");
+    expect(body).not.toMatch(/(^|\s)\/plan\b/m);
+    expect(body).not.toMatch(/(^|\s)\/git-workflow\b/m);
+  });
+
+  it("never emits `hide` on any rendered skill", () => {
+    // Belt-and-braces across all 12 plugins: no renderer path may reintroduce
+    // the key, whatever the authored frontmatter looks like.
+    for (const out of emission.outputs) {
+      if (!out.path.endsWith("/SKILL.md")) {
+        continue;
+      }
+      expect(fm.get(front(out.path), "hide")).toBeUndefined();
+    }
   });
 
   it("drops every key Oh-My-Pi has no field for", () => {

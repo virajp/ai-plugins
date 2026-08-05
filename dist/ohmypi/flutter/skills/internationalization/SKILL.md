@@ -4,7 +4,6 @@ description: How the Flutter app localizes — ARB files with English as the
   template, l10n.yaml config, the genarb → arb_translate → gen-l10n pipeline,
   GetMaterialApp delegate wiring, and L10n.of(context) usage. Auto-applies when
   editing ARB files or l10n.yaml.
-hide: true
 globs:
   - "**/l10n.yaml"
   - "**/*.arb"

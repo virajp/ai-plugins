@@ -5,7 +5,6 @@ description: The house lint/format gate — @askviraj/linter (ESLint, bundled)
   the lint gate and dprint as the formatter. Both must pass before commit. Covers
   how to run each, how to scope rule overrides, and common failure remedies.
   Auto-applies when editing dprint.json, eslint config, or .config/linter.yaml.
-hide: true
 globs:
   - "**/dprint.json"
   - "**/dprint.jsonc"

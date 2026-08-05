@@ -19,13 +19,13 @@ Since blueprint flow passes render and review each flow's screens **in-pass**
 (blueprint §6a), this command is the **batch / regeneration tool**: re-render
 everything after a design-system change, refresh a legacy repo, or redo one flow
 post-hoc. It requires reviewed Screens contracts and a design system, and is
-**never a gate for `/plan`**.
+**never a gate for `/skill:plan`**.
 
 **Mockups are realizations, not contract.** They are *views* of the blueprint,
 regenerated at will — each flow's folder is **overwritten in place** on
 re-render, so paths stay stable and the tree always shows the latest render of
 every flow. A review remark that changes what a screen should *be* routes
-through `/blueprint <flow>` or `/design-system` — then re-run this
+through `/skill:blueprint <flow>` or `/skill:design-system` — then re-run this
 command (regenerate-over-edit). Nothing here ever writes into `docs/blueprint/`,
 and nothing under `docs/scratchpad/` is ever committed.
 
@@ -46,9 +46,9 @@ semantics). No template — this command authors no repo doc.
 ## Halt Conditions
 
 - No flow folders under `docs/blueprint/flows/` → "No blueprint found. Run
-  `/blueprint` first." Stop.
+  `/skill:blueprint` first." Stop.
 - No design system (neither file nor folder form) → "Screens reference the
-  design system; run `/design-system` first." Stop.
+  design system; run `/skill:design-system` first." Stop.
 - The registry has **no UI-surface project** (no project whose `role` is `site`,
   `fullstack` or `frontend`) → no flow can have a Screens surface; say so and
   stop.
@@ -58,8 +58,8 @@ semantics). No template — this command authors no repo doc.
 ## Format Check
 
 Run the preflight in `%%AI_PLUGINS_ROOT%%/assets/format-check.md`; nudge
-`/setup` on drift (proceed unless the Screens/design-system artifacts this
-command consumes are missing — then tell the user to run `/setup` and stop).
+`/skill:setup` on drift (proceed unless the Screens/design-system artifacts this
+command consumes are missing — then tell the user to run `/skill:setup` and stop).
 
 ## Pipeline
 
@@ -67,7 +67,7 @@ command consumes are missing — then tell the user to run `/setup` and stop).
 
 Before any write, verify `docs/scratchpad/` is gitignored:
 `git check-ignore -q docs/scratchpad`. If it is not, append `docs/scratchpad/`
-to the repo's `.gitignore` and commit that one line via `/git-workflow`
+to the repo's `.gitignore` and commit that one line via `/skill:git-workflow`
 (`chore(vwf): gitignore docs/scratchpad`), then proceed. Rendered mockups must
 never become committable.
 
@@ -117,13 +117,13 @@ Report per flow, grouped by platform: the screens and state variants rendered,
 and the **absolute file paths** to open in a browser (the entry point per
 platform is its first screen's default view). Include the standing reminder that
 mockup remarks never flow back as files — contract changes route through
-`/blueprint <flow>` or `/design-system`, then re-render.
+`/skill:blueprint <flow>` or `/skill:design-system`, then re-render.
 
 **Stamp `flows_rendered`.** Record each rendered flow platform in the config's
 `design.flows_rendered` list as `<project>/<NNN>-<flow>/<platform>` — a sweep
 sets it to exactly what was rendered; a flow-scoped run adds its flow's
-platforms. This is the render-currency state `/plan`'s soft advisory reads
-(and `/blueprint` drops when a flow's Screens change unrendered).
+platforms. This is the render-currency state `/skill:plan`'s soft advisory reads
+(and `/skill:blueprint` drops when a flow's Screens change unrendered).
 
 **Persist.** Store the run outcome to mempalace room `decisions` per
 `%%AI_PLUGINS_ROOT%%/assets/memory.md`. Skip silently if mempalace is
@@ -132,6 +132,6 @@ unavailable.
 **Git.** This command writes no repo docs — docs-sync does not fire, and the
 scratchpad tree is gitignored. The single exception is a changed
 `.config/vwf.yaml` (the `flows_rendered` stamp, or the one-time `.gitignore`
-line from §1): hand that to `/git-workflow` with a
+line from §1): hand that to `/skill:git-workflow` with a
 `chore(vwf): stamp rendered flows` message. When nothing in the config changed,
 touch no git state at all.

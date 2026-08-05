@@ -3,7 +3,7 @@ name: effect-stack-template
 description: Return one Effect-TS stack template as a vwf template payload —
   its
   axis fields, per-capability harness mechanisms, and conventions. Invoked by
-  /architecture and /setup after the user picks from the effect menu —
+  /skill:architecture and /skill:setup after the user picks from the effect menu —
   not a general-purpose skill.
 ---
 
@@ -11,7 +11,7 @@ description: Return one Effect-TS stack template as a vwf template payload —
 
 Return the template payload for the slug the caller names, per the stack-adapter
 contract. The only valid slug is `typescript-effect`, which
-`/effect-stack-menu` lists. An unknown slug is an error, not a guess.
+`/skill:effect-stack-menu` lists. An unknown slug is an error, not a guess.
 
 > **`disable-model-invocation` must stay `false`** — see `effect-stack-menu`.
 

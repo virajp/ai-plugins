@@ -8,7 +8,7 @@ The split is deliberate and asymmetric:
 
 | Direction  | How it works                                                           | Needs an adapter? |
 | ---------- | ---------------------------------------------------------------------- | ----------------- |
-| **Export** | `/screens prompt` writes design briefs to `docs/prompts/screens/…` | **No**            |
+| **Export** | `/skill:screens prompt` writes design briefs to `docs/prompts/screens/…` | **No**            |
 | **Import** | vwf delegates to the configured adapter and consumes what it returns   | **Yes**           |
 
 **Export needs no adapter at all.** The briefs are files — the deliverable is
@@ -38,7 +38,7 @@ vwf invokes two skills on the configured plugin, at **exactly** these names:
 | `/<plugin>:<plugin>-import-screens <flow> <platform>` | a **screens payload**       |
 | `/<plugin>:<plugin>-import-design-system`             | a **design-system payload** |
 
-So `design.tool: lovable` resolves to `/lovable-import-screens`. vwf
+So `design.tool: lovable` resolves to `/skill:lovable-import-screens`. vwf
 constructs both names from the configured value — nothing is looked up or
 guessed.
 
@@ -65,7 +65,7 @@ adapter that returned an empty payload.
 
 ### vwf preflights, because the failure mode is silence
 
-Before delegating, `/design-system` and `/screens import` **verify the
+Before delegating, `/skill:design-system` and `/skill:screens import` **verify the
 configured plugin is installed** (`claude plugin list`). They do not attempt the
 call and infer from the result — that inference is impossible.
 
@@ -83,7 +83,7 @@ looking in the wrong place two times out of three.
 ## Payload 1 — screens
 
 Returned by `/<plugin>:<plugin>-import-screens <flow> <platform>`. Shapes match
-the flow platform template, so `/screens import` can diff it directly
+the flow platform template, so `/skill:screens import` can diff it directly
 against the Screens contract.
 
 ```yaml
@@ -114,7 +114,7 @@ with `code: null` and say so in `notes`, rather than inventing codes.
 ## Payload 2 — design system
 
 Returned by `/<plugin>:<plugin>-import-design-system`. Shapes match the
-design-system template's sections, so `/design-system` can write the doc
+design-system template's sections, so `/skill:design-system` can write the doc
 from it.
 
 ```yaml
@@ -164,7 +164,7 @@ The adapter returns data. **Everything downstream is vwf's**, and no adapter
 gets to do it:
 
 - Diffing a screens payload against the Screens contract.
-- Routing every accepted delta through `/blueprint` — an adapter never edits
+- Routing every accepted delta through `/skill:blueprint` — an adapter never edits
   a flow doc.
 - Writing `design-system.md` from a design-system payload, gated by the
   `design-system-reviewer`.

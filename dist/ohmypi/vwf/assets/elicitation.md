@@ -1,8 +1,8 @@
 # Elicitation Protocol
 
 The shared questioning discipline for every skill that asks the user anything —
-`/product`, `/architecture`, `/design-system`, `/blueprint`,
-`/screens`, `/plan`, `/setup`, and `/feedback`. You own the user
+`/skill:product`, `/skill:architecture`, `/skill:design-system`, `/skill:blueprint`,
+`/skill:screens`, `/skill:plan`, `/skill:setup`, and `/skill:feedback`. You own the user
 conversation — elicitation stays with the orchestrator and is never delegated to
 a subagent (a subagent cannot pause to ask a question). Each command names
 **what** to ask about; this file governs **how**.
@@ -76,7 +76,7 @@ Two rules that follow:
   contract question that names only one side will be answered for that side.
 
 Do this in a single-project workspace too. It costs a few words, and the
-transcript is what a later `/recall` — or a reader of the mempalace
+transcript is what a later `/skill:recall` — or a reader of the mempalace
 `decisions` drawer — has to reconstruct the decision from.
 
 ## 4. What to ask — the decisions-vs-mechanics filter

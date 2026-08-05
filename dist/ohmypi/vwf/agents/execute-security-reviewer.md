@@ -1,7 +1,7 @@
 ---
 name: execute-security-reviewer
-description: Security reviewer for the /execute command. Invoked only by
-  /execute — do not delegate to it for general tasks. Threat-models the
+description: Security reviewer for the /skill:execute command. Invoked only by
+  /skill:execute — do not delegate to it for general tasks. Threat-models the
   implemented changes against the project's declared capabilities, using
   /security-review as its engine. Returns rated findings only.
 tools: ["Read","Bash","Grep","Glob","Skill","SlashCommand","mcp__plugin_vwf_mempalace__mempalace_search","mcp__plugin_mempalace_mempalace__mempalace_search","mcp__plugin_vwf_mempalace__mempalace_add_drawer","mcp__plugin_mempalace_mempalace__mempalace_add_drawer"]

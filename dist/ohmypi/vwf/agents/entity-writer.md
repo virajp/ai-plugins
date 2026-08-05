@@ -1,7 +1,7 @@
 ---
 name: entity-writer
 description: Writes or updates one entity's index.md and schema.yaml plus its
-  catalog row for the /blueprint command. Invoked only by /blueprint —
+  catalog row for the /skill:blueprint command. Invoked only by /skill:blueprint —
   do not delegate to it for general tasks. Turns the orchestrator's elicited
   decisions into a format-conformant data contract; never elicits, never invents
   a decision.

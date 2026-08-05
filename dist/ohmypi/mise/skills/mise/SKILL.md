@@ -6,7 +6,6 @@ description: Opinionated mise configuration — the .config/ three-file split
   the CI node-gpg workaround, and the mandatory file-based task library
   (init,_scripts/_helpers, code/*, setup/*). Auto-applies when editing any
   mise config or task file.
-hide: true
 globs:
   - "**/mise.toml"
   - "**/mise.dev.toml"
@@ -167,7 +166,7 @@ colon-separated names: `.config/mise/tasks/code/format` →
 headers, flags) while the commands *inside* `code/*` and `setup/*` change with
 the stack. They ship as ready-made templates under `assets/tasks/` (a shared
 `common/` set plus a `node/`, `flutter/`, or `python/` overlay);
-**`/scaffold` copies them in** — author from those, not from scratch.
+**`/skill:scaffold` copies them in** — author from those, not from scratch.
 
 Read the reference for the full spec before writing or editing a task file:
 

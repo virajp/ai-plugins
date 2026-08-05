@@ -17,15 +17,15 @@ Steps:
    - **Config present and equal to the shipped value** → silent; proceed.
    - **Stamp behind, only at the legacy location, OR missing while a
      `docs/blueprint/` (or legacy `docs/specs/`) tree exists** → tell the user,
-     then offer `/setup`:
+     then offer `/skill:setup`:
      > "This repo is on blueprint format `<N>`; vwf now ships `<M>`. Run
-     > `/setup` to migrate to the latest format."
+     > `/skill:setup` to migrate to the latest format."
    - **No blueprint tree at all** → not a drift case; the command's own
      bootstrap halt handles it.
 4. **Halt only if blocking.** Proceed with the requested operation when its
    required docs are present; hard-halt only when the operation needs an
    artifact the old format lacks (e.g. a `design-system.md` or section the new
-   format introduced). Never auto-migrate — `/setup` does that behind its
+   format introduced). Never auto-migrate — `/skill:setup` does that behind its
    own consent gate.
 
 Skip silently if neither config/stamp nor the format constant can be read.

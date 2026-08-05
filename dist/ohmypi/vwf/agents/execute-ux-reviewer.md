@@ -1,7 +1,7 @@
 ---
 name: execute-ux-reviewer
-description: UX-conformance reviewer for the /execute command. Invoked only
-  by /execute, and only for UI slices — do not
+description: UX-conformance reviewer for the /skill:execute command. Invoked only
+  by /skill:execute, and only for UI slices — do not
   delegate to it for general tasks. Renders the changed screens (screenshots
   via the repo's own dev server + Playwright; golden/snapshot tests for a
   native frontend), judges them against design-system.md and the flow Screens

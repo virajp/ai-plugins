@@ -27,7 +27,7 @@ my-product/
 ```
 
 Deployables under `projects/`, shared libraries under `packages/`. The grouping
-is a convention `/setup` proposes, not a hard requirement — a repo that
+is a convention `/skill:setup` proposes, not a hard requirement — a repo that
 already groups its projects differently records what it has.
 
 `docs/blueprint/` lives at the repo root.

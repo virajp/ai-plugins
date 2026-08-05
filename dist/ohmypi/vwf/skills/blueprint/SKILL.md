@@ -7,7 +7,7 @@ description: Maintain the always-current, full-product blueprint under
   subagent completeness reviewers per doc and one whole-product coherence
   review at the end of the sweep. A run sweeps flow by flow until
   whole-product coverage holds, then stamps it in .config/vwf.yaml —
-  /plan halts without a complete stamp.
+  /skill:plan halts without a complete stamp.
 ---
 
 # blueprint — Full-Product Blueprint (Flow-First)
@@ -47,15 +47,15 @@ The doc units:
 - **API contract** — `docs/blueprint/apis/<project>.openapi.yaml`, one per
   **API-publishing** project (`role` is `service` or `fullstack` — a fullstack
   publishes its own API, which is exactly what separates it from a `site`);
-  `apis/released/` holds the frozen production snapshots `/verify` writes
+  `apis/released/` holds the frozen production snapshots `/skill:verify` writes
   for `service` projects.
 - The `docs/blueprint/` **root holds only the system docs** (product,
   architecture, conventions, design-system, environment). A root
   `integration.md` or a flat/root entity folder is pre-format-9 drift;
-  `/setup` migrates it.
+  `/skill:setup` migrates it.
 
 **A run is a sweep, not a single flow.** The blueprint must describe the **whole
-product's** as-of state before anything downstream consumes it — `/plan`
+product's** as-of state before anything downstream consumes it — `/skill:plan`
 hard-halts unless the coverage stamp (§9) reads `complete`. A run therefore
 works flow by flow (§§2–7 per flow) and does not end at one flow: it continues
 down the coverage worklist (§1) until whole-product coverage holds **including a
@@ -127,13 +127,13 @@ Reserved names: `product`, `architecture`, `conventions`, `design-system`,
 ### 1. Read the product doc & registry
 
 Read `docs/blueprint/product.md`. **Halt if it does not exist:** "No product doc
-found. Run `/product` first — the blueprint needs the goals every flow must
+found. Run `/skill:product` first — the blueprint needs the goals every flow must
 trace to." Hold its goal anchors (`#goal-<slug>`) and slice priority: goals
 anchor every flow's Purpose; the priority list is what you suggest when the user
 asks what to blueprint next.
 
 Read `docs/blueprint/registry.yaml` — the machine-readable system description.
-**Halt if it does not exist:** "No registry found. Run `/architecture` first
+**Halt if it does not exist:** "No registry found. Run `/skill:architecture` first
 to bootstrap `docs/blueprint/registry.yaml`."
 
 Read the registry, **not** `architecture.md`: the prose doc is the human view of
@@ -144,7 +144,7 @@ technology in a blueprint doc is a reviewer failure (see the prose nouns in
 
 **Format check.** Run the preflight in
 `%%AI_PLUGINS_ROOT%%/assets/format-check.md`; if the repo's blueprint format
-is behind what vwf ships, nudge `/setup` (proceed unless a needed artifact
+is behind what vwf ships, nudge `/skill:setup` (proceed unless a needed artifact
 is missing).
 
 **Build the coverage worklist (delegated).** Dispatch a fresh
@@ -281,7 +281,7 @@ apply; an inapplicable surface is `N/A — <reason>`, never silently omitted.
 **Design-system gate.** If the flow has a **Screens** section (some registry
 project's `role` is `site`, `fullstack` or `frontend`),
 `docs/blueprint/design-system.md` must exist. **Halt if it does not:** "This
-flow has UI but no design system. Run `/design-system` first." Screens
+flow has UI but no design system. Run `/skill:design-system` first." Screens
 reference the design system; they never re-decide visual language.
 
 ### 3. Interactive elicitation (orchestrator)
@@ -485,7 +485,7 @@ optimization, never a reason to blow the context budget mid-sweep.
 
 If the blueprint's project or capability shape changed (a new project,
 capability, or cross-cutting decision implied by this pass), update the
-**registry** `docs/blueprint/registry.yaml` precisely — via `/architecture`
+**registry** `docs/blueprint/registry.yaml` precisely — via `/skill:architecture`
 if the change is non-trivial. When this pass added a cross-cutting decision to
 `conventions.md`, check the registry's `cross_cutting` block covers it and
 reconcile any mismatch.
@@ -493,7 +493,7 @@ reconcile any mismatch.
 **Demote the build stamp.** If this pass **materially changed the contract
 content** of a flow or entity doc whose frontmatter reads
 `implementation: complete`, set it to `implementation: partial` — the contract
-moved, so the code is no longer known to match; the next `/plan` for that
+moved, so the code is no longer known to match; the next `/skill:plan` for that
 slice picks up the delta. (State-stamp edits are the only frontmatter the sweep
 changes outside `status:`.)
 
@@ -501,7 +501,7 @@ changes outside `status:`.)
 and `.config/vwf.yaml` lists that flow's platform under `design.flows_rendered`,
 remove those entries — the scratchpad render no longer shows the contract.
 Normally §6a's re-render re-lists it within this same pass; when §6a was
-explicitly skipped, the drop stands and a later `/mockups <flow>` re-renders
+explicitly skipped, the drop stands and a later `/skill:mockups <flow>` re-renders
 it. (Like the build stamp: a state-only edit, riding the same commit.)
 
 **Persist.** Per `%%AI_PLUGINS_ROOT%%/assets/memory.md`, store this pass's
@@ -536,15 +536,15 @@ them before approving the flow.
    screen-level → the Screens table / recorded deviations (re-elicit, update the
    doc; a material contract change re-runs the per-doc reviewer (§5) and
    re-renders — back to 1); visual-language-level → flag for
-   `/design-system`, parked per the elicitation protocol's parked-scope rule
+   `/skill:design-system`, parked per the elicitation protocol's parked-scope rule
    when out of this pass's scope.
 4. **Design-first (alternative to 1–3).** The user may prefer Claude Design to
    *design* these screens rather than review vwf's contract-derived render: run
-   `/screens prompt <flow>` (it writes the per-platform briefs under
+   `/skill:screens prompt <flow>` (it writes the per-platform briefs under
    `docs/prompts/` — files the user pastes into the canvas chat), record
    `screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining` —
    deferred by design, not skipped — and continue the sweep. The later
-   `/screens import <flow>` closes it through a targeted pass here, folding
+   `/skill:screens import <flow>` closes it through a targeted pass here, folding
    what the canvas decided into the contract delta-by-delta.
 5. **Skip (escape hatch).** The user may explicitly decline the review. Record
    it honestly: one line in the flow doc's Open Questions ("screens not yet
@@ -622,7 +622,7 @@ blueprint:
 
 Stamp after **every** run — a targeted update that opened a hole (or skipped the
 coherence re-run, or skipped a §6a visual review) downgrades a `complete` stamp
-to `partial`. This stamp is what `/plan` gates on.
+to `partial`. This stamp is what `/skill:plan` gates on.
 
 A `density/<unit>` entry clears when the unit is within budget **or** the
 condenser returned `HELD:` for it (every remaining line load-bearing). Report
@@ -632,11 +632,11 @@ line is contract is not a hole, and must never hold the stamp hostage.
 
 ### 10. Commit (git-workflow)
 
-After approval, hand **all** git actions to `/git-workflow` — it owns
+After approval, hand **all** git actions to `/skill:git-workflow` — it owns
 worktree isolation and the commit (the stamp change rides the same commit). Use
 a `blueprint(<flow|entity>):` or `docs(blueprint):` message. Do not run raw git
 here.
 
 **Chain forward.** When the sweep ends with `coverage: complete`, offer to
-continue straight into `/plan` for the highest-priority slice (from the
+continue straight into `/skill:plan` for the highest-priority slice (from the
 product doc's slice priority) — the user can decline and plan later.

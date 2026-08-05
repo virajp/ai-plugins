@@ -1,7 +1,7 @@
 ---
 name: blueprint-surveyor
-description: Stateless coverage surveyor for the /blueprint command. Invoked
-  only by /blueprint at the start of a sweep — do not delegate to it for
+description: Stateless coverage surveyor for the /skill:blueprint command. Invoked
+  only by /skill:blueprint at the start of a sweep — do not delegate to it for
   general tasks. Walks the blueprint bundle against the coverage conditions and
   returns the ordered worklist of units that fail. Pass paths only — no
   conversation context.

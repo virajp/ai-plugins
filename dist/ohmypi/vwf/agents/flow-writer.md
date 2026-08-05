@@ -2,7 +2,7 @@
 name: flow-writer
 description: Writes or updates one flow folder (index.md contract + one
   <platform>.md per implemented platform) and its catalog row for the
-  /blueprint command. Invoked only by /blueprint — do not delegate to it
+  /skill:blueprint command. Invoked only by /skill:blueprint — do not delegate to it
   for general tasks. Turns the orchestrator's elicited decisions into a
   format-conformant flow contract; never elicits, never invents a decision.
 tools: ["Read","Write","Edit","Grep","Glob"]
