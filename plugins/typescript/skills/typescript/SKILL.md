@@ -22,14 +22,18 @@ The single entry point for TypeScript work. Each topic lives in its own
 reference file — **read the one matching your task**. Start every change from
 the always-on baseline.
 
-| Topic                                                                                  | When to read                                                                                                        |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| [Coding standards](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/standards.md)    | The always-on baseline: naming, import ordering, strict type safety, named functions, parameter conventions         |
-| [Effect-TS](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/effect.md)              | Effect.gen, Effect.Schema, Effect.Service, error handling, telemetry, logging, config, the HTTP boundary            |
-| [Effect runtime](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/effect-runtime.md) | Composing & running Effect: Layer wiring, ManagedRuntime, Scope/acquireRelease, Schedule retries, Stream, TestClock |
-| [Vitest](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/vitest.md)                 | Writing/running tests: it.effect, the shared config, _testUtils, v8 coverage                                        |
-| [Build pipeline](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/build.md)          | The @/ path alias, barrels, the clean→check→build pipeline, and (monorepo) project references + turbo               |
+| Topic                                                                               | When to read                                                                                                |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [Coding standards](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/standards.md) | The always-on baseline: naming, import ordering, strict type safety, named functions, parameter conventions |
+| [Vitest](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/vitest.md)              | Writing/running tests: the shared config, _testUtils, v8 coverage, run wrappers                             |
+| [Build pipeline](${CLAUDE_PLUGIN_ROOT}/skills/typescript/references/build.md)       | The @/ path alias, barrels, the clean→check→build pipeline, and (monorepo) project references + turbo       |
 
 For `package.json`, pnpm workspace, and `tsconfig` standards, see the
 **package-json**, **pnpm**, and **tsconfig** skills. For the lint/format gate
 that must pass before commit, see the **lint-format** skill.
+
+**Effect-TS doctrine is not here.** It lives in the separate **effect** plugin,
+which depends on this one — so plain TypeScript gets these standards without
+Effect's, and an Effect project gets both. If the code under test returns an
+`Effect`, read that plugin's testing reference alongside the Vitest one above:
+the runner is the same, only the assertions differ.

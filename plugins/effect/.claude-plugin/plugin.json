@@ -1,0 +1,10 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "dependencies": [
+    {
+      "marketplace": "virajp-plugins",
+      "name": "typescript"
+    }
+  ],
+  "name": "effect"
+}

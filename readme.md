@@ -405,19 +405,19 @@ they never merge because they never overlap:
 
 Project-axis templates:
 
-| Role        | Template ships today         | Stack                                          |
-| ----------- | ---------------------------- | ---------------------------------------------- |
-| `packages`  | `typescript-effect`          | TypeScript · Effect-TS                         |
-| `service`   | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                  |
-| `worker`    | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS              |
-| `site`      | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
-| `fullstack` | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend`  | `dart-flutter`               | Dart · Flutter                                 |
-| `frontend`  | `kotlin-android`             | Kotlin · Jetpack Compose                       |
-| `frontend`  | `swift-ios`                  | Swift · SwiftUI                                |
-| `frontend`  | `typescript-effect-cli`      | TypeScript · @effect/cli — platform `cli`      |
-| `infra`     | `typescript-pulumi`          | TypeScript · Pulumi                            |
-| `infra`     | `terraform`                  | Terraform / OpenTofu                           |
+| Role        | Template ships today         | Stack                                             |
+| ----------- | ---------------------------- | ------------------------------------------------- |
+| `packages`  | `typescript-effect`          | TypeScript · Effect-TS — from the `effect` plugin |
+| `service`   | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                     |
+| `worker`    | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS                 |
+| `site`      | `typescript-astro-react`     | TypeScript · Astro (SSR) · React                  |
+| `fullstack` | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine    |
+| `frontend`  | `dart-flutter`               | Dart · Flutter                                    |
+| `frontend`  | `kotlin-android`             | Kotlin · Jetpack Compose                          |
+| `frontend`  | `swift-ios`                  | Swift · SwiftUI                                   |
+| `frontend`  | `typescript-effect-cli`      | TypeScript · @effect/cli — platform `cli`         |
+| `infra`     | `typescript-pulumi`          | TypeScript · Pulumi                               |
+| `infra`     | `terraform`                  | Terraform / OpenTofu                              |
 
 **Why the split matters.** The same Hono + Effect service runs against Firebase
 or Postgres, on Cloud Run or any container host. Before format 19 all three were
@@ -1332,19 +1332,20 @@ The marketplace ships additional plugins — opinionated coding-standard skills
 and language servers. Most auto-apply by file path; install only the ones for
 your stack. Each has a dedicated guide:
 
-| Plugin                                                                             | What it provides                                                                                                                                                                                   | Install                                     |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` skill that documents a repo's README                                                                 | `--user markdown`                           |
-| **[typescript](./docs/typescript.md)**                                             | Effect-TS coding standards — a `typescript` router skill (+ effect/effect-runtime/vitest/build references) plus package-json/pnpm/tsconfig/lint-format + the TypeScript/JavaScript language server | `--user typescript`                         |
-| **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped**                          | `--project flutter`                         |
-| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                         | `--user mise`                               |
-| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` skill — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                     | `--user github-actions`                     |
-| **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                        | `--user context7`                           |
-| **[claude-design](./docs/claude-design.md)**                                       | Claude Design MCP server + vwf design-adapter skills — the **default** design adapter                                                                                                              | `--user claude-design`                      |
-| **lovable**                                                                        | vwf design adapter for Lovable (opt-in — set `design.tool: lovable`)                                                                                                                               | `--user lovable`                            |
-| **stitch**                                                                         | vwf design adapter for Google Stitch (opt-in — set `design.tool: stitch`)                                                                                                                          | `--user stitch`                             |
-| **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                               | `--user mempalace`                          |
-| **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                             | `--user`/`--project andrej-karpathy-skills` |
+| Plugin                                                                             | What it provides                                                                                                                                                                              | Install                                     |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` skill that documents a repo's README                                                            | `--user markdown`                           |
+| **[typescript](./docs/typescript.md)**                                             | Plain TypeScript coding standards — a `typescript` router skill (+ standards/vitest/build references) plus package-json/pnpm/tsconfig/lint-format + the TypeScript/JavaScript language server | `--user typescript`                         |
+| **[effect](./docs/effect.md)**                                                     | Effect-TS doctrine — an `effect` router skill (+ effect/effect-runtime/testing references) and the `packages` vwf stack template (opt-in; requires `typescript`)                              | `--user effect`                             |
+| **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped**                     | `--project flutter`                         |
+| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                    | `--user mise`                               |
+| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` skill — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                | `--user github-actions`                     |
+| **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                   | `--user context7`                           |
+| **[claude-design](./docs/claude-design.md)**                                       | Claude Design MCP server + vwf design-adapter skills — the **default** design adapter                                                                                                         | `--user claude-design`                      |
+| **lovable**                                                                        | vwf design adapter for Lovable (opt-in — set `design.tool: lovable`)                                                                                                                          | `--user lovable`                            |
+| **stitch**                                                                         | vwf design adapter for Google Stitch (opt-in — set `design.tool: stitch`)                                                                                                                     | `--user stitch`                             |
+| **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                          | `--user mempalace`                          |
+| **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                        | `--user`/`--project andrej-karpathy-skills` |
 
 ```sh
 pnpx @askviraj/ai-plugins --user typescript --user markdown

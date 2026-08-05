@@ -117,6 +117,7 @@ const PLUGINS = [
   "lovable",
   "stitch",
   "gcp",
+  "effect",
   "andrej-karpathy-skills",
 ];
 
@@ -143,7 +144,13 @@ const USER_ONLY = new Set(["mempalace"]);
 // vwf STACK adapters (gcp) are opt-in for the same reason: a product names the
 // stack plugins it uses in `stacks:`, and GCP knowledge is noise to a product
 // running anywhere else.
-const OPT_IN = new Set(["andrej-karpathy-skills", "lovable", "stitch", "gcp"]);
+const OPT_IN = new Set([
+  "andrej-karpathy-skills",
+  "lovable",
+  "stitch",
+  "gcp",
+  "effect",
+]);
 
 // --all only acts on the user-scoped set: every plugin that is neither
 // project-scoped nor opt-in. Project-scoped and opt-in plugins are deliberate
@@ -181,6 +188,7 @@ const CORE_DEPS = ["claude"];
 // (plugins:check asserts the sync). Claude Code auto-installs these itself;
 // the OpenCode target expands them explicitly at plan time.
 const PLUGIN_DEPS = {
+  effect: ["typescript"],
   vwf: [
     "context7",
     "github-actions",
@@ -197,6 +205,7 @@ const PLUGIN_DEPS = {
 const PLUGIN_EXTRA_DEPS = {
   vwf: ["rtk", "graphify", "mise", "pnpm", "uv"],
   typescript: ["mise", "pnpm"],
+  effect: ["mise", "pnpm"], // via its typescript dependency
   stitch: ["pnpm"],
   context7: ["pnpm"],
   flutter: ["mise", "kotlin-lsp", "sourcekit-lsp"],

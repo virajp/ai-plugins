@@ -63,7 +63,7 @@ Each role has one or more templates under
 
 | Role        | Template                                                                                                       | Stack                                          |
 | ----------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `packages`  | [typescript-effect](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/packages/typescript-effect.md)                 | TypeScript · Effect-TS                         |
+| `packages`  | `typescript-effect` — in the **effect** plugin                                                                 | TypeScript · Effect-TS                         |
 | `service`   | [typescript-effect-hono](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/service/typescript-effect-hono.md)        | TypeScript · Hono · Effect-TS                  |
 | `worker`    | [typescript-effect-temporal](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
 | `site`      | [typescript-astro-react](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
