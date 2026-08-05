@@ -1,0 +1,53 @@
+name: typescript
+version: 1.0.0
+description: "Opinionated plain-TypeScript plugin — a `typescript` router skill
+  (lean SKILL.md routing to on-demand references: the coding standards baseline,
+  Vitest testing, the build pipeline for single-package and monorepo) plus
+  `package-json`, `pnpm`, `tsconfig`, and `lint-format`, and the
+  TypeScript/JavaScript language server. Effect-TS doctrine lives in the
+  separate `effect` plugin, which depends on this one."
+category: development
+tags:
+  - typescript
+  - javascript
+  - pnpm
+  - tsconfig
+  - monorepo
+  - build
+  - vitest
+  - testing
+  - skills
+  - language-server
+  - lsp
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+requires:
+  - mise
+  - pnpm
+lspServers:
+  typescript-lsp:
+    command: mise
+    args:
+      - x
+      - --
+      - pnpm
+      - --package=typescript
+      - --package=typescript-language-server
+      - dlx
+      - typescript-language-server
+      - --stdio
+    extensions:
+      .cjs: javascript
+      .cts: typescript
+      .js: javascript
+      .jsx: javascriptreact
+      .mjs: javascript
+      .mts: typescript
+      .ts: typescript
+      .tsx: typescriptreact
+    startupTimeout: 60000
+    idAliases:
+      opencode: typescript

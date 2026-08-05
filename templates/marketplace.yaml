@@ -1,0 +1,6 @@
+name: virajp-plugins
+displayName: Viraj Patel's Plugins
+description: Opinionated Plugins for Claude Code & Antigravity
+owner:
+  name: Viraj Patel
+forceRemoveDeletedPlugins: true

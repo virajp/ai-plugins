@@ -1,0 +1,30 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "lspServers": {
+    "typescript-lsp": {
+      "args": [
+        "x",
+        "--",
+        "pnpm",
+        "--package=typescript",
+        "--package=typescript-language-server",
+        "dlx",
+        "typescript-language-server",
+        "--stdio"
+      ],
+      "command": "mise",
+      "extensionToLanguage": {
+        ".cjs": "javascript",
+        ".cts": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".mts": "typescript",
+        ".ts": "typescript",
+        ".tsx": "typescriptreact"
+      },
+      "startupTimeout": 60000
+    }
+  },
+  "name": "typescript"
+}

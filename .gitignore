@@ -25,3 +25,11 @@ graphify-out/
 # Node / CLI
 # ============================================================
 node_modules/
+
+# TypeScript build artifacts. Note the name collision: the ROOT dist/ is the
+# rendered plugin output and IS committed — these per-package dist/ dirs are
+# compiler output and are not.
+schema/dist/
+build/dist/
+cli/dist/
+*.tsbuildinfo

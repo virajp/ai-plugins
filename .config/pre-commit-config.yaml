@@ -75,6 +75,10 @@ repos:
       - id: linter
         name: Linter
         entry: mise x -- pnpm dlx @askviraj/linter --fix
+        # dist/ is rendered output. pre-commit passes staged paths explicitly,
+        # and the linter warns on each one it is configured to ignore — enough
+        # warnings to fail the run. Keep them out of the argument list entirely.
+        exclude: ^dist/
         language: system
         stages: [ pre-commit ]
 

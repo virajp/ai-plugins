@@ -1,0 +1,48 @@
+# Conformance example (blueprint-format 19) — the machine-readable registry.
+#
+# Every downstream command parses THIS file; architecture.md is the prose view
+# and is omitted from this bundle for brevity. Note what is absent: there is no
+# `stack` key anywhere. The concrete technology lives in `.config/vwf.yaml`
+# under `projects.<name>.stack`, which no blueprint-authoring or reviewing
+# surface reads — which is why no doc in this bundle names a database, cloud,
+# framework, or vendor, and why doing so would be a reviewer failure rather
+# than a matter of taste.
+
+vwf_registry: 1
+
+# Each project carries exactly ONE `role`. `web` is a `site` (UI only, calls
+# the api project); a project publishing its own API alongside a UI would be
+# `fullstack`, which is also what an operator back-office is — `fullstack` plus
+# the `operator-rbac` capability (format 19 dissolved the old `console` type).
+
+projects:
+  - name: web
+    role: site
+    path: apps/web
+    capabilities: [ ssr, seo ]
+    depends_on: [ api ]
+    doc_unit: page
+    platforms: [ web ]
+
+  - name: api
+    role: service
+    path: services/api
+    capabilities: [ relational-datastore, payments-subscriptions, audit-log ]
+    depends_on: []
+    doc_unit: entity
+
+  - name: worker
+    role: worker
+    path: services/worker
+    capabilities: [ scheduled-jobs, message-queue, email ]
+    depends_on: [ api ]
+    doc_unit: entity
+
+cross_cutting:
+  auth: session-cookie
+  errors: coded-envelope
+  observability: opentelemetry
+  config: env-vars
+  testing: unit-integration
+  integrations: [ payment-provider, email-provider ]
+  audit: privileged-destructive

@@ -1,0 +1,77 @@
+name: flutter
+version: 0.7.0
+description: "Opinionated Flutter plugin — a `dart` router skill (lean SKILL.md
+  routing to on-demand references: GetX, a Firebase suite of
+  auth/analytics/app-check/crashlytics/messaging/storage, and feature areas of
+  architecture, state, navigation, theming, layouts, animations, performance,
+  maps, webview, webrtc, revenuecat, image handling, http/json, concurrency,
+  caching, testing, flavors, app-size, coverage, build) and a `swift` router
+  skill (Swift, SwiftUI, Xcode), plus `kotlin`, `pubspec`, `analysis-options`,
+  and `internationalization`, and bundled Dart, Kotlin & Swift (SourceKit)
+  language servers. Self-contained — no cross-marketplace dependencies."
+category: development
+tags:
+  - flutter
+  - dart
+  - getx
+  - firebase
+  - swift
+  - swiftui
+  - xcode
+  - kotlin
+  - i18n
+  - testing
+  - mobile
+  - skills
+  - language-server
+  - lsp
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+scope: project
+requires:
+  - mise
+  - kotlin-lsp
+  - sourcekit-lsp
+lspServers:
+  dart-lsp:
+    command: mise
+    args:
+      - x
+      - flutter@latest
+      - --
+      - dart
+      - language-server
+      - --protocol=lsp
+    extensions:
+      .dart: dart
+    startupTimeout: 60000
+    idAliases:
+      opencode: dart
+  kotlin-lsp:
+    command: mise
+    args:
+      - x
+      - kotlin@latest
+      - --
+      - kotlin-lsp
+      - --stdio
+    extensions:
+      .kt: kotlin
+      .kts: kotlin
+    startupTimeout: 60000
+    idAliases:
+      opencode: kotlin-ls
+  sourcekit-lsp:
+    command: mise
+    args:
+      - x
+      - --
+      - sourcekit-lsp
+    extensions:
+      .swift: swift
+    startupTimeout: 1000
+    idAliases:
+      opencode: sourcekit-lsp

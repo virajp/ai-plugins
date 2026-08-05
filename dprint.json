@@ -5,7 +5,8 @@
   "excludes": [
     "**/node_modules/",
     "**/dist/",
-    "**/build/",
+    "*/build/",
+    "templates/**/*.md",
     "**/.astro/",
     "**/.turbo/",
     "**/*-lock.json",

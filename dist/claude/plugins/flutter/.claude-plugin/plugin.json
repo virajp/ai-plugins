@@ -1,0 +1,48 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "lspServers": {
+    "dart-lsp": {
+      "args": [
+        "x",
+        "flutter@latest",
+        "--",
+        "dart",
+        "language-server",
+        "--protocol=lsp"
+      ],
+      "command": "mise",
+      "extensionToLanguage": {
+        ".dart": "dart"
+      },
+      "startupTimeout": 60000
+    },
+    "kotlin-lsp": {
+      "args": [
+        "x",
+        "kotlin@latest",
+        "--",
+        "kotlin-lsp",
+        "--stdio"
+      ],
+      "command": "mise",
+      "extensionToLanguage": {
+        ".kt": "kotlin",
+        ".kts": "kotlin"
+      },
+      "startupTimeout": 60000
+    },
+    "sourcekit-lsp": {
+      "args": [
+        "x",
+        "--",
+        "sourcekit-lsp"
+      ],
+      "command": "mise",
+      "extensionToLanguage": {
+        ".swift": "swift"
+      },
+      "startupTimeout": 1000
+    }
+  },
+  "name": "flutter"
+}

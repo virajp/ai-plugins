@@ -6,11 +6,16 @@ version: 1
 
 ignores:
   - "**/archived/**"
+  # Rendered output. Generated from templates/ and committed; linting it would
+  # report every finding twice and, worse, invite fixes in the wrong tree.
+  - "dist/**"
   # vwf blueprint templates + example bundle carry OKF frontmatter (a `title`)
   # alongside a body H1; the linter counts the frontmatter title as an H1, so
   # exclude these template/example docs from markdown linting.
   - "plugins/vwf/assets/templates/**"
   - "plugins/vwf/assets/examples/**"
+  - "templates/vwf/assets/templates/**"
+  - "templates/vwf/assets/examples/**"
 
 overrides:
   markdown:

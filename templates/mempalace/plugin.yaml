@@ -1,0 +1,12 @@
+name: mempalace
+description: AI memory system — mine projects and conversations into a
+  searchable palace. 33 MCP tools, auto-save hooks, guided setup.
+category: development
+homepage: https://github.com/MemPalace/mempalace.git
+source:
+  kind: url
+  url: https://github.com/MemPalace/mempalace.git
+userOnly: true
+requires:
+  - uv
+  - mise

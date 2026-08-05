@@ -1,0 +1,29 @@
+name: gcp
+version: 0.1.0
+description: "Google Cloud stack plugin for vwf — the judgment layer an SDK
+  reference cannot give you: which service to pick and when it stops being the
+  answer, how each one bills and the traps that multiply it, which services have
+  local emulators (and where they lie), and least-privilege IAM shapes. Covers
+  the full Firebase suite plus Cloud SQL, AlloyDB, Memorystore, Bigtable,
+  BigQuery, Pub/Sub, Cloud Tasks, Scheduler, Eventarc, Workflows, Cloud Storage,
+  Cloud Run, GKE, Artifact Registry, Cloud Deploy, Cloud Armor, VPC, DNS, Load
+  Balancing, CDN, KMS, Backup & DR, reCAPTCHA Enterprise and Vertex AI.
+  Observability is OpenTelemetry only — GCP services appear as OTLP sinks, never
+  as vendor SDKs. Implements the vwf stack-adapter contract."
+category: development
+tags:
+  - gcp
+  - google-cloud
+  - firebase
+  - cloud-run
+  - gke
+  - cost
+  - iam
+  - emulators
+  - vwf-stack-adapter
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+optIn: true
