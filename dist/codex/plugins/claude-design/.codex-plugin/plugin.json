@@ -1,0 +1,15 @@
+{
+  "name": "claude-design",
+  "version": "0.1.0",
+  "description": "Claude Design MCP server plus the vwf design-adapter skills (import-screens, import-design-system) — connects the agent to claude.ai/design (https://api.anthropic.com/v1/design/mcp).",
+  "author": {
+    "name": "Viraj Patel"
+  },
+  "keywords": [
+    "claude-design",
+    "mcp",
+    "design",
+    "mockups",
+    "vwf-design-adapter"
+  ]
+}

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="List outdated Python packages"
+#MISE hide=true
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+print_header "Checking for outdated packages ..."
+uv pip list --outdated || true

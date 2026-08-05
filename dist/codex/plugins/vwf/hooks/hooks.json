@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "async": false,
+            "command": "%%AI_PLUGINS_ROOT%%/hooks/npm-normalize.sh",
+            "timeout": 5,
+            "type": "command"
+          }
+        ],
+        "matcher": "shell"
+      },
+      {
+        "hooks": [
+          {
+            "command": "command -v rtk >/dev/null 2>&1 && rtk hook claude || true",
+            "type": "command"
+          }
+        ],
+        "matcher": "shell"
+      }
+    ]
+  }
+}

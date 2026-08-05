@@ -1,0 +1,30 @@
+{
+  "configSchema": "https://opencode.ai/config.json",
+  "name": "typescript",
+  "version": "1.0.0",
+  "lsp": {
+    "typescript": {
+      "command": [
+        "mise",
+        "x",
+        "--",
+        "pnpm",
+        "--package=typescript",
+        "--package=typescript-language-server",
+        "dlx",
+        "typescript-language-server",
+        "--stdio"
+      ],
+      "extensions": [
+        ".cjs",
+        ".cts",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".mts",
+        ".ts",
+        ".tsx"
+      ]
+    }
+  }
+}

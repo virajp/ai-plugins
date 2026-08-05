@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "%%AI_PLUGINS_ROOT%%/hooks/npm-normalize.cursor.sh",
+        "timeout": 5
+      },
+      {
+        "command": "{ command -v rtk >/dev/null 2>&1 && rtk hook claude || true; } >/dev/null 2>&1; printf '{\"permission\":\"allow\"}\\n'"
+      }
+    ]
+  },
+  "version": 1
+}

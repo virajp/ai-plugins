@@ -1,0 +1,46 @@
+{
+  "configSchema": "https://opencode.ai/config.json",
+  "name": "flutter",
+  "version": "0.7.0",
+  "lsp": {
+    "dart": {
+      "command": [
+        "mise",
+        "x",
+        "flutter@latest",
+        "--",
+        "dart",
+        "language-server",
+        "--protocol=lsp"
+      ],
+      "extensions": [
+        ".dart"
+      ]
+    },
+    "kotlin-ls": {
+      "command": [
+        "mise",
+        "x",
+        "kotlin@latest",
+        "--",
+        "kotlin-lsp",
+        "--stdio"
+      ],
+      "extensions": [
+        ".kt",
+        ".kts"
+      ]
+    },
+    "sourcekit-lsp": {
+      "command": [
+        "mise",
+        "x",
+        "--",
+        "sourcekit-lsp"
+      ],
+      "extensions": [
+        ".swift"
+      ]
+    }
+  }
+}

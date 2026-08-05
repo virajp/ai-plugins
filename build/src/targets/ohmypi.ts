@@ -1,0 +1,572 @@
+import {
+  agentFromFrontmatter,
+  CAPABILITIES,
+  frontmatter as fm,
+} from "@ai-plugins/schema";
+import type {
+  Hook,
+  LspServer,
+  Manifest,
+} from "@ai-plugins/schema";
+import { readFileSync } from "node:fs";
+import type {
+  PluginSource,
+  SkillSource,
+  Workspace,
+} from "../source.ts";
+import {
+  type Context,
+  type Emission,
+  type Gap,
+  type Output,
+  type Target,
+  bundledFiles,
+  renderDocument,
+  ROOT_TOKEN,
+  siblingRootToken,
+} from "../target.ts";
+
+/**
+ * Oh-My-Pi — a Claude-shaped bundle with its own frontmatter contract.
+ *
+ * The directory layout is almost Claude's (`skills/<name>/SKILL.md`,
+ * `agents/*.md`, `hooks/`, `.mcp.json`), which makes this the cheapest target
+ * to reach. What it does *not* share is the vocabulary: Oh-My-Pi explicitly
+ * refuses to read `.claude/agents`, so every agent has to be re-emitted under
+ * its own keys, and skills spell path scoping `globs` rather than `paths`.
+ *
+ * Three things genuinely do not carry, and each is reported rather than
+ * dropped: `globs` only rank retrieval instead of forcing selection, a hook
+ * cannot rewrite the tool input, and skill frontmatter has no model/effort or
+ * tool-allowlist field.
+ */
+export const ohmypi: Target = {
+  id: "ohmypi",
+  capabilities: CAPABILITIES.ohmypi,
+
+  render(workspace: Workspace): Emission {
+    const outputs: Output[] = [];
+    const gaps: Gap[] = [];
+
+    for (const plugin of workspace.plugins) {
+      if (plugin.manifest.source.kind !== "local") {
+        // Still catalogued below — an externally hosted plugin installs from
+        // its own repo, whose layout this build does not control.
+        gaps.push({
+          plugin: plugin.manifest.name,
+          capability: "marketplace",
+          detail:
+            "re-listed by URL, not rendered: the upstream repo ships Claude's "
+            + "bundle layout, so its agents and hook wiring reach Oh-My-Pi "
+            + "unconverted.",
+          severity: "degraded",
+        });
+        continue;
+      }
+      const emission = renderPlugin(plugin);
+      outputs.push(...emission.outputs);
+      gaps.push(...emission.gaps);
+    }
+
+    outputs.push({
+      path: ".omp-plugin/marketplace.json",
+      contents: marketplaceJson(workspace),
+    });
+
+    return { outputs, gaps };
+  },
+};
+
+/**
+ * Oh-My-Pi has no `${CLAUDE_PLUGIN_ROOT}` equivalent, so both roots resolve to
+ * the shared install-time tokens. `cmd` keeps Claude's `/<plugin>:<skill>`
+ * spelling: a skill is the slash surface here too, and 54 descriptions name a
+ * sibling command, so the spelling has to be one users can actually type.
+ */
+function contextFor(): Context {
+  return {
+    root: ROOT_TOKEN,
+    pluginRoot: siblingRootToken,
+    // Bare name, not `/<plugin>:<skill>`. That spelling is Claude's plugin
+    // namespacing; Oh-My-Pi discovers skills from every provider into ONE flat
+    // namespace and dedups by name, so a `vwf:` prefix resolves to nothing.
+    // Cross-plugin skill names are already unique (the checker enforces it).
+    cmd: ref => `/${ref.slice(ref.indexOf(":") + 1)}`,
+    target: { id: "ohmypi", caps: CAPABILITIES.ohmypi },
+  };
+}
+
+function renderPlugin(plugin: PluginSource): Emission {
+  const base = plugin.manifest.name;
+  const context = contextFor();
+  const outputs: Output[] = [];
+
+  for (const skill of plugin.skills) {
+    outputs.push({
+      path: `${base}/${skill.path}`,
+      contents: fm.emit(
+        toOhMyPiSkill(renderDocument(
+          readFileSync(`${plugin.root}/${skill.path}`, "utf8"),
+          context,
+        )),
+      ),
+    });
+    outputs.push(...bundledFiles(skill.extras, base, context));
+  }
+
+  for (const agent of plugin.agents) {
+    outputs.push({
+      path: `${base}/${agent.path}`,
+      contents: fm.emit(
+        toOhMyPiAgent(renderDocument(
+          readFileSync(`${plugin.root}/${agent.path}`, "utf8"),
+          context,
+        )),
+      ),
+    });
+  }
+
+  outputs.push(...bundledFiles(plugin.files, base, context));
+
+  if (Object.keys(plugin.manifest.mcpServers).length > 0) {
+    outputs.push({
+      path: `${base}/.mcp.json`,
+      contents: mcpJson(plugin.manifest),
+    });
+  }
+
+  if (Object.keys(plugin.manifest.lspServers).length > 0) {
+    outputs.push({
+      path: `${base}/.lsp.json`,
+      contents: lspJson(plugin.manifest),
+    });
+  }
+
+  const hooks = plugin.hooks.filter(h => !h.skipTargets.includes("ohmypi"));
+  const wired = hooks.filter(h => EVENTS[h.event] !== undefined);
+  for (const hook of wired) {
+    outputs.push({
+      path: `${base}/hooks/${hook.id}.ts`,
+      contents: hookExtension(plugin, hook),
+    });
+  }
+  if (wired.length > 0) {
+    // The bundle's package.json exists only to point at the extensions; there
+    // is nothing else in the neutral manifest Oh-My-Pi reads from it.
+    outputs.push({
+      path: `${base}/package.json`,
+      contents: packageJson(plugin.manifest, wired),
+    });
+  }
+
+  return { outputs, gaps: gapsFor(plugin, hooks) };
+}
+
+// ---------------------------------------------------------------------------
+// Skills
+// ---------------------------------------------------------------------------
+
+/**
+ * Neutral skill frontmatter → Oh-My-Pi's spelling.
+ *
+ * Key *position* is preserved the way `claude.ts` preserves it — a rename in
+ * place keeps the emitted order close to the authored file, so a reviewer
+ * diffing two targets sees the vocabulary change and nothing else.
+ *
+ * The three-valued `invocation` splits back into the two independent booleans
+ * every client encodes it with: `disableModelInvocation` hides it from the
+ * model, `hide` takes it off the slash menu.
+ */
+function toOhMyPiSkill(doc: fm.Document): fm.Document {
+  let out = doc;
+
+  if (fm.get(doc, "paths") !== undefined) {
+    out = fm.rename(out, "paths", "globs");
+    // Explicit rather than implied: `globs` without `alwaysApply` would leave
+    // "load everywhere" one default-change away from being the behaviour.
+    out = fm.set(out, "alwaysApply", " false");
+  }
+
+  switch (readInvocation(doc)) {
+    case "model":
+      out = fm.rename(out, "invocation", "hide");
+      out = fm.set(out, "hide", " true");
+      break;
+    case "user":
+      out = fm.rename(out, "invocation", "disableModelInvocation");
+      out = fm.set(out, "disableModelInvocation", " true");
+      break;
+    case "both":
+      out = fm.omit(out, "invocation");
+      break;
+  }
+
+  // Everything Oh-My-Pi's skill frontmatter has no field for. Left in place
+  // these are inert at best, and a strict parser rejects the whole document —
+  // the loss each one represents is reported as a gap instead.
+  return fm.omit(
+    out,
+    "version",
+    "category",
+    "license",
+    "argumentHint",
+    "model",
+    "effort",
+    "tools",
+  );
+}
+
+/**
+ * `invocation` off the *rendered* document.
+ *
+ * `skillFromFrontmatter` would do this, but it also re-validates `name` and
+ * `description`, and the rendered body is not what those were authored as. The
+ * one key that matters here is unambiguous on its own.
+ */
+function readInvocation(doc: fm.Document): "model" | "user" | "both" {
+  const raw = fm.scalar(doc, "invocation");
+  return raw === "model" || raw === "user" ? raw : "both";
+}
+
+// ---------------------------------------------------------------------------
+// Agents
+// ---------------------------------------------------------------------------
+
+/**
+ * Neutral agent frontmatter → Oh-My-Pi's contract.
+ *
+ * `tools` is the one value that cannot pass through verbatim: the authored form
+ * is a comma-separated scalar and Oh-My-Pi wants a sequence, so it is
+ * re-encoded from the semantic view. JSON quoting is used deliberately — it is
+ * valid YAML flow syntax and it survives the `mcp__plugin_*` tool names
+ * unescaped.
+ */
+function toOhMyPiAgent(doc: fm.Document): fm.Document {
+  const meta = agentFromFrontmatter(doc);
+  let out = doc;
+
+  if (meta.tools !== undefined) {
+    out = fm.set(out, "tools", ` ${JSON.stringify(meta.tools)}`);
+  }
+  if (meta.model !== undefined) {
+    // Oh-My-Pi takes a preference list, not a single id.
+    out = fm.set(out, "model", ` ${JSON.stringify([meta.model])}`);
+  }
+  out = fm.rename(out, "effort", "thinkingLevel");
+
+  // Oh-My-Pi grants delegation through `spawns`, and its default is not
+  // "nothing" — every agent here is a leaf the skills invoke directly and none
+  // delegates onward, so the empty list is the accurate declaration.
+  return fm.set(out, "spawns", " []");
+}
+
+// ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
+
+/** Neutral event → Oh-My-Pi's extension event. Unmapped events cannot ship. */
+const EVENTS: Partial<Record<Hook["event"], string>> = {
+  preToolUse: "tool_call",
+};
+
+/**
+ * One hook → one Oh-My-Pi extension module.
+ *
+ * The authored scripts speak Claude's payload shape (they read
+ * `.tool_input.command` and answer with `hookSpecificOutput`), so the wrapper
+ * — not the script — is what learns Oh-My-Pi. That is the split `hooks.yaml`
+ * asks for: the script stays one implementation, the renderer pays per target.
+ *
+ * A `rewrite` degrades here, because `{block, reason}` carries no input. The
+ * script still decides, and its decision becomes a block plus the authored
+ * correction: the wrong command never runs, the model reissues it, and the
+ * guarantee costs a turn instead of being lost.
+ */
+function hookExtension(plugin: PluginSource, hook: Hook): string {
+  const event = EVENTS[hook.event];
+  const observe = hook.action === "observe";
+  const timeout = hook.timeout === undefined
+    ? ""
+    : `, timeout: ${hook.timeout * 1000}`;
+
+  const runner = hook.script === undefined
+    ? {
+      importee: "execSync",
+      target: `const COMMAND = ${q(hook.command ?? "")};`,
+      call: `execSync(COMMAND, { input: payload, encoding: "utf8"${timeout} })`,
+    }
+    : {
+      importee: "execFileSync",
+      target: `const SCRIPT = ${q(`${ROOT_TOKEN}/hooks/${hook.script}`)};`,
+      call:
+        `execFileSync(SCRIPT, [], { input: payload, encoding: "utf8"${timeout} })`,
+    };
+
+  const guard = hook.matcher === undefined
+    ? ""
+    : `    if (tool !== ${q(hook.matcher)}) {\n      return;\n    }\n`;
+
+  // An `observe` hook has no verdict to read, so it neither captures stdout nor
+  // returns — a stray `return {}` there would look like a decision.
+  const verdict = observe ? [] : [
+    ``,
+    `    // A verdict at all means the script wants this call stopped. Oh-My-Pi`,
+    `    // cannot apply the fix, so it hands the model the reason instead.`,
+    `    if (out.trim() === "" || out.trim() === "{}") {`,
+    `      return;`,
+    `    }`,
+    `    return { block: true, reason: REASON };`,
+  ];
+
+  return [
+    `// Generated by @ai-plugins/build from ${plugin.manifest.name}/hooks/hooks.yaml.`,
+    `// Edit the hook there, not this file.`,
+    ``,
+    `import { ${runner.importee} } from "node:child_process";`,
+    ``,
+    runner.target,
+    observe ? null : `const REASON = ${q(reasonFor(hook))};`,
+    ``,
+    `export default function (pi) {`,
+    `  pi.on(${q(event ?? "tool_call")}, async event => {`,
+    `    // Both spellings are accepted so a payload rename upstream degrades`,
+    `    // to a no-op rather than a crash on every tool call.`,
+    `    const tool = event.tool ?? event.tool_name;`,
+    guard === "" ? null : guard.replace(/\n$/, ""),
+    `    const payload = JSON.stringify({`,
+    `      tool_name: tool,`,
+    `      tool_input: event.input ?? event.tool_input ?? {},`,
+    `    });`,
+    ``,
+    observe ? null : `    let out = "";`,
+    `    try {`,
+    `      ${observe ? "" : "out = "}${runner.call};`,
+    `    }`,
+    `    catch {`,
+    `      // A hook that cannot run must not take the tool call down with it.`,
+    `      return;`,
+    `    }`,
+    ...verdict,
+    `  });`,
+    `}`,
+    ``,
+  ]
+    .filter(line => line !== null)
+    .join("\n");
+}
+
+/** What the model is told when a blocked call needs reissuing. */
+function reasonFor(hook: Hook): string {
+  return hook.correction
+    ?? `Blocked by the ${hook.id} hook.`;
+}
+
+function packageJson(manifest: Manifest, hooks: readonly Hook[]): string {
+  return json({
+    name: manifest.name,
+    omp: { extensions: hooks.map(h => `./hooks/${h.id}.ts`) },
+    private: true,
+    ...(manifest.version ? { version: manifest.version } : {}),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Servers
+// ---------------------------------------------------------------------------
+
+function mcpJson(manifest: Manifest): string {
+  return json({
+    mcpServers: Object.fromEntries(
+      Object.entries(manifest.mcpServers).map(([id, s]) => [
+        id,
+        s.transport === "http"
+          ? {
+            type: "http",
+            url: s.url,
+            ...(s.headers ? { headers: s.headers } : {}),
+          }
+          // `type` omitted: stdio is Oh-My-Pi's default and the shorter entry
+          // is the one its own docs show.
+          : {
+            args: s.args,
+            command: s.command,
+            ...(s.env ? { env: s.env } : {}),
+          },
+      ]),
+    ),
+  });
+}
+
+function lspJson(manifest: Manifest): string {
+  return json({
+    servers: Object.fromEntries(
+      Object.entries(manifest.lspServers).map(([id, s]) => [
+        // `idAliases` exists because clients key LSP config by their own
+        // built-in server ids; honour an Oh-My-Pi entry if one is ever authored.
+        s.idAliases?.["ohmypi"] ?? id,
+        lspServer(s),
+      ]),
+    ),
+  });
+}
+
+function lspServer(server: LspServer): Record<string, unknown> {
+  return {
+    args: server.args,
+    command: server.command,
+    // The neutral `extensions` map is extension → language id; Oh-My-Pi routes
+    // on the extension alone, and the keys already carry the leading dot.
+    fileTypes: Object.keys(server.extensions).sort(),
+    // `.git` is the only marker the neutral manifest can justify. A per-language
+    // one (`pubspec.yaml`, `package.json`) is not recorded anywhere, and
+    // guessing it would silently narrow where the server starts.
+    rootMarkers: [".git"],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Marketplace
+// ---------------------------------------------------------------------------
+
+function marketplaceJson(workspace: Workspace): string {
+  const plugins = workspace.plugins.map(plugin => {
+    const m = plugin.manifest;
+    const entry: Record<string, unknown> = {
+      category: m.category,
+      description: m.description ?? m.name,
+      name: m.name,
+      source: m.source.kind === "local"
+        ? `./dist/ohmypi/${m.name}`
+        : m.source.url,
+    };
+    if (m.homepage) {
+      entry["homepage"] = m.homepage;
+    }
+    return sortKeys(entry);
+  });
+
+  return json({
+    metadata: {
+      ...(workspace.marketplace.description
+        ? { description: workspace.marketplace.description }
+        : {}),
+    },
+    name: workspace.marketplace.name,
+    owner: workspace.marketplace.owner,
+    plugins,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Gaps
+// ---------------------------------------------------------------------------
+
+function gapsFor(plugin: PluginSource, hooks: readonly Hook[]): Gap[] {
+  const gaps: Gap[] = [];
+  const name = plugin.manifest.name;
+  const named = (pick: (s: SkillSource) => boolean) =>
+    plugin.skills.filter(pick).map(s => s.meta.name);
+
+  // One gap per capability per plugin, not per skill: a coverage report listing
+  // the same sentence 20 times is one nobody reads to the end.
+  const scoped = named(s => s.meta.paths !== undefined);
+  if (scoped.length > 0) {
+    gaps.push({
+      plugin: name,
+      capability: "pathScopedSkills",
+      detail:
+        `globs are advisory in Oh-My-Pi — they rank retrieval, they do not `
+        + `force selection. ${list(scoped)} may not load when the files they `
+        + `govern are edited.`,
+      severity: "degraded",
+    });
+  }
+
+  const hinted = named(s => s.meta.argumentHint !== undefined);
+  if (hinted.length > 0) {
+    gaps.push({
+      plugin: name,
+      capability: "commandArguments",
+      detail: `arguments still interpolate, but skill frontmatter has no `
+        + `argumentHint field, so the usage hint on ${list(hinted)} is not `
+        + `shown at the prompt.`,
+      severity: "degraded",
+    });
+  }
+
+  const pinned = named(s =>
+    s.meta.model !== undefined || s.meta.effort !== undefined
+  );
+  if (pinned.length > 0) {
+    gaps.push({
+      plugin: name,
+      capability: "skillModelPin",
+      detail: `Oh-My-Pi pins a model per agent, not per skill: the pin on `
+        + `${list(pinned)} is not honoured, and those skills run on whatever `
+        + `model the session already holds.`,
+      severity: "dropped",
+    });
+  }
+
+  const restricted = named(s => s.meta.tools !== undefined);
+  if (restricted.length > 0) {
+    gaps.push({
+      plugin: name,
+      capability: "skillToolAllowlist",
+      detail:
+        `skill frontmatter carries no tool allowlist, so the restriction on `
+        + `${list(restricted)} is not enforced and those skills see the `
+        + `session's full tool set. Agents keep theirs.`,
+      severity: "dropped",
+    });
+  }
+
+  for (const hook of hooks) {
+    if (EVENTS[hook.event] === undefined) {
+      gaps.push({
+        plugin: name,
+        capability: "hooks",
+        detail:
+          `the ${hook.id} hook fires on ${hook.event}, which has no Oh-My-Pi `
+          + `extension event; it does not ship.`,
+        severity: "dropped",
+      });
+      continue;
+    }
+    if (hook.action === "rewrite") {
+      gaps.push({
+        plugin: name,
+        capability: "hookRewrite",
+        detail: `the ${hook.id} hook rewrites the tool input, which a `
+          + `{block, reason} result cannot do. It blocks instead and returns `
+          + `the correction, so the model reissues the command itself.`,
+        severity: "degraded",
+      });
+    }
+  }
+
+  return gaps;
+}
+
+function list(names: readonly string[]): string {
+  return names.map(n => `\`${n}\``).join(", ");
+}
+
+// ---------------------------------------------------------------------------
+// Encoding
+// ---------------------------------------------------------------------------
+
+/** Key-sorted, matching `claude.ts`, so diffs across targets stay reviewable. */
+function sortKeys(value: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1)),
+  );
+}
+
+function json(value: unknown): string {
+  return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function q(value: string): string {
+  return JSON.stringify(value);
+}

@@ -1,0 +1,18 @@
+{
+  "configSchema": "https://opencode.ai/config.json",
+  "name": "context7",
+  "version": "1.1.0",
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": [
+        "pnpm",
+        "dlx",
+        "@upstash/context7-mcp"
+      ],
+      "environment": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
+      }
+    }
+  }
+}

@@ -16,8 +16,18 @@ import type {
   Target,
 } from "./target.ts";
 import { claude } from "./targets/claude.ts";
+import { codex } from "./targets/codex.ts";
+import { cursor } from "./targets/cursor.ts";
+import { ohmypi } from "./targets/ohmypi.ts";
+import { opencode } from "./targets/opencode.ts";
 
-export const TARGETS: readonly Target[] = [claude];
+export const TARGETS: readonly Target[] = [
+  claude,
+  opencode,
+  cursor,
+  ohmypi,
+  codex,
+];
 
 export interface RenderResult {
   readonly target: TargetId;

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "context7": {
+      "args": [
+        "dlx",
+        "@upstash/context7-mcp"
+      ],
+      "command": "pnpm",
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
+      }
+    }
+  }
+}

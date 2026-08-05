@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+#MISE description="Bootstrap the project: toolchain, dependencies, pre-commit"
+#MISE depends=["init"]
+
+#USAGE flag "--clean" help="Clean build artifacts before installing"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+line_sep "="
+mise run setup:mise
+
+line_sep "="
+mise run setup:flutter
+
+if [[ "${usage_clean:-false}" == "true" ]]; then
+  line_sep "="
+  mise run setup:app:cleanup
+fi
+
+line_sep "="
+mise run setup:app:install
+
+line_sep "="
+mise run setup:precommit
+
+line_sep "="
+print_header "Setup complete!"

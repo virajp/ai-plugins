@@ -1,0 +1,52 @@
+{
+  "servers": {
+    "dart-lsp": {
+      "args": [
+        "x",
+        "flutter@latest",
+        "--",
+        "dart",
+        "language-server",
+        "--protocol=lsp"
+      ],
+      "command": "mise",
+      "fileTypes": [
+        ".dart"
+      ],
+      "rootMarkers": [
+        ".git"
+      ]
+    },
+    "kotlin-lsp": {
+      "args": [
+        "x",
+        "kotlin@latest",
+        "--",
+        "kotlin-lsp",
+        "--stdio"
+      ],
+      "command": "mise",
+      "fileTypes": [
+        ".kt",
+        ".kts"
+      ],
+      "rootMarkers": [
+        ".git"
+      ]
+    },
+    "sourcekit-lsp": {
+      "args": [
+        "x",
+        "--",
+        "sourcekit-lsp"
+      ],
+      "command": "mise",
+      "fileTypes": [
+        ".swift"
+      ],
+      "rootMarkers": [
+        ".git"
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "effect",
+  "version": "0.1.0",
+  "description": "Effect-TS doctrine, split from the typescript plugin so plain TypeScript need not carry it — writing effects (Effect.gen, Schema, Service, error handling, telemetry, the HTTP boundary), composing and running them (Layer, ManagedRuntime, Scope, Schedule, Stream, TestClock), and testing them (it.effect, test Layers, controlled time). Ships the shared-kernel `packages` stack template and implements the vwf stack-adapter contract. Requires the typescript plugin.",
+  "author": {
+    "name": "Viraj Patel"
+  },
+  "keywords": [
+    "effect",
+    "effect-ts",
+    "typescript",
+    "functional",
+    "testing",
+    "skills",
+    "vwf-stack-adapter"
+  ]
+}

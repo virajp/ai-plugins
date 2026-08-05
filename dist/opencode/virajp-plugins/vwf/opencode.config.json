@@ -1,0 +1,18 @@
+{
+  "configSchema": "https://opencode.ai/config.json",
+  "name": "vwf",
+  "version": "14.0.0",
+  "dependencies": [
+    "context7",
+    "github-actions",
+    "markdown",
+    "mempalace",
+    "mise"
+  ],
+  "mcp": {
+    "mempalace": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8765/mcp"
+    }
+  }
+}

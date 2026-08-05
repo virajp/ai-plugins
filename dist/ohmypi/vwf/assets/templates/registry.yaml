@@ -1,0 +1,52 @@
+# Project Registry — docs/blueprint/registry.yaml
+#
+# The machine-readable description of the system. `blueprint`, `plan`,
+# `execute`, `verify`, `screens`, and `mockups` parse THIS file; none of them
+# reads architecture.md, which is the prose view of the same facts.
+#
+# Typed by path (no frontmatter), like schema.yaml and the OpenAPI contracts.
+#
+# What is NOT here:
+#   - `stack` — the concrete technology per project lives in `.config/vwf.yaml`
+#     under `projects.<name>.stack`, selected from the template menu for the
+#     project's role (assets/stacks/). Keeping it out is what makes the
+#     blueprint structurally incapable of naming a vendor: no authoring or
+#     reviewing surface reads it.
+#   - enforcement opt-outs — vwf operating config, `.config/vwf.yaml`.
+#   - prose, rationale, or hosting narrative — architecture.md.
+
+vwf_registry: 1 # registry schema version
+
+projects:
+  - name: <project-name>
+    # Exactly ONE role per project. `site` is a UI that calls someone else's
+    # API; `fullstack` publishes its own API and therefore REQUIRES
+    # apis/<name>.openapi.yaml plus a health endpoint. SSR does not make a site
+    # fullstack. An operator back-office is `fullstack` plus the
+    # `operator-rbac` capability (there is no `console` role since format 19).
+    role: <service|worker|packages|site|fullstack|frontend|infra>
+    path: <repo-or-directory>
+    capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
+    depends_on: [ <project-name>, <...> ] # or []
+    doc_unit: <entity|page|module> # defaults by role
+    # UI roles only. `cli` is the terminal surface: no screens, so it takes no
+    # <platform>.md file (see assets/standard-flows.md).
+    platforms: [ <mobile|tablet|desktop|web|auto|cli>, <...> ]
+
+# System-wide concerns → the anchors blueprint expands in conventions.md.
+# One token per concern; include only the concerns the system actually has.
+cross_cutting:
+  auth: <selection> # e.g. provider-id-token, jwt, session-cookie, none
+  errors: <selection> # e.g. coded-envelope, http-status-only
+  observability: <selection> # e.g. opentelemetry, structured-json-logs, none
+  config: <selection> # e.g. env-vars, secrets-manager
+  testing: <selection> # e.g. unit-integration, none
+  integrations: [ <service-name>, <...> ] # external services, or []
+# foundation tokens (product-foundations) — present only when accepted:
+# audit: privileged-destructive
+# notifications: [ push, email ]
+# background: durable-worker-ephemeral-service
+# data-retention: gdpr-dpdpa
+# runtime_settings: cached-settings-doc
+# rate_limiting: endpoint-classes
+# changelog: keepachangelog-fastlane

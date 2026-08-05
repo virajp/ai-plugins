@@ -41,6 +41,23 @@ export interface Target {
 }
 
 /**
+ * Placeholder for a plugin's installed root, for targets with no runtime
+ * equivalent of `${CLAUDE_PLUGIN_ROOT}` — which is all of them except Claude.
+ *
+ * The absolute path is only known at install time, so the build emits this
+ * token and the install-time adapter substitutes it, exactly as
+ * `bin/opencode.mjs` does today. Every non-Claude target must use these two
+ * helpers rather than inventing its own spelling, or the adapter has to learn
+ * one substitution rule per target.
+ */
+export const ROOT_TOKEN = "%%AI_PLUGINS_ROOT%%";
+
+/** Placeholder for a *sibling* plugin's installed root. */
+export function siblingRootToken(plugin: string): string {
+  return `%%AI_PLUGINS_ROOT:${plugin}%%`;
+}
+
+/**
  * The Eta context (`it`) every template body is rendered against.
  *
  * These helpers exist because the same prose has to name a different thing on

@@ -1,0 +1,6 @@
+{
+  "author": "Viraj Patel",
+  "description": "Context7 MCP docs server — fetches current, version-accurate documentation for libraries, frameworks, SDKs, and CLIs on demand, so code is never written from stale training knowledge.",
+  "name": "context7",
+  "version": "1.1.0"
+}

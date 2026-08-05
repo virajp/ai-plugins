@@ -1,0 +1,11 @@
+{
+  "name": "vwf",
+  "omp": {
+    "extensions": [
+      "./hooks/npm-normalize.ts",
+      "./hooks/rtk.ts"
+    ]
+  },
+  "private": true,
+  "version": "14.0.0"
+}
