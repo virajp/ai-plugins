@@ -115,11 +115,19 @@ function renderPlugin(plugin: PluginSource): Emission {
       contents: fm.emit(toCodexSkill(doc, meta)),
     });
 
-    // Invocation is not a frontmatter key here — it is a sibling policy file,
-    // and only the restrictive direction needs stating.
+    // Invocation is not a frontmatter key here — it is a policy sidecar, and
+    // only the restrictive direction needs stating (the field defaults to
+    // true). The path is `<skill>/agents/openai.yaml`, NOT the skill root:
+    // the loader builds it as parent(SKILL.md) + "agents" + "openai.yaml"
+    // (core-skills/src/loader.rs, SKILLS_METADATA_DIR = "agents"), and all
+    // five bundled sample skills are laid out that way.
+    //
+    // Getting this wrong is silent and inverted: the sidecar is simply never
+    // found, `allow_implicit_invocation` falls back to true, and every
+    // user-only skill becomes model-invocable.
     if (meta.invocation === "user") {
       outputs.push({
-        path: `${base}/${skillDir(skill.path)}/openai.yaml`,
+        path: `${base}/${skillDir(skill.path)}/agents/openai.yaml`,
         contents: "policy:\n  allow_implicit_invocation: false\n",
       });
     }

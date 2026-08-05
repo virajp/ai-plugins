@@ -68,18 +68,24 @@ describe("codex target", () => {
   });
 
   it("marks only user-only skills as non-implicitly-invocable", () => {
+    // The sidecar lives at `<skill>/agents/openai.yaml`. The loader builds
+    // that path as parent(SKILL.md) + "agents" + "openai.yaml"; at the skill
+    // root it is never read, `allow_implicit_invocation` defaults back to
+    // true, and every user-only skill quietly becomes model-invocable.
     // `archive` is user-only; `blueprint` is delegated to, so it stays reachable.
-    expect(text("plugins/vwf/skills/archive/openai.yaml")).toContain(
+    expect(text("plugins/vwf/skills/archive/agents/openai.yaml")).toContain(
       "allow_implicit_invocation: false",
     );
-    expect(outputs.has("plugins/vwf/skills/blueprint/openai.yaml")).toBe(false);
+    expect(outputs.has("plugins/vwf/skills/archive/openai.yaml")).toBe(false);
+    expect(outputs.has("plugins/vwf/skills/blueprint/agents/openai.yaml"))
+      .toBe(false);
     expect(
-      outputs.has("plugins/vwf/skills/blueprint-authoring/openai.yaml"),
+      outputs.has("plugins/vwf/skills/blueprint-authoring/agents/openai.yaml"),
     )
       .toBe(false);
 
     const policies = [...outputs.keys()].filter(p =>
-      p.endsWith("/openai.yaml")
+      p.endsWith("/agents/openai.yaml")
     );
     const userOnly = workspace
       .plugins
@@ -128,8 +134,12 @@ describe("codex target", () => {
     // Escaping round-trips: nothing that would close the string early is left.
     expect(body).not.toContain("\"\"\"");
 
-    // Not inside any plugin bundle — the manifest cannot carry them.
-    expect([...outputs.keys()].some(p => p.includes("/agents/"))).toBe(false);
+    // Not inside any plugin bundle — the manifest cannot carry them. Match the
+    // bundle's own `agents/` dir specifically: `agents/` is overloaded here,
+    // since a skill's policy sidecar is `<skill>/agents/openai.yaml` and is a
+    // legitimate bundle member.
+    expect([...outputs.keys()].some(p => /^plugins\/[^/]+\/agents\//.test(p)))
+      .toBe(false);
     expect(gapsFor("subagentsInBundle")).toHaveLength(1);
   });
 
