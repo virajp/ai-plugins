@@ -49,7 +49,6 @@ const planFor = (user: string[]): AdapterPlan => ({
   target: "opencode",
   user,
   project: [],
-  statusline: false,
 });
 
 /** A stand-in adapter; the real ones have their own suites. */

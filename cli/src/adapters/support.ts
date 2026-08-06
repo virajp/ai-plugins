@@ -43,6 +43,21 @@ export function hasBin(bin: string): boolean {
 }
 
 /**
+ * Where Claude Code keeps its user-level config.
+ *
+ * `CLAUDE_CONFIG_DIR` wins, which is also how the tests point a whole install
+ * at a throwaway directory. Shared because the statusline writes into the same
+ * `settings.json` the plugin adapter reads, and the two disagreeing would put
+ * the status bar in a file Claude never loads.
+ */
+export function claudeConfigDir(home: string): string {
+  const override = process.env["CLAUDE_CONFIG_DIR"];
+  return override !== undefined && override.length > 0
+    ? override
+    : join(home, ".claude");
+}
+
+/**
  * The shortest prefix of `path` that is absent from the document.
  *
  * That prefix is what this install creates, and therefore what an uninstall has

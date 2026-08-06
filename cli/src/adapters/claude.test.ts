@@ -123,7 +123,6 @@ const planFor = (user: string[], project: string[] = []): AdapterPlan => ({
   target: "claude",
   user,
   project,
-  statusline: false,
 });
 
 describe("claude adapter", () => {

@@ -37,7 +37,10 @@ import {
   ReceiptBuilder,
   revert as revertReceipt,
 } from "../receipt.ts";
-import { hasBin } from "./support.ts";
+import {
+  claudeConfigDir,
+  hasBin,
+} from "./support.ts";
 import type {
   Action,
   Adapter,
@@ -232,12 +235,8 @@ function settingsFile(context: AdapterContext, scope: Scope): string {
     : join(configDir(context), "settings.json");
 }
 
-/** `CLAUDE_CONFIG_DIR` wins, which is also how tests point at a throwaway dir. */
 function configDir(context: AdapterContext): string {
-  const override = process.env["CLAUDE_CONFIG_DIR"];
-  return override !== undefined && override.length > 0
-    ? override
-    : join(context.home, ".claude");
+  return claudeConfigDir(context.home);
 }
 
 function claudeExec(context: AdapterContext, args: readonly string[]) {

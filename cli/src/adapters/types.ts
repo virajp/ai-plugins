@@ -21,14 +21,10 @@ export interface AdapterPlan {
   readonly user: readonly string[];
   /** Plugin names at project scope. */
   readonly project: readonly string[];
-  /** Claude Code only; other adapters ignore it. */
-  readonly statusline: boolean;
 }
 
 export function isEmptyPlan(plan: AdapterPlan): boolean {
-  return plan.user.length === 0
-    && plan.project.length === 0
-    && !plan.statusline;
+  return plan.user.length === 0 && plan.project.length === 0;
 }
 
 /** A single intended change, rendered for `--dry-run` and for the reporter. */

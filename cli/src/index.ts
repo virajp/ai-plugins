@@ -37,10 +37,12 @@ import type {
 } from "./adapters/types.ts";
 import {
   execute,
+  executeStatusline,
   failed,
   renderDiff,
   renderProgress,
   revert,
+  revertStatuslineInstall,
 } from "./executor.ts";
 import type { PlanRequest } from "./plan.ts";
 import {
@@ -115,7 +117,6 @@ export function buildJobs(
   adapters: readonly Adapter[],
   request: PlanRequest,
   sourceRoot: string,
-  statusline: boolean,
   log: (message: string) => void,
 ): (readonly [Adapter, AdapterPlan])[] {
   const index = readPluginIndex(sourceRoot);
@@ -125,8 +126,34 @@ export function buildJobs(
       localOnly: adapter.id === "opencode",
       log,
     });
-    return [adapter, { ...plan, statusline }] as const;
+    return [adapter, plan] as const;
   });
+}
+
+/**
+ * Should this run touch the statusline?
+ *
+ * It is Claude Code's alone, so a run that is not targeting Claude skips it.
+ * The note is printed only for an **explicit** `--statusline`: under `--all` on
+ * an OpenCode-only machine the bar was never separately asked for, and saying
+ * so every time would be noise.
+ */
+export function statuslineSelected(
+  wanted: boolean,
+  explicit: boolean,
+  adapters: readonly Adapter[],
+  log: (message: string) => void,
+): boolean {
+  if (!wanted) {
+    return false;
+  }
+  if (adapters.some(a => a.id === "claude")) {
+    return true;
+  }
+  if (explicit) {
+    log("statusline: skipped — it is a Claude Code feature only");
+  }
+  return false;
 }
 
 const main = defineCommand({
@@ -201,8 +228,21 @@ const main = defineCommand({
       process.exit(1);
     }
 
+    const statusline = statuslineSelected(
+      wantsStatusline(
+        args.statusline as boolean | undefined,
+        args.all === true,
+      ),
+      args.statusline === true,
+      adapters,
+      context.log,
+    );
+
     if (args.uninstall === true) {
       const outcomes = revert(adapters, options);
+      if (statusline) {
+        outcomes.push(revertStatuslineInstall(options));
+      }
       process.stderr.write(`${renderProgress(outcomes)}\n`);
       process.exit(failed(outcomes) ? 1 : 0);
     }
@@ -216,24 +256,20 @@ const main = defineCommand({
       request.all !== true
       && request.user?.length === 0
       && request.project?.length === 0
+      // `--statusline` on its own is a complete request: it is not a plugin.
+      && !statusline
     ) {
       process.stderr.write(
-        "nothing to install: pass --all, or name plugins with --user/--project\n",
+        "nothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
       );
       process.exit(1);
     }
 
-    const jobs = buildJobs(
-      adapters,
-      request,
-      context.sourceRoot,
-      wantsStatusline(
-        args.statusline as boolean | undefined,
-        args.all === true,
-      ),
-      context.log,
-    );
+    const jobs = buildJobs(adapters, request, context.sourceRoot, context.log);
     const outcomes = execute(jobs, options);
+    if (statusline) {
+      outcomes.push(executeStatusline(options));
+    }
 
     if (options.dryRun) {
       // Data to stdout, so it can be piped or diffed.

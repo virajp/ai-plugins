@@ -56,7 +56,6 @@ const planFor = (user: string[]): AdapterPlan => ({
   target: "opencode",
   user,
   project: [],
-  statusline: false,
 });
 
 const configPath = () => join(home, ".config", "opencode", "opencode.jsonc");
@@ -175,7 +174,6 @@ describe("opencode adapter", () => {
       target: "opencode",
       user: [],
       project: ["markdown"],
-      statusline: false,
     });
 
     expect(existsSync(join(cwd, ".opencode", "virajp-plugins", "markdown")))

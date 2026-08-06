@@ -84,7 +84,6 @@ const planFor = (user: string[], project: string[] = []): AdapterPlan => ({
   target: "ohmypi",
   user,
   project,
-  statusline: false,
 });
 
 describe("ohmypi adapter", () => {

@@ -61,7 +61,6 @@ const planFor = (project: string[], user: string[] = []): AdapterPlan => ({
   target: "cursor",
   user,
   project,
-  statusline: false,
 });
 
 const settingsPath = () => join(cwd, ".cursor", "settings.json");

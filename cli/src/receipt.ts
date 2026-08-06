@@ -97,6 +97,25 @@ export class ReceiptBuilder {
     return this;
   }
 
+  /**
+   * Record a file as **created**, whatever is already at that path.
+   *
+   * For a path this tool owns outright — `~/.claude/scripts/statusline` — a file
+   * already holding our bytes is ours, whichever run put it there. Recording it
+   * as pre-existing instead would make an uninstall *after a second install*
+   * restore the script rather than remove it, because the second install found
+   * the first one's output sitting there and dutifully captured it as prior
+   * state.
+   */
+  createdFile(path: string, mode?: number): this {
+    this.entries.push({
+      kind: "file",
+      path,
+      ...(mode === undefined ? {} : { mode }),
+    });
+    return this;
+  }
+
   /** Record a directory we are about to create. Existing dirs are not recorded. */
   dir(path: string): this {
     if (!existsSync(path)) {

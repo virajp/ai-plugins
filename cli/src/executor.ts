@@ -25,9 +25,21 @@ import {
   readReceipt,
   writeReceipt,
 } from "./receipt.ts";
+import {
+  installStatusline,
+  planStatusline,
+  revertStatusline,
+} from "./statusline.ts";
+
+/**
+ * What an outcome can be about. The statusline is not a target — it is not a
+ * plugin and belongs to Claude Code alone — but it is reported beside them, so
+ * the reporter needs one row type rather than two.
+ */
+export type OutcomeId = TargetId | "statusline";
 
 export interface TargetOutcome {
-  readonly target: TargetId;
+  readonly target: OutcomeId;
   readonly actions: readonly Action[];
   /** Absent on success; the failure message otherwise. */
   readonly error?: string;
@@ -139,6 +151,64 @@ export function revert(
   }
 
   return outcomes;
+}
+
+/**
+ * The statusline's own receipt, beside the per-target ones.
+ *
+ * Separate rather than folded into Claude's, so uninstalling the plugins does
+ * not take the status bar with them and vice versa — the two are selected by
+ * different flags and a user may well want only one of them gone.
+ */
+export function statuslineReceiptPath(receiptDir: string): string {
+  return join(receiptDir, "statusline.json");
+}
+
+/** Install the statusline, or describe the install under `--dry-run`. */
+export function executeStatusline(options: ExecuteOptions): TargetOutcome {
+  try {
+    if (options.dryRun) {
+      return {
+        target: "statusline",
+        actions: planStatusline(options.context),
+      };
+    }
+    const result = installStatusline(options.context);
+    writeReceipt(statuslineReceiptPath(options.receiptDir), result.receipt);
+    return { target: "statusline", actions: result.actions };
+  }
+  catch (error) {
+    return {
+      target: "statusline",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
+}
+
+/** Undo a statusline install from its receipt. */
+export function revertStatuslineInstall(
+  options: ExecuteOptions,
+): TargetOutcome {
+  const path = statuslineReceiptPath(options.receiptDir);
+  const receipt = readReceipt(path);
+  if (receipt === undefined) {
+    return { target: "statusline", actions: [], skipped: "empty" };
+  }
+  try {
+    revertStatusline(receipt);
+    return {
+      target: "statusline",
+      actions: [{ summary: "reverted the statusline", path }],
+    };
+  }
+  catch (error) {
+    return {
+      target: "statusline",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
 }
 
 /** Did anything fail? Drives the process exit code. */

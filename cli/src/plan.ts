@@ -134,7 +134,7 @@ export function resolvePlan(
     (scope === "project" ? project : user).push(name);
   }
 
-  return { target, user, project, statusline: false };
+  return { target, user, project };
 }
 
 /**

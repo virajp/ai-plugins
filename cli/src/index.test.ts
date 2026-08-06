@@ -11,6 +11,7 @@ import {
   ADAPTERS,
   buildJobs,
   selectAdapters,
+  statuslineSelected,
   toList,
   wantsStatusline,
 } from "./index.ts";
@@ -109,7 +110,6 @@ describe("buildJobs", () => {
       [fake("claude", true), fake("codex", true)],
       { user: ["vwf"] },
       repoRoot,
-      false,
       () => {},
     );
 
@@ -122,7 +122,6 @@ describe("buildJobs", () => {
       [fake("opencode", true), fake("codex", true)],
       { user: ["mempalace"] },
       repoRoot,
-      false,
       () => {},
     );
 
@@ -131,16 +130,34 @@ describe("buildJobs", () => {
     expect(jobs[0]?.[1].user).toEqual([]);
     expect(jobs[1]?.[1].user).toEqual(["mempalace"]);
   });
+});
 
-  it("carries the statusline decision onto every plan", () => {
-    const jobs = buildJobs(
-      [fake("claude", true)],
-      { user: ["markdown"] },
-      repoRoot,
-      true,
-      () => {},
-    );
+describe("statuslineSelected", () => {
+  const claudeOnly = [fake("claude", true)];
+  const openCodeOnly = [fake("opencode", true)];
 
-    expect(jobs[0]?.[1].statusline).toBe(true);
+  it("installs when Claude Code is among the targets", () => {
+    expect(statuslineSelected(true, true, claudeOnly, () => {})).toBe(true);
+  });
+
+  it("skips a target set without Claude Code", () => {
+    // It is a Claude Code feature; there is nothing to install elsewhere.
+    expect(statuslineSelected(true, false, openCodeOnly, () => {})).toBe(false);
+  });
+
+  it("notes the skip only when the flag was explicit", () => {
+    const noted: string[] = [];
+    statuslineSelected(true, false, openCodeOnly, m => noted.push(m));
+    expect(noted).toEqual([]);
+
+    statuslineSelected(true, true, openCodeOnly, m => noted.push(m));
+    expect(noted[0]).toMatch(/Claude Code/);
+  });
+
+  it("says nothing at all when it was not wanted", () => {
+    const noted: string[] = [];
+    expect(statuslineSelected(false, true, claudeOnly, m => noted.push(m)))
+      .toBe(false);
+    expect(noted).toEqual([]);
   });
 });
