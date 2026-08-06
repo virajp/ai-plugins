@@ -638,10 +638,12 @@ Layout:
   then runs the vitest suites too, so `release.yml` cannot publish something no
   gate validated; `plugins.yml` runs them independently.
 
-  **Vitest collects from the workspace packages only** (`schema`, `build`,
-  `cli`) — there is no vitest config, and a test file at the repo root is
-  invisible to it. That is why the statusline *script* tests live at
-  `cli/src/statusline-script.test.ts` rather than beside `tools/`.
+  **`vitest.config.mts` restricts collection to
+  `{schema,build,cli}/src/**/*.test.ts`.** A test file anywhere else — beside
+  `tools/`, or at the repo root — is silently never run rather than failing.
+  That is why the statusline *script* tests live at
+  `cli/src/statusline-script.test.ts` even though what they exercise is
+  `tools/statusline/`.
 
 ### Flags
 
