@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Verify the publishable installer package (no transpile step)"
+#MISE description="Bundle cli/ into bin/ and verify the publishable package"
 #MISE dir="{{ config_root }}"
 
 set -e
@@ -7,10 +7,24 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# This is a plain-JS package — there is nothing to compile or bundle. "Build"
-# here means verifying exactly what would ship to npm (the `files` allowlist in
-# package.json) before publishing.
+# `cli/` is the TypeScript source; `bin/` is the built output and the only code
+# npm ships. bin/ is gitignored, so this step is not optional before a publish —
+# without it the tarball would carry no entrypoint at all.
+print_header "Bundling cli/ into bin/ ..."
+pnpm exec tsup
+
+if [[ ! -f bin/ai-plugins.mjs ]]; then
+  print_error "tsup produced no bin/ai-plugins.mjs"
+  exit 1
+fi
+
+# The bundle finds its own package root by walking up for package.json and reads
+# dist/ from there. If that resolution broke, every adapter would silently point
+# at the wrong tree — so prove the built artifact runs, not merely that it exists.
+print_header "Smoke-testing the bundle ..."
+node bin/ai-plugins.mjs --help >/dev/null
+
 print_header "Listing package contents (dry run) ..."
 pnpm pack --dry-run
 
-print_header "Package verified — nothing to compile."
+print_header "Package verified."

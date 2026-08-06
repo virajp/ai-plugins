@@ -27,6 +27,11 @@ export interface PluginIndexEntry {
   readonly userOnly: boolean;
   readonly local: boolean;
   readonly dependencies: readonly string[];
+  /**
+   * External binaries the plugin needs at runtime, from its `requires:`.
+   * Optional so an index written before this field still parses.
+   */
+  readonly requires?: readonly string[];
 }
 
 export interface PluginIndex {

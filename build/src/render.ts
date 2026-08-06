@@ -124,6 +124,12 @@ function writePluginIndex(repoRoot: string, workspace: Workspace): void {
         // installer has nothing to install and must skip it.
         local: m.source.kind === "local",
         dependencies: [...m.dependencies].sort(),
+        // External binaries the plugin needs at runtime. Projected so the CLI
+        // can refuse an install that would land in a broken state — vwf without
+        // graphify installs fine and then halts at its own entry gate. The old
+        // installer carried this as a hand-maintained `PLUGIN_EXTRA_DEPS` map,
+        // which is exactly the drift this layer exists to make unrepresentable.
+        requires: [...m.requires].sort(),
       };
     }),
   };

@@ -1,7 +1,7 @@
 {
   "name": "@askviraj/ai-plugins",
   "version": "2.7.3",
-  "description": "CLI to install Viraj Patel's Claude Code toolkit: marketplace plugins (via the claude CLI) and the powerline statusline",
+  "description": "CLI to install Viraj Patel's AI coding toolkit across Claude Code, Codex, Cursor, Oh-My-Pi and OpenCode, plus the powerline statusline",
   "keywords": [
     "claude",
     "claude-code",
@@ -19,28 +19,25 @@
     "mempalace",
     "ai",
     "anthropic",
-    "oclif"
+    "codex",
+    "cursor",
+    "opencode"
   ],
   "repository": "github:virajp/ai-plugins",
   "license": "MIT",
   "author": "Viraj Patel",
   "type": "commonjs",
   "bin": {
-    "ai-plugins": "./bin/installer.mjs"
+    "ai-plugins": "./bin/ai-plugins.mjs"
   },
   "files": [
     "bin",
-    "tools"
+    "tools",
+    "dist",
+    ".claude-plugin",
+    ".cursor-plugin"
   ],
-  "oclif": {
-    "bin": "ai-plugins",
-    "commands": {
-      "strategy": "single",
-      "target": "./bin/installer.mjs"
-    }
-  },
   "dependencies": {
-    "@oclif/core": "4.11.8",
     "citty": "^0.2.2",
     "jsonc-parser": "^3.3.1",
     "picocolors": "^1.1.1",
@@ -53,6 +50,7 @@
   "devDependencies": {
     "@types/node": "^26.1.2",
     "@types/write-file-atomic": "^4.0.3",
+    "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10",
     "yaml": "^2.9.0"

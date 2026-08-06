@@ -1,5 +1,11 @@
+#!/usr/bin/env node
 /**
- * The CLI entrypoint — replaces `bin/installer.mjs`.
+ * The CLI entrypoint.
+ *
+ * This file is the *source*; `bin/` holds what tsup builds from it, and `bin/`
+ * is what npm publishes. The hashbang above is not decoration — tsup copies it
+ * through and marks the output executable, which is what lets `package.json`'s
+ * `bin` entry point straight at the bundle.
  *
  * Everything below this file is already built and tested: `plan.ts` turns flags
  * into one `AdapterPlan` per target, `executor.ts` runs them and renders the
@@ -20,21 +26,36 @@ import {
   defineCommand,
   runMain,
 } from "citty";
-import { realpathSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  realpathSync,
+} from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import {
+  dirname,
+  join,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import { claude } from "./adapters/claude.ts";
 import { codex } from "./adapters/codex.ts";
 import { cursor } from "./adapters/cursor.ts";
 import { ohmypi } from "./adapters/ohmypi.ts";
 import { opencode } from "./adapters/opencode.ts";
-import { execCommand } from "./adapters/support.ts";
+import {
+  execCommand,
+  hasBin,
+} from "./adapters/support.ts";
 import type {
   Adapter,
   AdapterContext,
   AdapterPlan,
 } from "./adapters/types.ts";
+import {
+  missingTools,
+  renderMissing,
+  requiredTools,
+} from "./deps.ts";
 import {
   execute,
   executeStatusline,
@@ -46,6 +67,7 @@ import {
   statuslineInstalled,
   upgradeJobs,
 } from "./executor.ts";
+import { setupGraphify } from "./graphify.ts";
 import type { PlanRequest } from "./plan.ts";
 import {
   readPluginIndex,
@@ -59,6 +81,9 @@ import {
   readCliVersion,
   renderVersionReport,
 } from "./version.ts";
+
+/** The published package, used to locate its root from either build layout. */
+const PACKAGE_NAME = "@askviraj/ai-plugins";
 
 export const ADAPTERS: readonly Adapter[] = [
   claude,
@@ -329,9 +354,44 @@ const main = defineCommand({
     }
 
     const jobs = buildJobs(adapters, request, context.sourceRoot, context.log);
+
+    // Refuse before touching anything: a plugin whose tools are absent installs
+    // cleanly and fails later, somewhere with no visible link to the install.
+    //
+    // Not overridable by `--force`, which means something narrower — act on a
+    // target whose *own* CLI is missing. A plugin's runtime tools are a fact
+    // about the plugin, not about the target, and there is no useful state on
+    // the far side of installing vwf without graphify.
+    const wanted = [
+      ...new Set(jobs.flatMap(([, p]) => [...p.user, ...p.project])),
+    ];
+    const missing = missingTools(
+      requiredTools(readPluginIndex(context.sourceRoot), wanted),
+      hasBin,
+    );
+    if (missing.length > 0) {
+      process.stderr.write(`${renderMissing(missing)}\n`);
+      // A dry run reports it and carries on: it is showing what *would* happen,
+      // and the rest of the diff is still worth seeing.
+      if (!options.dryRun) {
+        process.exit(1);
+      }
+    }
+
     const outcomes = execute(jobs, options);
     if (statusline) {
       outcomes.push(executeStatusline(options));
+    }
+
+    // After the install, and only for targets that actually took it: vwf's
+    // commands halt at their own entry gate without this.
+    if (!options.dryRun && wanted.includes("vwf")) {
+      setupGraphify(
+        context,
+        outcomes
+          .filter(o => o.error === undefined && o.skipped === undefined)
+          .map(o => o.target),
+      );
     }
 
     if (options.dryRun) {
@@ -369,9 +429,39 @@ async function noteNewerCli(context: AdapterContext): Promise<void> {
   }
 }
 
-/** The package root holding `dist/` — two levels up from `cli/src/`. */
+/**
+ * The package root — what holds `dist/`, the marketplace manifests and `tools/`.
+ *
+ * Found by walking up rather than by counting `..` segments, because this code
+ * runs from two different depths: `cli/src/index.ts` in the repo, and
+ * `bin/ai-plugins.mjs` once tsup has bundled it. A fixed offset would be right
+ * in one and silently wrong in the other, resolving `sourceRoot` to a directory
+ * that exists but holds none of the trees an adapter reads.
+ *
+ * Matched on the package *name*, so the workspace's own `cli/package.json` is
+ * walked past rather than mistaken for the root.
+ */
 function packageRoot(): string {
-  return join(import.meta.dirname, "..", "..");
+  let dir = import.meta.dirname;
+  for (let depth = 0; depth < 6; depth++) {
+    const manifest = join(dir, "package.json");
+    if (existsSync(manifest)) {
+      const parsed = JSON.parse(readFileSync(manifest, "utf8")) as {
+        name?: string;
+      };
+      if (parsed.name === PACKAGE_NAME) {
+        return dir;
+      }
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  throw new Error(
+    `could not locate the ${PACKAGE_NAME} package root from ${import.meta.dirname}`,
+  );
 }
 
 /**

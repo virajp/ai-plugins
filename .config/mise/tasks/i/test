@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Smoke-test the installer CLI (non-mutating)"
+#MISE description="Smoke-test the built installer CLI (non-mutating)"
 #MISE dir="{{ config_root }}"
 
 set -e
@@ -7,22 +7,24 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# The CLI needs @oclif/core to load; install deps if they are missing.
-if [[ ! -d node_modules/@oclif/core ]]; then
+if [[ ! -d node_modules/citty ]]; then
   print_header "Installing dependencies ..."
   pnpm install
 fi
 
-CLI=(node bin/installer.mjs)
+# Test the BUILT artifact, not the source. bin/ is what npm ships, and the
+# bundle is where a packaging mistake would show up — a missing external, a
+# broken package-root resolution — none of which `node cli/src/index.ts` can
+# expose, because in the repo everything resolves through the workspace.
+print_header "Bundling cli/ into bin/ ..."
+pnpm exec tsup >/dev/null
 
-print_header "Checking syntax ..."
-node --check bin/installer.mjs
+CLI=(node bin/ai-plugins.mjs)
 
 print_header "Rendering --help ..."
 "${CLI[@]}" --help >/dev/null
 
-# The invocations below are chosen to NEVER mutate the system or call the claude
-# CLI — each exits before any install runs.
+# The invocations below never mutate anything: each exits before an install runs.
 print_header "Asserting no flags exits non-zero ..."
 if "${CLI[@]}" >/dev/null 2>&1; then
   print_error "Expected non-zero exit with no flags"
@@ -35,18 +37,6 @@ if "${CLI[@]}" --user bogus >/dev/null 2>&1; then
   exit 1
 fi
 
-print_header "Asserting same plugin at both scopes is rejected ..."
-if "${CLI[@]}" --user vwf --project vwf >/dev/null 2>&1; then
-  print_error "Expected non-zero exit for a plugin at both --user and --project"
-  exit 1
-fi
-
-print_header "Asserting mutually exclusive flags are rejected ..."
-if "${CLI[@]}" --all --user vwf >/dev/null 2>&1; then
-  print_error "Expected non-zero exit for --all combined with --user"
-  exit 1
-fi
-
 print_header "Asserting an unknown platform is rejected ..."
 if "${CLI[@]}" --platform bogus --user vwf >/dev/null 2>&1; then
   print_error "Expected non-zero exit for --platform bogus"
@@ -54,46 +44,34 @@ if "${CLI[@]}" --platform bogus --user vwf >/dev/null 2>&1; then
 fi
 
 print_header "Asserting no-detectable-platform exits non-zero ..."
-# With only node on PATH neither claude nor opencode resolves, so platform
-# auto-detection errors out before anything runs.
+# With only node on PATH no agent CLI resolves, so auto-detection finds nothing.
 NODE_DIR="$(dirname "$(command -v node)")"
 if env PATH="$NODE_DIR" "${CLI[@]}" --user vwf >/dev/null 2>&1; then
   print_error "Expected non-zero exit when no platform is detectable"
   exit 1
 fi
 
-print_header "Asserting the missing-dependency check fires ..."
-# Explicit --platform claude with only node on PATH: the required tools report
-# as missing, so the CLI prints install hints and exits non-zero before touching
-# claude or the filesystem.
+# The external-tool gate: vwf needs graphify/rtk/mise/pnpm/uv, none of which are
+# on a node-only PATH. The list is derived from each plugin's `requires:` via
+# dist/plugins.json, so this also proves that projection survived the build.
+print_header "Asserting the missing-tool gate fires ..."
 if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user vwf >/dev/null 2>&1; then
-  print_error "Expected non-zero exit when dependencies are missing"
+  print_error "Expected non-zero exit when required tools are missing"
   exit 1
 fi
 
-# Dependency checks are per-plugin: a tool is required only when a plugin that
-# needs it is selected (the missing list above is computed under PATH=node-only).
-print_header "Asserting per-plugin deps: markdown needs no mise ..."
-if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user markdown 2>&1 | grep -qE '^  mise$'; then
-  print_error "markdown should not require mise"
+print_header "Asserting per-plugin tools: markdown needs none ..."
+if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user markdown 2>&1 | grep -q "missing required tool"; then
+  print_error "markdown should require no external tools"
   exit 1
 fi
 
-print_header "Asserting per-plugin deps: the mise plugin needs mise ..."
-if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user mise 2>&1 | grep -qE '^  mise$'; then
+print_header "Asserting per-plugin tools: the mise plugin needs mise ..."
+if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user mise 2>&1 | grep -qE '^  mise '; then
   print_error "the mise plugin should require mise"
   exit 1
 fi
 
-# What is left for the old runner covers bin/, which is still the published
-# installer. These files go when bin/ does; everything already ported runs under
-# vitest below.
-print_header "Running the legacy bin/ tests (node --test) ..."
-node --test test/*.test.mjs
-
-# The publish gate has to cover what the package actually ships — including the
-# statusline, whose tests moved to vitest. Running them here as well as in
-# plugins.yml keeps release.yml from publishing something no gate validated.
 print_header "Running the vitest suites ..."
 pnpm exec vitest run
 

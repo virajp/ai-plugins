@@ -1,5 +1,0 @@
-{
-  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
-  "description": "vwf design adapter for Lovable — imports screens and the published design system via Lovable's MCP server.",
-  "name": "lovable"
-}

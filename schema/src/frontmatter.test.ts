@@ -69,8 +69,8 @@ describe("parse/emit", () => {
 describe("round-trips every authored document", () => {
   const root = join(import.meta.dirname, "..", "..");
   const files = [
-    ...globSync("plugins/**/SKILL.md", { cwd: root }),
-    ...globSync("plugins/*/agents/*.md", { cwd: root }),
+    ...globSync("templates/**/SKILL.md", { cwd: root }),
+    ...globSync("templates/*/agents/*.md", { cwd: root }),
   ]
     .sort();
 

@@ -7,7 +7,8 @@
       "optIn": true,
       "userOnly": false,
       "local": false,
-      "dependencies": []
+      "dependencies": [],
+      "requires": []
     },
     {
       "name": "claude-design",
@@ -15,7 +16,8 @@
       "optIn": false,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": []
     },
     {
       "name": "context7",
@@ -23,7 +25,10 @@
       "optIn": false,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": [
+        "pnpm"
+      ]
     },
     {
       "name": "effect",
@@ -33,6 +38,10 @@
       "local": true,
       "dependencies": [
         "typescript"
+      ],
+      "requires": [
+        "mise",
+        "pnpm"
       ]
     },
     {
@@ -41,7 +50,12 @@
       "optIn": false,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": [
+        "kotlin-lsp",
+        "mise",
+        "sourcekit-lsp"
+      ]
     },
     {
       "name": "gcp",
@@ -49,7 +63,8 @@
       "optIn": true,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": []
     },
     {
       "name": "github-actions",
@@ -57,7 +72,10 @@
       "optIn": false,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": [
+        "mise"
+      ]
     },
     {
       "name": "lovable",
@@ -65,7 +83,8 @@
       "optIn": true,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": []
     },
     {
       "name": "markdown",
@@ -73,7 +92,8 @@
       "optIn": false,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": []
     },
     {
       "name": "mempalace",
@@ -81,7 +101,11 @@
       "optIn": false,
       "userOnly": true,
       "local": false,
-      "dependencies": []
+      "dependencies": [],
+      "requires": [
+        "mise",
+        "uv"
+      ]
     },
     {
       "name": "mise",
@@ -89,7 +113,10 @@
       "optIn": false,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": [
+        "mise"
+      ]
     },
     {
       "name": "stitch",
@@ -97,7 +124,10 @@
       "optIn": true,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": [
+        "pnpm"
+      ]
     },
     {
       "name": "typescript",
@@ -105,7 +135,11 @@
       "optIn": false,
       "userOnly": false,
       "local": true,
-      "dependencies": []
+      "dependencies": [],
+      "requires": [
+        "mise",
+        "pnpm"
+      ]
     },
     {
       "name": "vwf",
@@ -119,6 +153,13 @@
         "markdown",
         "mempalace",
         "mise"
+      ],
+      "requires": [
+        "graphify",
+        "mise",
+        "pnpm",
+        "rtk",
+        "uv"
       ]
     }
   ]

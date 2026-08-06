@@ -1513,7 +1513,9 @@ maintainers. 🙏
   `brew install --formulae rtk`).
 - **[graphify](https://github.com/safishamsi/graphify)** — the knowledge-graph
   tool `vwf` integrates with.
-- **[oclif](https://oclif.io/)** — the framework this installer CLI is built on.
+- **[citty](https://github.com/unjs/citty)** — the argument parser this
+  installer CLI is built on, bundled for publication with
+  **[tsup](https://tsup.egoist.dev/)**.
 - **[Nerd Fonts](https://www.nerdfonts.com/)** — the glyphs that make the
   statusline render, and the **[Gruvbox](https://github.com/morhetz/gruvbox)**
   palette it ships by default.

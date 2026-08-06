@@ -22,8 +22,8 @@ import { fromFrontmatter as skillFrom } from "./skill.ts";
 const root = join(import.meta.dirname, "..", "..");
 const read = (p: string) => fm.parse(readFileSync(join(root, p), "utf8"))!;
 
-const skills = globSync("plugins/**/SKILL.md", { cwd: root }).sort();
-const agents = globSync("plugins/*/agents/*.md", { cwd: root }).sort();
+const skills = globSync("templates/**/SKILL.md", { cwd: root }).sort();
+const agents = globSync("templates/*/agents/*.md", { cwd: root }).sort();
 
 describe("skills", () => {
   it.each(skills)("parses %s", path => {
@@ -33,7 +33,10 @@ describe("skills", () => {
     expect(skill.description.length).toBeGreaterThan(0);
   });
 
-  it("classifies invocation from the legacy Claude encoding", () => {
+  // Corpus is `templates/`, the authored source, since the frozen `plugins/`
+  // tree went with the installer cutover. That also moves this off the legacy
+  // Claude encoding onto the neutral `invocation:` key the templates carry.
+  it("classifies every skill's invocation", () => {
     const byInvocation = { model: 0, user: 0, both: 0 };
     for (const p of skills) {
       byInvocation[skillFrom(read(p)).invocation]++;

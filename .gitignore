@@ -34,5 +34,11 @@ build/dist/
 cli/dist/
 *.tsbuildinfo
 
+# Build output: tsup bundles cli/ into bin/, and bin/ is what npm publishes.
+# Not committed — unlike the root dist/, which is a *rendered* tree meant to be
+# diffed in review. A bundle diff is noise, and `i:build` regenerates it before
+# every publish. Note the asymmetry: root dist/ is committed, bin/ is not.
+bin/
+
 # Working notes and session handoffs — personal state, not the team's.
 docs/scratchpad/

@@ -72,10 +72,10 @@ const ROOT_REF_RE =
 
 export async function check(repoRoot: string): Promise<CheckResult> {
   const workspace = readWorkspace(join(repoRoot, "templates"));
-  const findings: Finding[] = [
-    ...checkTemplates(workspace),
-    ...(await checkInstallerSync(repoRoot, workspace)),
-  ];
+  // `checkInstallerSync` lived here until the cutover. It compared
+  // `bin/claude.mjs`'s hardcoded plugin sets against the manifests; the CLI now
+  // reads `dist/plugins.json`, so there is no second copy left to disagree.
+  const findings: Finding[] = [...checkTemplates(workspace)];
 
   const coverage: TargetCoverage[] = [];
   for (const target of TARGETS) {
@@ -412,98 +412,6 @@ function summarise(target: Target, emission: Emission): TargetCoverage {
     dropped: emission.gaps.filter(g => g.severity === "dropped").length,
     byCapability,
   };
-}
-
-// ---------------------------------------------------------------------------
-// Installer sync
-// ---------------------------------------------------------------------------
-
-/**
- * The installer's hardcoded plugin sets must agree with the manifests.
- *
- * `bin/claude.mjs` predates the template layer and still carries its own
- * copies. Phase 2 replaces it with a CLI that reads the manifests directly, at
- * which point this check has nothing left to compare and should be deleted
- * rather than ported.
- */
-async function checkInstallerSync(
-  repoRoot: string,
-  workspace: Workspace,
-): Promise<Finding[]> {
-  const path = join(repoRoot, "bin", "claude.mjs");
-  if (!existsSync(path)) {
-    return [];
-  }
-
-  let mod: Record<string, unknown>;
-  try {
-    mod = await import(path) as Record<string, unknown>;
-  }
-  catch (error) {
-    return [{
-      scope: "installer",
-      message: `could not load bin/claude.mjs: ${(error as Error).message}`,
-    }];
-  }
-
-  const findings: Finding[] = [];
-  const manifests = workspace.plugins.map(p => p.manifest);
-  const expect = (
-    label: string,
-    actual: Iterable<string> | undefined,
-    wanted: readonly string[],
-  ) => {
-    const got = [...(actual ?? [])].sort();
-    const want = [...wanted].sort();
-    if (got.join() !== want.join()) {
-      findings.push({
-        scope: "installer",
-        message: `${label} != manifests\n         installer: ${
-          JSON.stringify(got)
-        }\n         manifests: ${JSON.stringify(want)}`,
-      });
-    }
-  };
-
-  expect("PLUGINS", mod["PLUGINS"] as string[], manifests.map(m => m.name));
-  expect(
-    "PROJECT_SCOPED",
-    mod["PROJECT_SCOPED"] as Set<string>,
-    manifests.filter(m => m.scope === "project").map(m => m.name),
-  );
-  expect(
-    "OPT_IN",
-    mod["OPT_IN"] as Set<string>,
-    manifests.filter(m => m.optIn).map(m => m.name),
-  );
-  expect(
-    "USER_ONLY",
-    mod["USER_ONLY"] as Set<string>,
-    manifests.filter(m => m.userOnly).map(m => m.name),
-  );
-
-  const wantedDeps = Object.fromEntries(
-    manifests
-      .filter(m => m.dependencies.length > 0)
-      .map(m => [m.name, [...m.dependencies].sort()]),
-  );
-  const actualDeps = Object.fromEntries(
-    Object
-      .entries(
-        (mod["PLUGIN_DEPS"] ?? {}) as Record<string, readonly string[]>,
-      )
-      .map(([k, v]) => [k, [...v].sort()]),
-  );
-  if (JSON.stringify(actualDeps) !== JSON.stringify(wantedDeps)) {
-    findings.push({
-      scope: "installer",
-      message: `PLUGIN_DEPS != manifest dependencies\n         installer: ${
-        JSON.stringify(actualDeps)
-      }\n         manifests: ${JSON.stringify(wantedDeps)}`,
-    });
-  }
-
-  return findings;
 }
 
 // ---------------------------------------------------------------------------

@@ -13,7 +13,7 @@ A multi-agent plugin toolkit (`virajp-plugins`) containing LSP servers, an MCP
 server, and `vwf` — a full Product → Blueprint → Plan → Execute workflow plugin
 (with post-deploy verify + production-feedback intake).
 
-The repo also ships a **statusline**, installed via a small `oclif` CLI
+The repo also ships a **statusline**, installed via a small `citty` CLI
 (`@askviraj/ai-plugins`) rather than the marketplace — see The installer &
 statusline CLI.
 
@@ -29,6 +29,10 @@ dist/claude/plugins/**     committed, one tree per target
 dist/{opencode,cursor,ohmypi,codex}/**
 .claude-plugin/marketplace.json    generated at the repo root
 .cursor-plugin/marketplace.json    likewise — Cursor reads it from there
+
+cli/src/**                 installer source (TypeScript)
+  ↓  tsup
+bin/ai-plugins.mjs         gitignored build output — the published entrypoint
 ```
 
 - **`templates/`** is the only thing authored. `plugin.yaml` is the neutral
@@ -42,18 +46,25 @@ dist/{opencode,cursor,ohmypi,codex}/**
   round-tripped through a YAML serialiser, because the corpus uses nine key
   orders and folds descriptions at irregular widths.
 - **`dist/`** is committed, so what users install is inspectable and diffable in
-  review, and CI can assert it matches a fresh render.
-- **`plugins/`** is the frozen pre-migration tree. It is kept **only** as the
-  Claude byte-parity gate, and because the published installer's OpenCode path
-  still reads it from the `main` tarball at run time. It is deleted in Phase 2,
-  alongside the `bin/` → `cli/` rewrite that removes its last consumer. Do not
-  author there.
+  review, and CI can assert it matches a fresh render. The frozen pre-migration
+  tree `plugins/` is **gone**, deleted with the installer cutover. It existed
+  for two reasons and outlived both: it was the Claude renderer's byte-parity
+  ground truth, and the published installer's OpenCode path read it from the
+  `main` tarball at run time. That second consumer disappeared when `bin/`
+  became build output, and the two had to go in one commit — deleting `plugins/`
+  while any published version still fetched it would have broken
+  `npx @askviraj/ai-plugins --platform opencode` for **already-released**
+  versions, not just future ones.
 
-Byte-parity against `plugins/` is the load-bearing correctness gate for the
-Claude renderer, currently **3 justified hunks**: `lovable` and `stitch` drop a
-`description` duplicated from the marketplace entry, and `git-workflow` drops
-`user-invocable: true`, which is the default. The other four targets have no
-such ground truth — `plugins:check` is their only automated defence.
+Retiring it retires the byte-parity gate with it. That gate was never automated
+— it was a manual `diff -rq plugins dist/claude/plugins`, which settled at **3
+justified hunks** (`lovable` and `stitch` dropping a `description` duplicated
+from the marketplace entry; `git-workflow` dropping `user-invocable: true`,
+which is the default). All five targets now stand on the same footing:
+`plugins:check` plus the schema and renderer suites are the whole defence, and
+`schema/src/frontmatter.test.ts` still proves `emit(parse(x)) === x` over every
+authored document — the parity property in miniature, and the part that actually
+generalised.
 
 ### Targets and adapters
 
@@ -109,8 +120,7 @@ allows one Trusted Publisher and validates the entry-point filename):
   agent is referenced at least once — the two directions cover each other on a
   rename), cross-plugin skill-name uniqueness (skills share one flat namespace
   on OpenCode, Oh-My-Pi and Codex), the vwf design-adapter contract, relative
-  links under `assets/examples/**`, **strict-YAML frontmatter**, and the
-  installer sync assertion (`bin/claude.mjs` sets ≡ the manifests). On each
+  links under `assets/examples/**`, and **strict-YAML frontmatter**. On each
   rendered target: no surviving template tags, strict-YAML frontmatter, and
   every root-relative reference resolving to something actually emitted.
 - **`vwf:test`** — table-tests the `vwf` `npm-normalize.sh` hook through the
@@ -539,9 +549,29 @@ findings loop-back quietly stops persisting.
 
 ## The installer & statusline CLI
 
-The statusline is **not** a Claude Code plugin — it is an `oclif` CLI published
-as `@askviraj/ai-plugins` that installs the toolkit for **Claude Code and/or
-OpenCode** (plugins, OpenCode-rendered skills, and the powerline statusline).
+The statusline is **not** a plugin — it ships inside `@askviraj/ai-plugins`, the
+`citty` CLI that installs the toolkit across all five targets (marketplace
+registration or a copied tree, plus the powerline statusline).
+
+**`cli/` is the source; `bin/` is the build output, and `bin/` is what npm
+publishes.** tsup bundles `cli/src/index.ts` → `bin/ai-plugins.mjs`, and two
+things make that split load-bearing rather than stylistic: `@ai-plugins/schema`
+is a private workspace package that would not resolve from an installed tarball
+(every import of it is `import type`, so the bundle erases it), and shipping
+`cli/src/*.ts` directly would raise `engines.node` from `>=18` to `>=22.18`,
+where Node strips types unflagged. **`bin/` is gitignored** — note the asymmetry
+with the root `dist/`, which is committed because a *rendered* tree is meant to
+be diffed in review, whereas a bundle diff is noise. `i:build` regenerates it,
+and `release.yml` already calls `i:build` before publishing, so its trigger
+surface is untouched.
+
+The published tarball is `bin` + `tools` + `dist` + both root marketplace
+manifests: every adapter reads `dist/<target>/` at install time through
+`context.sourceRoot`, and the Claude and Cursor adapters read
+`.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json` from the
+package root. That makes the package ~12 MB, which is the cost of the
+committed-`dist/` guarantee — what a user installs is what CI validated.
+
 Layout:
 
 - `tools/statusline/statusline` — the executable Node script (node shebang).
@@ -551,163 +581,107 @@ Layout:
   constant: palette, powerline glyphs, symbols, per-segment styling, line
   layout, subagent panel). The installer seeds this into
   `~/.config/statusline.json`.
-- `package.json` (root) — the npm package: oclif single-command CLI, `bin`
-  `ai-plugins`, sole runtime dep `@oclif/core`. Plain JS (ESM) — no build step.
-  The package `type` stays `commonjs`: the `bin/` modules are ESM by their
-  `.mjs` extension, while the standalone `tools/statusline/` scripts (run
-  outside this package, with no package.json beside them) must remain CommonJS —
-  so the ESM/CJS split is carried per-file, not by a package-wide
-  `type: module`.
-- `bin/installer.mjs` — the CLI entrypoint: the oclif command class plus the
-  bootstrap that runs it (single-command `strategy`/`target` in `package.json`;
-  `settings.enableAutoTranspile = false` keeps oclif from hunting for
-  TypeScript). It dispatches to one **tool module per platform** —
-  `bin/claude.mjs` (the `ClaudeCode` tool) and `bin/opencode.mjs` (the
-  `OpenCode` tool), both exposing the same surface
-  (`resolvePlan`/`hasSelection`/`install`/`upgrade`/`uninstall`/`printVersions`)
-  — plus `bin/utils.mjs` (shared helpers). `--platform claude|opencode`
-  (repeatable) selects targets; omitted, every platform whose binary is on
-  `PATH` is targeted. The run-directly guard uses
-  `realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)` (the ESM
-  equivalent of `require.main === module`, symlink-safe for the npm bin).
-- `bin/opencode.mjs` — the OpenCode target. OpenCode has no plugin/marketplace
-  concept, so install = **render**: fetch the repo source (GitHub `main`
-  tarball; `AI_PLUGINS_SOURCE_DIR` — a local checkout — overrides for
-  tests/dev), copy each selected plugin's `skills/` + `assets/` into
-  `<configDir>/virajp-plugins/<plugin>/` (`--user` → `~/.config/opencode/`,
-  `--project` → `.opencode/`; agents/hooks are Claude-only, skipped), rewrite
-  every `${CLAUDE_PLUGIN_ROOT}` to the installed absolute path, stamp `.version`
-  from the source marketplace manifest, **segregate workflow skills** (each
-  `disable-model-invocation` skill moves to `commands/<name>/index.md`, outside
-  the `**/SKILL.md` discovery — the model never auto-invokes them, mirroring
-  Claude's user-only semantics; doctrine skills stay under `skills/`), append
-  the `virajp-plugins` dir to `skills.paths` in the OpenCode config (targeted
-  array append; foreign keys preserved), map the plugin's `lspServers` onto the
-  config's `lsp` key (`LSP_ID_MAP` — overrides of OpenCode's built-in ids with
-  the plugins' mise-provisioned launchers, stamped per plugin as `.lsp.json` so
-  uninstall removes exactly what was written and never a user-modified entry),
-  write a **command wrapper** `command/<plugin>-<skill>.md` per
-  `disable-model-invocation` skill (OpenCode has no user-invoked skills), and
-  write each plugin's MCP server (`MCP_ENTRIES`: context7 via `pnpm dlx`,
-  mempalace via `mise x -- mempalace-mcp`, claude-design as a `remote` entry
-  pointing at Anthropic's endpoint) to the config's `mcp` key. **Upstream
-  plugins** (`UPSTREAM`): mempalace installs from its own repo (tarball;
-  `AI_PLUGINS_UPSTREAM_DIR` overrides for tests) — its repo root is the plugin
-  root (skills/ + integrations/ copied, versioned by its plugin.json), and its
-  Claude hooks are replaced by the bundled `tools/opencode/mempalace-hooks.js`,
-  copied to `<configDir>/plugin/` — an OpenCode plugin that injects a MemPalace
-  save-checkpoint prompt every 15 user messages (`session.idle`) and after
-  compaction (`session.compacted`), honoring mempalace's auto-save opt-out.
-  **Config file:** edits target an existing `opencode.jsonc` first (OpenCode
-  merges all config names, jsonc wins), else an existing `opencode.json`; a new
-  file is created as `opencode.jsonc`. All names are read JSONC-tolerantly, and
-  a config with comments is only rewritten after confirmation (or `--yes`) since
-  a rewrite drops them. **Dependencies** expand at plan time from `PLUGIN_DEPS`
-  in `claude.mjs` (kept ≡ the marketplace lists by `plugins:check`; Claude Code
-  auto-installs them natively) — installs only, uninstall never removes an
-  unnamed dependency. **User-level-only:** `USER_ONLY` plugins (mempalace) are
-  pinned to user scope — a `--project` request or project-scoped dep expansion
-  redirects them (with a note). A vwf install wires **graphify at user level
-  only**: the CLI is run with a throwaway cwd (its user-level skills land in
-  `~/.config/opencode/skills/graphify/`), and the project-level `graphify.js` it
-  generates is harvested into the GLOBAL `plugin/` dir — no project writes, no
-  `plugin`-array entry (the dir is auto-discovered). url-sourced plugins
-  **without** `UPSTREAM` support (andrej-karpathy-skills) are filtered from
-  `--all`, rejected when named, and skipped (with a note) as dependencies.
-  `--uninstall`/`--upgrade`/`--version` mirror all of this via the `.version`
-  stamps.
+- `package.json` (root) — the npm package: `bin` `ai-plugins` →
+  `./bin/ai-plugins.mjs`. Runtime deps are whatever the bundle leaves external
+  (`citty`, `jsonc-parser`, `smol-toml`, `write-file-atomic`); tsup treats
+  `dependencies` as external and inlines everything else, so **a runtime import
+  that is only a `devDependency` gets silently bundled** — it works, and it
+  hides that package from `osv-scanner`, which reads the lockfile. The package
+  `type` stays `commonjs`: the bundle is ESM by its `.mjs` extension, while the
+  standalone `tools/statusline/` scripts (run outside this package, with no
+  package.json beside them) must remain CommonJS — so the ESM/CJS split is
+  carried per-file, not by a package-wide `type: module`.
+- `tsup.config.ts` — one entry, `outDir: bin`, ESM, `target: node18`,
+  `clean: true`. The hashbang on `cli/src/index.ts` is not decoration: tsup
+  copies it through and marks the output executable, which is what lets `bin`
+  point straight at the bundle.
+- `cli/src/index.ts` — the citty router: parse, resolve, gate, execute, report,
+  exit. It resolves the package root by **walking up for a `package.json` whose
+  name matches**, rather than counting `..` segments, because it runs from two
+  depths (`cli/src/` in the repo, `bin/` once bundled) and a fixed offset would
+  be right in one and silently wrong in the other.
+- `cli/src/deps.ts` — the external-tool gate. Each plugin declares its own
+  `requires:` in `plugin.yaml`; the build projects it into `dist/plugins.json`,
+  and the union over the dependency-expanded set is checked before anything is
+  written. The old installer kept this as a hand-maintained `PLUGIN_EXTRA_DEPS`
+  map whose entries rolled their dependencies' tools up by hand — the derived
+  union reproduces every one of those entries exactly, and a test pins that.
+  **Not overridable by `--force`**, which means something narrower (act on a
+  target whose own CLI is missing): there is no useful state on the far side of
+  installing vwf without graphify. `DEP_HINTS` stays CLI-side because it
+  describes *this toolchain*, not the plugin — so a tool with no hint still
+  reports as missing rather than needing the two lists kept in sync.
+- `cli/src/graphify.ts` — runs `graphify install --platform <target>` plus
+  `graphify hook install` when vwf is installed, for the two targets graphify
+  supports (claude, opencode). Not optional: vwf enforces graphify at its own
+  entry gate, so an install that skips this produces a plugin that halts.
+  Soft-skips throughout — the hook needs a git work tree, and failing here would
+  undo an install that already succeeded.
+- `cli/src/version.ts` — `--version`. It does **not** ask each tool what it has
+  installed the way `bin/claude.mjs` asked `claude plugin list --json`; with
+  five targets that is five bookkeeping formats. Instead, a plugin's version *in
+  this build* is what an install would give you — every target reads
+  `dist/<target>/` in place or copies it — so the local manifest against the one
+  on `main` answers it for all five at once. A plugin here but not on `main` is
+  labelled `(not on main yet)` rather than left bare, which read as a failed
+  lookup.
+- `cli/src/statusline.ts` — the statusline installer. Not a plugin and therefore
+  not an adapter; wired straight from the router with its own receipt. See
+  Statusline below.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
-- `test/` — `node --test` suites run by `i:test` (and thus in `release.yml`):
-  `utils.test.mjs` (cmpVer/cmpPre/deepMerge incl. prototype-pollution keys),
-  `statusline.test.mjs` (hermetic smoke tests for both render surfaces + the
-  usage-file contract `context-caps.js` reads), `claude.test.mjs` (pure
-  `resolvePlan` cases — plugin selection/scope and the `--all` ⇒ statusline
-  implication with its `--no-statusline` opt-out), and `opencode.test.mjs`
-  (hermetic OpenCode installs into a temp `$HOME` with
-  `AI_PLUGINS_SOURCE_DIR=<checkout>`: render/rewrite, wrapper emission, config
-  idempotency + foreign-key preservation, uninstall symmetry). Not shipped in
-  the npm package (`files` is `bin` + `tools`).
+- Tests live beside the source under `cli/src/**/*.test.ts` and run under
+  **vitest**. `i:test` bundles first and then smoke-tests
+  **`bin/ai-plugins.mjs`, not `cli/src/index.ts`** — a packaging mistake (a
+  missing external, a broken package-root walk) only shows up in the built
+  artifact, because in the repo everything resolves through the workspace. It
+  then runs the vitest suites too, so `release.yml` cannot publish something no
+  gate validated; `plugins.yml` runs them independently.
 
-The command does several jobs. **Plugins:** `--all` (every user-scoped plugin,
-at user scope) or `--user <name>` / `--project <name>` (repeatable; name plugins
-at user or project scope) drive the `claude` CLI to add the `virajp-plugins`
-marketplace (user scope) and install each plugin. `--all` installs **user-scoped
-plugins only** (`USER_SCOPED`); **project-scoped** plugins (`flutter` —
-`PROJECT_SCOPED`) and **opt-in** plugins (`andrej-karpathy-skills` — `OPT_IN`,
-an external re-listed plugin) are both excluded from `--all`. Project-scoped
-plugins are reached via `--project <name>`; opt-in plugins via
-`--user`/`--project
-<name>` at whichever scope you choose (they carry no forced
-default). Scope is carried by the flag itself — `--user` installs at user scope,
-`--project` at project scope, and the two compose in one run (a name cannot
-appear in both). This governs install and uninstall alike, but never the
-marketplace add (always user scope). Plugin names are **bare and allowlisted**
-(`PLUGINS`); an `@marketplace` or path qualifier is rejected outright so the CLI
-can only ever install from `virajp-plugins`. The CLI installs and refreshes
-**only** `virajp-plugins`; every plugin (including the bundled Dart/Kotlin/Swift
-language servers, which ship inside `flutter`) resolves from it alone — no other
-marketplace is registered or refreshed. Installing or upgrading **`vwf`**
-additionally runs `setupGraphify` — `graphify install --platform claude` plus
-`graphify hook install` — since vwf's commands depend on graphify's knowledge
-graph. `graphify install` works anywhere and always runs;
-`graphify hook
-install` attaches a git post-commit hook, so it runs **only
-inside a git repo** (detected via `git rev-parse --is-inside-work-tree`) and is
-soft-skipped with a note otherwise. Both commands are idempotent (so an upgrade
-self-heals the setup), and the whole step is soft-skipped when `graphify` isn't
-on `PATH` (the `checkDeps` gate guarantees it for installs, but the upgrade-only
-path does not run that gate). **Statusline:** `--statusline` — one merged flag
-that installs **both** the main bar `statusLine` and the subagent panel
-`subagentStatusLine` — copies the script into `~/.claude/scripts/` (chmod 755),
-seeds the bundled defaults into `~/.config/statusline.json` (deep-merging
-missing settings if it already exists, preserving user edits), and writes both
-keys into `~/.claude/settings.json` (preserving other keys; prompting before
-overwrite unless `--yes`). The flag is **tri-state** (`allowNo`): `--statusline`
-asks for it, `--no-statusline` refuses it, and an unset flag defers to `--all` —
-which means the whole toolkit, so a bare `--all` installs the bar too (and
-`--uninstall --all` removes it). Only an **explicit** `--statusline` on an
-opencode-only run prints the Claude-only skip note. Installing the statusline
-additionally wires the **context/rate-limit caps** `PostToolUse` hook
-(`installContextCaps`): it copies `tools/statusline/context-caps.js` into
-`~/.claude/hooks/`, sets `env.AI_PLUGINS_USAGE_DIR` (`${HOME}/.claude/usage`),
-and appends the hook entry (idempotently, preserving other env keys /
-PostToolUse hooks). The statusline's `writeUsageFile` mirrors each session's
-`context_window`/`rate_limits` to that dir — the only surface those numbers
-appear on — and the hook reads them and, at the caps (context over 65%, 5-hour
-over 90%, 7-day over 80%), tells the agent to run a bare `/vwf:handoff` (the
-reserved `next` handoff) then halt, resuming via `/vwf:recall next`. It is
-bundled with the `statusLine` key (not the subagent panel) because that main-bar
-writer is its sensor, and is inert until the bar runs. **Versions:**
-`--version`/`-v` prints the CLI version (vs the latest on npm), the bundled
-statusline version, and each plugin's installed version (from
-`claude plugin list`) vs the latest in the **remote** marketplace manifest on
-GitHub (`REMOTE_MARKETPLACE_URL`), flagging updates. **Upgrade:** `--upgrade`
-runs **after** any install phase — it `claude plugin update`s every installed
-virajp-plugins plugin that's outdated, refreshes the statusline, and notes a
-newer CLI; combine with `--all` for an idempotent install+upgrade fit for a
-setup script. `--version`/`--upgrade` need the network and `claude`, and error
-out (non-zero) if either is unavailable. **Uninstall:** `--uninstall` reuses the
-same selection flags but removes — `claude plugin uninstall`s the selected
-plugins (matching their install scope) and/or strips the statusline keys from
-`settings.json`, deleting the installed script once no statusline key remains.
-Uninstalling the statusline also runs `uninstallContextCaps` — it strips the
-caps hook entry and `AI_PLUGINS_USAGE_DIR` from `settings.json` and deletes
-`~/.claude/hooks/context-caps.js` (leaving other hooks/env keys intact). It
-leaves the seeded `~/.config/statusline.json` (it may hold user edits) and never
-touches external tools (the CLI never installed those).
+  **Vitest collects from the workspace packages only** (`schema`, `build`,
+  `cli`) — there is no vitest config, and a test file at the repo root is
+  invisible to it. That is why the statusline *script* tests live at
+  `cli/src/statusline-script.test.ts` rather than beside `tools/`.
 
-Before any install, the CLI **checks required external tools** for the resolved
-plan: `CORE_DEPS` (just `claude` — the install mechanism) for any plugin
-install, plus each selected plugin's `PLUGIN_EXTRA_DEPS` runtime tools
-(vwf→rtk+graphify+ mise+pnpm+uv, context7→pnpm, typescript→mise+pnpm, mise→mise,
-flutter→mise+kotlin-lsp+ sourcekit-lsp, mempalace→uv, github-actions→mise) and
-`node` for the statusline. If any are missing it prints the install command for
-each (`DEP_HINTS`) and exits non-zero — it never auto-installs a dependency.
-Keep `PLUGINS`, `PROJECT_SCOPED`, `OPT_IN`, `DEP_HINTS`, `CORE_DEPS`, and
-`PLUGIN_EXTRA_DEPS` in sync with the marketplace and the plugins' actual runtime
-needs (`plugins:check` asserts the `PLUGINS`↔marketplace name sync). Users run
-it via `npx @askviraj/ai-plugins …`.
+### Flags
+
+**Plugins.** `--all` installs every **user-scoped, non-opt-in** plugin at user
+scope; `--user <name>` / `--project <name>` (both repeatable) name plugins at a
+scope. Project-scoped plugins (`flutter`) and opt-in ones
+(`andrej-karpathy-skills`) are excluded from `--all` and reached by name. Every
+one of those sets is **derived from `plugin.yaml` via `dist/plugins.json`**, not
+hardcoded — the old `PLUGINS` / `PROJECT_SCOPED` / `OPT_IN` / `USER_ONLY` /
+`PLUGIN_DEPS` constants and the `plugins:check` assertion that kept them honest
+are both gone, because there is no longer a second copy to disagree. Names are
+bare and validated against that index, so an `@marketplace` or path qualifier is
+simply not a known name and the CLI can only install from `virajp-plugins`.
+
+**Targets.** `--platform` (repeatable) selects among `claude`, `codex`,
+`cursor`, `ohmypi`, `opencode`; omitted, every tool detected on `PATH` is
+targeted. A selected target whose tool is absent is *skipped with a note*, not
+failed — targets are independent, and one missing agent should not fail a run
+that installed into three others. `--force` acts on it anyway.
+
+**Statusline.** `--statusline` installs both `statusLine` and
+`subagentStatusLine` plus the caps hook. **Tri-state**: `--statusline` asks,
+`--no-statusline` refuses, unset defers to `--all` — so a bare `--all` installs
+the bar. Only an *explicit* `--statusline` on a run not targeting Claude prints
+the Claude-only skip note.
+
+**`--version` / `--upgrade`.** See `cli/src/version.ts` above for what
+`--version` compares. `--upgrade` replays each target's receipt: **installing is
+already upgrading**, since every target reads `dist/<target>/` in place or
+copies it, so there is no per-tool update command to drive. Combined with an
+install request the install phase covers it, and only the newer-CLI note is
+kept. A receipt written before plans were recorded is reported, not silently
+skipped.
+
+**`--uninstall` / `--dry-run`.** Uninstall reverts from the receipt, which
+records prior state — so it restores rather than guessing, and leaves the seeded
+`~/.config/statusline.json` (it may hold user edits). A dry run writes nothing
+and prints the full diff to stdout, progress to stderr.
+
+Users run it via `npx @askviraj/ai-plugins …`.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):
@@ -982,6 +956,7 @@ Installing `vwf` pulls in its dependencies (`claude-design`, `context7`,
 the Dependencies section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
-`--platform opencode` target, which renders each plugin's skills into
-`~/.config/opencode/virajp-plugins/` (url-sourced plugins excluded) — see The
-installer & statusline CLI.
+`--platform opencode` target, which copies each plugin's rendered
+`dist/opencode/` tree into `~/.config/opencode/virajp-plugins/` (url-sourced
+plugins excluded, having no rendered bundle) — see The installer & statusline
+CLI.
