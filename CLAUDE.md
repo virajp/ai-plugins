@@ -685,6 +685,46 @@ and prints the full diff to stdout, progress to stderr.
 
 Users run it via `npx @askviraj/ai-plugins …`.
 
+### Distribution channels
+
+Two shapes, and the difference is forced rather than chosen.
+
+- **npm** (`npx @askviraj/ai-plugins`) — the tsup bundle plus the payload.
+  Requires Node.
+- **Standalone archives** (Homebrew, Scoop, curl-sh) — a `bun build --compile`
+  binary **plus the same payload beside it**. No Node required.
+
+**The binary cannot be self-contained**, and this is the constraint that shapes
+every channel: Claude, Codex and Oh-My-Pi each register a marketplace whose
+source is a real directory under `dist/`, which the agent re-reads *in place* on
+every later session. Embedding the payload inside the executable would leave
+those three pointing at nothing. So every channel ships a tree, and the
+installers extract it into a prefix and symlink only the executable onto `PATH`.
+`packageRoot()` finds the payload from `process.execPath`, because inside a
+compiled binary `import.meta.dirname` is Bun's virtual filesystem
+(`/$bunfs/root`) and can never lead anywhere real.
+
+- **`i:binaries`** — cross-compiles all five targets (`darwin-arm64`,
+  `darwin-x64`, `linux-x64`, `linux-arm64`, `windows-x64`) **from one host**;
+  bun cross-compiles, so no runner matrix is needed. Assembles one archive per
+  platform (26–40 MB compressed) plus a `checksums-<version>.txt`.
+- **`i:packaging`** — generates the Homebrew formula and Scoop manifest *from*
+  those checksums. Both pin a per-platform sha256, so hand-maintaining them in
+  the tap and bucket repos means a checksum that is wrong exactly once per
+  release and breaks every install until someone notices.
+- **`packaging/install.sh`** — the curl-sh installer. POSIX `sh`, since it runs
+  before anything is installed; resolves the latest release, verifies the
+  checksum, extracts, symlinks.
+- **`.github/workflows/binaries.yml`** — builds and attaches all of it. A
+  **separate workflow** on `release: published`, for two reasons:
+  `release.yml`'s `on:` block is untouchable (npm validates the entry-point
+  workflow filename), and the GitHub Release is created by hand *after* the tag
+  push, so a job in `release.yml` would have nothing to upload to.
+
+**The tap and the bucket are separate repositories** (`virajp/homebrew-tap`,
+`virajp/scoop-bucket`) and neither exists yet. The generated formula and
+manifest are attached to each Release for copying into them.
+
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):
 
