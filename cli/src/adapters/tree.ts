@@ -59,14 +59,32 @@ export function copyTree(
   receipt: ReceiptBuilder,
   dryRun: boolean,
 ): Action[] {
-  const actions: Action[] = [];
   if (!existsSync(options.from)) {
     throw new Error(`missing rendered tree: ${options.from}`);
   }
 
-  for (const relPath of walk(options.from)) {
-    const source = join(options.from, relPath);
-    const destination = join(options.to, relPath);
+  // `from` may name a single file — the flat `agent/`, `command/` and
+  // `plugin/` entries are selected individually by owner, since their paths
+  // carry no plugin prefix.
+  const files = statSync(options.from).isDirectory()
+    ? walk(options.from).map(rel =>
+      [join(options.from, rel), join(options.to, rel)] as const
+    )
+    : [[options.from, options.to] as const];
+
+  return copyFiles(files, options, receipt, dryRun);
+}
+
+function copyFiles(
+  files: readonly (readonly [string, string])[],
+  options: CopyOptions,
+  receipt: ReceiptBuilder,
+  dryRun: boolean,
+): Action[] {
+  const actions: Action[] = [];
+
+  for (const [source, destination] of files) {
+    const relPath = source;
 
     if (TEXT.test(relPath)) {
       const before = existsSync(destination)
@@ -83,7 +101,7 @@ export function copyTree(
         diff: { before, after },
       });
       if (!dryRun) {
-        receipt.dir(dirOf(destination));
+        recordDirs(receipt, options.to, destination);
         receipt.file(destination);
         mkdirSync(dirOf(destination), { recursive: true });
         writeFileAtomic.sync(destination, after);
@@ -92,7 +110,7 @@ export function copyTree(
     else {
       actions.push({ summary: `copy ${destination}`, path: destination });
       if (!dryRun) {
-        receipt.dir(dirOf(destination));
+        recordDirs(receipt, options.to, destination);
         receipt.file(destination);
         mkdirSync(dirOf(destination), { recursive: true });
         cpSync(source, destination);
@@ -139,4 +157,30 @@ export function walk(root: string): string[] {
 
 function dirOf(path: string): string {
   return resolve(path, "..");
+}
+
+/**
+ * Record every directory this write brings into existence, outermost first.
+ *
+ * `mkdirSync(..., { recursive: true })` creates a whole chain, so recording
+ * only the immediate parent leaves the intermediate levels untracked and an
+ * uninstall strands them — the bundle root survives with empty directories
+ * inside it. Outermost-first matters because revert replays in reverse, which
+ * then removes the deepest first.
+ */
+function recordDirs(
+  receipt: ReceiptBuilder,
+  root: string,
+  destination: string,
+): void {
+  const chain: string[] = [];
+  for (let dir = dirOf(destination); dir.startsWith(root); dir = dirOf(dir)) {
+    chain.unshift(dir);
+    if (dir === root) {
+      break;
+    }
+  }
+  for (const dir of chain) {
+    receipt.dir(dir);
+  }
 }
