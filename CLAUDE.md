@@ -27,7 +27,8 @@ templates/<plugin>/        authored source — plugin.yaml + skills/ + agents/
   ↓  build/ (TypeScript, no build step of its own — node strips the types)
 dist/claude/plugins/**     committed, one tree per target
 dist/{opencode,cursor,ohmypi,codex}/**
-.claude-plugin/marketplace.json   generated at the repo root
+.claude-plugin/marketplace.json    generated at the repo root
+.cursor-plugin/marketplace.json    likewise — Cursor reads it from there
 ```
 
 - **`templates/`** is the only thing authored. `plugin.yaml` is the neutral
@@ -53,6 +54,40 @@ Claude renderer, currently **3 justified hunks**: `lovable` and `stitch` drop a
 `description` duplicated from the marketplace entry, and `git-workflow` drops
 `user-invocable: true`, which is the default. The other four targets have no
 such ground truth — `plugins:check` is their only automated defence.
+
+### Targets and adapters
+
+Two halves, deliberately kept apart. A **Target** (`build/src/targets/`) is
+build-time and pure: templates → the committed `dist/` tree. An **Adapter**
+(`cli/src/adapters/`) is install-time and effectful: `dist/` → the user's
+machine. That split is what keeps format-preserving config mutation out of the
+renderer, and what let the OpenCode installer shrink from a 1189-line renderer
+to a copier.
+
+Adapters come in two kinds, and which kind a target gets is dictated by the
+target, not chosen:
+
+- **Copy** — OpenCode alone, because it has no plugin concept: skills, agents
+  and commands go into well-known directories and the rest is config to merge.
+- **Marketplace** — everyone else. Claude, Codex and Oh-My-Pi are driven through
+  their own CLI (`plugin marketplace add` + `plugin install`), because each owns
+  bookkeeping this tool has no business editing: Codex a versioned cache plus
+  `config.toml`, Oh-My-Pi an npm-shaped tree with a lockfile. Cursor has no CLI,
+  so its adapter writes the reference itself.
+
+**Scope is declared by `plugin.yaml` and honoured where the target supports it;
+where it does not, the request falls back rather than failing.** Only OpenCode
+and Oh-My-Pi support both natively. Cursor is project-only — user-scope
+marketplace installs are account-side, and the local file that once held them is
+closed (`addGitHubPlugin` throws). Codex is user-only — `codex plugin add` has
+no `--scope`. Each redirect logs a note; neither is silent.
+
+An install returns a **receipt** recording prior state, so uninstall restores
+rather than guesses. For CLI-driven targets an entry pairs the command run with
+the command that undoes it — deleting their files directly would leave the
+tool's own records claiming an install that is gone. An undo is recorded **only
+when the command changed something**, so uninstall never removes a marketplace
+the user registered themselves.
 
 ### Tasks
 
@@ -188,13 +223,45 @@ do not need to be listed in `plugin.yaml`:
   `action`, `script`) so each renderer can emit its own mechanism (see Hooks
   below)
 
-The marketplace manifest at `.claude-plugin/marketplace.json` is **generated**
-into the repo root by `plugins:build`, with sources pointing at
-`./dist/claude/plugins/<name>`. It lives at the root rather than under
-`dist/claude/` because that is where Claude Code reads it when the marketplace
-is added from this repo, and because the sources inside it are root-relative and
-would resolve nowhere from anywhere else. Do not edit it by hand —
-`plugins:dist-clean` will fail.
+### Marketplace manifests
+
+Four of the five targets have a native plugin marketplace, so `plugins:build`
+generates one per target from the manifests. **Only OpenCode has none** — it has
+no plugin concept at all, which is why its installer copies a rendered tree
+while the other four register a marketplace and let the tool do the installing.
+Do not edit any of them by hand; `plugins:dist-clean` will fail.
+
+| Target   | Manifest                           | Plugin source                                 |
+| -------- | ---------------------------------- | --------------------------------------------- |
+| Claude   | `.claude-plugin/marketplace.json`  | `./dist/claude/plugins/<name>`                |
+| Cursor   | `.cursor-plugin/marketplace.json`  | `git-subdir` → `dist/cursor/<name>`           |
+| Codex    | `dist/codex/.agents/plugins/…json` | `{source: "local", path: "./plugins/<name>"}` |
+| Oh-My-Pi | `dist/ohmypi/.omp-plugin/…json`    | `./<name>`                                    |
+
+Two manifests live at the **repo root** rather than under `dist/<target>/`,
+because that is where the tool looks when the marketplace is added from this
+repo, and their sources are root-relative and would resolve nowhere else.
+Cursor's must be there for a second reason: Cursor accepts
+`.claude-plugin/marketplace.json` as a fallback, and checks `.cursor-plugin/`
+**first** — so without ours at the root it would read Claude's and resolve every
+plugin to a Claude-rendered bundle.
+
+Three traps, each verified by running the real tool and each silent when wrong:
+
+- **Sources resolve against the marketplace root**, not the repo root.
+  Oh-My-Pi's were once spelled `./dist/ohmypi/<name>` and resolved to
+  `dist/ohmypi/dist/ohmypi/<name>`, failing every install. `plugins:check`
+  cannot catch this — the path exists, just not where the tool looks.
+- **Codex's source discriminator is `"local"`.** Any other value still parses
+  and still registers; `codex plugin list` simply reports "No marketplace
+  plugins found", naming no field. It looks exactly like a disabled feature
+  flag, which is a detour worth not repeating — no flag is involved.
+- **Cursor's sources are git-only** — a bare string, or an object tagged
+  `github` / `url` / `git-subdir`; there is no local-path variant. So a Cursor
+  install clones this repo and reads whatever ref it resolves, rather than the
+  `dist/cursor/` tree beside it. It is the one target where the
+  committed-`dist/` guarantee does not reach, and the only one needing
+  `marketplace.yaml`'s `repository` field.
 
 ## The vwf Plugin
 
