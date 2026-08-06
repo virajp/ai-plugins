@@ -63,6 +63,34 @@ importers:
         specifier: latest
         version: 7.0.2
 
+  cli:
+    dependencies:
+      '@ai-plugins/schema':
+        specifier: workspace:*
+        version: link:../schema
+      citty:
+        specifier: latest
+        version: 0.2.2
+      jsonc-parser:
+        specifier: latest
+        version: 3.3.1
+      picocolors:
+        specifier: latest
+        version: 1.1.1
+      smol-toml:
+        specifier: latest
+        version: 1.7.1
+      write-file-atomic:
+        specifier: latest
+        version: 8.0.0
+      yaml:
+        specifier: latest
+        version: 2.9.0
+    devDependencies:
+      typescript:
+        specifier: latest
+        version: 7.0.2
+
   schema:
     dependencies:
       zod:

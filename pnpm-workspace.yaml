@@ -4,6 +4,7 @@
 packages:
   - schema
   - build
+  - cli
 
 # Supply-chain hardening: refuse to install a dependency version until it has been
 # public for at least this many MINUTES. A compromised release is usually caught

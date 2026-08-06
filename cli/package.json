@@ -1,0 +1,25 @@
+{
+  "name": "@ai-plugins/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Installs the toolkit from the committed dist/ trees onto a user's machine. Bundled into the published @askviraj/ai-plugins package.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-plugins/schema": "workspace:*",
+    "citty": "latest",
+    "jsonc-parser": "latest",
+    "picocolors": "latest",
+    "smol-toml": "latest",
+    "write-file-atomic": "latest",
+    "yaml": "latest"
+  },
+  "devDependencies": {
+    "typescript": "latest"
+  }
+}
