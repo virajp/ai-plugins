@@ -42,9 +42,13 @@ export const claude: Target = {
       outputs.push(...renderPlugin(plugin));
     }
 
+    // At the repo root, not under dist/claude/: this is the file Claude Code
+    // reads when the marketplace is added from this repo, and the sources it
+    // holds are root-relative.
     outputs.push({
       path: ".claude-plugin/marketplace.json",
       contents: marketplaceJson(workspace),
+      atRepoRoot: true,
     });
 
     return { outputs, gaps };

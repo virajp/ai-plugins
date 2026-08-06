@@ -56,7 +56,7 @@ export function renderAll(
     const emission = target.render(workspace);
 
     for (const file of emission.outputs) {
-      const path = join(out, file.path);
+      const path = join(file.atRepoRoot === true ? repoRoot : out, file.path);
       mkdirSync(dirname(path), { recursive: true });
 
       if (typeof file.contents === "string") {

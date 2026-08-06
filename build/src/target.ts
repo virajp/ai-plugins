@@ -13,10 +13,22 @@ import type { Workspace } from "./source.ts";
  * a single writer owns the filesystem.
  */
 export interface Output {
-  /** Path relative to the target's dist root. */
+  /** Path relative to the target's dist root, or to the repo root — see below. */
   readonly path: string;
   readonly contents: string | { readonly copyFrom: string; };
   readonly executable?: boolean;
+  /**
+   * Write relative to the **repo root** rather than `dist/<target>/`.
+   *
+   * Exactly one file needs this: Claude Code reads the marketplace manifest
+   * from `.claude-plugin/marketplace.json` at the root of the repo it was
+   * added from, and the sources inside it are root-relative
+   * (`./dist/claude/plugins/<name>`). Emitted under `dist/claude/` those paths
+   * would resolve nowhere, so the file belongs at the root and is generated
+   * there — the alternative being a hand-maintained copy that can drift from
+   * the manifests it is derived from.
+   */
+  readonly atRepoRoot?: boolean;
 }
 
 /** A capability a target could not carry, surfaced in the coverage report. */
