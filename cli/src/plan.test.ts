@@ -1,0 +1,186 @@
+import { join } from "node:path";
+import {
+  describe,
+  expect,
+  it,
+} from "vitest";
+import {
+  readPluginIndex,
+  resolvePlan,
+} from "./plan.ts";
+import type {
+  PluginIndex,
+  ResolveOptions,
+} from "./plan.ts";
+
+const repoRoot = join(import.meta.dirname, "..", "..");
+
+const index: PluginIndex = {
+  marketplace: "test-marketplace",
+  plugins: [
+    {
+      name: "core",
+      scope: "user",
+      optIn: false,
+      userOnly: false,
+      local: true,
+      dependencies: ["dep"],
+    },
+    {
+      name: "dep",
+      scope: "user",
+      optIn: false,
+      userOnly: false,
+      local: true,
+      dependencies: ["deep"],
+    },
+    {
+      name: "deep",
+      scope: "user",
+      optIn: false,
+      userOnly: false,
+      local: true,
+      dependencies: [],
+    },
+    {
+      name: "pinned",
+      scope: "user",
+      optIn: false,
+      userOnly: true,
+      local: true,
+      dependencies: [],
+    },
+    {
+      name: "proj",
+      scope: "project",
+      optIn: false,
+      userOnly: false,
+      local: true,
+      dependencies: [],
+    },
+    {
+      name: "extra",
+      scope: "user",
+      optIn: true,
+      userOnly: false,
+      local: true,
+      dependencies: [],
+    },
+    {
+      name: "remote",
+      scope: "user",
+      optIn: true,
+      userOnly: false,
+      local: false,
+      dependencies: [],
+    },
+  ],
+};
+
+const opts = (over: Partial<ResolveOptions> = {}): ResolveOptions => ({
+  expandDependencies: true,
+  localOnly: false,
+  ...over,
+});
+
+describe("resolvePlan", () => {
+  it("expands dependencies transitively", () => {
+    const plan = resolvePlan(index, "opencode", { user: ["core"] }, opts());
+
+    expect(plan.user).toEqual(["core", "deep", "dep"]);
+  });
+
+  it("leaves dependencies alone when the target's CLI expands them", () => {
+    // Claude installs its own; naming them would record undos for plugins it
+    // manages, and uninstalling one would remove a shared dependency.
+    const plan = resolvePlan(
+      index,
+      "claude",
+      { user: ["core"] },
+      opts({ expandDependencies: false }),
+    );
+
+    expect(plan.user).toEqual(["core"]);
+  });
+
+  it("gives a dependency the scope of whatever pulled it in", () => {
+    const plan = resolvePlan(index, "opencode", { project: ["core"] }, opts());
+
+    expect(plan.project).toEqual(["core", "deep", "dep"]);
+    expect(plan.user).toEqual([]);
+  });
+
+  it("keeps a user-pinned plugin at user scope even when asked for a project", () => {
+    const logged: string[] = [];
+    const plan = resolvePlan(
+      index,
+      "opencode",
+      { project: ["pinned"] },
+      opts({ log: m => void logged.push(m) }),
+    );
+
+    expect(plan.user).toEqual(["pinned"]);
+    expect(plan.project).toEqual([]);
+    expect(logged.join("\n")).toMatch(/user scope/);
+  });
+
+  it("--all takes user-scoped plugins and excludes opt-in ones", () => {
+    const plan = resolvePlan(index, "opencode", { all: true }, opts());
+
+    // `proj` is project-scoped, `extra`/`remote` are opt-in.
+    expect(plan.user).toEqual(["core", "deep", "dep", "pinned"]);
+    expect(plan.project).toEqual([]);
+  });
+
+  it("installs an opt-in plugin when it is named explicitly", () => {
+    const plan = resolvePlan(index, "opencode", { user: ["extra"] }, opts());
+
+    expect(plan.user).toEqual(["extra"]);
+  });
+
+  it("resolves a name requested at both scopes once, narrowest wins", () => {
+    const plan = resolvePlan(
+      index,
+      "opencode",
+      { user: ["deep"], project: ["deep"] },
+      opts(),
+    );
+
+    expect(plan.project).toEqual(["deep"]);
+    expect(plan.user).toEqual([]);
+  });
+
+  it("skips a url-sourced plugin for targets that can only copy a bundle", () => {
+    const logged: string[] = [];
+    const plan = resolvePlan(
+      index,
+      "opencode",
+      { user: ["remote"] },
+      opts({ localOnly: true, log: m => void logged.push(m) }),
+    );
+
+    expect(plan.user).toEqual([]);
+    expect(logged.join("\n")).toMatch(/no rendered bundle/);
+  });
+
+  it("rejects an unknown name, so only this marketplace is installable", () => {
+    // A qualified name is not a different source — it is simply not a name.
+    expect(() =>
+      resolvePlan(index, "opencode", { user: ["core@other"] }, opts())
+    )
+      .toThrow(/unknown plugin/);
+  });
+});
+
+describe("readPluginIndex", () => {
+  it("reads the index the build emits, with the real manifests in it", () => {
+    const real = readPluginIndex(repoRoot);
+
+    expect(real.marketplace).toBe("virajp-plugins");
+    const vwf = real.plugins.find(p => p.name === "vwf");
+    // Declared in templates/vwf/plugin.yaml, and the reason the CLI no longer
+    // needs its own copy of the dependency list.
+    expect(vwf?.dependencies).toContain("mempalace");
+    expect(real.plugins.find(p => p.name === "flutter")?.scope).toBe("project");
+  });
+});

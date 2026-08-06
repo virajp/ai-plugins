@@ -10,6 +10,7 @@ import {
   dirname,
   join,
 } from "node:path";
+import type { Workspace } from "./source.ts";
 import { readWorkspace } from "./source.ts";
 import type {
   Emission,
@@ -48,6 +49,8 @@ export function renderAll(
 ): RenderResult[] {
   const workspace = readWorkspace(join(repoRoot, "templates"));
   const selected = only ? TARGETS.filter(t => only.includes(t.id)) : TARGETS;
+
+  writePluginIndex(repoRoot, workspace);
 
   return selected.map(target => {
     const out = join(repoRoot, "dist", target.id);
@@ -92,6 +95,42 @@ export function renderAll(
 
     return { target: target.id, files: emission.outputs.length, emission };
   });
+}
+
+/**
+ * The install-time view of the manifests: `dist/plugins.json`.
+ *
+ * The CLI resolves a plan — dependency expansion, scope defaults, which plugins
+ * `--all` covers, the bare-name allowlist — entirely from `plugin.yaml`. But it
+ * cannot read `templates/`: the published package ships `dist/`, not the
+ * authored source. So the build projects the plan-relevant fields here, the
+ * same build→install contract `.ownership.json` already is.
+ *
+ * Deliberately narrow. Anything the renderers consume (skills, hooks, servers)
+ * is already baked into the rendered trees; duplicating it would create a
+ * second source of truth for something that has one.
+ */
+function writePluginIndex(repoRoot: string, workspace: Workspace): void {
+  const index = {
+    marketplace: workspace.marketplace.name,
+    plugins: workspace.plugins.map(plugin => {
+      const m = plugin.manifest;
+      return {
+        name: m.name,
+        scope: m.scope,
+        optIn: m.optIn,
+        userOnly: m.userOnly,
+        // A url-sourced plugin has no rendered bundle, so the copy-based
+        // installer has nothing to install and must skip it.
+        local: m.source.kind === "local",
+        dependencies: [...m.dependencies].sort(),
+      };
+    }),
+  };
+
+  const path = join(repoRoot, "dist", "plugins.json");
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${JSON.stringify(index, null, 2)}\n`);
 }
 
 /** Stable key order, so the manifest is a pure function of the templates. */

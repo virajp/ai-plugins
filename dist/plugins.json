@@ -1,0 +1,125 @@
+{
+  "marketplace": "virajp-plugins",
+  "plugins": [
+    {
+      "name": "andrej-karpathy-skills",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": false,
+      "dependencies": []
+    },
+    {
+      "name": "claude-design",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "context7",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "effect",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [
+        "typescript"
+      ]
+    },
+    {
+      "name": "flutter",
+      "scope": "project",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "gcp",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "github-actions",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "lovable",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "markdown",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "mempalace",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": true,
+      "local": false,
+      "dependencies": []
+    },
+    {
+      "name": "mise",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "stitch",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "typescript",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": []
+    },
+    {
+      "name": "vwf",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [
+        "context7",
+        "github-actions",
+        "markdown",
+        "mempalace",
+        "mise"
+      ]
+    }
+  ]
+}
