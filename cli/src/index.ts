@@ -433,35 +433,62 @@ async function noteNewerCli(context: AdapterContext): Promise<void> {
  * The package root — what holds `dist/`, the marketplace manifests and `tools/`.
  *
  * Found by walking up rather than by counting `..` segments, because this code
- * runs from two different depths: `cli/src/index.ts` in the repo, and
- * `bin/ai-plugins.mjs` once tsup has bundled it. A fixed offset would be right
- * in one and silently wrong in the other, resolving `sourceRoot` to a directory
- * that exists but holds none of the trees an adapter reads.
+ * runs from three places now: `cli/src/index.ts` in the repo,
+ * `bin/ai-plugins.mjs` once tsup has bundled it, and a `bun build --compile`
+ * binary. A fixed offset would be right in one and silently wrong in the others,
+ * resolving `sourceRoot` to a directory that exists but holds none of the trees
+ * an adapter reads.
+ *
+ * **Two starting points, and the second is why this is not simpler.** Inside a
+ * compiled binary `import.meta.dirname` is Bun's *virtual* filesystem root
+ * (`/$bunfs/root`), which contains only the bundled JS — walking up from it
+ * finds nothing and never can. `process.execPath` is the one path that points at
+ * where the binary actually sits, next to the payload it shipped with.
  *
  * Matched on the package *name*, so the workspace's own `cli/package.json` is
  * walked past rather than mistaken for the root.
  */
 function packageRoot(): string {
-  let dir = import.meta.dirname;
+  // Order matters: under `node` these agree, but a compiled binary's
+  // `execPath` is the truthful one and its `import.meta.dirname` is virtual.
+  const starts = [import.meta.dirname, dirname(process.execPath)];
+  for (const start of starts) {
+    const found = walkUpForPackage(start);
+    if (found !== undefined) {
+      return found;
+    }
+  }
+  throw new Error(
+    `could not locate the ${PACKAGE_NAME} package root from ${
+      starts.join(" or ")
+    }`,
+  );
+}
+
+function walkUpForPackage(start: string): string | undefined {
+  let dir = start;
   for (let depth = 0; depth < 6; depth++) {
     const manifest = join(dir, "package.json");
     if (existsSync(manifest)) {
-      const parsed = JSON.parse(readFileSync(manifest, "utf8")) as {
-        name?: string;
-      };
-      if (parsed.name === PACKAGE_NAME) {
-        return dir;
+      try {
+        const parsed = JSON.parse(readFileSync(manifest, "utf8")) as {
+          name?: string;
+        };
+        if (parsed.name === PACKAGE_NAME) {
+          return dir;
+        }
+      }
+      catch {
+        // An unreadable package.json on the way up is somebody else's problem.
       }
     }
     const parent = dirname(dir);
     if (parent === dir) {
-      break;
+      return undefined;
     }
     dir = parent;
   }
-  throw new Error(
-    `could not locate the ${PACKAGE_NAME} package root from ${import.meta.dirname}`,
-  );
+  return undefined;
 }
 
 /**
@@ -477,10 +504,26 @@ function receiptDir(): string {
  * Only run when invoked directly, so importing this module — as the tests do,
  * for the pure helpers above — does not execute the CLI. `realpathSync` is what
  * makes it survive the symlink npm creates for a `bin` entry.
+ *
+ * A compiled binary takes the `catch`: its `argv[1]` is a path inside Bun's
+ * virtual filesystem, so `realpathSync` throws ENOENT rather than returning
+ * something to compare. Nothing else can produce an `argv[1]` that does not
+ * exist — a bad script path never gets this far — so treating it as the
+ * entrypoint is the only reading available.
  */
-if (
-  process.argv[1] !== undefined
-  && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
-) {
+function isEntrypoint(): boolean {
+  const invoked = process.argv[1];
+  if (invoked === undefined) {
+    return false;
+  }
+  try {
+    return realpathSync(invoked) === fileURLToPath(import.meta.url);
+  }
+  catch {
+    return true;
+  }
+}
+
+if (isEntrypoint()) {
   runMain(main);
 }
