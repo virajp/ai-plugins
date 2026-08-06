@@ -35,6 +35,10 @@ import {
   ReceiptBuilder,
   revert as revertReceipt,
 } from "../receipt.ts";
+import {
+  hasBin,
+  shallowestNew,
+} from "./support.ts";
 import { copyTree } from "./tree.ts";
 import type {
   Action,
@@ -329,30 +333,4 @@ function readOwnership(dist: string): Record<string, string> {
     throw new Error(`missing ${path} — run \`mise run plugins:build\``);
   }
   return JSON.parse(readFileSync(path, "utf8")) as Record<string, string>;
-}
-
-function hasBin(bin: string): boolean {
-  const path = process.env["PATH"] ?? "";
-  return path
-    .split(process.platform === "win32" ? ";" : ":")
-    .some(dir => dir.length > 0 && existsSync(join(dir, bin)));
-}
-
-/**
- * The shortest prefix of `path` that is absent from the document.
- *
- * That prefix is what this install creates, and therefore what an uninstall
- * has to remove to leave the file as it found it.
- */
-function shallowestNew(
-  parsed: Record<string, unknown> | undefined,
-  path: readonly (string | number)[],
-): readonly (string | number)[] {
-  for (let i = 1; i <= path.length; i++) {
-    const prefix = path.slice(0, i);
-    if (parsed === undefined || getPath(parsed, prefix) === undefined) {
-      return prefix;
-    }
-  }
-  return path;
 }
