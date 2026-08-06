@@ -21,7 +21,11 @@ import {
 import { dirname } from "node:path";
 import writeFileAtomic from "write-file-atomic";
 
-export const RECEIPT_VERSION = 1;
+/**
+ * 2 added the `command` entry. A v1 receipt still reverts correctly, so the
+ * guard in `readReceipt` only refuses receipts from a *future* version.
+ */
+export const RECEIPT_VERSION = 2;
 
 export type Entry =
   /** A file we wrote. `previous` is absent when we created it. */
@@ -44,6 +48,24 @@ export type Entry =
     readonly path: readonly (string | number)[];
     readonly hadKey: boolean;
     readonly previous?: unknown;
+  }
+  /**
+   * A command we ran, and the command that undoes it.
+   *
+   * The marketplace targets install by driving their own CLI, which owns
+   * bookkeeping this tool has no business editing — Codex's cache tree,
+   * Oh-My-Pi's `node_modules` and lockfile. Undoing those by deleting the files
+   * we can see would leave the tool's own records claiming an install that is
+   * no longer there, so the CLI has to unmake what it made.
+   *
+   * Recorded only when the command actually changed something: re-registering
+   * an already-registered marketplace is a no-op whose "undo" would remove one
+   * the user set up themselves.
+   */
+  | {
+    readonly kind: "command";
+    readonly ran: readonly string[];
+    readonly undo: readonly string[];
   };
 
 export interface Receipt {
@@ -80,6 +102,12 @@ export class ReceiptBuilder {
     if (!existsSync(path)) {
       this.entries.push({ kind: "dir", path });
     }
+    return this;
+  }
+
+  /** Record a command we ran, together with the command that undoes it. */
+  command(ran: readonly string[], undo: readonly string[]): this {
+    this.entries.push({ kind: "command", ran: [...ran], undo: [...undo] });
     return this;
   }
 
@@ -146,6 +174,12 @@ export interface RevertHooks {
     hadKey: boolean,
     previous: unknown,
   ): void;
+
+  /**
+   * Run a recorded undo command. Absent for adapters that never record one, in
+   * which case a `command` entry is skipped rather than treated as an error.
+   */
+  runUndo?(undo: readonly string[]): void;
 }
 
 /**
@@ -180,6 +214,10 @@ export function revert(receipt: Receipt, hooks: RevertHooks): void {
       }
       case "configKey": {
         hooks.restoreKey(entry.file, entry.path, entry.hadKey, entry.previous);
+        break;
+      }
+      case "command": {
+        hooks.runUndo?.(entry.undo);
         break;
       }
     }

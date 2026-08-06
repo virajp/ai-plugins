@@ -4,9 +4,35 @@
  * Kept deliberately small: an adapter's value is that it says exactly what its
  * target needs, so anything moved here has to be genuinely target-independent.
  */
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { getPath } from "../config/json.ts";
+import type { Exec } from "./types.ts";
+
+/**
+ * The real command runner, for the CLI entrypoint to put on the context.
+ *
+ * No shell: arguments are passed as an array, so a marketplace name or path
+ * containing a space or a metacharacter is an argument rather than syntax.
+ * A command that cannot be spawned at all reports status 127 like a shell
+ * would, instead of throwing, so callers have one failure shape to handle.
+ */
+export const execCommand: Exec = (command, args, options) => {
+  const result = spawnSync(command, [...args], {
+    encoding: "utf8",
+    ...(options?.cwd === undefined ? {} : { cwd: options.cwd }),
+    ...(options?.env === undefined ? {} : { env: options.env }),
+  });
+  if (result.error !== undefined) {
+    return { status: 127, stdout: "", stderr: String(result.error.message) };
+  }
+  return {
+    status: result.status ?? 1,
+    stdout: result.stdout ?? "",
+    stderr: result.stderr ?? "",
+  };
+};
 
 /** Is `bin` on the PATH? Used by every adapter's `detect`. */
 export function hasBin(bin: string): boolean {

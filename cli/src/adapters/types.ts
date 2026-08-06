@@ -63,7 +63,28 @@ export interface AdapterContext {
   /** Timestamp for the receipt, supplied by the caller. */
   readonly now: string;
   readonly log: (message: string) => void;
+  /**
+   * Runs an external command.
+   *
+   * Required rather than optional, and injected rather than imported, because
+   * the marketplace-backed targets (Claude, Codex, Oh-My-Pi) install by driving
+   * their own CLI — so for those adapters this *is* the install. A default
+   * would give tests a second code path to the one that ships.
+   */
+  readonly exec: Exec;
 }
+
+export interface ExecResult {
+  readonly status: number;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+
+export type Exec = (
+  command: string,
+  args: readonly string[],
+  options?: { readonly cwd?: string; readonly env?: NodeJS.ProcessEnv; },
+) => ExecResult;
 
 export interface Adapter {
   readonly id: TargetId;

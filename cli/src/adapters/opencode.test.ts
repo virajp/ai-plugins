@@ -41,6 +41,10 @@ beforeEach(() => {
     cwd,
     now: "2026-01-01T00:00:00Z",
     log: () => {},
+    // OpenCode installs by copying; nothing here should ever shell out.
+    exec: () => {
+      throw new Error("the OpenCode adapter must not run commands");
+    },
   };
 });
 afterEach(() => {

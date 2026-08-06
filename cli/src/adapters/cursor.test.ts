@@ -43,7 +43,13 @@ beforeEach(() => {
     home,
     cwd,
     now: "2026-01-01T00:00:00Z",
-    log: message => logged.push(message),
+    log: message => {
+      logged.push(message);
+    },
+    // Cursor installs by writing a reference; nothing here should shell out.
+    exec: () => {
+      throw new Error("the Cursor adapter must not run commands");
+    },
   };
 });
 afterEach(() => {
