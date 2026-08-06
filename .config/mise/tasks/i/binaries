@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#MISE description="Cross-compile standalone binaries and package one archive per platform"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--target <target>" help="build one platform only (e.g. darwin-arm64)"
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+# Why an archive rather than a lone executable: three of the five adapters
+# (claude, codex, ohmypi) register a marketplace whose source is a real
+# directory under dist/, which the agent re-reads IN PLACE on every later
+# session. So the payload cannot live inside the binary — it has to sit beside
+# it, at a path that persists after the install.
+#
+# The payload is platform-independent and the binary is not, which is the whole
+# reason this loop assembles rather than just compiles.
+PAYLOAD=(dist .claude-plugin .cursor-plugin tools package.json LICENSE)
+
+VERSION="$(node -p 'require("./package.json").version')"
+OUT="release"
+
+# bun's target triples, from its own docs. Kept to the five that matter; the
+# musl and baseline variants exist if a user ever needs Alpine or a pre-2013 CPU.
+TARGETS=(
+  "darwin-arm64:bun-darwin-arm64"
+  "darwin-x64:bun-darwin-x64"
+  "linux-x64:bun-linux-x64"
+  "linux-arm64:bun-linux-arm64"
+  "windows-x64:bun-windows-x64"
+)
+
+only="${usage_target:-}"
+
+rm -rf "$OUT"
+mkdir -p "$OUT"
+
+for entry in "${TARGETS[@]}"; do
+  name="${entry%%:*}"
+  triple="${entry##*:}"
+
+  if [[ -n "$only" && "$only" != "$name" ]]; then
+    continue
+  fi
+
+  stage="$OUT/ai-plugins-$VERSION-$name"
+  binary="$stage/ai-plugins"
+  [[ "$name" == windows-* ]] && binary="$stage/ai-plugins.exe"
+
+  print_header "Compiling $name ..."
+  mkdir -p "$stage"
+  bun build --compile --target="$triple" cli/src/index.ts --outfile "$binary" \
+    >/dev/null
+
+  # cp -R so the rendered trees land byte-identical; they are what CI validated.
+  for item in "${PAYLOAD[@]}"; do
+    [[ -e "$item" ]] && cp -R "$item" "$stage/"
+  done
+
+  print_header "Archiving $name ..."
+  if [[ "$name" == windows-* ]]; then
+    (cd "$OUT" && zip -qr "ai-plugins-$VERSION-$name.zip" "$(basename "$stage")")
+  else
+    tar -czf "$OUT/ai-plugins-$VERSION-$name.tar.gz" -C "$OUT" "$(basename "$stage")"
+  fi
+  rm -rf "$stage"
+done
+
+# Checksums are what the Homebrew formula and Scoop manifest pin, and what the
+# curl-sh installer verifies. Generated here so all three read one file.
+print_header "Writing checksums ..."
+(cd "$OUT" && shasum -a 256 ai-plugins-"$VERSION"-* > "checksums-$VERSION.txt")
+cat "$OUT/checksums-$VERSION.txt"
+
+print_header "Binaries built into $OUT/"

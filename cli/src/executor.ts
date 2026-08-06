@@ -12,6 +12,7 @@
  * any failed.
  */
 import type { TargetId } from "@ai-plugins/schema";
+import { rmSync } from "node:fs";
 import { join } from "node:path";
 import type {
   Action,
@@ -136,12 +137,19 @@ export function revert(
     }
     try {
       adapter.revert(options.context, receipt);
+      // Consume it. A receipt describes an install that exists; leaving it
+      // behind after undoing one makes every later command believe in it —
+      // `--upgrade` would cheerfully re-install exactly what was just removed,
+      // and `verify` would report the whole thing as missing files.
+      rmSync(path, { force: true });
       outcomes.push({
         target: adapter.id,
         actions: [{ summary: `reverted ${adapter.displayName}`, path }],
       });
     }
     catch (error) {
+      // Kept on failure, deliberately: a half-reverted install still has state
+      // to undo, and throwing the record away would strand it.
       outcomes.push({
         target: adapter.id,
         actions: [],

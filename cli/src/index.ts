@@ -449,6 +449,14 @@ async function noteNewerCli(context: AdapterContext): Promise<void> {
  * walked past rather than mistaken for the root.
  */
 function packageRoot(): string {
+  // Escape hatch, and the same name the old installer used for it. Needed
+  // whenever the payload is not somewhere above the executable — a packaged
+  // archive being smoke-tested from elsewhere, or a layout that splits the
+  // binary from the trees it reads.
+  const override = process.env["AI_PLUGINS_SOURCE_DIR"];
+  if (override !== undefined && override.length > 0) {
+    return override;
+  }
   // Order matters: under `node` these agree, but a compiled binary's
   // `execPath` is the truthful one and its `import.meta.dirname` is virtual.
   const starts = [import.meta.dirname, dirname(process.execPath)];

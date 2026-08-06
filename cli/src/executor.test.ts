@@ -261,6 +261,34 @@ describe("revert", () => {
 
     expect(called).toBe(true);
   });
+
+  it("consumes the receipt, so --upgrade cannot resurrect the install", () => {
+    execute([[fakeAdapter(), planFor(["markdown"])]], options());
+
+    revert([fakeAdapter()], options());
+
+    expect(existsSync(receiptPath(receiptDir, "opencode"))).toBe(false);
+    // The bite: a surviving receipt makes `--upgrade` re-install exactly what
+    // was just uninstalled.
+    expect(upgradeJobs([fakeAdapter()], options()).jobs).toEqual([]);
+  });
+
+  it("keeps the receipt when the revert failed", () => {
+    execute([[fakeAdapter(), planFor(["markdown"])]], options());
+
+    revert(
+      [fakeAdapter({
+        revert: () => {
+          throw new Error("boom");
+        },
+      })],
+      options(),
+    );
+
+    // A half-reverted install still has state to undo; discarding the record
+    // would strand it.
+    expect(existsSync(receiptPath(receiptDir, "opencode"))).toBe(true);
+  });
 });
 
 describe("renderProgress", () => {
