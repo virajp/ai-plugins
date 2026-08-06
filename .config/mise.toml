@@ -15,6 +15,10 @@ npm.package_manager = "pnpm"
 # mise.ci.toml (MISE_ENV=ci, the GitHub workflows). Only the common runtime that
 # both need (node, pnpm) lives here, to avoid duplicating it across both.
 [tools]
+# bun is the compiler for `i:binaries`, not a runtime for this project — it
+# cross-compiles every standalone target from one host. Common rather than
+# dev-only because the Binaries workflow runs that task in CI.
+bun         = { version = "latest" }
 node        = { version = "latest" }
 osv-scanner = { version = "latest" }
 pnpm        = { version = "latest" }
