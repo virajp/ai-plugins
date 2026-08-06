@@ -1,0 +1,271 @@
+/**
+ * The CLI entrypoint — replaces `bin/installer.mjs`.
+ *
+ * Everything below this file is already built and tested: `plan.ts` turns flags
+ * into one `AdapterPlan` per target, `executor.ts` runs them and renders the
+ * result. So this stays a router: parse, resolve, execute, report, exit.
+ *
+ * Two citty details it has to work around, both confirmed against its docs:
+ *
+ * - citty documents no `multiple:` argument kind. A repeated `--user a --user b`
+ *   arrives as an array, a single one as a string — so every list flag is
+ *   normalised through `toList`.
+ * - The tri-state `--statusline` needs a boolean with **no default**, so
+ *   "absent" stays `undefined` and can defer to `--all`. Giving it
+ *   `default: false` would make an unset flag indistinguishable from
+ *   `--no-statusline`.
+ */
+import type { TargetId } from "@ai-plugins/schema";
+import {
+  defineCommand,
+  runMain,
+} from "citty";
+import { realpathSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { claude } from "./adapters/claude.ts";
+import { codex } from "./adapters/codex.ts";
+import { cursor } from "./adapters/cursor.ts";
+import { ohmypi } from "./adapters/ohmypi.ts";
+import { opencode } from "./adapters/opencode.ts";
+import { execCommand } from "./adapters/support.ts";
+import type {
+  Adapter,
+  AdapterContext,
+  AdapterPlan,
+} from "./adapters/types.ts";
+import {
+  execute,
+  failed,
+  renderDiff,
+  renderProgress,
+  revert,
+} from "./executor.ts";
+import type { PlanRequest } from "./plan.ts";
+import {
+  readPluginIndex,
+  resolvePlan,
+} from "./plan.ts";
+
+export const ADAPTERS: readonly Adapter[] = [
+  claude,
+  codex,
+  cursor,
+  ohmypi,
+  opencode,
+];
+
+/**
+ * Repeated flags arrive as an array, single ones as a string, absent ones as
+ * `undefined`. One shape out, so callers never branch on citty's.
+ */
+export function toList(value: unknown): string[] {
+  if (value === undefined || value === null || value === "") {
+    return [];
+  }
+  return (Array.isArray(value) ? value : [value]).map(String).filter(v =>
+    v.length > 0
+  );
+}
+
+/**
+ * Resolve the tri-state statusline flag.
+ *
+ * Unset defers to `--all`, which means the whole toolkit and therefore the bar
+ * too. `--no-statusline` refuses it even under `--all`.
+ */
+export function wantsStatusline(
+  flag: boolean | undefined,
+  all: boolean,
+): boolean {
+  return flag ?? all;
+}
+
+/** Which targets to act on: those named, else every tool actually present. */
+export function selectAdapters(
+  platforms: readonly string[],
+  context: AdapterContext,
+  adapters: readonly Adapter[] = ADAPTERS,
+): Adapter[] {
+  if (platforms.length === 0) {
+    return adapters.filter(a => a.detect(context));
+  }
+  return platforms.map(name => {
+    const adapter = adapters.find(a => a.id === name);
+    if (adapter === undefined) {
+      throw new Error(
+        `unknown platform \`${name}\` — expected one of: ${
+          adapters.map(a => a.id).join(", ")
+        }`,
+      );
+    }
+    return adapter;
+  });
+}
+
+/**
+ * One plan per adapter.
+ *
+ * The two per-target rules live here rather than in `resolvePlan`, because they
+ * are facts about the *target*, not about the request: Claude's CLI installs
+ * dependencies itself, and only a copy-based target needs a rendered bundle.
+ */
+export function buildJobs(
+  adapters: readonly Adapter[],
+  request: PlanRequest,
+  sourceRoot: string,
+  statusline: boolean,
+  log: (message: string) => void,
+): (readonly [Adapter, AdapterPlan])[] {
+  const index = readPluginIndex(sourceRoot);
+  return adapters.map(adapter => {
+    const plan = resolvePlan(index, adapter.id as TargetId, request, {
+      expandDependencies: adapter.id !== "claude",
+      localOnly: adapter.id === "opencode",
+      log,
+    });
+    return [adapter, { ...plan, statusline }] as const;
+  });
+}
+
+const main = defineCommand({
+  meta: {
+    name: "ai-plugins",
+    description: "Install the virajp-plugins toolkit across AI coding agents",
+  },
+  args: {
+    all: {
+      type: "boolean",
+      description: "Install every user-scoped plugin (excludes opt-in ones)",
+      default: false,
+    },
+    user: {
+      type: "string",
+      description: "Install a plugin at user scope (repeatable)",
+    },
+    project: {
+      type: "string",
+      description: "Install a plugin at project scope (repeatable)",
+    },
+    platform: {
+      type: "string",
+      description:
+        "Target an agent: claude, codex, cursor, ohmypi, opencode (repeatable). Defaults to every one installed",
+    },
+    statusline: {
+      type: "boolean",
+      description: "Install the statusline",
+      negativeDescription: "Skip the statusline",
+    },
+    uninstall: {
+      type: "boolean",
+      description: "Undo a previous install, from its receipt",
+      default: false,
+    },
+    "dry-run": {
+      type: "boolean",
+      description: "Show the full diff without writing anything",
+      default: false,
+    },
+    force: {
+      type: "boolean",
+      description: "Act on a target whose tool is not on PATH",
+      default: false,
+    },
+  },
+  run({ args }) {
+    const context: AdapterContext = {
+      sourceRoot: packageRoot(),
+      home: homedir(),
+      cwd: process.cwd(),
+      now: new Date().toISOString(),
+      // stderr: progress is not data.
+      log: message => process.stderr.write(`${message}\n`),
+      exec: execCommand,
+    };
+
+    const options = {
+      context,
+      dryRun: args["dry-run"] === true,
+      receiptDir: receiptDir(),
+      force: args.force === true,
+    };
+
+    const adapters = selectAdapters(toList(args.platform), context);
+    if (adapters.length === 0) {
+      // Never hang waiting for input that is not coming.
+      process.stderr.write(
+        "no supported agent found on PATH; name one with --platform\n",
+      );
+      process.exit(1);
+    }
+
+    if (args.uninstall === true) {
+      const outcomes = revert(adapters, options);
+      process.stderr.write(`${renderProgress(outcomes)}\n`);
+      process.exit(failed(outcomes) ? 1 : 0);
+    }
+
+    const request: PlanRequest = {
+      all: args.all === true,
+      user: toList(args.user),
+      project: toList(args.project),
+    };
+    if (
+      request.all !== true
+      && request.user?.length === 0
+      && request.project?.length === 0
+    ) {
+      process.stderr.write(
+        "nothing to install: pass --all, or name plugins with --user/--project\n",
+      );
+      process.exit(1);
+    }
+
+    const jobs = buildJobs(
+      adapters,
+      request,
+      context.sourceRoot,
+      wantsStatusline(
+        args.statusline as boolean | undefined,
+        args.all === true,
+      ),
+      context.log,
+    );
+    const outcomes = execute(jobs, options);
+
+    if (options.dryRun) {
+      // Data to stdout, so it can be piped or diffed.
+      process.stdout.write(`${renderDiff(outcomes)}\n`);
+    }
+    process.stderr.write(`${renderProgress(outcomes)}\n`);
+    process.exit(failed(outcomes) ? 1 : 0);
+  },
+});
+
+/** The package root holding `dist/` — two levels up from `cli/src/`. */
+function packageRoot(): string {
+  return join(import.meta.dirname, "..", "..");
+}
+
+/**
+ * Where receipts live. Stable across runs by construction: an uninstall that
+ * cannot find the receipt has nothing to restore from.
+ */
+function receiptDir(): string {
+  const base = process.env["XDG_CONFIG_HOME"] ?? join(homedir(), ".config");
+  return join(base, "ai-plugins", "receipts");
+}
+
+/**
+ * Only run when invoked directly, so importing this module — as the tests do,
+ * for the pure helpers above — does not execute the CLI. `realpathSync` is what
+ * makes it survive the symlink npm creates for a `bin` entry.
+ */
+if (
+  process.argv[1] !== undefined
+  && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  runMain(main);
+}
