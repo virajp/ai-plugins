@@ -9,117 +9,196 @@
 
 ## What This Repo Is
 
-A Claude Code plugin marketplace (`virajp-plugins`) containing LSP servers, an
-MCP server, and `vwf` — a full Product → Blueprint → Plan → Execute workflow
-plugin (with post-deploy verify + production-feedback intake). The root
-`.claude-plugin/marketplace.json` defines the marketplace; each plugin lives in
-`plugins/<name>/.claude-plugin/plugin.json`.
+A multi-agent plugin toolkit (`virajp-plugins`) containing LSP servers, an MCP
+server, and `vwf` — a full Product → Blueprint → Plan → Execute workflow plugin
+(with post-deploy verify + production-feedback intake).
 
 The repo also ships a **statusline**, installed via a small `oclif` CLI
 (`@askviraj/ai-plugins`) rather than the marketplace — see The installer &
 statusline CLI.
 
-Plugins are pure JSON/markdown configuration plus shell scripts (no build step).
-The one addition is the statusline CLI: a small plain-JS `oclif` package at the
-repo root — also no build step.
+### Templates, targets, and dist
 
-The plugins have two test tasks, run **locally via pre-commit** (never in
-`release.yml`, which is the installer's):
+Plugins are **authored once, in a target-agnostic form, and rendered per
+agent**. Claude Code is one target of five, not the source shape:
 
-- **`plugins:check`** — static validation of **every** local plugin under
-  `plugins/*`: manifest JSON validity, `plugin.json` `name`↔dir, registration in
-  `marketplace.json` with the right `./plugins/<name>` source (both directions),
-  `plugin.json`↔marketplace dependency sync, `${CLAUDE_PLUGIN_ROOT}` asset-ref
-  resolution, agent `name:`↔filename (for plugins with an `agents/` dir),
-  **agent cross-reference resolution** (every role-shaped `` `token` `` in a
-  plugin's own prose — the suffix set derived from its own `agents/` dir — names
-  a real agent, and every declared agent is referenced at least once; the two
-  directions cover each other on a rename), skill frontmatter (`name:`↔dir +
-  `description:` + plausible `model:` when pinned), cross-plugin skill-name
-  uniqueness (OpenCode installs skills into one flat namespace), `hooks.json`
-  validity + script existence/executability, relative links under
-  `assets/examples/**`, and the installer sync assertion (`bin/claude.mjs`
-  `PLUGINS` ≡ marketplace names, `PROJECT_SCOPED`/`OPT_IN` ⊆ `PLUGINS`,
-  `PLUGIN_DEPS` ≡ the marketplace dependency lists). url-sourced entries (e.g.
-  `mempalace`) are covered only for JSON validity. Scoped to fire when anything
-  under `plugins/` or the marketplace manifest changes.
+```text
+templates/<plugin>/        authored source — plugin.yaml + skills/ + agents/
+  ↓  build/ (TypeScript, no build step of its own — node strips the types)
+dist/claude/plugins/**     committed, one tree per target
+dist/{opencode,cursor,ohmypi,codex}/**
+.claude-plugin/marketplace.json   generated at the repo root
+```
+
+- **`templates/`** is the only thing authored. `plugin.yaml` is the neutral
+  manifest, merging what used to be split between `plugin.json` and the
+  marketplace entry — so those two can no longer disagree. Prose uses Eta
+  helpers (`<%= it.root %>`, `<%= it.cmd('vwf:plan') %>`) wherever a target
+  needs a different spelling.
+- **`schema/`** holds the neutral contract: order-preserving frontmatter, zod
+  schemas, and the verified per-target capability matrix. Frontmatter is
+  modelled as ordered `(key, raw)` pairs and re-emitted **verbatim** — never
+  round-tripped through a YAML serialiser, because the corpus uses nine key
+  orders and folds descriptions at irregular widths.
+- **`dist/`** is committed, so what users install is inspectable and diffable in
+  review, and CI can assert it matches a fresh render.
+- **`plugins/`** is the frozen pre-migration tree. It is kept **only** as the
+  Claude byte-parity gate, and because the published installer's OpenCode path
+  still reads it from the `main` tarball at run time. It is deleted in Phase 2,
+  alongside the `bin/` → `cli/` rewrite that removes its last consumer. Do not
+  author there.
+
+Byte-parity against `plugins/` is the load-bearing correctness gate for the
+Claude renderer, currently **3 justified hunks**: `lovable` and `stitch` drop a
+`description` duplicated from the marketplace entry, and `git-workflow` drops
+`user-invocable: true`, which is the default. The other four targets have no
+such ground truth — `plugins:check` is their only automated defence.
+
+### Tasks
+
+Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
+which is the installer's and whose trigger surface must stay untouched — npm
+allows one Trusted Publisher and validates the entry-point filename):
+
+- **`plugins:build`** — renders `templates/` into every `dist/<target>/`. Each
+  target directory is removed first, so a deleted skill disappears rather than
+  lingering.
+- **`plugins:dist-clean`** — renders, then fails if that produced anything not
+  already staged. This is what catches a template edited without a rebuild;
+  nothing else can, because `dist/` is committed.
+- **`plugins:check`** — validates `templates/` **and** all five rendered
+  targets, then prints the per-target coverage report. On the source: manifest
+  name↔dir, dependencies resolving within the marketplace, hook scripts existing
+  and executable, **agent cross-reference resolution** (every role-shaped
+  `` `token` `` in a plugin's own prose names a real agent, and every declared
+  agent is referenced at least once — the two directions cover each other on a
+  rename), cross-plugin skill-name uniqueness (skills share one flat namespace
+  on OpenCode, Oh-My-Pi and Codex), the vwf design-adapter contract, relative
+  links under `assets/examples/**`, **strict-YAML frontmatter**, and the
+  installer sync assertion (`bin/claude.mjs` sets ≡ the manifests). On each
+  rendered target: no surviving template tags, strict-YAML frontmatter, and
+  every root-relative reference resolving to something actually emitted.
 - **`vwf:test`** — table-tests the `vwf` `npm-normalize.sh` hook through the
   system sed (the BSD-sed portability guarantee), for **both** package managers:
   each table runs in a temp dir seeded with the lockfile that selects pnpm or
-  bun, so resolution is exercised alongside the rewrite. vwf-specific since it
-  is the only plugin shipping a hook. Scoped to `plugins/vwf/hooks/`.
+  bun, so resolution is exercised alongside the rewrite. It runs against
+  `templates/vwf/hooks/` — hook scripts are copied byte-for-byte rather than
+  rendered, so the source is exactly what every target ships.
+- **`vitest run`** — schema, renderer and checker suites.
+
+`plugins:check` is deliberately smaller than the Python task it replaced. Whole
+families of the old assertions became *unrepresentable* rather than merely
+unchecked: the two dependency lists that had to be kept identical by hand,
+marketplace registration in both directions (the marketplace is derived from the
+manifests), and skill `name:`/`description:`/`model:` shape (zod types all
+three). What remains is what no type can state.
 
 Plugin/skill version numbers are **not** cross-checked — they are independent by
 design (a plugin may hold skills versioned on their own cadence).
+
+### Traps worth knowing
+
+- **Eta needs `autoEscape: false` AND `autoTrim: false`.** `autoTrim` strips the
+  newline next to a tag, which silently reflows folded YAML scalars — same text,
+  different bytes, parity gone.
+- **dprint deliberately excludes `templates/**/*.md`.** It re-wraps markdown,
+  but Eta expressions are wider than what they render to, so formatting the
+  templates mis-wraps the rendered output. It *does* format `plugins/**/*.md`,
+  and pre-commit only formats files a commit touches — so editing a
+  never-formatted file there reflows one tree and not the other, breaking
+  parity. Match the existing fold width rather than fighting it.
+- **Root `dist/` is committed; per-package `dist/` are gitignored.** Same name,
+  opposite treatment.
+- **Frontmatter must be strict-YAML valid.** Claude's parser is lenient and will
+  accept what Codex's rejects outright — and a rejected skill is dropped
+  silently, with no error and no warning.
 
 ## Plugins
 
 | Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`                    | `./plugins/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, an npm→pnpm/bun normalizing hook, and the mempalace MCP server over **HTTP** (see mempalace: skills from the plugin, MCP from vwf)                                                                                                                                                                                                       |
-| `markdown`               | `./plugins/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` skill that scans a repo and writes/updates its README                                                                                                                                                                                                                                                                                 |
-| `typescript`             | `./plugins/typescript`     | Opinionated **plain** TypeScript skills — a `typescript` router skill (lean SKILL.md → on-demand standards/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`). Effect-TS doctrine lives in `effect`, not here                                                                                 |
-| `effect`                 | `./plugins/effect`         | Effect-TS doctrine, split out of `typescript` so plain TypeScript need not carry it — an `effect` router skill (effect/effect-runtime/testing references) plus the `packages` **stack template** and the two vwf stack-adapter skills. Depends on `typescript`. **Opt-in**                                                                                                                                                    |
-| `context7`               | `./plugins/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `claude-design`          | `./plugins/claude-design`  | Claude Design MCP server plus the **vwf design-adapter skills**. The default adapter (stays in `--all`), and no longer a vwf dependency                                                                                                                                                                                                                                                                                       |
-| `lovable`                | `./plugins/lovable`        | vwf design adapter for Lovable — screens from generated source, design system from the published `.lovable/design-system.json`. **Opt-in**                                                                                                                                                                                                                                                                                    |
-| `stitch`                 | `./plugins/stitch`         | vwf design adapter for Google Stitch — screens as HTML via `@google/stitch-sdk`; tokens are **derived**, not stored. **Opt-in**                                                                                                                                                                                                                                                                                               |
-| `flutter`                | `./plugins/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)                                                                                                                                         |
+| `vwf`                    | `templates/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, an npm→pnpm/bun normalizing hook, and the mempalace MCP server over **HTTP** (see mempalace: skills from the plugin, MCP from vwf)                                                                                                                                                                                                       |
+| `markdown`               | `templates/markdown`       | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` skill that scans a repo and writes/updates its README                                                                                                                                                                                                                                                                                 |
+| `typescript`             | `templates/typescript`     | Opinionated **plain** TypeScript skills — a `typescript` router skill (lean SKILL.md → on-demand standards/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`). Effect-TS doctrine lives in `effect`, not here                                                                                 |
+| `effect`                 | `templates/effect`         | Effect-TS doctrine, split out of `typescript` so plain TypeScript need not carry it — an `effect` router skill (effect/effect-runtime/testing references) plus the `packages` **stack template** and the two vwf stack-adapter skills. Depends on `typescript`. **Opt-in**                                                                                                                                                    |
+| `context7`               | `templates/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `claude-design`          | `templates/claude-design`  | Claude Design MCP server plus the **vwf design-adapter skills**. The default adapter (stays in `--all`), and no longer a vwf dependency                                                                                                                                                                                                                                                                                       |
+| `lovable`                | `templates/lovable`        | vwf design adapter for Lovable — screens from generated source, design system from the published `.lovable/design-system.json`. **Opt-in**                                                                                                                                                                                                                                                                                    |
+| `stitch`                 | `templates/stitch`         | vwf design adapter for Google Stitch — screens as HTML via `@google/stitch-sdk`; tokens are **derived**, not stored. **Opt-in**                                                                                                                                                                                                                                                                                               |
+| `flutter`                | `templates/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)                                                                                                                                         |
 | `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep). Kept **for its skills** — its bundled stdio MCP server is toggled off, since vwf declares the same server over HTTP                                                                                                                                                                                                                                                |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                                                                                                                                                       |
-| `mise`                   | `./plugins/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` skill                                                                                                                                                                                                                                                                  |
-| `github-actions`         | `./plugins/github-actions` | A `/github-actions:workflow` skill that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy); generates release workflows conforming to vwf's delivery-pipeline contract — one main workflow (tag parse, branch validation, test gate) calling as few reusable sub-workflows as the repo's variation allows — a vwf dep |
+| `mise`                   | `templates/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` skill                                                                                                                                                                                                                                                                  |
+| `github-actions`         | `templates/github-actions` | A `/github-actions:workflow` skill that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy); generates release workflows conforming to vwf's delivery-pipeline contract — one main workflow (tag parse, branch validation, test gate) calling as few reusable sub-workflows as the repo's variation allows — a vwf dep |
 
 ## Plugin Structure
 
-Every plugin is a directory under `plugins/` with a
-`.claude-plugin/plugin.json`. Minimal form:
+Every plugin is a directory under `templates/` with a `plugin.yaml` — the
+**neutral manifest**. Minimal form:
 
-```json
-{
-  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "<plugin-name>"
-}
+```yaml
+name: <plugin-name>
+description: <one line>
 ```
+
+Everything else defaults: `category` to `development`, `scope` to `user`,
+`source` to local, and `optIn`/`userOnly` to false. The schema is
+`schema/src/manifest.ts`, which is authoritative.
+
+This one file replaces what used to be split between
+`plugins/<name>/.claude-plugin/plugin.json` (servers, dependencies) and the
+plugin's entry in `.claude-plugin/marketplace.json` (version, category, tags,
+source) — two files that had to be kept in sync by hand, and a whole class of
+drift `plugins:check` existed to catch. The marketplace manifest is now
+**generated** from the manifests, so a plugin cannot be unregistered, orphaned,
+or disagree with its own entry.
 
 Plugins may declare any combination of:
 
 - **`lspServers`** — LSP server definitions keyed by language ID. Each entry
-  needs `command`, `args`, `extensionToLanguage`, and optionally
-  `startupTimeout`. `plugins/flutter` bundles three — `dart-lsp` (run via
-  `mise`) plus `kotlin-lsp` and `sourcekit-lsp` (Swift), which invoke
-  system-installed binaries on `PATH`.
-- **`mcpServers`** — MCP server definitions. See
-  `plugins/context7/.claude-plugin/plugin.json`.
-- **`dependencies`** — other plugins this plugin requires (see below); `vwf` is
-  the only one that declares them, all resolved within `virajp-plugins` itself.
-  `plugins:check` enforces that the `plugin.json` and marketplace-entry
-  dependency lists are **identical**. A dependency *may* point at **another
-  marketplace** (each entry carries its own `marketplace`), but
-  cross-marketplace deps are **blocked at install time** unless the ROOT
-  `marketplace.json` allowlists that foreign marketplace via top-level
-  `allowCrossMarketplaceDependenciesOn` (not transitive — only the installing
-  marketplace's allowlist applies). No plugin here currently uses one, so that
-  allowlist is absent; re-add it if a cross-marketplace dependency is
-  introduced.
+  needs `command`, `args`, `extensions`, and optionally `startupTimeout` and
+  per-target `idAliases` (OpenCode keys LSP config by its own built-in ids, so
+  `typescript-lsp` has to be written as `typescript` there). `templates/flutter`
+  bundles three — `dart-lsp` (run via `mise`) plus `kotlin-lsp` and
+  `sourcekit-lsp` (Swift), which invoke system-installed binaries on `PATH`.
+  Cursor and Codex have no LSP surface at all; the build reports it as a gap.
+- **`mcpServers`** — MCP server definitions, a discriminated union on
+  `transport` (`stdio` or `http`). See `templates/context7/plugin.yaml`.
+- **`dependencies`** — other plugins this plugin requires (see below), as a
+  plain list of names; `vwf` is the only one that declares them, all resolved
+  within `virajp-plugins` itself. `plugins:check` enforces that each names a
+  real plugin. A dependency *may* point at **another marketplace** (each entry
+  carries its own `marketplace`), but cross-marketplace deps are **blocked at
+  install time** unless the ROOT `marketplace.json` allowlists that foreign
+  marketplace via top-level `allowCrossMarketplaceDependenciesOn` (not
+  transitive — only the installing marketplace's allowlist applies). No plugin
+  here currently uses one, so that allowlist is absent; re-add it if a
+  cross-marketplace dependency is introduced.
 
 Skills, agents, and hooks are **auto-discovered by directory convention** — they
-do not need to be listed in `plugin.json`:
+do not need to be listed in `plugin.yaml`:
 
-- `skills/<name>/SKILL.md` → skills, invocable as `/<plugin>:<name>` (Claude
-  Code's unified skills — a skill with `disable-model-invocation: true` is
-  user-only, i.e. exactly a classic slash command). This repo has **no
-  `commands/` dirs**: former commands are skills, so one artifact serves both
-  Claude Code and OpenCode.
+- `skills/<name>/SKILL.md` → skills. Invocation is the neutral three-valued
+  `invocation:` key — `model` (auto-applying doctrine), `user` (slash only) or
+  `both` (the default) — which each renderer projects down to its target's
+  spelling. This repo has **no `commands/` dirs**: former commands are skills,
+  so one artifact serves every target.
 - `agents/<name>.md` → subagents
-- `hooks/hooks.json` → hooks (see Hooks below)
+- `hooks/hooks.yaml` → hooks, declared as *intent* (`event`, `matcher`,
+  `action`, `script`) so each renderer can emit its own mechanism (see Hooks
+  below)
 
-The marketplace manifest at `.claude-plugin/marketplace.json` lists each plugin
-with its `source`, `version`, `category`, `tags`, and optional `dependencies`.
+The marketplace manifest at `.claude-plugin/marketplace.json` is **generated**
+into the repo root by `plugins:build`, with sources pointing at
+`./dist/claude/plugins/<name>`. It lives at the root rather than under
+`dist/claude/` because that is where Claude Code reads it when the marketplace
+is added from this repo, and because the sources inside it are root-relative and
+would resolve nowhere from anywhere else. Do not edit it by hand —
+`plugins:dist-clean` will fail.
 
 ## The vwf Plugin
 
-`vwf` is the flagship plugin. Its layout under `plugins/vwf/`:
+`vwf` is the flagship plugin. Its layout under `templates/vwf/`:
 
 - `skills/` (workflow) — the `/vwf:` workflow skills (each
   `skills/<name>/SKILL.md`), implementing the Product → Blueprint → Plan →
@@ -335,14 +414,12 @@ installing `vwf` needs no other marketplace registered. `claude-design`,
 via a `url` source (pointing at its upstream repo) so it lives under
 `virajp-plugins`.
 
-The dependency list is declared in **two** places, which must stay in sync —
-both reference `@virajp-plugins` for every entry (the `plugins:check` task
-enforces this):
-
-- `plugins/vwf/.claude-plugin/plugin.json` → `context7`, `github-actions`,
-  `markdown`, `mempalace`, `mise`
-- `.claude-plugin/marketplace.json` (vwf entry) → `context7`, `github-actions`,
-  `markdown`, `mempalace`, `mise`
+The dependency list is declared in **one** place — `templates/vwf/plugin.yaml` →
+`context7`, `github-actions`, `markdown`, `mempalace`, `mise` — and the
+marketplace entry is generated from it, so the two can no longer drift. (Before
+the template layer they were separate files kept in sync by hand, which is what
+`plugins:check` used to compare.) The checker now verifies each name resolves to
+a real plugin instead.
 
 **`claude-design` is deliberately *not* a dependency.** vwf is decoupled from
 any design tool: it delegates to whichever adapter plugin `design.tool` names.
@@ -604,6 +681,16 @@ environment-specific tools in the matching env file.
 
 ### Workflows (`.github/workflows/`)
 
+- **`plugins.yml`** — validates the plugin toolkit on every push to `main` and
+  every PR: `plugins:dist-clean`, then `plugins:check`, then the vitest suites,
+  then `vwf:test`. The order matters — proving `dist/` is a fresh render
+  *before* validating it means a stale tree fails as staleness rather than as
+  some confusing downstream assertion. Deliberately a **separate file** from
+  `release.yml`: npm allows one Trusted Publisher and validates the entry-point
+  workflow's filename, so that file's trigger surface stays untouched. This
+  workflow publishes nothing and holds no `id-token` permission. Before it,
+  these checks ran only in pre-commit — i.e. only for whoever had the hooks
+  installed.
 - **`release.yml`** — publishes `@askviraj/ai-plugins` to npm via **OIDC trusted
   publishing** (no stored token, provenance automatic). Triggered two ways: a
   pushed `v*` tag, or `workflow_dispatch` — which is also how `deps-update.yml`
@@ -698,7 +785,11 @@ gh release create vX.Y.Z --title vX.Y.Z --notes-file <notes> --verify-tag
 
 ## Hooks
 
-`vwf` ships two `PreToolUse` / `Bash` hooks (declared in `hooks/hooks.json`):
+`vwf` ships two `PreToolUse` / `Bash` hooks, authored in `hooks/hooks.yaml` as
+*intent* (`event`, `matcher`, `action`, `script`) so each renderer emits its own
+mechanism — Claude and Codex `hooks.json` with `updatedInput`, OpenCode a
+generated JS plugin mutating `output.args`, Cursor and Oh-My-Pi a
+deny-with-correction, since neither can rewrite a command:
 
 - `hooks/npm-normalize.sh` — rewrites `npm`/`npx` to the repo's package manager.
   vwf allows exactly two for JS/TS — **pnpm** and **bun** — and the hook
@@ -719,62 +810,88 @@ gh release create vX.Y.Z --title vX.Y.Z --notes-file <notes> --verify-tag
 Things to know when editing hooks here:
 
 - **Plugin hooks are never written to `settings.json`.** They are
-  auto-discovered from `hooks/hooks.json` and loaded in-memory at session start.
-  Verify active hooks with `/hooks`, not by inspecting `settings.json`.
+  auto-discovered from the rendered `hooks/hooks.json` and loaded in-memory at
+  session start. Verify active hooks with `/hooks`, not by inspecting
+  `settings.json`.
 - **Hook scripts must be portable to macOS BSD `sed`.** BSD `sed` does not
   support `\s` or `\b` — use POSIX classes (`[[:space:]]`) and explicit
   boundaries instead. `npm-normalize.sh` follows this.
 
 ## Adding a Plugin
 
-1. Create `plugins/<name>/.claude-plugin/plugin.json` with only the fields the
-   plugin needs.
-2. Register it in `.claude-plugin/marketplace.json` under `plugins[]` with a
-   `version` (the marketplace `version` is what end-user installs pin to — bump
-   it to ship changes).
+1. Create `templates/<name>/plugin.yaml` with only the fields the plugin needs —
+   including a `version` (what end-user installs pin to; bump it to ship
+   changes).
+2. Run `mise run plugins:build` and stage the result.
+
+There is no second place to register it: the marketplace manifest is generated
+from the manifests, so step 2 *is* the registration.
 
 ## Adding a vwf Skill
 
-Create `plugins/vwf/skills/<name>/SKILL.md` — no other registration is needed
-(auto-discovered). For auto-applying doctrine, set `user-invocable: false` +
+Create `templates/vwf/skills/<name>/SKILL.md` — no other registration is needed
+(auto-discovered). For auto-applying doctrine, set `invocation: model` +
 `paths:` scoping. Skill names must be unique across **all** local plugins
-(`plugins:check` enforces this — OpenCode installs them into one flat
-namespace). Then pick the invocation mode per the policy below.
+(`plugins:check` enforces this — skills share one flat namespace on OpenCode,
+Oh-My-Pi and Codex). Then pick the invocation mode per the policy below, and run
+`mise run plugins:build`.
 
 ### Invocation policy
 
-`disable-model-invocation: true` does **not** merely stop Claude auto-triggering
-a skill — it *"removes the skill from Claude's context entirely"* and *"blocks
-programmatic invocation"* (Claude Code docs, Control who invokes a skill). A
-skill flipped to `true` **cannot be invoked by another skill**, and the failure
-is silent: the delegating skill simply can't see it.
+Skills declare the neutral `invocation:` key — `model`, `user`, or `both` (the
+default). It is **not cosmetic**: on every target, `user` removes the skill from
+the model's context entirely, so a `user` skill **cannot be invoked by another
+skill**, and the failure is silent — the delegating skill simply can't see it.
 
 That makes the vwf mesh the deciding constraint — every workflow skill is
 delegated to by name somewhere. The rule:
 
-- **`false` (model-invocable) when anything delegates to it.** `git-workflow`
-  (every skill commits through it), `blueprint` / `plan` / `execute`
-  (`/vwf:recall` routes its continuation through all three — resuming a
-  cap-paused run is recall's primary use), `product` / `architecture` /
-  `design-system` / `doctor` (`setup` orchestrates them), `handoff` (`execute`
-  runs it at a resource cap, and the statusline caps hook instructs it),
-  `feedback` (`verify` routes failures through it), `screens` (`feedback canvas`
-  routes into it).
-- **`true` (user-only) when nothing does**, and the user owns the timing:
-  `setup`, `verify`, `mockups`, `archive`, `recall`. Every reference to these
-  from another skill must read as a **recommendation to the user**, never an
-  invocation — `execute` tells the user to run `/vwf:archive`, it does not call
-  it.
+- **`both` when anything delegates to it.** `git-workflow` (every skill commits
+  through it), `blueprint` / `plan` / `execute` (`/vwf:recall` routes its
+  continuation through all three — resuming a cap-paused run is recall's primary
+  use), `product` / `architecture` / `design-system` / `doctor` (`setup`
+  orchestrates them), `handoff` (`execute` runs it at a resource cap, and the
+  statusline caps hook instructs it), `feedback` (`verify` routes failures
+  through it), `screens` (`feedback canvas` routes into it).
+- **`user` when nothing does**, and the user owns the timing: `setup`, `verify`,
+  `mockups`, `archive`, `recall`. Every reference to these from another skill
+  must read as a **recommendation to the user**, never an invocation — `execute`
+  tells the user to run `/vwf:archive`, it does not call it.
+- **`model`** is the auto-applying doctrine archetype, paired with `paths:`.
 
-Before flipping a skill to `true`, grep for `/vwf:<name>` across
-`plugins/vwf/skills/` and `plugins/vwf/agents/` and confirm every hit is prose
-addressed to the user. Adding a delegation to a user-only skill is the reverse
-trap: it will never fire.
+Before flipping a skill to `user`, grep for its command reference across
+`templates/vwf/skills/` and `templates/vwf/agents/` and confirm every hit is
+prose addressed to the user. Adding a delegation to a user-only skill is the
+reverse trap: it will never fire.
 
 This applies across plugins too — `mise:scaffold` and `markdown:readme` are
-`false` **because `/vwf:setup` orchestrates them**, per its own "orchestrate,
-don't reimplement" rule. `github-actions:workflow` stays `true`: nothing
+`both` **because `/vwf:setup` orchestrates them**, per its own "orchestrate,
+don't reimplement" rule. `github-actions:workflow` stays `user`: nothing
 delegates to it.
+
+**How each target spells it** (all verified against a real install or vendor
+source — do not infer these):
+
+| Target   | `user`                                                    | `model`                 | Invocation                            |
+| -------- | --------------------------------------------------------- | ----------------------- | ------------------------------------- |
+| Claude   | `disable-model-invocation: true`                          | `user-invocable: false` | `/vwf:plan`                           |
+| OpenCode | moved to `command/<plugin>-<skill>`                       | bare, under `skills/`   | bare name; `/vwf-setup` for user-only |
+| Cursor   | `disable-model-invocation: true`                          | bare + `paths:`         | `/plan`                               |
+| Oh-My-Pi | `disableModelInvocation: true`                            | **bare — no key**       | `/skill:plan`                         |
+| Codex    | `agents/openai.yaml` → `allow_implicit_invocation: false` | no sidecar              | `$plan`                               |
+
+Two of these are counter-intuitive and were found only by checking real
+installs, each having silently broken an entire class of skill:
+
+- **Oh-My-Pi has one axis, not two.** `hide` and `disableModelInvocation` are
+  aliases the loader ORs into a single flag meaning *hidden from the model*.
+  Doctrine must therefore carry **neither** — emitting `hide` on it drops it
+  from the prompt, and the skill still loads and still lists while never firing.
+  Nothing can hide a skill from the slash menu alone.
+- **Codex reads its policy sidecar at `<skill>/agents/openai.yaml`**, not the
+  skill root. At the root it is never found, `allow_implicit_invocation` falls
+  back to its default of true, and every user-only skill becomes model-invocable
+  — the exact inverse failure.
 
 ## Installation (end-user)
 

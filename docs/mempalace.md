@@ -35,7 +35,7 @@ equivalent — the interval saves cover it.
 ## Running the server (HTTP daemon)
 
 `vwf` declares mempalace over **HTTP**, not stdio — see its `mcpServers` block
-in `plugins/vwf/.claude-plugin/plugin.json`. You run the server yourself:
+in `templates/vwf/plugin.yaml`. You run the server yourself:
 
 ```sh
 mempalace serve --host 127.0.0.1 --port 8765   # loopback bind needs no token
