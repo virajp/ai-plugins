@@ -49,6 +49,10 @@ import {
   readPluginIndex,
   resolvePlan,
 } from "./plan.ts";
+import {
+  buildVersionReport,
+  renderVersionReport,
+} from "./version.ts";
 
 export const ADAPTERS: readonly Adapter[] = [
   claude,
@@ -200,8 +204,15 @@ const main = defineCommand({
       description: "Act on a target whose tool is not on PATH",
       default: false,
     },
+    version: {
+      type: "boolean",
+      alias: "v",
+      description:
+        "Report this CLI's version and every plugin's, vs the latest",
+      default: false,
+    },
   },
-  run({ args }) {
+  async run({ args }) {
     const context: AdapterContext = {
       sourceRoot: packageRoot(),
       home: homedir(),
@@ -218,6 +229,16 @@ const main = defineCommand({
       receiptDir: receiptDir(),
       force: args.force === true,
     };
+
+    if (args.version === true) {
+      const report = await buildVersionReport(context.sourceRoot);
+      // Data to stdout; the reason the remote half is missing is not data.
+      process.stdout.write(`${renderVersionReport(report)}\n`);
+      // Non-zero without the network, as the documented contract has it: a
+      // report that could not compare against anything answered half the
+      // question, and a script checking for updates should notice.
+      process.exit(report.remoteError === undefined ? 0 : 1);
+    }
 
     const adapters = selectAdapters(toList(args.platform), context);
     if (adapters.length === 0) {
