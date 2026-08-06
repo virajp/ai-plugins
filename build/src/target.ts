@@ -29,6 +29,52 @@ export interface Output {
    * the manifests it is derived from.
    */
   readonly atRepoRoot?: boolean;
+  /**
+   * The plugin this file came from, stamped by `stampOwner`.
+   *
+   * Some targets flatten per-plugin files into one global directory —
+   * OpenCode's `agent/`, `command/` and `plugin/` — where the path no longer
+   * says who owns what. The installer needs that to install or remove a
+   * *subset* of plugins, so the build records it in `.ownership.json` rather
+   * than making the adapter infer it.
+   *
+   * Filenames are deliberately left alone. `command/` and `plugin/` happen to
+   * carry a plugin prefix already, but agents cannot: OpenCode strips the
+   * `name` field and keys an agent by its filename, so prefixing would rename
+   * every agent and silently break the delegation that names them.
+   */
+  readonly owner?: string;
+  /**
+   * Deliberately belongs to no plugin — a target-level registry such as a
+   * marketplace manifest, which describes the whole set.
+   *
+   * Distinct from `atRepoRoot`, which is about *where* a file lands: Claude's
+   * manifest is both, Oh-My-Pi's is unowned but still inside `dist/`. Marked
+   * explicitly so `plugins:check` can insist every *other* file is
+   * attributable, rather than pattern-matching filenames and silently
+   * excusing a real gap.
+   */
+  readonly unowned?: boolean;
+}
+
+/**
+ * Stamp every output added since `from` as belonging to `owner`.
+ *
+ * Targets differ in how they accumulate (returned arrays, mutated arrays,
+ * nested emissions), so this works off a length marker rather than trying to
+ * impose one shape on all five.
+ */
+export function stampOwner(
+  outputs: Output[],
+  from: number,
+  owner: string,
+): void {
+  for (let i = from; i < outputs.length; i++) {
+    const output = outputs[i];
+    if (output !== undefined) {
+      outputs[i] = { ...output, owner };
+    }
+  }
 }
 
 /** A capability a target could not carry, surfaced in the coverage report. */

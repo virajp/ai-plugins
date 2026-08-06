@@ -27,6 +27,7 @@ import {
   renderTemplate,
   ROOT_TOKEN,
   siblingRootToken,
+  stampOwner,
 } from "../target.ts";
 
 /**
@@ -72,8 +73,10 @@ export const opencode: Target = {
       if (plugin.manifest.source.kind !== "local") {
         continue;
       }
+      const before = outputs.length;
       const emission = renderPlugin(plugin, invocations);
       outputs.push(...emission.outputs);
+      stampOwner(outputs, before, plugin.manifest.name);
       gaps.push(...emission.gaps);
     }
 

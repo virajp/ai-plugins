@@ -24,6 +24,7 @@ import {
   renderDocument,
   ROOT_TOKEN,
   siblingRootToken,
+  stampOwner,
 } from "../target.ts";
 
 /**
@@ -53,7 +54,9 @@ export const cursor: Target = {
       if (plugin.manifest.source.kind !== "local") {
         continue;
       }
+      const before = outputs.length;
       renderPlugin(plugin, outputs, gaps);
+      stampOwner(outputs, before, plugin.manifest.name);
     }
 
     // No marketplace manifest: Cursor resolves plugins from a git source, so

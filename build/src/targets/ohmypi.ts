@@ -24,6 +24,7 @@ import {
   renderDocument,
   ROOT_TOKEN,
   siblingRootToken,
+  stampOwner,
 } from "../target.ts";
 
 /**
@@ -63,14 +64,17 @@ export const ohmypi: Target = {
         });
         continue;
       }
+      const before = outputs.length;
       const emission = renderPlugin(plugin);
       outputs.push(...emission.outputs);
+      stampOwner(outputs, before, plugin.manifest.name);
       gaps.push(...emission.gaps);
     }
 
     outputs.push({
       path: ".omp-plugin/marketplace.json",
       contents: marketplaceJson(workspace),
+      unowned: true,
     });
 
     return { outputs, gaps };

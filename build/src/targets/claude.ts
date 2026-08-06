@@ -17,6 +17,7 @@ import {
   type Target,
   bundledFiles,
   renderDocument,
+  stampOwner,
 } from "../target.ts";
 
 /**
@@ -39,7 +40,9 @@ export const claude: Target = {
       if (plugin.manifest.source.kind !== "local") {
         continue;
       }
+      const before = outputs.length;
       outputs.push(...renderPlugin(plugin));
+      stampOwner(outputs, before, plugin.manifest.name);
     }
 
     // At the repo root, not under dist/claude/: this is the file Claude Code
@@ -49,6 +52,7 @@ export const claude: Target = {
       path: ".claude-plugin/marketplace.json",
       contents: marketplaceJson(workspace),
       atRepoRoot: true,
+      unowned: true,
     });
 
     return { outputs, gaps };

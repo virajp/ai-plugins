@@ -331,6 +331,16 @@ function checkTarget(target: Target, emission: Emission): Finding[] {
   const paths = emission.outputs.map(o => o.path);
 
   for (const out of emission.outputs) {
+    // Every emitted file must be attributable to a plugin, or the installer
+    // cannot install or remove a subset. The repo-root marketplace manifest is
+    // the one file that legitimately belongs to no single plugin.
+    if (out.owner === undefined && out.unowned !== true) {
+      findings.push({
+        scope,
+        message: `${out.path}: no owning plugin — it would be unremovable`,
+      });
+    }
+
     if (typeof out.contents !== "string") {
       continue;
     }

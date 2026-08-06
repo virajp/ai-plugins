@@ -23,6 +23,7 @@ import {
   renderDocument,
   ROOT_TOKEN,
   siblingRootToken,
+  stampOwner,
 } from "../target.ts";
 
 /**
@@ -51,8 +52,10 @@ export const codex: Target = {
       if (plugin.manifest.source.kind !== "local") {
         continue;
       }
+      const before = outputs.length;
       const emission = renderPlugin(plugin);
       outputs.push(...emission.outputs);
+      stampOwner(outputs, before, plugin.manifest.name);
       gaps.push(...emission.gaps);
     }
 
