@@ -691,8 +691,14 @@ Two shapes, and the difference is forced rather than chosen.
 
 - **npm** (`npx @askviraj/ai-plugins`) — the tsup bundle plus the payload.
   Requires Node.
-- **Standalone archives** (Homebrew, Scoop, curl-sh) — a `bun build --compile`
+- **Standalone archive** (curl-sh, or fetched by hand) — a `bun build --compile`
   binary **plus the same payload beside it**. No Node required.
+
+There is deliberately **no Homebrew tap and no Scoop bucket**. Each would be a
+second repository to create and keep current, and both exist only to hand a user
+an archive the release already publishes — with a per-platform sha256 that has
+to be regenerated every release or it breaks every install. The curl-sh
+installer does the same job from this repo, against the same checksums file.
 
 **The binary cannot be self-contained**, and this is the constraint that shapes
 every channel: Claude, Codex and Oh-My-Pi each register a marketplace whose
@@ -708,10 +714,6 @@ compiled binary `import.meta.dirname` is Bun's virtual filesystem
   `darwin-x64`, `linux-x64`, `linux-arm64`, `windows-x64`) **from one host**;
   bun cross-compiles, so no runner matrix is needed. Assembles one archive per
   platform (26–40 MB compressed) plus a `checksums-<version>.txt`.
-- **`i:packaging`** — generates the Homebrew formula and Scoop manifest *from*
-  those checksums. Both pin a per-platform sha256, so hand-maintaining them in
-  the tap and bucket repos means a checksum that is wrong exactly once per
-  release and breaks every install until someone notices.
 - **`packaging/install.sh`** — the curl-sh installer. POSIX `sh`, since it runs
   before anything is installed; resolves the latest release, verifies the
   checksum, extracts, symlinks.
@@ -721,9 +723,9 @@ compiled binary `import.meta.dirname` is Bun's virtual filesystem
   workflow filename), and the GitHub Release is created by hand *after* the tag
   push, so a job in `release.yml` would have nothing to upload to.
 
-**The tap and the bucket are separate repositories** (`virajp/homebrew-tap`,
-`virajp/scoop-bucket`) and neither exists yet. The generated formula and
-manifest are attached to each Release for copying into them.
+**Windows has no scripted installer.** The `windows-x64` archive is still built
+and attached to every release — `install.sh` is POSIX `sh` and says so — so
+Windows users take `npx @askviraj/ai-plugins` or unzip the archive themselves.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):

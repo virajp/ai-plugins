@@ -47,7 +47,9 @@ arch="$(uname -m)"
 case "$os" in
   Darwin) os=darwin ;;
   Linux) os=linux ;;
-  *) die "unsupported OS: $os (Windows users: use the Scoop manifest)" ;;
+  # The Windows archive is still built and attached to every release; there is
+  # just no scripted installer for it. Fetch the .zip, or use npm.
+  *) die "unsupported OS: $os — on Windows use \`npx @askviraj/ai-plugins\`, or unzip the windows-x64 archive from the latest release" ;;
 esac
 
 case "$arch" in

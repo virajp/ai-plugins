@@ -1405,6 +1405,9 @@ not a lone executable** — the binary reads its plugin trees from `dist/` besid
 it, because three of the five agents register a marketplace whose source is a
 real directory they re-read on every later session.
 
+The install script is POSIX `sh`, so **on Windows** use `npx` or unzip the
+`windows-x64` archive from the release yourself.
+
 ```sh
 # Everything: all user-scoped plugins + the statusline, for every detected platform
 pnpx @askviraj/ai-plugins --all

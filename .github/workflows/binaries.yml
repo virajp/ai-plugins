@@ -69,12 +69,6 @@ jobs:
       - name: Build the per-platform archives
         run: mise run i:binaries
 
-      # Both pin a per-platform sha256, so they are generated from the archives
-      # that were just built rather than hand-maintained in the tap and bucket
-      # repos — where a stale checksum breaks every install until noticed.
-      - name: Generate the Homebrew formula and Scoop manifest
-        run: mise run i:packaging
-
       - name: Attach them to the release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -82,5 +76,4 @@ jobs:
           tag="${{ steps.tag.outputs.tag }}"
           # --clobber so a re-run replaces assets rather than failing on them.
           gh release upload "$tag" release/*.tar.gz release/*.zip \
-            release/checksums-*.txt release/ai-plugins.rb release/ai-plugins.json \
-            --clobber
+            release/checksums-*.txt --clobber

@@ -68,8 +68,8 @@ for entry in "${TARGETS[@]}"; do
   rm -rf "$stage"
 done
 
-# Checksums are what the Homebrew formula and Scoop manifest pin, and what the
-# curl-sh installer verifies. Generated here so all three read one file.
+# What `packaging/install.sh` verifies each download against, and what anyone
+# fetching an archive by hand can check it with.
 print_header "Writing checksums ..."
 (cd "$OUT" && shasum -a 256 ai-plugins-"$VERSION"-* > "checksums-$VERSION.txt")
 cat "$OUT/checksums-$VERSION.txt"
