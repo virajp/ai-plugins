@@ -37,6 +37,7 @@ import type {
   ApplyResult,
   Scope,
 } from "./types.ts";
+import { planPlugins } from "./types.ts";
 
 const BIN = "omp";
 
@@ -111,7 +112,7 @@ function run(
   const actions: Action[] = [];
 
   if (plan.user.length === 0 && plan.project.length === 0) {
-    return { receipt: receipt.build(context.now), actions };
+    return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
   }
 
   const marketplace = readMarketplaceName(context);
@@ -157,7 +158,7 @@ function run(
     }
   }
 
-  return { receipt: receipt.build(context.now), actions };
+  return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
 }
 
 /** The marketplace's own name, so the CLI selector matches what it registered. */

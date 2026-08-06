@@ -49,6 +49,7 @@ import type {
   ApplyResult,
   Scope,
 } from "./types.ts";
+import { planPlugins } from "./types.ts";
 
 const BIN = "claude";
 
@@ -116,7 +117,7 @@ function run(
   const actions: Action[] = [];
 
   if (plan.user.length === 0 && plan.project.length === 0) {
-    return { receipt: receipt.build(context.now), actions };
+    return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
   }
 
   const marketplace = readMarketplaceName(context);
@@ -147,7 +148,7 @@ function run(
     }
   }
 
-  return { receipt: receipt.build(context.now), actions };
+  return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
 }
 
 /**

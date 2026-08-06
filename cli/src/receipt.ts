@@ -20,6 +20,7 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import writeFileAtomic from "write-file-atomic";
+import type { Scope } from "./adapters/types.ts";
 
 /**
  * 2 added the `command` entry. A v1 receipt still reverts correctly, so the
@@ -73,6 +74,21 @@ export interface Receipt {
   /** Passed in rather than read from the clock, so runs are reproducible. */
   readonly installedAt: string;
   readonly entries: readonly Entry[];
+  /**
+   * What was installed, as opposed to which bytes moved — the record `--upgrade`
+   * replays so it can refresh what is here without being told the names again.
+   *
+   * **Deliberately not a version bump.** `RECEIPT_VERSION` guards *revert*, and
+   * `readReceipt` refuses a future version because reverting under rules that do
+   * not match how a receipt was written is worse than declining. This field
+   * changes nothing about revert, so bumping for it would strand receipts an
+   * older CLI could undo perfectly well. Absent on every pre-existing receipt,
+   * which `--upgrade` reports rather than treating as "nothing installed".
+   */
+  readonly plugins?: readonly {
+    readonly name: string;
+    readonly scope: Scope;
+  }[];
 }
 
 /** Accumulates entries during an apply. One per adapter run. */
@@ -146,11 +162,15 @@ export class ReceiptBuilder {
     return this;
   }
 
-  build(installedAt: string): Receipt {
+  build(
+    installedAt: string,
+    plugins?: readonly { readonly name: string; readonly scope: Scope; }[],
+  ): Receipt {
     return {
       version: RECEIPT_VERSION,
       installedAt,
       entries: [...this.entries],
+      ...(plugins === undefined ? {} : { plugins: [...plugins] }),
     };
   }
 }

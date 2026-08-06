@@ -154,6 +154,71 @@ export function revert(
 }
 
 /**
+ * Rebuild a target's plan from what its receipt says it installed.
+ *
+ * This is what `--upgrade` replays. It works because **installing is already
+ * upgrading**: every target either reads `dist/<target>/` in place or copies it,
+ * so re-running the recorded plan against a newer package is the upgrade. There
+ * is no separate update command to drive and no per-tool version to query.
+ *
+ * `undefined` for a receipt written before plans were recorded, or one that
+ * installed nothing — the caller reports that rather than silently doing
+ * nothing.
+ */
+export function planFromReceipt(
+  target: TargetId,
+  receipt: Receipt,
+): AdapterPlan | undefined {
+  if (receipt.plugins === undefined || receipt.plugins.length === 0) {
+    return undefined;
+  }
+  return {
+    target,
+    user: receipt.plugins.filter(p => p.scope === "user").map(p => p.name),
+    project: receipt
+      .plugins
+      .filter(p => p.scope === "project")
+      .map(p => p.name),
+  };
+}
+
+/**
+ * Re-install what each target's receipt recorded.
+ *
+ * A target with no receipt is skipped rather than installed: `--upgrade`
+ * refreshes what is here, and deciding what *should* be here is what the
+ * install flags are for.
+ */
+export function upgradeJobs(
+  adapters: readonly Adapter[],
+  options: ExecuteOptions,
+): { jobs: (readonly [Adapter, AdapterPlan])[]; unrecorded: TargetId[]; } {
+  const jobs: (readonly [Adapter, AdapterPlan])[] = [];
+  const unrecorded: TargetId[] = [];
+
+  for (const adapter of adapters) {
+    const receipt = readReceipt(receiptPath(options.receiptDir, adapter.id));
+    if (receipt === undefined) {
+      continue;
+    }
+    const plan = planFromReceipt(adapter.id, receipt);
+    if (plan === undefined) {
+      // An older receipt records the bytes but not the names, so there is
+      // nothing to replay — say so instead of reporting "nothing to do".
+      unrecorded.push(adapter.id);
+      continue;
+    }
+    jobs.push([adapter, plan]);
+  }
+  return { jobs, unrecorded };
+}
+
+/** Has the statusline been installed by this CLI? Drives the upgrade refresh. */
+export function statuslineInstalled(options: ExecuteOptions): boolean {
+  return readReceipt(statuslineReceiptPath(options.receiptDir)) !== undefined;
+}
+
+/**
  * The statusline's own receipt, beside the per-target ones.
  *
  * Separate rather than folded into Claude's, so uninstalling the plugins does

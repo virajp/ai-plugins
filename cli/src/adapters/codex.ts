@@ -40,6 +40,7 @@ import type {
   AdapterPlan,
   ApplyResult,
 } from "./types.ts";
+import { planPlugins } from "./types.ts";
 
 const BIN = "codex";
 
@@ -125,7 +126,7 @@ function run(
 
   const names = [...new Set([...plan.user, ...plan.project])];
   if (names.length === 0) {
-    return { receipt: receipt.build(context.now), actions };
+    return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
   }
 
   const marketplace = readMarketplaceName(context);
@@ -155,7 +156,7 @@ function run(
     }
   }
 
-  return { receipt: receipt.build(context.now), actions };
+  return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
 }
 
 /** The marketplace's own name, so the CLI selector matches what it registered. */

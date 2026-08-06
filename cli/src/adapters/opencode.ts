@@ -48,6 +48,7 @@ import type {
   ApplyResult,
   Scope,
 } from "./types.ts";
+import { planPlugins } from "./types.ts";
 
 /** Named after the marketplace, mirroring where the plugins come from. */
 const BUNDLE_DIR = "virajp-plugins";
@@ -142,7 +143,7 @@ function run(
     actions.push(...installScope(context, scope, plugins, receipt, dryRun));
   }
 
-  return { receipt: receipt.build(context.now), actions };
+  return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
 }
 
 function installScope(

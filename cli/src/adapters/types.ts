@@ -27,6 +27,24 @@ export function isEmptyPlan(plan: AdapterPlan): boolean {
   return plan.user.length === 0 && plan.project.length === 0;
 }
 
+/**
+ * The plan as a flat list, for the receipt to record.
+ *
+ * This is the plan **as requested**, not as an adapter may have redirected it —
+ * Cursor moves user-scope installs to project scope, Codex the other way. That
+ * is deliberate: the redirects are deterministic, so replaying the recorded plan
+ * on `--upgrade` lands in the same place, and recording the redirected form
+ * would bake one target's limitation into a record the user never asked for.
+ */
+export function planPlugins(
+  plan: AdapterPlan,
+): { name: string; scope: Scope; }[] {
+  return [
+    ...plan.user.map(name => ({ name, scope: "user" as const })),
+    ...plan.project.map(name => ({ name, scope: "project" as const })),
+  ];
+}
+
 /** A single intended change, rendered for `--dry-run` and for the reporter. */
 export interface Action {
   /** Imperative, user-facing: "write ~/.config/opencode/…". */

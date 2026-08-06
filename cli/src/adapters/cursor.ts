@@ -56,6 +56,7 @@ import type {
   AdapterPlan,
   ApplyResult,
 } from "./types.ts";
+import { planPlugins } from "./types.ts";
 
 /** Cursor prefers this over `.claude-plugin/marketplace.json`; the build emits both. */
 const MANIFEST = ".cursor-plugin/marketplace.json";
@@ -162,7 +163,7 @@ function run(
     ? []
     : mergeSettings(context, names, receipt, dryRun);
 
-  return { receipt: receipt.build(context.now), actions };
+  return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
 }
 
 function mergeSettings(

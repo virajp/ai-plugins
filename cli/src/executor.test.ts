@@ -17,15 +17,21 @@ import type {
   AdapterContext,
   AdapterPlan,
 } from "./adapters/types.ts";
+import { planPlugins } from "./adapters/types.ts";
 import {
   execute,
   failed,
+  planFromReceipt,
   receiptPath,
   renderDiff,
   renderProgress,
   revert,
+  upgradeJobs,
 } from "./executor.ts";
-import { ReceiptBuilder } from "./receipt.ts";
+import {
+  readReceipt,
+  ReceiptBuilder,
+} from "./receipt.ts";
 
 let receiptDir: string;
 let context: AdapterContext;
@@ -60,8 +66,13 @@ function fakeAdapter(over: Partial<Adapter> = {}): Adapter {
     detect: () => true,
     configPaths: () => [],
     plan: () => [{ summary: "would write /x" }],
-    apply: () => ({
-      receipt: new ReceiptBuilder().build("2026-01-01T00:00:00Z"),
+    // Records the plan, as every real adapter does — that is what `--upgrade`
+    // replays.
+    apply: (_context, plan) => ({
+      receipt: new ReceiptBuilder().build(
+        "2026-01-01T00:00:00Z",
+        planPlugins(plan),
+      ),
       actions: [{ summary: "wrote /x" }],
     }),
     verify: () => [],
@@ -72,7 +83,76 @@ function fakeAdapter(over: Partial<Adapter> = {}): Adapter {
 
 const options = (dryRun = false) => ({ context, dryRun, receiptDir });
 
+describe("planFromReceipt", () => {
+  it("splits the recorded plugins back by scope", () => {
+    const receipt = new ReceiptBuilder().build("2026-01-01T00:00:00Z", [
+      { name: "vwf", scope: "user" },
+      { name: "flutter", scope: "project" },
+    ]);
+
+    expect(planFromReceipt("opencode", receipt)).toEqual({
+      target: "opencode",
+      user: ["vwf"],
+      project: ["flutter"],
+    });
+  });
+
+  it("returns nothing for a receipt written before plans were recorded", () => {
+    // Byte entries alone cannot say which plugins to re-install.
+    const receipt = new ReceiptBuilder().build("2026-01-01T00:00:00Z");
+
+    expect(planFromReceipt("opencode", receipt)).toBeUndefined();
+  });
+});
+
+describe("upgradeJobs", () => {
+  it("replays what a target's receipt recorded", () => {
+    execute([[fakeAdapter(), planFor(["markdown"])]], options());
+
+    const { jobs, unrecorded } = upgradeJobs([fakeAdapter()], options());
+
+    expect(jobs[0]?.[1].user).toEqual(["markdown"]);
+    expect(unrecorded).toEqual([]);
+  });
+
+  it("skips a target with no receipt rather than installing into it", () => {
+    // `--upgrade` refreshes what is here; choosing what should be here is the
+    // install flags' job.
+    const { jobs, unrecorded } = upgradeJobs([fakeAdapter()], options());
+
+    expect(jobs).toEqual([]);
+    expect(unrecorded).toEqual([]);
+  });
+
+  it("names a target whose receipt predates plan recording", () => {
+    execute(
+      [[
+        fakeAdapter({
+          apply: () => ({
+            receipt: new ReceiptBuilder().build("2026-01-01T00:00:00Z"),
+            actions: [],
+          }),
+        }),
+        planFor(["markdown"]),
+      ]],
+      options(),
+    );
+
+    const { jobs, unrecorded } = upgradeJobs([fakeAdapter()], options());
+
+    expect(jobs).toEqual([]);
+    expect(unrecorded).toEqual(["opencode"]);
+  });
+});
+
 describe("execute", () => {
+  it("records the plan it installed, for --upgrade to replay", () => {
+    execute([[fakeAdapter(), planFor(["markdown"])]], options());
+
+    expect(readReceipt(receiptPath(receiptDir, "opencode"))?.plugins)
+      .toEqual([{ name: "markdown", scope: "user" }]);
+  });
+
   it("writes a receipt per target", () => {
     execute([[fakeAdapter(), planFor(["markdown"])]], options());
 

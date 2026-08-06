@@ -43,6 +43,8 @@ import {
   renderProgress,
   revert,
   revertStatuslineInstall,
+  statuslineInstalled,
+  upgradeJobs,
 } from "./executor.ts";
 import type { PlanRequest } from "./plan.ts";
 import {
@@ -51,6 +53,10 @@ import {
 } from "./plan.ts";
 import {
   buildVersionReport,
+  cmpVer,
+  fetchJson,
+  NPM_LATEST_URL,
+  readCliVersion,
   renderVersionReport,
 } from "./version.ts";
 
@@ -211,6 +217,11 @@ const main = defineCommand({
         "Report this CLI's version and every plugin's, vs the latest",
       default: false,
     },
+    upgrade: {
+      type: "boolean",
+      description: "Re-install whatever each target's receipt recorded",
+      default: false,
+    },
   },
   async run({ args }) {
     const context: AdapterContext = {
@@ -273,10 +284,41 @@ const main = defineCommand({
       user: toList(args.user),
       project: toList(args.project),
     };
+    const named = request.all === true
+      || (request.user?.length ?? 0) > 0
+      || (request.project?.length ?? 0) > 0;
+
+    // `--upgrade` alone replays the receipts. Combined with an install request
+    // it adds nothing to the plugins — installing already reads the current
+    // `dist/` — so the install phase runs instead, and only the newer-CLI note
+    // below is kept.
+    if (args.upgrade === true && !named) {
+      const { jobs, unrecorded } = upgradeJobs(adapters, options);
+      for (const target of unrecorded) {
+        context.log(
+          `${target}: installed before this CLI recorded plans; `
+            + "re-run the install once to make it upgradable",
+        );
+      }
+      const outcomes = execute(jobs, options);
+      if (statuslineInstalled(options)) {
+        outcomes.push(executeStatusline(options));
+      }
+      if (outcomes.length === 0) {
+        context.log("nothing installed by this CLI yet — nothing to upgrade");
+      }
+      else {
+        if (options.dryRun) {
+          process.stdout.write(`${renderDiff(outcomes)}\n`);
+        }
+        process.stderr.write(`${renderProgress(outcomes)}\n`);
+      }
+      await noteNewerCli(context);
+      process.exit(failed(outcomes) ? 1 : 0);
+    }
+
     if (
-      request.all !== true
-      && request.user?.length === 0
-      && request.project?.length === 0
+      !named
       // `--statusline` on its own is a complete request: it is not a plugin.
       && !statusline
     ) {
@@ -297,9 +339,35 @@ const main = defineCommand({
       process.stdout.write(`${renderDiff(outcomes)}\n`);
     }
     process.stderr.write(`${renderProgress(outcomes)}\n`);
+    if (args.upgrade === true) {
+      await noteNewerCli(context);
+    }
     process.exit(failed(outcomes) ? 1 : 0);
   },
 });
+
+/**
+ * Mention a newer published CLI, if there is one.
+ *
+ * Best-effort and never fatal: the upgrade itself is local, so a machine that
+ * cannot reach npm has still done everything it was asked to. `--version` is
+ * where a failed check is worth an exit code.
+ */
+async function noteNewerCli(context: AdapterContext): Promise<void> {
+  try {
+    const current = readCliVersion(context.sourceRoot);
+    const latest = await fetchJson<{ version: string; }>(NPM_LATEST_URL);
+    if (cmpVer(latest.version, current) > 0) {
+      context.log(
+        `\nA newer CLI is available: ${current} → ${latest.version}\n`
+          + "Re-run with: npx @askviraj/ai-plugins@latest --upgrade",
+      );
+    }
+  }
+  catch {
+    // No network is not an upgrade failure.
+  }
+}
 
 /** The package root holding `dist/` — two levels up from `cli/src/`. */
 function packageRoot(): string {
