@@ -85,7 +85,16 @@ if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user mise 2>&1 | grep 
   exit 1
 fi
 
-print_header "Running unit + statusline tests (node --test) ..."
+# What is left for the old runner covers bin/, which is still the published
+# installer. These files go when bin/ does; everything already ported runs under
+# vitest below.
+print_header "Running the legacy bin/ tests (node --test) ..."
 node --test test/*.test.mjs
+
+# The publish gate has to cover what the package actually ships — including the
+# statusline, whose tests moved to vitest. Running them here as well as in
+# plugins.yml keeps release.yml from publishing something no gate validated.
+print_header "Running the vitest suites ..."
+pnpm exec vitest run
 
 print_header "All installer smoke tests passed!"
