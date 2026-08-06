@@ -40,13 +40,19 @@
     }
   },
   "dependencies": {
-    "@oclif/core": "4.11.8"
+    "@oclif/core": "4.11.8",
+    "citty": "^0.2.2",
+    "jsonc-parser": "^3.3.1",
+    "picocolors": "^1.1.1",
+    "smol-toml": "^1.7.1",
+    "write-file-atomic": "^8.0.0"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
+    "@types/write-file-atomic": "^4.0.3",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10",
     "yaml": "^2.9.0"
