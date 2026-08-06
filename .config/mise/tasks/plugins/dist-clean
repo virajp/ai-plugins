@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#MISE description="Assert the committed dist/ is exactly what templates/ renders to"
+#MISE dir="{{ config_root }}"
+
+# Renders every target and fails if that leaves anything uncommitted under
+# dist/. The committed output is what users install, so it has to be a pure
+# function of templates/ — this is what catches a template edited without a
+# rebuild, or a dist/ file edited by hand and never traced back to its source.
+#
+# Used by pre-commit and by CI. In CI it is the whole gate: nothing there runs
+# the renderer for real, so without this a stale dist/ would ship.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+node --experimental-strip-types build/src/cli.ts render >/dev/null
+
+# --porcelain covers modified, added and deleted alike; untracked files under
+# dist/ matter too, so they are not excluded.
+if [[ -n "$(git status --porcelain -- dist)" ]]; then
+  print_error "dist/ is not what templates/ renders to — re-run 'mise run plugins:build' and stage the result"
+  git --no-pager status --short -- dist
+  git --no-pager diff --stat -- dist
+  exit 1
+fi
+
+print_ok "dist/ matches a fresh render"

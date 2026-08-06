@@ -5,6 +5,7 @@
  * pulling the CLI's command framework into a build tool.
  */
 import { join } from "node:path";
+import { check } from "./check.ts";
 import { migrate } from "./codemod.ts";
 import { renderAll } from "./render.ts";
 
@@ -26,6 +27,39 @@ switch (command) {
         );
       }
     }
+    break;
+  }
+  case "check": {
+    const { findings, coverage, counts } = await check(repoRoot);
+
+    for (const { scope, message } of findings) {
+      console.error(`  FAIL ${scope}: ${message}`);
+    }
+
+    console.log(
+      `\nchecked ${counts.plugins} plugins, ${counts.skills} skills, `
+        + `${counts.agents} agents`,
+    );
+
+    console.log("\ncoverage");
+    for (const t of coverage) {
+      const lost = t.degraded + t.dropped;
+      console.log(
+        `  ${t.target.padEnd(9)} ${String(t.outputs).padStart(4)} files`
+          + (lost === 0
+            ? "   full parity"
+            : `   ${t.dropped} dropped, ${t.degraded} degraded`),
+      );
+      for (const [capability, plugins] of [...t.byCapability].sort()) {
+        console.log(`      ${capability}: ${plugins.join(", ")}`);
+      }
+    }
+
+    if (findings.length > 0) {
+      console.error(`\n${findings.length} finding(s)`);
+      process.exit(1);
+    }
+    console.log("\nAll checks passed.");
     break;
   }
   default: {

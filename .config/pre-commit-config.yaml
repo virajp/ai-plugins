@@ -22,14 +22,35 @@ repos:
         entry: mise x -- mise run vwf:test
         language: system
         pass_filenames: false
-        files: ^plugins/vwf/hooks/
+        files: ^templates/vwf/hooks/
+        stages: [ pre-commit ]
+      # dist/ is generated, so it is rebuilt before it is validated: a template
+      # edit that was never re-rendered would otherwise pass the checker against
+      # a stale tree. The render is deterministic and destructive per target, so
+      # running it here is safe and makes `dist-clean` below meaningful.
+      - id: plugins-build
+        name: render every target
+        entry: mise x -- mise run plugins:build
+        language: system
+        pass_filenames: false
+        files: ^(templates/|build/|schema/)
         stages: [ pre-commit ]
       - id: plugins-check
         name: plugin tree static validation
         entry: mise x -- mise run plugins:check
         language: system
         pass_filenames: false
-        files: ^(plugins/|\.claude-plugin/marketplace\.json$)
+        files: ^(templates/|build/|schema/|dist/)
+        stages: [ pre-commit ]
+      # The committed dist/ must be exactly what templates/ renders to. Catches
+      # the case the two hooks above cannot: output edited by hand, or a render
+      # whose result was never staged.
+      - id: dist-clean
+        name: dist/ matches a fresh render
+        entry: mise x -- mise run plugins:dist-clean
+        language: system
+        pass_filenames: false
+        files: ^(templates/|build/|schema/|dist/)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks

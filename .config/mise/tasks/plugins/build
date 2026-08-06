@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#MISE description="Render templates/ into dist/<target>/ for every agent target"
+#MISE dir="{{ config_root }}"
+
+# Renders the authored, target-agnostic templates/ tree into the committed
+# dist/<target>/ trees — one per agent (claude, opencode, cursor, ohmypi,
+# codex). Each target directory is removed first, so a deleted skill disappears
+# from the output rather than lingering: dist/ must be a pure function of
+# templates/, or `git status` stops meaning anything.
+#
+# The output is committed on purpose. What users install is then inspectable and
+# diffable in review, and CI can assert the tree is clean after a render — which
+# is what catches a template edit that was never rebuilt.
+#
+# Run with no build step: node strips the TypeScript types directly. That needs
+# node >= 22.6, which .config/mise.toml already pins.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+exec node --experimental-strip-types build/src/cli.ts render "$@"

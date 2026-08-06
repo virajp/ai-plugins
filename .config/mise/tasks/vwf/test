@@ -2,7 +2,7 @@
 #MISE description="Unit-test the vwf npm-normalize hook (table-driven)"
 #MISE dir="{{ config_root }}"
 
-# Feeds crafted PreToolUse payloads through plugins/vwf/hooks/npm-normalize.sh
+# Feeds crafted PreToolUse payloads through templates/vwf/hooks/npm-normalize.sh
 # and asserts the rewritten command, for BOTH package managers vwf allows. Each
 # table runs inside a temp dir seeded with the lockfile that selects the
 # manager, so the resolution path is exercised too — not just the rewrite. Runs
@@ -14,7 +14,10 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-HOOK="plugins/vwf/hooks/npm-normalize.sh"
+# The authored script. Hook scripts are copied byte-for-byte rather than
+# rendered (only .md goes through the template engine), so testing the source
+# tests exactly what every target ships.
+HOOK="templates/vwf/hooks/npm-normalize.sh"
 
 command -v jq >/dev/null 2>&1 || { print_error "jq is required to run the hook tests"; exit 1; }
 [[ -f "$HOOK" ]] || { print_error "Hook not found: $HOOK"; exit 1; }
