@@ -13,6 +13,9 @@ ignores:
   # esbuild emits empty catch blocks and keeps unused helpers from bundled deps.
   # The source it is built from is linted.
   - "bin/**"
+  # Gitignored working notes and session handoffs. Never committed, so linting
+  # them only ever fails the local gate on prose nobody reviews.
+  - "docs/scratchpad/**"
   # vwf blueprint templates + example bundle carry OKF frontmatter (a `title`)
   # alongside a body H1; the linter counts the frontmatter title as an H1, so
   # exclude these template/example docs from markdown linting.

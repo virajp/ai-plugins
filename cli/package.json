@@ -14,10 +14,8 @@
     "@ai-plugins/schema": "workspace:*",
     "citty": "latest",
     "jsonc-parser": "latest",
-    "picocolors": "latest",
     "smol-toml": "latest",
-    "write-file-atomic": "latest",
-    "yaml": "latest"
+    "write-file-atomic": "latest"
   },
   "devDependencies": {
     "typescript": "latest"

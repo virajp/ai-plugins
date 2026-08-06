@@ -15,11 +15,6 @@ import {
   readToml,
   setTomlTable,
 } from "./toml.ts";
-import {
-  deleteYamlPath,
-  getYamlPath,
-  setYamlPath,
-} from "./yaml.ts";
 
 /**
  * These files belong to the user, not to us. Every assertion here is really the
@@ -105,50 +100,6 @@ describe("jsonc", () => {
 
   it("treats a malformed document as absent rather than throwing", () => {
     expect(readJsonc("{ this is not json")).toBeUndefined();
-  });
-});
-
-describe("yaml", () => {
-  const source = `# vwf config, hand-maintained.
-config_format: 12
-
-repo:
-  # Which package manager this repo uses.
-  package_manager: pnpm
-  stack: typescript
-
-harness:
-  dev: dev
-`;
-
-  it("preserves comments and key order through an edit", () => {
-    const out = setYamlPath(source, ["repo", "package_manager"], "bun");
-
-    expect(out).toContain("# vwf config, hand-maintained.");
-    expect(out).toContain("# Which package manager this repo uses.");
-    expect(out).toContain("package_manager: bun");
-    // Order preserved: config_format still precedes repo.
-    expect(out.indexOf("config_format")).toBeLessThan(out.indexOf("repo:"));
-    expect(out).toContain("dev: dev");
-  });
-
-  it("adds a nested key without rewriting the document", () => {
-    const out = setYamlPath(source, ["design", "tool"], "claude-design");
-    expect(getYamlPath(out, ["design", "tool"])).toBe("claude-design");
-    expect(out).toContain("# vwf config, hand-maintained.");
-    expect(out).toContain("stack: typescript");
-  });
-
-  it("deletes a key, leaving comments intact", () => {
-    const out = deleteYamlPath(source, ["harness"]);
-    expect(getYamlPath(out, ["harness"])).toBeUndefined();
-    expect(out).toContain("# Which package manager this repo uses.");
-  });
-
-  it("refuses to edit a malformed document", () => {
-    expect(() => setYamlPath("a:\n- [unclosed\n", ["a"], 1)).toThrow(
-      /malformed/,
-    );
   });
 });
 
