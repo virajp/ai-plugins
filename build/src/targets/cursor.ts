@@ -59,9 +59,18 @@ export const cursor: Target = {
       stampOwner(outputs, before, plugin.manifest.name);
     }
 
-    // No marketplace manifest: Cursor resolves plugins from a git source, so
-    // the bundles *are* the distribution and a second registry file would be
-    // one more thing to keep in sync with `templates/marketplace.yaml`.
+    outputs.push({
+      // At the repo root for the same reason Claude's is, plus one of its own:
+      // Cursor looks for `.cursor-plugin/marketplace.json` *before*
+      // `.claude-plugin/marketplace.json`, so emitting ours here shadows the
+      // Claude manifest. Without it Cursor would read that one and resolve
+      // every plugin to a Claude-rendered bundle.
+      path: ".cursor-plugin/marketplace.json",
+      contents: marketplaceJson(workspace, gaps),
+      atRepoRoot: true,
+      unowned: true,
+    });
+
     return { outputs, gaps };
   },
 };
@@ -428,6 +437,61 @@ function pluginJson(manifest: Manifest, gaps: Gap[]): string {
     description: manifest.description ?? manifest.name,
     name: manifest.name,
     version: manifest.version ?? "0.0.0",
+  });
+}
+
+/**
+ * The registry Cursor reads when this repo is added as a marketplace.
+ *
+ * Cursor's plugin `source` is a union of git forms only — a bare string, or an
+ * object tagged `github` / `url` / `git-subdir`. **There is no local-path
+ * variant**, verified against its manifest parser. So unlike every other target
+ * here, a Cursor install cannot be pointed at the rendered tree sitting on
+ * disk: it clones the repo and reads `dist/cursor/<plugin>` from whatever ref
+ * it resolves. A working copy and an installed copy can therefore differ, which
+ * is the one place the committed-`dist/` guarantee does not reach.
+ *
+ * `git-subdir` is the only form that can name a directory inside the repo,
+ * which is what every plugin here is.
+ */
+function marketplaceJson(workspace: Workspace, gaps: Gap[]): string {
+  const local = workspace
+    .plugins
+    .filter(plugin => plugin.manifest.source.kind === "local");
+  const repository = workspace.marketplace.repository;
+
+  if (repository === undefined) {
+    for (const plugin of local) {
+      gaps.push({
+        plugin: plugin.manifest.name,
+        capability: "marketplace",
+        detail: "not listed: `marketplace.yaml` declares no `repository`, and "
+          + "Cursor's plugin sources are git-only, so there is no URL to point "
+          + "the entry at.",
+        severity: "dropped",
+      });
+    }
+    // A manifest listing nothing still registers cleanly and reports "no
+    // plugins", which is a far clearer failure than entries Cursor skips one by
+    // one for having no usable source.
+    return json({ name: workspace.marketplace.name, plugins: [] });
+  }
+
+  return json({
+    description: workspace.marketplace.description,
+    name: workspace.marketplace.name,
+    owner: workspace.marketplace.owner,
+    plugins: local.map(plugin => ({
+      category: plugin.manifest.category,
+      description: plugin.manifest.description ?? plugin.manifest.name,
+      name: plugin.manifest.name,
+      source: {
+        source: "git-subdir",
+        url: repository,
+        path: `dist/cursor/${plugin.manifest.name}`,
+      },
+      ...(plugin.manifest.version ? { version: plugin.manifest.version } : {}),
+    })),
   });
 }
 

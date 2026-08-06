@@ -59,9 +59,12 @@ export const codex: Target = {
       gaps.push(...emission.gaps);
     }
 
-    // No marketplace manifest: Codex has a registry, but this version ships no
-    // verified schema for it, and inventing one would be worse than the install
-    // step pointing at the bundles directly.
+    outputs.push({
+      path: MARKETPLACE_PATH,
+      contents: marketplaceJson(workspace),
+      unowned: true,
+    });
+
     return { outputs, gaps };
   },
 };
@@ -74,6 +77,14 @@ export const codex: Target = {
  * silent overwrite.
  */
 const AGENTS_DIR = "codex-agents";
+
+/**
+ * Where `codex plugin marketplace add <root>` looks, verified by running it.
+ * Not `.codex-plugin/` — that names a *plugin* manifest; the registry is the
+ * cross-tool `.agents/` path, which Codex shares with other Agents-standard
+ * tools.
+ */
+const MARKETPLACE_PATH = ".agents/plugins/marketplace.json";
 
 function contextFor(plugin: PluginSource): Context {
   return {
@@ -551,4 +562,36 @@ function json(value: unknown): string {
 
 function join(a: string, b: string): string {
   return `${a}/${b}`;
+}
+
+/**
+ * The registry `codex plugin marketplace add` reads.
+ *
+ * Two things here were established by running the real CLI, and both fail
+ * *silently* if guessed:
+ *
+ * - The source discriminator is `"local"`. With any other value the manifest
+ *   still parses and the marketplace still registers — `codex plugin list` just
+ *   reports "No marketplace plugins found", with no error naming the field.
+ * - `path` resolves against the marketplace root (the directory holding
+ *   `.agents/`), which is `dist/codex/` — so `./plugins/<name>` lands on the
+ *   bundles this target already emits.
+ *
+ * Only local plugins are listed: Codex needs a rendered bundle at a path it can
+ * copy, and a url-sourced plugin has none here.
+ */
+function marketplaceJson(workspace: Workspace): string {
+  return json({
+    name: workspace.marketplace.name,
+    plugins: workspace
+      .plugins
+      .filter(plugin => plugin.manifest.source.kind === "local")
+      .map(plugin => ({
+        name: plugin.manifest.name,
+        source: {
+          source: "local",
+          path: `./plugins/${plugin.manifest.name}`,
+        },
+      })),
+  });
 }

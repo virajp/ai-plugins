@@ -1,0 +1,89 @@
+{
+  "name": "virajp-plugins",
+  "plugins": [
+    {
+      "name": "claude-design",
+      "source": {
+        "source": "local",
+        "path": "./plugins/claude-design"
+      }
+    },
+    {
+      "name": "context7",
+      "source": {
+        "source": "local",
+        "path": "./plugins/context7"
+      }
+    },
+    {
+      "name": "effect",
+      "source": {
+        "source": "local",
+        "path": "./plugins/effect"
+      }
+    },
+    {
+      "name": "flutter",
+      "source": {
+        "source": "local",
+        "path": "./plugins/flutter"
+      }
+    },
+    {
+      "name": "gcp",
+      "source": {
+        "source": "local",
+        "path": "./plugins/gcp"
+      }
+    },
+    {
+      "name": "github-actions",
+      "source": {
+        "source": "local",
+        "path": "./plugins/github-actions"
+      }
+    },
+    {
+      "name": "lovable",
+      "source": {
+        "source": "local",
+        "path": "./plugins/lovable"
+      }
+    },
+    {
+      "name": "markdown",
+      "source": {
+        "source": "local",
+        "path": "./plugins/markdown"
+      }
+    },
+    {
+      "name": "mise",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mise"
+      }
+    },
+    {
+      "name": "stitch",
+      "source": {
+        "source": "local",
+        "path": "./plugins/stitch"
+      }
+    },
+    {
+      "name": "typescript",
+      "source": {
+        "source": "local",
+        "path": "./plugins/typescript"
+      }
+    },
+    {
+      "name": "vwf",
+      "source": {
+        "source": "local",
+        "path": "./plugins/vwf"
+      }
+    }
+  ]
+}

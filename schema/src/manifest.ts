@@ -88,5 +88,15 @@ export const Marketplace = z.object({
   description: z.string().optional(),
   owner: z.object({ name: z.string(), email: z.email().optional() }),
   forceRemoveDeletedPlugins: z.boolean().default(false),
+  /**
+   * Clone URL of the repo publishing this marketplace.
+   *
+   * Needed only by targets whose marketplace cannot reference a local path.
+   * Cursor is the one that does: its plugin `source` is a union of git forms
+   * (`github` / `url` / `git-subdir`) with no local variant, so a Cursor
+   * install resolves over the network even when the rendered tree sits right
+   * beside the config.
+   */
+  repository: z.url().optional(),
 });
 export type Marketplace = z.infer<typeof Marketplace>;
