@@ -33,3 +33,6 @@ schema/dist/
 build/dist/
 cli/dist/
 *.tsbuildinfo
+
+# Working notes and session handoffs — personal state, not the team's.
+docs/scratchpad/
