@@ -21,6 +21,9 @@ graphify-out/
 # repo ships OpenCode support but is not itself OpenCode-configured.
 .opencode/
 
+# Scratchpad / temporary files
+docs/scratchpad/
+
 # ============================================================
 # Node / CLI
 # ============================================================
