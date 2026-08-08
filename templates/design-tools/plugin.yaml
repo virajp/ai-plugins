@@ -1,0 +1,26 @@
+name: design-tools
+version: 0.1.0
+description: The vwf design adapter — two skills (import-screens,
+  import-design-system) that resolve the design tool per project and speak
+  Claude Design, Lovable or Google Stitch. Ships the Claude Design MCP server
+  (https://api.anthropic.com/v1/design/mcp).
+category: development
+tags:
+  - design
+  - mcp
+  - mockups
+  - claude-design
+  - lovable
+  - stitch
+  - vwf-design-adapter
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+requires:
+  - pnpm
+mcpServers:
+  claude-design:
+    transport: http
+    url: https://api.anthropic.com/v1/design/mcp

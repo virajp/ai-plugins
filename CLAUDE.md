@@ -66,13 +66,13 @@ hand, the other two are not.
 
 Retiring it retires the byte-parity gate with it. That gate was never automated
 — it was a manual `diff -rq plugins claude/plugins`, which settled at **3
-justified hunks** (`lovable` and `stitch` dropping a `description` duplicated
-from the marketplace entry; `git-workflow` dropping `user-invocable: true`,
-which is the default). All five targets now stand on the same footing:
-`plugins:check` plus the schema and renderer suites are the whole defence, and
-`schema/src/frontmatter.test.ts` still proves `emit(parse(x)) === x` over every
-authored document — the parity property in miniature, and the part that actually
-generalised.
+justified hunks** (two of the then-separate design adapters dropping a
+`description` duplicated from the marketplace entry; `git-workflow` dropping
+`user-invocable: true`, which is the default). All five targets now stand on the
+same footing: `plugins:check` plus the schema and renderer suites are the whole
+defence, and `schema/src/frontmatter.test.ts` still proves
+`emit(parse(x)) === x` over every authored document — the parity property in
+miniature, and the part that actually generalised.
 
 ### Targets and adapters
 
@@ -176,9 +176,7 @@ design (a plugin may hold skills versioned on their own cadence).
 | `typescript`             | `templates/typescript`     | Opinionated **plain** TypeScript skills — a `typescript` router skill (lean SKILL.md → on-demand standards/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`). Effect-TS doctrine lives in `effect`, not here                                                                                 |
 | `effect`                 | `templates/effect`         | Effect-TS doctrine, split out of `typescript` so plain TypeScript need not carry it — an `effect` router skill (effect/effect-runtime/testing references) plus the `packages` **stack template** and the two vwf stack-adapter skills. Depends on `typescript`. **Opt-in**                                                                                                                                                    |
 | `context7`               | `templates/context7`       | Context7 MCP docs server                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `claude-design`          | `templates/claude-design`  | Claude Design MCP server plus the **vwf design-adapter skills**. The default adapter (stays in `--all`), and no longer a vwf dependency                                                                                                                                                                                                                                                                                       |
-| `lovable`                | `templates/lovable`        | vwf design adapter for Lovable — screens from generated source, design system from the published `.lovable/design-system.json`. **Opt-in**                                                                                                                                                                                                                                                                                    |
-| `stitch`                 | `templates/stitch`         | vwf design adapter for Google Stitch — screens as HTML via `@google/stitch-sdk`; tokens are **derived**, not stored. **Opt-in**                                                                                                                                                                                                                                                                                               |
+| `design-tools`           | `templates/design-tools`   | The **vwf design adapter** — two skills (`design-tools-import-screens`, `design-tools-import-design-system`) that resolve the design tool **per project** and dispatch to a per-tool reference (`claude-design`, `lovable`, `stitch`), read on demand. Ships the Claude Design MCP server. Not a vwf dependency                                                                                                               |
 | `flutter`                | `templates/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)                                                                                                                                         |
 | `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep). Kept **for its skills** — its bundled stdio MCP server is toggled off, since vwf declares the same server over HTTP                                                                                                                                                                                                                                                |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                                                                                                                                                       |
@@ -365,7 +363,7 @@ Three traps, each verified by running the real tool and each silent when wrong:
   | `engineering-baseline.md`              | The **15 centralized technical rules** every product follows by default — enforced, never elicited; seeded into `conventions.md#baseline`, waived only via `enforcement.rules`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
   | `delivery-pipeline.md`                 | The canonical environment vocabulary (`development`/`staging`/`production`) + CI/CD contract (mise-built; `<project>-<env>-v<semver>` tag-triggered, branch-validated, tested-before-release). Read by `blueprint`, `verify`, and the **github-actions** plugin                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
   | `standard-flows.md`                    | The canonical flow-slug vocabulary per project role, the designated numbers, the auth-capability signal, and the synonym table (rename proposals, never automatic)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-  | `design-adapter.md`                    | The **design-adapter contract** — vwf talks to no design tool. Export (`/vwf:screens prompt`) needs no adapter since briefs are files; only **import** delegates, to `/<tool>:<tool>-import-screens` and `/<tool>:<tool>-import-design-system`. Defines both normalized payloads, why the skill names repeat the plugin (OpenCode's flat namespace vs. deterministic construction), the mandatory `disable-model-invocation: false`, and the **preflight** — a user-only adapter skill cannot be invoked and does not error, so a missing adapter is indistinguishable from an empty result unless vwf checks first                                                                                                                                                                                                                                      |
+  | `design-adapter.md`                    | The **design-adapter contract** — vwf talks to no design tool. Export (`/vwf:screens prompt`) needs no adapter since briefs are files; only **import** delegates, and always to the same two names — `/design-tools:design-tools-import-screens` and `/design-tools:design-tools-import-design-system`. **vwf constructs no skill name from config**: the tool is a **per-project** key the adapter resolves internally. Defines both normalized payloads, the mandatory `invocation: both`, and the **preflight** — a user-only adapter skill cannot be invoked and does not error, so an unsupported tool is indistinguishable from an empty result unless it halts first                                                                                                                                                                              |
   | `vwf-config.md`                        | The `.config/vwf.yaml` doctrine (currently `config_format` **12**): stamp keys, the coverage stamp, per-project nuances **and the structured `stack` block**, the repo-level `repo.stack`, `harness:`, `enforcement:`, bounded `pipeline` knobs, `verify` environments, the `design:` pins, and the hard floor config can never disable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
   | `harness.md`                           | The harness contract — the verification capabilities a repo must be able to run (`dev`, `e2e_local`, `local_stack`, `e2e_staging`, `health`, `screenshots`) and their canonical task names. Task names may vary; `local_stack` is the one capability whose **mechanism** may not — when a repo needs a local stack it must be Docker-composed services behind `wait-on` gates, since the acceptance verifier depends on a deterministic ready signal. A product needing no backing services needs no Docker                                                                                                                                                                                                                                                                                                                                              |
   | `stacks/`                              | The **stack template menu**, split into **four independent axes** since format 19: `stacks/project/<role>/` (language, framework, layout, testing), `stacks/backing/` (datastore, identity, queue, storage, the local stack), `stacks/deploy/` (artifact, release pipeline, hosting), and `stacks/repo/` (package manager, task runner, lint/format). They vary independently — the same Hono service runs against Firebase or Postgres, on Cloud Run or any container host — so a project template never names a vendor and a backing template never names a framework. Nothing merges and no precedence applies. `backing`/`deploy` are pinned product-wide; `project` per project; `repo` per repo. A menu, not a default: `architecture` presents each and the user picks. Adding an option means adding a file                                      |
@@ -494,11 +492,10 @@ catalog/erDiagram sync, the released-API additive-only diff).
 
 `vwf` depends on `context7`, `github-actions`, `markdown`, `mempalace`, and
 `mise` — **all resolved from the `virajp-plugins` marketplace itself**, so
-installing `vwf` needs no other marketplace registered. `claude-design`,
-`context7`, `github-actions`, `markdown`, and `mise` are authored here;
-`mempalace` is not — it is **re-listed** in `.claude-plugin/marketplace.json`
-via a `url` source (pointing at its upstream repo) so it lives under
-`virajp-plugins`.
+installing `vwf` needs no other marketplace registered. `context7`,
+`github-actions`, `markdown`, and `mise` are authored here; `mempalace` is not —
+it is **re-listed** in `.claude-plugin/marketplace.json` via a `url` source
+(pointing at its upstream repo) so it lives under `virajp-plugins`.
 
 The dependency list is declared in **one** place — `templates/vwf/plugin.yaml` →
 `context7`, `github-actions`, `markdown`, `mempalace`, `mise` — and the
@@ -507,9 +504,10 @@ the template layer they were separate files kept in sync by hand, which is what
 `plugins:check` used to compare.) The checker now verifies each name resolves to
 a real plugin instead.
 
-**`claude-design` is deliberately *not* a dependency.** vwf is decoupled from
-any design tool: it delegates to whichever adapter plugin `design.tool` names.
-Adapters are chosen, not inherited — see the design-adapter contract.
+**`design-tools` is deliberately *not* a dependency.** vwf is decoupled from any
+design tool: it calls two fixed adapter skill names and the adapter resolves
+which tool answers, per project. The adapter is chosen, not inherited — see the
+design-adapter contract.
 
 When `vwf` is enabled, Claude Code (≥ 2.1.143) **auto-installs and
 auto-enables** these dependencies at the same scope. Key rules:
@@ -997,15 +995,15 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 Available plugin names: `vwf`, `markdown`, `typescript`, `effect`, `flutter`,
-`mempalace`, `claude-design`, `context7`, `mise`, `github-actions`,
+`mempalace`, `design-tools`, `context7`, `mise`, `github-actions`,
 `andrej-karpathy-skills` (external, opt-in). (The statusline is not a plugin —
 install it via `npx @askviraj/ai-plugins …`; see The installer & statusline
 CLI.)
 
-Installing `vwf` pulls in its dependencies (`claude-design`, `context7`,
-`github-actions`, `markdown`, `mempalace`, `mise`) automatically from the same
-`virajp-plugins` marketplace — no other marketplace needs to be registered. See
-the Dependencies section above.
+Installing `vwf` pulls in its dependencies (`context7`, `github-actions`,
+`markdown`, `mempalace`, `mise`) automatically from the same `virajp-plugins`
+marketplace — no other marketplace needs to be registered. See the Dependencies
+section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
 `--platform opencode` target, which copies each plugin's rendered `opencode/`

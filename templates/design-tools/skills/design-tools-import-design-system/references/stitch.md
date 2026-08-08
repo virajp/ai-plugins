@@ -1,21 +1,6 @@
----
-name: stitch-import-design-system
-description: Derive a design system from Google Stitch's generated screens and
-  return it as a vwf design-system payload. Invoked by <%= it.cmd("vwf:design-system") %> as
-  its configured design adapter — not a general-purpose skill.
-invocation: both
-model: sonnet
-effort: high
----
+# import-design-system — Google Stitch
 
-# import-design-system — Google Stitch adapter
-
-Return a **vwf design-system payload** derived from what Stitch generated.
-
-> **`disable-model-invocation` must stay `false`.** A `true` value blocks
-> delegation *silently* — vwf would import nothing and see no error.
-
-Payload shape: the installed vwf plugin's `assets/design-adapter.md`.
+The project's design tool resolved to `stitch`.
 
 ## Read this first: Stitch has no stored design system
 
@@ -37,6 +22,11 @@ If the product needs an authoritative, stable design system, pair Stitch's
 screen generation with a tool that stores one — or author `design-system.md`
 in-repo. Say so plainly rather than presenting a derived snapshot as equivalent.
 
+## Prerequisites
+
+`STITCH_API_KEY` in the environment, and the `@google/stitch-sdk` package
+reachable (`pnpm dlx` / `bunx`).
+
 ## What to do
 
 1. **Gather the source.** `stitch.projects()` → `project.screens()` →
@@ -57,21 +47,10 @@ in-repo. Say so plainly rather than presenting a derived snapshot as equivalent.
 5. **Accessibility** — report what the markup evidences (contrast pairs, focus
    styles, target sizes). An absent standard is `null`, never an assumed "WCAG
    AA".
+6. **Set `source.tool: stitch` and `derived: true`.**
 
 ## Rules
 
 - A value you inferred is reported as inferred. The whole risk of a derived
   system is that it reads exactly like an authoritative one.
 - Never regenerate screens to "improve" the sample.
-- Never write to `docs/blueprint/`.
-
-## Return contract
-
-Output **only** the design-system payload as YAML — nothing before or after,
-with `derived: true`.
-
-On failure, output only:
-
-```text
-ERROR: <what could not be reached or read, in one line>
-```

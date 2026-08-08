@@ -18,7 +18,8 @@ Two equivalent surfaces expose the same operations (`get_project`,
    `"select:DesignSync"` and confirm the schema arrives.
 2. **The claude-design MCP server** — the portable fallback (e.g. OpenCode has
    no DesignSync): load the operations via `ToolSearch` (names prefixed
-   `mcp__plugin_claude-design_claude-design__`).
+   `mcp__plugin_design-tools_claude-design__`; the `design-tools` plugin
+   declares the server, and the prefix carries the declaring plugin).
 
 Neither available, or the first read call fails authorization (no claude.ai
 login / design scopes — `/design-login`, or `/mcp` to connect the server) →
