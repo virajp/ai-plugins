@@ -39,14 +39,13 @@ and one of `mobile` / `tablet` / `desktop` / `web` / `auto`. vwf also passes the
 in Lovable and its mobile app on the Claude Design canvas, so resolve against
 the registry project vwf named — never against "the product".
 
-Read `.config/vwf.yaml`, in this order:
+Read `projects.<project>.design` in `.config/vwf.yaml`. That is the only key —
+there is no product-wide fallback. A config still carrying the pre-`13`
+`design.tool` is drift for `/vwf:setup`'s `12 → 13` migration to copy down;
+reading it here would make that migration optional and leave two answers to one
+question in the config.
 
-1. `projects.<project>.design` — the per-project key. This wins.
-2. `design.tool` — the older product-wide key. Honor it as a fallback for every
-   project, and nudge the user to run `/vwf:setup` for the
-   config migration.
-
-Neither present → **halt**, do not guess:
+Absent → **halt**, do not guess:
 
 ```text
 ERROR: no design tool configured for project <project>. Set

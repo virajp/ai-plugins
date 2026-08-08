@@ -42,7 +42,7 @@ a pre-format-4 repo has nothing to verify flows against; tell the user to run
 
 Read the registry (`docs/blueprint/registry.yaml`) for the deployed projects
 (any project whose `role` is `service`, `worker`, `site`, `fullstack` or
-`infra`) and the Acceptance blocks of every flow under
+`iac`) and the Acceptance blocks of every flow under
 `docs/blueprint/flows/*/*/index.md`. Resolve each project's base URL for the
 named environment from the **`environments:` block in `.config/vwf.yaml`** first
 (per the vwf-config asset); fall back to the repo's own configuration (deploy
@@ -112,8 +112,8 @@ just automated feedback):
   path now — `blueprint <flow|entity>` if the blueprint is wrong,
   `plan <slice>` for a fix cycle. Deferred → record one line in the owning
   flow doc's **Open Questions** so it survives a mempalace outage.
-- **Health down / infra failure** → report precisely (project, probe, error);
-  this is operational, not a blueprint gap — do not file it as one.
+- **Health down / infrastructure failure** → report precisely (project, probe,
+  error); this is operational, not a blueprint gap — do not file it as one.
 - **NOT-COVERED / no harness** → a testing gap; file to room `gaps` and offer a
   plan step next cycle.
 

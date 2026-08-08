@@ -70,15 +70,16 @@ than by vwf**. What ships today:
 | `fullstack` | `typescript-hono-refine` — in the **typescript** plugin     | TypeScript · Hono + Effect-TS · React + Refine |
 | `frontend`  | `dart-flutter` — in the **flutter** plugin                  | Dart · Flutter                                 |
 | `frontend`  | `typescript-effect-cli` — in the **typescript** plugin      | TypeScript · @effect/cli (platform `cli`)      |
-| `infra`     | `typescript-pulumi` — in the **typescript** plugin          | TypeScript · Pulumi                            |
+| `iac`       | `typescript-pulumi` — in the **typescript** plugin          | TypeScript · Pulumi                            |
 
-Three more axes compose with the project one — pick one of each:
+Three more axes compose with the project one — pick one of each, and pick them
+**per project** (`backing`, `deploy`) or per repo (`repo`):
 
-| Axis      | Ships today                                                                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `backing` | none here — a **capability** plugin ships the contract and its own provider (`datastore`, `identity`, `observability`, `orchestration`, `object-storage`), a **cloud** plugin the managed flavour                                      |
-| `deploy`  | `npm-package` (in the **typescript** plugin) · the hosted targets come from a **cloud** plugin (`gcp`, `cloudflare`)                                                                                                                   |
-| `repo`    | `pnpm-turbo` · `bun` — both in the **typescript** plugin                                                                                                                                                                              |
+| Axis      | Scope       | Ships today                                                                                                                                                                                                     |
+| --------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backing` | per project | none here — a **capability** plugin ships the contract and its own provider (`datastore`, `identity`, `observability`, `orchestration`, `object-storage`), a **cloud** plugin the managed flavour               |
+| `deploy`  | per project | `npm-package` (in the **typescript** plugin) · the hosted targets come from a **cloud** plugin (`gcp`, `cloudflare`)                                                                                            |
+| `repo`    | per repo    | `pnpm-turbo` · `bun` — both in the **typescript** plugin                                                                                                                                                        |
 
 **One entry per role is not a default.** `/architecture` presents the menu
 for the project's role and the user picks, always — plus an **other (describe)**
@@ -129,8 +130,15 @@ reviewers flag violations unless an `enforcement.rules` waiver in
 ## Infrastructure
 
 There is no infrastructure *default* — the backing and deploy axes are menus
-like the project axis, and `/architecture` presents them. What is fixed is
-the **shape**: one backing template naming the datastore/identity/queue/storage
-set, one deploy template naming the artifact and release path, and mise as the
-tool manager. Per-project detail (hosting, secrets, testing modes) lives in the
-selected templates, never here.
+like the project axis, and `/architecture` presents them **per project**.
+What is fixed is the **shape**: a backing list naming the
+datastore/identity/queue/storage services that project uses, one deploy template
+naming its artifact and release path, and mise as the tool manager. Two projects
+in the same product may answer differently — a site on one cloud, an API on
+another — and config_format 13 records each separately rather than forcing one
+product-wide pin. Detail (hosting, secrets, testing modes) lives in the selected
+templates, never here.
+
+Infrastructure **as code** is a different thing again: a project with
+`role: iac`, which is registered, exempt from blueprint coverage, and required
+to live in **its own repo** (`%%AI_PLUGINS_ROOT%%/assets/topologies/`).

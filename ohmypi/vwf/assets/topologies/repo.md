@@ -28,6 +28,16 @@ Exactly **one** project in `registry.yaml`, carrying whatever `role` fits
 (`service`, `fullstack`, `frontend`, …). `depends_on` is always empty — there is
 nothing else in the product to depend on.
 
+**Except `iac`.** A project with `role: iac` is never that one project's
+neighbour: it is its own repo, always. A single-repo product that provisions its
+own infrastructure as code therefore has **two** repos — the product, and the
+IaC one beside it — which makes it a small polyrepo, not a single repo. This is
+the one structural rule vwf enforces rather than offers: `/skill:doctor` raises a
+violation as **blocking**, and `/skill:setup` offers a consent-gated restructure.
+The reasoning — blast radius, credentials, lifecycle, cadence — is in
+[monorepo](monorepo.md), and holds identically here; a smaller product does not
+make an accidental `terraform destroy` smaller.
+
 ## When this is the right shape
 
 - The product is a single deployable: one API, one app, one site.

@@ -41,8 +41,9 @@ exactly one, in the registry's `role` field.
   makes the design system mandatory. SSR alone does not make a site fullstack.
 - **`frontend`** — a client-side app (mobile / tablet / desktop / auto). Also
   makes the design system mandatory. Synonym: `app`.
-- **`infra`** — an IaC project (Pulumi, Terraform, …). Registered, but exempt
-  from blueprint coverage.
+- **`iac`** — an IaC project (Pulumi, Terraform, …). Registered, but exempt from
+  blueprint coverage, and **always its own repo** — never a directory inside
+  another project's (`%%AI_PLUGINS_ROOT%%/assets/topologies/`). Synonym: `infra`.
 
 An **operator back-office** is not its own role: record it as `role: fullstack`
 plus the `operator-rbac` capability.

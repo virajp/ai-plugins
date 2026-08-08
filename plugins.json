@@ -51,6 +51,17 @@
       ]
     },
     {
+      "name": "devtools",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "mise"
+      ]
+    },
+    {
       "name": "flutter",
       "scope": "project",
       "optIn": false,
@@ -91,17 +102,6 @@
       "requires": [
         "mise",
         "uv"
-      ]
-    },
-    {
-      "name": "mise",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
-      "local": true,
-      "dependencies": [],
-      "requires": [
-        "mise"
       ]
     },
     {
@@ -151,8 +151,8 @@
       "local": true,
       "dependencies": [
         "andrej-karpathy-skills",
-        "mempalace",
-        "mise"
+        "devtools",
+        "mempalace"
       ],
       "requires": [
         "graphify",

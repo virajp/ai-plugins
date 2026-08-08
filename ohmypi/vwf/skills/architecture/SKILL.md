@@ -109,7 +109,7 @@ a time, gathering for each:
 | Field          | How to elicit                                                                        |
 | -------------- | ------------------------------------------------------------------------------------ |
 | `name`         | Free text (short identifier)                                                         |
-| `role`         | MCQ: `service` / `worker` / `packages` / `site` / `fullstack` / `frontend` / `infra` |
+| `role`         | MCQ: `service` / `worker` / `packages` / `site` / `fullstack` / `frontend` / `iac`   |
 | `path`         | Free text (repo-relative directory)                                                  |
 | `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other        |
 | `depends_on`   | Multi-select from named projects + None                                              |
@@ -122,7 +122,7 @@ registry describes what the system *is*; config records what it is *built with*.
 
 Offer the role defaults for `doc_unit`: `service` → `entity`, `worker` →
 `entity`, `packages` → `module`, `site` → `page`, `fullstack` → `page`,
-`frontend` → `entity`, `infra` → `module`.
+`frontend` → `entity`, `iac` → `module`.
 
 **`site` vs `fullstack`.** Ask which one it is by the API question, not by how
 the user describes the code: a project that **publishes its own API** is
@@ -133,10 +133,21 @@ a site fullstack — server rendering is not a published API.
 **No `console`.** An operator back-office is `role: fullstack` plus the
 `operator-rbac` capability. When a user describes an admin panel, offer exactly
 that rather than inventing a role. **Synonyms** normalize on the way in: `api` →
-`service`, `web` → `site`, `app` → `frontend`, `library` → `packages`.
+`service`, `web` → `site`, `app` → `frontend`, `library` → `packages`, `infra` →
+`iac`.
 
-**`infra`** is registered but exempt from blueprint coverage — it has no flows,
+**`iac`** is registered but exempt from blueprint coverage — it has no flows,
 screens or API contracts. Record it, then skip it in every coverage question.
+
+**An `iac` project must be its own repo** — independent, or a submodule of the
+product parent. The rule and its rationale live in
+`%%AI_PLUGINS_ROOT%%/assets/topologies/`; it holds under all three topologies,
+including a monorepo that otherwise keeps every project in one tree. So when a
+user declares a project with role `iac`, **elicit its repo** — ask where it
+lives and record that path — rather than defaulting it under the product root
+like every other project. If the answer places it inside another repo, say so
+plainly and record what they chose: `/skill:doctor` will raise it as blocking and
+`/skill:setup` will offer the restructure. Never restructure from here.
 
 **Platforms.** Record each UI project's implemented surfaces under its
 `platforms:` in **`registry.yaml`** — the single source since format 19; the key
@@ -172,30 +183,50 @@ system's **Terminal UX** section. A CLI-only tool is `role: frontend` with
 Since format 19 a stack is composed from **four independent axes**
 (`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`), each its own menu:
 
-| Axis        | Scope        | Menu                            | Recorded as                      |
-| ----------- | ------------ | ------------------------------- | -------------------------------- |
-| **project** | per project  | `assets/stacks/project/<role>/` | `projects.<name>.stack.template` |
-| **backing** | product-wide | `assets/stacks/backing/`        | `backing.template`               |
-| **deploy**  | product-wide | `assets/stacks/deploy/`         | `deploy.template`                |
-| **repo**    | per repo     | `assets/stacks/repo/`           | `repo.stack.template`            |
+| Axis        | Scope       | Menu                    | Recorded as                              |
+| ----------- | ----------- | ----------------------- | ---------------------------------------- |
+| **project** | per project | the plugins' `project/` | `projects.<name>.stack.template`         |
+| **backing** | per project | the plugins' `backing/` | `projects.<name>.stack.backing_template` |
+| **deploy**  | per project | the plugins' `deploy/`  | `projects.<name>.stack.deploy_template`  |
+| **repo**    | per repo    | the plugins' `repo/`    | `repo.stack.template`                    |
 
 Elicit each as its **own** round (per `assets/elicitation.md` — one decision,
-the menu plus an **other (describe)** option):
+the menu plus an **other (describe)** option), and per §3a of that protocol
+**every question names the project it decides**. Since format 13 all three
+technology axes are per project, so "which datastore?" is never a question about
+the product — it is a question about `api`, or about `website`:
 
 - **project** — once per project, filtered to that project's `role`.
-- **backing** and **deploy** — **once for the whole product**, not per project.
-  Every project talks to the same datastore/identity set and ships the same way
-  unless the user says otherwise; offer a per-project override only if they
-  raise one. Filter the backing menu by the capabilities the registry declares.
+- **backing** — once per project, filtered to the capabilities that project
+  declares in the registry. Records a **list**: one slug per capability it needs
+  (datastore, identity, queue, object storage, telemetry sink). A project that
+  talks to no backing service records `[]`.
+- **deploy** — once per project. A `frontend` on a screen platform records
+  `n/a`, a `cli` frontend `deploy/npm-package`, an `iac` project `n/a`.
 - **repo** — once per repo, filtered to templates whose `topologies` include
   this repo's.
 
+**Offer the previous project's answer as the default on the next.** Most
+products do run every project on one cloud, and re-asking from scratch per
+project would be tedious for the common case — but the answer is recorded per
+project either way, so the moment one diverges the config can say so. Never
+collapse the recorded values back into a shared pin.
+
+Two more per-project keys are elicited here, alongside the axes:
+
+- **`design`** — the design tool, for each **UI** project only (`site`,
+  `fullstack`, `frontend`). A tool token — `claude-design`, `lovable`, `stitch`
+  — resolved inside the design adapter, never a plugin name
+  (`%%AI_PLUGINS_ROOT%%/assets/design-adapter.md`). A product may design its
+  website in one tool and its app in another; ask per project.
+- **`cicd`** — the CI system that builds and releases the project
+  (`github-actions`, …). vwf owns the delivery-pipeline *contract* and never the
+  mechanism, so this value is read only by the `cicd` plugin. Ask once and offer
+  the same answer for every project; in a monorepo they will all match.
+
 The axes are orthogonal by construction — a project template never names a
 vendor, a backing template never names a framework — so there is nothing to
-merge and no precedence to resolve. A `frontend` project on a **screen**
-platform has **no deploy axis** (it ships through a store): record
-`deploy_template: n/a`. A `cli` frontend is the exception — it ships through a
-package registry, which *is* a deploy target: pin `deploy/npm-package`.
+merge and no precedence to resolve.
 
 Record all of it in `.config/vwf.yaml` per the vwf-config asset. **Always write
 the project block**, for every project: it is what `/skill:doctor` checks the repo
@@ -284,9 +315,11 @@ The `architecture-writer` agent writes **both** files directly — the registry
 not pass either file back through this session.
 
 **Write the stack yourself**, not through the writer: set the structured
-`projects.<name>.stack` block in `.config/vwf.yaml` for **every** project, plus
-the repo-level `repo.stack`. The writer never touches config, and never sees a
-stack — that separation is what keeps the blueprint vendor-free.
+`projects.<name>.stack` block in `.config/vwf.yaml` for **every** project — all
+three axes, `template`, `backing_template` and `deploy_template` — plus the
+per-project `design` (UI projects) and `cicd` keys and the repo-level
+`repo.stack`. The writer never touches config, and never sees a stack — that
+separation is what keeps the blueprint vendor-free.
 
 ---
 

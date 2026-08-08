@@ -51,7 +51,7 @@ repo never needs it.
 - **Worktree-safe; all git via `git-workflow`.** Operate in an isolated
   worktree; never delete; never overwrite without consent. Keep the worktree
   local.
-- **Don't duplicate tools.** Use `mise:scaffold` for mise config and
+- **Don't duplicate tools.** Use `devtools:scaffold` for mise config and
   `/readme` for the README — orchestrate, don't reimplement.
 - **Idempotent.** A re-run detects what already conforms and migrates only the
   delta; a conforming repo yields an empty plan.
@@ -92,8 +92,13 @@ Per the project-setup skill (topology-detection), read repo signals —
 existing `docs/blueprint/` or legacy `docs/specs/`. Infer: monorepo vs polyrepo
 vs **workspace** (a parent repo with submodule children — classify each child on
 its own signals), the project **roles** present (`service`, `worker`,
-`packages`, `site`, `frontend`, `infra` — a list per project, order
+`packages`, `site`, `frontend`, `iac` — a list per project, order
 significant), and the stack per project.
+
+**`iac` placement.** For every project detected as `iac`, resolve which repo's
+working tree its directory falls in. One sitting inside another project's repo
+violates the own-repo rule (`%%AI_PLUGINS_ROOT%%/assets/topologies/`) — record
+it here and carry it into the step-4 plan as a restructure proposal (§4).
 
 **Harness detection.** Detect the repo's verification-harness capabilities per
 `%%AI_PLUGINS_ROOT%%/assets/harness.md` (dev task, local E2E + stack, staging
@@ -147,10 +152,17 @@ primary project and numbered in execution order — per format-versioning, a
 mechanical `git mv` + link rewrite with the ordering elicited), or the
 **`10 → 11`** delta (a UI project's flows regrouped under device-type subgroups,
 Screens rows gaining their frame Codes, in-car journeys elicited into their own
-subset flows — per format-versioning), or the **`12 → 14`** delta (those device
+subset flows — per format-versioning), the **`12 → 14`** delta (those device
 subgroups flattened back out, the device moving into the flow's `device:`
-frontmatter key — a mechanical `git mv` + link rewrite + config entry rewrite).
-Fold in any old or partial structure.
+frontmatter key — a mechanical `git mv` + link rewrite + config entry rewrite),
+or the **`19 → 20`** delta (`role: infra` renamed to `role: iac` in every
+`registry.yaml`, plus the own-repo rule for `iac` projects — the restructure
+proposal §4 carries). Fold in any old or partial structure.
+
+`19 → 20` ships with the config's **`12 → 13`** migration (per the vwf-config
+asset): the backing, deploy, design and CI axes move down to per-project keys.
+Run the two together — a repo on one but not the other is a state neither
+migration expects.
 
 Since format 14 the conforming layout is **flows-first and project-grouped**:
 every flow, UI or not, under
@@ -180,6 +192,16 @@ tooling (mise), CLAUDE.md merge, README. **Write the plan to a scratch artifact
 present it **section by section** — do not keep it chat-only. **Wait for
 approval.**
 
+**An `iac` project inside another repo** enters the plan as its own batch: a
+proposal to extract that directory into its own repo and add it back as a
+submodule of the product parent. Present it as a dry run like every other batch
+— the moves, the resulting `.gitmodules` entry, and the registry `path` that
+changes — and **never apply it uninvited**; a repo split rewrites history
+boundaries and is the least reversible thing setup can do, so it is never
+bundled with anything else. A decline is recorded and not re-proposed on later
+runs; `/doctor` keeps reporting it as blocking, which is the honest state.
+The rule and its rationale live in `%%AI_PLUGINS_ROOT%%/assets/topologies/`.
+
 **Dirty-tree guard.** Before creating the worktree, run `git status`. If the
 working tree is dirty, **stop and ask** whether to commit, stash, or proceed —
 never migrate over uncommitted changes silently. Once clean (or the user
@@ -187,9 +209,9 @@ consents), set up an isolated worktree via `/git-workflow`.
 
 ### 5. Tooling
 
-If mise config is missing or incomplete, invoke **mise:scaffold**. Note any
+If mise config is missing or incomplete, invoke **devtools:scaffold**. Note any
 other runtimes the detected stacks need — do not install them. If
-`mise:scaffold` fails, report the error, offer to continue without it (leaving
+`devtools:scaffold` fails, report the error, offer to continue without it (leaving
 mise config for the user), and record the skip in `setup_progress`.
 
 ### 6. Migrate (consent-gated)
@@ -260,15 +282,24 @@ run diffs against, and how every vwf command operates in this repo:
 - any **`enforcement:`** entries recorded during this run (structure/stack
   declines, rule waivers);
 - **per-project nuances** the run surfaced — a `coverage_target` override, a
-  non-conventional `harness.health` path, a `package_manager` or
-  `deploy_template` override — elicited when ambiguous, never assumed. A
-  project's **`platforms:` is not one of them**: it is a system-shape fact and
-  lives only in `docs/blueprint/registry.yaml`, written by `/architecture`
-  (format 19 removed the duplicate key from this file);
+  non-conventional `harness.health` path, a `package_manager` override —
+  elicited when ambiguous, never assumed. A project's **`platforms:` is not one
+  of them**: it is a system-shape fact and lives only in
+  `docs/blueprint/registry.yaml`, written by `/architecture` (format 19
+  removed the duplicate key from this file);
 - the **`stack` block for every project** and the repo-level **`repo.stack`**,
   as `/architecture` elicited them at step 7 — write them out in full, for
-  every project the registry declares. An absent block is not "the default"; it
-  is what leaves `/doctor` with nothing to check;
+  every project the registry declares. Since config-format 13 that block carries
+  **all three technology axes per project**: `template`, `backing_template` (a
+  list — `[]` when the project talks to no backing service) and
+  `deploy_template` (`n/a` for a `frontend` on a screen platform and for an
+  `iac` project). An absent block is not "the default"; it is what leaves
+  `/doctor` with nothing to check;
+- the per-project **`design`** (UI projects only — the design tool token the
+  adapter resolves) and **`cicd`** (the CI system) keys, likewise per project
+  since config-format 13. Never write a product-wide `backing:`, `deploy:` or
+  `design.tool` key: those are `12` drift, and step 3's `12 → 13` migration is
+  what removes them from a repo that has them;
 - leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
   them.
 

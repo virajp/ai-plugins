@@ -1,7 +1,7 @@
 # GitHub Actions
 
 The `github-actions` implementation of `/cicd:workflow`. Read
-this only when the resolved `cicd.tool` is `github-actions`; the skill's own
+this only when the resolved `cicd` value is `github-actions`; the skill's own
 rules (mise installs everything, run through mise, both layouts, the vwf
 delivery-pipeline contract) still apply and are not repeated here.
 

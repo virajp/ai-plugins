@@ -12,7 +12,7 @@ This is the same shape as the design-adapter contract
 
 | vwf owns (abstract)                                                 | A stack plugin owns (concrete)                              |
 | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| The **four axes** (`project` / `backing` / `deploy` / `repo`)       | Which templates exist on each axis                          |
+| The **four axes** (`project` / `backing` / `deploy` per project, `repo` per repo) | Which templates exist on each axis             |
 | The **template frontmatter contract** (`stack-vocabulary.md`)       | The templates themselves                                    |
 | The **role** vocabulary a project template declares                 | Which roles it offers a template for                        |
 | Harness **capability names** (`dev`, `e2e_local`, `screenshots`, …) | What *satisfies* each one — the tool, the task, the command |
@@ -26,18 +26,47 @@ tool, that naming is a bug in this contract.
 
 ## Configuration
 
+Two different things are configured, at two different scopes, and conflating
+them is the mistake this section exists to prevent.
+
+**Which plugins to ask** is product-wide — the roster vwf unions the menus of:
+
 ```yaml
 # .config/vwf.yaml
-stacks: [ typescript, effect, hono, gcp ] # ADAPTER PLUGIN NAMES, verbatim
+stacks: [ typescript, gcp, cloudflare, datastore ] # ADAPTER PLUGIN NAMES, verbatim
 ```
 
-An ordered list of plugin names, product-wide. Every name must be an installed
-plugin — `stacks: [ gcp ]` means the `gcp` plugin must be installed. Order is
-the menu order; it carries no precedence, because the axes do not overlap.
+An ordered list of plugin names. Every name must be an installed plugin —
+`stacks: [ gcp ]` means the `gcp` plugin must be installed. Order is the menu
+order; it carries no precedence, because the axes do not overlap. A **dependent**
+plugin does not need its dependency listed: a plugin declaring another in its own
+`plugin.yaml` is installed with it. List what the product chose, not the closure.
 
-A **dependent** plugin does not need its dependency listed: `effect` declares
-`typescript` in its own `plugin.json`, so Claude Code installs and enables it.
-List what the product chose, not the closure.
+**What each project picked** is per project, and lives in the project's own
+`stack` block (`%%AI_PLUGINS_ROOT%%/assets/vwf-config.md`):
+
+```yaml
+projects:
+  website:
+    stack:
+      template: project/site/<slug>
+      backing_template: [ <slug>, <slug> ]
+      deploy_template: <slug>
+  api:
+    stack:
+      template: project/service/<slug>
+      backing_template: [ <slug> ]
+      deploy_template: <slug>
+```
+
+Since **config_format 13** the `backing` and `deploy` axes are per project, not
+product-wide. That is what lets one product run its site on one cloud and its
+API on another while both draw from the same installed plugins: the roster is
+shared, the selections are not. A product-wide `backing:` or `deploy:` block is
+`12` drift.
+
+The `repo` axis stays per repo (`repo.stack.template`) — it describes the
+checkout, not a project.
 
 ## The delegation protocol
 

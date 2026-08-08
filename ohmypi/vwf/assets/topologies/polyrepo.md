@@ -41,6 +41,19 @@ Each member is classified on its own signals per
 — a member may be a monorepo or a single repo, and each carries its own
 `repo.stack` block.
 
+## An `iac` member is mandatory, not optional
+
+A project with `role: iac` is **always its own repo** — here that means its own
+submodule, never a directory inside another member and never a directory in the
+parent. This is the one structural rule vwf enforces rather than offers:
+`/skill:doctor` raises a violation as **blocking**, and `/skill:setup` offers a
+consent-gated restructure. The reasoning — blast radius, credentials, lifecycle,
+cadence — is in [monorepo](monorepo.md), where the rule is most surprising.
+
+Polyrepo pays almost nothing for it: the shape already is a group of repos, so
+an IaC member is one more `git submodule add`. A product that acquires an `iac`
+project while on the **monorepo** shape becomes a polyrepo by that fact alone.
+
 ## The onboarding cost, stated plainly
 
 A product whose repos are **not** already wired as submodules has to create a

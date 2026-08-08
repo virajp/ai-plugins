@@ -40,6 +40,12 @@
     },
     {
       "category": "development",
+      "description": "The developer-machine toolchain in one plugin — mise (the .config/ three-file MISE_ENV split, tool/env placement, the file-based task library, the CI node-gpg workaround) plus /devtools:scaffold, Doppler for **development** secrets, Docker/OCI, and the repo-level quality gates the stack templates name: dprint, ESLint, gitleaks, grype, pre-commit. Owns the provider-neutral container-generic deploy template, so it also implements the vwf stack-adapter contract. Production secrets are a cloud plugin's, never this one's.",
+      "name": "devtools",
+      "source": "./devtools"
+    },
+    {
+      "category": "development",
       "description": "Opinionated Flutter plugin — a `dart` router skill (lean SKILL.md routing to on-demand references: GetX, a Firebase suite of auth/analytics/app-check/crashlytics/messaging/storage, and feature areas of architecture, state, navigation, theming, layouts, animations, performance, maps, webview, webrtc, revenuecat, image handling, http/json, concurrency, caching, testing, flavors, app-size, coverage, build) and a `swift` router skill (Swift, SwiftUI, Xcode), plus `kotlin`, `pubspec`, `analysis-options`, and `internationalization`, and bundled Dart, Kotlin & Swift (SourceKit) language servers. Also owns the `dart-flutter` **stack template** and the two vwf stack-adapter skills, so a `frontend` project can be composed without vwf naming Flutter. Self-contained — no cross-marketplace dependencies.",
       "name": "flutter",
       "source": "./flutter"
@@ -62,12 +68,6 @@
       "homepage": "https://github.com/MemPalace/mempalace.git",
       "name": "mempalace",
       "source": "https://github.com/MemPalace/mempalace.git"
-    },
-    {
-      "category": "development",
-      "description": "Opinionated mise plugin — the .config/ three-file split (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, tool/env placement, file-based tasks, and the CI node-gpg workaround. Skill auto-applies to mise configs; /mise:scaffold sets up a repo.",
-      "name": "mise",
-      "source": "./mise"
     },
     {
       "category": "development",

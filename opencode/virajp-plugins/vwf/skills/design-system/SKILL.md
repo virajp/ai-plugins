@@ -14,8 +14,8 @@ description: Import the product's design system from the configured design tool
 # design-system — Import the Product's Design System
 
 **The design tool owns design-system authoring.** You pick or build the design
-system there — vwf imports it through the adapter plugin named by `design.tool`
-and never authors visual language. Which tool that is (`claude-design`,
+system there — vwf imports it through the design adapter and never authors
+visual language. Which tool answers (`claude-design`,
 `lovable`, `stitch`, …) is the product's choice; vwf knows only the payload
 shape, per `%%AI_PLUGINS_ROOT%%/assets/design-adapter.md`. The canvas is where
 visual language is judged. This skill does one job: resolve the design system,
@@ -78,18 +78,23 @@ rationale (room `decisions`), plus parked visual/UX points (room `gaps`, tag
 ### 3. Preflight the design adapter — or halt
 
 vwf does not talk to any design tool. Per
-`%%AI_PLUGINS_ROOT%%/assets/design-adapter.md`, resolve `design.tool` from
-`.config/vwf.yaml` and **verify that plugin is installed**
-(`claude plugin
-list`) before delegating. Three distinct halts — never collapsed
-into one, since each needs a different fix:
+`%%AI_PLUGINS_ROOT%%/assets/design-adapter.md`, the tool is a **per-project**
+key — `projects.<name>.design` in `.config/vwf.yaml` — resolved inside the
+adapter, not here. **Name the project you are importing for**: read the `design`
+value of every UI project (`role` `site`, `fullstack` or `frontend`); when they
+all agree, use that project and say which. When they disagree, ask which
+project's tool authors the product's one design system — that is a product
+decision, not something to pick silently. Then **verify the `design-tools`
+plugin is installed** (`claude plugin list`) before delegating. Three distinct
+halts — never collapsed into one, since each needs a different fix:
 
-- **No `design.tool`** → "No design tool configured. Set `design.tool` in
-  `.config/vwf.yaml` and install its adapter plugin (e.g. `claude-design`,
-  `lovable`, `stitch`)."
-- **Plugin not installed** → "`design.tool: <name>` but the `<name>` plugin
-  isn't installed. Install it via `/plugin`, then re-run."
-- **Adapter returns nothing usable** → "`<name>` returned no usable payload",
+- **No `design` on any UI project** → "No design tool configured. Set
+  `projects.<name>.design` in `.config/vwf.yaml` to one of `claude-design`,
+  `lovable`, `stitch`." A config still carrying a product-wide `design.tool` is
+  `config_format` 12 drift — nudge `/vwf-setup` rather than reading it.
+- **Plugin not installed** → "the `design-tools` plugin isn't installed. Install
+  it via `/plugin`, then re-run."
+- **Adapter returns nothing usable** → "`<tool>` returned no usable payload",
   with the parse error.
 
 The preflight exists because the failure is **silent**: an adapter skill set to

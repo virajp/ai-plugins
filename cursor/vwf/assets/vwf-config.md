@@ -12,14 +12,19 @@ reach it, which is what makes a vendor name in a blueprint doc structurally
 impossible rather than merely discouraged. Since **format 11** the stack is
 **structured** — a template selection plus the four axes `/doctor` checks
 the repo against — and is written for **every** project, always. Since
+**format 13** every technology choice is **per project**: the backing and deploy
+axes, the design tool and the CI tool all live under `projects.<name>`, because
+a product may legitimately host its site on one cloud and its API on another,
+and design its app in one tool and its website in another. Only `repo` (per
+repo) and the canvas state under `design:` remain outside that scope. Since
 **blueprint-format 6** this file replaces the old stamp at
 `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 12)
+## Schema (config_format 13)
 
 ```yaml
-config_format: 12 # this file's own schema version — setup migrates it
-blueprint_format: 19 # the docs/blueprint format stamp
+config_format: 13 # this file's own schema version — setup migrates it
+blueprint_format: 20 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -40,20 +45,14 @@ repo: # REPO-level tooling, the counterpart to a project's stack. One block per 
     package_manager: <tool> # pnpm | bun ONLY, and only for JS/TS. A non-JS repo records its language's native tool (cargo, uv, pub), which was never a choice
     tools: [] # open, lowercase-kebab — turborepo, dprint, mise, …
 
-# The BACKING and DEPLOY axes are product-wide, not per-project: every project
-# talks to the same datastore/identity/queue set and ships the same way. A
-# project that genuinely differs overrides them in its own `stack` block.
-backing:
-  template: backing/<slug> # a template under assets/stacks/backing/, or `custom`
-deploy:
-  template: deploy/<slug> # a template under assets/stacks/deploy/, or `custom`
-
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /doctor cannot check what was never recorded
       template: project/<role>/<slug> # the PROJECT-axis template under assets/stacks/project/, or `custom`. NOT a default: /architecture presents the menu and the user picks
-      backing_template: <slug> # optional — overrides the product-wide `backing` pin for this project only
-      deploy_template: <slug> # optional — overrides the product-wide `deploy` pin. A `frontend` project on a SCREEN platform sets this to `n/a`: it ships through a store, not a deploy target. A `cli` frontend sets `deploy/npm-package` — a package registry IS its target
+      backing_template: [
+        <slug>,
+      ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` or `frontend` project usually does not)
+      deploy_template: <slug> # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). A `frontend` project on a SCREEN platform sets this to `n/a`: it ships through a store, not a deploy target. A `cli` frontend sets `deploy/npm-package` — a package registry IS its target. An `iac` project sets `n/a`: it IS the deploy path
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing pnpm and bun projects
       languages: [
         <token>,
@@ -63,6 +62,8 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
       note: <one
         line> # optional — why this stack, when the reason is not obvious from the template name
     # NO `platforms:` key — a project's implemented surfaces are a system-shape fact and live in docs/blueprint/registry.yaml, the single source (format 19). Config carries realization: the stack and the design pins
+    design: <tool-token> # the DESIGN TOOL for this project's surfaces — claude-design | lovable | stitch | … Per project since format 13 (was one product-wide `design.tool`): a product may design its website in one tool and its app in another. A TOOL token the design adapter recognises, NOT a plugin name — vwf never constructs a skill name from it (assets/design-adapter.md). Required for a UI project, absent for every other role
+    cicd: <tool> # the CI SYSTEM that builds and releases this project — github-actions | gitlab-ci | … Per project since format 13, so a product whose projects ship through different pipelines can say so. Read ONLY by the `cicd` plugin, which resolves it to one of its per-tool references; vwf owns the delivery-pipeline CONTRACT (assets/delivery-pipeline.md) and never the mechanism. In a monorepo every project repeats the same value — accepted, since the key's scope follows the other three rather than inventing a fourth scoping rule
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -92,8 +93,7 @@ environments: # /verify targets — URLs only, NEVER secrets (those stay in envi
 
 production_env: production # optional — names the release environment for /verify (default: the env literally named "production")
 
-design: # design-tool pins & canvas state — ids and flow names only, never content
-  tool: claude-design # the ADAPTER PLUGIN NAME (claude-design | lovable | stitch | …). vwf never talks to a design tool itself: it delegates to /<tool>:<tool>-import-screens and /<tool>:<tool>-import-design-system per assets/design-adapter.md. The named plugin must be installed — /design-system and /screens import PREFLIGHT that, because a missing adapter fails silently
+design: # CANVAS STATE only — ids and flow names, never content. The design TOOL is not here: it is per project, at projects.<name>.design (format 13)
   design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
   projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
@@ -116,14 +116,14 @@ setup_progress: [] # transient — /setup resume state, removed on completion
 | stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                    |
 | `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                                                 |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
-| `projects.*`         | `setup` / `architecture` (`stack`, elicited); `execute` reconcile                                                                         | `plan`, `execute`, `doctor`, the verifiers — **never** `blueprint` or the reviewers, which must not see a stack |
+| `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the `cicd` plugin (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
 | `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                             |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, the statusline caps hook                                                                             |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
-| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory)                               |
+| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) — the tool itself is `projects.<name>.design` |
 | `docs_sync`          | the user (hand-edited)                                                                                                                    | the docs-sync step                                                                                              |
 
 ## The hard floor (never configurable)
@@ -281,6 +281,52 @@ earlier than 65/90/80), never loosen.
   Bump `config_format` to `12` and `blueprint_format` to `19` together — the two
   migrations ship in one release and a repo on one but not the other is a state
   neither migration expects.
+
+- **`12 → 13` migration** (performed by `/setup`, alongside the blueprint
+  `19 → 20` delta): **every technology axis becomes per project.** A product can
+  legitimately mix providers — the site on one cloud, the API on another, the
+  app designed in one tool and the website in another — and format 12 could not
+  express any of it. Four keys move down into `projects.<name>`, and each move
+  is the same two mechanical steps: **copy the product-wide value onto every
+  project, then delete the product-wide key.** Copying down is what makes this
+  safe — the repo's behaviour is byte-identical afterwards, and a project only
+  diverges when the user later changes one.
+
+  1. **`backing`** → `projects.<name>.stack.backing_template`, and the value
+     becomes a **list**. A project already carrying a `backing_template`
+     override keeps its own value (the override wins over the pin it was
+     overriding); every other project takes the product-wide
+     `backing.template`'s slug. Wrap a single slug as a one-element list. Then
+     drop the top-level `backing:` block. A project the registry declares with
+     no backing service at all — typically `packages`, and a `frontend` that
+     talks only to a `service` — records `[]` rather than inheriting a slug it
+     never used; propose that, do not assume it.
+  2. **`deploy`** → `projects.<name>.stack.deploy_template`, unchanged in shape.
+     Same override rule, and the existing `n/a` conventions carry over verbatim:
+     a `frontend` on a screen platform stays `n/a`, a `cli` frontend stays
+     `deploy/npm-package`. Then drop the top-level `deploy:` block.
+  3. **`design.tool`** → `projects.<name>.design`, for every **UI** project only
+     (`role` `site`, `fullstack` or `frontend` in `registry.yaml`) — a project
+     with no surfaces never had a design tool and must not acquire one. Then
+     drop `design.tool`; the rest of the `design:` block is canvas state and
+     stays exactly where it is. A repo with no `design.tool` and a
+     `design_system_id` takes `claude-design`, on the same reasoning the
+     `11 → 12` migration used.
+  4. **`cicd`** is **new** — there was no product-wide key to copy down. Detect
+     it once from the repo (`.github/workflows/` → `github-actions`,
+     `.gitlab-ci.yml` → `gitlab-ci`, `.circleci/config.yml` → `circleci`),
+     **confirm with the user**, and write the confirmed token to every project.
+     More than one signal, or none, is a question — never a guess. This is the
+     only step here that needs input, and it is also the last place repo
+     detection is legitimate: from `13` on the `cicd` plugin reads the key and
+     asks when it is absent, rather than sniffing the repo behind the user's
+     back.
+
+  Report any project left without a required axis — that is a real finding
+  `/doctor` will raise on the next run, not noise.
+
+  Bump `config_format` to `13` and `blueprint_format` to `20` together, for the
+  same reason `12`/`19` shipped together.
 
 - **`10 → 11` migration** (performed by `/setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

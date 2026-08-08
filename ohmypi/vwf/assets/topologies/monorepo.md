@@ -40,6 +40,39 @@ that stops being true — a project on a different toolchain, or one whose relea
 cycle cannot sync with the others — the product wants the **polyrepo** shape
 instead.
 
+## The one exception: an `iac` project is its own repo
+
+**A project with `role: iac` never lives in the monorepo.** It is an independent
+repo, or a submodule of a product parent — which turns a monorepo product into a
+two-member polyrepo the moment it acquires one. This is the single structural
+rule vwf **enforces**: `/skill:doctor` raises a violation as a **blocking** finding,
+and `/skill:setup` offers a consent-gated restructure. Everything else on this page
+is a menu.
+
+The rest of the topology model is deliberately unenforced — a repo shape is a
+tradeoff with no universally right answer, so vwf presents the three and records
+what the user picks. This role is different for reasons that are not about taste:
+
+- **Blast radius.** An IaC apply can destroy the product's data stores. Merge
+  rights on application code and merge rights on the thing that can delete
+  production are not the same permission, and a monorepo cannot separate them —
+  one repo means one set of branch protections and one CODEOWNERS surface.
+- **Credentials.** The IaC pipeline holds the most privileged credential the
+  product owns. In a monorepo, every CI job in every project runs in a
+  repository that can read those secrets. A separate repo is what makes
+  least-privilege stateable at all.
+- **Lifecycle.** Infrastructure exists **before** the first application project
+  and **after** the last one is retired. A project whose lifetime brackets the
+  monorepo's cannot be a directory inside it.
+- **Cadence.** An infrastructure change is reviewed, planned and applied on its
+  own schedule, against real state. Coupling it to the application's atomic
+  commits — the whole reason to pick a monorepo — is the opposite of what it
+  needs.
+
+The cost is honest: a second repo to clone, and a change spanning both cannot be
+one commit. That is the point. An infrastructure change that *had* to be atomic
+with an application change is a change that should have been two deploys.
+
 ## Repo tooling
 
 The `repo` stack axis carries the package manager, task runner, and workspace

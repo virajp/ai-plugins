@@ -41,8 +41,10 @@ The value is a **tool token**, not a plugin name. Supported today:
 | `lovable`       | the generated application source, plus the published `.lovable/design-system.json`          |
 | `stitch`        | Google Stitch's generated HTML per screen; the design system is **derived**, not stored     |
 
-A product-wide `design.tool: <token>` from the older config shape is still
-honored as a fallback for every project, with a nudge to run `/vwf:setup`.
+A product-wide `design.tool: <token>` is the pre-`config_format`-13 shape and is
+**not** read. It is drift `/vwf:setup`'s `12 → 13` migration copies down onto
+each UI project — honoring it here would make that migration optional and leave
+the config holding two answers to one question.
 
 **An unrecognised token halts**, with a message naming the supported set. It
 never falls back to a default and never returns an empty payload — an empty

@@ -31,17 +31,17 @@ generated — vwf works without it.
 
 The skill's first act, before it inspects anything else:
 
-1. the project's `cicd.tool` in `.config/vwf.yaml`;
-2. a repo-wide `cicd.tool`, if the config carries one instead;
-3. detection from the repo — `.github/workflows/` → `github-actions`,
-   `.gitlab-ci.yml` → `gitlab-ci`, `.circleci/config.yml` → `circleci`;
-4. asking you.
+1. the project's `cicd` key in `.config/vwf.yaml` — `projects.<name>.cicd`,
+   alongside `design` and the `stack` block since `config_format` 13;
+2. asking you, and offering to record the answer there.
 
-**It never defaults.** Ambiguous signals, no signal, or a token this plugin does
-not implement yet are all questions — a silent default is how a GitLab repo ends
-up with `.github/workflows/`.
+**It never detects and never defaults.** An absent key or a token this plugin
+does not implement yet are both questions. Sniffing the repo is deliberately
+gone: `.github/workflows/` in a repo migrating *off* GitHub Actions is exactly
+the signal that would mislead, and a silent default is how a GitLab repo ends up
+with `.github/workflows/`.
 
-| `cicd.tool`      | Status                                   |
+| `cicd`           | Status                                   |
 | ---------------- | ---------------------------------------- |
 | `github-actions` | implemented                              |
 | anything else    | resolved, then reported as unimplemented |

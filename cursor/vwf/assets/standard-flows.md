@@ -92,7 +92,7 @@ platform files. Neither does a project whose **only** platform is `cli`: every
 standard slug is a screen journey (`splash` before the first frame, `home` as
 the center of the app), which a terminal tool does not have. Its flows are its
 commands, named by the product; the surveyor skips the mandate check for it the
-way it skips `infra`.
+way it skips `iac`.
 
 ## The platform vocabulary
 

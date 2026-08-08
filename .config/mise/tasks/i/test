@@ -60,15 +60,26 @@ if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user vwf >/dev/null 2>&1
   exit 1
 fi
 
-print_header "Asserting per-plugin tools: markdown needs none ..."
-if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user markdown 2>&1 | grep -q "missing required tool"; then
-  print_error "markdown should require no external tools"
+# Asserted positively, not just by the absence of the missing-tool line. An
+# unknown plugin name exits early with "unknown plugin", which also lacks that
+# line — so the negative form passed vacuously for as long as the plugin it
+# named did not exist. It did exactly that once, after `markdown` folded into
+# vwf. Requiring the run to reach the per-target skip proves the name resolved.
+print_header "Asserting per-plugin tools: datastore needs none ..."
+datastore_out="$(env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user datastore 2>&1)"
+if grep -q "missing required tool" <<<"$datastore_out"; then
+  print_error "datastore should require no external tools"
+  exit 1
+fi
+if ! grep -q "claude: not installed, skipping" <<<"$datastore_out"; then
+  print_error "datastore did not resolve to a known plugin"
+  printf '%s\n' "$datastore_out"
   exit 1
 fi
 
-print_header "Asserting per-plugin tools: the mise plugin needs mise ..."
-if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user mise 2>&1 | grep -qE '^  mise '; then
-  print_error "the mise plugin should require mise"
+print_header "Asserting per-plugin tools: devtools needs mise ..."
+if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user devtools 2>&1 | grep -qE '^  mise '; then
+  print_error "the devtools plugin should require mise"
   exit 1
 fi
 

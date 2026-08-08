@@ -408,12 +408,19 @@ template and there is nothing to merge.
 A stack is composed from **four independent axes** — you pick one of each, and
 they never merge because they never overlap:
 
-| Axis        | Scope        | Ships today                                                                                                                                                                                                                                                                                |
-| ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **project** | per project  | one or more per role — see below                                                                                                                                                                                                                                                           |
-| **backing** | product-wide | none from vwf — a **capability** plugin ships each one: `postgres` (`datastore`) · `oidc` (`identity`) · `otel-lgtm` (`observability`) · `temporal` (`orchestration`); `object-storage` is contract-only. A **cloud** plugin ships its managed set — `firebase` and `cloud-sql` from `gcp` |
-| **deploy**  | product-wide | `npm-package` (published, not deployed — the CLI/library target) · `cloud-run` and `gke` from `gcp` · `zero-trust-access` from `cloudflare`, the private plane that composes with any host                                                                                                 |
-| **repo**    | per repo     | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                                                                                                                                                                   |
+| Axis        | Scope       | Ships today                                                                                                                                                                                                                                                                                |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **project** | per project | one or more per role — see below                                                                                                                                                                                                                                                           |
+| **backing** | per project | none from vwf — a **capability** plugin ships each one: `postgres` (`datastore`) · `oidc` (`identity`) · `otel-lgtm` (`observability`) · `temporal` (`orchestration`); `object-storage` is contract-only. A **cloud** plugin ships its managed set — `firebase` and `cloud-sql` from `gcp` |
+| **deploy**  | per project | `npm-package` (published, not deployed — the CLI/library target) · `cloud-run` and `gke` from `gcp` · `zero-trust-access` from `cloudflare`, the private plane that composes with any host                                                                                                 |
+| **repo**    | per repo    | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                                                                                                                                                                   |
+
+Since `config_format` **13** the first three are pinned **per project**, so a
+product can host its site on Cloudflare, its API on GCP and its worker somewhere
+else again — and design its app in one tool while its website is designed in
+another (`design`, likewise per project). Two more per-project keys sit beside
+them: `design` (the design tool) and `cicd` (the CI system). Only `repo` stays
+per repo; it describes the checkout, not a project.
 
 Project-axis templates:
 
@@ -426,7 +433,7 @@ Project-axis templates:
 | `fullstack` | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
 | `frontend`  | `dart-flutter`               | Dart · Flutter — from the `flutter` plugin     |
 | `frontend`  | `typescript-effect-cli`      | TypeScript · @effect/cli — platform `cli`      |
-| `infra`     | `typescript-pulumi`          | TypeScript · Pulumi                            |
+| `iac`       | `typescript-pulumi`          | TypeScript · Pulumi — always its own repo      |
 
 **Templates ship in the plugin that owns the technology, not in vwf.** Every
 `typescript-*` row above, plus the `npm-package` deploy target and both `repo`
@@ -447,6 +454,14 @@ An operator back-office is `role: fullstack` plus the `operator-rbac`
 capability, and picks the `fullstack` template. A `frontend` project on a screen
 platform has no deploy axis — it ships through a store. A `cli` frontend does
 have one: it ships through a package registry, so it pins `npm-package`.
+
+**`iac` is the one role vwf constrains structurally.** A project with
+`role: iac` must live in **its own repo** — independent, or a submodule of the
+product parent — under every topology, monorepo included. Blast radius,
+credentials, lifecycle and cadence all differ in kind from application code, and
+one repo cannot separate them. `/vwf:doctor` raises a violation as a
+**blocking** finding and `/vwf:setup` offers a consent-gated restructure;
+nothing else about repo shape is enforced.
 
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
@@ -1042,7 +1057,7 @@ deployed project in the named environment, then re-runs the blueprint's flow
 **acceptance criteria against the real environment** (staging-mode E2E — all
 flows, not just the last plan's, so regressions in untouched flows surface).
 Failures route like feedback: a behavior regression becomes a gap with a
-`/vwf:blueprint` / `/vwf:plan` offer; an infra failure is reported as
+`/vwf:blueprint` / `/vwf:plan` offer; an infrastructure failure is reported as
 operational, not filed as a blueprint gap.
 
 ```text

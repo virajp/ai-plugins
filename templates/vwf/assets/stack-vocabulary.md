@@ -41,12 +41,17 @@ A stack is **composed from four independent templates**, not one monolith. Each
 axis answers a different question, and a project's `.config/vwf.yaml` `stack`
 block pins one of each:
 
-| Axis        | Path                              | Owns                                                    |
-| ----------- | --------------------------------- | ------------------------------------------------------- |
-| **project** | `assets/stacks/project/<role>/`   | Language, framework, source layout, testing             |
-| **backing** | `assets/stacks/backing/<slug>.md` | Datastore, identity, queue, storage, the local stack    |
-| **deploy**  | `assets/stacks/deploy/<slug>.md`  | Build artifact, release pipeline, hosting, environments |
-| **repo**    | `assets/stacks/repo/<slug>.md`    | Package manager, task runner, lint/format, workspace    |
+| Axis        | Scope       | Owns                                                    |
+| ----------- | ----------- | ------------------------------------------------------- |
+| **project** | per project | Language, framework, source layout, testing             |
+| **backing** | per project | Datastore, identity, queue, storage, the local stack    |
+| **deploy**  | per project | Build artifact, release pipeline, hosting, environments |
+| **repo**    | per repo    | Package manager, task runner, lint/format, workspace    |
+
+The templates themselves live in the **stack plugins**, never in vwf
+(`<%= it.root %>/assets/stack-adapter.md`). Since config_format 13 the
+first three are pinned **per project** — a product may run its site on one cloud
+and its API on another.
 
 The split exists because these vary **independently**: the same Hono + Effect
 service runs against Firebase or Postgres, on Cloud Run or any container host.
@@ -65,7 +70,7 @@ with:
 
 ```yaml
 ---
-role: <registry role> # service | worker | packages | site | fullstack | frontend | infra
+role: <registry role> # service | worker | packages | site | fullstack | frontend | iac
 name: <display name> # what the menu shows
 languages: [<token>] # closed vocabulary above; may be empty when the language is outside it
 optional_languages: [] # admitted by the template, not required — e.g. flutter's kotlin/swift

@@ -64,11 +64,11 @@ templates:
       with no screens, governed by the design system's Terminal UX section.
   - slug: typescript-pulumi
     axis: project
-    role: infra
+    role: iac
     name: TypeScript · Pulumi
     summary: Infrastructure as code in the same language as the rest of the
       workspace — one Pulumi stack per environment, unit-tested against a
-      mocked runtime.
+      mocked runtime. Scaffolds its own repo, per vwf's iac rule.
   - slug: npm-package
     axis: deploy
     name: Package registry · npm

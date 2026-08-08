@@ -1,9 +1,9 @@
 ---
 name: workflow
 description: Generate this repo's delivery pipeline for whichever CI system it
-  uses. Resolves the CI tool from config (falling back to detecting it from the
-  repo, and asking when it cannot tell), then reads that tool's reference and
-  writes the pipeline files. Every tool is installed through mise.
+  uses. Resolves the CI tool from the project's config key (asking when it is
+  absent), then reads that tool's reference and writes the pipeline files.
+  Every tool is installed through mise.
 argument-hint: "[workflow-name | ci | release | deploy]"
 model: sonnet
 effort: high
@@ -24,26 +24,26 @@ or ask.
 
 Read, in order, and stop at the first answer:
 
-1. **The project's `cicd.tool` in `.config/vwf.yaml`** — a per-project key
-   alongside `design` / `backing` / `deploy`. When the repo holds more than one
-   registry project, resolve the one this pipeline is for; if that is ambiguous,
-   ask which project.
-2. **A repo-wide `cicd.tool`**, if the config carries one instead.
-3. **Detect it from the repo** — `.github/workflows/` → `github-actions`,
-   `.gitlab-ci.yml` → `gitlab-ci`, `.circleci/config.yml` → `circleci`. This
-   fallback exists only until the config key is universal; when it answers, say
-   so and offer to record the value in `.config/vwf.yaml`.
-4. **Ask the user.** More than one signal, no signal, or a token with no
-   reference below — all three are questions, never a guess.
+1. **The project's `cicd` in `.config/vwf.yaml`** — `projects.<name>.cicd`, a
+   per-project key alongside `design` and the `stack` block, since
+   `config_format` 13. When the repo holds more than one registry project,
+   resolve the one this pipeline is for; if that is ambiguous, ask which
+   project.
+2. **Ask the user.** An absent key, or a token with no reference below, is a
+   question — never a guess. Offer to record the answer at
+   `projects.<name>.cicd` so the next run does not ask again.
 
-**Never default to a CI system.** A silent default is how a GitLab repo ends up
-with `.github/workflows/`. If the resolved token has no reference file, stop and
-say which token you resolved and that this plugin does not implement it yet — do
-not improvise the syntax.
+**Never detect the CI system from the repo, and never default to one.** Both are
+ways of answering a question nobody asked: `.github/workflows/` in a repo
+migrating *off* GitHub Actions is exactly the signal that would mislead, and a
+silent default is how a GitLab repo ends up with `.github/workflows/`. The
+config key is the answer; asking is the fallback. If the resolved token has no
+reference file, stop and say which token you resolved and that this plugin does
+not implement it yet — do not improvise the syntax.
 
 ### Routing table
 
-| `cicd.tool`      | Reference                                      |
+| `cicd`           | Reference                                      |
 | ---------------- | ---------------------------------------------- |
 | `github-actions` | [github-actions](references/github-actions.md) |
 
@@ -92,7 +92,7 @@ Inspect the target repo before writing — do not assume:
   last one decides how far the pipeline is split.
 
 If there is **no mise config**, stop and tell the user to run
-/mise:scaffold first (the pipeline depends on mise providing the
+/devtools:scaffold first (the pipeline depends on mise providing the
 toolchain). Only proceed with a minimal `mise.toml` if they insist.
 
 ## 4. Ask (one batched round — only what you cannot infer)
@@ -176,13 +176,13 @@ chosen pipeline needs.
 ## 7. Report
 
 State the files written, the CI tool you resolved **and how you resolved it**
-(config key, repo detection, or the user's answer), the layout and strategy
+(the config key, or the user's answer), the layout and strategy
 chosen, and the prerequisites the user must satisfy:
 
 - the mise config must declare every tool the steps need under `[tools]` (and a
   `mise.ci.toml` if `MISE_ENV: ci` was set);
 - any task names the steps call must exist (`mise tasks`); if no task library
-  exists, suggest /mise:scaffold;
+  exists, suggest /devtools:scaffold;
 - any secrets / OIDC / registries the pipeline references must be configured in
   the CI system's own settings.
 

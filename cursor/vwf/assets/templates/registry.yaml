@@ -24,7 +24,7 @@ projects:
     # apis/<name>.openapi.yaml plus a health endpoint. SSR does not make a site
     # fullstack. An operator back-office is `fullstack` plus the
     # `operator-rbac` capability (there is no `console` role since format 19).
-    role: <service|worker|packages|site|fullstack|frontend|infra>
+    role: <service|worker|packages|site|fullstack|frontend|iac>
     path: <repo-or-directory>
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
     depends_on: [ <project-name>, <...> ] # or []

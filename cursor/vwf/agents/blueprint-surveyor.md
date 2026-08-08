@@ -71,7 +71,7 @@ condition; a unit may fail more than one (report the most blocking).
    identity capability requires `signin`, and with it `profile`,
    `delete-account`, `recover-account`) — that has no flow folder on the
    project. Skip the whole check for a project whose **only** platform is `cli`
-   (the standard slugs are screen journeys), as for `infra`. Skip any slug
+   (the standard slugs are screen journeys), as for `iac`. Skip any slug
    waived in the passed `enforcement.rules` (`standard-flows/<project>/<slug>`).
    Report as a missing flow at its **designated number**
    (`flows/<project>/<NNN>-<slug>`). While checking, also note **synonym

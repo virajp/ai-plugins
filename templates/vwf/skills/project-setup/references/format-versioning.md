@@ -7,8 +7,8 @@ and, on re-run, migrates the gap.
 `<%= it.root %>/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 12
-blueprint_format: 19
+config_format: 13
+blueprint_format: 20
 topology: monorepo # repo | monorepo | polyrepo
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,15 +29,23 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 19.** (13 and 17 are deliberately **skipped** — no format
-ever carried either; a repo stamped 13 is impossible and would be treated as 12,
-one stamped 17 as 16.) Format 19 = format 18 **plus** the **role model** (the
+**Current format = 20.** (13 and 17 are deliberately **skipped** — no
+*blueprint* format ever carried either; a repo whose `blueprint_format` reads 13
+is impossible and would be treated as 12, one stamped 17 as 16. `config_format`
+13 is a different number line and is real — see the vwf-config asset.) Format
+20 = format 19 **plus** the **`iac` role rename and the own-repo rule** (the
+`19 → 20` delta below): the IaC role is spelled `iac` rather than the old
+abbreviation, and an `iac` project must live in its own repo — independent, or a
+submodule of the product parent — which `<%= it.cmd("vwf:doctor") %>` raises as a **blocking**
+finding and `<%= it.cmd("vwf:setup") %>` offers to restructure. It ships with `config_format` 13,
+which moves the backing, deploy, design and CI axes down to per-project keys.
+Format 19 = format 18 **plus** the **role model** (the
 `18 → 19` delta below): a registry project carries a single `role` instead of a
-`type`, `console` becomes `fullstack` + the `operator-rbac` capability, `infra`
-joins the role vocabulary (registered, exempt from coverage), and `cli` joins
-the **platform** vocabulary (a terminal surface: no screens, no platform file).
-It ships with `config_format` 12, which splits the stack into four axes, turns
-topology into a menu, and adds `design.tool`. Format 18 = format 16 **plus** the
+`type`, `console` becomes `fullstack` + the `operator-rbac` capability, the IaC
+role joins the role vocabulary (registered, exempt from coverage), and `cli`
+joins the **platform** vocabulary (a terminal surface: no screens, no platform
+file). It ships with `config_format` 12, which splits the stack into four axes,
+turns topology into a menu, and adds the design-tool pin. Format 18 = format 16 **plus** the
 **project-scoped release tags** delta (the `16 → 18` delta below): the seeded
 `conventions.md#pipeline` anchor moves from the `stage-*` / `prod-*` tag globs
 to `<project>-<env>-v<semver>` (`api-prod-v1.2.3`) and gains the
@@ -586,9 +594,14 @@ the current format and apply the delta:
      each `type: site` project for an `apis/<name>.openapi.yaml`. If one exists
      the project owns an API contract and is `fullstack`; if not it stays
      `site`. Report each reclassification. SSR is not an API.
-  4. **`infra` is available but never inferred.** Do not retype any existing
-     project to `infra`. Mention that IaC projects can now be registered (exempt
-     from blueprint coverage) and let the user add them via `<%= it.cmd("vwf:architecture") %>`.
+  4. **The IaC role is available but never inferred.** Do not retype any
+     existing project to it. Mention that IaC projects can now be registered
+     (exempt from blueprint coverage) and let the user add them via
+     `<%= it.cmd("vwf:architecture") %>`. Write the token as **`iac`** — this migration ran under
+     format 19, where it was spelled differently, but a repo migrating today
+     runs straight on into `19 → 20`, which renames it. Writing the current
+     spelling now saves a rewrite two steps later; a repo that stopped at 19
+     carries the old spelling and the `19 → 20` delta handles it.
   5. **Re-point role-keyed prose.** In `architecture.md`, rewrite any "type"
      wording to "role" so the prose view matches the registry it describes. Flow
      and entity docs are untouched — they never named a project type.
@@ -620,6 +633,48 @@ the current format and apply the delta:
   **What does not change:** flow paths stay `flows/<project>/<NNN>-<flow>/`
   (keyed on project *name*, never type), platform files, screen codes, entity
   docs, and every `enforcement.rules` waiver — rule ids are unchanged.
+
+- **`19 → 20`** → **the `iac` role rename, plus the own-repo rule**. Steps 1–3
+  are mechanical; step 4 is the one that needs the user, and it is a
+  *proposal*, never an action.
+
+  1. **`role: infra` → `role: iac` in every `registry.yaml`.** The parent's, and
+     each submodule's if a polyrepo carries more than one. `infra` was an
+     abbreviation of "infrastructure", which is not what the role is: an IaC
+     project provisions infrastructure, it is not the infrastructure. `iac`
+     names the artifact — code — and matches the template directory it selects
+     from. Also normalize `infra` on the way in from a user or a legacy config,
+     the way `api` → `service` already normalizes.
+  2. **Re-point role-keyed prose.** In `architecture.md`, rewrite any `infra`
+     wording to `iac` so the prose view matches the registry it describes. Flow
+     and entity docs are untouched — they never named a project role.
+  3. **Move the flow folder if the project was named for its role.** A project
+     literally named `infra` renamed to `iac` takes its
+     `docs/blueprint/flows/<project>/` directory with it (`git mv`, plus the
+     inbound links in `flows/index.md`). Most repos will have neither — an
+     `iac` project carries no flows, being exempt from coverage — so this step
+     is usually a no-op. **A project whose *name* happens to be `infra` but
+     whose role is something else is not renamed**; only the role token moves.
+  4. **An `iac` project must be its own repo** — independent, or a submodule of
+     the product parent. For each `iac` project in the registry, check whether
+     its `path` resolves inside another repo's working tree. If it does, present
+     the restructure as a **dry-run proposal** per this skill's
+     migration-and-consent discipline: extract the directory to its own repo and
+     add it back as a submodule. **Never restructure uninvited**, and never as
+     part of a batch the user approved for something else — a repo split
+     rewrites history boundaries and is the least reversible thing setup can do.
+     A decline is recorded and not re-proposed; `<%= it.cmd("vwf:doctor") %>` keeps reporting it
+     as blocking, which is the honest state. The rationale for the rule lives
+     with the rule, in `<%= it.root %>/assets/topologies/`.
+  5. Bump the stamp to `20`, **and `config_format` to `13` in the same run** —
+     see the `12 → 13` entry in the vwf-config asset, which moves the backing,
+     deploy, design and CI axes down to per-project keys. The two ship together;
+     a repo on one but not the other is a state neither migration expects.
+
+  **What does not change:** every other role token, flow paths, platform files,
+  screen codes, entity docs, the coverage stamp, and every `enforcement.rules`
+  waiver. An `iac` project stays exempt from blueprint coverage — the rename
+  changes its spelling, not its treatment.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.
