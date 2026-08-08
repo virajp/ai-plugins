@@ -68,12 +68,9 @@ Each role has one or more templates under
 | `worker`    | [typescript-effect-temporal](<%= it.root %>/assets/stacks/project/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
 | `site`      | [typescript-astro-react](<%= it.root %>/assets/stacks/project/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
 | `fullstack` | [typescript-hono-refine](<%= it.root %>/assets/stacks/project/fullstack/typescript-hono-refine.md)      | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend`  | [dart-flutter](<%= it.root %>/assets/stacks/project/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
-| `frontend`  | [kotlin-android](<%= it.root %>/assets/stacks/project/frontend/kotlin-android.md)                       | Kotlin · Jetpack Compose                       |
-| `frontend`  | [swift-ios](<%= it.root %>/assets/stacks/project/frontend/swift-ios.md)                                 | Swift · SwiftUI                                |
+| `frontend`  | `dart-flutter` — in the **flutter** plugin                                                              | Dart · Flutter                                 |
 | `frontend`  | [typescript-effect-cli](<%= it.root %>/assets/stacks/project/frontend/typescript-effect-cli.md)         | TypeScript · @effect/cli (platform `cli`)      |
 | `infra`     | [typescript-pulumi](<%= it.root %>/assets/stacks/project/infra/typescript-pulumi.md)                    | TypeScript · Pulumi                            |
-| `infra`     | [terraform](<%= it.root %>/assets/stacks/project/infra/terraform.md)                                    | Terraform / OpenTofu                           |
 
 Three more axes compose with the project one — pick one of each:
 

@@ -7,6 +7,10 @@ repositories, ARB-based localization, and platform-channel native code. It is
 declares no cross-marketplace dependencies. The plugin is **project-scoped** —
 install it from inside the Flutter project it should govern.
 
+It also ships the `dart-flutter` **stack template** and implements vwf's
+stack-adapter contract, so `/vwf:architecture` can offer Flutter for a
+`frontend` project without vwf itself knowing what Flutter is.
+
 ## Install
 
 Run this from the root of your Flutter project:
@@ -19,11 +23,12 @@ pnpx @askviraj/ai-plugins --project flutter
 
 ## Skills
 
-The plugin ships six skills, all of which **auto-apply** when you edit a
-matching file — they activate from a `paths:` glob, no command needed. `dart`
-and `swift` are **routers**: a lean `SKILL.md` that loads the always-on baseline
-and then points to a library of topic references read on demand, so editing a
-file never pulls the whole corpus into context.
+Six skills **auto-apply** when you edit a matching file — they activate from a
+`paths:` glob, no command needed. `dart` and `swift` are **routers**: a lean
+`SKILL.md` that loads the always-on baseline and then points to a library of
+topic references read on demand, so editing a file never pulls the whole corpus
+into context. Two more are the vwf stack adapter, invoked by vwf rather than by
+you.
 
 | Skill                  | Activates on                         | Standardizes                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,6 +46,18 @@ animations, performance, maps, webview, webrtc, revenuecat, image handling,
 http/json, concurrency, caching), testing, and build/tooling (flavors, app-size,
 coverage, the `build_runner` pipeline). The `swift` skill's references cover
 SwiftUI and Xcode. Each reference loads only when the routed topic is relevant.
+
+Two further skills are **invoked by vwf**, not by a file edit:
+
+| Skill                    | What it does                                                                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flutter-stack-menu`     | Returns the Flutter stack templates this plugin offers, as a vwf menu payload. Invoked by `/vwf:architecture` and `/vwf:setup` when `flutter` is listed in the config's `stacks:`. |
+| `flutter-stack-template` | Returns one template (`dart-flutter`) as a vwf template payload — axis fields, per-capability harness mechanisms, and conventions. Invoked after the user picks it from the menu.  |
+
+The template itself lives at `stacks/project/frontend/dart-flutter.md` in this
+plugin. Its harness answers `goldens` rather than `screenshots`: a Flutter app
+is a native `frontend`, so its UI evidence is golden/snapshot tests plus
+`flutter_test`'s accessibility assertions, never a browser driver.
 
 ## Language servers
 
