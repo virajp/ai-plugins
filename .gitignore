@@ -41,10 +41,5 @@ cli/dist/
 # diff is noise, and `i:build` regenerates it before every publish.
 bin/
 
-# Per-platform binaries and their archives, assembled by `i:binaries`. Build
-# output like bin/, and far too large to commit — each archive carries a 61 MB
-# Bun runtime beside a copy of the 12 MB dist/ payload.
-release/
-
 # Working notes and session handoffs — personal state, not the team's.
 docs/scratchpad/

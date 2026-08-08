@@ -1389,24 +1389,8 @@ and installs for every one it finds.
 
 ### Installing it
 
-```sh
-# npm — needs Node
-npx @askviraj/ai-plugins --all
-
-# Standalone binary — no Node required
-curl -fsSL https://raw.githubusercontent.com/virajp/ai-plugins/main/packaging/install.sh | sh
-```
-
-Standalone builds ship for macOS (arm64/x64), Linux (arm64/x64) and Windows
-(x64), attached to every
-[release](https://github.com/virajp/ai-plugins/releases) with a
-`checksums-<version>.txt` the installer verifies against. Each is an **archive,
-not a lone executable** — the binary reads its rendered plugin trees from the
-directories beside it, because three of the five agents register a marketplace
-whose source is a real directory they re-read on every later session.
-
-The install script is POSIX `sh`, so **on Windows** use `npx` or unzip the
-`windows-x64` archive from the release yourself.
+**npm is the only distribution channel**, so the CLI needs Node — on every
+platform, Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
 # Everything: all user-scoped plugins + the statusline, for every detected platform

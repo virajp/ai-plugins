@@ -434,43 +434,29 @@ async function noteNewerCli(context: AdapterContext): Promise<void> {
  * and `tools/`.
  *
  * Found by walking up rather than by counting `..` segments, because this code
- * runs from three places now: `cli/src/index.ts` in the repo,
- * `bin/ai-plugins.mjs` once tsup has bundled it, and a `bun build --compile`
- * binary. A fixed offset would be right in one and silently wrong in the others,
- * resolving `sourceRoot` to a directory that exists but holds none of the trees
- * an adapter reads.
- *
- * **Two starting points, and the second is why this is not simpler.** Inside a
- * compiled binary `import.meta.dirname` is Bun's *virtual* filesystem root
- * (`/$bunfs/root`), which contains only the bundled JS — walking up from it
- * finds nothing and never can. `process.execPath` is the one path that points at
- * where the binary actually sits, next to the payload it shipped with.
+ * runs from two depths: `cli/src/index.ts` in the repo and `bin/ai-plugins.mjs`
+ * once tsup has bundled it. A fixed offset would be right in one and silently
+ * wrong in the other, resolving `sourceRoot` to a directory that exists but
+ * holds none of the trees an adapter reads.
  *
  * Matched on the package *name*, so the workspace's own `cli/package.json` is
  * walked past rather than mistaken for the root.
  */
 function packageRoot(): string {
   // Escape hatch, and the same name the old installer used for it. Needed
-  // whenever the payload is not somewhere above the executable — a packaged
-  // archive being smoke-tested from elsewhere, or a layout that splits the
-  // binary from the trees it reads.
+  // whenever the payload is not somewhere above this module — a checkout being
+  // driven from elsewhere, as the tests do.
   const override = process.env["AI_PLUGINS_SOURCE_DIR"];
   if (override !== undefined && override.length > 0) {
     return override;
   }
-  // Order matters: under `node` these agree, but a compiled binary's
-  // `execPath` is the truthful one and its `import.meta.dirname` is virtual.
-  const starts = [import.meta.dirname, dirname(process.execPath)];
-  for (const start of starts) {
-    const found = walkUpForPackage(start);
-    if (found !== undefined) {
-      return found;
-    }
+  const start = import.meta.dirname;
+  const found = walkUpForPackage(start);
+  if (found !== undefined) {
+    return found;
   }
   throw new Error(
-    `could not locate the ${PACKAGE_NAME} package root from ${
-      starts.join(" or ")
-    }`,
+    `could not locate the ${PACKAGE_NAME} package root from ${start}`,
   );
 }
 
