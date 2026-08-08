@@ -13,7 +13,7 @@ effort: high
 invocation: both
 ---
 
-# markdown:readme — Document the repo in its README
+# readme — Document the repo in its README
 
 Scan the repository and write (or update) its **README**, following the
 **documentation-standards** skill (writing style, tables, and the mermaid

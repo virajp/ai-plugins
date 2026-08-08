@@ -35,10 +35,9 @@ strict: true
 source:
   kind: local
 dependencies:
-  - context7
-  - markdown
   - mempalace
-  - mise
+  - andrej-karpathy-skills
+  - mise # S09 renames this to devtools
 requires:
   - rtk
   - graphify
@@ -49,3 +48,11 @@ mcpServers:
   mempalace:
     transport: http
     url: http://127.0.0.1:8765/mcp
+  context7:
+    transport: stdio
+    command: pnpm
+    args:
+      - dlx
+      - "@upstash/context7-mcp"
+    env:
+      CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}

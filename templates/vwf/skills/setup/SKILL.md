@@ -54,7 +54,7 @@ repo never needs it.
   worktree; never delete; never overwrite without consent. Keep the worktree
   local.
 - **Don't duplicate tools.** Use `mise:scaffold` for mise config and
-  `markdown:readme` for the README — orchestrate, don't reimplement.
+  `<%= it.cmd("vwf:readme") %>` for the README — orchestrate, don't reimplement.
 - **Idempotent.** A re-run detects what already conforms and migrates only the
   delta; a conforming repo yields an empty plan.
 - **Resumable.** After each completed step, append its id to a transient
@@ -245,7 +245,7 @@ later run), and record the skip in `setup_progress`.
 
 Merge the vwf section (from the project-claude template) into the repo's
 `CLAUDE.md`, **preserving existing content**. Generate or update the README via
-**markdown:readme**; if it fails, report the error, offer to continue without it
+**`<%= it.cmd("vwf:readme") %>`**; if it fails, report the error, offer to continue without it
 (leaving the README for the user), and record the skip in `setup_progress`.
 
 ### 9. Write the vwf config

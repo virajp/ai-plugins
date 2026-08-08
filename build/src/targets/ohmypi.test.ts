@@ -205,16 +205,13 @@ describe("servers", () => {
   });
 
   it("writes stdio servers without a type and http servers with one", () => {
-    const stdio = JSON.parse(text("context7/.mcp.json")) as {
+    const servers = (JSON.parse(text("vwf/.mcp.json")) as {
       mcpServers: Record<string, Record<string, unknown>>;
-    };
-    expect(stdio.mcpServers["context7"]).toMatchObject({ command: "pnpm" });
-    expect(stdio.mcpServers["context7"]).not.toHaveProperty("type");
-
-    const http = JSON.parse(text("vwf/.mcp.json")) as {
-      mcpServers: Record<string, Record<string, unknown>>;
-    };
-    expect(http.mcpServers["mempalace"]).toMatchObject({ type: "http" });
+    })
+      .mcpServers;
+    expect(servers["context7"]).toMatchObject({ command: "pnpm" });
+    expect(servers["context7"]).not.toHaveProperty("type");
+    expect(servers["mempalace"]).toMatchObject({ type: "http" });
   });
 });
 

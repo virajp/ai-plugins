@@ -58,7 +58,7 @@ describe("skills", () => {
     // Model-invoked skills stay discoverable.
     expect(paths).toContain("virajp-plugins/vwf/skills/blueprint/SKILL.md");
     expect(paths).toContain(
-      "virajp-plugins/markdown/skills/documentation-standards/SKILL.md",
+      "virajp-plugins/vwf/skills/documentation-standards/SKILL.md",
     );
   });
 
@@ -93,7 +93,7 @@ describe("skills", () => {
 
   it("drops frontmatter OpenCode does not read", () => {
     const skill = text(
-      "virajp-plugins/markdown/skills/documentation-standards/SKILL.md",
+      "virajp-plugins/vwf/skills/documentation-standards/SKILL.md",
     );
     const block = skill.slice(0, skill.indexOf("\n---\n", 4));
     for (const key of ["invocation", "paths", "tools", "model", "effort"]) {
@@ -154,7 +154,7 @@ describe("config fragments", () => {
   });
 
   it("spells mcp transports local and remote", () => {
-    expect(fragment("context7").mcp?.["context7"]).toEqual({
+    expect(fragment("vwf").mcp?.["context7"]).toEqual({
       type: "local",
       command: ["pnpm", "dlx", "@upstash/context7-mcp"],
       environment: { CONTEXT7_API_KEY: "${CONTEXT7_API_KEY:-}" },
@@ -262,6 +262,6 @@ describe("gaps", () => {
     const scoped = gaps.filter(g => g.capability === "pathScopedSkills");
     expect(scoped.length).toBeGreaterThan(0);
     expect(scoped.every(g => g.severity === "degraded")).toBe(true);
-    expect(scoped.map(g => g.plugin)).toContain("markdown");
+    expect(scoped.map(g => g.plugin)).toContain("vwf");
   });
 });

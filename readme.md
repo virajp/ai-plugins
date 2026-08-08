@@ -127,7 +127,7 @@ checks for each and prints the exact command for anything missing.
 | --------------- | ------------ | ---------------------------------------------------- | ------------------------------------- |
 | mise            | **required** | task runner + resolves the toolchain                 | `brew install mise`                   |
 | graphify        | **required** | knowledge graph the commands rely on                 | `mise use -g pipx:graphifyy@latest`   |
-| node + pnpm     | **required** | `context7` MCP server; the npm-normalize hook        | `mise use -g node@latest pnpm@latest` |
+| node + pnpm     | **required** | vwf's Context7 MCP server; the npm-normalize hook    | `mise use -g node@latest pnpm@latest` |
 | Claude Code CLI | **required** | hosts the commands                                   | `mise use -g claude-code@latest`      |
 | uv              | **required** | installs the `mempalace` memory server               | `mise use -g uv@latest`               |
 | rtk             | optional     | the `rtk hook claude` Bash hook; skipped when absent | `brew install --formulae rtk`         |
@@ -140,10 +140,14 @@ and reconnects instead of dying with the session. Toggle the mempalace
 **plugin's** own stdio server off in `/mcp` — two servers would contend for
 mempalace's single writer lease. See [docs/mempalace.md](./docs/mempalace.md).
 
-`vwf` also depends on four plugins — `context7`, `markdown`, `mempalace`, and
+`vwf` also depends on three plugins — `mempalace`, `andrej-karpathy-skills`, and
 `mise` — all resolved from the same `virajp-plugins` marketplace. Claude Code
 **auto-installs and auto-enables** them when you enable `vwf` (requires Claude
 Code ≥ 2.1.143).
+
+The Markdown/documentation skills and the Context7 docs server used to be two
+more dependencies. They are **part of `vwf` now**: `documentation-standards` and
+`/vwf:readme` are vwf skills, and Context7 is one of vwf's two MCP servers.
 
 **`cicd` is not among them.** vwf states the delivery-pipeline *contract*; the
 [`cicd`](./docs/cicd.md) plugin implements it on whichever CI system a repo
@@ -1308,14 +1312,22 @@ they auto-apply and inform how Claude writes and reviews:
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
   plan touches an API surface.
+- **`documentation-standards`** — Markdown/doc standards (writing style, heading
+  hierarchy, links, front matter, CHANGELOGs, mermaid rules), auto-applying on
+  every `**/*.md` edit. Absorbed from the retired `markdown` plugin.
+
+One more absorbed skill is user-invoked rather than doctrine: **`/vwf:readme`**
+scans a repo and writes or updates its README against eight required sections.
+`/vwf:setup` orchestrates it, which is why it stays model-invocable too.
 
 The minimal-code behaviors that a "karpathy guidelines" skill would cover are
 already enforced structurally across the workflow — elicitation (think before
 coding), the plan-as-a-diff and the coder's "nothing not in the plan" (surgical
 changes, YAGNI/the minimalism ladder), and TDD with a coverage gate (goal-driven
-execution). For ad-hoc, off-pipeline work you can install the external
+execution). The external
 **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
-plugin (see Supporting plugins).
+plugin covers the ad-hoc, off-pipeline case, and installs with `vwf` as one of
+its three dependencies.
 
 ## Tips
 
@@ -1340,20 +1352,18 @@ your stack. Each has a dedicated guide:
 
 | Plugin                                                                             | What it provides                                                                                                                                                                              | Install                                     |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **[markdown](./docs/markdown.md)**                                                 | Always-on Markdown/documentation standards (auto-applies to `**/*.md`) + a `/markdown:readme` skill that documents a repo's README                                                            | `--user markdown`                           |
 | **[typescript](./docs/typescript.md)**                                             | Plain TypeScript coding standards — a `typescript` router skill (+ standards/vitest/build references) plus package-json/pnpm/tsconfig/lint-format + the TypeScript/JavaScript language server | `--user typescript`                         |
 | **[effect](./docs/effect.md)**                                                     | Effect-TS doctrine — an `effect` router skill (+ effect/effect-runtime/testing references) and the `packages` vwf stack template (opt-in; requires `typescript`)                              | `--user effect`                             |
 | **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped**                     | `--project flutter`                         |
 | **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                    | `--user mise`                               |
 | **[cicd](./docs/cicd.md)**                                                         | A `/cicd:workflow` skill — resolves the repo's CI system from config, then generates its delivery pipeline (every tool via mise); supports polyrepo + monorepo                                | `--user cicd`                               |
-| **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                   | `--user context7`                           |
 | **[design-tools](./docs/design-tools.md)**                                         | The vwf design adapter — two skills resolving the design tool **per project** (`claude-design`, `lovable`, `stitch`) + the Claude Design MCP server                                           | `--user design-tools`                       |
 | **cloudflare**                                                                     | vwf stack adapter for Cloudflare — **parked at Zero Trust Access**; Workers, Pages, R2, D1, KV and the rest arrive under their own plan (opt-in)                                              | `--user cloudflare`                         |
 | **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                          | `--user mempalace`                          |
-| **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                        | `--user`/`--project andrej-karpathy-skills` |
+| **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; also a `vwf` dependency)                                                                                                                        | `--user`/`--project andrej-karpathy-skills` |
 
 ```sh
-pnpx @askviraj/ai-plugins --user typescript --user markdown
+pnpx @askviraj/ai-plugins --user typescript --user mise
 ```
 
 ## Statusline
@@ -1428,8 +1438,8 @@ Notes:
 
 - `--all` acts on **user-scoped** plugins only. `flutter` is **project-scoped**
   — install it explicitly with `--project flutter` from within the project that
-  needs it. `andrej-karpathy-skills` is **opt-in** (external) — also excluded
-  from `--all`; install it with `--user`/`--project andrej-karpathy-skills`.
+  needs it. `cloudflare`, `effect` and `gcp` are **opt-in** — also excluded from
+  `--all`; install them by name at whichever scope you want.
 - `--all` means the whole toolkit, so it **includes the statusline** (Claude
   Code only) — pass `--no-statusline` for a plugins-only run. The same applies
   in reverse: `--uninstall --all` removes the statusline too.
@@ -1454,9 +1464,9 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   exactly like Claude's `disable-model-invocation` — while doctrine skills stay
   discoverable under `skills/`;
 - expands plugin **dependencies** like Claude Code does — installing `vwf` also
-  renders `markdown`, `mise`, and wires `context7` and `mempalace`. `mempalace`
-  (like the graphify wiring below) is **user-level only** — a `--project`
-  request is redirected to user scope, on both platforms;
+  renders `mise` and wires `mempalace`. `mempalace` (like the graphify wiring
+  below) is **user-level only** — a `--project` request is redirected to user
+  scope, on both platforms;
 - wires **graphify at user level** when `vwf` is installed: its user-level
   skills install as usual, and the project-level `graphify.js` its CLI generates
   is harvested into `~/.config/opencode/plugin/` instead — no project files are
@@ -1479,10 +1489,11 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   OpenCode's built-in launchers with the plugins' mise-provisioned ones (no SDK
   on `PATH` needed); an entry you already have is never overwritten;
 - writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each workflow
-  skill, so `/markdown-readme` etc. work in OpenCode (which has no user-invoked
-  skills yet);
-- for `context7` and `design-tools`, adds the MCP server to the config's `mcp`
-  key (the Claude Design server as a `remote` entry).
+  skill, so `/vwf-setup` etc. work in OpenCode (which has no user-invoked skills
+  yet);
+- for `vwf` and `design-tools`, adds the MCP servers to the config's `mcp` key
+  (vwf's Context7 as a `local` entry and mempalace as a `remote` one; the Claude
+  Design server as a `remote` entry).
 
 **Not ported**: subagents and vwf's hooks are Claude Code concepts (vwf's
 execute pipeline degrades accordingly), the statusline is Claude-only, and
@@ -1504,14 +1515,13 @@ maintainers. 🙏
   that powers `vwf`'s cross-session recall (re-listed here as a dependency).
 - **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
   — behavioral coding guidelines derived from Andrej Karpathy's observations,
-  re-listed here as an opt-in plugin.
+  re-listed here as a `vwf` dependency.
 - **[Context7](https://github.com/upstash/context7)** by
-  [Upstash](https://upstash.com) — the MCP docs server behind the `context7`
-  plugin.
+  [Upstash](https://upstash.com) — the MCP docs server `vwf` declares.
 - **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the
   plugins and hooks depend on.
 - **[pnpm](https://pnpm.io/)** — the default package manager the normalizing
-  hook and `context7` rely on.
+  hook and the Context7 server rely on.
 - **[typescript-language-server](https://github.com/typescript-language-server/typescript-language-server)**,
   the **[Dart SDK](https://dart.dev/)**,
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and

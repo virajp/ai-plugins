@@ -197,8 +197,6 @@ describe("mcp", () => {
       type: "http",
       url: "http://127.0.0.1:8765/mcp",
     });
-
-    const c7 = JSON.parse(text("context7/mcp.json"));
-    expect(Object.values(c7.mcpServers)[0]).toHaveProperty("command");
+    expect(vwf.mcpServers.context7).toHaveProperty("command");
   });
 });
