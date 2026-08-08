@@ -4,8 +4,8 @@
  * `bin/installer.mjs` answered this by asking Claude Code:
  * `claude plugin list --json`, cross-referenced against the marketplace manifest
  * on `main`. That worked while Claude was the only target it could install
- * plugins into. With five targets it does not: four of them keep their own
- * bookkeeping in their own shapes, and only two of those CLIs are even
+ * plugins into. With four targets it does not: three of them keep their own
+ * bookkeeping in their own shapes, and only some of those CLIs are even
  * installable on a given machine.
  *
  * So the question is asked differently. **A plugin's version in this build is

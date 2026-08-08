@@ -17,7 +17,7 @@
  *
  * What survives here is what no type can state: cross-file agreement, things
  * that must exist on disk, and the properties of the *rendered* output. The
- * per-target half matters most — four of the five targets have no byte-parity
+ * per-target half matters most — three of the four targets have no byte-parity
  * gate, so this is their only automated defence.
  */
 import { frontmatter as fm } from "@ai-plugins/schema";

@@ -16,7 +16,7 @@
  * derived union reproduces every one of those hand-rolled entries exactly.
  *
  * There is no equivalent of the old `CORE_DEPS`. That existed to require
- * `claude`, the one install mechanism; with five targets each adapter's
+ * `claude`, the one install mechanism; with four targets each adapter's
  * `detect()` answers it, and the executor skips a target whose tool is absent
  * rather than failing the whole run.
  */
