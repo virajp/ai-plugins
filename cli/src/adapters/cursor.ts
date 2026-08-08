@@ -11,8 +11,8 @@
  *
  * - **Plugin sources are git-only.** The union is a bare string, or an object
  *   tagged `github` / `url` / `git-subdir`; there is no local-path variant. So a
- *   Cursor install resolves over the network even though `dist/cursor/` is
- *   sitting right there. This is the one target where the committed-`dist/`
+ *   Cursor install resolves over the network even though `cursor/` is sitting
+ *   right there. This is the one target where the committed-render
  *   guarantee — what you install is what CI validated — does not hold, because
  *   Cursor reads whatever ref it resolves rather than the working copy.
  * - **Project scope is the only writable per-plugin surface.** A user-scope

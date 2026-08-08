@@ -315,7 +315,7 @@ const main = defineCommand({
 
     // `--upgrade` alone replays the receipts. Combined with an install request
     // it adds nothing to the plugins — installing already reads the current
-    // `dist/` — so the install phase runs instead, and only the newer-CLI note
+    // render — so the install phase runs instead, and only the newer-CLI note
     // below is kept.
     if (args.upgrade === true && !named) {
       const { jobs, unrecorded } = upgradeJobs(adapters, options);
@@ -430,7 +430,8 @@ async function noteNewerCli(context: AdapterContext): Promise<void> {
 }
 
 /**
- * The package root — what holds `dist/`, the marketplace manifests and `tools/`.
+ * The package root — what holds the rendered trees, the marketplace manifests
+ * and `tools/`.
  *
  * Found by walking up rather than by counting `..` segments, because this code
  * runs from three places now: `cli/src/index.ts` in the repo,

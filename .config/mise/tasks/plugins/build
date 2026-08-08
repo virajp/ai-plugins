@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-#MISE description="Render templates/ into dist/<target>/ for every agent target"
+#MISE description="Render templates/ into <repo>/<target>/ for every agent target"
 #MISE dir="{{ config_root }}"
 
 # Renders the authored, target-agnostic templates/ tree into the committed
-# dist/<target>/ trees — one per agent (claude, opencode, cursor, ohmypi,
+# <repo>/<target>/ trees — one per agent (claude, opencode, cursor, ohmypi,
 # codex). Each target directory is removed first, so a deleted skill disappears
-# from the output rather than lingering: dist/ must be a pure function of
+# from the output rather than lingering: the render must be a pure function of
 # templates/, or `git status` stops meaning anything.
 #
 # The output is committed on purpose. What users install is then inspectable and

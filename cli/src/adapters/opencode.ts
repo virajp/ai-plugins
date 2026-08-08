@@ -154,17 +154,17 @@ function installScope(
   dryRun: boolean,
 ): Action[] {
   const actions: Action[] = [];
-  const dist = join(context.sourceRoot, "dist", "opencode");
+  const tree = join(context.sourceRoot, "opencode");
   const target = configDir(context, scope);
   const bundleRoot = join(target, BUNDLE_DIR);
-  const ownership = readOwnership(dist);
+  const ownership = readOwnership(tree);
 
   const rootFor = (plugin: string) => join(bundleRoot, plugin);
 
   for (const plugin of plugins) {
     actions.push(...copyTree(
       {
-        from: join(dist, BUNDLE_DIR, plugin),
+        from: join(tree, BUNDLE_DIR, plugin),
         to: rootFor(plugin),
         rootPath: rootFor(plugin),
         siblingRoot: rootFor,
@@ -187,7 +187,7 @@ function installScope(
     }
     actions.push(...copyTree(
       {
-        from: join(dist, path),
+        from: join(tree, path),
         to: join(target, path),
         rootPath: rootFor(owner),
         siblingRoot: rootFor,
@@ -198,7 +198,7 @@ function installScope(
   }
 
   actions.push(
-    ...mergeConfig(context, scope, plugins, dist, receipt, dryRun),
+    ...mergeConfig(context, scope, plugins, tree, receipt, dryRun),
   );
   return actions;
 }
@@ -213,7 +213,7 @@ function mergeConfig(
   context: AdapterContext,
   scope: Scope,
   plugins: readonly string[],
-  dist: string,
+  tree: string,
   receipt: ReceiptBuilder,
   dryRun: boolean,
 ): Action[] {
@@ -253,7 +253,7 @@ function mergeConfig(
     : () => {};
 
   for (const plugin of plugins) {
-    const fragmentPath = join(dist, BUNDLE_DIR, plugin, "opencode.config.json");
+    const fragmentPath = join(tree, BUNDLE_DIR, plugin, "opencode.config.json");
     if (!existsSync(fragmentPath)) {
       continue;
     }
@@ -328,8 +328,8 @@ function configFile(context: AdapterContext, scope: Scope): string {
   return join(dir, CONFIG_FILES[0]);
 }
 
-function readOwnership(dist: string): Record<string, string> {
-  const path = join(dist, ".ownership.json");
+function readOwnership(tree: string): Record<string, string> {
+  const path = join(tree, ".ownership.json");
   if (!existsSync(path)) {
     throw new Error(`missing ${path} — run \`mise run plugins:build\``);
   }

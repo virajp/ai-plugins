@@ -17,7 +17,7 @@ The repo also ships a **statusline**, installed via a small `citty` CLI
 (`@askviraj/ai-plugins`) rather than the marketplace — see The installer &
 statusline CLI.
 
-### Templates, targets, and dist
+### Templates, targets, and the rendered trees
 
 Plugins are **authored once, in a target-agnostic form, and rendered per
 agent**. Claude Code is one target of five, not the source shape:
@@ -25,8 +25,9 @@ agent**. Claude Code is one target of five, not the source shape:
 ```text
 templates/<plugin>/        authored source — plugin.yaml + skills/ + agents/
   ↓  build/ (TypeScript, no build step of its own — node strips the types)
-dist/claude/plugins/**     committed, one tree per target
-dist/{opencode,cursor,ohmypi,codex}/**
+claude/plugins/**          committed, one tree per target, at the repo root
+{opencode,cursor,ohmypi,codex}/**
+plugins.json                       the target-agnostic plugin index the CLI reads
 .claude-plugin/marketplace.json    generated at the repo root
 .cursor-plugin/marketplace.json    likewise — Cursor reads it from there
 
@@ -34,6 +35,13 @@ cli/src/**                 installer source (TypeScript)
   ↓  tsup
 bin/ai-plugins.mjs         gitignored build output — the published entrypoint
 ```
+
+**Four top-level directories are rendered output**, and one of them reads
+confusingly beside its neighbours: `claude/` sits next to `.claude/` (which
+holds the worktrees) and `.claude-plugin/` (the generated Claude marketplace
+manifest). The dot prefixes keep them distinct on disk, but a reader skimming
+the root will not infer it — `claude/` is machine-written and never edited by
+hand, the other two are not.
 
 - **`templates/`** is the only thing authored. `plugin.yaml` is the neutral
   manifest, merging what used to be split between `plugin.json` and the
@@ -45,19 +53,19 @@ bin/ai-plugins.mjs         gitignored build output — the published entrypoint
   modelled as ordered `(key, raw)` pairs and re-emitted **verbatim** — never
   round-tripped through a YAML serialiser, because the corpus uses nine key
   orders and folds descriptions at irregular widths.
-- **`dist/`** is committed, so what users install is inspectable and diffable in
-  review, and CI can assert it matches a fresh render. The frozen pre-migration
-  tree `plugins/` is **gone**, deleted with the installer cutover. It existed
-  for two reasons and outlived both: it was the Claude renderer's byte-parity
-  ground truth, and the published installer's OpenCode path read it from the
-  `main` tarball at run time. That second consumer disappeared when `bin/`
-  became build output, and the two had to go in one commit — deleting `plugins/`
-  while any published version still fetched it would have broken
+- **The rendered trees** are committed, so what users install is inspectable and
+  diffable in review, and CI can assert they match a fresh render. The frozen
+  pre-migration tree `plugins/` is **gone**, deleted with the installer cutover.
+  It existed for two reasons and outlived both: it was the Claude renderer's
+  byte-parity ground truth, and the published installer's OpenCode path read it
+  from the `main` tarball at run time. That second consumer disappeared when
+  `bin/` became build output, and the two had to go in one commit — deleting
+  `plugins/` while any published version still fetched it would have broken
   `npx @askviraj/ai-plugins --platform opencode` for **already-released**
   versions, not just future ones.
 
 Retiring it retires the byte-parity gate with it. That gate was never automated
-— it was a manual `diff -rq plugins dist/claude/plugins`, which settled at **3
+— it was a manual `diff -rq plugins claude/plugins`, which settled at **3
 justified hunks** (`lovable` and `stitch` dropping a `description` duplicated
 from the marketplace entry; `git-workflow` dropping `user-invocable: true`,
 which is the default). All five targets now stand on the same footing:
@@ -69,8 +77,8 @@ generalised.
 ### Targets and adapters
 
 Two halves, deliberately kept apart. A **Target** (`build/src/targets/`) is
-build-time and pure: templates → the committed `dist/` tree. An **Adapter**
-(`cli/src/adapters/`) is install-time and effectful: `dist/` → the user's
+build-time and pure: templates → the committed render tree. An **Adapter**
+(`cli/src/adapters/`) is install-time and effectful: that tree → the user's
 machine. That split is what keeps format-preserving config mutation out of the
 renderer, and what let the OpenCode installer shrink from a 1189-line renderer
 to a copier.
@@ -106,12 +114,12 @@ Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
 which is the installer's and whose trigger surface must stay untouched — npm
 allows one Trusted Publisher and validates the entry-point filename):
 
-- **`plugins:build`** — renders `templates/` into every `dist/<target>/`. Each
+- **`plugins:build`** — renders `templates/` into every `<repo>/<target>/`. Each
   target directory is removed first, so a deleted skill disappears rather than
   lingering.
-- **`plugins:dist-clean`** — renders, then fails if that produced anything not
+- **`plugins:render-clean`** — renders, then fails if that produced anything not
   already staged. This is what catches a template edited without a rebuild;
-  nothing else can, because `dist/` is committed.
+  nothing else can, because the rendered trees are committed.
 - **`plugins:check`** — validates `templates/` **and** all five rendered
   targets, then prints the per-target coverage report. On the source: manifest
   name↔dir, dependencies resolving within the marketplace, hook scripts existing
@@ -152,8 +160,9 @@ design (a plugin may hold skills versioned on their own cadence).
   and pre-commit only formats files a commit touches — so editing a
   never-formatted file there reflows one tree and not the other, breaking
   parity. Match the existing fold width rather than fighting it.
-- **Root `dist/` is committed; per-package `dist/` are gitignored.** Same name,
-  opposite treatment.
+- **The rendered trees are committed; `bin/` and the per-package `dist/` are
+  gitignored.** A rendered tree is meant to be diffed in review; a bundle diff
+  is noise.
 - **Frontmatter must be strict-YAML valid.** Claude's parser is lenient and will
   accept what Codex's rejects outright — and a rejected skill is dropped
   silently, with no error and no warning.
@@ -239,16 +248,16 @@ Four of the five targets have a native plugin marketplace, so `plugins:build`
 generates one per target from the manifests. **Only OpenCode has none** — it has
 no plugin concept at all, which is why its installer copies a rendered tree
 while the other four register a marketplace and let the tool do the installing.
-Do not edit any of them by hand; `plugins:dist-clean` will fail.
+Do not edit any of them by hand; `plugins:render-clean` will fail.
 
-| Target   | Manifest                           | Plugin source                                 |
-| -------- | ---------------------------------- | --------------------------------------------- |
-| Claude   | `.claude-plugin/marketplace.json`  | `./dist/claude/plugins/<name>`                |
-| Cursor   | `.cursor-plugin/marketplace.json`  | `git-subdir` → `dist/cursor/<name>`           |
-| Codex    | `dist/codex/.agents/plugins/…json` | `{source: "local", path: "./plugins/<name>"}` |
-| Oh-My-Pi | `dist/ohmypi/.omp-plugin/…json`    | `./<name>`                                    |
+| Target   | Manifest                          | Plugin source                                 |
+| -------- | --------------------------------- | --------------------------------------------- |
+| Claude   | `.claude-plugin/marketplace.json` | `./claude/plugins/<name>`                     |
+| Cursor   | `.cursor-plugin/marketplace.json` | `git-subdir` → `cursor/<name>`                |
+| Codex    | `codex/.agents/plugins/…json`     | `{source: "local", path: "./plugins/<name>"}` |
+| Oh-My-Pi | `ohmypi/.omp-plugin/…json`        | `./<name>`                                    |
 
-Two manifests live at the **repo root** rather than under `dist/<target>/`,
+Two manifests live at the **repo root** rather than under `<repo>/<target>/`,
 because that is where the tool looks when the marketplace is added from this
 repo, and their sources are root-relative and would resolve nowhere else.
 Cursor's must be there for a second reason: Cursor accepts
@@ -259,9 +268,9 @@ plugin to a Claude-rendered bundle.
 Three traps, each verified by running the real tool and each silent when wrong:
 
 - **Sources resolve against the marketplace root**, not the repo root.
-  Oh-My-Pi's were once spelled `./dist/ohmypi/<name>` and resolved to
-  `dist/ohmypi/dist/ohmypi/<name>`, failing every install. `plugins:check`
-  cannot catch this — the path exists, just not where the tool looks.
+  Oh-My-Pi's were once spelled from the repo root and resolved to
+  `ohmypi/ohmypi/<name>`, failing every install. `plugins:check` cannot catch
+  this — the path exists, just not where the tool looks.
 - **Codex's source discriminator is `"local"`.** Any other value still parses
   and still registers; `codex plugin list` simply reports "No marketplace
   plugins found", naming no field. It looks exactly like a disabled feature
@@ -269,9 +278,9 @@ Three traps, each verified by running the real tool and each silent when wrong:
 - **Cursor's sources are git-only** — a bare string, or an object tagged
   `github` / `url` / `git-subdir`; there is no local-path variant. So a Cursor
   install clones this repo and reads whatever ref it resolves, rather than the
-  `dist/cursor/` tree beside it. It is the one target where the
-  committed-`dist/` guarantee does not reach, and the only one needing
-  `marketplace.yaml`'s `repository` field.
+  `cursor/` tree beside it. It is the one target where the committed-render
+  guarantee does not reach, and the only one needing `marketplace.yaml`'s
+  `repository` field.
 
 ## The vwf Plugin
 
@@ -560,17 +569,18 @@ is a private workspace package that would not resolve from an installed tarball
 (every import of it is `import type`, so the bundle erases it), and shipping
 `cli/src/*.ts` directly would raise `engines.node` from `>=18` to `>=22.18`,
 where Node strips types unflagged. **`bin/` is gitignored** — note the asymmetry
-with the root `dist/`, which is committed because a *rendered* tree is meant to
-be diffed in review, whereas a bundle diff is noise. `i:build` regenerates it,
-and `release.yml` already calls `i:build` before publishing, so its trigger
+with the rendered trees, which are committed because a *rendered* tree is meant
+to be diffed in review, whereas a bundle diff is noise. `i:build` regenerates
+it, and `release.yml` already calls `i:build` before publishing, so its trigger
 surface is untouched.
 
-The published tarball is `bin` + `tools` + `dist` + both root marketplace
-manifests: every adapter reads `dist/<target>/` at install time through
-`context.sourceRoot`, and the Claude and Cursor adapters read
-`.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json` from the
-package root. That makes the package ~12 MB, which is the cost of the
-committed-`dist/` guarantee — what a user installs is what CI validated.
+The published tarball is `bin` + `tools` + the five rendered trees +
+`plugins.json` + both root marketplace manifests: every adapter reads
+`<target>/` at install time through `context.sourceRoot`, and the Claude and
+Cursor adapters read `.claude-plugin/marketplace.json` and
+`.cursor-plugin/marketplace.json` from the package root. That makes the package
+~12 MB, which is the cost of the committed-render guarantee — what a user
+installs is what CI validated.
 
 Layout:
 
@@ -601,8 +611,8 @@ Layout:
   depths (`cli/src/` in the repo, `bin/` once bundled) and a fixed offset would
   be right in one and silently wrong in the other.
 - `cli/src/deps.ts` — the external-tool gate. Each plugin declares its own
-  `requires:` in `plugin.yaml`; the build projects it into `dist/plugins.json`,
-  and the union over the dependency-expanded set is checked before anything is
+  `requires:` in `plugin.yaml`; the build projects it into `plugins.json`, and
+  the union over the dependency-expanded set is checked before anything is
   written. The old installer kept this as a hand-maintained `PLUGIN_EXTRA_DEPS`
   map whose entries rolled their dependencies' tools up by hand — the derived
   union reproduces every one of those entries exactly, and a test pins that.
@@ -620,11 +630,10 @@ Layout:
 - `cli/src/version.ts` — `--version`. It does **not** ask each tool what it has
   installed the way `bin/claude.mjs` asked `claude plugin list --json`; with
   five targets that is five bookkeeping formats. Instead, a plugin's version *in
-  this build* is what an install would give you — every target reads
-  `dist/<target>/` in place or copies it — so the local manifest against the one
-  on `main` answers it for all five at once. A plugin here but not on `main` is
-  labelled `(not on main yet)` rather than left bare, which read as a failed
-  lookup.
+  this build* is what an install would give you — every target reads `<target>/`
+  in place or copies it — so the local manifest against the one on `main`
+  answers it for all five at once. A plugin here but not on `main` is labelled
+  `(not on main yet)` rather than left bare, which read as a failed lookup.
 - `cli/src/statusline.ts` — the statusline installer. Not a plugin and therefore
   not an adapter; wired straight from the router with its own receipt. See
   Statusline below.
@@ -651,7 +660,7 @@ Layout:
 scope; `--user <name>` / `--project <name>` (both repeatable) name plugins at a
 scope. Project-scoped plugins (`flutter`) and opt-in ones
 (`andrej-karpathy-skills`) are excluded from `--all` and reached by name. Every
-one of those sets is **derived from `plugin.yaml` via `dist/plugins.json`**, not
+one of those sets is **derived from `plugin.yaml` via `plugins.json`**, not
 hardcoded — the old `PLUGINS` / `PROJECT_SCOPED` / `OPT_IN` / `USER_ONLY` /
 `PLUGIN_DEPS` constants and the `plugins:check` assertion that kept them honest
 are both gone, because there is no longer a second copy to disagree. Names are
@@ -672,11 +681,10 @@ the Claude-only skip note.
 
 **`--version` / `--upgrade`.** See `cli/src/version.ts` above for what
 `--version` compares. `--upgrade` replays each target's receipt: **installing is
-already upgrading**, since every target reads `dist/<target>/` in place or
-copies it, so there is no per-tool update command to drive. Combined with an
-install request the install phase covers it, and only the newer-CLI note is
-kept. A receipt written before plans were recorded is reported, not silently
-skipped.
+already upgrading**, since every target reads `<target>/` in place or copies it,
+so there is no per-tool update command to drive. Combined with an install
+request the install phase covers it, and only the newer-CLI note is kept. A
+receipt written before plans were recorded is reported, not silently skipped.
 
 **`--uninstall` / `--dry-run`.** Uninstall reverts from the receipt, which
 records prior state — so it restores rather than guessing, and leaves the seeded
@@ -702,7 +710,7 @@ installer does the same job from this repo, against the same checksums file.
 
 **The binary cannot be self-contained**, and this is the constraint that shapes
 every channel: Claude, Codex and Oh-My-Pi each register a marketplace whose
-source is a real directory under `dist/`, which the agent re-reads *in place* on
+source is a real rendered directory, which the agent re-reads *in place* on
 every later session. Embedding the payload inside the executable would leave
 those three pointing at nothing. So every channel ships a tree, and the
 installers extract it into a prefix and symlink only the executable onto `PATH`.
@@ -767,15 +775,15 @@ environment-specific tools in the matching env file.
 ### Workflows (`.github/workflows/`)
 
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` and
-  every PR: `plugins:dist-clean`, then `plugins:check`, then the vitest suites,
-  then `vwf:test`. The order matters — proving `dist/` is a fresh render
-  *before* validating it means a stale tree fails as staleness rather than as
-  some confusing downstream assertion. Deliberately a **separate file** from
-  `release.yml`: npm allows one Trusted Publisher and validates the entry-point
-  workflow's filename, so that file's trigger surface stays untouched. This
-  workflow publishes nothing and holds no `id-token` permission. Before it,
-  these checks ran only in pre-commit — i.e. only for whoever had the hooks
-  installed.
+  every PR: `plugins:render-clean`, then `plugins:check`, then the vitest
+  suites, then `vwf:test`. The order matters — proving the rendered trees are a
+  fresh render *before* validating it means a stale tree fails as staleness
+  rather than as some confusing downstream assertion. Deliberately a **separate
+  file** from `release.yml`: npm allows one Trusted Publisher and validates the
+  entry-point workflow's filename, so that file's trigger surface stays
+  untouched. This workflow publishes nothing and holds no `id-token` permission.
+  Before it, these checks ran only in pre-commit — i.e. only for whoever had the
+  hooks installed.
 - **`release.yml`** — publishes `@askviraj/ai-plugins` to npm via **OIDC trusted
   publishing** (no stored token, provenance automatic). Triggered two ways: a
   pushed `v*` tag, or `workflow_dispatch` — which is also how `deps-update.yml`
@@ -1000,7 +1008,6 @@ Installing `vwf` pulls in its dependencies (`claude-design`, `context7`,
 the Dependencies section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
-`--platform opencode` target, which copies each plugin's rendered
-`dist/opencode/` tree into `~/.config/opencode/virajp-plugins/` (url-sourced
-plugins excluded, having no rendered bundle) — see The installer & statusline
-CLI.
+`--platform opencode` target, which copies each plugin's rendered `opencode/`
+tree into `~/.config/opencode/virajp-plugins/` (url-sourced plugins excluded,
+having no rendered bundle) — see The installer & statusline CLI.

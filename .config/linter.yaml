@@ -8,7 +8,11 @@ ignores:
   - "**/archived/**"
   # Rendered output. Generated from templates/ and committed; linting it would
   # report every finding twice and, worse, invite fixes in the wrong tree.
-  - "dist/**"
+  - "claude/**"
+  - "codex/**"
+  - "cursor/**"
+  - "ohmypi/**"
+  - "opencode/**"
   # tsup's bundle of cli/. Build output, gitignored, and not ours to style —
   # esbuild emits empty catch blocks and keeps unused helpers from bundled deps.
   # The source it is built from is linted.

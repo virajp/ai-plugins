@@ -574,7 +574,7 @@ function join(a: string, b: string): string {
  *   still parses and the marketplace still registers — `codex plugin list` just
  *   reports "No marketplace plugins found", with no error naming the field.
  * - `path` resolves against the marketplace root (the directory holding
- *   `.agents/`), which is `dist/codex/` — so `./plugins/<name>` lands on the
+ *   `.agents/`), which is `codex/` — so `./plugins/<name>` lands on the
  *   bundles this target already emits.
  *
  * Only local plugins are listed: Codex needs a rendered bundle at a path it can

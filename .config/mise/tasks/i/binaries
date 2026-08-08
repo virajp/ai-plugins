@@ -11,13 +11,13 @@ cd "$MISE_PROJECT_ROOT"
 
 # Why an archive rather than a lone executable: three of the five adapters
 # (claude, codex, ohmypi) register a marketplace whose source is a real
-# directory under dist/, which the agent re-reads IN PLACE on every later
+# rendered directory at the repo root, which the agent re-reads IN PLACE on every later
 # session. So the payload cannot live inside the binary — it has to sit beside
 # it, at a path that persists after the install.
 #
 # The payload is platform-independent and the binary is not, which is the whole
 # reason this loop assembles rather than just compiles.
-PAYLOAD=(dist .claude-plugin .cursor-plugin tools package.json LICENSE)
+PAYLOAD=(claude codex cursor ohmypi opencode plugins.json .claude-plugin .cursor-plugin tools package.json LICENSE)
 
 VERSION="$(node -p 'require("./package.json").version')"
 OUT="release"

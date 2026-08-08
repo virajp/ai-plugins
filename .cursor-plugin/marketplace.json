@@ -12,7 +12,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/claude-design"
+        "path": "cursor/claude-design"
       },
       "version": "0.1.0"
     },
@@ -23,7 +23,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/context7"
+        "path": "cursor/context7"
       },
       "version": "1.1.0"
     },
@@ -34,7 +34,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/effect"
+        "path": "cursor/effect"
       },
       "version": "0.1.0"
     },
@@ -45,7 +45,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/flutter"
+        "path": "cursor/flutter"
       },
       "version": "0.7.0"
     },
@@ -56,7 +56,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/gcp"
+        "path": "cursor/gcp"
       },
       "version": "0.1.0"
     },
@@ -67,7 +67,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/github-actions"
+        "path": "cursor/github-actions"
       },
       "version": "0.5.0"
     },
@@ -78,7 +78,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/lovable"
+        "path": "cursor/lovable"
       },
       "version": "0.1.0"
     },
@@ -89,7 +89,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/markdown"
+        "path": "cursor/markdown"
       },
       "version": "0.7.0"
     },
@@ -100,7 +100,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/mise"
+        "path": "cursor/mise"
       },
       "version": "0.4.0"
     },
@@ -111,7 +111,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/stitch"
+        "path": "cursor/stitch"
       },
       "version": "0.1.0"
     },
@@ -122,7 +122,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/typescript"
+        "path": "cursor/typescript"
       },
       "version": "1.0.0"
     },
@@ -133,7 +133,7 @@
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "dist/cursor/vwf"
+        "path": "cursor/vwf"
       },
       "version": "14.0.0"
     }

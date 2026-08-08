@@ -8,25 +8,25 @@ import { readFileSync } from "node:fs";
 import type { Workspace } from "./source.ts";
 
 /**
- * A rendered file, ready to be written under `dist/<target>/`.
+ * A rendered file, ready to be written under `<repo>/<target>/`.
  * Renderers return data rather than writing, so they stay pure and testable and
  * a single writer owns the filesystem.
  */
 export interface Output {
-  /** Path relative to the target's dist root, or to the repo root — see below. */
+  /** Path relative to the target's render root, or to the repo root — see below. */
   readonly path: string;
   readonly contents: string | { readonly copyFrom: string; };
   readonly executable?: boolean;
   /**
-   * Write relative to the **repo root** rather than `dist/<target>/`.
+   * Write relative to the **repo root** rather than `<repo>/<target>/`.
    *
    * Exactly one file needs this: Claude Code reads the marketplace manifest
    * from `.claude-plugin/marketplace.json` at the root of the repo it was
    * added from, and the sources inside it are root-relative
-   * (`./dist/claude/plugins/<name>`). Emitted under `dist/claude/` those paths
-   * would resolve nowhere, so the file belongs at the root and is generated
-   * there — the alternative being a hand-maintained copy that can drift from
-   * the manifests it is derived from.
+   * (`./claude/plugins/<name>`). Emitted under `claude/` those paths would
+   * resolve nowhere, so the file belongs at the root and is generated there —
+   * the alternative being a hand-maintained copy that can drift from the
+   * manifests it is derived from.
    */
   readonly atRepoRoot?: boolean;
   /**
@@ -49,7 +49,7 @@ export interface Output {
    * marketplace manifest, which describes the whole set.
    *
    * Distinct from `atRepoRoot`, which is about *where* a file lands: Claude's
-   * manifest is both, Oh-My-Pi's is unowned but still inside `dist/`. Marked
+   * manifest is both, Oh-My-Pi's is unowned but still inside `ohmypi/`. Marked
    * explicitly so `plugins:check` can insist every *other* file is
    * attributable, rather than pattern-matching filenames and silently
    * excusing a real gap.
@@ -94,7 +94,7 @@ export interface Emission {
 export interface Target {
   readonly id: TargetId;
   readonly capabilities: Capabilities;
-  /** Root under `dist/` — e.g. `claude` → `dist/claude/`. */
+  /** Root at the repo root — e.g. `claude` → `<repo>/claude/`. */
   render(workspace: Workspace): Emission;
 }
 

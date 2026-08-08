@@ -2,7 +2,7 @@
   "name": "@ai-plugins/build",
   "version": "0.0.0",
   "private": true,
-  "description": "Renders templates/ into per-agent plugins under dist/. Dev-only; never published.",
+  "description": "Renders templates/ into per-agent plugins at the repo root. Dev-only; never published.",
   "type": "module",
   "bin": {
     "ai-plugins-build": "./src/cli.ts"

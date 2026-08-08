@@ -24,10 +24,11 @@ repos:
         pass_filenames: false
         files: ^templates/vwf/hooks/
         stages: [ pre-commit ]
-      # dist/ is generated, so it is rebuilt before it is validated: a template
-      # edit that was never re-rendered would otherwise pass the checker against
-      # a stale tree. The render is deterministic and destructive per target, so
-      # running it here is safe and makes `dist-clean` below meaningful.
+      # The rendered trees are generated, so they are rebuilt before they are
+      # validated: a template edit that was never re-rendered would otherwise
+      # pass the checker against a stale tree. The render is deterministic and
+      # destructive per target, so running it here is safe and makes
+      # `render-clean` below meaningful.
       - id: plugins-build
         name: render every target
         entry: mise x -- mise run plugins:build
@@ -40,17 +41,17 @@ repos:
         entry: mise x -- mise run plugins:check
         language: system
         pass_filenames: false
-        files: ^(templates/|build/|schema/|dist/)
+        files: ^(templates/|build/|schema/|claude/|codex/|cursor/|ohmypi/|opencode/)
         stages: [ pre-commit ]
-      # The committed dist/ must be exactly what templates/ renders to. Catches
+      # The committed render must be exactly what templates/ renders to. Catches
       # the case the two hooks above cannot: output edited by hand, or a render
       # whose result was never staged.
-      - id: dist-clean
-        name: dist/ matches a fresh render
-        entry: mise x -- mise run plugins:dist-clean
+      - id: render-clean
+        name: rendered trees match a fresh render
+        entry: mise x -- mise run plugins:render-clean
         language: system
         pass_filenames: false
-        files: ^(templates/|build/|schema/|dist/)
+        files: ^(templates/|build/|schema/|claude/|codex/|cursor/|ohmypi/|opencode/)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -96,10 +97,11 @@ repos:
       - id: linter
         name: Linter
         entry: mise x -- pnpm dlx @askviraj/linter --fix
-        # dist/ is rendered output. pre-commit passes staged paths explicitly,
-        # and the linter warns on each one it is configured to ignore — enough
-        # warnings to fail the run. Keep them out of the argument list entirely.
-        exclude: ^dist/
+        # The root trees are rendered output. pre-commit passes staged paths
+        # explicitly, and the linter warns on each one it is configured to
+        # ignore — enough warnings to fail the run. Keep them out of the
+        # argument list entirely.
+        exclude: ^(claude|codex|cursor|ohmypi|opencode)/
         language: system
         stages: [ pre-commit ]
 

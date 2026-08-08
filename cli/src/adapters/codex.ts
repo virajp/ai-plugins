@@ -8,7 +8,7 @@
  * produce a config claiming an install that is not there.
  *
  * Unlike Cursor, Codex's marketplace takes a **local path**, so an install
- * reads the committed `dist/codex` tree directly and the bytes installed are
+ * reads the committed `codex/` tree directly and the bytes installed are
  * the bytes CI validated.
  *
  * Verified against `codex-cli 0.146.1` by running it against a throwaway
@@ -45,7 +45,7 @@ import { planPlugins } from "./types.ts";
 const BIN = "codex";
 
 /** Where the build writes this target's tree, relative to `sourceRoot`. */
-const DIST = join("dist", "codex");
+const TREE = "codex";
 
 /** Mirrors `MARKETPLACE_PATH` in `build/src/targets/codex.ts`. */
 const MANIFEST = join(".agents", "plugins", "marketplace.json");
@@ -130,7 +130,7 @@ function run(
   }
 
   const marketplace = readMarketplaceName(context);
-  const root = join(context.sourceRoot, DIST);
+  const root = join(context.sourceRoot, TREE);
 
   // Registering a marketplace that is already registered would re-point it and,
   // worse, record an undo that removes one the user set up themselves.
@@ -161,7 +161,7 @@ function run(
 
 /** The marketplace's own name, so the CLI selector matches what it registered. */
 function readMarketplaceName(context: AdapterContext): string {
-  const path = join(context.sourceRoot, DIST, MANIFEST);
+  const path = join(context.sourceRoot, TREE, MANIFEST);
   if (!existsSync(path)) {
     throw new Error(`missing ${path} — run \`mise run plugins:build\``);
   }

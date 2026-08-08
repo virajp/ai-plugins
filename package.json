@@ -33,7 +33,12 @@
   "files": [
     "bin",
     "tools",
-    "dist",
+    "claude",
+    "codex",
+    "cursor",
+    "ohmypi",
+    "opencode",
+    "plugins.json",
     ".claude-plugin",
     ".cursor-plugin"
   ],

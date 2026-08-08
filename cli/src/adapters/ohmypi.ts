@@ -5,7 +5,7 @@
  * `<root>/.omp/plugins/` with a `package.json`, a lockfile and
  * `installed_plugins.json` — so this adapter drives the CLI rather than writing
  * any of it. Its marketplace takes a local path, so an install reads the
- * committed `dist/ohmypi` tree.
+ * committed `ohmypi/` tree.
  *
  * Verified by running `omp` against a throwaway `HOME`:
  *
@@ -42,7 +42,7 @@ import { planPlugins } from "./types.ts";
 const BIN = "omp";
 
 /** Where the build writes this target's tree, relative to `sourceRoot`. */
-const DIST = join("dist", "ohmypi");
+const TREE = "ohmypi";
 
 /** Mirrors the marketplace output path in `build/src/targets/ohmypi.ts`. */
 const MANIFEST = join(".omp-plugin", "marketplace.json");
@@ -124,7 +124,7 @@ function run(
       "plugin",
       "marketplace",
       "add",
-      join(context.sourceRoot, DIST),
+      join(context.sourceRoot, TREE),
     ];
     actions.push({ summary: `${BIN} ${add.join(" ")}` });
     if (!dryRun) {
@@ -163,7 +163,7 @@ function run(
 
 /** The marketplace's own name, so the CLI selector matches what it registered. */
 function readMarketplaceName(context: AdapterContext): string {
-  const path = join(context.sourceRoot, DIST, MANIFEST);
+  const path = join(context.sourceRoot, TREE, MANIFEST);
   if (!existsSync(path)) {
     throw new Error(`missing ${path} — run \`mise run plugins:build\``);
   }

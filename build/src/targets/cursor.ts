@@ -447,9 +447,9 @@ function pluginJson(manifest: Manifest, gaps: Gap[]): string {
  * object tagged `github` / `url` / `git-subdir`. **There is no local-path
  * variant**, verified against its manifest parser. So unlike every other target
  * here, a Cursor install cannot be pointed at the rendered tree sitting on
- * disk: it clones the repo and reads `dist/cursor/<plugin>` from whatever ref
- * it resolves. A working copy and an installed copy can therefore differ, which
- * is the one place the committed-`dist/` guarantee does not reach.
+ * disk: it clones the repo and reads `cursor/<plugin>` from whatever ref it
+ * resolves. A working copy and an installed copy can therefore differ, which is
+ * the one place the committed-render guarantee does not reach.
  *
  * `git-subdir` is the only form that can name a directory inside the repo,
  * which is what every plugin here is.
@@ -488,7 +488,7 @@ function marketplaceJson(workspace: Workspace, gaps: Gap[]): string {
       source: {
         source: "git-subdir",
         url: repository,
-        path: `dist/cursor/${plugin.manifest.name}`,
+        path: `cursor/${plugin.manifest.name}`,
       },
       ...(plugin.manifest.version ? { version: plugin.manifest.version } : {}),
     })),

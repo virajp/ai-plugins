@@ -91,7 +91,7 @@ describe("ohmypi adapter", () => {
     ohmypi.apply(context, planFor(["markdown"]));
 
     expect(ran.map(c => c.join(" "))).toEqual([
-      `omp plugin marketplace add ${join(repoRoot, "dist", "ohmypi")}`,
+      `omp plugin marketplace add ${join(repoRoot, "ohmypi")}`,
       "omp plugin install markdown@virajp-plugins --scope user",
     ]);
   });
@@ -145,7 +145,7 @@ describe("ohmypi adapter", () => {
 
     expect(ran).toEqual([]);
     expect(actions.map(a => a.summary)).toEqual([
-      `omp plugin marketplace add ${join(repoRoot, "dist", "ohmypi")}`,
+      `omp plugin marketplace add ${join(repoRoot, "ohmypi")}`,
       "omp plugin install markdown@virajp-plugins --scope user",
     ]);
   });

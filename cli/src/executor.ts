@@ -165,7 +165,7 @@ export function revert(
  * Rebuild a target's plan from what its receipt says it installed.
  *
  * This is what `--upgrade` replays. It works because **installing is already
- * upgrading**: every target either reads `dist/<target>/` in place or copies it,
+ * upgrading**: every target either reads `<target>/` in place or copies it,
  * so re-running the recorded plan against a newer package is the upgrade. There
  * is no separate update command to drive and no per-tool version to query.
  *

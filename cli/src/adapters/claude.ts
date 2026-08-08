@@ -4,7 +4,7 @@
  * Driven through `claude plugin`, like Codex and Oh-My-Pi. The marketplace is
  * the repo root — `.claude-plugin/marketplace.json` lives there and its sources
  * are root-relative — and Claude registers it as a `directory` source, reading
- * `dist/claude/plugins/<name>` **in place** rather than copying. So an install
+ * `claude/plugins/<name>` **in place** rather than copying. So an install
  * tracks the working tree, and a rebuild is picked up without reinstalling.
  *
  * Verified against a throwaway `CLAUDE_CONFIG_DIR`:
@@ -53,7 +53,7 @@ import { planPlugins } from "./types.ts";
 
 const BIN = "claude";
 
-/** Generated into the repo root, not `dist/claude/` — see `build/src/targets/claude.ts`. */
+/** Generated into the repo root, not `claude/` — see `build/src/targets/claude.ts`. */
 const MANIFEST = join(".claude-plugin", "marketplace.json");
 
 export const claude: Adapter = {

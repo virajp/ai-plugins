@@ -37,7 +37,7 @@ const SIBLING_TOKEN = /%%AI_PLUGINS_ROOT:([a-z0-9-]+)%%/g;
 const TEXT = /\.(md|json|jsonc|ya?ml|toml|js|mjs|ts|sh|txt)$/;
 
 export interface CopyOptions {
-  /** Directory inside `dist/<target>/` to copy, e.g. `vwf`. */
+  /** Directory inside `<repo>/<target>/` to copy, e.g. `vwf`. */
   readonly from: string;
   /** Absolute destination. */
   readonly to: string;

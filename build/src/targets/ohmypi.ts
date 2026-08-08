@@ -462,8 +462,8 @@ function marketplaceJson(workspace: Workspace): string {
       description: m.description ?? m.name,
       name: m.name,
       // Relative to the MARKETPLACE ROOT — the directory holding
-      // `.omp-plugin/`, i.e. `dist/ohmypi/` itself. Spelling this from the repo
-      // root instead resolves to `dist/ohmypi/dist/ohmypi/<name>`, and `omp
+      // `.omp-plugin/`, i.e. `ohmypi/` itself. Spelling this from the repo
+      // root instead resolves to `ohmypi/ohmypi/<name>`, and `omp
       // plugin install` fails with "Plugin source directory does not exist".
       source: m.source.kind === "local" ? `./${m.name}` : m.source.url,
     };

@@ -174,13 +174,13 @@ describe("marketplace", () => {
 
   // Regression: sources were once spelled from the repo root, which `omp`
   // resolves against the marketplace root instead — producing
-  // `dist/ohmypi/dist/ohmypi/<name>` and failing every install with "Plugin
-  // source directory does not exist". Nothing else catches it: the path exists,
-  // just not where Oh-My-Pi looks.
+  // `ohmypi/ohmypi/<name>` and failing every install with "Plugin source
+  // directory does not exist". Nothing else catches it: the path exists, just
+  // not where Oh-My-Pi looks.
   it("spells local sources relative to the marketplace root", () => {
     for (const plugin of catalog.plugins) {
       if (plugin.source.startsWith("./")) {
-        expect(plugin.source, plugin.name).not.toContain("dist/");
+        expect(plugin.source, plugin.name).not.toContain("ohmypi/");
       }
     }
   });

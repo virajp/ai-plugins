@@ -37,10 +37,10 @@ export interface RenderResult {
 }
 
 /**
- * Render every target into `dist/<target>/`.
+ * Render every target into `<repo>/<target>/`.
  *
  * Each target's directory is removed first, so a deleted skill disappears from
- * the output instead of lingering — the committed `dist/` must be a pure
+ * the output instead of lingering — the committed render must be a pure
  * function of `templates/`, or `git status` stops being a meaningful check.
  */
 export function renderAll(
@@ -53,7 +53,7 @@ export function renderAll(
   writePluginIndex(repoRoot, workspace);
 
   return selected.map(target => {
-    const out = join(repoRoot, "dist", target.id);
+    const out = join(repoRoot, target.id);
     rmSync(out, { recursive: true, force: true });
 
     const emission = target.render(workspace);
@@ -98,12 +98,12 @@ export function renderAll(
 }
 
 /**
- * The install-time view of the manifests: `dist/plugins.json`.
+ * The install-time view of the manifests: `plugins.json` at the repo root.
  *
  * The CLI resolves a plan — dependency expansion, scope defaults, which plugins
  * `--all` covers, the bare-name allowlist — entirely from `plugin.yaml`. But it
- * cannot read `templates/`: the published package ships `dist/`, not the
- * authored source. So the build projects the plan-relevant fields here, the
+ * cannot read `templates/`: the published package ships the rendered trees, not
+ * the authored source. So the build projects the plan-relevant fields here, the
  * same build→install contract `.ownership.json` already is.
  *
  * Deliberately narrow. Anything the renderers consume (skills, hooks, servers)
@@ -134,7 +134,7 @@ function writePluginIndex(repoRoot: string, workspace: Workspace): void {
     }),
   };
 
-  const path = join(repoRoot, "dist", "plugins.json");
+  const path = join(repoRoot, "plugins.json");
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(index, null, 2)}\n`);
 }

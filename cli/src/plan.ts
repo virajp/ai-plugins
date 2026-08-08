@@ -1,7 +1,7 @@
 /**
  * Turning a request into a per-adapter plan.
  *
- * Everything here derives from `dist/plugins.json`, which the build projects
+ * Everything here derives from `plugins.json`, which the build projects
  * from each `templates/<plugin>/plugin.yaml`. The old installer carried the same facts as
  * five hand-maintained constants — `PLUGINS`, `PROJECT_SCOPED`, `OPT_IN`,
  * `USER_ONLY`, `PLUGIN_DEPS` — and `plugins:check` existed to assert they still
@@ -61,7 +61,7 @@ export interface ResolveOptions {
 }
 
 export function readPluginIndex(sourceRoot: string): PluginIndex {
-  const path = join(sourceRoot, "dist", "plugins.json");
+  const path = join(sourceRoot, "plugins.json");
   if (!existsSync(path)) {
     throw new Error(`missing ${path} — run \`mise run plugins:build\``);
   }

@@ -10,7 +10,7 @@
  *
  * So the question is asked differently. **A plugin's version in this build is
  * what an install would give you**, because every target either reads
- * `dist/<target>/` in place or copies it — so comparing the manifest here
+ * `<target>/` in place or copies it — so comparing the manifest here
  * against the manifest on `main` answers "am I current?" for all five at once,
  * with no per-tool query and nothing to guess at.
  *

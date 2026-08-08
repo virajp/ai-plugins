@@ -74,7 +74,7 @@ export async function check(repoRoot: string): Promise<CheckResult> {
   const workspace = readWorkspace(join(repoRoot, "templates"));
   // `checkInstallerSync` lived here until the cutover. It compared
   // `bin/claude.mjs`'s hardcoded plugin sets against the manifests; the CLI now
-  // reads `dist/plugins.json`, so there is no second copy left to disagree.
+  // reads `plugins.json`, so there is no second copy left to disagree.
   const findings: Finding[] = [...checkTemplates(workspace)];
 
   const coverage: TargetCoverage[] = [];

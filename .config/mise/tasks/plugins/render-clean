@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-#MISE description="Assert the committed dist/ and marketplace manifest match a fresh render"
+#MISE description="Assert the committed render trees and marketplace manifests match a fresh render"
 #MISE dir="{{ config_root }}"
 
-# Renders every target and fails if that leaves anything uncommitted under
-# dist/. The committed output is what users install, so it has to be a pure
-# function of templates/ — this is what catches a template edited without a
-# rebuild, or a dist/ file edited by hand and never traced back to its source.
+# Renders every target and fails if that leaves anything uncommitted in the
+# rendered trees. The committed output is what users install, so it has to be a
+# pure function of templates/ — this is what catches a template edited without a
+# rebuild, or a rendered file edited by hand and never traced back to its
+# source.
 #
 # Used by pre-commit and by CI. In CI it is the whole gate: nothing there runs
-# the renderer for real, so without this a stale dist/ would ship.
+# the renderer for real, so without this a stale tree would ship.
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
@@ -17,9 +18,10 @@ cd "$MISE_PROJECT_ROOT"
 
 node --experimental-strip-types build/src/cli.ts render >/dev/null
 
-# .claude-plugin/ is generated too: the marketplace manifest Claude Code reads
-# is written at the repo root, because the sources inside it are root-relative
-# and would resolve nowhere from dist/claude/.
+# .claude-plugin/ and .cursor-plugin/ are generated too: the marketplace
+# manifests Claude Code and Cursor read are written at the repo root, because
+# the sources inside them are root-relative and would resolve nowhere from
+# claude/ or cursor/.
 #
 # Only *unstaged* differences are a failure. In --porcelain the second status
 # column is the working tree, so `M ` (staged, tree clean) is precisely the
@@ -30,7 +32,7 @@ node --experimental-strip-types build/src/cli.ts render >/dev/null
 # ` M`, `MM`, `??` and friends all carry a non-blank second column and are real
 # failures: the render produced something that is not what is being committed.
 # In CI nothing is staged, so any drift shows up there too.
-drift="$(git status --porcelain -- dist .claude-plugin | awk 'substr($0, 2, 1) != " "')"
+drift="$(git status --porcelain -- claude codex cursor ohmypi opencode plugins.json .claude-plugin .cursor-plugin | awk 'substr($0, 2, 1) != " "')"
 if [[ -n "$drift" ]]; then
   print_error "generated output is not what templates/ renders to — re-run 'mise run plugins:build' and stage the result"
   printf '%s\n' "$drift"

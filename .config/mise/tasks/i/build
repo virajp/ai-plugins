@@ -19,7 +19,8 @@ if [[ ! -f bin/ai-plugins.mjs ]]; then
 fi
 
 # The bundle finds its own package root by walking up for package.json and reads
-# dist/ from there. If that resolution broke, every adapter would silently point
+# the rendered trees from there. If that resolution broke, every adapter would
+# silently point
 # at the wrong tree — so prove the built artifact runs, not merely that it exists.
 print_header "Smoke-testing the bundle ..."
 node bin/ai-plugins.mjs --help >/dev/null

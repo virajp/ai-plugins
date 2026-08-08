@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Dev-only entrypoint for the renderer. End users never run this — they install
- * from the committed `dist/` tree — so it stays a plain argv switch rather than
+ * from the committed render trees — so it stays a plain argv switch rather than
  * pulling the CLI's command framework into a build tool.
  */
 import { join } from "node:path";

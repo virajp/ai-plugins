@@ -24,8 +24,8 @@ import {
  * Claude Code — the reference target.
  *
  * It supports every capability in the toolkit, so it emits no gaps. Its output
- * is also the byte-parity gate: `dist/claude/plugins/**` must reproduce the
- * hand-authored `plugins/**` exactly, which is what proves the neutral schema
+ * was also the byte-parity gate: `claude/plugins/**` had to reproduce the
+ * hand-authored `plugins/**` exactly, which is what proved the neutral schema
  * is lossless.
  */
 export const claude: Target = {
@@ -45,7 +45,7 @@ export const claude: Target = {
       stampOwner(outputs, before, plugin.manifest.name);
     }
 
-    // At the repo root, not under dist/claude/: this is the file Claude Code
+    // At the repo root, not under claude/: this is the file Claude Code
     // reads when the marketplace is added from this repo, and the sources it
     // holds are root-relative.
     outputs.push({
@@ -280,7 +280,7 @@ function marketplaceJson(workspace: Workspace): string {
       entry["repository"] = m.repository;
     }
     entry["source"] = m.source.kind === "local"
-      ? `./dist/claude/plugins/${m.name}`
+      ? `./claude/plugins/${m.name}`
       : { source: "url", url: m.source.url };
     if (m.strict !== undefined) {
       entry["strict"] = m.strict;

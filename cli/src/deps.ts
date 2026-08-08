@@ -8,7 +8,7 @@
  * front and says what to run.
  *
  * **The list is derived, not maintained.** Each plugin declares its own
- * `requires:` in `plugin.yaml`, the build projects it into `dist/plugins.json`,
+ * `requires:` in `plugin.yaml`, the build projects it into `plugins.json`,
  * and the union over the dependency-expanded set is what gets checked. The old
  * installer kept the same facts as a hand-written `PLUGIN_EXTRA_DEPS` map whose
  * entries had to roll their dependencies' tools up by hand — vwf listing

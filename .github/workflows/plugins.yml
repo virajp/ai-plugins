@@ -1,7 +1,7 @@
 name: Plugins
 
 # Validates the plugin toolkit: the authored templates/ tree, the five rendered
-# targets under dist/, and the renderer itself.
+# target trees at the repo root, and the renderer itself.
 #
 # Deliberately a SEPARATE workflow from release.yml. npm allows exactly one
 # Trusted Publisher per package and validates the entry-point workflow's
@@ -9,9 +9,9 @@ name: Plugins
 # publishes nothing and holds no id-token permission.
 #
 # Until now these checks ran only in pre-commit, which means they ran only for
-# whoever had the hooks installed. The dist-clean gate in particular has no
-# other home: dist/ is committed, so a template edited without a rebuild is
-# invisible to every other check.
+# whoever had the hooks installed. The render-clean gate in particular has no
+# other home: the rendered trees are committed, so a template edited without a
+# rebuild is invisible to every other check.
 on:
   push:
     branches: [ main ]
@@ -40,11 +40,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Order matters: prove dist/ is what templates/ renders to BEFORE
-      # validating it, so a stale tree fails as staleness rather than as some
-      # confusing downstream assertion.
-      - name: dist/ matches a fresh render
-        run: mise run plugins:dist-clean
+      # Order matters: prove the rendered trees are what templates/ renders to
+      # BEFORE validating them, so a stale tree fails as staleness rather than
+      # as some confusing downstream assertion.
+      - name: Rendered trees match a fresh render
+        run: mise run plugins:render-clean
 
       - name: Static validation + coverage report
         run: mise run plugins:check

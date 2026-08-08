@@ -2,8 +2,8 @@
  * The install-time half of the two abstractions.
  *
  * A **Target** (`build/src/targets/`) is build-time and pure: templates → the
- * committed `dist/` tree. An **Adapter** is install-time and effectful:
- * `dist/` → the user's machine. Keeping them apart is what stops
+ * committed render trees. An **Adapter** is install-time and effectful: the
+ * rendered tree → the user's machine. Keeping them apart is what stops
  * format-preserving config mutation leaking into the renderer, where it has no
  * business, and what let the OpenCode installer shrink from a 1189-line
  * renderer to a copier.
@@ -68,7 +68,7 @@ export interface ApplyResult {
  * receipt has to be reproducible.
  */
 export interface AdapterContext {
-  /** Root of the checkout or unpacked package holding `dist/`. */
+  /** Root of the checkout or unpacked package holding the rendered trees. */
   readonly sourceRoot: string;
   /** `$HOME`, injectable so tests never touch the real one. */
   readonly home: string;

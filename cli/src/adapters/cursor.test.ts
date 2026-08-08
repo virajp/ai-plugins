@@ -74,9 +74,9 @@ describe("cursor adapter", () => {
     const entry = settings().plugins["virajp-plugins/markdown"];
     expect(entry.enabled).toBe(true);
     // git-only: there is no local-path source in Cursor's union, so the install
-    // points at the repo rather than at dist/cursor sitting next to it.
+    // points at the repo rather than at cursor/ sitting next to it.
     expect(entry.gitUrl).toMatch(/^https:\/\/github\.com\//);
-    expect(entry.gitPath).toBe("dist/cursor/markdown");
+    expect(entry.gitPath).toBe("cursor/markdown");
   });
 
   it("keys plugins as <marketplace>/<name>, which Cursor splits on the first slash", () => {

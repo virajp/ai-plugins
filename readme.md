@@ -1401,9 +1401,9 @@ Standalone builds ship for macOS (arm64/x64), Linux (arm64/x64) and Windows
 (x64), attached to every
 [release](https://github.com/virajp/ai-plugins/releases) with a
 `checksums-<version>.txt` the installer verifies against. Each is an **archive,
-not a lone executable** — the binary reads its plugin trees from `dist/` beside
-it, because three of the five agents register a marketplace whose source is a
-real directory they re-read on every later session.
+not a lone executable** — the binary reads its rendered plugin trees from the
+directories beside it, because three of the five agents register a marketplace
+whose source is a real directory they re-read on every later session.
 
 The install script is POSIX `sh`, so **on Windows** use `npx` or unzip the
 `windows-x64` archive from the release yourself.

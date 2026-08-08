@@ -58,11 +58,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The archives carry the rendered dist/ trees verbatim, so a stale or
-      # hand-edited dist/ would ship to every binary user. Same gate plugins.yml
+      # The archives carry the rendered trees verbatim, so a stale or
+      # hand-edited tree would ship to every binary user. Same gate plugins.yml
       # runs, for the same reason.
-      - name: Assert dist/ matches a fresh render
-        run: mise run plugins:dist-clean
+      - name: Assert the rendered trees match a fresh render
+        run: mise run plugins:render-clean
 
       # bun cross-compiles every target from one host, so this needs no runner
       # matrix — five platforms, one job.

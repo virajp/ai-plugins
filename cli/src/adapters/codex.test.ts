@@ -108,18 +108,18 @@ describe("codex adapter", () => {
     codex.apply(context, planFor(["markdown", "mise"]));
 
     expect(ran.map(c => c.join(" "))).toEqual([
-      `codex plugin marketplace add ${join(repoRoot, "dist", "codex")}`,
+      `codex plugin marketplace add ${join(repoRoot, "codex")}`,
       "codex plugin add markdown@virajp-plugins",
       "codex plugin add mise@virajp-plugins",
     ]);
   });
 
-  it("installs from the local dist tree, not over the network", () => {
+  it("installs from the local rendered tree, not over the network", () => {
     codex.apply(context, planFor(["markdown"]));
 
     const add = ran.find(c => c.includes("marketplace"));
-    expect(add?.at(-1)).toBe(join(repoRoot, "dist", "codex"));
-    expect(existsSync(join(repoRoot, "dist", "codex"))).toBe(true);
+    expect(add?.at(-1)).toBe(join(repoRoot, "codex"));
+    expect(existsSync(join(repoRoot, "codex"))).toBe(true);
   });
 
   it("does not re-register a marketplace that is already configured", () => {
@@ -164,7 +164,7 @@ describe("codex adapter", () => {
 
     expect(ran).toEqual([]);
     expect(actions.map(a => a.summary)).toEqual([
-      `codex plugin marketplace add ${join(repoRoot, "dist", "codex")}`,
+      `codex plugin marketplace add ${join(repoRoot, "codex")}`,
       "codex plugin add markdown@virajp-plugins",
     ]);
   });

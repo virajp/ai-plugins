@@ -23,7 +23,7 @@ import type {
 } from "./types.ts";
 
 /**
- * Hermetic: a real install of the committed `dist/opencode` tree into a temp
+ * Hermetic: a real install of the committed `opencode/` tree into a temp
  * `$HOME`. Nothing here touches the developer's own config.
  */
 const repoRoot = join(import.meta.dirname, "..", "..", "..");

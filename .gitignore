@@ -29,18 +29,16 @@ docs/scratchpad/
 # ============================================================
 node_modules/
 
-# TypeScript build artifacts. Note the name collision: the ROOT dist/ is the
-# rendered plugin output and IS committed — these per-package dist/ dirs are
-# compiler output and are not.
+# TypeScript build artifacts.
 schema/dist/
 build/dist/
 cli/dist/
 *.tsbuildinfo
 
 # Build output: tsup bundles cli/ into bin/, and bin/ is what npm publishes.
-# Not committed — unlike the root dist/, which is a *rendered* tree meant to be
-# diffed in review. A bundle diff is noise, and `i:build` regenerates it before
-# every publish. Note the asymmetry: root dist/ is committed, bin/ is not.
+# Not committed — unlike the rendered trees at the repo root (claude/, codex/,
+# cursor/, ohmypi/, opencode/), which are meant to be diffed in review. A bundle
+# diff is noise, and `i:build` regenerates it before every publish.
 bin/
 
 # Per-platform binaries and their archives, assembled by `i:binaries`. Build

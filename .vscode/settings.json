@@ -85,6 +85,11 @@
   "files.exclude": {
     ".config/mise.*.lock": true,
     ".config/mise.lock": true,
+    "claude/": true,
+    "codex/": true,
+    "cursor/": true,
+    "ohmypi/": true,
+    "opencode/": true,
     "**/.astro/": true,
     "**/.turbo/": true,
     "**/*.log": true,
@@ -126,6 +131,11 @@
   "js/ts.updateImportsOnFileMove.enabled": "never",
   "outline.showKeys": true,
   "search.exclude": {
+    "claude/": true,
+    "codex/": true,
+    "cursor/": true,
+    "ohmypi/": true,
+    "opencode/": true,
     "**/.turbo/": true,
     "**/*.code-search": true,
     "**/*.log": true,
