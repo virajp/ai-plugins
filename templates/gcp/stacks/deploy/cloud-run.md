@@ -35,7 +35,7 @@ what keeps the target swappable: the workflow calls the task, not `gcloud`.
 
 Deploys obey **vwf's delivery-pipeline contract** — tag-triggered only, shaped
 `<project>-<env>-v<semver>`, branch-validated, and gated on the tagged project's
-tests plus its dependents'. CI itself belongs to the `github-actions` plugin;
+tests plus its dependents'. CI itself belongs to the `cicd` plugin;
 Cloud Build is deliberately not part of this stack, so there is exactly one
 place a pipeline is defined.
 

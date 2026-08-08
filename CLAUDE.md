@@ -182,7 +182,7 @@ design (a plugin may hold skills versioned on their own cadence).
 | `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep). Kept **for its skills** — its bundled stdio MCP server is toggled off, since vwf declares the same server over HTTP                                                                                                                                                                                                                                                |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                                                                                                                                                       |
 | `mise`                   | `templates/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` skill                                                                                                                                                                                                                                                                  |
-| `github-actions`         | `templates/github-actions` | A `/github-actions:workflow` skill that generates GitHub Actions workflows installing all tools via `jdx/mise-action` (mise only), supporting both polyrepo and monorepo (detect-and-ask strategy); generates release workflows conforming to vwf's delivery-pipeline contract — one main workflow (tag parse, branch validation, test gate) calling as few reusable sub-workflows as the repo's variation allows — a vwf dep |
+| `cicd`                   | `templates/cicd`           | A `/cicd:workflow` skill that resolves the repo's CI system (per-project `cicd.tool`, else repo detection, else ask — **never** a silent default) and reads only that tool's `references/<tool>.md`; GitHub Actions is the one implemented today. Neutral rules live in SKILL.md (mise installs everything, both layouts, vwf's delivery-pipeline contract); adding a CI system is one reference file. **Independent — not a vwf dep** (vwf states the contract, `cicd` implements it)                                                                        |
 
 ## Plugin Structure
 
@@ -357,7 +357,7 @@ Two traps, each verified by running the real tool and each silent when wrong:
   | `execute-stages.md`                    | The execute stage pipeline: the stage table + Runs column, per-stage subagent contracts, shared stage rules (model enforcement, loop-on-findings, the **convergence guard**), the **run journal** shape, and the end-of-run reconcile                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
   | `capability-vocabulary.md`             | The stack-agnostic capability tokens **and** the prose-noun mapping (`document-datastore` → "the datastore") every blueprint doc writes against                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
   | `engineering-baseline.md`              | The **15 centralized technical rules** every product follows by default — enforced, never elicited; seeded into `conventions.md#baseline`, waived only via `enforcement.rules`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-  | `delivery-pipeline.md`                 | The canonical environment vocabulary (`development`/`staging`/`production`) + CI/CD contract (mise-built; `<project>-<env>-v<semver>` tag-triggered, branch-validated, tested-before-release). Read by `blueprint`, `verify`, and the **github-actions** plugin                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+  | `delivery-pipeline.md`                 | The canonical environment vocabulary (`development`/`staging`/`production`) + CI/CD contract (mise-built; `<project>-<env>-v<semver>` tag-triggered, branch-validated, tested-before-release). Read by `blueprint`, `verify`, and the **cicd** plugin                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
   | `standard-flows.md`                    | The canonical flow-slug vocabulary per project role, the designated numbers, the auth-capability signal, and the synonym table (rename proposals, never automatic)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
   | `design-adapter.md`                    | The **design-adapter contract** — vwf talks to no design tool. Export (`/vwf:screens prompt`) needs no adapter since briefs are files; only **import** delegates, to `/<tool>:<tool>-import-screens` and `/<tool>:<tool>-import-design-system`. Defines both normalized payloads, why the skill names repeat the plugin (OpenCode's flat namespace vs. deterministic construction), the mandatory `disable-model-invocation: false`, and the **preflight** — a user-only adapter skill cannot be invoked and does not error, so a missing adapter is indistinguishable from an empty result unless vwf checks first                                                                                                                                                                                                                                      |
   | `vwf-config.md`                        | The `.config/vwf.yaml` doctrine (currently `config_format` **12**): stamp keys, the coverage stamp, per-project nuances **and the structured `stack` block**, the repo-level `repo.stack`, `harness:`, `enforcement:`, bounded `pipeline` knobs, `verify` environments, the `design:` pins, and the hard floor config can never disable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -486,16 +486,15 @@ catalog/erDiagram sync, the released-API additive-only diff).
 
 ### Dependencies
 
-`vwf` depends on `context7`, `github-actions`, `markdown`, `mempalace`, and
-`mise` — **all resolved from the `virajp-plugins` marketplace itself**, so
-installing `vwf` needs no other marketplace registered. `claude-design`,
-`context7`, `github-actions`, `markdown`, and `mise` are authored here;
-`mempalace` is not — it is **re-listed** in `.claude-plugin/marketplace.json`
-via a `url` source (pointing at its upstream repo) so it lives under
-`virajp-plugins`.
+`vwf` depends on `context7`, `markdown`, `mempalace`, and `mise` — **all
+resolved from the `virajp-plugins` marketplace itself**, so installing `vwf`
+needs no other marketplace registered. `claude-design`, `context7`, `markdown`,
+and `mise` are authored here; `mempalace` is not — it is **re-listed** in
+`.claude-plugin/marketplace.json` via a `url` source (pointing at its upstream
+repo) so it lives under `virajp-plugins`.
 
 The dependency list is declared in **one** place — `templates/vwf/plugin.yaml` →
-`context7`, `github-actions`, `markdown`, `mempalace`, `mise` — and the
+`context7`, `markdown`, `mempalace`, `mise` — and the
 marketplace entry is generated from it, so the two can no longer drift. (Before
 the template layer they were separate files kept in sync by hand, which is what
 `plugins:check` used to compare.) The checker now verifies each name resolves to
@@ -504,6 +503,12 @@ a real plugin instead.
 **`claude-design` is deliberately *not* a dependency.** vwf is decoupled from
 any design tool: it delegates to whichever adapter plugin `design.tool` names.
 Adapters are chosen, not inherited — see the design-adapter contract.
+
+**`cicd` is deliberately *not* a dependency either.** vwf owns the
+delivery-pipeline **contract** (`assets/delivery-pipeline.md`); `cicd` owns the
+**mechanism** that satisfies it on a given CI system. Nothing in vwf delegates
+to `/cicd:workflow` — every mention of it is prose recommending it to the user —
+so vwf has no reason to force its install.
 
 When `vwf` is enabled, Claude Code (≥ 2.1.143) **auto-installs and
 auto-enables** these dependencies at the same scope. Key rules:
@@ -926,8 +931,9 @@ reverse trap: it will never fire.
 
 This applies across plugins too — `mise:scaffold` and `markdown:readme` are
 `both` **because `/vwf:setup` orchestrates them**, per its own "orchestrate,
-don't reimplement" rule. `github-actions:workflow` stays `user`: nothing
-delegates to it.
+don't reimplement" rule. `cicd:workflow` stays `user`: nothing delegates to it —
+vwf's two mentions of it are prose recommending it to the user, which the rename
+from `github-actions:workflow` did not change.
 
 **How each target spells it** (all verified against a real install or vendor
 source — do not infer these):
@@ -959,15 +965,15 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 Available plugin names: `vwf`, `markdown`, `typescript`, `effect`, `flutter`,
-`mempalace`, `claude-design`, `context7`, `mise`, `github-actions`,
+`mempalace`, `claude-design`, `context7`, `mise`, `cicd`,
 `andrej-karpathy-skills` (external, opt-in). (The statusline is not a plugin —
 install it via `npx @askviraj/ai-plugins …`; see The installer & statusline
 CLI.)
 
-Installing `vwf` pulls in its dependencies (`claude-design`, `context7`,
-`github-actions`, `markdown`, `mempalace`, `mise`) automatically from the same
-`virajp-plugins` marketplace — no other marketplace needs to be registered. See
-the Dependencies section above.
+Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
+`mise`) automatically from the same `virajp-plugins` marketplace — no other
+marketplace needs to be registered. `cicd` is **not** among them; install it by
+name when you want pipelines generated. See the Dependencies section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
 `--platform opencode` target, which copies each plugin's rendered `opencode/`

@@ -43,9 +43,9 @@ describe("parse/emit", () => {
   });
 
   it("does not treat a `key:` inside the body as frontmatter", () => {
-    // github-actions/workflow embeds a GitHub Actions YAML sample containing
-    // `name: release` in its body. Only the block before the closing `---`
-    // counts.
+    // cicd/workflow's github-actions reference embeds a GitHub Actions YAML
+    // sample containing `name: release` in its body. Only the block before the
+    // closing `---` counts.
     const doc = fm.parse(
       "---\nname: workflow\n---\n```yaml\nname: release\n```\n",
     )!;
