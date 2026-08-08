@@ -6,14 +6,14 @@ are **not started**.
 
 ## Workspace
 
-| | |
-|---|---|
-| **Worktree** | `/Users/virajpatel/Projects/github.com/virajp/ai-plugins/.claude/worktrees/template-build-architecture` |
-| **Branch** | `worktree-template-build-architecture` |
-| **HEAD** | `dc4082a` |
-| **Ahead of `main`** | 81 commits; `main` untouched at `94478e4` |
-| **Tree** | clean; rendered trees match a fresh render |
-| **Pushed / released** | no, and no — version `2.7.3` unbumped |
+|                       |                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Worktree**          | `/Users/virajpatel/Projects/github.com/virajp/ai-plugins/.claude/worktrees/template-build-architecture` |
+| **Branch**            | `worktree-template-build-architecture`                                                                  |
+| **HEAD**              | `dc4082a`                                                                                               |
+| **Ahead of `main`**   | 81 commits; `main` untouched at `94478e4`                                                               |
+| **Tree**              | clean; rendered trees match a fresh render                                                              |
+| **Pushed / released** | no, and no — version `2.7.3` unbumped                                                                   |
 
 Do **not** use `EnterWorktree` or branch from `origin/main`; that ref does not
 contain this work. The branch descends from 34 commits recovered from dangling
@@ -21,9 +21,9 @@ objects — never rebase it.
 
 ## The long-form handoff
 
-**`docs/scratchpad/next.md` in the MAIN checkout is the detailed handoff** and is
-the first thing to read. It is gitignored, so it exists only there — not in this
-worktree, not in git. It carries the full state, the gate set, the review
+**`docs/scratchpad/next.md` in the MAIN checkout is the detailed handoff** and
+is the first thing to read. It is gitignored, so it exists only there — not in
+this worktree, not in git. It carries the full state, the gate set, the review
 priorities, both new work items with their traps, the open decisions and the
 parked scope. This drawer is the pointer; that file is the content.
 
