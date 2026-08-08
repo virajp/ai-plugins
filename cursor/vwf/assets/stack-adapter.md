@@ -24,6 +24,22 @@ states the mechanism.** vwf says a UI slice must have its screens rendered and
 scanned; it must never say "Playwright" or "golden tests". If a vwf file names a
 tool, that naming is a bug in this contract.
 
+### The two deliberate exceptions
+
+Both are **recognition, not prescription** — vwf naming a tool in order to read
+someone else's repo, never to tell them what to use. Any third case is a bug.
+
+1. **This paragraph.** The rule cannot be stated without an example of what it
+   forbids.
+2. **The `readme` skill's scan lists.** It documents a repo it did not choose,
+   so it has to recognise what is already there. The lists are open-ended and
+   carry no preference; a tool absent from them is a gap in recognition, not a
+   verdict on the tool.
+
+Everything else that reads a repo — topology detection, harness detection —
+resolves through the installed stack plugins instead, and degrades to `unknown`
+rather than failing on a language nobody has written a plugin for.
+
 ## Configuration
 
 Two different things are configured, at two different scopes, and conflating
@@ -166,20 +182,21 @@ gap that reaches the final human gate, never a silent downgrade to a code-only
 review. What counts as "rendered" is the plugin's call.
 
 **A stack plugin with no UI stack ships no `-ux-gate` skill**, and vwf never
-calls it — a `gcp` or `temporal` project has no screens.
+calls it — a project with no UI surface has no screens.
 
 ## Writing a stack plugin
 
-1. `plugins/<name>/.claude-plugin/plugin.json` — `name`, plus `dependencies` for
-   any plugin whose language it builds on (`effect` → `typescript`).
+1. `<name>/plugin.yaml` — the neutral manifest: `name`, plus `dependencies` for
+   any plugin whose language it builds on.
 2. `skills/<name>-stack-menu/SKILL.md` and
-   `skills/<name>-stack-template/SKILL.md`, both
-   `disable-model-invocation: false`.
+   `skills/<name>-stack-template/SKILL.md`, both **`invocation: both`**. A
+   `user` skill cannot be invoked by vwf and the failure is silent.
 3. `skills/<name>-ux-gate/SKILL.md` only if the plugin owns a UI stack.
 4. `stacks/<axis>/<slug>.md` — the templates themselves, in the plugin's own
    tree. Their shape is the plugin's business; only the payload is contracted.
-5. Register in `.claude-plugin/marketplace.json` and in the installer's
-   `PLUGINS`, per the repo's CLAUDE.md.
+
+There is no registration step: the marketplace manifest is generated from the
+manifests, so adding the plugin is the registration.
 
 Nothing is added to vwf. A new stack — a language, a cloud, a framework — never
 touches this plugin again, which is the whole point.

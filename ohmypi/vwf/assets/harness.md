@@ -9,40 +9,38 @@ re-verified cheaply when a cycle needs it.
 
 ## Capabilities
 
-| Capability    | Required when                                   | Canonical convention                                         |
-| ------------- | ----------------------------------------------- | ------------------------------------------------------------ |
-| `dev`         | a UI project exists (`site` or `frontend` role) | a `dev` task/script that boots the project locally           |
-| `e2e_local`   | any flow carries acceptance criteria            | a `test:e2e` task/script running E2E against the local stack |
-| `local_stack` | `e2e_local` needs backing services              | Docker-composed emulators + `wait-on` readiness gates        |
-| `e2e_staging` | flows have criteria **and** a deploy target     | a `test:e2e:staging` task/script targeting a deployed env    |
-| `health`      | a cloud project (`service`/`fullstack` role)    | a `GET /health` (or documented readiness) endpoint           |
-| `screenshots` | a **web** UI project (`site`/`fullstack` role)  | Playwright runnable via the repo's package manager           |
-| `goldens`     | a **native** `frontend` project                 | golden/snapshot tests + the platform's a11y assertions       |
+| Capability    | Required when                                   | Canonical convention                                          |
+| ------------- | ----------------------------------------------- | ------------------------------------------------------------- |
+| `dev`         | a UI project exists (`site` or `frontend` role) | a `dev` task/script that boots the project locally            |
+| `e2e_local`   | any flow carries acceptance criteria            | a `test:e2e` task/script running E2E against the local stack  |
+| `local_stack` | `e2e_local` needs backing services              | the backing services, behind a **deterministic ready signal** |
+| `e2e_staging` | flows have criteria **and** a deploy target     | a `test:e2e:staging` task/script targeting a deployed env     |
+| `health`      | a cloud project (`service`/`fullstack` role)    | a `GET /health` (or documented readiness) endpoint            |
+| `screenshots` | a **web** UI project (`site`/`fullstack` role)  | a repeatable way to render a screen and scan it               |
+| `goldens`     | a **native** `frontend` project                 | a repeatable visual check + the platform's a11y assertions    |
 
-Reference implementations live in the stack docs — the monorepo tooling doc
-(compose stack, wait-on, task library) and the per-type docs (service test
-modes, site dev server). A repo may satisfy a capability under a **non-canonical
-name**; detection records what it found — the convention is the default, not a
-straitjacket.
+Reference implementations live in the **stack plugins**, not here. A repo may
+satisfy a capability under a **non-canonical name**; detection records what it
+found — the convention is the default, not a straitjacket.
 
-**`local_stack` is the one exception.** Its *task name* may vary like any other,
-but its *mechanism* may not: when a repo needs a local stack at all, it must be
-**Docker-composed services behind `wait-on` readiness gates**. An alternative
-container runtime or an ad-hoc readiness sleep is a finding, not a recorded
-variant — the acceptance verifier's reliability depends on a deterministic ready
-signal. A product whose `e2e_local` needs no backing services never needs a
-local stack, and Docker is not required of it.
+**`local_stack` carries one requirement beyond its task name**, and it is a
+requirement, not a mechanism: the stack must come up behind a **deterministic
+readiness signal** the acceptance verifier can gate on. A fixed sleep is a
+finding, because it makes the verifier's result a race rather than an
+observation. *How* the services are started and *how* readiness is signalled are
+the stack plugin's business. A product whose `e2e_local` needs no backing
+services never needs a local stack at all.
 
 ## Detection (used by `/skill:setup`)
 
-Per capability: check mise tasks (`mise tasks`) and package scripts for the
-canonical (then near-canonical) names; for `local_stack`, a compose file plus
-`wait-on`/readiness config; for `health`, a health route in the service's
-routing or deploy manifest; for `screenshots`, a web UI project on a stack where
-Playwright can run; for `goldens`, a golden/snapshot test target in the native
-project's test setup (`flutter test --tags golden`, a Compose screenshot task,
-an XCUITest snapshot scheme). Record each as `true` / `false` / `n/a` (not
-required for this topology) in the stamp:
+Per capability: check the repo's task runner and package scripts for the
+canonical (then near-canonical) names; for `local_stack`, a service definition
+plus its readiness config; for `health`, a health route in the service's routing
+or deploy manifest; for `screenshots` and `goldens`, the visual-check target the
+project's own stack provides. **What that target looks like is the stack
+plugin's answer, not vwf's** — ask its `-stack-template` skill rather than
+guessing at a tool. Record each as `true` / `false` / `n/a` (not required for
+this topology) in the stamp:
 
 ```yaml
 # .config/vwf.yaml — the vwf config (see the vwf-config asset)

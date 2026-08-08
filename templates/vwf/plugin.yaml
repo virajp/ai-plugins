@@ -41,12 +41,24 @@ dependencies:
   # skill vwf cannot see fails SILENTLY — indistinguishable from one that ran
   # and returned nothing.
   - devtools
+# Binaries that must be on PATH, which is a different claim from depending on
+# the plugin that documents them. All four are tools vwf itself executes.
 requires:
+  # rtk backs vwf's Bash hook; graphify builds the knowledge graph vwf enforces
+  # at its own entry gate; uv is graphify's Python runtime. AI tooling, not dev
+  # tooling — they do not move to devtools.
   - rtk
   - graphify
-  - mise
-  - pnpm
   - uv
+  # /vwf:doctor escalates a missing mise to blocking, so vwf requires the binary
+  # even though the devtools plugin owns the mise doctrine skill.
+  - mise
+  # vwf launches the context7 MCP server as `pnpm dlx @upstash/context7-mcp`, so
+  # pnpm is a runtime need here, not a JS opinion — same reasoning as mise
+  # above. Dropping it would leave the server failing to start with no error,
+  # since an un-gated missing binary is silent. vwf's prose still names no
+  # package manager.
+  - pnpm
 mcpServers:
   mempalace:
     transport: http

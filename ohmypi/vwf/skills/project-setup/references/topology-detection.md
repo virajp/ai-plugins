@@ -5,11 +5,17 @@ MCQ.
 
 **Which topology** (`repo` | `monorepo` | `polyrepo`):
 
-- `pnpm-workspace.yaml`, a `workspaces` field (npm/yarn/bun), `turbo.json`, or
-  `nx.json` → **monorepo**.
-- a single `package.json` / `pubspec.yaml` / `build.gradle(.kts)` /
-  `Package.swift` at the root with no workspace globs → **repo** (or, inside a
+- a **workspace declaration** — a manifest listing member globs, or a
+  task-runner config spanning several projects → **monorepo**.
+- a **single root manifest** with no workspace globs → **repo** (or, inside a
   parent, a polyrepo member).
+
+Manifests are language-specific and vwf holds no list of them. Recognise the
+manifest of any language a **stack plugin** in the config's `stacks:` roster
+declares, and treat any other root manifest as a manifest all the same — a
+project in a language nobody has written a plugin for is still a project.
+**An unrecognised manifest never fails detection**; it classifies on the
+structural signals above, and the language is recorded verbatim as `unknown`.
 - a `.gitmodules` naming child repos (child dirs carrying their own `.git`) →
   **polyrepo**: a parent repo holding the vwf docs, with each child classified
   on its own signals. See
@@ -41,7 +47,7 @@ exactly one, in the registry's `role` field.
   makes the design system mandatory. SSR alone does not make a site fullstack.
 - **`frontend`** — a client-side app (mobile / tablet / desktop / auto). Also
   makes the design system mandatory. Synonym: `app`.
-- **`iac`** — an IaC project (Pulumi, Terraform, …). Registered, but exempt from
+- **`iac`** — an infrastructure-as-code project. Registered, but exempt from
   blueprint coverage, and **always its own repo** — never a directory inside
   another project's (`%%AI_PLUGINS_ROOT%%/assets/topologies/`). Synonym: `infra`.
 

@@ -2,8 +2,8 @@
 
 Every product has **two user classes**: **customers** (the product's users) and
 **operators** (the people who run it). The default contract below is the
-code-independent layer; the realization (Firebase Auth, an `operators` datastore
-collection) lives in the `service` and `site` reference-stack docs.
+code-independent layer; the realization — an identity provider plus an
+`operators` record in the datastore — lives in the project's stack templates.
 
 ## Default contract
 

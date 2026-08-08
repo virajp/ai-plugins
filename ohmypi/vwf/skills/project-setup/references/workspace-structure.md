@@ -58,28 +58,24 @@ projects, and recomputes the coverage stamp without them.
 
 ## Stack templates (a menu)
 
-Each role has one or more templates, **all of them shipped by a plugin rather
-than by vwf**. What ships today:
+**vwf ships no stack templates and holds no list of them.** Every template comes
+from a stack plugin, and the authoritative list is the plugin's own
+`<plugin>-stack-menu` — ask it, per the stack-adapter contract
+(`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`). A table here would be a second copy
+that drifts the moment a plugin adds a template, which is exactly what this
+effort removed.
 
-| Role        | Template                                                    | Stack                                          |
-| ----------- | ------------------------------------------------------------- | ---------------------------------------------- |
-| `packages`  | `typescript-effect` — in the **typescript** plugin          | TypeScript · Effect-TS                         |
-| `service`   | `typescript-effect-hono` — in the **typescript** plugin     | TypeScript · Hono · Effect-TS                  |
-| `worker`    | `typescript-effect-temporal` — in the **typescript** plugin | TypeScript · Temporal · Effect-TS              |
-| `site`      | `typescript-astro-react` — in the **typescript** plugin     | TypeScript · Astro (SSR) · React               |
-| `fullstack` | `typescript-hono-refine` — in the **typescript** plugin     | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend`  | `dart-flutter` — in the **flutter** plugin                  | Dart · Flutter                                 |
-| `frontend`  | `typescript-effect-cli` — in the **typescript** plugin      | TypeScript · @effect/cli (platform `cli`)      |
-| `iac`       | `typescript-pulumi` — in the **typescript** plugin          | TypeScript · Pulumi                            |
+Four axes compose, at three scopes:
 
-Three more axes compose with the project one — pick one of each, and pick them
-**per project** (`backing`, `deploy`) or per repo (`repo`):
+| Axis      | Scope       | Comes from                                                        |
+| --------- | ----------- | ------------------------------------------------------------------ |
+| `project` | per project | a **language** plugin, per the project's `role`                   |
+| `backing` | per project | a **capability** plugin's contract + a **cloud** plugin's flavour |
+| `deploy`  | per project | a **cloud** plugin, or a language plugin for a published artifact |
+| `repo`    | per repo    | a **language** or **tooling** plugin                              |
 
-| Axis      | Scope       | Ships today                                                                                                                                                                                                     |
-| --------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `backing` | per project | none here — a **capability** plugin ships the contract and its own provider (`datastore`, `identity`, `observability`, `orchestration`, `object-storage`), a **cloud** plugin the managed flavour               |
-| `deploy`  | per project | `npm-package` (in the **typescript** plugin) · the hosted targets come from a **cloud** plugin (`gcp`, `cloudflare`)                                                                                            |
-| `repo`    | per repo    | `pnpm-turbo` · `bun` — both in the **typescript** plugin                                                                                                                                                        |
+Which plugins are asked is the product-wide `stacks:` roster in
+`.config/vwf.yaml`; which template each project picks is per project.
 
 **One entry per role is not a default.** `/skill:architecture` presents the menu
 for the project's role and the user picks, always — plus an **other (describe)**

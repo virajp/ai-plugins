@@ -44,5 +44,5 @@ Cross-cutting token: `background: durable-worker-ephemeral-service`.
 - `conventions.md#background` (or the existing `#integrations` workflow note)
   records the placement rule once; each flow's Background Jobs carries the
   worker-placed jobs; fire-and-forget effects are visible on the flow steps.
-  Realization: Temporal client/worker patterns in the `service` and `worker`
-  reference-stack docs.
+  Realization: the durable-execution patterns the project's orchestration and
+  worker stack templates describe.

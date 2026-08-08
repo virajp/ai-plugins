@@ -1,12 +1,12 @@
-// Generated from templates/vwf/hooks/hooks.yaml — do not edit.
+// Generated from templates/typescript/hooks/hooks.yaml — do not edit.
 import { spawn } from "node:child_process";
 
-const COMMAND = ["%%AI_PLUGINS_ROOT:vwf%%/hooks/npm-normalize.sh"];
+const COMMAND = ["%%AI_PLUGINS_ROOT:typescript%%/hooks/npm-normalize.sh"];
 const MATCHER = "bash";
 const ACTION = "rewrite";
 const CORRECTION = "This repo uses pnpm or bun, never npm. Reissue the command with the repo's package manager.";
 
-export const vwfNpmNormalize = async ({ directory }) => ({
+export const typescriptNpmNormalize = async ({ directory }) => ({
   "tool.execute.before": async (input, output) => {
     if (MATCHER !== null && input.tool !== MATCHER) {
       return;

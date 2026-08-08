@@ -41,9 +41,9 @@ integrations: true # external integration/secret exists → environment.md requi
 
 repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in polyrepo topology the parent and each member carry their own
   stack:
-    template: repo/<slug> # a template under assets/stacks/repo/, or `custom`
-    package_manager: <tool> # pnpm | bun ONLY, and only for JS/TS. A non-JS repo records its language's native tool (cargo, uv, pub), which was never a choice
-    tools: [] # open, lowercase-kebab — turborepo, dprint, mise, …
+    template: repo/<slug> # a repo-axis template from a stack plugin, or `custom`
+    package_manager: <tool> # only where the language has one; the repo template names the permitted values
+    tools: [] # open, lowercase-kebab — whatever the repo template names
 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
@@ -254,12 +254,11 @@ earlier than 65/90/80), never loosen.
      re-points from `<type>/<slug>` to `project/<role>/<slug>` (the templates
      moved under `assets/stacks/project/`). Add the product-wide **`backing`**
      and **`deploy`** blocks — this is the one step needing input, since the old
-     monolithic templates carried Firebase and Cloud Run implicitly. Default the
-     proposal to `backing: firebase` + `deploy: cloud-run` for a repo that was
-     on the old templates (that is what it was already running, undeclared), and
-     confirm rather than assume. A `frontend` project takes
+     monolithic templates carried a datastore and a host implicitly. Propose the
+     backing and deploy templates matching what the repo is already running,
+     read off its own config, and confirm rather than assume. A `frontend` project takes
      `deploy_template: n/a` — it ships through a store.
-  3. **`repo.stack.package_manager`** narrows to `pnpm | bun`. A repo recording
+  3. **`repo.stack.package_manager`** narrows to what the repo template permits. A repo recording
      `npm` is drift to fix; `cargo`/`uv`/`pub` were never a JS/TS choice and
      move to being implied by the language. Optionally add a per-project
      `package_manager` where a hybrid repo mixes the two.

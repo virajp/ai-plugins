@@ -1,0 +1,11 @@
+hooks:
+  - id: npm-normalize
+    event: preToolUse
+    matcher: Bash
+    action: rewrite
+    script: npm-normalize.sh
+    correction: This repo uses pnpm or bun, never npm. Reissue the command with
+      the
+      repo's package manager.
+    timeout: 5
+    async: false

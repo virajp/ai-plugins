@@ -51,8 +51,8 @@ identical whichever provider the publisher chose.
 
 A capability token answers *which* gate is open. Blueprint **prose** needs a
 noun for the same thing, and that noun must be as stack-agnostic as the token:
-the blueprint states that an order is written to **the datastore**, never to
-Firestore or Postgres.
+the blueprint states that an order is written to **the datastore**, never to a
+particular datastore product.
 
 This is enforced by construction, not by discipline: since blueprint-format 16
 the **registry carries no `stack`** — the concrete technology lives in

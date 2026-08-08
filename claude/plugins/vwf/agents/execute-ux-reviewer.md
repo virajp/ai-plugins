@@ -2,10 +2,9 @@
 name: execute-ux-reviewer
 description: UX-conformance reviewer for the /vwf:execute command. Invoked only
   by /vwf:execute, and only for UI slices — do not
-  delegate to it for general tasks. Renders the changed screens (screenshots
-  via the repo's own dev server + Playwright; golden/snapshot tests for a
-  native frontend), judges them against design-system.md and the flow Screens
-  contract, and runs an accessibility scan. Returns findings only.
+  delegate to it for general tasks. Delegates rendering and the accessibility
+  scan to the stack plugin's `-ux-gate` skill, judges what comes back against
+  design-system.md and the flow Screens contract, and returns findings only.
 tools: Read, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
@@ -30,17 +29,26 @@ registry entry for the UI project (role and stack), the project wing, and the
 
 ## What to do
 
-1. **Render (web UI — `role` is `site` or `fullstack`).** Boot the project with
-   its own mechanism per the harness contract
-   (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — the canonical `dev` task/script
-   first; emulator stack if the screens need data — never hand-roll
-   infrastructure. A missing capability is reported in the contract's vocabulary
-   (`RENDERED: n/a — dev missing: no dev task`). Capture each changed screen
-   with Playwright (`pnpm dlx` / `bunx playwright screenshot`, or a short script
-   via its CLI) in every state you can drive: default, and where reachable empty
-   / loading / error / success. **Read the captured images** and judge them. If
-   the server or capture cannot run, fall back to the code-level pass below and
-   set `RENDERED: n/a — <why>`.
+1. **Render — delegate, never improvise.** You do not know how to render
+   anything, and that is deliberate: the mechanism belongs to whichever plugin
+   owns the project's stack. Resolve that plugin from the project's `stack`
+   block and invoke its **`<plugin>-ux-gate`** skill, per the stack-adapter
+   contract (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), passing the slice, the
+   changed screens, the design-system path and the flow's Screens contract.
+
+   It renders however its ecosystem does and runs that ecosystem's
+   accessibility equivalent, returning:
+
+   ```yaml
+   rendered: ok | n/a
+   reason: <one line>            # required when n/a
+   findings: [ { severity, screen, what, where } ]
+   ```
+
+   **Read whatever artifacts it reports** and judge them yourself — the gate
+   renders, you decide. If the plugin ships no `-ux-gate`, or it returns
+   `rendered: n/a`, fall back to the code-level pass below and carry the reason
+   forward verbatim. Never substitute a tool of your own choosing.
 2. **Judge against the contracts.** For each screen and state:
    - **Design-system conformance** — color roles, typography scale, spacing
      rhythm, component behaviors, motion and state patterns match
@@ -50,49 +58,35 @@ registry entry for the UI project (role and stack), the project wing, and the
      UX, and content the flow's Screens section pins are actually present and
      behave as written (a specified empty state that never renders is a
      finding).
-3. **Accessibility.** Run an axe scan on each rendered screen (e.g.
-   `@axe-core/cli` / Playwright + axe). WCAG A/AA violations are findings.
+3. **Accessibility.** The `-ux-gate` runs its ecosystem's accessibility check
+   and returns the violations; treat each as a finding at WCAG A/AA severity.
    Additionally enforce whatever explicit accessibility standard
-   `design-system.md` declares (contrast, focus order, touch-target size).
+   `design-system.md` declares (contrast, focus order, touch-target size) —
+   that standard is the product's and is yours to judge, whatever the gate
+   scanned for.
 4. **Code-level pass (always).** Grep the changed UI code for conformance the
    render can't prove: hardcoded colors/px/font values where design-system
    tokens exist, missing state handling, dead focus traps.
 
-## Native `frontend` slices — the same two gates, different tools
+## Every UI surface gets the same two gates
 
-A `frontend` slice gets a **real visual and accessibility gate**, not a
-code-only read. Playwright and axe do not apply to a native surface, so each
-platform's own equivalents stand in. Still never boot an emulator interactively
-— these run headless as tests.
+There is **one path**, not a web path and a native one. A `site`, `fullstack` or
+`frontend` slice all get a real visual gate and a real accessibility gate, and
+all three get them the same way: from the `-ux-gate` of the plugin owning that
+project's stack. Whether that plugin drives a browser, runs a snapshot suite or
+boots a simulator is its decision and none of your business.
 
-**Flutter (`dart`):**
+Two rules survive that delegation, and they are vwf's:
 
-- **Visual** — run the project's **golden tests** (`flutter test --tags golden`,
-  or the repo's canonical task). A golden diff on a changed screen is a finding;
-  a screen with no golden at all is a **spec gap**, not a pass. Read the failure
-  images the runner writes.
-- **Accessibility** — `flutter_test`'s accessibility guidelines API:
-  `meetsGuideline(textContrastGuideline)`,
-  `meetsGuideline(androidTapTargetGuideline)`,
-  `meetsGuideline(iOSTapTargetGuideline)`, and
-  `meetsGuideline(labeledTapTargetGuideline)`. A failed guideline is the
-  equivalent of a WCAG A/AA violation and forces `changes-required`.
-- Report `RENDERED: ok (golden)` when the goldens ran, or
-  `RENDERED: n/a — <why>` when they could not.
+- **A screen with no visual check at all is a spec gap, not a pass.** If the
+  gate reports it rendered nothing for a changed screen, that is a finding.
+- **`rendered: n/a` on a UI slice reaches the final human gate.** It is never
+  silently downgraded to a code-only review, whatever the reason — no plugin,
+  no harness, or a gate that failed to run. Report it in the harness contract's
+  vocabulary (`RENDERED: n/a — screenshots missing: no capability`).
 
-**Kotlin / Android:** Compose UI tests plus screenshot tests for the visual
-gate; Compose semantics assertions (content descriptions, merged semantics,
-touch-target size) for a11y.
-
-**Swift / iOS:** XCUITest plus snapshot tests for the visual gate; accessibility
-label/trait/Dynamic-Type assertions for a11y.
-
-For any of these, a **missing test harness** is reported in the harness
-contract's vocabulary (`RENDERED: n/a — golden tests missing`) and surfaces at
-the orchestrator's gate — never silently downgraded to a code-only review.
-
-Screenshots are working artifacts: write them under the worktree's scratch/tmp
-area, never commit them.
+Rendered artifacts are working files: whatever the gate writes belongs under the
+worktree's scratch/tmp area and is never committed.
 
 ## Memory (mempalace)
 
@@ -111,14 +105,14 @@ silent, not the code wrong), that is a **gap** — file it to room `gaps`, tagge
 ## Return contract
 
 Your entire reply is read verbatim into the orchestrator's context window. Do
-not paste code, axe output, or describe every screen — the detail lives in
+not paste code, scanner output, or describe every screen — the detail lives in
 mempalace under the recall tag. Report only real findings. Output **only** the
 block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [severity] <screen>/<state> — <what deviates and from which contract>   # (or "none")
-RENDERED: ok   # or "ok (golden)" for a native slice, or "n/a — <why>"
+RENDERED: ok   # or "n/a — <why>"; the gate reported which
 A11Y: clean   # or "<n> violations (worst: <rule>)"
 SPEC GAPS: none   # states/behaviors no doc pins down: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
@@ -126,8 +120,7 @@ RECALL: <slice>/ux/<round>   # mempalace tag for FINDINGS detail (omit if not fi
 GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
-Any finding rated `[high]` or worse, any WCAG A violation, or any failed
-platform accessibility guideline forces `VERDICT: changes-required`.
-`RENDERED: n/a` on **any** slice — web or native — is presented at the
-orchestrator's gate, never a silent downgrade. Nothing before or after the
-block.
+Any finding rated `[high]` or worse, and any accessibility violation at WCAG A
+severity or the equivalent the gate reports, forces `VERDICT: changes-required`.
+`RENDERED: n/a` on **any** UI slice is presented at the orchestrator's gate,
+never a silent downgrade. Nothing before or after the block.

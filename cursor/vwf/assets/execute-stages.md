@@ -28,10 +28,9 @@ so one boot of the local stack serves both. Each is conditional — skipped
 - `acceptance` — only when the plan's "Acceptance criteria (from blueprint)"
   section carries criteria (skip on `none — no flow touched`).
 - `ux` — only when the slice changes screens in a UI project (`role` is `site`,
-  `fullstack` or `frontend`). Web UI is rendered with Playwright and scanned
-  with axe; a **native** `frontend` gets the equivalent gate from its own
-  toolchain — golden/snapshot tests plus the platform's accessibility assertions
-  — never a code-only read.
+  `fullstack` or `frontend`). Every UI surface gets a real visual gate and a
+  real accessibility gate, delivered by the stack plugin's `-ux-gate` — never a
+  code-only read.
 
 Per-stage dispatch contract:
 
@@ -86,12 +85,10 @@ Per-stage dispatch contract:
   Screens section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`),
   the UI project's registry entry, the wing, and the **slice** and **round
   number**). For a **web** slice it renders the changed screens via the repo's
-  own dev server + Playwright (per state where drivable) and runs an **axe**
-  accessibility scan (WCAG A/AA violations are findings). For a **native**
-  `frontend` slice it runs that platform's equivalents instead — golden/snapshot
-  tests plus the platform's accessibility assertions (for Flutter,
-  `flutter_test`'s `meetsGuideline` checks), which carry the same weight as a
-  WCAG violation. Either way it judges against the design system and the Screens
+  stack plugin's `-ux-gate`, which renders each changed screen and runs its
+  ecosystem's accessibility scan; violations come back at WCAG A/AA severity
+  whatever the ecosystem, so one rule applies across every stack. The reviewer
+  itself never renders. Either way it judges against the design system and the Screens
   contract and adds a code-level token/state pass. Findings loop back to `code`
   like review findings; `RENDERED: n/a` on **any** UI slice is recorded as a gap
   and reported at the final gate.

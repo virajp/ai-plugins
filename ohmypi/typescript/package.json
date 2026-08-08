@@ -1,0 +1,10 @@
+{
+  "name": "typescript",
+  "omp": {
+    "extensions": [
+      "./hooks/npm-normalize.ts"
+    ]
+  },
+  "private": true,
+  "version": "2.0.0"
+}

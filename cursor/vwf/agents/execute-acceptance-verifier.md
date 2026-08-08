@@ -46,8 +46,8 @@ staging-capable test).
    contract (`%%AI_PLUGINS_ROOT%%/assets/harness.md`): the canonical
    `test:e2e` mise task first, then near-canonical names (`all:e2e`, package
    scripts of the projects involved). If the harness needs the local stack
-   (emulators, dev servers), use the repo's own boot mechanism (docker compose
-   task, `wait-on` gates) — never hand-roll infrastructure. Run the mapped tests
+   (backing services, dev servers), use the repo's own boot mechanism and wait
+   on its readiness signal — never hand-roll infrastructure. Run the mapped tests
    (the full e2e suite when scoping is impractical) and capture per-criterion
    results.
 3. **Classify each criterion:**
@@ -59,7 +59,7 @@ staging-capable test).
 4. **No harness at all** (no e2e task, no runnable stack): do not improvise —
    report `ACCEPTANCE: n/a`, naming what is missing in the harness-contract
    vocabulary (e.g. `n/a — e2e_local missing: no test:e2e task`,
-   `local_stack missing: no compose/wait-on`), and let the orchestrator's gate
+   `local_stack missing: no readiness signal`), and let the orchestrator's gate
    decide.
 
 ## Memory (mempalace)

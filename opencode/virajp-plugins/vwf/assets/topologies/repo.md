@@ -36,7 +36,7 @@ the one structural rule vwf enforces rather than offers: `doctor` raises a
 violation as **blocking**, and `/vwf-setup` offers a consent-gated restructure.
 The reasoning — blast radius, credentials, lifecycle, cadence — is in
 [monorepo](monorepo.md), and holds identically here; a smaller product does not
-make an accidental `terraform destroy` smaller.
+make an accidental teardown of the live environment smaller.
 
 ## When this is the right shape
 

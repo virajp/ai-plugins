@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "%%AI_PLUGINS_ROOT%%/hooks/npm-normalize.cursor.sh",
+        "timeout": 5
+      }
+    ]
+  },
+  "version": 1
+}

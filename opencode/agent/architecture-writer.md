@@ -112,7 +112,7 @@ A project carries exactly one **`role`**. Seven tokens:
 | `site`      | Web UI that calls someone else's API                     | `page`             | cloud     |
 | `fullstack` | Web UI **and** its own API, one deployable               | `page`             | cloud     |
 | `frontend`  | Client-side app (mobile / tablet / desktop / auto / cli) | `entity`           | device    |
-| `iac`       | Infrastructure-as-code (Pulumi, Terraform, …)            | `module`           | n/a       |
+| `iac`       | Infrastructure-as-code                                   | `module`           | n/a       |
 
 `service`, `worker`, `packages`, `site`, `fullstack` and `iac` are
 cloud-hosted or cloud-targeting; `frontend` runs on the client and ships through

@@ -54,5 +54,5 @@ jobs:
 
       # The BSD-sed portability guarantee. Runs on GNU sed here, which is the
       # point: the script has to work under both.
-      - name: vwf hook tests
-        run: mise run vwf:test
+      - name: typescript hook tests
+        run: mise run typescript:test

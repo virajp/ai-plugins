@@ -112,16 +112,22 @@ describe("agents", () => {
 });
 
 describe("hooks", () => {
+  // The npm-normalize hook lives in `typescript`, not vwf: a JS/TS rewrite has
+  // no place in a language-agnostic workflow plugin, and it fires on every Bash
+  // call in every repo. vwf keeps only the rtk observer.
   it("maps preToolUse/Bash onto beforeShellExecution", () => {
-    const hooks = JSON.parse(text("vwf/hooks/hooks.json"));
+    const hooks = JSON.parse(text("typescript/hooks/hooks.json"));
     expect(hooks.version).toBe(1);
-    expect(hooks.hooks.beforeShellExecution).toHaveLength(2);
+    expect(hooks.hooks.beforeShellExecution).toHaveLength(1);
     expect(hooks.hooks.beforeShellExecution[0].command)
       .toBe("%%AI_PLUGINS_ROOT%%/hooks/npm-normalize.cursor.sh");
+
+    const vwfHooks = JSON.parse(text("vwf/hooks/hooks.json"));
+    expect(vwfHooks.hooks.beforeShellExecution).toHaveLength(1);
   });
 
   it("degrades the rewrite hook to deny-plus-correction", () => {
-    const wrapper = text("vwf/hooks/npm-normalize.cursor.sh");
+    const wrapper = text("typescript/hooks/npm-normalize.cursor.sh");
     // Runs the neutral script, then answers in Cursor's vocabulary.
     expect(wrapper).toContain("npm-normalize.sh");
     expect(wrapper).toContain("permission: \"deny\"");
@@ -129,12 +135,12 @@ describe("hooks", () => {
     expect(
       emission
         .outputs
-        .find(o => o.path === "vwf/hooks/npm-normalize.cursor.sh")
+        .find(o => o.path === "typescript/hooks/npm-normalize.cursor.sh")
         ?.executable,
     )
       .toBe(true);
 
-    const gap = gapsFor("hookRewrite").find(g => g.plugin === "vwf");
+    const gap = gapsFor("hookRewrite").find(g => g.plugin === "typescript");
     expect(gap?.severity).toBe("degraded");
   });
 });

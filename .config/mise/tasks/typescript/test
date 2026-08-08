@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-#MISE description="Unit-test the vwf npm-normalize hook (table-driven)"
+#MISE description="Unit-test the typescript npm-normalize hook (table-driven)"
 #MISE dir="{{ config_root }}"
 
-# Feeds crafted PreToolUse payloads through templates/vwf/hooks/npm-normalize.sh
-# and asserts the rewritten command, for BOTH package managers vwf allows. Each
+# Feeds crafted PreToolUse payloads through templates/typescript/hooks/npm-normalize.sh
+# and asserts the rewritten command, for BOTH package managers this plugin allows. Each
 # table runs inside a temp dir seeded with the lockfile that selects the
 # manager, so the resolution path is exercised too — not just the rewrite. Runs
 # under the system sed (BSD sed on macOS), the portability guarantee CLAUDE.md
@@ -17,7 +17,7 @@ cd "$MISE_PROJECT_ROOT"
 # The authored script. Hook scripts are copied byte-for-byte rather than
 # rendered (only .md goes through the template engine), so testing the source
 # tests exactly what every target ships.
-HOOK="templates/vwf/hooks/npm-normalize.sh"
+HOOK="templates/typescript/hooks/npm-normalize.sh"
 
 command -v jq >/dev/null 2>&1 || { print_error "jq is required to run the hook tests"; exit 1; }
 [[ -f "$HOOK" ]] || { print_error "Hook not found: $HOOK"; exit 1; }
@@ -96,8 +96,8 @@ run_table "bun (bun.lock)" "bun.lock" "${bun_cases[@]}"
 run_table "no lockfile → pnpm default" "" "${pnpm_cases[@]}"
 
 if [[ "$fail" -ne 0 ]]; then
-  print_error "vwf hook tests failed"
+  print_error "npm-normalize hook tests failed"
   exit 1
 fi
 
-print_header "All vwf hook tests passed ($total cases)!"
+print_header "All npm-normalize hook tests passed ($total cases)!"

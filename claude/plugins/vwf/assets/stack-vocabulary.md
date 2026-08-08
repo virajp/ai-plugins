@@ -1,39 +1,37 @@
 # Stack Vocabulary
 
-The **closed language vocabulary** every stack template and every
-`.config/vwf.yaml` `stack.languages` entry draws from, plus the per-language
-facts `/vwf:doctor` checks against. Frameworks and dependencies are **open** —
-any lowercase-kebab token is valid — because no useful check exists for them
-beyond presence in a manifest. Languages are closed precisely so the LSP and
-toolchain lookups below can never miss on a spelling.
+The **shape of a language fact** — what vwf needs to know about any language, and
+what it does when it knows nothing. vwf holds no list of languages. Frameworks
+and dependencies are open too: any lowercase-kebab token is valid, because no
+useful check exists for them beyond presence in a manifest.
 
-## Languages
+## Languages — an open vocabulary
 
-| Token        | LSP shipped here    | Manifest                            | mise tool |
-| ------------ | ------------------- | ----------------------------------- | --------- |
-| `typescript` | `typescript` plugin | `package.json`                      | `node`    |
-| `javascript` | `typescript` plugin | `package.json`                      | `node`    |
-| `dart`       | `flutter` plugin    | `pubspec.yaml`                      | `flutter` |
-| `kotlin`     | `flutter` plugin    | `build.gradle` / `build.gradle.kts` | `java`    |
-| `swift`      | `flutter` plugin    | `Package.swift` / `ios/Podfile`     | —         |
+**vwf names no language.** A language token is whatever a stack template
+declares, and the facts `/vwf:doctor` checks are supplied by the
+**language plugin** that owns it, never by a table here. This file defines only
+what such a fact consists of:
 
-**The table is scoped to what this marketplace actually supports.** Every row
-ships an LSP; there are no dead rows. `kotlin` and `swift` are **standalone
-project languages**, not merely Flutter's `optional_languages` — a native
-Android or iOS app is a `frontend` project in its own right. `swift` has no mise
-tool because its toolchain comes from Xcode, which mise does not manage.
+| Field        | Means                                                                    |
+| ------------ | ------------------------------------------------------------------------ |
+| token        | The lowercase-kebab name the template's `languages:` frontmatter carries |
+| LSP plugin   | The `virajp-plugins` plugin whose `lspServers` block covers the language |
+| manifest     | The file whose presence identifies a project of that language           |
+| toolchain    | The mise tool that installs it, where mise manages one                   |
 
-**"LSP shipped here"** names the `virajp-plugins` plugin whose `lspServers`
-block covers the language — the thing `/vwf:doctor` looks for in
-`claude plugin list`. A future row may carry `none`; that is **not a failure**,
-and doctor reports it as *unavailable in this marketplace* rather than
-*missing*, because there is no install command to suggest.
+Any of these may legitimately be absent. A language whose toolchain does not
+come from mise has none; a language with no LSP in this marketplace is reported
+as *unavailable here* rather than *missing*, because there is no install command
+to suggest. Neither is a failure.
 
-A language outside this table is recorded verbatim and reported by doctor as
-**unknown** — it checks nothing for it, and says so. That fallback is what keeps
-an unsupported language usable rather than blocked. Extending vwf means adding a
-row here, not improvising a token per repo; the table is deliberately narrow
-today and is expected to grow as templates and LSP coverage arrive.
+**An unrecognised token degrades, it never blocks.** vwf records it verbatim,
+`doctor` checks nothing for it and says so, and topology detection classifies
+the repo on its other signals rather than failing. That is what makes a language
+nobody has written a plugin for usable today — the fallback is the feature, not
+a gap waiting to be filled by a longer table.
+
+Adding real support for a language means **shipping a plugin for it**, which is
+what supplies the rows this file used to hardcode. It does not mean editing vwf.
 
 ## The four axes
 
@@ -53,27 +51,27 @@ The templates themselves live in the **stack plugins**, never in vwf
 first three are pinned **per project** — a product may run its site on one cloud
 and its API on another.
 
-The split exists because these vary **independently**: the same Hono + Effect
-service runs against Firebase or Postgres, on Cloud Run or any container host.
-Folding them into one document is what made the old templates 95octane-specific
-while their frontmatter only ever declared the language and framework.
+The split exists because these vary **independently**: one service framework
+runs against any datastore, on any host. Folding them into one document is what
+made the old templates specific to a single product while their frontmatter only
+ever declared the language and framework.
 
 The axes are genuinely orthogonal, so nothing merges and no precedence rule is
 needed. Where one axis must refer to another it names the *axis*, not a vendor —
 a project template says "the identity provider the backing axis selects", never
-"Firebase Auth".
+a provider by name.
 
 ## Template frontmatter
 
-Every **project** template at `assets/stacks/project/<role>/<slug>.md` opens
-with:
+Every **project** template a stack plugin ships, at
+`<plugin>/stacks/project/<role>/<slug>.md`, opens with:
 
 ```yaml
 ---
 role: <registry role> # service | worker | packages | site | fullstack | frontend | iac
 name: <display name> # what the menu shows
-languages: [<token>] # closed vocabulary above; may be empty when the language is outside it
-optional_languages: [] # admitted by the template, not required — e.g. flutter's kotlin/swift
+languages: [<token>] # open; the plugin owning the language defines its facts
+optional_languages: [] # admitted by the template, not required — e.g. a mobile template's platform languages
 frameworks: [] # open, lowercase-kebab; 0..n
 dependencies: [] # open, lowercase-kebab; the few that characterize the stack
 ---
@@ -86,7 +84,7 @@ dependencies: [] # open, lowercase-kebab; the few that characterize the stack
 ---
 axis: backing
 name: <display name>
-capabilities: [] # from assets/capability-vocabulary.md
+capabilities: [] # from ${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md
 local_stack: <mechanism> # how the local_stack harness capability is satisfied
 ---
 ```
@@ -109,7 +107,7 @@ private_plane: <mechanism> # how a non-public project is kept off the internet
 scope: repo
 name: <display name>
 topologies: [monorepo, workspace] # which topologies this template suits
-package_manager: <pnpm | bun> # JS/TS only; see the vwf-config asset
+package_manager: <token> # only where the language has one; see the vwf-config asset
 tools: [] # the tooling that defines the template
 ---
 ```

@@ -217,15 +217,19 @@ describe("servers", () => {
 
 describe("hooks", () => {
   it("wires each shipped hook as an extension module", () => {
-    const pkg = JSON.parse(text("vwf/package.json")) as {
+    // The two hooks live in different plugins: npm-normalize is JS/TS-specific
+    // and belongs to `typescript`; vwf keeps only the rtk observer.
+    const vwfPkg = JSON.parse(text("vwf/package.json")) as {
       omp: { extensions: string[]; };
     };
-    expect(pkg.omp.extensions).toEqual([
-      "./hooks/npm-normalize.ts",
-      "./hooks/rtk.ts",
-    ]);
+    expect(vwfPkg.omp.extensions).toEqual(["./hooks/rtk.ts"]);
 
-    const rewrite = text("vwf/hooks/npm-normalize.ts");
+    const tsPkg = JSON.parse(text("typescript/package.json")) as {
+      omp: { extensions: string[]; };
+    };
+    expect(tsPkg.omp.extensions).toEqual(["./hooks/npm-normalize.ts"]);
+
+    const rewrite = text("typescript/hooks/npm-normalize.ts");
     // The rewrite degrades to a block, and the correction is what the model is
     // given to act on — a wordless block would be unusable.
     expect(rewrite).toContain("block: true");
@@ -250,7 +254,7 @@ describe("gaps", () => {
 
     const rewrite = find("hookRewrite");
     expect(rewrite).toHaveLength(1);
-    expect(rewrite[0]?.plugin).toBe("vwf");
+    expect(rewrite[0]?.plugin).toBe("typescript");
     expect(rewrite[0]?.severity).toBe("degraded");
   });
 

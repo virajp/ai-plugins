@@ -179,16 +179,21 @@ describe("config fragments", () => {
 
 describe("hooks", () => {
   it("wraps each hook as a JS plugin module", () => {
-    const hook = text("plugin/vwf-npm-normalize.js");
+    // npm-normalize belongs to `typescript` — a JS/TS rewrite has no place in a
+    // language-agnostic workflow plugin. The flat `plugin/` dir is global, so
+    // the filename carries the owner and that owner changed with it.
+    const hook = text("plugin/typescript-npm-normalize.js");
     expect(hook).toContain("\"tool.execute.before\"");
-    expect(hook).toContain("export const vwfNpmNormalize");
+    expect(hook).toContain("export const typescriptNpmNormalize");
     // The rewrite lands natively — `output.args` is mutable on this target.
     expect(hook).toContain("Object.assign(args, decision.updatedInput)");
     expect(hook).toContain(
-      "%%AI_PLUGINS_ROOT:vwf%%/hooks/npm-normalize.sh",
+      "%%AI_PLUGINS_ROOT:typescript%%/hooks/npm-normalize.sh",
     );
     // The script itself still ships, and keeps its executable bit.
-    const script = byPath.get("virajp-plugins/vwf/hooks/npm-normalize.sh");
+    const script = byPath.get(
+      "virajp-plugins/typescript/hooks/npm-normalize.sh",
+    );
     expect(script?.executable).toBe(true);
   });
 

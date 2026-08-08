@@ -100,8 +100,8 @@ Overview and topology — ask in sequence:
 
 Hosting and deployment — ask in sequence:
 
-- Where each project runs (e.g. Cloud Run, App Store/Play Store).
-- How each project ships (e.g. GitHub Actions + Cloud Build, manual).
+- Where each project runs — a hosted runtime, an app store, an edge network.
+- How each project ships — an automated pipeline, or by hand.
 
 ### 3b — Project Registry
 
@@ -262,12 +262,12 @@ concern **not applicable** to omit it from the doc entirely.
 
 | Concern         | Example selection                  |
 | --------------- | ---------------------------------- |
-| `auth`          | `firebase-id-token`                |
-| `errors`        | `coded-envelope`                   |
-| `observability` | `opentelemetry-grafana`            |
-| `config`        | `doppler-secrets`                  |
-| `testing`       | `emulator-backed`                  |
-| `integrations`  | `[firebase, google-maps-platform]` |
+| `auth`          | `<issuer>-id-token`         |
+| `errors`        | `coded-envelope`            |
+| `observability` | `otlp-to-<sink>`            |
+| `config`        | `<manager>-secrets`         |
+| `testing`       | `emulator-backed`           |
+| `integrations`  | `[<service>, <service>]`    |
 
 **Foundations checklist.** Then walk the **product-foundations** skill's
 checklist — users & operators, observability, audit logs, change logs,
