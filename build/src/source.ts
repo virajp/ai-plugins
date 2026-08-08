@@ -105,7 +105,7 @@ export function readPlugin(root: string): PluginSource {
     : [];
 
   // Every bundled file a skill or agent does not already own. Deliberately
-  // generic: `assets/` is the common case, but `effect` and `gcp` keep their
+  // generic: `assets/` is the common case, but `typescript` and `gcp` keep their
   // stack templates in a top-level `stacks/`, and hardcoding a directory list
   // would silently drop them. Hook scripts come through here too, so they keep
   // their mode bits.

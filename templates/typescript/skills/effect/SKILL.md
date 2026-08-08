@@ -3,7 +3,7 @@ name: effect
 description: Effect-TS development — writing effects, composing and running
   them, and testing them. Auto-applies when editing any TypeScript file. Read the
   reference matching your task; the TypeScript coding baseline lives in the
-  `typescript` skill and still applies.
+  sibling `typescript` skill and still applies.
 invocation: model
 paths:
   - "**/*.ts"
