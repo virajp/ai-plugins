@@ -1,0 +1,23 @@
+name: identity
+version: 0.1.0
+description: "Identity capability plugin for vwf — the neutral contract every
+  identity provider must satisfy (token verification at the edge of every
+  authenticated route, what a token claim may and may not carry, session and
+  revocation shape, the operator plane) plus the one provider that belongs to
+  no cloud: any **OIDC** issuer, self-hosted or managed. Managed flavours —
+  Firebase Auth, Identity Platform, and the rest — come from the project's own
+  cloud plugin, not from here. Implements the vwf stack-adapter contract."
+category: development
+tags:
+  - identity
+  - auth
+  - oidc
+  - authorization
+  - capability
+  - vwf-stack-adapter
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+optIn: true
