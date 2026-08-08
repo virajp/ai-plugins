@@ -43,8 +43,8 @@ not implement it yet — do not improvise the syntax.
 | ---------------- | ---------------------------------------------- |
 | `github-actions` | [github-actions](references/github-actions.md) |
 
-Read **only** the resolved tool's reference. Everything below is tool-agnostic
-and applies whichever one it is.
+Read **only** the resolved tool's reference — never another tool's. Everything
+below is tool-agnostic and applies whichever one it is.
 
 ## 2. Hard rules (never violate, on any CI system)
 
@@ -97,7 +97,9 @@ toolchain). Only proceed with a minimal `mise.toml` if they insist.
    **triggers** (pushes, pull/merge requests, tags, manual runs; which branches
    or tag globs). **Skip the trigger question entirely for a release/deploy
    pipeline in a repo carrying the vwf pipeline contract** — it pins the
-   trigger, tag scheme, branch validation and test gate (§5).
+   trigger, tag scheme, branch validation and test gate (§5, and the
+   [delivery-pipeline](references/delivery-pipeline.md) reference it points at,
+   which is read before this round).
 2. **Steps source.** If a mise task library exists, confirm which tasks map to
    the pipeline's phases (e.g. `code:lint`, `test`, `build`, `i:release`). If
    none exists, fall back to inline `mise exec -- <cmd>` and confirm the
@@ -120,48 +122,12 @@ Don't invent triggers, task names, secrets, or package paths — ask.
 ## 5. The vwf delivery-pipeline contract
 
 For a **server-side project deployed to cloud or a data center**, releases are
-not elicited — they follow a fixed architecture, and **vwf owns it**. Check
-whether the repo carries the contract
-(`docs/blueprint/conventions.md#pipeline`, or a vwf installation providing
-`assets/delivery-pipeline.md`). **Read that file — it is the source of truth,
-and this skill does not restate it.** When the repo carries it, the contract
-pins the trigger, the tag scheme, the branch validation and the test gate — **do
-not ask about any of them**; ask only what it leaves open (runner, secrets/OIDC,
-the deploy commands inside the release task, job shape).
-
-What the contract requires the generated pipeline to express, on any CI system:
-
-- **Tag-triggered only**, on `<project>-<env>-v<semver>` — `api-prod-v1.2.3`,
-  `web-stage-v0.4.0`. `env` is `stage` (→ `staging`, from `develop`) or `prod`
-  (→ `production`, from `main`); `<project>` names the registry project
-  released, so one tag releases exactly one project. A **polyrepo uses the repo
-  name** (`myservice-prod-v1.2.3`) so the shape never varies by layout. Parse
-  **right-to-left** — project names contain hyphens.
-- **Branch validation.** The tagged commit must be reachable from the branch its
-  environment maps to, or the run fails. A prod tag on a feature branch can
-  never deploy.
-- **Tested before released.** The tagged project *and its dependents* are tested
-  in the same run, and no deploy step starts until every one of them passes.
-- **One deploy path, split as little as the repo allows.** Everything common to
-  every subproject — tag parsing, branch validation, the test gate — is written
-  once; only the deploy itself is factored per project. Split it further only
-  when two subprojects differ in something the CI system itself must express (a
-  different OIDC provider, registry login, or environment approval rule).
-  Differences in *build or deploy commands* are not a reason: those live in the
-  mise task, which already varies per project.
-- **Release task naming.** `mise run <project>:release:<environment>` in a
-  monorepo, `mise run release:<environment>` in a polyrepo — the environment is
-  the **canonical** name (`staging` / `production`), never the tag's short form.
-  Tests are `<project>:test` / `test` the same way. Confirm these tasks exist
-  (`mise tasks`); if the workspace's package identifiers differ from the mise
-  task prefixes, ask for the mapping rather than guessing it.
-- **Staging is not a release.** A `*-stage-v*` run never publishes packages,
-  creates release records, or updates changelogs — those belong only to the
-  `*-prod-v*` path, and the release *record* itself belongs to
-  /vwf-verify, not CI.
-
-Without the contract, release triggers are elicited as normal (§4) — but offer
-this shape as the recommended default.
+not elicited — they follow a fixed architecture, and **vwf owns it**. So for a
+**release or deploy** pipeline, read
+[delivery-pipeline](references/delivery-pipeline.md) **before asking anything**:
+it locates the contract, states what the generated pipeline must express on any
+CI system, and names what is still yours to elicit. A CI-only pipeline
+(lint/test/build) never needs it.
 
 ## 6. Write
 

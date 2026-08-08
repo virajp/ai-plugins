@@ -44,6 +44,17 @@ step specifies.
 If hooks fail during a commit: fix the issue, then create a **new commit** —
 never `--amend` after a hook failure, never retry with `--no-verify`.
 
+## References
+
+The two branches most runs never take. Read one only when the step below routes
+you into it — a run that lands in an existing worktree and stops at a commit
+needs neither.
+
+| Reference                                     | When to read                                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [Worktree setup](references/worktree-setup.md) | **Step 2** — only when Step 1 concluded a worktree must be created (native tool, git fallback, submodules, mise init) |
+| [Landing a branch](references/landing.md)      | **Step 4** — only when the chosen post-commit action is one of the two merge options (submodule order, push, teardown, stale sweep) |
+
 ---
 
 ## Step 1 — Detect Existing Isolation
@@ -92,109 +103,10 @@ in place and skip to Step 3.
 
 ## Step 2 — Create Isolated Workspace
 
-Try the mechanisms in this order — stop at the first that applies.
-
-### 2a. Native Worktree Tools (preferred)
-
-Do you have a tool named `EnterWorktree`, `WorktreeCreate`, a `/worktree`
-command, or a `--worktree` flag? If so, use it and **proceed to Step 2c**
-(submodules).
-
-Native tools handle directory placement, branch creation, and cleanup
-automatically — prefer them over raw git commands.
-
-### 2b. Git Worktree Fallback
-
-Only use this if no native worktree tool is available.
-
-#### Directory selection
-
-Follow this priority:
-
-1. Check instructions for a declared worktree directory preference.
-2. Check for an existing project-local worktree directory:
-   ```bash
-   ls -d .worktrees 2>/dev/null   # preferred
-   ls -d worktrees 2>/dev/null    # alternative
-   ```
-   Use it if found (`.worktrees/` wins if both exist).
-3. Default to `.worktrees/` at the project root.
-
-#### Safety verification
-
-Verify the directory is git-ignored before creating the worktree:
-
-```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
-```
-
-If NOT ignored: add it to `.gitignore`, commit that change, then proceed.
-
-#### Create the worktree
-
-Always branch from the **current branch**, not the default branch:
-
-```bash
-CURRENT_BRANCH=$(git branch --show-current)
-path=".worktrees/$BRANCH_NAME"
-
-git worktree add -b "$BRANCH_NAME" "$path" "$CURRENT_BRANCH"
-cd "$path"
-```
-
-**Sandbox fallback:** If `git worktree add` fails with a permission error,
-report it and proceed in the current directory instead.
-
-Then **proceed to Step 2c** (submodules).
-
-### 2c. Initialize Submodules (always, after any mechanism)
-
-A newly created worktree does **not** inherit the submodules from the main
-checkout — a fresh worktree leaves the submodule directories empty. If the repo
-uses submodules, populate them in the new worktree before doing any work — they
-are required to build and run the project.
-
-Resolve the new worktree's path from git, then init its submodules — skip
-silently if the repo has none:
-
-```bash
-# Path of the worktree just created for this branch
-WORKTREE_PATH=$(git worktree list --porcelain \
-  | awk -v b="refs/heads/$BRANCH_NAME" '/^worktree /{p=substr($0,10)} /^branch /{if ($2==b) print p}')
-
-# Only if the repo declares submodules
-if [ -f "$WORKTREE_PATH/.gitmodules" ]; then
-  git -C "$WORKTREE_PATH" submodule update --init --recursive
-fi
-```
-
-Use `git -C "$WORKTREE_PATH"` rather than `cd` so it works regardless of where
-the native tool placed the worktree. For the **git fallback** where you already
-`cd`'d into the worktree, `git submodule update --init --recursive` from there
-is equivalent.
-
-If a submodule fails to fetch (e.g. no network or auth), report it and ask the
-user how to proceed — do not leave a partially-initialized worktree silently.
-
-### 2d. Initialize the Worktree (mise task)
-
-A fresh worktree has no installed dependencies. After submodules are populated,
-bootstrap it so it can build and run — prefer a dedicated `worktree:init` task,
-falling back to the bootstrap entrypoint `setup:all`:
-
-```bash
-have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
-
-if have_task worktree:init; then
-  mise run worktree:init
-elif have_task setup:all; then
-  mise run setup:all
-fi
-```
-
-Run it from the worktree root. **Skip silently** if neither task exists. If the
-task fails, report it and ask the user how to proceed rather than working in a
-half-initialized worktree.
+Read [Worktree setup](references/worktree-setup.md) and follow it: the four
+mechanisms in order (native tool, git fallback, submodule init, mise init),
+stopping at the first that applies. Every new worktree ends at **2c** and **2d**
+— submodules populated and the init task run — whichever mechanism created it.
 
 ---
 
@@ -246,6 +158,12 @@ Otherwise, after a successful commit, ask the user to choose what to do next via
   worktree, push changes, but leave the additional worktree open for continued
   work.
 
+**On a merge conflict (either land sequence).** If a merge — the outer repo's or
+a submodule merge task — **conflicts**, do **not** resolve it autonomously.
+Abort the merge cleanly (`git merge --abort`, or the task's equivalent), leave
+the worktree **intact**, and report the conflicting files to the caller. Callers
+treat this as a **hard halt**.
+
 Execute the chosen action:
 
 ### Commit only
@@ -253,57 +171,12 @@ Execute the chosen action:
 Nothing further. Inform the user the commit is done and the worktree remains
 available.
 
-**On a merge conflict (either land sequence).** If a merge — the outer repo's or
-a submodule merge task — **conflicts**, do **not** resolve it autonomously.
-Abort the merge cleanly (`git merge --abort`, or the task's equivalent), leave
-the worktree **intact**, and report the conflicting files to the caller. Callers
-treat this as a **hard halt**.
+### Merge, push & clean up / Merge, push & keep worktree
 
-### Merge, push & clean up
-
-End the worktree with **full coverage** — nothing left uncommitted, submodule
-pointers current — then remove it. Order matters:
-
-1. **Land each changed submodule.** For every submodule with work on this
-   branch, run its own merge task from the submodule directory (this commits and
-   pushes the submodule's branch). Repeat per changed submodule:
-
-   ```bash
-   mise x --cd <submodule> -- mise run merge:develop   # or merge:main
-   ```
-
-2. **Update the outer repo's submodule pointers.** Back in the outer worktree,
-   stage the moved gitlinks and commit them so the superproject records the new
-   submodule commits:
-
-   ```bash
-   git add <submodule-paths>            # the gitlinks that moved
-   git commit -m "ops: update submodule pointers"
-   ```
-
-3. **Land the outer repo.** Merge this branch to the destination — its own
-   `merge:` task if the outer repo defines one, else merge the branch in the
-   main worktree — then `git push`.
-
-4. **Remove the worktree.**
-   - **Native tool:** use its teardown (e.g. `ExitWorktree` or equivalent).
-   - **Git fallback:** `git worktree remove <path>`.
-
-5. **Sweep stale worktrees.** After this one lands, list the other worktrees
-   under the worktree dir (`git worktree list`) whose branches are **fully
-   merged** into the destination (`git branch --merged`), and offer to remove
-   them. Never remove a worktree with unmerged work.
-
-For a repo with **no submodules**, skip steps 1–2: land the branch (its `merge:`
-task if defined, else merge it in the main worktree), `git push`, then remove
-the worktree.
-
-### Merge, push & keep worktree
-
-Run the same land sequence — any submodule work, then the outer repo +
-`git
-push` — but **do not remove** the worktree. Inform the user which branch
-and path it is on.
+Read [Landing a branch](references/landing.md) and follow the sequence for the
+chosen option — submodules first, then the outer repo's pointers and merge, then
+push; **clean up** additionally removes this worktree and sweeps stale ones,
+**keep worktree** leaves it in place.
 
 ---
 

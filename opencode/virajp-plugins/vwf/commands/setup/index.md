@@ -42,6 +42,14 @@ step that needs it, not upfront: `topology-detection` + `structure` at §1,
 the deltas between the repo's stamp and the shipped format — an already-current
 repo never needs it.
 
+This skill's own references follow the same rule:
+
+| Reference                                                  | Read it when                                                       |
+| ---------------------------------------------------------- | ------------------------------------------------------------------ |
+| [format-reconcile](references/format-reconcile.md)         | §3 — computing the delta and judging layout drift                  |
+| [environment-bootstrap](references/environment-bootstrap.md) | §6 — the registry declares integrations or a secrets-manager config |
+| [memory-tree](references/memory-tree.md)                   | §9 — writing `docs/memory/` and each repo's `mempalace.yaml`       |
+
 ## Hard Rules
 
 - **Consent + dry-run.** Present the full migration plan (every create / move /
@@ -138,49 +146,20 @@ deviation in the registry and not re-proposed on later runs.
 
 ### 3. Reconcile format & legacy
 
-Read `.config/vwf.yaml` (or the legacy `docs/blueprint/.vwf.yml`) if present.
-Per the project-setup skill (format-versioning), compute the **migration delta**
-between the repo's current format and the format this vwf ships — a legacy
-`docs/specs/` tree to upgrade, a missing `design-system.md` / `environment.md`,
-entity docs lacking Relationships / Concurrency, the **`1 → 2`** delta (docs
-missing OKF frontmatter and relationships/references not yet written as markdown
-links), the **`2 → 3`** delta (a missing `environment.md` when the registry
-declares integrations or a secrets-manager `config`), the **`8 → 9`** delta (the
-process-based restructure below), the **`9 → 10`** delta (flows regrouped by
-primary project and numbered in execution order — per format-versioning, a
-mechanical `git mv` + link rewrite with the ordering elicited), or the
-**`10 → 11`** delta (a UI project's flows regrouped under device-type subgroups,
-Screens rows gaining their frame Codes, in-car journeys elicited into their own
-subset flows — per format-versioning), the **`12 → 14`** delta (those device
-subgroups flattened back out, the device moving into the flow's `device:`
-frontmatter key — a mechanical `git mv` + link rewrite + config entry rewrite),
-or the **`19 → 20`** delta (`role: infra` renamed to `role: iac` in every
-`registry.yaml`, plus the own-repo rule for `iac` projects — the restructure
-proposal §4 carries). Fold in any old or partial structure.
+Read `.config/vwf.yaml` (or the legacy `docs/blueprint/.vwf.yml`) if present and
+compute the **migration delta** between the repo's current format and the format
+this vwf ships. The deltas to compute, and what counts as drift in the current
+layout, are in [format reconcile](references/format-reconcile.md) — read it
+here, together with only the project-setup skill's `format-versioning` deltas
+between the repo's stamp and the shipped format. Fold in any old or partial
+structure.
 
 `19 → 20` ships with the config's **`12 → 13`** migration (per the vwf-config
 asset): the backing, deploy, design and CI axes move down to per-project keys.
 Run the two together — a repo on one but not the other is a state neither
 migration expects.
 
-Since format 14 the conforming layout is **flows-first and project-grouped**:
-every flow, UI or not, under
-`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` at one uniform depth,
-with a UI project's flow declaring its device in the `device:` frontmatter key
-(`mobile` / `web` plus declared in-car platforms) and numbered in execution
-order with gap numbering **per device**, entities under
-`docs/blueprint/entities/<entity>/` (`index.md` + `schema.yaml`), API contracts
-under `docs/blueprint/apis/`, and the root reserved for the system docs. A root
-`integration.md`, an entity folder at the blueprint root, entity surface files
-(`data.md`/`api.md`/`jobs.md`/`screens.md`), a flat `<entity>.md`, an
-ungrouped/unnumbered `flows/<flow>/` folder, or a UI project's flow sitting
-directly under `flows/<project>/` **is** drift — the `8 → 9` delta (per
-format-versioning) performs the mechanical scaffold phase with `git mv` (move,
-never delete), splits `integration.md` into per-flow docs, extracts Data Model
-tables to `schema.yaml` and API tables to OpenAPI stubs, seeds the
-`implementation:` stamps, and downgrades coverage to `partial`; the follow-up
-`blueprint` sweep (offered, consent-gated) does the elicited fill. YAML
-artifacts the scaffold writes must parse — validate them in step 10.
+Any YAML artifact a migration writes must parse — validate them in step 10.
 
 ### 4. Build the migration plan (dry-run)
 
@@ -229,14 +208,9 @@ in `setup_progress`.
 
 **Bootstrap the environment catalog.** When the registry declares integrations
 or a secrets-manager `config` (the `2 → 3` trigger), scaffold
-`docs/blueprint/environment.md` from the environment template and **populate it
-from the repo's existing usage** — scan config schemas, `.env`/`.env.example`,
-mise env values, and CI secrets/variables for the variable *names* and infer
-purpose/issuer/consumer/required/classification per the blueprint-authoring
-**environment-catalog** reference. Record names only — **never copy a value**.
-If a secrets/env-var catalog already lived in `conventions.md#config` (or
-elsewhere), move those rows here and leave `#config` with the injection
-mechanism alone.
+`docs/blueprint/environment.md` and populate it from the repo's existing usage
+per [environment bootstrap](references/environment-bootstrap.md) — read it when
+that trigger holds. Record variable names only; **never copy a value**.
 
 ### 7. Orchestrate foundations
 
@@ -302,30 +276,14 @@ run diffs against, and how every vwf command operates in this repo:
 - leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
   them.
 
-**Write the memory tree.** Create `docs/memory/` with the seven room
-directories, and add the developer-specific ones to `.gitignore`
-(`docs/memory/handoff/`, `docs/memory/doctor/`, `docs/memory/runs/`) if absent —
-the same way the `docs/scratchpad/` line is added. Per
-`%%AI_PLUGINS_ROOT%%/assets/memory.md`, every memory write goes to both this
-tree and mempalace, which is what makes the daemon optional. A pre-format-19
-`docs/handoffs/next.md` moves to `docs/memory/handoff/next.md`.
-
-**Write the mempalace config.** Per `%%AI_PLUGINS_ROOT%%/assets/memory.md`,
-write a `mempalace.yaml` to **each repo root** — the parent and every submodule
-— all naming the single confirmed `memory.wing`. Seed all seven protocol rooms
-(`decisions`, `problems`, `planning`, `gaps`, `runs`, `doctor`, `handoff`), then
-add path-derived rooms per repo from its actual top-level directories. Give the
-parent `exclude_patterns` for the submodule paths so a root mine does not
-double-file their contents.
-
-Two things to get right, both from the memory asset: room routing returns on the
-**first** path-part match, so never key a room on a directory that contains
-another room's path (`docs` on `documentation` shadows `docs/memory/handoff/`);
-and because the wing is shared, a room name reused across repos **merges** —
-propose a distinguishing name wherever the same name would mean two different
-things. Present the files as part of the step-4 dry-run and confirm the wing
-(one MCQ) before writing; an existing `mempalace.yaml` is **merged, never
-overwritten** — preserve rooms and patterns the user added.
+**Write the memory tree and the mempalace config.** `docs/memory/` with its
+seven room directories (three of them gitignored), and a `mempalace.yaml` in
+**each repo root** — the parent and every submodule — all naming the single
+confirmed `memory.wing`. The layout, the seeded rooms, and the two routing traps
+are in [the memory tree](references/memory-tree.md); read it at this step. Two
+rules hold regardless: present the files as part of the step-4 dry-run and
+confirm the wing (one MCQ) before writing, and an existing `mempalace.yaml` is
+**merged, never overwritten**.
 
 On the `5 → 6` migration, `git mv` the legacy stamp to the new path first (move,
 never delete), then restructure — per format-versioning. Also migrate any

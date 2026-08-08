@@ -43,6 +43,13 @@ it. When a planning decision is genuinely open, elicit it following the
 | Plan           | `docs/plans/<date>-<time>-<slice>.md`                                               |
 | Plan template  | `%%AI_PLUGINS_ROOT%%/assets/templates/plan.md`                                    |
 
+## References
+
+| Reference                                    | When to read                                                                                                                    |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| [§3 conditional checks](references/delta-checks.md) | While working §3 — stamp-heal (empty delta), the released-contract check (a touched `apis/released/` snapshot), the harness preflight (always), and the visual-review advisory (a flow with platform files) |
+| [Writing the plan doc](references/plan-doc.md)      | At §7, once the delta is computed and every decision is settled — the doc's frontmatter, chain position, and acceptance-criteria transcription |
+
 ---
 
 ## Pipeline
@@ -139,19 +146,6 @@ order to do it in. Reference blueprint sections; do not restate them.
 A `CONTRADICTIONS:` entry is never resolved in the plan — route it per §4, like
 any blueprint gap. `HARNESS:` seeds the preflight below.
 
-**Stamp-heal.** If the element's computed delta is **empty** — the code already
-conforms though the stamp reads `none`/`partial` — offer (user-confirmed, never
-silent) to set that doc's `implementation: complete` (a state-only frontmatter
-edit, committed via `git-workflow`) and drop the element from the chain.
-This self-heals conservative stamps.
-
-**Released-contract check.** When the delta touches an
-`apis/<project>.openapi.yaml` that has a released snapshot (latest = highest
-semver under `apis/released/`), verify the desired change is additive per the
-rest-api-design skill (reference 8). A breaking desired change is a blueprint
-problem — route it per §4 (the sweep's coherence review enforces the
-major-version bump); never plan code that breaks a released contract.
-
 Apply the **minimalism decision ladder** in
 `%%AI_PLUGINS_ROOT%%/assets/minimalism.md` as you size each step: include a
 step only if a blueprint requirement needs it (rung 1), and prefer reusing
@@ -163,29 +157,11 @@ named explicitly in that step (package + what it's for): the plan's approval
 gate is where the user consents to new dependencies, and execute never installs
 one the plan doesn't name.
 
-**Harness preflight.** Per `%%AI_PLUGINS_ROOT%%/assets/harness.md`, work out
-which harness capabilities this element's gates will need (acceptance criteria →
-`e2e_local` + `local_stack`; changed screens in a web UI → `dev` +
-`screenshots`; a touched cloud project → `health`; flows + a deploy target →
-`e2e_staging`). Read the `.config/vwf.yaml` `harness:` block (plus any
-per-project `projects.<name>.harness` override) and **re-verify just those**
-against the repo (the stamp may be stale). For each one missing, **inject a
-bootstrap step** into the ordered steps — the coder builds it under the normal
-pipeline. Harness steps are gate-required guardrails: the minimalism ladder
-never strikes them, and they order **before** the steps whose verification
-depends on them.
-
-**Visual-review advisory (soft — never a halt).** When the element is a flow
-that has platform files and any of them is **not** listed under
-`design.flows_rendered` in `.config/vwf.yaml` as
-`<project>/<NNN>-<flow>/<platform>` (or the block is absent — a legacy
-`flows_pushed` key, or an entry without a platform leaf, read as drift), note it
-for the §8 gate naming the unrendered platforms: those screens have no current
-visual render — recommend the user run `/vwf-mockups <flow>` (a local scratchpad
-render), or `screens import <flow>` when a
-`docs/prompts/screens/<project>/<NNN>-<flow>/` brief has a design session
-pending, before approving. Advisory only: planning and approval proceed
-regardless (neither is ever a gate here).
+**Then run the four checks** in
+[§3 conditional checks](references/delta-checks.md) — stamp-heal, the
+released-contract check, the harness preflight, and the visual-review advisory.
+The harness preflight fires on every element; the other three only when their
+condition holds.
 
 ### 4. Route blueprint gaps back; flag drift
 
@@ -244,22 +220,10 @@ never push remotely here.
 
 ### 7. Write the plan
 
-Write `docs/plans/<date>-<time>-<slice>.md` from the plan template — including
-its **OKF frontmatter**: `type: vwf-plan`, `title`, `description`, `status`,
-**`covers:`** (the blueprint doc(s) this element implements — one path, or the
-cycle element's set), and **`requires:`** (the plan filenames of this element's
-direct prerequisites in the chain — empty for the first). The Slice section
-links the covered doc(s) and states the chain position ("Plan 2 of 3 — requires
-`<file>`; required by `<file>`"; or "no dependency chain"). Steps are ordered
-for TDD, each naming the failing test that defines "done".
-
-**Acceptance criteria.** Copy the Acceptance blocks of the flow docs this
-element touches **verbatim** into the plan's "Acceptance criteria (from
-blueprint)" section (with a link to each flow), and make sure the ordered steps
-include the **E2E tests** that cover each criterion — the coder implements them
-like any TDD step; `execute`'s acceptance stage independently maps and runs
-them. A criterion no step covers is a hole in the plan, not something to defer.
-When the element maps to no flow, write `none — no flow touched`.
+Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, following
+[Writing the plan doc](references/plan-doc.md) — the OKF frontmatter (`covers:`
+and `requires:` in particular), the chain position, TDD-ordered steps, and the
+verbatim acceptance-criteria transcription.
 
 ### 8. Approval gate (per chain element)
 

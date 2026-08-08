@@ -31,6 +31,13 @@ place a platform name is legitimate.
 There is exactly one registry and one architecture doc per workspace; together
 they describe every project.
 
+## References (read on demand, never upfront)
+
+| Reference                              | Read it when                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------- |
+| [platforms](references/platforms.md)   | the project being walked is a UI one, or the CLI/TUI question comes up (3b) |
+| [stack-menu](references/stack-menu.md) | eliciting any stack axis, or the `design` / `cicd` keys (3b)              |
+
 ---
 
 ## Step 1 — Setup
@@ -149,103 +156,22 @@ like every other project. If the answer places it inside another repo, say so
 plainly and record what they chose: `/doctor` will raise it as blocking and
 `/setup` will offer the restructure. Never restructure from here.
 
-**Platforms.** Record each UI project's implemented surfaces under its
-`platforms:` in **`registry.yaml`** — the single source since format 19; the key
-no longer appears in `.config/vwf.yaml`. The one vocabulary is in
-`%%AI_PLUGINS_ROOT%%/assets/standard-flows.md`, and the project's `role`
-bounds what you offer:
+**Platforms.** A UI project (`site`, `fullstack`, `frontend`) records its
+implemented surfaces under `platforms:` in **`registry.yaml`** — the single
+source since format 19; the key no longer appears in `.config/vwf.yaml`. The
+per-role menu, the in-car (`auto`) rule, and the CLI/TUI question are in
+[platforms & terminal surfaces](references/platforms.md) — read it when the
+project being walked is a UI one. A non-UI project takes no `platforms:` key.
 
-| Role                 | Offer                                                    |
-| -------------------- | -------------------------------------------------------- |
-| `site` / `fullstack` | **`web`** — browser-delivered, the only option           |
-| `frontend`           | **`mobile`**, **`tablet`**, **`desktop`**, `auto`, `cli` |
-| everything else      | none — platforms are a UI-role field                     |
-
-Ask once per `frontend` project whether the app must run in-car, and offer
-**`auto`** (CarPlay and Android Auto together) **only** for those; `cli` is a
-terminal surface — see below. A native client that talks to a `fullstack`
-project's API is its own `frontend` project, not a platform of the fullstack
-one. The vocabulary names form factors, not vendors — `mobile` already hides
-iOS/Android, so `auto` hides CarPlay/Android Auto the same way. These platforms
-decide which `<platform>.md` files a flow may carry, and the `/screens`
-design briefs.
-
-**Terminal surfaces.** While walking the projects, ask (once) whether any
-project exposes a **CLI/TUI** — a shipped command-line tool, not internal dev
-scripts. For each that does, offer `cli` among its platforms. A terminal surface
-has no screens, so `cli` never admits a `cli.md` platform file and never
-triggers Screens, mockups, or the canvas; what it does require is the design
-system's **Terminal UX** section. A CLI-only tool is `role: frontend` with
-`platforms: [ cli ]` — and is exempt from the standard-flows mandates, since
-`splash` and `home` are screen journeys it does not have.
-
-**The stack is a menu — elicited, and it lives in config, not the registry.**
-Since format 19 a stack is composed from **four independent axes**
-(`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`), each its own menu:
-
-| Axis        | Scope       | Menu                    | Recorded as                              |
-| ----------- | ----------- | ----------------------- | ---------------------------------------- |
-| **project** | per project | the plugins' `project/` | `projects.<name>.stack.template`         |
-| **backing** | per project | the plugins' `backing/` | `projects.<name>.stack.backing_template` |
-| **deploy**  | per project | the plugins' `deploy/`  | `projects.<name>.stack.deploy_template`  |
-| **repo**    | per repo    | the plugins' `repo/`    | `repo.stack.template`                    |
-
-Elicit each as its **own** round (per `assets/elicitation.md` — one decision,
-the menu plus an **other (describe)** option), and per §3a of that protocol
-**every question names the project it decides**. Since format 13 all three
-technology axes are per project, so "which datastore?" is never a question about
-the product — it is a question about `api`, or about `website`:
-
-- **project** — once per project, filtered to that project's `role`.
-- **backing** — once per project, filtered to the capabilities that project
-  declares in the registry. Records a **list**: one slug per capability it needs
-  (datastore, identity, queue, object storage, telemetry sink). A project that
-  talks to no backing service records `[]`.
-- **deploy** — once per project. A `frontend` on a screen platform records
-  `n/a`, a `cli` frontend `deploy/npm-package`, an `iac` project `n/a`.
-- **repo** — once per repo, filtered to templates whose `topologies` include
-  this repo's.
-
-**Offer the previous project's answer as the default on the next.** Most
-products do run every project on one cloud, and re-asking from scratch per
-project would be tedious for the common case — but the answer is recorded per
-project either way, so the moment one diverges the config can say so. Never
-collapse the recorded values back into a shared pin.
-
-Two more per-project keys are elicited here, alongside the axes:
-
-- **`design`** — the design tool, for each **UI** project only (`site`,
-  `fullstack`, `frontend`). A tool token — `claude-design`, `lovable`, `stitch`
-  — resolved inside the design adapter, never a plugin name
-  (`%%AI_PLUGINS_ROOT%%/assets/design-adapter.md`). A product may design its
-  website in one tool and its app in another; ask per project.
-- **`cicd`** — the CI system that builds and releases the project
-  (`github-actions`, …). vwf owns the delivery-pipeline *contract* and never the
-  mechanism, so this value is read only by the `cicd` plugin. Ask once and offer
-  the same answer for every project; in a monorepo they will all match.
-
-The axes are orthogonal by construction — a project template never names a
-vendor, a backing template never names a framework — so there is nothing to
-merge and no precedence to resolve.
-
-Record all of it in `.config/vwf.yaml` per the vwf-config asset. **Always write
-the project block**, for every project: it is what `/doctor` checks the repo
-against, and it cannot check what was never recorded.
-
-vwf ships no default and marks no template recommended. Picking a project
-template fills its four frontmatter axes; **other (describe)** records
-`template: custom` and the axes the user gives. `languages` must come from the
-closed vocabulary in `%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md` — offer
-the nearest token when the user names something outside it, and record it
-verbatim only if they insist (doctor will flag it as unknown, which is the
-honest outcome).
-
-There is nothing to justify: a stack matching no template is a normal answer,
-not a deviation, and gets **no** `enforcement` entry. Use the optional `note`
-only when the reason isn't obvious from the template name. A recorded stack is
-settled — never re-litigate it on update runs. In update mode, a project whose
-manifest has clearly moved away from its recorded stack is a delta to raise:
-align the config or ask.
+**The stack is a menu — elicited, and it lives in config, not the registry.** It
+is composed from **four independent axes** (project / backing / deploy per
+project, repo per repo), each elicited as its own round, plus the per-project
+`design` and `cicd` keys. The menus, what each axis records, and the recording
+rules are in [the stack menu](references/stack-menu.md) — read it before
+eliciting any of them. Two rules hold whatever the answers are: vwf ships **no
+default and no recommended template**, and **every project gets a written
+`stack` block**, because that block is what `/doctor` checks the repo against
+and it cannot check what was never recorded.
 
 The stack never reaches `docs/blueprint/`. That is not a convention the authors
 have to keep — it is what the registry's shape enforces, and it is why a flow

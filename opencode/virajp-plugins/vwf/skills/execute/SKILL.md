@@ -66,6 +66,16 @@ the pause rules — never migrate autonomously.
 | Conventions   | `docs/blueprint/conventions.md`                           |
 | Environment   | `docs/blueprint/environment.md`                           |
 
+## References
+
+This skill is almost entirely rules that hold on every run — the halts, the
+pause conditions, the autonomous rules — so they stay here. Only two branches
+are conditional enough to load on demand, and each is named where it applies:
+[preflight](references/preflight.md) (Setup step 1, when doctor reports a
+missing LSP server) and
+[acceptance-and-ux](references/acceptance-and-ux.md) (when the acceptance or ux
+stage returns short of a clean pass). Never read either upfront.
+
 ## Pipeline (per step)
 
 `code`, then `review` and `security` **concurrently**, per step — then
@@ -230,18 +240,10 @@ silently if mempalace is unavailable.
    started without them fails later and less legibly. Report and stop.
 
    **Then gate on the LSP findings** — everything else doctor reports is noted
-   and carried into the run's gap list, not blocked on. If a language's LSP
-   server is missing, ask and **wait**:
-
-   > "No LSP server detected for `<language>`. Without it, type errors may not
-   > surface until runtime. Continue without LSP?"
-
-   - **Yes** → proceed. **No** → halt; install via `/plugin` (Discover) then
-     retry. On a **resumed** run, don't re-ask — note it as a gap (degraded
-     type-safety) and continue.
-   - A language doctor reports as **unavailable** (no LSP ships in this
-     marketplace) or **unknown** is not a gate — there is nothing to install.
-     Note it as a gap and proceed.
+   and carried into the run's gap list, not blocked on. A missing LSP server is
+   a question to the user, not a halt: read
+   [the LSP gate](references/preflight.md) when doctor reports one, and ask and
+   **wait** per its script.
 
 2. **Worktree.** Invoke `git-workflow` to create the dedicated worktree,
    passing the declared preferences (isolate without prompting; commit-only, no
@@ -303,27 +305,18 @@ When every step is done (or skipped per the gap rules), run the `acceptance` and
 `ux` stages back to back per the contracts in `execute-stages.md` — skip each
 (journaled, never silent) per its condition: acceptance when the plan's
 "Acceptance criteria (from blueprint)" section reads `none — no flow touched`,
-ux when the plan changes no screens in a UI project. Autonomous policy:
+ux when the plan changes no screens in a UI project. On anything short of a
+clean pass, follow the autonomous policy in
+[acceptance & ux](references/acceptance-and-ux.md) — the loop-to-`code` rule and
+its 4-round cap under the convergence guard, the `n/a` cases, and the spec-gap
+routing. Two rules hold whatever it says: a residual is **never silently
+dropped**, and infrastructure is **never scaffolded beyond the plan's own
+steps**.
 
-- **Acceptance `FAIL` / `NOT-COVERED`, and ux findings → loop to `code`** for
-  the step that owns the flow/screen (dispatch `execute-coder` with the **tag**;
-  the fix is the code, the missing E2E test, or the style/state correction),
-  re-commit, re-verify the affected stage — **up to 4 rounds** (the review-cap
-  rule), under the same **convergence guard**: a round that doesn't strictly
-  reduce the failures, or that re-breaks a criterion an earlier round fixed,
-  ends the loop early as an oscillation gap. Residuals — at the cap or at the
-  guard — are documented as gaps and the run proceeds to the final gate; a
-  residual is never silently dropped.
-- **Acceptance `n/a — no harness`**, or **ux `RENDERED: n/a` on a web slice** →
-  record it as a gap (what harness/capture is missing, in the harness-contract
-  vocabulary) and proceed — never scaffold infrastructure beyond the plan's own
-  steps.
-- **Untestable criteria / unpinned states** (`SPEC/PLAN GAPS` / `SPEC GAPS`) →
-  plan-doc gap section + room `gaps`, per the gap rules.
-- Journal both stages like any other node — a record per execution, and a
-  `skipped` record with its `why` when the condition didn't hold. A resumed run
-  must know whether they already passed, and the gate reports each skip from the
-  record rather than from recollection.
+Journal both stages like any other node — a record per execution, and a
+`skipped` record with its `why` when the condition didn't hold. A resumed run
+must know whether they already passed, and the gate reports each skip from the
+record rather than from recollection.
 
 ## Reconcile (in the worktree, before the final gate)
 
