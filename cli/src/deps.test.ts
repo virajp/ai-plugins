@@ -106,12 +106,11 @@ describe("requiredTools against the committed index", () => {
       .toEqual(["graphify", "mise", "pnpm", "rtk", "uv"]);
   });
 
-  it("reproduces it for typescript and effect too", () => {
-    const index = readPluginIndex(repoRoot);
-
-    expect(requiredTools(index, ["typescript"])).toEqual(["mise", "pnpm"]);
-    // effect declared no tools of its own; these arrive via typescript.
-    expect(requiredTools(index, ["effect"])).toEqual(["mise", "pnpm"]);
+  it("reproduces it for typescript too", () => {
+    // Effect-TS folded into this plugin, so there is no longer a second entry
+    // inheriting these through a dependency edge.
+    expect(requiredTools(readPluginIndex(repoRoot), ["typescript"]))
+      .toEqual(["mise", "pnpm"]);
   });
 });
 

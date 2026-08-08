@@ -417,7 +417,7 @@ Project-axis templates:
 
 | Role        | Template ships today         | Stack                                             |
 | ----------- | ---------------------------- | ------------------------------------------------- |
-| `packages`  | `typescript-effect`          | TypeScript · Effect-TS — from the `effect` plugin |
+| `packages`  | `typescript-effect`          | TypeScript · Effect-TS                            |
 | `service`   | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                     |
 | `worker`    | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS                 |
 | `site`      | `typescript-astro-react`     | TypeScript · Astro (SSR) · React                  |
@@ -428,6 +428,12 @@ Project-axis templates:
 | `frontend`  | `typescript-effect-cli`      | TypeScript · @effect/cli — platform `cli`         |
 | `infra`     | `typescript-pulumi`          | TypeScript · Pulumi                               |
 | `infra`     | `terraform`                  | Terraform / OpenTofu                              |
+
+**Templates ship in the plugin that owns the technology, not in vwf.** Every
+`typescript-*` row above, plus the `npm-package` deploy target and both `repo`
+choices, comes from the **[typescript](./docs/typescript.md)** plugin — so a
+product whose `stacks:` lists `typescript` gets that whole menu, and one that
+does not never sees it.
 
 **Why the split matters.** The same Hono + Effect service runs against Firebase
 or Postgres, on Cloud Run or any container host. Before format 19 all three were
@@ -1352,8 +1358,7 @@ your stack. Each has a dedicated guide:
 
 | Plugin                                                                             | What it provides                                                                                                                                                                              | Install                                     |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **[typescript](./docs/typescript.md)**                                             | Plain TypeScript coding standards — a `typescript` router skill (+ standards/vitest/build references) plus package-json/pnpm/tsconfig/lint-format + the TypeScript/JavaScript language server | `--user typescript`                         |
-| **[effect](./docs/effect.md)**                                                     | Effect-TS doctrine — an `effect` router skill (+ effect/effect-runtime/testing references) and the `packages` vwf stack template (opt-in; requires `typescript`)                              | `--user effect`                             |
+| **[typescript](./docs/typescript.md)**                                             | The TypeScript language plugin — `typescript` and `effect` router skills plus package-json/pnpm/tsconfig/lint-format, the TypeScript/JavaScript language server, and every TypeScript vwf stack template | `--user typescript`                         |
 | **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped**                     | `--project flutter`                         |
 | **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                    | `--user mise`                               |
 | **[cicd](./docs/cicd.md)**                                                         | A `/cicd:workflow` skill — resolves the repo's CI system from config, then generates its delivery pipeline (every tool via mise); supports polyrepo + monorepo                                | `--user cicd`                               |

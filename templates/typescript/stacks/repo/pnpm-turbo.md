@@ -6,10 +6,10 @@ package_manager: pnpm
 tools: [ turborepo, dprint, eslint, mise, docker-compose ]
 ---
 
-# Backend Monorepo — pnpm · Turborepo
+# Monorepo — pnpm · Turborepo
 
-The tooling every backend monorepo (the `backend/` submodule) shares across its
-`projects/*` and `packages/*` members. All-ESM TypeScript, built on Effect-TS.
+Repo-level tooling for a pnpm workspace, shared across its `projects/*` and
+`packages/*` members. All-ESM TypeScript, built on Effect-TS.
 
 ## Workspace & builds
 
