@@ -19,8 +19,8 @@ item lands in a durable doc, so nothing depends on memory being up.
 ## Canvas harvest (`/skill:feedback canvas`)
 
 When `$ARGUMENTS` is `canvas` (or the user asks to pull canvas review), the
-intake is the claude.ai/design review conversation instead of pasted text — what
-the user said to Claude Design while designing screens (`/skill:screens`) or
+intake is the design tool's review conversation instead of pasted text — what
+the user said there while designing screens (`/skill:screens`) or
 iterating the design system:
 
 1. Gather every distinct pinned uuid from `.config/vwf.yaml`: the

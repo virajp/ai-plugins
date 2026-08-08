@@ -4,7 +4,7 @@ description: Render the blueprint's screens as self-contained static HTML
   mockups — one page per screen plus the state variants the Screens contract
   pins, styled from design-system tokens — into the repo's gitignored
   docs/scratchpad/ tree for local browser review. Mockups are realizations,
-  never contract; never pushed to Claude Design, never committed.
+  never contract; never pushed to the design tool, never committed.
 ---
 
 # mockups — Render Screen Mockups Locally
@@ -13,7 +13,7 @@ Turn the blueprint's **Screens contracts** into reviewable visuals: one
 self-contained HTML page per screen (plus each pinned state variant), styled
 from `design-system.md` tokens, written into the repo's **gitignored
 `docs/scratchpad/` tree** and reviewed in the user's own browser. Mockups are
-**never pushed to Claude Design** — the scratchpad is the only render surface.
+**never pushed to the design tool** — the scratchpad is the only render surface.
 Since blueprint flow passes render and review each flow's screens **in-pass**
 (blueprint §6a), this command is the **batch / regeneration tool**: re-render
 everything after a design-system change, refresh a legacy repo, or redo one flow

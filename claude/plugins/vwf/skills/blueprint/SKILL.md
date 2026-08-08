@@ -463,7 +463,7 @@ design-first alternative, and the explicit skip — is in
 path the user takes, a deferred or declined review records
 `screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining`, and
 coverage stays `partial` while any `screens/` entry remains — exactly like any
-other hole. Mockups are **never pushed to Claude Design**.
+other hole. Mockups are **never pushed to the design tool**.
 
 Flows without a Screens section skip this step silently.
 

@@ -62,11 +62,11 @@ against, and it cannot check what was never recorded.
 
 vwf ships no default and marks no template recommended. Picking a project
 template fills its four frontmatter axes; **other (describe)** records
-`template: custom` and the axes the user gives. `languages` must come from the
-closed vocabulary in `%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md` — offer
-the nearest token when the user names something outside it, and record it
-verbatim only if they insist (doctor will flag it as unknown, which is the
-honest outcome).
+`template: custom` and the axes the user gives. A `languages` token is whatever
+the stack plugin owning that language declares — offer the tokens the installed
+plugins cover, and record anything else verbatim (doctor flags it as unknown,
+which is the honest outcome, never a block). See
+`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`.
 
 There is nothing to justify: a stack matching no template is a normal answer,
 not a deviation, and gets **no** `enforcement` entry. Use the optional `note`

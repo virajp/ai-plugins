@@ -103,14 +103,15 @@ namespace, so two plugins declaring `stack-menu` would overwrite each other;
 reason. Claude Code namespaces by plugin and would have been fine, but the
 contract has to hold on both surfaces.
 
-### Every adapter skill MUST be `disable-model-invocation: false`
+### Every adapter skill MUST be `invocation: both`
 
 The single most important rule here, and getting it wrong fails **silently**.
-`disable-model-invocation: true` *"removes the skill from Claude's context
-entirely"* and *"blocks programmatic invocation"* — so a delegated call does not
-error. vwf simply cannot see the skill, and the menu comes back empty. A stack
-plugin whose skills are user-only is indistinguishable, at runtime, from one
-with no templates.
+`invocation: user` removes the skill from the model's context entirely and
+blocks programmatic invocation — so a delegated call does not error. vwf simply
+cannot see the skill, and the menu comes back empty. A stack plugin whose skills
+are user-only is indistinguishable, at runtime, from one with no templates.
+Each target spells this key its own way; `invocation:` is the neutral form every
+template is authored in, and `plugins:check` enforces it.
 
 ### vwf preflights, because the failure mode is silence
 
@@ -145,7 +146,7 @@ Returned by `-stack-template <slug>` once the user picks. Carries what
 ```yaml
 slug: <kebab>
 axis: project | backing | deploy | repo
-languages: [ <token> ] # stack-vocabulary.md's closed vocabulary
+languages: [ <token> ] # open; the plugin owning the language defines its facts
 optional_languages: []
 frameworks: [] # open, lowercase-kebab
 dependencies: [] # open, lowercase-kebab

@@ -287,8 +287,8 @@ Once the writes are confirmed, read both yourself. Check:
   dangling reference).
 - Every registry project has a `projects.<name>.stack` block in
   `.config/vwf.yaml` — the block is mandatory since config-format 11, and every
-  `languages` token comes from the closed vocabulary
-  (`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`). A flat list, an absent
+  `languages` token is one an installed stack plugin declares, or is recorded
+  verbatim as unknown (`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`). A flat list, an absent
   block, or a legacy `enforcement.stacks` block is drift — migrate it. Every
   `enforcement.rules` entry names a known rule and carries a reason.
 - No dependency cycle: the `depends_on` edges form a DAG.

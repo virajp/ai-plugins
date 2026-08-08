@@ -16,7 +16,7 @@ and `feedback` route what production says back into product/blueprint/plan.
 Blueprint flow passes render each flow's screens (happy & sad paths) into the
 gitignored `docs/scratchpad/` tree for visual review in your browser before the
 pass is approved — mockups are realizations for review, never part of the
-contract, and are never pushed to Claude Design. Design-first instead:
+contract, and are never pushed to the design tool. Design-first instead:
 `screens prompt <flow>` writes a brief you paste into the canvas chat (one
 interactive page per platform, named `<flow>--<platform>`),
 `screens

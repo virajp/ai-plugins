@@ -94,8 +94,8 @@ environments: # /skill:verify targets — URLs only, NEVER secrets (those stay i
 production_env: production # optional — names the release environment for /skill:verify (default: the env literally named "production")
 
 design: # CANVAS STATE only — ids and flow names, never content. The design TOOL is not here: it is per project, at projects.<name>.design (format 13)
-  design_system_id: <uuid> # UNIVERSAL — one per product: the Claude Design design system /skill:design-system imports from (its own canvas project, authored on claude.ai/design); every mockup push binds it via get_claude_design_prompt
-  projects: # one claude.ai/design design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
+  design_system_id: <uuid> # UNIVERSAL — one per product: the design system /skill:design-system imports from, as the design tool identifies it (its own canvas project); every mockup push binds it
+  projects: # one canvas design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
       <platform>: <uuid> # mobile | tablet | desktop | web | auto — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
   flows_rendered: [] # flow PLATFORMS whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>/<platform> (format 15: platform granularity, so a flow rendered for mobile but not auto is visibly partial); recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/<NNN>-<flow>/<platform>/ tree, NEVER on the canvas

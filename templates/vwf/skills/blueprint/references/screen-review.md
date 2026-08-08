@@ -15,7 +15,7 @@ never needs this file.
    plus **every pinned state**; the ui-ux-contract bar makes error and empty
    pins mandatory, so the sad paths are always in the set. `frontend` (Flutter)
    screens render as HTML approximations at the design system's viewport for
-   that platform. Mockups are **never pushed to Claude Design**.
+   that platform. Mockups are **never pushed to the design tool**.
 2. **Hand over.** Give the user the absolute file paths to open in a browser,
    grouped per platform, then record each rendered platform in
    `design.flows_rendered` as `<project>/<NNN>-<flow>/<platform>` (the
@@ -26,7 +26,7 @@ never needs this file.
    re-renders — back to 1); visual-language-level → flag for
    `<%= it.cmd("vwf:design-system") %>`, parked per the elicitation protocol's parked-scope rule
    when out of this pass's scope.
-4. **Design-first (alternative to 1–3).** The user may prefer Claude Design to
+4. **Design-first (alternative to 1–3).** The user may prefer their design tool to
    *design* these screens rather than review vwf's contract-derived render: run
    `<%= it.cmd("vwf:screens") %> prompt <flow>` (it writes the per-platform briefs under
    `docs/prompts/` — files the user pastes into the canvas chat), record

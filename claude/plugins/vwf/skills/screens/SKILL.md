@@ -1,12 +1,12 @@
 ---
 name: screens
-description: Two-way screen sync with Claude Design. "prompt <flow>" writes one
+description: Two-way screen sync with the project's design tool. "prompt <flow>" writes one
   wireframe-level design brief per platform
   (docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md) —
   always the flow's full screen blueprint, regenerated in place, never a
   change note, transcribing each screen's contract-pinned components and their
   rules — commissioning one interactive page per flow per platform on
-  the claude.ai/design canvas under a strict naming contract (pages
+  the design tool's canvas under a strict naming contract (pages
   <flow>--<platform>, frames named by the pinned screen codes, happy paths
   stitched into index--<platform>); it also maintains each platform canvas
   project's conventions CLAUDE.md (CLAUDE--<platform>.md — one design project
@@ -23,15 +23,15 @@ effort: high
 disable-model-invocation: false
 ---
 
-# screens — Design-First Screen Sync (Claude Design ⇄ Blueprint)
+# screens — Design-First Screen Sync (Canvas ⇄ Blueprint)
 
-Screens are the surface where canvas iteration beats contract prose: Claude
-Design nails visual and interaction nuance the blueprint's tables cannot.
+Screens are the surface where canvas iteration beats contract prose: a design
+tool nails visual and interaction nuance the blueprint's tables cannot.
 `prompt` writes a **wireframe-level** brief that commissions a flow's page for
 one platform — structure, navigation, components, and behavior; the visual
 design itself is made in the canvas chat — and **the file is the deliverable**:
 the user pastes it into the canvas chat themselves; this skill never runs a
-brief against the Claude Design MCP. A brief is **always the flow's full screen
+brief against the design tool. A brief is **always the flow's full screen
 blueprint**, regenerated in place — never a delta note; the canvas reconciles
 its existing pages against the latest brief (revise-in-place). `import` brings
 the designed pages back and folds what they decided into the contract —
@@ -77,7 +77,7 @@ reconcilable against the flows tree.
 | Prompts       | `docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md` — grouped by prompt type → registry project → flow; **one brief per flow per platform** (`mobile.md`, `tablet.md`, `desktop.md`, `web.md`, `auto.md`), regenerated in place — the tree mirrors the flows tree exactly (format 15) |
 | Prompt templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/screen-prompt.md`                                                                                                                                                                                                                                     |
 | Conventions   | `docs/prompts/screens/<project>/CLAUDE--<platform>.md` — the platform canvas project's CLAUDE.md source, one per pinned design project; generated sections regenerated in place, the canvas-owned section preserved                                                                           |
-| Conv. templ.  | the configured adapter plugin's conventions template (e.g. `claude-design`'s `assets/canvas-claude.md`)                                                                                                                                                                                       |
+| Conv. templ.  | the conventions template the design adapter returns for the project's tool                                                                                                                                                                                       |
 | Design system | `docs/blueprint/design-system.md` (or folder form)                                                                                                                                                                                                                                            |
 | Registry      | `docs/blueprint/registry.yaml`                                                                                                                                                                                                                                                                |
 | Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`                                                                                                                                                                                                    |

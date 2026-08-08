@@ -87,7 +87,8 @@ Each template's frontmatter carries the four axes (`languages` /
 `optional_languages` / `frameworks` / `dependencies`) that land in
 `.config/vwf.yaml` and that `<%= it.cmd("vwf:doctor") %>` checks the repo against; its prose
 carries the layout, testing and deployment conventions `plan` and `execute`
-read. Languages come from the closed vocabulary in
+read. The shape of a language fact — and what happens to a token nobody has
+written a plugin for — is in
 [stack-vocabulary](<%= it.root %>/assets/stack-vocabulary.md).
 
 Adding a stack option means **adding a template file** — a new slug under the

@@ -225,7 +225,7 @@ yielding an empty plan (the idempotence Hard Rule):
   cross-cutting decision).
 - Run `design-system` only if the topology has a **UI surface**
   (`ui: true`) **and** `docs/blueprint/design-system.md` is missing or stale. It
-  **imports** the product's Claude Design design system (pick or build one on
+  **imports** the product's design system from its design tool (pick or build one on
   claude.ai/design first); with no surface connected it halts with connect
   instructions — tell the user, and record the skip in `setup_progress` so a
   later run resumes it.
