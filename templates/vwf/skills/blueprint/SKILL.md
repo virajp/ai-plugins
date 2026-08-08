@@ -23,40 +23,14 @@ observable outcome), and flows are the goal-traceability spine — product goal 
 flow → the entities, API operations, screens, and jobs the flow needs. Entities
 are **supporting data contracts** the flows stand on.
 
-The doc units:
-
-- **Flow** — `docs/blueprint/flows/<project>/<NNN>-<flow>/`, one uniform depth
-  for UI and non-UI projects alike. The folder holds **`index.md`** — the
-  platform-agnostic contract (purpose, trigger, steps, diagram, jobs,
-  acceptance; **no screens**) — plus **one `<platform>.md` per implemented
-  platform** (`mobile` | `tablet` | `desktop` | `web` | `auto`) carrying only
-  that platform's Screens + Components. A non-UI flow is `index.md` alone — and
-  so is a flow of a `cli` project, since a terminal surface has no screens.
-  Flows are **grouped by their primary registry project** — the project that
-  owns the journey (the UI project of its Screens; for a UI-less flow, the
-  service/worker whose trigger starts it; ambiguous → ask, never guess). Since
-  format 15 the platform lives in the **filename**, so there is no `device:` key
-  and **one number line per project**. `<NNN>` is **designated** per
-  `<%= it.root %>/assets/standard-flows.md`: `010` splash, `020` signin,
-  `030` recover-account, `040` onboarding, **`100` home** (the anchor, every UI
-  project), `110`–`890` product flows (gap-numbered by 10), `910` profile, `920`
-  settings, `930` notifications, `940` delete-account. The folder name
-  (`<NNN>-<flow>`) is the join key. `flows/index.md` is the thin catalog — one
-  section per project, rows in numeric order with a Platforms column — plus the
-  cross-flow contracts.
-- **Entity** — `docs/blueprint/entities/<entity>/`: always exactly `index.md`
-  (lifecycle, relationships, invariants, concurrency) + `schema.yaml` (the
-  authoritative data model). `entities/index.md` is the catalog plus the
-  product-wide ER diagram.
-- **API contract** — `docs/blueprint/apis/<project>.openapi.yaml`, one per
-  **API-publishing** project (`role` is `service` or `fullstack` — a fullstack
-  publishes its own API, which is exactly what separates it from a `site`);
-  `apis/released/` holds the frozen production snapshots `<%= it.cmd("vwf:verify") %>` writes
-  for `service` projects.
-- The `docs/blueprint/` **root holds only the system docs** (product,
-  architecture, conventions, design-system, environment). A root
-  `integration.md` or a flat/root entity folder is pre-format-9 drift;
-  `<%= it.cmd("vwf:setup") %>` migrates it.
+The doc units are the **flow folder** (`index.md` + one `<platform>.md` per
+implemented platform), the **entity folder** (`index.md` + `schema.yaml`), and
+the per-project **OpenAPI contract**; the `docs/blueprint/` root holds only the
+system docs. Their exact shape, the designated number line, and the
+synonym-candidate MCQ are in [flow placement](references/flow-placement.md) —
+read it before placing or naming a **new** flow or entity, or when the surveyor
+returns `SYNONYM CANDIDATES:`. Paths for all of them are in the Doc Paths table
+below.
 
 **A run is a sweep, not a single flow.** The blueprint must describe the **whole
 product's** as-of state before anything downstream consumes it — `<%= it.cmd("vwf:plan") %>`
@@ -118,6 +92,17 @@ later turn of the sweep. `quick-reference` is the **reviewer's** bar (§5) — n
 the orchestrator's to carry. API contracts likewise apply the
 **rest-api-design** skill for endpoint contract depth, pulled on demand when you
 reach the API surface.
+
+## References (read on demand, never upfront)
+
+| Reference                                            | Read it when                                                               |
+| ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| [flow-placement](references/flow-placement.md)       | placing/naming a new flow or entity; the surveyor returned synonyms (§1)    |
+| [density-pass](references/density-pass.md)           | the worklist entry is `density/<unit>` (§2)                                |
+| [platforms](references/platforms.md)                 | the flow touches a UI project, or a project's `doc_unit` is non-obvious (§2) |
+| [screen-review](references/screen-review.md)         | the pass authored or changed a `## Screens` section (§6a)                  |
+| [rename-and-delete](references/rename-and-delete.md) | the pass renames or removes a flow or entity (§7)                          |
+| [coherence-review](references/coherence-review.md)   | the worklist is empty and the coherence review is next (§8)                |
 
 Reserved names: `product`, `architecture`, `conventions`, `design-system`,
 `environment`, `flows`, `entities`, `apis`, the platform filenames (`mobile`,
@@ -190,18 +175,12 @@ never authored speculatively. Deciding whether a goal genuinely needs a *new*
 flow (vs. an existing one extended) is elicitation, not inference — so the
 surveyor's `UNSERVED GOALS:` list is a prompt to **ask**, never to author.
 
-Handle the surveyor's `SYNONYM CANDIDATES:` before working the worklist: each is
-an existing flow whose journey may match a missing standard slug (per the
-standard-flows asset). One MCQ per candidate — **rename** to the standard slug
-(a §7 rename reconcile in that flow's pass: inbound links, catalogs, and canvas
-join keys move together), **keep** (it is genuinely a different journey; the
-standard flow stays on the worklist as missing), or **waive** (record
-`standard-flows/<project>/<slug>` under `enforcement.rules` with the user's
-reason — never re-asked). A missing mandatory standard flow with no synonym is
-worked like any other worklist hole: elicited (§3) — including where its number
-slots in the project's number line — then authored (§4). A standard flow takes
-its **designated number** (standard-flows asset); only a product flow is placed
-by elicitation, inside the `110`–`890` band.
+Handle the surveyor's `SYNONYM CANDIDATES:` before working the worklist — each
+is an existing flow whose journey may match a missing standard slug, resolved by
+one MCQ per candidate (rename / keep / waive). The procedure is in
+[flow placement](references/flow-placement.md); read it when the list is
+non-empty. A missing mandatory standard flow with no synonym is worked like any
+other worklist hole: elicited (§3), then authored (§4).
 
 If `$ARGUMENTS` named a flow or entity, start there (prepend it to the
 worklist); otherwise start at the top. An empty worklist with a named unit means
@@ -212,28 +191,12 @@ holes, e.g. a step referencing a not-yet-authored entity), and re-run coherence
 ### 2. Determine surfaces
 
 **Density items short-circuit this.** A worklist entry of the form
-`density/<unit>` is not an authoring pass: the unit's contract is already
-decided and merely over-written. Skip §§2–4 entirely, dispatch a fresh
-`blueprint-condenser` for that unit (pass the doc path, its budget and current
-count, and the `conventions.md` anchors it references), then go straight to the
-**§5 reviewer loop** — the reviewer's density bars are what confirm the pass
-landed.
-
-There is **no elicitation** on a density item. Condensation removes commentary
-and decides nothing, so there is nothing to ask; that is precisely why the sweep
-can clear these without a user in the loop. Handle the condenser's return:
-
-- **`PERSIST:`** — file each to mempalace room `decisions` (the rationale leaves
-  the contract but is not lost).
-- **`PARKED:`** — file each to room `gaps` per the parked-scope rule, and mirror
-  a terse line where the doc kept one.
-- **`GAPS:`** — a contract hole the cut exposed (a guard that lived only in a
-  diagram label, a rule with nowhere to live). This **does** need you: fold it
-  into the normal per-flow pass (§§3–4) rather than leaving it, since a hole
-  found while condensing is a hole either way.
-- **`HELD:`** — the doc is still over budget with every line load-bearing.
-  Accept it, report it at the end of the sweep, and **clear the entry** — an
-  honest over-budget doc must not block the coverage stamp forever.
+`density/<unit>` is not an authoring pass: skip §§2–4 entirely, dispatch a fresh
+`blueprint-condenser` for that unit, then go straight to the **§5 reviewer
+loop** — the reviewer's density bars are what confirm the pass landed. There is
+**no elicitation** on a density item. Read
+[the density pass](references/density-pass.md) for the dispatch payload and how
+to handle each part of the condenser's return.
 
 From the flow's nature and the registry, determine which sections apply. Map
 **by project `role`, never by literal technology**:
@@ -247,40 +210,13 @@ From the flow's nature and the registry, determine which sections apply. Map
 
 If no project carries the relevant role, **omit** that section for this flow.
 
-**Platform extensions.** Read the registry project's `platforms:` — the single
-source (it is not in `.config/vwf.yaml`). When a UI project declares targets
-beyond its stack's default, the Screens elicitation covers what genuinely
-differs per platform — navigation/input idiom, window/layout behavior,
-platform-specific states — and records only the differences, never a
-per-platform copy.
-
-**Which platforms implement this flow.** A journey is one flow; each platform
-that implements it gets a `<platform>.md`. **Elicit the platform set per flow**
-— a product decision, bounded by the registry project's declared `platforms:`.
-Most flows implement the project's primary platform only; `auto` in particular
-is selective (signing in or onboarding while driving makes no sense). Record the
-set in `index.md`'s **Platforms** table with a one-line note per platform on how
-its take differs. Steps, acceptance, and jobs stay in `index.md` and are **never
-forked per platform** — a platform that cannot perform a step omits the screens
-for it and says so in its note.
-
-**In-car (`auto`).** `auto` covers **CarPlay and Android Auto together** (the
-vocabulary names form factors, not vendors). An in-car take is a *platform
-file*, not its own flow — the pre-format-15 "in-car subset flow" with its
-`Subset of:` link is retired. Its Screens elicitation pins the in-car specifics
-per screen: the OS **template** it maps to (list / grid / map / now-playing /
-…), the glanceable content subset vs the phone screen, and the
-driver-distraction constraints — recorded under the platform file's **Platform
-deviations**, noting any CarPlay-vs-Android-Auto difference there. In-car UIs
-are template-constrained by the OS; custom layout does not apply.
-
-**Doc unit.** Each registry project declares a `doc_unit` (`entity` / `page` /
-`module`). Under format 9 these map as: `page` doc units (typically a project
-carrying `site`) are authored as **flows** — a page journey is a flow; `module`
-doc units (typically `packages`) stay under `entities/` — a module boundary is a
-supporting contract, with `schema.yaml` written as `N/A — <reason>` when the
-module has no data shape. The same section structure and completeness bars
-apply; an inapplicable surface is `N/A — <reason>`, never silently omitted.
+**Platforms and doc units.** A UI flow's platform set is **elicited per flow**,
+bounded by the registry project's declared `platforms:` — and steps, acceptance
+and jobs stay in `index.md`, **never forked per platform**. An inapplicable
+surface is `N/A — <reason>`, never silently omitted. Read
+[platforms & doc units](references/platforms.md) for the platform-extension
+rules, the in-car (`auto`) specifics, and the `doc_unit` mapping — when the flow
+touches a UI project, or when a project's `doc_unit` is not the obvious one.
 
 **Design-system gate.** If the flow has a **Screens** section (some registry
 project's `role` is `site`, `fullstack` or `frontend`),
@@ -520,56 +456,24 @@ has no screens), the pass approval (§7) **gates on a visual review** of those
 screens. Screens are contracts with happy *and* sad paths; the user must see
 them before approving the flow.
 
-1. **Render (local, never canvas).** Ensure `docs/scratchpad/` is gitignored
-   (`git check-ignore -q docs/scratchpad`; if not, append `docs/scratchpad/` to
-   `.gitignore` — the line rides this pass's commit). Dispatch a fresh
-   `mockup-generator` subagent **per platform file** the pass touched (that
-   platform's Screens table + Components blocks + deviations, the design-system
-   doc(s), and its render dir
-   `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` — overwritten in place;
-   dispatch them in a single message to run concurrently) — the default view
-   plus **every pinned state**; the ui-ux-contract bar makes error and empty
-   pins mandatory, so the sad paths are always in the set. `frontend` (Flutter)
-   screens render as HTML approximations at the design system's viewport for
-   that platform. Mockups are **never pushed to Claude Design**.
-2. **Hand over.** Give the user the absolute file paths to open in a browser,
-   grouped per platform, then record each rendered platform in
-   `design.flows_rendered` as `<project>/<NNN>-<flow>/<platform>` (the
-   render-currency stamp).
-3. **Review.** The user reviews the rendered screens. Remarks route **now**:
-   screen-level → the Screens table / recorded deviations (re-elicit, update the
-   doc; a material contract change re-runs the per-doc reviewer (§5) and
-   re-renders — back to 1); visual-language-level → flag for
-   `<%= it.cmd("vwf:design-system") %>`, parked per the elicitation protocol's parked-scope rule
-   when out of this pass's scope.
-4. **Design-first (alternative to 1–3).** The user may prefer Claude Design to
-   *design* these screens rather than review vwf's contract-derived render: run
-   `<%= it.cmd("vwf:screens") %> prompt <flow>` (it writes the per-platform briefs under
-   `docs/prompts/` — files the user pastes into the canvas chat), record
-   `screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining` —
-   deferred by design, not skipped — and continue the sweep. The later
-   `<%= it.cmd("vwf:screens") %> import <flow>` closes it through a targeted pass here, folding
-   what the canvas decided into the contract delta-by-delta.
-5. **Skip (escape hatch).** The user may explicitly decline the review. Record
-   it honestly: one line in the flow doc's Open Questions ("screens not yet
-   visually reviewed") and `screens/<project>/<NNN>-<flow>/<platform>` in
-   `blueprint.remaining` at stamp time (§9) — coverage stays `partial` while any
-   `screens/` entry remains, exactly like any other hole.
+The procedure — the `mockup-generator` dispatch per platform file, the hand-over
+and the `design.flows_rendered` stamp, how review remarks route, the
+design-first alternative, and the explicit skip — is in
+[screen render & review](references/screen-review.md). Read it now. Whichever
+path the user takes, a deferred or declined review records
+`screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining`, and
+coverage stays `partial` while any `screens/` entry remains — exactly like any
+other hole. Mockups are **never pushed to Claude Design**.
 
 Flows without a Screens section skip this step silently.
 
 ### 7. Reconcile inbound links (rename / delete) & continue the sweep
 
 When this pass **renames** or **removes** a flow or entity, no dangling OKF edge
-may be left behind. Grep `docs/blueprint/` (both catalogs, every flow and entity
-folder, `conventions.md`, `environment.md`) and the active plans under
-`docs/plans/` (including their `covers:` frontmatter) for inbound links to the
-old doc.
-
-- **Rename** → update every inbound link (and the catalogs) in this same pass.
-- **Delete** → list every inbound link and require the user to resolve each
-  (re-point to another doc, or remove it) before the commit. A step or
-  relationship pointing at a deleted doc is never left dangling.
+may be left behind — a step or relationship pointing at a deleted doc is never
+left dangling. Read [rename & delete](references/rename-and-delete.md) for where
+to grep and how each case resolves; a pass that only adds or edits in place
+skips it.
 
 **Approval & continuation.** Summarize what was written/changed (flow, entities
 touched, schema/API deltas, conventions, registry, catalogs, link fixups) plus
@@ -585,22 +489,10 @@ worklist to end sooner — coverage is checked, not negotiated.
 
 When the worklist is otherwise empty, dispatch the
 **`blueprint-coherence-reviewer`** subagent (stateless, fresh) over the bundle,
-naming its **scope**. Pass it **paths, not contents**: the `docs/blueprint/`
-root, the goal-anchor list (names only), the registry block, the names-only flow
-and entity lists, and the `apis/` file list (plus `apis/released/` when
-present). It returns `NO GAPS` or a numbered gap list.
-
-**Choose the shape by bundle size:**
-
-- **≤ 6 flows** → one reviewer at scope `full`. Sharding a small bundle costs
-  more than it saves.
-- **more than 6 flows** → shard: one `flow-walk <flow>` reviewer per flow plus
-  exactly one `bundle` reviewer, **all dispatched in a single message** so they
-  run concurrently. The `flow-walk` shards each walk one flow end-to-end across
-  its entities, schemas, and API contracts; the `bundle` shard owns every check
-  that compares flows to each other (goal coverage, cross-flow consistency,
-  entities and the `erDiagram`, API contracts, bundle hygiene). Merge the
-  returns into one gap list — the shard prefixes keep them unambiguous.
+naming its **scope**. It returns `NO GAPS` or a numbered gap list. The dispatch
+payload (paths, never contents) and the shape to pick — one `full` reviewer for
+a small bundle, or sharded `flow-walk` + `bundle` reviewers for a large one —
+are in [the coherence review](references/coherence-review.md). Read it now.
 
 The `bundle` shard is **mandatory** whichever shape you pick: it carries the
 released-contract diff. A **breaking change to a released API contract without a
