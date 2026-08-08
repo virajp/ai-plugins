@@ -685,49 +685,22 @@ records prior state — so it restores rather than guessing, and leaves the seed
 `~/.config/statusline.json` (it may hold user edits). A dry run writes nothing
 and prints the full diff to stdout, progress to stderr.
 
-Users run it via `npx @askviraj/ai-plugins …`.
+Users run it via `pnpx @askviraj/ai-plugins …`.
 
-### Distribution channels
+### Distribution
 
-Two shapes, and the difference is forced rather than chosen.
+**npm is the only channel** — `pnpx @askviraj/ai-plugins`, which needs Node.
+There is deliberately no standalone binary, no Homebrew tap and no Scoop bucket.
 
-- **npm** (`npx @askviraj/ai-plugins`) — the tsup bundle plus the payload.
-  Requires Node.
-- **Standalone archive** (curl-sh, or fetched by hand) — a `bun build --compile`
-  binary **plus the same payload beside it**. No Node required.
-
-There is deliberately **no Homebrew tap and no Scoop bucket**. Each would be a
-second repository to create and keep current, and both exist only to hand a user
-an archive the release already publishes — with a per-platform sha256 that has
-to be regenerated every release or it breaks every install. The curl-sh
-installer does the same job from this repo, against the same checksums file.
-
-**The binary cannot be self-contained**, and this is the constraint that shapes
-every channel: Claude and Oh-My-Pi each register a marketplace whose source is a
-real rendered directory, which the agent re-reads *in place* on every later
-session. Embedding the payload inside the executable would leave both pointing
-at nothing. So every channel ships a tree, and the installers extract it into a
-prefix and symlink only the executable onto `PATH`. `packageRoot()` finds the
-payload from `process.execPath`, because inside a compiled binary
-`import.meta.dirname` is Bun's virtual filesystem (`/$bunfs/root`) and can never
-lead anywhere real.
-
-- **`i:binaries`** — cross-compiles all five targets (`darwin-arm64`,
-  `darwin-x64`, `linux-x64`, `linux-arm64`, `windows-x64`) **from one host**;
-  bun cross-compiles, so no runner matrix is needed. Assembles one archive per
-  platform (26–40 MB compressed) plus a `checksums-<version>.txt`.
-- **`packaging/install.sh`** — the curl-sh installer. POSIX `sh`, since it runs
-  before anything is installed; resolves the latest release, verifies the
-  checksum, extracts, symlinks.
-- **`.github/workflows/binaries.yml`** — builds and attaches all of it. A
-  **separate workflow** on `release: published`, for two reasons:
-  `release.yml`'s `on:` block is untouchable (npm validates the entry-point
-  workflow filename), and the GitHub Release is created by hand *after* the tag
-  push, so a job in `release.yml` would have nothing to upload to.
-
-**Windows has no scripted installer.** The `windows-x64` archive is still built
-and attached to every release — `install.sh` is POSIX `sh` and says so — so
-Windows users take `npx @askviraj/ai-plugins` or unzip the archive themselves.
+A binary here could never be self-contained: Claude and Oh-My-Pi each register a
+marketplace whose source is a real rendered directory, which the agent re-reads
+*in place* on every later session, so the payload has to sit on disk beside the
+executable rather than inside it. That made every non-npm
+channel a per-platform archive plus a per-release checksum file plus an
+extract-and-symlink installer — a second distribution system to keep current,
+delivering exactly what the npm package already delivers. So `packageRoot()`
+resolves from `import.meta.dirname` alone, and Windows users run the same `pnpx`
+command everyone else does.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):
