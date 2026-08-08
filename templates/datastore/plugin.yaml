@@ -1,0 +1,23 @@
+name: datastore
+version: 0.1.0
+description: "Datastore capability plugin for vwf — the neutral contract every
+  datastore must satisfy (write versioning, transactional multi-record writes,
+  server-generated time, the services-layer access rule, a deterministic local
+  stack) plus the one provider that needs no cloud: **PostgreSQL**, self-hosted
+  or managed anywhere. Managed flavours — Firestore, Cloud SQL, and the rest —
+  come from the project's own cloud plugin, not from here. Implements the vwf
+  stack-adapter contract."
+category: development
+tags:
+  - datastore
+  - database
+  - postgres
+  - relational
+  - capability
+  - vwf-stack-adapter
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+optIn: true

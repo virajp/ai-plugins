@@ -409,8 +409,8 @@ they never merge because they never overlap:
 | Axis        | Scope        | Ships today                                                                                                                                                                                       |
 | ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **project** | per project  | one or more per role — see below                                                                                                                                                                  |
-| **backing** | product-wide | `firebase` (Firestore · Auth · FCM · Temporal · OTel-LGTM) · `postgres-object-storage` (Postgres · S3-compatible · OIDC — fully self-hostable)                                                    |
-| **deploy**  | product-wide | `cloud-run` (Artifact Registry · Cloud Run · Zero Trust) · `container-generic` (OCI image · any registry · any container host) · `npm-package` (published, not deployed — the CLI/library target) |
+| **backing** | product-wide | none from vwf — a **capability** plugin ships each one: `postgres` (`datastore`) · `oidc` (`identity`) · `otel-lgtm` (`observability`) · `temporal` (`orchestration`); `object-storage` is contract-only. A **cloud** plugin ships its managed set — `firebase` and `cloud-sql` from `gcp` |
+| **deploy**  | product-wide | `npm-package` (published, not deployed — the CLI/library target) · `cloud-run` and `gke` from `gcp` · `zero-trust-access` from `cloudflare`, the private plane that composes with any host                                                                                                |
 | **repo**    | per repo     | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                                                                          |
 
 Project-axis templates:
@@ -440,8 +440,9 @@ or Postgres, on Cloud Run or any container host. Before format 19 all three were
 welded into one document, so picking `service` because you wanted Hono silently
 also bought you Firestore, Firebase Auth, Temporal and Cloud Run — none of it
 declared. Now a project template names no vendor and a backing template names no
-framework, so `postgres-object-storage` + `container-generic` is a completely
-vendor-free path through vwf.
+framework — and a backing template is now one capability rather than a vendor
+bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each from its own
+capability plugin, is a completely vendor-free path through vwf.
 
 An operator back-office is `role: fullstack` plus the `operator-rbac`
 capability, and picks the `fullstack` template. A `frontend` project on a screen
@@ -1364,6 +1365,12 @@ your stack. Each has a dedicated guide:
 | **[cicd](./docs/cicd.md)**                                                         | A `/cicd:workflow` skill — resolves the repo's CI system from config, then generates its delivery pipeline (every tool via mise); supports polyrepo + monorepo                                | `--user cicd`                               |
 | **[design-tools](./docs/design-tools.md)**                                         | The vwf design adapter — two skills resolving the design tool **per project** (`claude-design`, `lovable`, `stitch`) + the Claude Design MCP server                                           | `--user design-tools`                       |
 | **cloudflare**                                                                     | vwf stack adapter for Cloudflare — **parked at Zero Trust Access**; Workers, Pages, R2, D1, KV and the rest arrive under their own plan (opt-in)                                              | `--user cloudflare`                         |
+| **gcp**                                                                            | vwf stack adapter for Google Cloud — `firebase`/`cloud-sql` backing, `cloud-run`/`gke` deploy, plus cost, IAM and local-emulator judgment skills (opt-in)                                     | `--user gcp`                                |
+| **datastore**                                                                      | vwf **capability** plugin — the neutral datastore contract plus **Postgres**, the provider that needs no cloud; managed flavours come from your cloud plugin (opt-in)                         | `--user datastore`                          |
+| **identity**                                                                       | vwf **capability** plugin — the neutral identity contract (claims carry status, never roles) plus any **OIDC** issuer (opt-in)                                                                | `--user identity`                           |
+| **observability**                                                                  | vwf **capability** plugin — the neutral telemetry contract (emit OTLP, never a vendor SDK) plus the self-hosted **OTel-LGTM** sink (opt-in)                                                   | `--user observability`                      |
+| **orchestration**                                                                  | vwf **capability** plugin — the neutral contract for work that happens later, plus **Temporal** (opt-in)                                                                                      | `--user orchestration`                      |
+| **object-storage**                                                                 | vwf **capability** plugin, **contract-only** — every object store is a cloud's, so it ships requirements and says so out loud rather than returning an empty menu (opt-in)                    | `--user object-storage`                     |
 | **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                          | `--user mempalace`                          |
 | **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; also a `vwf` dependency)                                                                                                                        | `--user`/`--project andrej-karpathy-skills` |
 

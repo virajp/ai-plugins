@@ -79,9 +79,9 @@ Three more axes compose with the project one — pick one of each:
 
 | Axis      | Ships today                                                                                                                                                                                                                            |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `backing` | [firebase](<%= it.root %>/assets/stacks/backing/firebase.md) · [postgres-object-storage](<%= it.root %>/assets/stacks/backing/postgres-object-storage.md)                                                                |
-| `deploy`  | [cloud-run](<%= it.root %>/assets/stacks/deploy/cloud-run.md) · [container-generic](<%= it.root %>/assets/stacks/deploy/container-generic.md) · `npm-package` (in the **typescript** plugin) |
-| `repo`    | `pnpm-turbo` · `bun` — both in the **typescript** plugin                                                                                                                                                                                |
+| `backing` | none here — a **capability** plugin ships the contract and its own provider (`datastore`, `identity`, `observability`, `orchestration`, `object-storage`), a **cloud** plugin the managed flavour                                      |
+| `deploy`  | `npm-package` (in the **typescript** plugin) · the hosted targets come from a **cloud** plugin (`gcp`, `cloudflare`)                                                                                                                   |
+| `repo`    | `pnpm-turbo` · `bun` — both in the **typescript** plugin                                                                                                                                                                              |
 
 **One entry per role is not a default.** `<%= it.cmd("vwf:architecture") %>` presents the menu
 for the project's role and the user picks, always — plus an **other (describe)**
