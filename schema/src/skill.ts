@@ -35,8 +35,8 @@ export const Skill = z.object({
 
   /**
    * Globs that scope where the skill auto-applies. Only Claude and Cursor
-   * honour these; OpenCode and Codex have no equivalent, Oh-My-Pi treats them
-   * as an advisory ranking signal.
+   * honour these; OpenCode has no equivalent, and Oh-My-Pi treats them as an
+   * advisory ranking signal.
    */
   paths: z.array(z.string()).optional(),
 

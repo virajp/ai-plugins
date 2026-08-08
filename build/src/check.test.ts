@@ -34,7 +34,6 @@ describe("check", () => {
       "opencode",
       "cursor",
       "ohmypi",
-      "codex",
     ]);
     for (const target of result.coverage) {
       expect(target.outputs, target.target).toBeGreaterThan(400);

@@ -103,9 +103,9 @@ function checkTemplates(workspace: Workspace): Finding[] {
   const findings: Finding[] = [];
   const declared = new Set(workspace.plugins.map(p => p.manifest.name));
 
-  // Skills land in one flat namespace on OpenCode, Oh-My-Pi and Codex alike —
-  // they are keyed by bare name with no plugin qualifier — so a collision
-  // between two plugins silently drops one of them.
+  // Skills land in one flat namespace on OpenCode and Oh-My-Pi alike — they
+  // are keyed by bare name with no plugin qualifier — so a collision between
+  // two plugins silently drops one of them.
   const skillOwners = new Map<string, string[]>();
 
   for (const plugin of workspace.plugins) {
@@ -228,9 +228,10 @@ function checkAgentReferences(plugin: PluginSource): Finding[] {
  * Frontmatter must parse under a *strict* YAML parser.
  *
  * A lenient host accepting it proves nothing: a colon-space inside a folded
- * plain scalar shipped for months because Claude tolerated it, while Codex
- * dropped the whole skill with no error. Renderers re-emit frontmatter verbatim
- * as ordered (key, raw) pairs, so nothing normalises a bad scalar away.
+ * plain scalar shipped for months because Claude tolerated it, while a strict
+ * host dropped the whole skill with no error. Renderers re-emit frontmatter
+ * verbatim as ordered (key, raw) pairs, so nothing normalises a bad scalar
+ * away.
  */
 function checkFrontmatterYaml(plugin: PluginSource): Finding[] {
   const findings: Finding[] = [];

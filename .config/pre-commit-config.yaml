@@ -41,7 +41,7 @@ repos:
         entry: mise x -- mise run plugins:check
         language: system
         pass_filenames: false
-        files: ^(templates/|build/|schema/|claude/|codex/|cursor/|ohmypi/|opencode/)
+        files: ^(templates/|build/|schema/|claude/|cursor/|ohmypi/|opencode/)
         stages: [ pre-commit ]
       # The committed render must be exactly what templates/ renders to. Catches
       # the case the two hooks above cannot: output edited by hand, or a render
@@ -51,7 +51,7 @@ repos:
         entry: mise x -- mise run plugins:render-clean
         language: system
         pass_filenames: false
-        files: ^(templates/|build/|schema/|claude/|codex/|cursor/|ohmypi/|opencode/)
+        files: ^(templates/|build/|schema/|claude/|cursor/|ohmypi/|opencode/)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -101,7 +101,7 @@ repos:
         # explicitly, and the linter warns on each one it is configured to
         # ignore — enough warnings to fail the run. Keep them out of the
         # argument list entirely.
-        exclude: ^(claude|codex|cursor|ohmypi|opencode)/
+        exclude: ^(claude|cursor|ohmypi|opencode)/
         language: system
         stages: [ pre-commit ]
 

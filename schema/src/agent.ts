@@ -9,10 +9,9 @@ import {
  * A subagent the workflow skills delegate to.
  *
  * Every target has subagents, but no two agree on the encoding: Claude and
- * Cursor use Markdown + YAML frontmatter, Oh-My-Pi uses its own frontmatter
- * contract (and explicitly refuses to read Claude's), and Codex uses TOML with
- * the body moved into a `developer_instructions` field. The neutral shape
- * carries what all of them can express; renderers project down.
+ * Cursor use Markdown + YAML frontmatter, and Oh-My-Pi uses its own
+ * frontmatter contract (explicitly refusing to read Claude's). The neutral
+ * shape carries what all of them can express; renderers project down.
  */
 export const Agent = z.object({
   name: z
@@ -22,8 +21,7 @@ export const Agent = z.object({
 
   /**
    * Tool allowlist. Claude and Oh-My-Pi enforce this by name; Cursor collapses
-   * it to a single `readonly` boolean; Codex approximates it with sandbox mode
-   * and MCP-server narrowing.
+   * it to a single `readonly` boolean.
    */
   tools: z.array(z.string()).optional(),
 

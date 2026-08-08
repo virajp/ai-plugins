@@ -4,7 +4,6 @@ graphify-out/graph.json merge=graphify
 # artifacts, but marked generated so it collapses in review — every byte in
 # these trees is a pure function of templates/.
 claude/** linguist-generated=true
-codex/** linguist-generated=true
 cursor/** linguist-generated=true
 ohmypi/** linguist-generated=true
 opencode/** linguist-generated=true

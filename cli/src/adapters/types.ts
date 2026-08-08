@@ -31,10 +31,10 @@ export function isEmptyPlan(plan: AdapterPlan): boolean {
  * The plan as a flat list, for the receipt to record.
  *
  * This is the plan **as requested**, not as an adapter may have redirected it —
- * Cursor moves user-scope installs to project scope, Codex the other way. That
- * is deliberate: the redirects are deterministic, so replaying the recorded plan
- * on `--upgrade` lands in the same place, and recording the redirected form
- * would bake one target's limitation into a record the user never asked for.
+ * Cursor moves user-scope installs to project scope. That is deliberate: the
+ * redirects are deterministic, so replaying the recorded plan on `--upgrade`
+ * lands in the same place, and recording the redirected form would bake one
+ * target's limitation into a record the user never asked for.
  */
 export function planPlugins(
   plan: AdapterPlan,
@@ -81,7 +81,7 @@ export interface AdapterContext {
    * Runs an external command.
    *
    * Required rather than optional, and injected rather than imported, because
-   * the marketplace-backed targets (Claude, Codex, Oh-My-Pi) install by driving
+   * the marketplace-backed targets (Claude, Oh-My-Pi) install by driving
    * their own CLI — so for those adapters this *is* the install. A default
    * would give tests a second code path to the one that ships.
    */

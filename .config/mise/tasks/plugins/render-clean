@@ -32,7 +32,7 @@ node --experimental-strip-types build/src/cli.ts render >/dev/null
 # ` M`, `MM`, `??` and friends all carry a non-blank second column and are real
 # failures: the render produced something that is not what is being committed.
 # In CI nothing is staged, so any drift shows up there too.
-drift="$(git status --porcelain -- claude codex cursor ohmypi opencode plugins.json .claude-plugin .cursor-plugin | awk 'substr($0, 2, 1) != " "')"
+drift="$(git status --porcelain -- claude cursor ohmypi opencode plugins.json .claude-plugin .cursor-plugin | awk 'substr($0, 2, 1) != " "')"
 if [[ -n "$drift" ]]; then
   print_error "generated output is not what templates/ renders to — re-run 'mise run plugins:build' and stage the result"
   printf '%s\n' "$drift"

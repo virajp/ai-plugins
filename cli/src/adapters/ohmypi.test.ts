@@ -107,7 +107,7 @@ describe("ohmypi adapter", () => {
   });
 
   it("installs both scopes in one run, without redirecting either", () => {
-    // Unlike Cursor and Codex, Oh-My-Pi supports both scopes natively.
+    // Unlike Cursor, Oh-My-Pi supports both scopes natively.
     ohmypi.apply(context, planFor(["markdown"], ["mise"]));
 
     const installs = ran.filter(c => c.includes("install")).map(c =>

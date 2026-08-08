@@ -20,13 +20,13 @@ statusline CLI.
 ### Templates, targets, and the rendered trees
 
 Plugins are **authored once, in a target-agnostic form, and rendered per
-agent**. Claude Code is one target of five, not the source shape:
+agent**. Claude Code is one target of four, not the source shape:
 
 ```text
 templates/<plugin>/        authored source — plugin.yaml + skills/ + agents/
   ↓  build/ (TypeScript, no build step of its own — node strips the types)
 claude/plugins/**          committed, one tree per target, at the repo root
-{opencode,cursor,ohmypi,codex}/**
+{opencode,cursor,ohmypi}/**
 plugins.json                       the target-agnostic plugin index the CLI reads
 .claude-plugin/marketplace.json    generated at the repo root
 .cursor-plugin/marketplace.json    likewise — Cursor reads it from there
@@ -68,7 +68,7 @@ Retiring it retires the byte-parity gate with it. That gate was never automated
 — it was a manual `diff -rq plugins claude/plugins`, which settled at **3
 justified hunks** (`lovable` and `stitch` dropping a `description` duplicated
 from the marketplace entry; `git-workflow` dropping `user-invocable: true`,
-which is the default). All five targets now stand on the same footing:
+which is the default). All four targets now stand on the same footing:
 `plugins:check` plus the schema and renderer suites are the whole defence, and
 `schema/src/frontmatter.test.ts` still proves `emit(parse(x)) === x` over every
 authored document — the parity property in miniature, and the part that actually
@@ -88,18 +88,17 @@ target, not chosen:
 
 - **Copy** — OpenCode alone, because it has no plugin concept: skills, agents
   and commands go into well-known directories and the rest is config to merge.
-- **Marketplace** — everyone else. Claude, Codex and Oh-My-Pi are driven through
-  their own CLI (`plugin marketplace add` + `plugin install`), because each owns
-  bookkeeping this tool has no business editing: Codex a versioned cache plus
-  `config.toml`, Oh-My-Pi an npm-shaped tree with a lockfile. Cursor has no CLI,
-  so its adapter writes the reference itself.
+- **Marketplace** — everyone else. Claude and Oh-My-Pi are driven through their
+  own CLI (`plugin marketplace add` + `plugin install`), because each owns
+  bookkeeping this tool has no business editing — Oh-My-Pi an npm-shaped tree
+  with a lockfile. Cursor has no CLI, so its adapter writes the reference
+  itself.
 
 **Scope is declared by `plugin.yaml` and honoured where the target supports it;
 where it does not, the request falls back rather than failing.** Only OpenCode
 and Oh-My-Pi support both natively. Cursor is project-only — user-scope
 marketplace installs are account-side, and the local file that once held them is
-closed (`addGitHubPlugin` throws). Codex is user-only — `codex plugin add` has
-no `--scope`. Each redirect logs a note; neither is silent.
+closed (`addGitHubPlugin` throws). The redirect logs a note; it is never silent.
 
 An install returns a **receipt** recording prior state, so uninstall restores
 rather than guesses. For CLI-driven targets an entry pairs the command run with
@@ -120,17 +119,17 @@ allows one Trusted Publisher and validates the entry-point filename):
 - **`plugins:render-clean`** — renders, then fails if that produced anything not
   already staged. This is what catches a template edited without a rebuild;
   nothing else can, because the rendered trees are committed.
-- **`plugins:check`** — validates `templates/` **and** all five rendered
+- **`plugins:check`** — validates `templates/` **and** all four rendered
   targets, then prints the per-target coverage report. On the source: manifest
   name↔dir, dependencies resolving within the marketplace, hook scripts existing
   and executable, **agent cross-reference resolution** (every role-shaped
   `` `token` `` in a plugin's own prose names a real agent, and every declared
   agent is referenced at least once — the two directions cover each other on a
   rename), cross-plugin skill-name uniqueness (skills share one flat namespace
-  on OpenCode, Oh-My-Pi and Codex), the vwf design-adapter contract, relative
-  links under `assets/examples/**`, and **strict-YAML frontmatter**. On each
-  rendered target: no surviving template tags, strict-YAML frontmatter, and
-  every root-relative reference resolving to something actually emitted.
+  on OpenCode and Oh-My-Pi), the vwf design-adapter contract, relative links
+  under `assets/examples/**`, and **strict-YAML frontmatter**. On each rendered
+  target: no surviving template tags, strict-YAML frontmatter, and every
+  root-relative reference resolving to something actually emitted.
 - **`vwf:test`** — table-tests the `vwf` `npm-normalize.sh` hook through the
   system sed (the BSD-sed portability guarantee), for **both** package managers:
   each table runs in a temp dir seeded with the lockfile that selects pnpm or
@@ -164,7 +163,7 @@ design (a plugin may hold skills versioned on their own cadence).
   gitignored.** A rendered tree is meant to be diffed in review; a bundle diff
   is noise.
 - **Frontmatter must be strict-YAML valid.** Claude's parser is lenient and will
-  accept what Codex's rejects outright — and a rejected skill is dropped
+  accept what a strict parser rejects outright — and a rejected skill is dropped
   silently, with no error and no warning.
 
 ## Plugins
@@ -215,7 +214,7 @@ Plugins may declare any combination of:
   `typescript-lsp` has to be written as `typescript` there). `templates/flutter`
   bundles three — `dart-lsp` (run via `mise`) plus `kotlin-lsp` and
   `sourcekit-lsp` (Swift), which invoke system-installed binaries on `PATH`.
-  Cursor and Codex have no LSP surface at all; the build reports it as a gap.
+  Cursor has no LSP surface at all; the build reports it as a gap.
 - **`mcpServers`** — MCP server definitions, a discriminated union on
   `transport` (`stdio` or `http`). See `templates/context7/plugin.yaml`.
 - **`dependencies`** — other plugins this plugin requires (see below), as a
@@ -244,18 +243,17 @@ do not need to be listed in `plugin.yaml`:
 
 ### Marketplace manifests
 
-Four of the five targets have a native plugin marketplace, so `plugins:build`
+Three of the four targets have a native plugin marketplace, so `plugins:build`
 generates one per target from the manifests. **Only OpenCode has none** — it has
 no plugin concept at all, which is why its installer copies a rendered tree
-while the other four register a marketplace and let the tool do the installing.
+while the other three register a marketplace and let the tool do the installing.
 Do not edit any of them by hand; `plugins:render-clean` will fail.
 
-| Target   | Manifest                          | Plugin source                                 |
-| -------- | --------------------------------- | --------------------------------------------- |
-| Claude   | `.claude-plugin/marketplace.json` | `./claude/plugins/<name>`                     |
-| Cursor   | `.cursor-plugin/marketplace.json` | `git-subdir` → `cursor/<name>`                |
-| Codex    | `codex/.agents/plugins/…json`     | `{source: "local", path: "./plugins/<name>"}` |
-| Oh-My-Pi | `ohmypi/.omp-plugin/…json`        | `./<name>`                                    |
+| Target   | Manifest                          | Plugin source                  |
+| -------- | --------------------------------- | ------------------------------ |
+| Claude   | `.claude-plugin/marketplace.json` | `./claude/plugins/<name>`      |
+| Cursor   | `.cursor-plugin/marketplace.json` | `git-subdir` → `cursor/<name>` |
+| Oh-My-Pi | `ohmypi/.omp-plugin/…json`        | `./<name>`                     |
 
 Two manifests live at the **repo root** rather than under `<repo>/<target>/`,
 because that is where the tool looks when the marketplace is added from this
@@ -265,16 +263,12 @@ Cursor's must be there for a second reason: Cursor accepts
 **first** — so without ours at the root it would read Claude's and resolve every
 plugin to a Claude-rendered bundle.
 
-Three traps, each verified by running the real tool and each silent when wrong:
+Two traps, each verified by running the real tool and each silent when wrong:
 
 - **Sources resolve against the marketplace root**, not the repo root.
   Oh-My-Pi's were once spelled from the repo root and resolved to
   `ohmypi/ohmypi/<name>`, failing every install. `plugins:check` cannot catch
   this — the path exists, just not where the tool looks.
-- **Codex's source discriminator is `"local"`.** Any other value still parses
-  and still registers; `codex plugin list` simply reports "No marketplace
-  plugins found", naming no field. It looks exactly like a disabled feature
-  flag, which is a detour worth not repeating — no flag is involved.
 - **Cursor's sources are git-only** — a bare string, or an object tagged
   `github` / `url` / `git-subdir`; there is no local-path variant. So a Cursor
   install clones this repo and reads whatever ref it resolves, rather than the
@@ -559,7 +553,7 @@ findings loop-back quietly stops persisting.
 ## The installer & statusline CLI
 
 The statusline is **not** a plugin — it ships inside `@askviraj/ai-plugins`, the
-`citty` CLI that installs the toolkit across all five targets (marketplace
+`citty` CLI that installs the toolkit across all four targets (marketplace
 registration or a copied tree, plus the powerline statusline).
 
 **`cli/` is the source; `bin/` is the build output, and `bin/` is what npm
@@ -574,7 +568,7 @@ to be diffed in review, whereas a bundle diff is noise. `i:build` regenerates
 it, and `release.yml` already calls `i:build` before publishing, so its trigger
 surface is untouched.
 
-The published tarball is `bin` + `tools` + the five rendered trees +
+The published tarball is `bin` + `tools` + the four rendered trees +
 `plugins.json` + both root marketplace manifests: every adapter reads
 `<target>/` at install time through `context.sourceRoot`, and the Claude and
 Cursor adapters read `.claude-plugin/marketplace.json` and
@@ -629,10 +623,10 @@ Layout:
   undo an install that already succeeded.
 - `cli/src/version.ts` — `--version`. It does **not** ask each tool what it has
   installed the way `bin/claude.mjs` asked `claude plugin list --json`; with
-  five targets that is five bookkeeping formats. Instead, a plugin's version *in
+  four targets that is four bookkeeping formats. Instead, a plugin's version *in
   this build* is what an install would give you — every target reads `<target>/`
   in place or copies it — so the local manifest against the one on `main`
-  answers it for all five at once. A plugin here but not on `main` is labelled
+  answers it for all four at once. A plugin here but not on `main` is labelled
   `(not on main yet)` rather than left bare, which read as a failed lookup.
 - `cli/src/statusline.ts` — the statusline installer. Not a plugin and therefore
   not an adapter; wired straight from the router with its own receipt. See
@@ -667,11 +661,11 @@ are both gone, because there is no longer a second copy to disagree. Names are
 bare and validated against that index, so an `@marketplace` or path qualifier is
 simply not a known name and the CLI can only install from `virajp-plugins`.
 
-**Targets.** `--platform` (repeatable) selects among `claude`, `codex`,
-`cursor`, `ohmypi`, `opencode`; omitted, every tool detected on `PATH` is
-targeted. A selected target whose tool is absent is *skipped with a note*, not
-failed — targets are independent, and one missing agent should not fail a run
-that installed into three others. `--force` acts on it anyway.
+**Targets.** `--platform` (repeatable) selects among `claude`, `cursor`,
+`ohmypi`, `opencode`; omitted, every tool detected on `PATH` is targeted. A
+selected target whose tool is absent is *skipped with a note*, not failed —
+targets are independent, and one missing agent should not fail a run that
+installed into the others. `--force` acts on it anyway.
 
 **Statusline.** `--statusline` installs both `statusLine` and
 `subagentStatusLine` plus the caps hook. **Tri-state**: `--statusline` asks,
@@ -709,14 +703,14 @@ to be regenerated every release or it breaks every install. The curl-sh
 installer does the same job from this repo, against the same checksums file.
 
 **The binary cannot be self-contained**, and this is the constraint that shapes
-every channel: Claude, Codex and Oh-My-Pi each register a marketplace whose
-source is a real rendered directory, which the agent re-reads *in place* on
-every later session. Embedding the payload inside the executable would leave
-those three pointing at nothing. So every channel ships a tree, and the
-installers extract it into a prefix and symlink only the executable onto `PATH`.
-`packageRoot()` finds the payload from `process.execPath`, because inside a
-compiled binary `import.meta.dirname` is Bun's virtual filesystem
-(`/$bunfs/root`) and can never lead anywhere real.
+every channel: Claude and Oh-My-Pi each register a marketplace whose source is a
+real rendered directory, which the agent re-reads *in place* on every later
+session. Embedding the payload inside the executable would leave both pointing
+at nothing. So every channel ships a tree, and the installers extract it into a
+prefix and symlink only the executable onto `PATH`. `packageRoot()` finds the
+payload from `process.execPath`, because inside a compiled binary
+`import.meta.dirname` is Bun's virtual filesystem (`/$bunfs/root`) and can never
+lead anywhere real.
 
 - **`i:binaries`** — cross-compiles all five targets (`darwin-arm64`,
   `darwin-x64`, `linux-x64`, `linux-arm64`, `windows-x64`) **from one host**;
@@ -880,9 +874,9 @@ gh release create vX.Y.Z --title vX.Y.Z --notes-file <notes> --verify-tag
 
 `vwf` ships two `PreToolUse` / `Bash` hooks, authored in `hooks/hooks.yaml` as
 *intent* (`event`, `matcher`, `action`, `script`) so each renderer emits its own
-mechanism — Claude and Codex `hooks.json` with `updatedInput`, OpenCode a
-generated JS plugin mutating `output.args`, Cursor and Oh-My-Pi a
-deny-with-correction, since neither can rewrite a command:
+mechanism — Claude a `hooks.json` with `updatedInput`, OpenCode a generated JS
+plugin mutating `output.args`, Cursor and Oh-My-Pi a deny-with-correction, since
+neither can rewrite a command:
 
 - `hooks/npm-normalize.sh` — rewrites `npm`/`npx` to the repo's package manager.
   vwf allows exactly two for JS/TS — **pnpm** and **bun** — and the hook
@@ -925,8 +919,8 @@ from the manifests, so step 2 *is* the registration.
 Create `templates/vwf/skills/<name>/SKILL.md` — no other registration is needed
 (auto-discovered). For auto-applying doctrine, set `invocation: model` +
 `paths:` scoping. Skill names must be unique across **all** local plugins
-(`plugins:check` enforces this — skills share one flat namespace on OpenCode,
-Oh-My-Pi and Codex). Then pick the invocation mode per the policy below, and run
+(`plugins:check` enforces this — skills share one flat namespace on OpenCode and
+Oh-My-Pi). Then pick the invocation mode per the policy below, and run
 `mise run plugins:build`.
 
 ### Invocation policy
@@ -965,26 +959,21 @@ delegates to it.
 **How each target spells it** (all verified against a real install or vendor
 source — do not infer these):
 
-| Target   | `user`                                                    | `model`                 | Invocation                            |
-| -------- | --------------------------------------------------------- | ----------------------- | ------------------------------------- |
-| Claude   | `disable-model-invocation: true`                          | `user-invocable: false` | `/vwf:plan`                           |
-| OpenCode | moved to `command/<plugin>-<skill>`                       | bare, under `skills/`   | bare name; `/vwf-setup` for user-only |
-| Cursor   | `disable-model-invocation: true`                          | bare + `paths:`         | `/plan`                               |
-| Oh-My-Pi | `disableModelInvocation: true`                            | **bare — no key**       | `/skill:plan`                         |
-| Codex    | `agents/openai.yaml` → `allow_implicit_invocation: false` | no sidecar              | `$plan`                               |
+| Target   | `user`                              | `model`                 | Invocation                            |
+| -------- | ----------------------------------- | ----------------------- | ------------------------------------- |
+| Claude   | `disable-model-invocation: true`    | `user-invocable: false` | `/vwf:plan`                           |
+| OpenCode | moved to `command/<plugin>-<skill>` | bare, under `skills/`   | bare name; `/vwf-setup` for user-only |
+| Cursor   | `disable-model-invocation: true`    | bare + `paths:`         | `/plan`                               |
+| Oh-My-Pi | `disableModelInvocation: true`      | **bare — no key**       | `/skill:plan`                         |
 
-Two of these are counter-intuitive and were found only by checking real
-installs, each having silently broken an entire class of skill:
+One of these is counter-intuitive and was found only by checking a real install,
+having silently broken an entire class of skill:
 
 - **Oh-My-Pi has one axis, not two.** `hide` and `disableModelInvocation` are
   aliases the loader ORs into a single flag meaning *hidden from the model*.
   Doctrine must therefore carry **neither** — emitting `hide` on it drops it
   from the prompt, and the skill still loads and still lists while never firing.
   Nothing can hide a skill from the slash menu alone.
-- **Codex reads its policy sidecar at `<skill>/agents/openai.yaml`**, not the
-  skill root. At the root it is never found, `allow_implicit_invocation` falls
-  back to its default of true, and every user-only skill becomes model-invocable
-  — the exact inverse failure.
 
 ## Installation (end-user)
 

@@ -1,7 +1,7 @@
 /**
  * Claude Code.
  *
- * Driven through `claude plugin`, like Codex and Oh-My-Pi. The marketplace is
+ * Driven through `claude plugin`, like Oh-My-Pi. The marketplace is
  * the repo root — `.claude-plugin/marketplace.json` lives there and its sources
  * are root-relative — and Claude registers it as a `directory` source, reading
  * `claude/plugins/<name>` **in place** rather than copying. So an install

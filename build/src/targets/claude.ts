@@ -185,8 +185,8 @@ function pluginJson(manifest: Manifest): string {
   }
   // No `description`: the marketplace entry carries it. Only 2 of 12 authored
   // manifests duplicated it, and Claude reads the marketplace copy when
-  // listing plugins. Other targets (Codex requires it) get it from the neutral
-  // manifest, which still holds it.
+  // listing plugins. Other targets get it from the neutral manifest, which
+  // still holds it.
 
   const lsp = Object.entries(manifest.lspServers);
   if (lsp.length > 0) {

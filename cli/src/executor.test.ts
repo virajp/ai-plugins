@@ -208,13 +208,13 @@ describe("execute", () => {
     // Targets are independent; stopping halfway would leave some installed with
     // no receipt for the ones that succeeded.
     const boom = fakeAdapter({
-      id: "codex",
+      id: "claude",
       apply: () => {
         throw new Error("boom");
       },
     });
     const outcomes = execute(
-      [[boom, { ...planFor(["markdown"]), target: "codex" }], [
+      [[boom, { ...planFor(["markdown"]), target: "claude" }], [
         fakeAdapter(),
         planFor(["markdown"]),
       ]],
@@ -295,12 +295,12 @@ describe("renderProgress", () => {
   it("distinguishes success, skip and failure", () => {
     const text = renderProgress([
       { target: "opencode", actions: [{ summary: "a" }] },
-      { target: "codex", actions: [], skipped: "not-installed" },
+      { target: "claude", actions: [], skipped: "not-installed" },
       { target: "cursor", actions: [], error: "boom" },
     ]);
 
     expect(text).toContain("✔ opencode: 1 change(s)");
-    expect(text).toContain("- codex: not installed");
+    expect(text).toContain("- claude: not installed");
     expect(text).toContain("✘ cursor: boom");
   });
 });
@@ -338,12 +338,12 @@ describe("renderDiff", () => {
 
   it("prints a summary alone for an action with no diff", () => {
     const text = renderDiff([{
-      target: "codex",
-      actions: [{ summary: "codex plugin add vwf@virajp-plugins" }],
+      target: "claude",
+      actions: [{ summary: "claude plugin install vwf@virajp-plugins" }],
     }]);
 
     expect(text.trim()).toBe(
-      "# codex\n  codex plugin add vwf@virajp-plugins",
+      "# claude\n  claude plugin install vwf@virajp-plugins",
     );
   });
 });

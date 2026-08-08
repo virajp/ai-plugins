@@ -1378,14 +1378,14 @@ configuration reference.
 ## The installer CLI
 
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins)
-installs the toolkit across **five agents** — Claude Code, Codex, Cursor,
-Oh-My-Pi and OpenCode. Four of them have a native plugin marketplace, so the CLI
-registers `virajp-plugins` and lets the agent's own CLI do the installing.
-OpenCode has no plugin concept, so its bundle is copied into place.
+installs the toolkit across **four agents** — Claude Code, Cursor, Oh-My-Pi and
+OpenCode. Three of them have a native plugin marketplace, so the CLI registers
+`virajp-plugins` and lets the agent's own CLI do the installing. OpenCode has no
+plugin concept, so its bundle is copied into place.
 
-`--platform` picks the target (repeatable: `claude`, `codex`, `cursor`,
-`ohmypi`, `opencode`); omitted, the CLI **detects** which tools are on `PATH`
-and installs for every one it finds.
+`--platform` picks the target (repeatable: `claude`, `cursor`, `ohmypi`,
+`opencode`); omitted, the CLI **detects** which tools are on `PATH` and installs
+for every one it finds.
 
 ### Installing it
 
@@ -1402,7 +1402,7 @@ Standalone builds ship for macOS (arm64/x64), Linux (arm64/x64) and Windows
 [release](https://github.com/virajp/ai-plugins/releases) with a
 `checksums-<version>.txt` the installer verifies against. Each is an **archive,
 not a lone executable** — the binary reads its rendered plugin trees from the
-directories beside it, because three of the five agents register a marketplace
+directories beside it, because two of the four agents register a marketplace
 whose source is a real directory they re-read on every later session.
 
 The install script is POSIX `sh`, so **on Windows** use `npx` or unzip the
