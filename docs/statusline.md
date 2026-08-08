@@ -23,12 +23,18 @@ is data-driven from JSON, so you can restyle it per repo without touching code.
 
 ## Wiring it up
 
-Run the installer with `npx` (or `pnpm dlx`) — no global install needed:
+Run the installer with `pnpx` — no global install needed:
 
 ```sh
 # install the statusline — both the main bar and the subagent panel
-npx @askviraj/ai-plugins --statusline
+pnpx @askviraj/ai-plugins --statusline
 ```
+
+**npm is the only channel.** There is deliberately no standalone binary, no
+Homebrew tap and no Scoop bucket: a binary here could never be self-contained,
+because the marketplace targets re-read a real rendered directory on every later
+session, so the payload has to sit on disk beside the executable rather than
+inside it. Windows runs the same `pnpx` command everyone else does.
 
 `--all` installs the whole toolkit and so brings the statusline with it; pass
 `--no-statusline` alongside it for a plugins-only run.
@@ -47,9 +53,13 @@ The CLI:
 If a target key already exists, the CLI prints the current value and asks before
 overwriting. Pass `--yes` (`-y`) to overwrite without prompting.
 
-The statusline is a **Claude Code surface** (it lives under `~/.claude`). When
-the CLI targets only OpenCode (`--platform opencode`), `--statusline` is skipped
-with a note.
+The statusline is a **Claude Code surface** (it lives under `~/.claude`). The
+CLI drives four targets — `claude`, `cursor`, `ohmypi` and `opencode` — and the
+statusline reaches only the first: on a run that does not target Claude Code
+(say `--platform opencode`), `--statusline` is skipped with a note. The note is
+printed only when you asked for it **explicitly**, so a bare `--all` on a
+Claude-less machine stays quiet. None of the other three exposes a scriptable
+status surface to install into.
 
 The blocks it writes:
 
@@ -253,3 +263,10 @@ echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"cost":{"to
 # subagent panel
 echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","type":"review","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node tools/statusline/statusline
 ```
+
+## See also
+
+- [../readme.md](../readme.md) — the marketplace overview and the installer CLI
+  this ships inside.
+- [vwf](./vwf.md) — the workflow the caps hook pauses, and the `/vwf:handoff` /
+  `/vwf:recall next` pair it directs you to.

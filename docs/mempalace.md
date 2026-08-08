@@ -6,8 +6,9 @@ across sessions. It ships 33 MCP tools, auto-save hooks, and guided setup.
 
 It is maintained externally at
 [MemPalace/mempalace](https://github.com/MemPalace/mempalace) and **re-listed**
-in the `virajp-plugins` marketplace, so it installs from the same place as the
-rest. It is also a dependency of `vwf`.
+in the `virajp-plugins` marketplace under a `url` source, so it installs from
+the same place as the rest without any third-party code being vendored into this
+repo. It is one of `vwf`'s three dependencies.
 
 ## Install
 
@@ -18,19 +19,27 @@ pnpx @askviraj/ai-plugins --user mempalace
 When you install `vwf`, `mempalace` is pulled in and enabled automatically — you
 only need this command to install it on its own.
 
-`mempalace` is **user-level only** on both platforms — per-user memory has no
-per-project install, so a `--project mempalace` request is redirected to user
-scope with a note.
+`mempalace` is **user-level only** — per-user memory has no per-project install,
+so a `--project mempalace` request is redirected to user scope with a note.
 
-For **OpenCode**, `--platform opencode --user mempalace` (or installing `vwf`)
-fetches the upstream repo and installs: its two skills, the `mempalace` MCP
-server in the OpenCode config (launched as `mise x -- mempalace-mcp`), and an
-OpenCode plugin (`plugin/mempalace-hooks.js`) that ports the Claude auto-save
-hooks — a save checkpoint every 15 user messages (on `session.idle`) and a
-safety save after compaction, honoring the same opt-out
-(`MEMPALACE_HOOKS_AUTO_SAVE=false` or `hooks.auto_save` in
-`~/.mempalace/config.json`). The Claude `SessionEnd` hook has no OpenCode
-equivalent — the interval saves cover it.
+Being url-sourced changes what each target can do with it. The three targets
+with a native marketplace — **Claude**, **Cursor** and **Oh-My-Pi** — install it
+from its own upstream repo, so nothing about it is rendered here. **OpenCode**
+has no plugin concept and its adapter can only copy a rendered bundle, so
+`mempalace` has nothing to copy and is **skipped with a note**: an OpenCode
+install of `vwf` leaves you to install mempalace yourself, from upstream.
+
+## Skills
+
+Two, both from upstream — this repo neither authors nor renders them:
+
+| Skill                        | What it does                                                                                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| `mempalace:mempalace`        | Setup and mining — wings, rooms, drawers; turning projects and conversations into the palace. |
+| `mempalace:mempalace-recall` | The recall protocol — search the palace before answering about past work or prior decisions.  |
+
+The MCP tools are a separate surface from the skills, and the two are wired
+differently here: the skills come from this plugin, the server comes from `vwf`.
 
 ## Running the server (HTTP daemon)
 
@@ -42,12 +51,12 @@ mempalace serve --host 127.0.0.1 --port 8765   # loopback bind needs no token
 curl http://127.0.0.1:8765/healthz             # -> ok
 ```
 
-Why not stdio: an stdio server is a **child process of Claude Code**, so when it
+Why not stdio: an stdio server is a **child process of the agent**, so when it
 dies the connection stays dead for the rest of the session. Over HTTP it
-reconnects, survives session restarts, and one daemon serves **every** Claude
-Code instance at once — all repos, all worktrees, in parallel (mempalace
-serializes concurrent writes). Its logs are also yours to read, which is what
-makes a flaky memory layer diagnosable.
+reconnects, survives session restarts, and one daemon serves **every** agent
+instance at once — every target, all repos, all worktrees, in parallel
+(mempalace serializes concurrent writes). Its logs are also yours to read, which
+is what makes a flaky memory layer diagnosable.
 
 **Turn the plugin's own stdio server off.** The upstream `mempalace` plugin
 bundles `{"command": "mempalace-mcp"}`, and mempalace holds a **single writer
@@ -158,7 +167,9 @@ further: it always writes **both** the drawer and the committed
 ## See also
 
 - [../readme.md](../readme.md) — the marketplace overview and full plugin list.
-- [vwf guide](../readme.md) — how the Product → Blueprint → Plan → Execute
-  workflow uses memory.
+- [vwf](./vwf.md) — how the Product → Blueprint → Plan → Execute workflow uses
+  memory, and the `assets/memory.md` protocol that is authoritative for it.
+- [andrej-karpathy-skills](./andrej-karpathy-skills.md) — the other url-sourced
+  `vwf` dependency.
 - [MemPalace upstream](https://github.com/MemPalace/mempalace) — full feature
   and tool documentation.
