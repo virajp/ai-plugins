@@ -1,0 +1,42 @@
+name: devtools
+version: 1.0.0
+description: "The developer-machine toolchain in one plugin — mise (the .config/
+  three-file MISE_ENV split, tool/env placement, the file-based task library,
+  the CI node-gpg workaround) plus /devtools:scaffold, Doppler for
+  **development** secrets, Docker/OCI, and the repo-level quality gates the
+  stack templates name: dprint, ESLint, gitleaks, grype, pre-commit. Owns the
+  provider-neutral container-generic deploy template, so it also implements the
+  vwf stack-adapter contract. Production secrets are a cloud plugin's, never
+  this one's."
+category: development
+tags:
+  - mise
+  - toolchain
+  - tasks
+  - ci
+  - devtools
+  - docker
+  - secrets
+  - lint
+  - format
+  - security
+  - skills
+  - vwf-stack-adapter
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+# `requires:` is a hard install gate, computed over the dependency-expanded set
+# and NOT overridable by `--force` — so the test is "does this plugin shell out
+# to it", never "does it discuss it". `mise` passes: `scaffold` writes mise
+# config and the whole task library is mise tasks.
+#
+# doppler is DELIBERATELY absent, and so are dprint, eslint, gitleaks, grype and
+# pre-commit. Every one of them is documented here and executed by the user's
+# own repo, never by this plugin. `devtools` is a vwf dependency and vwf is in
+# `--all`, so adding one would hard-fail a bare `pnpx @askviraj/ai-plugins
+# --all` for every user who lacks that binary — and with no `DEP_HINTS` entry it
+# would fail while naming no way to fix itself. Do not "complete" this list.
+requires:
+  - mise

@@ -141,9 +141,11 @@ and reconnects instead of dying with the session. Toggle the mempalace
 mempalace's single writer lease. See [docs/mempalace.md](./docs/mempalace.md).
 
 `vwf` also depends on three plugins — `mempalace`, `andrej-karpathy-skills`, and
-`mise` — all resolved from the same `virajp-plugins` marketplace. Claude Code
-**auto-installs and auto-enables** them when you enable `vwf` (requires Claude
-Code ≥ 2.1.143).
+`devtools` — all resolved from the same `virajp-plugins` marketplace. Claude
+Code **auto-installs and auto-enables** them when you enable `vwf` (requires
+Claude Code ≥ 2.1.143). `devtools` is a dependency rather than an optional extra
+because `/vwf:setup` orchestrates `/devtools:scaffold`, and a skill vwf cannot
+see fails silently.
 
 The Markdown/documentation skills and the Context7 docs server used to be two
 more dependencies. They are **part of `vwf` now**: `documentation-standards` and
@@ -579,11 +581,11 @@ default and elicits each project's stack from the
 one wing for the product, with the rooms vwf's memory protocol uses seeded in
 the parent and every submodule. Nothing is written until you approve; it works
 in a worktree, restructures code only with per-batch consent, and never deletes.
-It orchestrates the rest (mise, `product`, `architecture`, and `design-system`
-if you have a UI), merges a vwf section into your `CLAUDE.md`, writes the
-README, detects the repo's verification-harness capabilities (dev server, E2E,
-staging mode), and stamps the **vwf config** at `.config/vwf.yaml` — the
-blueprint format version, harness inventory, enforcement opt-outs, and
+It orchestrates the rest (`/devtools:scaffold`, `product`, `architecture`, and
+`design-system` if you have a UI), merges a vwf section into your `CLAUDE.md`,
+writes the README, detects the repo's verification-harness capabilities (dev
+server, E2E, staging mode), and stamps the **vwf config** at `.config/vwf.yaml`
+— the blueprint format version, harness inventory, enforcement opt-outs, and
 per-project nuances (a coverage-target override, a non-conventional health path)
 — so a later run can detect drift and migrate the delta, and every command knows
 how vwf operates in this repo (pipeline knobs, verify environments, the
@@ -1358,7 +1360,7 @@ your stack. Each has a dedicated guide:
 | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | **[typescript](./docs/typescript.md)**                                             | The TypeScript language plugin — `typescript` and `effect` router skills plus package-json/pnpm/tsconfig/lint-format, the TypeScript/JavaScript language server, and every TypeScript vwf stack template             | `--user typescript`                         |
 | **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers, and the `dart-flutter` vwf stack template; **project-scoped** | `--project flutter`                         |
-| **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                                           | `--user mise`                               |
+| **[devtools](./docs/devtools.md)**                                                 | The developer toolchain — mise standards + `/devtools:scaffold`, Doppler (**dev** secrets), Docker/OCI + the `container-generic` deploy template, dprint, ESLint, gitleaks, grype, pre-commit; a `vwf` dependency    | `--user devtools`                           |
 | **[cicd](./docs/cicd.md)**                                                         | A `/cicd:workflow` skill — resolves the repo's CI system from config, then generates its delivery pipeline (every tool via mise); supports polyrepo + monorepo                                                       | `--user cicd`                               |
 | **[design-tools](./docs/design-tools.md)**                                         | The vwf design adapter — two skills resolving the design tool **per project** (`claude-design`, `lovable`, `stitch`) + the Claude Design MCP server                                                                  | `--user design-tools`                       |
 | **cloudflare**                                                                     | vwf stack adapter for Cloudflare — **parked at Zero Trust Access**; Workers, Pages, R2, D1, KV and the rest arrive under their own plan (opt-in)                                                                     | `--user cloudflare`                         |
@@ -1372,7 +1374,7 @@ your stack. Each has a dedicated guide:
 | **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; also a `vwf` dependency)                                                                                                                                               | `--user`/`--project andrej-karpathy-skills` |
 
 ```sh
-pnpx @askviraj/ai-plugins --user typescript --user mise
+pnpx @askviraj/ai-plugins --user typescript --user devtools
 ```
 
 ## Statusline
@@ -1473,9 +1475,9 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   exactly like Claude's `disable-model-invocation` — while doctrine skills stay
   discoverable under `skills/`;
 - expands plugin **dependencies** like Claude Code does — installing `vwf` also
-  renders `mise` and wires `mempalace`. `mempalace` (like the graphify wiring
-  below) is **user-level only** — a `--project` request is redirected to user
-  scope, on both platforms;
+  renders `devtools` and wires `mempalace`. `mempalace` (like the graphify
+  wiring below) is **user-level only** — a `--project` request is redirected to
+  user scope, on both platforms;
 - wires **graphify at user level** when `vwf` is installed: its user-level
   skills install as usual, and the project-level `graphify.js` its CLI generates
   is harvested into `~/.config/opencode/plugin/` instead — no project files are

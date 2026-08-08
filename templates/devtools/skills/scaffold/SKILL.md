@@ -10,7 +10,7 @@ effort: high
 invocation: both
 ---
 
-# mise:scaffold — Scaffold the mise config & task library
+# devtools:scaffold — Scaffold the mise config & task library
 
 Create the `MISE_ENV`-selected mise config under **`.config/`** for the target
 repo, following the `mise` skill's standard. Default the target to the current

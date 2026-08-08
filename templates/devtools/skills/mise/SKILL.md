@@ -170,10 +170,10 @@ colon-separated names: `.config/mise/tasks/code/format` →
 headers, flags) while the commands *inside* `code/*` and `setup/*` change with
 the stack. They ship as ready-made templates under `assets/tasks/` (a shared
 `common/` set plus a `node/`, `flutter/`, or `python/` overlay);
-**`<%= it.cmd("mise:scaffold") %>` copies them in** — author from those, not from scratch.
+**`<%= it.cmd("devtools:scaffold") %>` copies them in** — author from those, not from scratch.
 
 Read the reference for the full spec before writing or editing a task file:
 
-| Topic                                                                        | When to read                                                                                                |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| [Task library](<%= it.root %>/skills/mise/references/task-library.md) | Task-file anatomy, the `_scripts/_helpers` shared library, and the per-stack `code/*` + `setup/*` task sets |
+| Topic                                      | When to read                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| [Task library](references/task-library.md) | Task-file anatomy, the `_scripts/_helpers` shared library, and the per-stack `code/*` + `setup/*` task sets |

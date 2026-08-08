@@ -37,7 +37,10 @@ source:
 dependencies:
   - mempalace
   - andrej-karpathy-skills
-  - mise # S09 renames this to devtools
+  # Load-bearing, not tidiness: /vwf:setup orchestrates devtools:scaffold, and a
+  # skill vwf cannot see fails SILENTLY — indistinguishable from one that ran
+  # and returned nothing.
+  - devtools
 requires:
   - rtk
   - graphify

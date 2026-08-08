@@ -1,21 +1,73 @@
-# mise plugin
+# devtools plugin
 
-The `mise` plugin teaches Claude Code an opinionated
-[mise](https://mise.jdx.dev) standard: the `.config/` three-file `MISE_ENV`
-split (`mise.toml` / `mise.dev.toml` / `mise.ci.toml`), a mandatory file-based
-task library (quality gates and bootstrap tasks under `.config/mise/tasks/`),
-and a `/mise:scaffold` skill that lays both into a repo. The bundled `mise`
-skill auto-applies whenever you edit mise config or a task file — its `paths`
-match `**/mise.toml`, `**/mise.dev.toml`, `**/mise.ci.toml`, the same three
-under `**/.config/`, and any file under `**/.config/mise/tasks/**`.
+The `devtools` plugin is the **developer-machine toolchain**, in one place. It
+teaches an opinionated [mise](https://mise.jdx.dev) standard — the `.config/`
+three-file `MISE_ENV` split (`mise.toml` / `mise.dev.toml` / `mise.ci.toml`) and
+a mandatory file-based task library under `.config/mise/tasks/` — plus a
+`/devtools:scaffold` skill that lays both into a repo. Around that sit the tools
+the stack templates name: Doppler, Docker/OCI, dprint, ESLint, gitleaks, grype,
+and pre-commit.
+
+It is a **`vwf` dependency**, because `/vwf:setup` orchestrates
+`/devtools:scaffold` and a skill vwf cannot see fails silently.
+
+## Skills
+
+Every skill except `scaffold` and the two stack adapters is **auto-applying**:
+it loads when you edit the file it governs, and never otherwise.
+
+| Skill                     | Governs                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `mise`                    | mise config + anything under `.config/mise/tasks/` — the standard below |
+| `scaffold`                | user- **and** model-invocable; lays the standard into a repo            |
+| `doppler`                 | **development** secret injection — never the production answer          |
+| `docker`                  | Dockerfiles, `.dockerignore`, compose files; the local stack            |
+| `dprint`                  | `dprint.json` — the repo's single formatter                             |
+| `eslint`                  | eslint config / `.config/linter.yaml` — the correctness gate            |
+| `gitleaks`                | `.config/gitleaks.toml` — the secret scanner                            |
+| `grype`                   | `.config/grype.yaml` — the dependency vulnerability scanner             |
+| `devtools-stack-menu`     | the vwf stack-adapter menu — one deploy template, `container-generic`   |
+| `devtools-stack-template` | the vwf stack-adapter payload for that template                         |
+| `pre-commit`              | `.config/pre-commit-config.yaml` — the local gate                       |
+
+### Secrets: development only
+
+**Doppler is a development tool.** Secrets reach a process as environment
+variables and are never read from a committed file — that rule holds in every
+environment, and it is the injector that changes: Doppler locally, the CI
+system's secret store in CI, the cloud plugin's secret manager in production
+(`gcp` → Secret Manager, `cloudflare` → Workers secrets).
+
+There is deliberately **no `secrets` plugin** in this marketplace, and a product
+that needs Doppler at runtime has moved a dev tool into production.
+
+### One deploy template
+
+`devtools` owns exactly one vwf stack template: **`container-generic`** — build
+a standard OCI image, push it to any registry, run it on any host that runs
+containers. It is the deploy option to pick when the product must not be tied to
+one cloud, and it lives here because Docker is developer tooling and the
+template names no provider. A **managed** container host (Cloud Run, GKE) comes
+from the cloud plugin instead.
+
+There is no `container` capability plugin: a container is not a backing
+capability, it is how a deployable is packaged.
 
 ## Install
 
 ```bash
-pnpx @askviraj/ai-plugins --user mise
+pnpx @askviraj/ai-plugins --user devtools
 ```
 
-## The three-file split
+Installing `vwf` pulls it in automatically.
+
+## The mise standard
+
+The rest of this guide is the `mise` skill's subject: how the toolchain is
+pinned, where env values live, and the task library everything else runs
+through.
+
+### The three-file split
 
 mise config lives under `.config/`, where mise resolves `MISE_ENV` variants. A
 repo built or deployed through CI/CD splits its config across three files. mise
@@ -64,7 +116,7 @@ CI runs on Linux, where mise's bundled Node release-key gpg import can fail with
 the tarball is still SHA256-verified. Keep the general `gpg_verify = true` in
 `mise.toml` intact.
 
-## The task library
+### The task library
 
 Once tasks grow past one-liners, drive everything through executable task files
 under `.config/mise/tasks/`. mise turns nested directories into colon-separated
@@ -97,11 +149,11 @@ inside `code/*` and `setup/*` change with the tech stack.
 The `mise` skill carries the full detail — task-file anatomy, the `--fix` /
 `--debug` / `--clean` flag conventions, and the per-stack command tables.
 
-## /mise:scaffold
+## /devtools:scaffold
 
-`/mise:scaffold [target-dir]` lays the whole standard into a repo. It defaults
-to the current repo root; pass a directory to scaffold into `<dir>/.config/`.
-The command:
+`/devtools:scaffold [target-dir]` lays the whole standard into a repo. It
+defaults to the current repo root; pass a directory to scaffold into
+`<dir>/.config/`. The command:
 
 1. **Detects the stack** — `package.json`/`pnpm-lock.yaml` (Node),
    `pyproject.toml`/`uv.lock` (Python), `pubspec.yaml` (Flutter) — and detected
