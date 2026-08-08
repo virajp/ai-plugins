@@ -1,23 +1,9 @@
----
-name: lovable-import-screens
-description: Read a flow's screens back from a Lovable project and return them
-  as a vwf screens payload. Invoked by <%= it.cmd("vwf:screens") %> import as its configured
-  design adapter — not a general-purpose skill.
-argumentHint: "<flow> <platform>"
-invocation: both
-model: sonnet
-effort: high
----
+# import-screens — Lovable
 
-# import-screens — Lovable adapter
-
-Return one flow's screens, for one platform, as a **vwf screens payload**. You
-read and normalize; you never diff and never touch a blueprint doc.
-
-> **`disable-model-invocation` must stay `false`.** A `true` value blocks
-> delegation *silently* — vwf would import nothing and see no error.
-
-Payload shape: the installed vwf plugin's `assets/design-adapter.md`.
+The project's design tool resolved to `lovable`. Lovable's **MCP server** must
+be connected (OAuth, workspace-scoped); every tool call is scoped to the token's
+workspace. If it is not connected, stop with an `ERROR:` line — do not fall back
+to scraping the editor UI.
 
 ## The honest caveat
 
@@ -26,7 +12,7 @@ frame whose title carries a pinned screen code, so recovering screens means
 **reading the generated source** — routes and components — and matching them to
 the flow's screens by name and purpose.
 
-That makes this adapter's output **less certain** than one reading a canvas with
+That makes this path's output **less certain** than one reading a canvas with
 named frames. Reflect that honestly:
 
 - Set `code: null` for any screen you cannot match to a pinned code with
@@ -48,23 +34,13 @@ named frames. Reflect that honestly:
    it composes. Extract: the screen's purpose, its components (name + role), the
    states it renders (empty / loading / error / success, wherever branches make
    them visible).
-5. **Normalize into the payload**, with `source.reference` set to the project id
-   plus the commit sha you read, so a later diff can cite exactly what was seen.
+5. **Normalize into the payload**, with `source.tool: lovable` and
+   `source.reference` set to the project id plus the commit sha you read, so a
+   later diff can cite exactly what was seen.
 
 ## Rules
 
 - Report what the code actually renders, not what it seems intended to.
-  Interpreting a delta is `<%= it.cmd("vwf:screens") %> import`'s job.
 - A conditional branch you cannot statically resolve is a `notes` line, not an
   assumed state.
-- Never write to the Lovable project, and never to `docs/blueprint/`.
-
-## Return contract
-
-Output **only** the screens payload as YAML — nothing before or after.
-
-On failure, output only:
-
-```text
-ERROR: <what could not be reached or read, in one line>
-```
+- Never write to the Lovable project.

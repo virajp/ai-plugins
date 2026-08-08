@@ -150,10 +150,12 @@ Code ≥ 2.1.143).
 uses. Install it when you want pipelines generated — vwf works without it.
 
 **A design tool is not among them.** vwf is decoupled from any particular one:
-it delegates screen and design-system imports to whichever **adapter plugin**
-`design.tool` names — `claude-design` (the default, installed by `--all`),
-`lovable`, `stitch`, or one you write. Export needs no adapter at all, since
-`/vwf:screens prompt` just writes design briefs as files.
+it delegates screen and design-system imports to two fixed skills in the
+**design-tools** plugin, which resolves the tool **per project** — so a product
+can design its website in Lovable and its app on the Claude Design canvas.
+Supported tools today are `claude-design`, `lovable` and `stitch`; adding one is
+a reference file in that plugin, not a vwf change. Export needs no adapter at
+all, since `/vwf:screens prompt` just writes design briefs as files.
 
 ## Install
 
@@ -1345,9 +1347,7 @@ your stack. Each has a dedicated guide:
 | **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                    | `--user mise`                               |
 | **[cicd](./docs/cicd.md)**                                                         | A `/cicd:workflow` skill — resolves the repo's CI system from config, then generates its delivery pipeline (every tool via mise); supports polyrepo + monorepo                                | `--user cicd`                               |
 | **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                   | `--user context7`                           |
-| **[claude-design](./docs/claude-design.md)**                                       | Claude Design MCP server + vwf design-adapter skills — the **default** design adapter                                                                                                         | `--user claude-design`                      |
-| **lovable**                                                                        | vwf design adapter for Lovable (opt-in — set `design.tool: lovable`)                                                                                                                          | `--user lovable`                            |
-| **stitch**                                                                         | vwf design adapter for Google Stitch (opt-in — set `design.tool: stitch`)                                                                                                                     | `--user stitch`                             |
+| **[design-tools](./docs/design-tools.md)**                                         | The vwf design adapter — two skills resolving the design tool **per project** (`claude-design`, `lovable`, `stitch`) + the Claude Design MCP server                                           | `--user design-tools`                       |
 | **[mempalace](./docs/mempalace.md)**                                               | AI memory system (external; also a `vwf` dependency)                                                                                                                                          | `--user mempalace`                          |
 | **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)** | Karpathy coding-mistake guidelines (external; opt-in — excluded from `--all`, install at either scope)                                                                                        | `--user`/`--project andrej-karpathy-skills` |
 
@@ -1453,9 +1453,9 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
   exactly like Claude's `disable-model-invocation` — while doctrine skills stay
   discoverable under `skills/`;
 - expands plugin **dependencies** like Claude Code does — installing `vwf` also
-  renders `markdown`, `mise`, and wires `claude-design`, `context7`, and
-  `mempalace`. `mempalace` (like the graphify wiring below) is **user-level
-  only** — a `--project` request is redirected to user scope, on both platforms;
+  renders `markdown`, `mise`, and wires `context7` and `mempalace`. `mempalace`
+  (like the graphify wiring below) is **user-level only** — a `--project`
+  request is redirected to user scope, on both platforms;
 - wires **graphify at user level** when `vwf` is installed: its user-level
   skills install as usual, and the project-level `graphify.js` its CLI generates
   is harvested into `~/.config/opencode/plugin/` instead — no project files are
@@ -1480,8 +1480,8 @@ this repo's source (the GitHub `main` tarball) and, per selected plugin:
 - writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each workflow
   skill, so `/markdown-readme` etc. work in OpenCode (which has no user-invoked
   skills yet);
-- for `context7` and `claude-design`, adds the MCP server to the config's `mcp`
-  key (`claude-design` as a `remote` entry).
+- for `context7` and `design-tools`, adds the MCP server to the config's `mcp`
+  key (the Claude Design server as a `remote` entry).
 
 **Not ported**: subagents and vwf's hooks are Claude Code concepts (vwf's
 execute pipeline degrades accordingly), the statusline is Claude-only, and

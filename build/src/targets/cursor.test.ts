@@ -175,7 +175,7 @@ describe("root substitution", () => {
     expect(doctrine).toContain("%%AI_PLUGINS_ROOT%%/assets/");
 
     const adapter = text(
-      "claude-design/skills/claude-design-import-design-system/SKILL.md",
+      "design-tools/skills/design-tools-import-design-system/SKILL.md",
     );
     expect(adapter).toContain(
       "%%AI_PLUGINS_ROOT:vwf%%/assets/design-adapter.md",
