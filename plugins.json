@@ -4,7 +4,7 @@
     {
       "name": "andrej-karpathy-skills",
       "scope": "user",
-      "optIn": true,
+      "optIn": false,
       "userOnly": false,
       "local": false,
       "dependencies": [],
@@ -31,15 +31,13 @@
       "requires": []
     },
     {
-      "name": "context7",
+      "name": "datastore",
       "scope": "user",
-      "optIn": false,
+      "optIn": true,
       "userOnly": false,
       "local": true,
       "dependencies": [],
-      "requires": [
-        "pnpm"
-      ]
+      "requires": []
     },
     {
       "name": "design-tools",
@@ -49,20 +47,6 @@
       "local": true,
       "dependencies": [],
       "requires": [
-        "pnpm"
-      ]
-    },
-    {
-      "name": "effect",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
-      "local": true,
-      "dependencies": [
-        "typescript"
-      ],
-      "requires": [
-        "mise",
         "pnpm"
       ]
     },
@@ -89,9 +73,9 @@
       "requires": []
     },
     {
-      "name": "markdown",
+      "name": "identity",
       "scope": "user",
-      "optIn": false,
+      "optIn": true,
       "userOnly": false,
       "local": true,
       "dependencies": [],
@@ -121,6 +105,33 @@
       ]
     },
     {
+      "name": "object-storage",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "observability",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "orchestration",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
       "name": "typescript",
       "scope": "user",
       "optIn": false,
@@ -139,8 +150,7 @@
       "userOnly": false,
       "local": true,
       "dependencies": [
-        "context7",
-        "markdown",
+        "andrej-karpathy-skills",
         "mempalace",
         "mise"
       ],

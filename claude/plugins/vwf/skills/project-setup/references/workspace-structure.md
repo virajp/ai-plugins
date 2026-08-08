@@ -58,30 +58,27 @@ projects, and recomputes the coverage stamp without them.
 
 ## Stack templates (a menu)
 
-Each role has one or more templates under
-`${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/<role>/`. What ships today:
+Each role has one or more templates, **all of them shipped by a plugin rather
+than by vwf**. What ships today:
 
-| Role        | Template                                                                                                       | Stack                                          |
-| ----------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `packages`  | `typescript-effect` — in the **effect** plugin                                                                 | TypeScript · Effect-TS                         |
-| `service`   | [typescript-effect-hono](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/service/typescript-effect-hono.md)        | TypeScript · Hono · Effect-TS                  |
-| `worker`    | [typescript-effect-temporal](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/worker/typescript-effect-temporal.md) | TypeScript · Temporal · Effect-TS              |
-| `site`      | [typescript-astro-react](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/site/typescript-astro-react.md)           | TypeScript · Astro (SSR) · React               |
-| `fullstack` | [typescript-hono-refine](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/fullstack/typescript-hono-refine.md)      | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend`  | [dart-flutter](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/dart-flutter.md)                           | Dart · Flutter                                 |
-| `frontend`  | [kotlin-android](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/kotlin-android.md)                       | Kotlin · Jetpack Compose                       |
-| `frontend`  | [swift-ios](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/swift-ios.md)                                 | Swift · SwiftUI                                |
-| `frontend`  | [typescript-effect-cli](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/frontend/typescript-effect-cli.md)         | TypeScript · @effect/cli (platform `cli`)      |
-| `infra`     | [typescript-pulumi](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/infra/typescript-pulumi.md)                    | TypeScript · Pulumi                            |
-| `infra`     | [terraform](${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/infra/terraform.md)                                    | Terraform / OpenTofu                           |
+| Role        | Template                                                    | Stack                                          |
+| ----------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| `packages`  | `typescript-effect` — in the **typescript** plugin          | TypeScript · Effect-TS                         |
+| `service`   | `typescript-effect-hono` — in the **typescript** plugin     | TypeScript · Hono · Effect-TS                  |
+| `worker`    | `typescript-effect-temporal` — in the **typescript** plugin | TypeScript · Temporal · Effect-TS              |
+| `site`      | `typescript-astro-react` — in the **typescript** plugin     | TypeScript · Astro (SSR) · React               |
+| `fullstack` | `typescript-hono-refine` — in the **typescript** plugin     | TypeScript · Hono + Effect-TS · React + Refine |
+| `frontend`  | `dart-flutter` — in the **flutter** plugin                  | Dart · Flutter                                 |
+| `frontend`  | `typescript-effect-cli` — in the **typescript** plugin      | TypeScript · @effect/cli (platform `cli`)      |
+| `infra`     | `typescript-pulumi` — in the **typescript** plugin          | TypeScript · Pulumi                            |
 
 Three more axes compose with the project one — pick one of each:
 
 | Axis      | Ships today                                                                                                                                                                                                                            |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `backing` | [firebase](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/firebase.md) · [postgres-object-storage](${CLAUDE_PLUGIN_ROOT}/assets/stacks/backing/postgres-object-storage.md)                                                                |
-| `deploy`  | [cloud-run](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/cloud-run.md) · [container-generic](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/container-generic.md) · [npm-package](${CLAUDE_PLUGIN_ROOT}/assets/stacks/deploy/npm-package.md) |
-| `repo`    | [pnpm-turbo](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/pnpm-turbo.md) · [bun](${CLAUDE_PLUGIN_ROOT}/assets/stacks/repo/bun.md)                                                                                                          |
+| `backing` | none here — a **capability** plugin ships the contract and its own provider (`datastore`, `identity`, `observability`, `orchestration`, `object-storage`), a **cloud** plugin the managed flavour                                      |
+| `deploy`  | `npm-package` (in the **typescript** plugin) · the hosted targets come from a **cloud** plugin (`gcp`, `cloudflare`)                                                                                                                   |
+| `repo`    | `pnpm-turbo` · `bun` — both in the **typescript** plugin                                                                                                                                                                              |
 
 **One entry per role is not a default.** `/vwf:architecture` presents the menu
 for the project's role and the user picks, always — plus an **other (describe)**

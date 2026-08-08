@@ -24,6 +24,29 @@ the system grows.
 - **Observability & governance:** `distributed-tracing`, `audit-log`,
   `rate-limiting`, `runtime-settings`
 
+## Consumers follow the publisher
+
+A capability is declared per project, but a capability is often **shared**: one
+project publishes it and others consume it. When they do, the *provider* is the
+publisher's — not each consumer's own.
+
+**If project A publishes a capability backed by one cloud and project B consumes
+it, B uses A's flavour, even when B's own cloud is a different one.** A shared
+datastore has one implementation; a consumer that "uses its own cloud's" is not
+consuming the same capability at all, it is standing up a second one.
+
+Two consequences worth stating, because both are otherwise discovered late:
+
+- **A consumer's cloud pick is not a vote.** It decides where that project runs
+  and what *it* publishes. It never re-decides a capability it only consumes.
+- **The publisher is a registry fact, not a convention.** Record which project
+  publishes each shared capability, so `plan` and `execute` resolve the provider
+  the same way every time rather than inferring it from whoever asks first.
+
+This rule is why a capability plugin holds the **contract** and a cloud plugin
+holds the **flavour**: the contract is what a consumer codes against, and it is
+identical whichever provider the publisher chose.
+
 ## Prose nouns — how blueprint docs name these
 
 A capability token answers *which* gate is open. Blueprint **prose** needs a

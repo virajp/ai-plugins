@@ -69,14 +69,14 @@ const settings = () =>
 
 describe("cursor adapter", () => {
   it("registers a plugin as a git reference under its marketplace key", () => {
-    cursor.apply(context, planFor(["markdown"]));
+    cursor.apply(context, planFor(["typescript"]));
 
-    const entry = settings().plugins["virajp-plugins/markdown"];
+    const entry = settings().plugins["virajp-plugins/typescript"];
     expect(entry.enabled).toBe(true);
     // git-only: there is no local-path source in Cursor's union, so the install
     // points at the repo rather than at cursor/ sitting next to it.
     expect(entry.gitUrl).toMatch(/^https:\/\/github\.com\//);
-    expect(entry.gitPath).toBe("cursor/markdown");
+    expect(entry.gitPath).toBe("cursor/typescript");
   });
 
   it("keys plugins as <marketplace>/<name>, which Cursor splits on the first slash", () => {
@@ -88,9 +88,9 @@ describe("cursor adapter", () => {
   });
 
   it("redirects a user-scoped request to project scope, and says so", () => {
-    cursor.apply(context, planFor([], ["markdown"]));
+    cursor.apply(context, planFor([], ["typescript"]));
 
-    expect(settings().plugins["virajp-plugins/markdown"].enabled).toBe(true);
+    expect(settings().plugins["virajp-plugins/typescript"].enabled).toBe(true);
     expect(logged.join("\n")).toMatch(/project scope/);
   });
 
@@ -99,7 +99,7 @@ describe("cursor adapter", () => {
     // our own first write, so revert would restore the installed state.
     const { receipt } = cursor.apply(
       context,
-      planFor(["markdown"], ["markdown"]),
+      planFor(["typescript"], ["typescript"]),
     );
 
     expect(Object.keys(settings().plugins)).toHaveLength(1);
@@ -111,10 +111,10 @@ describe("cursor adapter", () => {
   });
 
   it("installs only the plugins named", () => {
-    cursor.apply(context, planFor(["markdown"]));
+    cursor.apply(context, planFor(["typescript"]));
 
     expect(Object.keys(settings().plugins)).toEqual([
-      "virajp-plugins/markdown",
+      "virajp-plugins/typescript",
     ]);
   });
 
@@ -128,17 +128,17 @@ describe("cursor adapter", () => {
 `;
     writeFileSync(settingsPath(), original);
 
-    cursor.apply(context, planFor(["markdown"]));
+    cursor.apply(context, planFor(["typescript"]));
 
     const after = readFileSync(settingsPath(), "utf8");
     expect(after).toContain("// The user's own comment.");
     expect(settings().someSetting).toBe(true);
     expect(settings().plugins["other/thing"].enabled).toBe(true);
-    expect(settings().plugins["virajp-plugins/markdown"].enabled).toBe(true);
+    expect(settings().plugins["virajp-plugins/typescript"].enabled).toBe(true);
   });
 
   it("writes nothing on a dry run", () => {
-    const actions = cursor.plan(context, planFor(["markdown"]));
+    const actions = cursor.plan(context, planFor(["typescript"]));
 
     expect(actions.length).toBeGreaterThan(0);
     expect(existsSync(settingsPath())).toBe(false);
@@ -153,7 +153,7 @@ describe("cursor adapter", () => {
 `;
     writeFileSync(settingsPath(), original);
 
-    const { receipt } = cursor.apply(context, planFor(["markdown"]));
+    const { receipt } = cursor.apply(context, planFor(["typescript"]));
     expect(readFileSync(settingsPath(), "utf8")).not.toBe(original);
 
     cursor.revert(context, receipt);
@@ -164,7 +164,7 @@ describe("cursor adapter", () => {
   });
 
   it("leaves no file or directory behind when it created them", () => {
-    const { receipt } = cursor.apply(context, planFor(["markdown"]));
+    const { receipt } = cursor.apply(context, planFor(["typescript"]));
     expect(existsSync(settingsPath())).toBe(true);
 
     cursor.revert(context, receipt);
@@ -174,10 +174,10 @@ describe("cursor adapter", () => {
   });
 
   it("is idempotent: installing twice leaves the settings unchanged", () => {
-    cursor.apply(context, planFor(["markdown"]));
+    cursor.apply(context, planFor(["typescript"]));
     const once = readFileSync(settingsPath(), "utf8");
 
-    cursor.apply(context, planFor(["markdown"]));
+    cursor.apply(context, planFor(["typescript"]));
 
     expect(readFileSync(settingsPath(), "utf8")).toBe(once);
   });
@@ -186,7 +186,7 @@ describe("cursor adapter", () => {
     mkdirSync(join(cwd, ".cursor"), { recursive: true });
     writeFileSync(settingsPath(), "{ this is not json");
 
-    expect(() => cursor.apply(context, planFor(["markdown"])))
+    expect(() => cursor.apply(context, planFor(["typescript"])))
       .toThrow(/malformed/);
   });
 

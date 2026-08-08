@@ -32,7 +32,7 @@ throughout.
 | vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`)   |
 | Config schema     | `<%= it.root %>/assets/vwf-config.md`                   |
 | CLAUDE.md section | `<%= it.root %>/assets/templates/project-claude.md`     |
-| Stack templates   | `<%= it.root %>/assets/stacks/project/<role>/<slug>.md` |
+| Stack templates   | from the installed stack plugins, never from vwf                |
 | Stack vocabulary  | `<%= it.root %>/assets/stack-vocabulary.md`             |
 | Memory protocol   | `<%= it.root %>/assets/memory.md`                       |
 | mempalace config  | `mempalace.yaml` (parent **and** each submodule)               |
@@ -120,9 +120,9 @@ is no default and nothing to object to, so no `enforcement` entry: record
 `topology` and `topology_reason`.
 
 **Stacks are elicited, never stated.** For each project, present the templates
-under `<%= it.root %>/assets/stacks/project/<role>/` as a menu with an
-**other (describe)** option, plus the repo-level menu from
-`assets/stacks/repo/`. vwf ships no default and nothing to object to, so there
+the installed stack plugins offer for that role as a menu with an
+**other (describe)** option, plus their repo-level menus. vwf ships no stack
+template of its own, no default, and nothing to object to, so there
 is no `enforcement` entry for a stack. `<%= it.cmd("vwf:architecture") %>` owns this elicitation
 — hand off to it at step 7 rather than duplicating it here; what this step needs
 is only enough detection to populate the menu's starting point.

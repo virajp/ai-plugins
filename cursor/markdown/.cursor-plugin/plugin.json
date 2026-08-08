@@ -1,6 +1,0 @@
-{
-  "author": "Viraj Patel",
-  "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file, plus a /markdown:readme skill that scans the repo and writes/updates its README.",
-  "name": "markdown",
-  "version": "0.7.0"
-}

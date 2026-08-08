@@ -29,7 +29,7 @@ project in the registry.
 | vwf config        | `.config/vwf.yaml`                                             |
 | Registry          | `docs/blueprint/registry.yaml`                                 |
 | Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`             |
-| Stack templates   | `${CLAUDE_PLUGIN_ROOT}/assets/stacks/project/<role>/<slug>.md` |
+| Stack templates   | from the installed stack plugins, never from vwf                |
 | Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                      |
 | Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`                       |
 | mempalace config  | `mempalace.yaml` (one per repo — parent + submodules)          |

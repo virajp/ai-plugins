@@ -43,7 +43,7 @@ invoked by `/vwf:architecture` and `/vwf:setup` when a product lists
 
 | Skill                       | What it returns                                                                                                                        |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `typescript-stack-menu`     | The ten templates below, as a vwf menu payload — slug, axis, role, name, one-line summary. Nothing else; choosing is the user's job.  |
+| `typescript-stack-menu`     | The ten templates below, as a vwf menu payload — slug, axis, role, name, one-line summary. Nothing else; choosing is the user's job.   |
 | `typescript-stack-template` | One template as a vwf template payload — axis fields, per-capability harness mechanisms, and the conventions `plan` and `execute` read |
 
 The `typescript` skill's reference library covers **Vitest** testing (the shared
@@ -84,11 +84,11 @@ Project axis — one per role:
 
 Deploy and repo axes:
 
-| Slug          | Axis     | What it pins                                                       |
-| ------------- | -------- | ------------------------------------------------------------------ |
+| Slug          | Axis     | What it pins                                                            |
+| ------------- | -------- | ----------------------------------------------------------------------- |
 | `npm-package` | `deploy` | The registry as the host — for a project users install, not one you run |
-| `pnpm-turbo`  | `repo`   | pnpm workspace + Turborepo                                         |
-| `bun`         | `repo`   | bun as package manager, runtime, bundler and test runner           |
+| `pnpm-turbo`  | `repo`   | pnpm workspace + Turborepo                                              |
+| `bun`         | `repo`   | bun as package manager, runtime, bundler and test runner                |
 
 `typescript-effect` is the **shared kernel**: every domain schema and every
 third-party integration lives in that package as an Effect service, so

@@ -48,7 +48,7 @@ changes when code lands, not when a contract is written.
   omit a landed capability. Do not rewrite style, restructure, or document
   unchanged behavior — every edited line must trace to the change.
 - **Broad drift** (the README no longer resembles the repo): regenerate via
-  `markdown:readme` instead of patching sentence by sentence.
+  `/vwf:readme` instead of patching sentence by sentence.
 - **Same commit flow**: the sync lands through `/vwf:git-workflow` with the
   run's other reconcile output (a `docs:` commit when standalone).
 - **Report it**: state at the run's final gate/report which docs were synced —

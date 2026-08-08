@@ -30,7 +30,7 @@ throughout.
 | vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`)   |
 | Config schema     | `%%AI_PLUGINS_ROOT%%/assets/vwf-config.md`                   |
 | CLAUDE.md section | `%%AI_PLUGINS_ROOT%%/assets/templates/project-claude.md`     |
-| Stack templates   | `%%AI_PLUGINS_ROOT%%/assets/stacks/project/<role>/<slug>.md` |
+| Stack templates   | from the installed stack plugins, never from vwf                |
 | Stack vocabulary  | `%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`             |
 | Memory protocol   | `%%AI_PLUGINS_ROOT%%/assets/memory.md`                       |
 | mempalace config  | `mempalace.yaml` (parent **and** each submodule)               |
@@ -52,7 +52,7 @@ repo never needs it.
   worktree; never delete; never overwrite without consent. Keep the worktree
   local.
 - **Don't duplicate tools.** Use `mise:scaffold` for mise config and
-  `markdown:readme` for the README — orchestrate, don't reimplement.
+  `/skill:readme` for the README — orchestrate, don't reimplement.
 - **Idempotent.** A re-run detects what already conforms and migrates only the
   delta; a conforming repo yields an empty plan.
 - **Resumable.** After each completed step, append its id to a transient
@@ -118,9 +118,9 @@ is no default and nothing to object to, so no `enforcement` entry: record
 `topology` and `topology_reason`.
 
 **Stacks are elicited, never stated.** For each project, present the templates
-under `%%AI_PLUGINS_ROOT%%/assets/stacks/project/<role>/` as a menu with an
-**other (describe)** option, plus the repo-level menu from
-`assets/stacks/repo/`. vwf ships no default and nothing to object to, so there
+the installed stack plugins offer for that role as a menu with an
+**other (describe)** option, plus their repo-level menus. vwf ships no stack
+template of its own, no default, and nothing to object to, so there
 is no `enforcement` entry for a stack. `/skill:architecture` owns this elicitation
 — hand off to it at step 7 rather than duplicating it here; what this step needs
 is only enough detection to populate the menu's starting point.
@@ -243,7 +243,7 @@ later run), and record the skip in `setup_progress`.
 
 Merge the vwf section (from the project-claude template) into the repo's
 `CLAUDE.md`, **preserving existing content**. Generate or update the README via
-**markdown:readme**; if it fails, report the error, offer to continue without it
+**`/skill:readme`**; if it fails, report the error, offer to continue without it
 (leaving the README for the user), and record the skip in `setup_progress`.
 
 ### 9. Write the vwf config

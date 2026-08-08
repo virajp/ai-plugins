@@ -26,8 +26,9 @@ For `package.json`, pnpm workspace, and `tsconfig` standards, see the
 **package-json**, **pnpm**, and **tsconfig** skills. For the lint/format gate
 that must pass before commit, see the **lint-format** skill.
 
-**Effect-TS doctrine is not here.** It lives in the separate **effect** plugin,
-which depends on this one — so plain TypeScript gets these standards without
-Effect's, and an Effect project gets both. If the code under test returns an
-`Effect`, read that plugin's testing reference alongside the Vitest one above:
-the runner is the same, only the assertions differ.
+**Effect-TS doctrine is a sibling skill, not a separate plugin.** It lives in
+this plugin's **effect** skill, which layers on top of these standards rather
+than replacing them — so plain TypeScript gets this baseline alone, and an
+Effect project gets both. If the code under test returns an `Effect`, read that
+skill's testing reference alongside the Vitest one above: the runner is the
+same, only the assertions differ.

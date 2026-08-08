@@ -3,15 +3,11 @@
   "dependencies": [
     {
       "marketplace": "virajp-plugins",
-      "name": "context7"
-    },
-    {
-      "marketplace": "virajp-plugins",
-      "name": "markdown"
-    },
-    {
-      "marketplace": "virajp-plugins",
       "name": "mempalace"
+    },
+    {
+      "marketplace": "virajp-plugins",
+      "name": "andrej-karpathy-skills"
     },
     {
       "marketplace": "virajp-plugins",
@@ -22,6 +18,16 @@
     "mempalace": {
       "type": "http",
       "url": "http://127.0.0.1:8765/mcp"
+    },
+    "context7": {
+      "args": [
+        "dlx",
+        "@upstash/context7-mcp"
+      ],
+      "command": "pnpm",
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
+      }
     }
   },
   "name": "vwf"

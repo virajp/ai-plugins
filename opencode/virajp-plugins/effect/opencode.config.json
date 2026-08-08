@@ -1,8 +1,0 @@
-{
-  "configSchema": "https://opencode.ai/config.json",
-  "name": "effect",
-  "version": "0.1.0",
-  "dependencies": [
-    "typescript"
-  ]
-}

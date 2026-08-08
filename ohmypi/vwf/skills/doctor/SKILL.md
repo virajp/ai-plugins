@@ -25,7 +25,7 @@ project in the registry.
 | vwf config        | `.config/vwf.yaml`                                             |
 | Registry          | `docs/blueprint/registry.yaml`                                 |
 | Stack vocabulary  | `%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`             |
-| Stack templates   | `%%AI_PLUGINS_ROOT%%/assets/stacks/project/<role>/<slug>.md` |
+| Stack templates   | from the installed stack plugins, never from vwf                |
 | Harness contract  | `%%AI_PLUGINS_ROOT%%/assets/harness.md`                      |
 | Memory protocol   | `%%AI_PLUGINS_ROOT%%/assets/memory.md`                       |
 | mempalace config  | `mempalace.yaml` (one per repo — parent + submodules)          |

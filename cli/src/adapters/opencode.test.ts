@@ -62,11 +62,19 @@ const configPath = () => join(home, ".config", "opencode", "opencode.jsonc");
 const bundle = (plugin: string) =>
   join(home, ".config", "opencode", "virajp-plugins", plugin);
 
+// `datastore` is the generic fixture: it needs three properties at once and is
+// the smallest plugin that has all of them. Its skills are `invocation: both`,
+// so they render under `skills/` rather than being relocated to `commands/`
+// the way a `user` skill is. It declares no MCP or LSP server, so the config
+// merge stays a no-op and the idempotency assertion tests what it means to.
+// And it owns no agents, so the flat-file ownership test has a real negative
+// case. Swapping in a plugin missing any one of those fails a different test
+// each time.
 describe("opencode adapter", () => {
   it("installs a plugin's bundle and registers its skills path", () => {
-    opencode.apply(context, planFor(["markdown"]));
+    opencode.apply(context, planFor(["datastore"]));
 
-    expect(existsSync(join(bundle("markdown"), "skills"))).toBe(true);
+    expect(existsSync(join(bundle("datastore"), "skills"))).toBe(true);
     const config = readJsonc<any>(readFileSync(configPath(), "utf8"));
     expect(config.skills.paths).toContain("~/.config/opencode/virajp-plugins");
   });
@@ -94,7 +102,7 @@ describe("opencode adapter", () => {
   it("installs only the flat files owned by the selected plugins", () => {
     // Agents are global and their filenames carry no plugin prefix, so
     // selection has to come from the ownership manifest.
-    opencode.apply(context, planFor(["markdown"]));
+    opencode.apply(context, planFor(["datastore"]));
     const agentDir = join(home, ".config", "opencode", "agent");
     expect(existsSync(join(agentDir, "execute-coder.md"))).toBe(false);
 
@@ -120,7 +128,7 @@ describe("opencode adapter", () => {
 `;
     writeFileSync(configPath(), original);
 
-    opencode.apply(context, planFor(["markdown"]));
+    opencode.apply(context, planFor(["datastore"]));
 
     const after = readFileSync(configPath(), "utf8");
     expect(after).toContain("// The user's own comment.");
@@ -131,9 +139,9 @@ describe("opencode adapter", () => {
   });
 
   it("writes nothing on a dry run", () => {
-    const actions = opencode.plan(context, planFor(["markdown"]));
+    const actions = opencode.plan(context, planFor(["datastore"]));
     expect(actions.length).toBeGreaterThan(0);
-    expect(existsSync(bundle("markdown"))).toBe(false);
+    expect(existsSync(bundle("datastore"))).toBe(false);
     expect(existsSync(configPath())).toBe(false);
   });
 
@@ -146,26 +154,26 @@ describe("opencode adapter", () => {
 `;
     writeFileSync(configPath(), original);
 
-    const { receipt } = opencode.apply(context, planFor(["markdown"]));
+    const { receipt } = opencode.apply(context, planFor(["datastore"]));
     expect(readFileSync(configPath(), "utf8")).not.toBe(original);
 
     opencode.revert(context, receipt);
 
     expect(readFileSync(configPath(), "utf8")).toBe(original);
-    expect(existsSync(bundle("markdown"))).toBe(false);
+    expect(existsSync(bundle("datastore"))).toBe(false);
   });
 
   it("is idempotent: installing twice leaves the config unchanged", () => {
-    opencode.apply(context, planFor(["markdown"]));
+    opencode.apply(context, planFor(["datastore"]));
     const once = readFileSync(configPath(), "utf8");
-    opencode.apply(context, planFor(["markdown"]));
+    opencode.apply(context, planFor(["datastore"]));
     expect(readFileSync(configPath(), "utf8")).toBe(once);
   });
 
   it("refuses to edit a malformed config rather than clobbering it", () => {
     mkdirSync(join(home, ".config", "opencode"), { recursive: true });
     writeFileSync(configPath(), "{ this is not json");
-    expect(() => opencode.apply(context, planFor(["markdown"])))
+    expect(() => opencode.apply(context, planFor(["datastore"])))
       .toThrow(/malformed/);
   });
 
@@ -173,10 +181,10 @@ describe("opencode adapter", () => {
     opencode.apply(context, {
       target: "opencode",
       user: [],
-      project: ["markdown"],
+      project: ["datastore"],
     });
 
-    expect(existsSync(join(cwd, ".opencode", "virajp-plugins", "markdown")))
+    expect(existsSync(join(cwd, ".opencode", "virajp-plugins", "datastore")))
       .toBe(true);
     const config = readJsonc<any>(
       readFileSync(join(cwd, ".opencode", "opencode.jsonc"), "utf8"),
