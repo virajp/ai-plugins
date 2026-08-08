@@ -68,11 +68,11 @@ adopting it.
 
 **Dependencies**
 
-- **Hard external prerequisites.** `mise` and `graphify` must be on your `PATH`
-  — both are mandatory, and `/vwf:setup` and `/vwf:execute` halt without them.
-  `rtk` is **optional**: its Bash hook is guarded, so it is skipped when absent
-  and `/vwf:doctor` notes it. Dependency auto-install/enable needs Claude Code ≥
-  2.1.143. See [Prerequisites](#prerequisites).
+- **Hard external prerequisites.** `mise`, `graphify`, `uv`, `pnpm` and `rtk`
+  must be on your `PATH` — the installer refuses the install without them, and
+  `/vwf:setup` and `/vwf:execute` halt without mise or graphify at run time.
+  Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
+  [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
   to both `mempalace` (an **HTTP daemon you run** — `mempalace serve`) and a
   markdown tree under `docs/memory/`. Without the daemon nothing is lost, but
@@ -123,14 +123,22 @@ adopting it.
 `vwf` shells out to a few external tools. Install them first — the installer
 checks for each and prints the exact command for anything missing.
 
-| Tool            | Required?    | Why                                                  | Install                               |
-| --------------- | ------------ | ---------------------------------------------------- | ------------------------------------- |
-| mise            | **required** | task runner + resolves the toolchain                 | `brew install mise`                   |
-| graphify        | **required** | knowledge graph the commands rely on                 | `mise use -g pipx:graphifyy@latest`   |
-| node + pnpm     | **required** | vwf's Context7 MCP server; the npm-normalize hook    | `mise use -g node@latest pnpm@latest` |
-| Claude Code CLI | **required** | hosts the commands                                   | `mise use -g claude-code@latest`      |
-| uv              | **required** | installs the `mempalace` memory server               | `mise use -g uv@latest`               |
-| rtk             | optional     | the `rtk hook claude` Bash hook; skipped when absent | `brew install --formulae rtk`         |
+| Tool            | Required?    | Why                                             | Install                               |
+| --------------- | ------------ | ----------------------------------------------- | ------------------------------------- |
+| mise            | **required** | task runner + resolves the toolchain            | `brew install mise`                   |
+| graphify        | **required** | knowledge graph the commands rely on            | `mise use -g pipx:graphifyy@latest`   |
+| node + pnpm     | **required** | launches vwf's Context7 MCP server (`pnpm dlx`) | `mise use -g node@latest pnpm@latest` |
+| Claude Code CLI | **required** | hosts the commands                              | `mise use -g claude-code@latest`      |
+| uv              | **required** | graphify's and mempalace's Python runtime       | `mise use -g uv@latest`               |
+| rtk             | **required** | the token-saving `rtk hook claude` Bash hook    | `brew install --formulae rtk`         |
+
+Every row above is in `vwf`'s `requires:` list, which the installer treats as a
+**hard gate**: it refuses the install and prints the command for anything
+missing, rather than succeeding into a plugin that fails later with nothing
+pointing back at the install. `rtk` is the one whose *runtime* behaviour is
+softer than its install gate — the hook entry is guarded, so a `vwf` that
+somehow finds itself without `rtk` degrades (with a `/vwf:doctor` warning)
+instead of blocking every Bash call.
 
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
@@ -399,11 +407,16 @@ deleting them.
 
 ### Stack templates
 
-The stack is **not** enforced. Each role ships one or more templates under
-`assets/stacks/project/<role>/`, and `/vwf:architecture` presents them as a menu
-— one round per project, plus an *other (describe)* option for anything vwf
-doesn't ship. Each project carries exactly one role, so it picks exactly one
-template and there is nothing to merge.
+The stack is **not** enforced — and **vwf itself ships no stack templates at
+all**. It defines the axes, the `role` vocabulary and the template shape; every
+actual option lives in a **stack plugin** at
+`<plugin>/stacks/project/<role>/<slug>.md`, which vwf reaches through two fixed
+adapter skill names. `/vwf:architecture` presents the union across your
+installed plugins as a menu — one round per project, plus an *other (describe)*
+option for anything nobody ships. Each project carries exactly one role, so it
+picks exactly one template and there is nothing to merge. Install no stack
+plugin and the menu is empty: vwf says so and points at what to install, rather
+than coming back quietly short.
 
 A stack is composed from **four independent axes** — you pick one of each, and
 they never merge because they never overlap:
@@ -412,7 +425,7 @@ they never merge because they never overlap:
 | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **project** | per project | one or more per role — see below                                                                                                                                                                                                                                                           |
 | **backing** | per project | none from vwf — a **capability** plugin ships each one: `postgres` (`datastore`) · `oidc` (`identity`) · `otel-lgtm` (`observability`) · `temporal` (`orchestration`); `object-storage` is contract-only. A **cloud** plugin ships its managed set — `firebase` and `cloud-sql` from `gcp` |
-| **deploy**  | per project | `npm-package` (published, not deployed — the CLI/library target) · `cloud-run` and `gke` from `gcp` · `zero-trust-access` from `cloudflare`, the private plane that composes with any host                                                                                                 |
+| **deploy**  | per project | `npm-package` (published, not deployed — the CLI/library target) from `typescript` · `container-generic` from `devtools`, the provider-neutral OCI target · `cloud-run` and `gke` from `gcp` · `zero-trust-access` from `cloudflare`, the private plane that composes with any host        |
 | **repo**    | per repo    | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                                                                                                                                                                   |
 
 Since `config_format` **13** the first three are pinned **per project**, so a
@@ -469,16 +482,19 @@ template admits — Flutter's Kotlin and Swift), and prose carrying the layout,
 testing and deployment conventions `plan` and `execute` read. Picking one fills
 those axes into `.config/vwf.yaml`; you can then customize any of them.
 
-Languages come from a **closed vocabulary** so the tooling can act on them —
-which is the point of recording all this. `/vwf:doctor` reads the block back and
-checks the repo agrees: an LSP server and toolchain per declared language, every
-framework and dependency present in the project's manifest, the repo's package
-manager and tooling, harness task names, health paths. It reports drift in both
-directions, including a framework doing obvious structural work that your config
-never mentions.
+**vwf names no language.** The vocabulary is **open**: a language token is
+whatever a template declares, and the facts the tooling acts on — which LSP
+server covers it, which manifest identifies it, which mise tool installs it —
+come from the **language plugin** that owns it. `/vwf:doctor` reads the block
+back and checks the repo agrees: an LSP server and toolchain per declared
+language, every framework and dependency present in the project's manifest, the
+repo's package manager and tooling, harness task names, health paths. It reports
+drift in both directions, including a framework doing obvious structural work
+that your config never mentions. A language no installed plugin claims degrades
+to *unknown* — reported, never a block.
 
-Adding a stack option means adding a template file. One entry per type today is
-a starting point, not a default.
+Adding a stack option means adding a template file **to a plugin**, never to
+vwf. One entry per type today is a starting point, not a default.
 
 Two placement rules ride along with the shape — seeded into each repo's
 `conventions.md` and enforced by the execute reviewers:
@@ -531,8 +547,9 @@ serving both the operator API and an embedded UI, and the **sole holder of admin
 capabilities** (the public `service` exposes no admin routes). The capability,
 not a type name, is what marks it.
 
-The full stack docs ship inside the plugin under `assets/stacks/` and drive what
-`/vwf:setup` and `/vwf:architecture` record.
+The full stack docs ship inside each **stack plugin** under its own `stacks/`
+tree — never in vwf — and drive what `/vwf:setup` and `/vwf:architecture`
+record.
 
 ## Commands
 
@@ -556,9 +573,10 @@ The full stack docs ship inside the plugin under `assets/stacks/` and drive what
 | `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
-carry `disable-model-invocation: true`, so Claude never fires them on its own;
-you decide when a migration, a post-deploy check, a re-render, a plan retirement
-or a session resume happens. The rest stay model-invocable because the workflow
+are declared `invocation: user` (which Claude spells
+`disable-model-invocation: true`), so the model never fires them on its own; you
+decide when a migration, a post-deploy check, a re-render, a plan retirement or
+a session resume happens. The rest stay model-invocable because the workflow
 **delegates to them by name** — `recall` resumes a paused run *through*
 `blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`, and
 `setup` orchestrates `product`/`architecture`/`design-system`/`doctor`. Marking
@@ -1300,10 +1318,12 @@ plan/execute loop picks the change up.
 
 ## vwf skills
 
-vwf ships two kinds of skills: the **workflow skills** above (user-invoked via
-`/vwf:<name>`, model-invocation disabled) and the **doctrine skills** below. The
-doctrine skills back the workflow's quality — you don't invoke them directly;
-they auto-apply and inform how Claude writes and reviews:
+vwf ships two kinds of skills: the **workflow skills** above (invoked via
+`/vwf:<name>` — most are also reachable by the skills that delegate to them; a
+few, like `setup` and `verify`, are yours to time and nothing else can call) and
+the **doctrine skills** below. The doctrine skills back the workflow's quality —
+you don't invoke them directly; they auto-apply and inform how Claude writes and
+reviews:
 
 - **`product-foundations`** — the twelve foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
@@ -1464,8 +1484,10 @@ Notes:
 
 - `--all` acts on **user-scoped** plugins only. `flutter` is **project-scoped**
   — install it explicitly with `--project flutter` from within the project that
-  needs it. `cloudflare`, `effect` and `gcp` are **opt-in** — also excluded from
-  `--all`; install them by name at whichever scope you want.
+  needs it. The two cloud plugins (`cloudflare`, `gcp`) and all five capability
+  plugins (`datastore`, `identity`, `observability`, `orchestration`,
+  `object-storage`) are **opt-in** — also excluded from `--all`; install them by
+  name at whichever scope you want.
 - `--all` means the whole toolkit, so it **includes the statusline** (Claude
   Code only) — pass `--no-statusline` for a plugins-only run. The same applies
   in reverse: `--uninstall --all` removes the statusline too.
@@ -1478,55 +1500,43 @@ Notes:
 
 ### What an OpenCode install does
 
-OpenCode discovers skills from directories on disk, so the installer fetches
-this repo's source (the GitHub `main` tarball) and, per selected plugin:
+OpenCode has no plugin or marketplace concept — skills, commands, agents and
+plugins each live in a well-known directory, and everything else is config. The
+**build** already emits exactly that shape into this repo's `opencode/` tree, so
+installing is a copy plus a config merge rather than a render on your machine.
+Per selected plugin the CLI:
 
-- copies its `skills/` + `assets/` into
-  `~/.config/opencode/virajp-plugins/<plugin>/` (`--project` targets the
-  repo-local `.opencode/` instead), rewriting every `${CLAUDE_PLUGIN_ROOT}`
-  reference to the installed path and stamping the plugin version. Workflow
-  skills (user-invoked in Claude) are placed at `commands/<name>/index.md`,
-  **outside** OpenCode's skill discovery — so the model never auto-invokes them,
-  exactly like Claude's `disable-model-invocation` — while doctrine skills stay
-  discoverable under `skills/`;
-- expands plugin **dependencies** like Claude Code does — installing `vwf` also
-  renders `devtools` and wires `mempalace`. `mempalace` (like the graphify
-  wiring below) is **user-level only** — a `--project` request is redirected to
-  user scope, on both platforms;
-- wires **graphify at user level** when `vwf` is installed: its user-level
-  skills install as usual, and the project-level `graphify.js` its CLI generates
-  is harvested into `~/.config/opencode/plugin/` instead — no project files are
-  written;
-- **`mempalace`** (url-sourced) installs from its own upstream repo: its two
-  skills render, its MCP server lands in the config (launched as
-  `mise x -- mempalace-mcp`), and its Claude auto-save hooks are replaced by a
-  bundled OpenCode plugin (`plugin/mempalace-hooks.js`) — a save checkpoint
-  every 15 user messages plus a post-compaction safety save, honoring
-  mempalace's own opt-out (`MEMPALACE_HOOKS_AUTO_SAVE` /
-  `~/.mempalace/config.json`);
-- appends that `virajp-plugins` directory to `skills.paths` in the OpenCode
-  config — an existing `opencode.jsonc` is preferred (it wins OpenCode's config
-  merge), then an existing `opencode.json`; a new file is created as
-  `opencode.jsonc` with `$schema`. User keys are always preserved, and a config
-  containing comments is only rewritten after you confirm (or with `--yes`),
-  since a rewrite drops them;
-- maps the plugin's bundled `lspServers` onto the config's `lsp` key —
-  `typescript`/`dart`/`kotlin-ls`/`sourcekit-lsp` overrides that replace
-  OpenCode's built-in launchers with the plugins' mise-provisioned ones (no SDK
-  on `PATH` needed); an entry you already have is never overwritten;
-- writes a **command wrapper** (`command/<plugin>-<skill>.md`) for each workflow
-  skill, so `/vwf-setup` etc. work in OpenCode (which has no user-invoked skills
-  yet);
-- for `vwf` and `design-tools`, adds the MCP servers to the config's `mcp` key
-  (vwf's Context7 as a `local` entry and mempalace as a `remote` one; the Claude
-  Design server as a `remote` entry).
+- copies its bundle into `~/.config/opencode/virajp-plugins/<plugin>/`
+  (`--project` targets the repo-local `.opencode/` instead) — `skills/` for the
+  auto-applying doctrine, `commands/` for the user-invoked workflow skills
+  (**outside** OpenCode's skill discovery, so the model never auto-invokes them,
+  exactly like Claude's user-only skills), and `assets/`. Every
+  `${CLAUDE_PLUGIN_ROOT}` reference was already rewritten at build time;
+- copies the plugin's files in the **global** flat directories — `agent/`
+  (subagents *are* ported), `command/` (the `/vwf-setup`-style wrappers, since
+  OpenCode has no user-invoked skills) and `plugin/` (each hook rendered as a JS
+  plugin: `vwf-rtk.js` and `typescript-npm-normalize.js`). A per-target
+  ownership map says which plugin owns each file, so uninstall removes exactly
+  what was written;
+- merges that plugin's `mcp` and `lsp` entries into your OpenCode config and
+  appends the bundle directory to `skills.paths`. An existing `opencode.jsonc`
+  is preferred (it wins OpenCode's config merge), then an existing
+  `opencode.json`; a new file is created as `opencode.jsonc`. Every write
+  records the key's **prior state**, so uninstall restores a value you had
+  rather than deleting a key it merely wrote over;
+- expands plugin **dependencies**, which Claude Code does natively and OpenCode
+  cannot — so installing `vwf` also installs `devtools`;
+- wires **graphify** when `vwf` is installed
+  (`graphify install --platform
+  opencode` plus the git post-commit hook, both
+  idempotent, both soft-skipping).
 
-**Not ported**: subagents and vwf's hooks are Claude Code concepts (vwf's
-execute pipeline degrades accordingly), the statusline is Claude-only, and
-`andrej-karpathy-skills` (url-sourced, no upstream support wired) is skipped.
-`--uninstall` and `--upgrade` mirror all of this (uninstall never removes a
-dependency you didn't name); `--version` reports the stamped versions against
-the marketplace manifest.
+**Skipped, with a note**: the url-sourced plugins `mempalace` and
+`andrej-karpathy-skills` have no rendered bundle — nothing to copy — so an
+OpenCode install of `vwf` leaves you to install those two yourself. The
+statusline is Claude-only. `--uninstall` and `--upgrade` replay the receipt
+(uninstall never removes a dependency you didn't name); `--version` compares
+this build's versions against the manifest on `main`.
 
 ## Credits & acknowledgements
 
