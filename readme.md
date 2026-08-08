@@ -140,10 +140,14 @@ and reconnects instead of dying with the session. Toggle the mempalace
 **plugin's** own stdio server off in `/mcp` — two servers would contend for
 mempalace's single writer lease. See [docs/mempalace.md](./docs/mempalace.md).
 
-`vwf` also depends on five plugins — `context7`, `github-actions`, `markdown`,
-`mempalace`, and `mise` — all resolved from the same `virajp-plugins`
-marketplace. Claude Code **auto-installs and auto-enables** them when you enable
-`vwf` (requires Claude Code ≥ 2.1.143).
+`vwf` also depends on four plugins — `context7`, `markdown`, `mempalace`, and
+`mise` — all resolved from the same `virajp-plugins` marketplace. Claude Code
+**auto-installs and auto-enables** them when you enable `vwf` (requires Claude
+Code ≥ 2.1.143).
+
+**`cicd` is not among them.** vwf states the delivery-pipeline *contract*; the
+[`cicd`](./docs/cicd.md) plugin implements it on whichever CI system a repo
+uses. Install it when you want pipelines generated — vwf works without it.
 
 **A design tool is not among them.** vwf is decoupled from any particular one:
 it delegates screen and design-system imports to whichever **adapter plugin**
@@ -489,10 +493,10 @@ repo name) with **branch validation** in the workflow (a prod tag on a feature
 branch can never deploy) and **no deploy step before the tagged project's and
 its dependents' tests pass in the same run**. A staging deploy is never a
 release — production releases are recorded only by `/vwf:verify`. The
-`github-actions` plugin (now a vwf dependency) generates release workflows
-conforming to this contract: one main workflow owning tag parsing, branch
-validation and the test gate, calling as few reusable sub-workflows as the
-repo's variation allows.
+[`cicd`](./docs/cicd.md) plugin — independent, not a vwf dependency — generates
+release pipelines conforming to this contract on whichever CI system the repo
+uses: everything common (tag parsing, branch validation, the test gate) written
+once, and the deploy factored no further than the repo's own variation demands.
 
 The **operator back-office** deserves a note. Since format 19 it is not its own
 role: it is `role: fullstack` plus the `operator-rbac` capability — a single app
@@ -1339,7 +1343,7 @@ your stack. Each has a dedicated guide:
 | **[effect](./docs/effect.md)**                                                     | Effect-TS doctrine — an `effect` router skill (+ effect/effect-runtime/testing references) and the `packages` vwf stack template (opt-in; requires `typescript`)                              | `--user effect`                             |
 | **[flutter](./docs/flutter.md)**                                                   | Flutter/Dart (GetX) standards — `dart` & `swift` router skills plus kotlin/pubspec/analysis-options/i18n + bundled Dart/Kotlin/Swift language servers; **project-scoped**                     | `--project flutter`                         |
 | **[mise](./docs/mise.md)**                                                         | mise standards (the `.config/` three-file split + task library) + a `/mise:scaffold` skill                                                                                                    | `--user mise`                               |
-| **[github-actions](./docs/github-actions.md)**                                     | A `/github-actions:workflow` skill — generates workflows installing every tool via `jdx/mise-action` (mise only); supports polyrepo + monorepo                                                | `--user github-actions`                     |
+| **[cicd](./docs/cicd.md)**                                                         | A `/cicd:workflow` skill — resolves the repo's CI system from config, then generates its delivery pipeline (every tool via mise); supports polyrepo + monorepo                                | `--user cicd`                               |
 | **[context7](./docs/context7.md)**                                                 | The Context7 MCP server — up-to-date library docs on demand                                                                                                                                   | `--user context7`                           |
 | **[claude-design](./docs/claude-design.md)**                                       | Claude Design MCP server + vwf design-adapter skills — the **default** design adapter                                                                                                         | `--user claude-design`                      |
 | **lovable**                                                                        | vwf design adapter for Lovable (opt-in — set `design.tool: lovable`)                                                                                                                          | `--user lovable`                            |

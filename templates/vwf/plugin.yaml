@@ -36,7 +36,6 @@ source:
   kind: local
 dependencies:
   - context7
-  - github-actions
   - markdown
   - mempalace
   - mise
