@@ -125,37 +125,10 @@ just automated feedback):
 
 Runs only when this run targeted the **release environment** (§1) **and** both
 passes came back clean (every probed project healthy, every criterion `PASS`).
-Then, behind an explicit confirmation — never automatic:
-
-> "Record a production release? This freezes each deployed service's API
-> contract — later changes must be backward compatible or take a major-version
-> bump."
-
-On yes, for each registry `service` project that was deployed & healthy in this
-environment and has a living contract
-`docs/blueprint/apis/<project>.openapi.yaml`:
-
-1. Read `info.version` — it must be **semver**; otherwise skip that project's
-   snapshot and flag it (the blueprint sweep's coherence review requires semver,
-   so this means drift).
-2. Copy the living contract to
-   `docs/blueprint/apis/released/<project>@<info.version>.openapi.yaml`.
-   - Same version, **identical** content already there → skip ("already
-     released").
-   - Same version, **different** content → refuse and flag as a **hard gap**
-     (the version must be bumped; the coherence review should have caught this)
-     — do not overwrite a released snapshot, ever.
-3. Report what was frozen, per project.
-
-**`service` only.** A `fullstack` project owns a contract too, but its API
-serves its own UI shipped in the same deployable — there is no independent
-consumer for a freeze to protect, so it is never snapshotted and never carries
-the additive-only diff. Say so if the user asks why one was skipped.
-
-The snapshot dir **is** the release record — the latest release is the highest
-semver in the filenames; nothing is written to config. From the first snapshot
-on, the blueprint sweep's coherence review and execute's code-review compat
-dimension enforce additive-only changes against it.
+Only then, read [Release freeze](references/release-freeze.md) and follow it —
+the confirmation prompt, the per-`service` snapshot into `apis/released/`, and
+the never-overwrite rule. A staging run, or any run with a failure, skips this
+section entirely.
 
 **Persist.** Store the run's outcome (environment, per-criterion results,
 routing, any release recorded) to mempalace room `problems` (releases also to
