@@ -69,7 +69,7 @@
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
     ".envrc": ".env,.env.*,.nvmrc,.env.*.secrets,*.env",
-    ".gitignore": ".gitkeep,.gitmodules,.dockerignore,.env,.prettierignore",
+    ".gitignore": ".gitkeep,.gitmodules,.dockerignore,.env,.prettierignore,.gitattributes,.eslintignore,.stylelintignore,.dockerignore,.npmignore,.yarnclean",
     "*.js": "${capture}.js.map,${capture}.d.ts,${capture}.d.ts.map",
     "AGENTS.md": "CLAUDE.md",
     "dockerfile.projects": "docker-bake.hcl",
