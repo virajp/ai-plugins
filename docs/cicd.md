@@ -7,10 +7,11 @@ that system's reference. Adding a second CI system is one new reference file and
 one config value; there is no second skill and no second plugin.
 
 Whichever system it targets, the generated pipeline installs **every** tool
-through [mise](./mise.md) — no per-language setup steps, no shell installs — and
-supports both **polyrepo** (a single project) and **monorepo** (many packages)
-layouts, detecting which one you have and asking how to handle it. It is a
-single user-invoked skill; nothing auto-applies.
+through [mise](https://mise.jdx.dev) — no per-language setup steps, no shell
+installs — and supports both **polyrepo** (a single project) and **monorepo**
+(many packages) layouts, detecting which one you have and asking how to handle
+it. It is a single user-invoked skill; nothing auto-applies, and nothing
+delegates to it.
 
 ## Install
 
@@ -18,14 +19,17 @@ single user-invoked skill; nothing auto-applies.
 pnpx @askviraj/ai-plugins --user cicd
 ```
 
-It pairs naturally with the [`devtools`](./devtools.md) plugin: the pipelines it
-writes assume mise provides the toolchain, so a repo with no mise config should
-run [`/devtools:scaffold`](./devtools.md#devtoolsscaffold) first.
+It needs `mise` on your `PATH`, and pairs naturally with the
+[`devtools`](./devtools.md) plugin: the pipelines it writes assume mise provides
+the toolchain, so a repo with no mise config should run
+[`/devtools:scaffold`](./devtools.md#devtoolsscaffold) first.
 
-**It is not a `vwf` dependency.** vwf owns the *contract* a delivery pipeline
-must satisfy (`assets/delivery-pipeline.md`); this plugin owns the *mechanism*
-that satisfies it on a given CI system. Install it when you want pipelines
-generated — vwf works without it.
+**It is not a [`vwf`](./vwf.md) dependency**, deliberately. vwf owns the
+*contract* a delivery pipeline must satisfy (`assets/delivery-pipeline.md`);
+this plugin owns the *mechanism* that satisfies it on a given CI system. Nothing
+in vwf delegates to `/cicd:workflow` — every mention of it there is prose
+recommending it to you — so vwf has no reason to force its install. Install it
+when you want pipelines generated; vwf works without it.
 
 ## Resolving the CI system
 
@@ -35,16 +39,20 @@ The skill's first act, before it inspects anything else:
    alongside `design` and the `stack` block since `config_format` 13;
 2. asking you, and offering to record the answer there.
 
-**It never detects and never defaults.** An absent key or a token this plugin
-does not implement yet are both questions. Sniffing the repo is deliberately
-gone: `.github/workflows/` in a repo migrating *off* GitHub Actions is exactly
-the signal that would mislead, and a silent default is how a GitLab repo ends up
-with `.github/workflows/`.
+There is no third step. **It never detects the CI system from the repo and never
+defaults to one** — repo detection was deliberately removed, because
+`.github/workflows/` in a repo migrating *off* GitHub Actions is exactly the
+signal that would mislead, and a silent default is how a GitLab repo ends up
+with `.github/workflows/`. An absent key, and a token this plugin does not
+implement yet, are both questions.
 
-| `cicd`           | Status                                   |
-| ---------------- | ---------------------------------------- |
-| `github-actions` | implemented                              |
-| anything else    | resolved, then reported as unimplemented |
+| `cicd`           | Status                                                       |
+| ---------------- | ------------------------------------------------------------ |
+| `github-actions` | implemented — `skills/workflow/references/github-actions.md` |
+| anything else    | resolved, then reported as unimplemented                     |
+
+On an unimplemented token the skill stops and says which token it resolved,
+rather than improvising that system's syntax.
 
 ## The hard rules
 
@@ -62,7 +70,7 @@ exception:
    monorepo (with a chosen fan-out strategy).
 4. **CI env.** It sets a pipeline-level `MISE_ENV: ci` when the repo defines a
    `mise.ci.toml` variant, matching this marketplace's
-   [mise convention](./mise.md#the-three-file-split).
+   [mise convention](./devtools.md#the-three-file-split).
 5. **Every third-party building block is pinned** to an explicit version.
 
 ## /cicd:workflow
@@ -113,7 +121,11 @@ the release task, job shape). Staging is never a release.
 vwf states the requirement; this plugin states the mechanism — which is why the
 contract lives in vwf and stays there.
 
-### Shape of a generated job (GitHub Actions)
+### Shape of a generated job
+
+Illustrated in GitHub Actions, the one system implemented today. The shape — one
+toolchain step, then `mise run` for everything else — is what every reference
+must express in its own syntax.
 
 ```yaml
 env:
@@ -137,6 +149,9 @@ expressed in that system's syntax. Nothing else changes.
 
 ## See also
 
-- [../readme.md](../readme.md)
+- [../readme.md](../readme.md) — the marketplace overview and the full plugin
+  list.
+- [vwf plugin](./vwf.md) — the delivery-pipeline contract this plugin
+  implements.
 - [devtools plugin](./devtools.md) — the toolchain the generated pipelines rely
   on.

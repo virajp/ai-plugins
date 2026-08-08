@@ -6,10 +6,35 @@ three-file `MISE_ENV` split (`mise.toml` / `mise.dev.toml` / `mise.ci.toml`) and
 a mandatory file-based task library under `.config/mise/tasks/` — plus a
 `/devtools:scaffold` skill that lays both into a repo. Around that sit the tools
 the stack templates name: Doppler, Docker/OCI, dprint, ESLint, gitleaks, grype,
-and pre-commit.
+and pre-commit. It also owns the one provider-neutral **deploy** template,
+`container-generic`.
 
-It is a **`vwf` dependency**, because `/vwf:setup` orchestrates
-`/devtools:scaffold` and a skill vwf cannot see fails silently.
+It is a **`vwf` dependency**, and that is load-bearing rather than tidiness:
+`/vwf:setup` orchestrates `/devtools:scaffold`, and a skill vwf cannot see fails
+**silently** — indistinguishable from one that ran and returned nothing.
+
+## Install
+
+```bash
+pnpx @askviraj/ai-plugins --user devtools
+```
+
+Installing `vwf` pulls it in automatically.
+
+### Why `requires:` names only `mise`
+
+A plugin's `requires:` is a **hard install gate**, computed over the
+dependency-expanded set and deliberately **not** overridable by `--force`. So
+the test is "does this plugin shell out to it", never "does it document it".
+`mise` passes: `scaffold` writes mise config and the whole task library is mise
+tasks.
+
+`doppler`, `dprint`, `eslint`, `gitleaks`, `grype` and `pre-commit` are all
+documented here and executed by **your** repo, never by this plugin. Because
+`devtools` is a vwf dependency and vwf is in `--all`, adding any one of them
+would hard-fail a bare `pnpx @askviraj/ai-plugins --all` for every user lacking
+that binary — and with no install hint to offer, it would fail while naming no
+way to fix itself. The list is not incomplete; do not "complete" it.
 
 ## Skills
 
@@ -26,9 +51,16 @@ it loads when you edit the file it governs, and never otherwise.
 | `eslint`                  | eslint config / `.config/linter.yaml` — the correctness gate            |
 | `gitleaks`                | `.config/gitleaks.toml` — the secret scanner                            |
 | `grype`                   | `.config/grype.yaml` — the dependency vulnerability scanner             |
+| `pre-commit`              | `.config/pre-commit-config.yaml` — the local gate                       |
 | `devtools-stack-menu`     | the vwf stack-adapter menu — one deploy template, `container-generic`   |
 | `devtools-stack-template` | the vwf stack-adapter payload for that template                         |
-| `pre-commit`              | `.config/pre-commit-config.yaml` — the local gate                       |
+
+`dprint` and `eslint` own the **gate's shape** — one root config, plugins pinned
+by version, flat config only, zero formatting rules in the linter, an override
+scoped by `files` glob rather than disabled globally. Which rules a *language*
+runs is the language plugin's: for TypeScript that is
+[`typescript:lint-format`](./typescript.md#skills), which governs the same files
+from the other side.
 
 ### Secrets: development only
 
@@ -38,28 +70,58 @@ environment, and it is the injector that changes: Doppler locally, the CI
 system's secret store in CI, the cloud plugin's secret manager in production
 (`gcp` → Secret Manager, `cloudflare` → Workers secrets).
 
-There is deliberately **no `secrets` plugin** in this marketplace, and a product
-that needs Doppler at runtime has moved a dev tool into production.
+Wrap the **mise task**, never the application binary:
 
-### One deploy template
+```sh
+doppler run -- mise run dev
+```
 
-`devtools` owns exactly one vwf stack template: **`container-generic`** — build
-a standard OCI image, push it to any registry, run it on any host that runs
-containers. It is the deploy option to pick when the product must not be tied to
-one cloud, and it lives here because Docker is developer tooling and the
-template names no provider. A **managed** container host (Cloud Run, GKE) comes
-from the cloud plugin instead.
+That is what makes the same task run with and without Doppler — CI calls
+`mise run dev` directly under its own injected environment, and the task is
+identical either way.
+
+There is deliberately **no `secrets` plugin** in this marketplace. Dev secrets
+are `devtools`; production secrets belong to whichever cloud plugin the project
+deploys on. A product that needs Doppler at runtime has moved a dev tool into
+production.
+
+## Stack templates
+
+`devtools` owns exactly one vwf stack template, on the **deploy** axis:
+
+| Slug                | Axis     | What it pins                                              |
+| ------------------- | -------- | --------------------------------------------------------- |
+| `container-generic` | `deploy` | An OCI image, any registry, any host that runs containers |
+
+It is the option to pick when the product must not be tied to one cloud, and it
+lives here because Docker is developer tooling and the template names no
+provider. The image is built once and **promoted** between environments rather
+than rebuilt — which is what makes the tested artifact and the released artifact
+the same artifact. Configuration arrives as environment variables from the host,
+so the image carries nothing environment-specific and no provider-specific
+entrypoint or agent.
+
+A **managed** container host (Cloud Run, GKE) comes from the project's cloud
+plugin instead; this template stays deliberately silent on which host runs the
+image, and the menu says so on every answer rather than coming back quietly
+short.
 
 There is no `container` capability plugin: a container is not a backing
 capability, it is how a deployable is packaged.
 
-## Install
+### The local stack
 
-```bash
-pnpx @askviraj/ai-plugins --user devtools
-```
+The `docker` skill's second subject is the other job containers do — the backing
+services `e2e_local` needs, run under Compose. This is the **one harness
+capability whose mechanism vwf fixes**: composed services behind `wait-on`
+readiness gates, because the acceptance verifier depends on a deterministic
+ready signal. An ad-hoc `sleep` is a finding, not a variant — long enough on a
+laptop is short enough on a loaded CI runner.
 
-Installing `vwf` pulls it in automatically.
+Which services run in the stack is the **backing** axis's decision. This plugin
+owns the wiring; the [datastore](./datastore.md), [identity](./identity.md) or
+[orchestration](./orchestration.md) plugin owns what is wired. A product whose
+`e2e_local` needs no backing services needs no Compose file at all.
 
 ## The mise standard
 
@@ -176,6 +238,16 @@ overlay supplies the stack-divergent `code/format`, `code/lint`, the install
 sub-tasks, and `setup/all` (the entrypoint that names those install tasks). The
 overlay is copied on top of `common/`, merging into `code/` and `setup/`.
 
+The skill is **model-invocable as well as user-invocable**, because `/vwf:setup`
+orchestrates it. Flipping it to user-only would break setup silently rather than
+noisily.
+
 ## See also
 
-- [../readme.md](../readme.md)
+- [../readme.md](../readme.md) — the marketplace overview and the full plugin
+  list.
+- [vwf plugin](./vwf.md) — the workflow that depends on this one.
+- [cicd plugin](./cicd.md) — the pipelines that assume mise provides the
+  toolchain.
+- [typescript plugin](./typescript.md) — the language side of the lint/format
+  gate.
