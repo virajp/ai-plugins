@@ -113,8 +113,9 @@ them enforced rather than advisory)
 
 14. **`baseline/structured-logs-no-pii`** — logs are structured (key-value, not
     prose) and **never contain PII or secrets**; identifiers are opaque ids.
-    Logs, traces, and metrics all travel through **OpenTelemetry** (the
-    observability foundation) — never bespoke log files or side channels.
+    Logs, traces, and metrics all travel through **one vendor-neutral telemetry
+    pipeline** (the observability foundation the project's backing axis selects)
+    — never bespoke log files or side channels.
 15. **`baseline/integer-money`** — money and precise quantities are **integer
     minor units** (cents, satoshi, grams) with an explicit currency/unit field —
     never floats.

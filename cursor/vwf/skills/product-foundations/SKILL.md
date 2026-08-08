@@ -34,7 +34,7 @@ the reference-stack docs for the 95octane realization.
 | Foundation           | Default (one line)                                                         | Reference                                                  |
 | -------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | Users & operators    | Two user classes; document-based RBAC; claims for account-status only      | [users](references/users.md)                               |
-| Observability        | OpenTelemetry (traces+metrics+logs) → Grafana Cloud, trace-correlated logs | [observability](references/observability.md)               |
+| Observability        | Vendor-neutral telemetry, all three signals, trace-correlated logs        | [observability](references/observability.md)               |
 | Audit logs           | Append-only record of privileged + destructive actions                     | [audit-logs](references/audit-logs.md)                     |
 | Change logs          | Keep-a-Changelog source of truth → fastlane store metadata                 | [change-logs](references/change-logs.md)                   |
 | Background processes | Sync/async per action; durable → worker, ephemeral → service               | [background-processes](references/background-processes.md) |

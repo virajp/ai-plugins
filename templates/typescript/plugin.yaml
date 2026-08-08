@@ -9,6 +9,9 @@ description: "The TypeScript language plugin — one plugin per language, coveri
   TypeScript stack template — 7 project roles, the npm-package deploy target and
   the pnpm/bun repo choices — and implements the vwf stack-adapter contract."
 category: development
+languages:
+  - typescript
+  - javascript
 tags:
   - typescript
   - javascript

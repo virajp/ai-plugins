@@ -93,9 +93,9 @@ already carries `graphify-out/graph.json`, query it for the system shape first �
 the projects present, their stacks, and who depends on whom — then confirm what
 it reports against the manifests below; fall back silently when no graph exists.
 
-Per the project-setup skill (topology-detection), read repo signals —
-`package.json`, `pnpm-workspace.yaml`, `bun.lock`, `pubspec.yaml`,
-`build.gradle(.kts)`, `Package.swift`, `.gitmodules`, dir layout — plus any
+Per the project-setup skill (topology-detection), read repo signals — the root
+manifests and lockfiles the installed stack plugins recognise, `.gitmodules`,
+dir layout — plus any
 existing `docs/blueprint/` or legacy `docs/specs/`. Infer: monorepo vs polyrepo
 vs **workspace** (a parent repo with submodule children — classify each child on
 its own signals), the project **roles** present (`service`, `worker`,

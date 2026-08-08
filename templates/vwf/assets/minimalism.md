@@ -39,8 +39,8 @@ code, that code stays.
 
 ## New dependencies — consent required
 
-A **new third-party dependency** (an npm/pnpm package, a pub.dev package, an SPM
-package, or the stack's equivalent) is never added silently. In interactive
+A **new third-party dependency** — a package from whichever registry the
+project's language uses — is never added silently. In interactive
 phases the user consents explicitly before it lands: the plan **names** every
 new dependency a step introduces (package + purpose), so the plan's approval
 gate is where consent happens. In execute, the coder installs **only**

@@ -53,7 +53,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
         <slug>,
       ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` or `frontend` project usually does not)
       deploy_template: <slug> # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). A `frontend` project on a SCREEN platform sets this to `n/a`: it ships through a store, not a deploy target. A `cli` frontend sets `deploy/npm-package` — a package registry IS its target. An `iac` project sets `n/a`: it IS the deploy path
-      package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing pnpm and bun projects
+      package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing managers
       languages: [
         <token>,
       ] # CLOSED vocabulary — assets/stack-vocabulary.md. At least one; drives doctor's LSP + toolchain checks
@@ -258,10 +258,10 @@ earlier than 65/90/80), never loosen.
      backing and deploy templates matching what the repo is already running,
      read off its own config, and confirm rather than assume. A `frontend` project takes
      `deploy_template: n/a` — it ships through a store.
-  3. **`repo.stack.package_manager`** narrows to what the repo template permits. A repo recording
-     `npm` is drift to fix; `cargo`/`uv`/`pub` were never a JS/TS choice and
-     move to being implied by the language. Optionally add a per-project
-     `package_manager` where a hybrid repo mixes the two.
+  3. **`repo.stack.package_manager`** narrows to what the repo template permits.
+     A repo recording a manager the template does not list is drift to fix; a
+     language with only one manager moves to having it implied. Optionally add
+     a per-project `package_manager` where a hybrid repo mixes managers.
   4. **`design.tool`** is added, naming the adapter **plugin**. Default it to
      `claude-design` for any repo carrying a `design.design_system_id` — that is
      the tool it was already using. The pin itself stays, now adapter-scoped.

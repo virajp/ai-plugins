@@ -76,6 +76,20 @@ export const Manifest = z.object({
   /** External binaries this plugin needs at runtime, checked before install. */
   requires: z.array(z.string()).default([]),
 
+  /**
+   * Languages this plugin owns the facts for — the LSP, the manifest, the
+   * toolchain that `/vwf:doctor` checks a repo against.
+   *
+   * vwf holds no list of languages; it keeps only the *shape* of a language
+   * fact and the rule that an unrecognised token degrades to `unknown`. The
+   * rows come from here, which is what makes the vocabulary open: supporting a
+   * new language means shipping a plugin, not editing vwf.
+   *
+   * Empty for every plugin that is not a language plugin, which is most of
+   * them — a cloud or capability plugin owns providers, not languages.
+   */
+  languages: z.array(z.string()).default([]),
+
   mcpServers: z.record(z.string(), McpServer).default({}),
   lspServers: z.record(z.string(), LspServer).default({}),
 });

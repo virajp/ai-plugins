@@ -20,6 +20,7 @@
  * per-target half matters most — four of the five targets have no byte-parity
  * gate, so this is their only automated defence.
  */
+import { frontmatter as fm } from "@ai-plugins/schema";
 import {
   existsSync,
   readFileSync,
@@ -150,6 +151,8 @@ function checkTemplates(workspace: Workspace): Finding[] {
   }
 
   findings.push(...checkDesignAdapters(workspace));
+  findings.push(...checkStackAdapters(workspace));
+  findings.push(...checkVwfIsTechnologyFree(workspace));
   return findings;
 }
 
@@ -320,6 +323,275 @@ function checkDesignAdapters(workspace: Workspace): Finding[] {
     }
   }
   return findings;
+}
+
+/** The four axes a stack template may declare. */
+const AXES = new Set(["project", "backing", "deploy", "repo"]);
+
+/** Roles a `project`-axis template may declare, from the registry vocabulary. */
+const ROLES = new Set([
+  "service",
+  "worker",
+  "packages",
+  "site",
+  "fullstack",
+  "frontend",
+  "iac",
+]);
+
+/** Roles that put a UI in front of a user, and so need a `-ux-gate`. */
+const UI_ROLES = new Set(["site", "fullstack", "frontend"]);
+
+/**
+ * The vwf stack-adapter contract.
+ *
+ * The mirror of `checkDesignAdapters`, and it exists for the same reason: vwf
+ * delegates to these skills by *constructed* name, so a missing skill or one
+ * flipped to `user` invocation fails **silently** — vwf sees no menu and
+ * reports an empty result, which is indistinguishable from a plugin that
+ * genuinely offers nothing.
+ *
+ * Triggered by shipping `stacks/`, not by a tag: a plugin with templates and no
+ * way to serve them is exactly the broken state worth catching, and a tag would
+ * let it opt out of being checked.
+ */
+function checkStackAdapters(workspace: Workspace): Finding[] {
+  const findings: Finding[] = [];
+
+  for (const plugin of workspace.plugins) {
+    const templates = plugin.files.filter(f =>
+      f.path.startsWith("stacks/") && f.path.endsWith(".md")
+    );
+    if (templates.length === 0) {
+      continue;
+    }
+
+    const name = plugin.manifest.name;
+    const byName = new Map(plugin.skills.map(s => [s.meta.name, s]));
+
+    for (const kind of ["stack-menu", "stack-template"]) {
+      const expected = `${name}-${kind}`;
+      const skill = byName.get(expected);
+      if (skill === undefined) {
+        findings.push({
+          scope: name,
+          message: `ships stacks/ but has no "${expected}" skill — vwf `
+            + `constructs that name, so the templates are unreachable`,
+        });
+        continue;
+      }
+      if (skill.meta.invocation === "user") {
+        findings.push({
+          scope: name,
+          message:
+            `${expected} has invocation "user" — vwf delegates to it by name, `
+            + `and a user-only skill cannot be invoked programmatically, so the `
+            + `menu would silently come back empty`,
+        });
+      }
+    }
+
+    const uiRoles = new Set<string>();
+    for (const template of templates) {
+      const front = frontmatterOf(template.absolute);
+      const axis = front["axis"];
+      if (axis === undefined) {
+        findings.push({
+          scope: `${name}:${template.path}`,
+          message: "stack template declares no `axis:` — the template payload "
+            + "contract requires one of project/backing/deploy/repo",
+        });
+      }
+      else if (!AXES.has(axis)) {
+        findings.push({
+          scope: `${name}:${template.path}`,
+          message: `stack template declares axis "${axis}", which is not one `
+            + `of project/backing/deploy/repo`,
+        });
+      }
+
+      if (axis === "project") {
+        const role = front["role"];
+        if (role === undefined) {
+          findings.push({
+            scope: `${name}:${template.path}`,
+            message: "project-axis template declares no `role:` — the axis "
+              + "says which menu it joins, the role says which projects it "
+              + "serves, and both are required",
+          });
+        }
+        else if (!ROLES.has(role)) {
+          findings.push({
+            scope: `${name}:${template.path}`,
+            message: `project-axis template declares role "${role}", which is `
+              + `not in the registry role vocabulary`,
+          });
+        }
+        else if (UI_ROLES.has(role)) {
+          uiRoles.add(role);
+        }
+      }
+    }
+
+    // A plugin owning a UI stack must ship the gate vwf's `execute-ux-reviewer`
+    // delegates to. Without it the reviewer reports `rendered: n/a` on every
+    // slice — the UX gate degrades to a code-only read and says nothing about
+    // why. The inverse also holds: a plugin with no UI stack must not ship one,
+    // or the roster stops saying which plugins own a UI.
+    const gate = `${name}-ux-gate`;
+    const hasGate = plugin.skills.some(s => s.meta.name === gate);
+    if (uiRoles.size > 0 && !hasGate) {
+      findings.push({
+        scope: name,
+        message: `owns a UI stack (role ${[...uiRoles].sort().join(", ")}) but `
+          + `ships no "${gate}" skill — vwf would report rendered: n/a on `
+          + `every UI slice`,
+      });
+    }
+    if (uiRoles.size === 0 && hasGate) {
+      findings.push({
+        scope: name,
+        message: `ships "${gate}" but owns no UI stack — vwf never calls it`,
+      });
+    }
+  }
+
+  return findings;
+}
+
+/**
+ * Tokens that name a concrete technology. vwf may not use any of them.
+ *
+ * Anchored on both sides on purpose. The unanchored form this list started as
+ * matched `hono` inside "honor" and "honored" across a dozen files, which is
+ * the kind of false positive that gets a guard deleted rather than fixed.
+ */
+const TOOL_TOKENS = [
+  "firebase",
+  "firestore",
+  "cloud run",
+  "cloud-run",
+  "playwright",
+  "axe-core",
+  "pnpm",
+  "npm",
+  "bun",
+  "turbo",
+  "turborepo",
+  "docker",
+  "wait-on",
+  "temporal",
+  "terraform",
+  "pulumi",
+  "refine",
+  "astro",
+  "hono",
+  "vitest",
+  "doppler",
+  "postgres",
+  "grafana",
+  "opentelemetry",
+];
+
+/**
+ * The two places vwf is allowed to name a tool, both reviewed and both
+ * recognition rather than prescription — vwf naming a tool to read a repo it
+ * did not choose, never to tell anyone what to use.
+ *
+ * Deliberately a path allowlist, not a weakened pattern. Adding a third entry
+ * should require arguing for it, which is the point.
+ */
+const TOOL_NAME_EXCEPTIONS = new Set([
+  // States the rule, which cannot be stated without an example of what it bans.
+  "assets/stack-adapter.md",
+  // Documents a repo it did not choose, so it has to recognise what is there.
+  "skills/readme/SKILL.md",
+]);
+
+/**
+ * The regression guard: vwf ships no stack template and names no tool.
+ *
+ * `stack-adapter.md` has stated this since it was written and nothing enforced
+ * it, which is how 17 templates accumulated inside vwf. Without this check the
+ * whole re-architecture is one refactor away from unwinding.
+ */
+function checkVwfIsTechnologyFree(workspace: Workspace): Finding[] {
+  const findings: Finding[] = [];
+  const vwf = workspace.plugins.find(p => p.manifest.name === "vwf");
+  if (vwf === undefined) {
+    return findings;
+  }
+
+  // Decision 6: the language vocabulary is open, and the rows come from the
+  // plugins. vwf declaring one would put a language back inside the workflow.
+  if (vwf.manifest.languages.length > 0) {
+    findings.push({
+      scope: "vwf",
+      message: `declares languages ${vwf.manifest.languages.join(", ")} — vwf `
+        + `keeps the shape of a language fact; a language plugin supplies the `
+        + `rows`,
+    });
+  }
+
+  for (const file of vwf.files) {
+    if (file.path.startsWith("stacks/")) {
+      findings.push({
+        scope: "vwf",
+        message: `ships a stack template at ${file.path} — vwf states the `
+          + `requirement and a plugin states the mechanism, so every template `
+          + `belongs to a stack plugin (assets/stack-adapter.md)`,
+      });
+    }
+  }
+
+  const documents = [
+    ...vwf.files.filter(f => f.path.endsWith(".md")),
+    ...vwf.skills.map(s => ({
+      path: s.path,
+      absolute: join(vwf.root, s.path),
+    })),
+    ...vwf.agents.map(a => ({
+      path: a.path,
+      absolute: join(vwf.root, a.path),
+    })),
+    ...vwf.skills.flatMap(s => s.extras.filter(e => e.path.endsWith(".md"))),
+  ];
+
+  for (const document of documents) {
+    if (TOOL_NAME_EXCEPTIONS.has(document.path)) {
+      continue;
+    }
+    // The conformance bundle is a worked EXAMPLE of a product's blueprint, not
+    // vwf's own prose. A blueprint names its product's technology by design.
+    if (document.path.startsWith("assets/examples/")) {
+      continue;
+    }
+    const body = readFileSync(document.absolute, "utf8").toLowerCase();
+    const hits = TOOL_TOKENS.filter(token =>
+      new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9-]|$)`).test(body)
+    );
+    if (hits.length > 0) {
+      findings.push({
+        scope: `vwf:${document.path}`,
+        message: `names ${hits.map(h => `"${h}"`).join(", ")} — vwf states the `
+          + `requirement, the plugin states the mechanism, so a tool name here `
+          + `is a bug in that contract (assets/stack-adapter.md). If this is `
+          + `genuinely recognition rather than prescription, add the path to `
+          + `TOOL_NAME_EXCEPTIONS with a reason.`,
+      });
+    }
+  }
+
+  return findings;
+}
+
+/** The `axis` and `role` a stack template declares, if it declares them. */
+function frontmatterOf(absolute: string): Record<string, string | undefined> {
+  const doc = fm.parse(readFileSync(absolute, "utf8"));
+  if (doc === null) {
+    return {};
+  }
+  return { axis: fm.scalar(doc, "axis"), role: fm.scalar(doc, "role") };
 }
 
 // ---------------------------------------------------------------------------

@@ -12,6 +12,10 @@ description: "Opinionated Flutter plugin — a `dart` router skill (lean SKILL.m
   vwf stack-adapter skills, so a `frontend` project can be composed without vwf
   naming Flutter. Self-contained — no cross-marketplace dependencies."
 category: development
+languages:
+  - dart
+  - kotlin
+  - swift
 tags:
   - flutter
   - dart

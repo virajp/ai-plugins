@@ -166,7 +166,7 @@ export function renderDocument(source: string, context: Context): fm.Document {
 /**
  * Bundled files (assets, stack templates, skill references, hook scripts).
  *
- * Markdown is *rendered*, not copied: the codemod templatised every `.md` in
+ * Markdown is *rendered*, not copied: the migration templatised every `.md` in
  * the tree, and `assets/` holds the bulk of vwf's doctrine — copying it
  * verbatim would ship `<%= it.root %>` to users. Everything else is copied
  * byte-for-byte, preserving the executable bit that hook scripts need.

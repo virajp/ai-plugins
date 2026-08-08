@@ -63,11 +63,17 @@ a provider by name.
 
 ## Template frontmatter
 
+**Every template declares `axis:`**, whichever axis it is on — that key is what
+says which menu it joins, and `plugins:check` enforces it. A project-axis
+template carries `role:` *alongside* `axis:`, never instead of it: the role is
+real data, but it is not the axis.
+
 Every **project** template a stack plugin ships, at
 `<plugin>/stacks/project/<role>/<slug>.md`, opens with:
 
 ```yaml
 ---
+axis: project # which of the four menus this template joins
 role: <registry role> # service | worker | packages | site | fullstack | frontend | iac
 name: <display name> # what the menu shows
 languages: [<token>] # open; the plugin owning the language defines its facts
@@ -104,7 +110,7 @@ private_plane: <mechanism> # how a non-public project is kept off the internet
 
 ```yaml
 ---
-scope: repo
+axis: repo
 name: <display name>
 topologies: [monorepo, workspace] # which topologies this template suits
 package_manager: <token> # only where the language has one; see the vwf-config asset

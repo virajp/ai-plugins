@@ -1,18 +1,20 @@
 # Observability
 
-The default: **OpenTelemetry, all three signals, exported to Grafana Cloud** —
-one shared telemetry layer instrumenting every server-side project identically.
-Cross-cutting token: `observability: opentelemetry-grafana`.
+The default: **one vendor-neutral telemetry standard, all three signals,
+exported to a single sink** — one shared telemetry layer instrumenting every
+server-side project identically. Which standard and which sink is the
+observability capability plugin's answer, recorded as the cross-cutting
+`observability:` token.
 
 ## Default contract
 
 - **One shared telemetry layer** in the common package — projects initialise it
   at startup and never hand-roll exporters or loggers. Resource attributes:
   `service.name`, `service.version`, `deployment.environment.name`.
-- **Three signals** (traces, metrics, logs), OTLP over HTTP to Grafana Cloud.
-  Export cadence ~1s local/test, ~10s production; the API key may be null
-  locally (export disabled), UI projects enable telemetry only when the endpoint
-  is configured.
+- **Three signals** (traces, metrics, logs) over one wire protocol to one sink.
+  Export cadence ~1s local/test, ~10s production; credentials may be null
+  locally (export disabled), and UI projects enable telemetry only when the
+  endpoint is configured.
 - **Trace-correlated structured logging**: every log entry carries the active
   trace/span id; leveled log helpers are the only operational log path — no
   unstructured console output. Errors are typed/coded and logged through the

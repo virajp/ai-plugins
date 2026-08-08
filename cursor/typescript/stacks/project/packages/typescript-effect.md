@@ -1,4 +1,5 @@
 ---
+axis: project
 role: packages
 name: TypeScript · Effect
 languages: [ typescript ]

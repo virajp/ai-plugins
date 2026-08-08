@@ -1,5 +1,5 @@
 ---
-scope: repo
+axis: repo
 name: bun · workspaces
 topologies: [ monorepo, workspace ]
 package_manager: bun

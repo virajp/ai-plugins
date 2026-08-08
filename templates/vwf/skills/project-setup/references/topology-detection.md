@@ -9,30 +9,30 @@ MCQ.
   task-runner config spanning several projects → **monorepo**.
 - a **single root manifest** with no workspace globs → **repo** (or, inside a
   parent, a polyrepo member).
-
-Manifests are language-specific and vwf holds no list of them. Recognise the
-manifest of any language a **stack plugin** in the config's `stacks:` roster
-declares, and treat any other root manifest as a manifest all the same — a
-project in a language nobody has written a plugin for is still a project.
-**An unrecognised manifest never fails detection**; it classifies on the
-structural signals above, and the language is recorded verbatim as `unknown`.
 - a `.gitmodules` naming child repos (child dirs carrying their own `.git`) →
   **polyrepo**: a parent repo holding the vwf docs, with each child classified
   on its own signals. See
   [structure](<%= it.root %>/skills/project-setup/references/workspace-structure.md)
   for the topology menu and how a choice is recorded.
 
-**Package manager** (JS/TS only, and only `pnpm` or `bun` — see the vwf-config
-asset): `pnpm-lock.yaml` → pnpm, `bun.lock` / `bun.lockb` → bun. The lockfile is
-the signal, since bun reuses npm's `workspaces` field. A repo carrying neither
-is asked. Non-JS projects record their language's native tool, which was never a
-choice.
+Manifests are language-specific and vwf holds no list of them. Recognise the
+manifest of any language a **stack plugin** in the config's `stacks:` roster
+declares, and treat any other root manifest as a manifest all the same — a
+project in a language nobody has written a plugin for is still a project.
 
-Signals are scoped to the languages in
-[stack-vocabulary](<%= it.root %>/assets/stack-vocabulary.md). A repo
-outside that set (a Go or Rust codebase) will **not** be detected and must be
-described by the user — deliberate for now, and expected to widen as the
-vocabulary does.
+**Package manager** — only where the language has more than one. The
+**lockfile is the signal**, never the manifest: some ecosystems share a manifest
+field across managers, so the manifest cannot distinguish them. The repo's
+`repo`-axis stack template names which managers it permits and which lockfile
+selects each; ask when a repo carries none of them. A language with one manager
+records it without a question, because it was never a choice.
+
+**An unrecognised manifest never fails detection.** The repo classifies on the
+structural signals above regardless, and its language is recorded verbatim with
+its facts marked `unknown`, per
+[stack-vocabulary](<%= it.root %>/assets/stack-vocabulary.md). A codebase in a
+language nobody has written a plugin for is onboarded like any other — vwf just
+checks less for it, and says so.
 
 **Project role** — seven tokens, never literal tech. Each project carries
 exactly one, in the registry's `role` field.

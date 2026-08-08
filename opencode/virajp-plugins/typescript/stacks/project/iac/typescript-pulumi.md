@@ -1,4 +1,5 @@
 ---
+axis: project
 role: iac
 name: TypeScript · Pulumi
 languages: [ typescript ]

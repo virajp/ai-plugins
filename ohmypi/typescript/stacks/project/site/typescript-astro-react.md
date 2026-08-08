@@ -1,4 +1,5 @@
 ---
+axis: project
 role: site
 name: TypeScript · Astro (SSR) · React
 languages: [ typescript ]

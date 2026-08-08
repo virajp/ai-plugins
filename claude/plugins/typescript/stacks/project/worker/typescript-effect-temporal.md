@@ -1,4 +1,5 @@
 ---
+axis: project
 role: worker
 name: TypeScript · Temporal · Effect
 languages: [ typescript ]

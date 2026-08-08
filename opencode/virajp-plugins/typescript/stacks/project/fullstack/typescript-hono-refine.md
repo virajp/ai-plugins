@@ -1,4 +1,5 @@
 ---
+axis: project
 role: fullstack
 name: TypeScript · Hono + Effect · React + Refine
 languages: [ typescript ]

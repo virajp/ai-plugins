@@ -6,18 +6,12 @@
  */
 import { join } from "node:path";
 import { check } from "./check.ts";
-import { migrate } from "./codemod.ts";
 import { renderAll } from "./render.ts";
 
 const repoRoot = join(import.meta.dirname, "..", "..");
 const command = process.argv[2];
 
 switch (command) {
-  case "codemod": {
-    migrate(repoRoot);
-    console.log("wrote templates/");
-    break;
-  }
   case "render": {
     for (const result of renderAll(repoRoot)) {
       console.log(`${result.target}: ${result.files} files`);
@@ -63,7 +57,7 @@ switch (command) {
     break;
   }
   default: {
-    console.error(`usage: ai-plugins-build <codemod|render|check>`);
+    console.error(`usage: ai-plugins-build <render|check>`);
     process.exit(1);
   }
 }

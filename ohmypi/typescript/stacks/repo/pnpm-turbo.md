@@ -1,5 +1,5 @@
 ---
-scope: repo
+axis: repo
 name: pnpm · Turborepo
 topologies: [ monorepo, workspace ]
 package_manager: pnpm

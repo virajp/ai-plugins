@@ -1,4 +1,5 @@
 ---
+axis: project
 role: frontend
 name: TypeScript · Effect CLI
 languages: [ typescript ]

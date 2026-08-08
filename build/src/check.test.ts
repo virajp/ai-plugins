@@ -122,3 +122,52 @@ describe("reference resolution", () => {
     expect(resolves("assets/topologies/missing.md", paths)).toBe(false);
   });
 });
+
+/**
+ * The regression guards from the re-architecture.
+ *
+ * `stack-adapter.md` stated "vwf ships no stack templates and names no tool"
+ * since it was written, and nothing enforced it — which is how 17 templates
+ * accumulated inside vwf. These assertions are what make the claim true rather
+ * than aspirational, so they are pinned here as well as run by `plugins:check`.
+ */
+describe("the stack-adapter contract", () => {
+  const vwf = workspace.plugins.find(p => p.manifest.name === "vwf")!;
+
+  it("keeps vwf free of stack templates and language rows", () => {
+    expect(vwf.files.filter(f => f.path.startsWith("stacks/"))).toEqual([]);
+    expect(vwf.manifest.languages).toEqual([]);
+  });
+
+  it("gives every plugin shipping stacks/ both adapter skills, model-invocable", () => {
+    for (const plugin of workspace.plugins) {
+      if (!plugin.files.some(f => f.path.startsWith("stacks/"))) {
+        continue;
+      }
+      const name = plugin.manifest.name;
+      for (const kind of ["stack-menu", "stack-template"]) {
+        const skill = plugin.skills.find(s =>
+          s.meta.name === `${name}-${kind}`
+        );
+        expect(skill, `${name}-${kind}`).toBeDefined();
+        // `user` would remove it from the model's context, so vwf could not
+        // invoke it — and the failure is silent, not an error.
+        expect(skill!.meta.invocation, `${name}-${kind}`).not.toBe("user");
+      }
+    }
+  });
+
+  it("pairs a UI stack with a ux-gate, in both directions", () => {
+    const UI = new Set(["site", "fullstack", "frontend"]);
+    for (const plugin of workspace.plugins) {
+      const ownsUi = plugin.files.some(f =>
+        f.path.startsWith("stacks/project/")
+        && [...UI].some(role => f.path.includes(`/project/${role}/`))
+      );
+      const hasGate = plugin.skills.some(s =>
+        s.meta.name === `${plugin.manifest.name}-ux-gate`
+      );
+      expect(hasGate, plugin.manifest.name).toBe(ownsUi);
+    }
+  });
+});
