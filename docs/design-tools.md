@@ -2,16 +2,9 @@
 
 The `design-tools` plugin is **vwf's design adapter**. vwf itself talks to no
 design tool: it calls two fixed skills and this plugin decides which tool
-answers.
-
-| Skill                                                         | Returns                                 |
-| ------------------------------------------------------------- | --------------------------------------- |
-| `/design-tools:design-tools-import-screens <flow> <platform>` | one flow's designed screens, normalized |
-| `/design-tools:design-tools-import-design-system`             | the design system, normalized           |
-
-Both are `invocation: both`, which is load-bearing rather than cosmetic — a
-user-only skill is removed from the model's context and cannot be delegated to,
-and the failure is silent. `mise run plugins:check` enforces it.
+answers. It is one plugin covering three tools — Claude Design, Lovable and
+Google Stitch — because the tool is a *value* the adapter resolves, not a plugin
+name vwf constructs a skill from.
 
 ## Install
 
@@ -21,6 +14,26 @@ pnpx @askviraj/ai-plugins --user design-tools
 
 It is **not** a vwf dependency: the design tool is a product decision, so the
 adapter is chosen rather than inherited.
+
+The plugin carries the `vwf-design-adapter` tag, which is what
+`mise run plugins:check` keys the whole design-adapter validation off — an
+adapter without it is skipped silently rather than checked.
+
+## Skills
+
+| Skill                                                         | Returns                                 |
+| ------------------------------------------------------------- | --------------------------------------- |
+| `/design-tools:design-tools-import-screens <flow> <platform>` | one flow's designed screens, normalized |
+| `/design-tools:design-tools-import-design-system`             | the design system, normalized           |
+
+Both are **import-only**: they read from the design tool and normalize. They
+never diff, never decide what a delta means, never write to the design tool, and
+never touch `docs/blueprint/`. Export needs no adapter at all — `/vwf:screens`
+in `prompt` mode writes design briefs as files, and a file is tool-agnostic.
+
+Both are `invocation: both`, which is load-bearing rather than cosmetic — a
+user-only skill is removed from the model's context and cannot be delegated to,
+and the failure is silent. `mise run plugins:check` enforces it.
 
 ## The tool is per project
 
@@ -99,3 +112,9 @@ The other two tools bring their own surfaces, and this plugin declares neither:
 Lovable needs its own MCP server connected (OAuth, workspace-scoped), and Stitch
 needs `STITCH_API_KEY` plus `@google/stitch-sdk` — hence the plugin's `pnpm`
 requirement.
+
+## See also
+
+- [../readme.md](../readme.md) — the marketplace overview and full plugin list.
+- [vwf](./vwf.md) — the workflow this plugin adapts; its
+  `assets/design-adapter.md` is the authoritative payload contract.
