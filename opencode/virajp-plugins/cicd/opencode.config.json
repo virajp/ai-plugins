@@ -1,0 +1,5 @@
+{
+  "configSchema": "https://opencode.ai/config.json",
+  "name": "cicd",
+  "version": "1.0.0"
+}

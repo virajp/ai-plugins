@@ -3,7 +3,7 @@
 The canonical environment vocabulary and the CI/CD contract every product
 follows — **enforced, not elicited** (the engineering-baseline mechanism).
 `/vwf:blueprint` seeds it into `conventions.md#pipeline` on first touch; the
-**github-actions** plugin's workflow generator conforms to it when writing
+**cicd** plugin's workflow generator conforms to it when writing
 pipelines; `/vwf:verify` resolves environments by it. Exceptions are the
 doc-note + `enforcement.rules` waiver pair (`pipeline/<rule>[/<unit>]`).
 
@@ -62,7 +62,7 @@ literally named `production`).
 - **`/vwf:verify`** resolves its target environment by canonical name (a synonym
   in `environments:` is flagged as drift); its release offer stays
   production-only — rule 4 is why.
-- **The github-actions plugin** (`/github-actions:workflow`) generates release
+- **The cicd plugin** (`/cicd:workflow`) generates release
   workflows conforming to rules 1–3 and 5 when the repo carries this contract —
   one main workflow owning tag parsing, branch validation and the test gate,
   calling as few reusable sub-workflows as the repo's variation allows — and

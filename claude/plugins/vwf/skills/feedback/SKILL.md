@@ -34,7 +34,7 @@ iterating the design system:
    on the canvas to harvest (pins come from `/vwf:screens` or
    `/vwf:design-system`)." Stop.
 2. Load the claude-design MCP `get_conversation` tool via `ToolSearch`
-   (`mcp__plugin_claude-design_claude-design__` prefix). Tool absent or
+   (`mcp__plugin_design-tools_claude-design__` prefix). Tool absent or
    unauthorized (the user may need `/mcp` to connect) → say exactly that and
    stop.
 3. `get_conversation` on **each** gathered project (shared uuids harvested

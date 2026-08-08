@@ -16,15 +16,27 @@
     },
     {
       "category": "development",
-      "description": "Claude Design MCP server plus the vwf design-adapter skills (import-screens, import-design-system) — connects the agent to claude.ai/design (https://api.anthropic.com/v1/design/mcp).",
-      "name": "claude-design",
-      "source": "./claude-design"
+      "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; polyrepo and monorepo layouts are both supported.",
+      "name": "cicd",
+      "source": "./cicd"
+    },
+    {
+      "category": "development",
+      "description": "Cloudflare stack plugin for vwf — **scope is deliberately parked**. It currently covers **Zero Trust Access** only: putting a project that must not be publicly reachable behind an identity-aware proxy on its own hostname, independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered yet and arrive under their own dedicated plan — so the menu says what it does not cover rather than coming back quietly short. Implements the vwf stack-adapter contract.",
+      "name": "cloudflare",
+      "source": "./cloudflare"
     },
     {
       "category": "development",
       "description": "Context7 MCP docs server — fetches current, version-accurate documentation for libraries, frameworks, SDKs, and CLIs on demand, so code is never written from stale training knowledge.",
       "name": "context7",
       "source": "./context7"
+    },
+    {
+      "category": "development",
+      "description": "The vwf design adapter — two skills (import-screens, import-design-system) that resolve the design tool per project and speak Claude Design, Lovable or Google Stitch. Ships the Claude Design MCP server (https://api.anthropic.com/v1/design/mcp).",
+      "name": "design-tools",
+      "source": "./design-tools"
     },
     {
       "category": "development",
@@ -46,18 +58,6 @@
     },
     {
       "category": "development",
-      "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts — via the /github-actions:workflow skill.",
-      "name": "github-actions",
-      "source": "./github-actions"
-    },
-    {
-      "category": "development",
-      "description": "vwf design adapter for Lovable — imports screens and the published .lovable/design-system.json via Lovable's MCP server.",
-      "name": "lovable",
-      "source": "./lovable"
-    },
-    {
-      "category": "development",
       "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file, plus a /markdown:readme skill that scans the repo and writes/updates its README.",
       "name": "markdown",
       "source": "./markdown"
@@ -74,12 +74,6 @@
       "description": "Opinionated mise plugin — the .config/ three-file split (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, tool/env placement, file-based tasks, and the CI node-gpg workaround. Skill auto-applies to mise configs; /mise:scaffold sets up a repo.",
       "name": "mise",
       "source": "./mise"
-    },
-    {
-      "category": "development",
-      "description": "vwf design adapter for Google Stitch — imports generated screens and derives design tokens via @google/stitch-sdk.",
-      "name": "stitch",
-      "source": "./stitch"
     },
     {
       "category": "development",

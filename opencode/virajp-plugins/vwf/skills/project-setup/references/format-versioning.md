@@ -563,7 +563,7 @@ the current format and apply the delta:
   2. **Report existing release workflows, do not rewrite them.** List any
      `.github/workflows/*` matching on `stage-*` / `prod-*` and tell the user
      they now contradict the re-seeded anchor — regenerating them is
-     `/github-actions-workflow`'s job, not the migration's, and the old tags
+     `/cicd-workflow`'s job, not the migration's, and the old tags
      keep deploying until it runs. Rewriting CI from a doc migration is exactly
      the unreviewable change this file avoids.
   3. Bump the stamp to `18`. `config_format` stays as it is — nothing in

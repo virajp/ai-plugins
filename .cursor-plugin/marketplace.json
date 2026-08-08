@@ -7,12 +7,23 @@
   "plugins": [
     {
       "category": "development",
-      "description": "Claude Design MCP server plus the vwf design-adapter skills (import-screens, import-design-system) — connects the agent to claude.ai/design (https://api.anthropic.com/v1/design/mcp).",
-      "name": "claude-design",
+      "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; polyrepo and monorepo layouts are both supported.",
+      "name": "cicd",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "cursor/claude-design"
+        "path": "cursor/cicd"
+      },
+      "version": "1.0.0"
+    },
+    {
+      "category": "development",
+      "description": "Cloudflare stack plugin for vwf — **scope is deliberately parked**. It currently covers **Zero Trust Access** only: putting a project that must not be publicly reachable behind an identity-aware proxy on its own hostname, independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered yet and arrive under their own dedicated plan — so the menu says what it does not cover rather than coming back quietly short. Implements the vwf stack-adapter contract.",
+      "name": "cloudflare",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/virajp/ai-plugins.git",
+        "path": "cursor/cloudflare"
       },
       "version": "0.1.0"
     },
@@ -26,6 +37,17 @@
         "path": "cursor/context7"
       },
       "version": "1.1.0"
+    },
+    {
+      "category": "development",
+      "description": "The vwf design adapter — two skills (import-screens, import-design-system) that resolve the design tool per project and speak Claude Design, Lovable or Google Stitch. Ships the Claude Design MCP server (https://api.anthropic.com/v1/design/mcp).",
+      "name": "design-tools",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/virajp/ai-plugins.git",
+        "path": "cursor/design-tools"
+      },
+      "version": "0.1.0"
     },
     {
       "category": "development",
@@ -62,28 +84,6 @@
     },
     {
       "category": "development",
-      "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts — via the /github-actions:workflow skill.",
-      "name": "github-actions",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "cursor/github-actions"
-      },
-      "version": "0.5.0"
-    },
-    {
-      "category": "development",
-      "description": "vwf design adapter for Lovable — imports screens and the published .lovable/design-system.json via Lovable's MCP server.",
-      "name": "lovable",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "cursor/lovable"
-      },
-      "version": "0.1.0"
-    },
-    {
-      "category": "development",
       "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file, plus a /markdown:readme skill that scans the repo and writes/updates its README.",
       "name": "markdown",
       "source": {
@@ -103,17 +103,6 @@
         "path": "cursor/mise"
       },
       "version": "0.4.0"
-    },
-    {
-      "category": "development",
-      "description": "vwf design adapter for Google Stitch — imports generated screens and derives design tokens via @google/stitch-sdk.",
-      "name": "stitch",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/virajp/ai-plugins.git",
-        "path": "cursor/stitch"
-      },
-      "version": "0.1.0"
     },
     {
       "category": "development",

@@ -35,7 +35,7 @@ task applies them, so the same command runs locally and in CI.
 
 Deploys obey **vwf's delivery-pipeline contract** — tag-triggered only, shaped
 `<project>-<env>-v<semver>`, branch-validated, tests gated. CI belongs to the
-`github-actions` plugin.
+`cicd` plugin.
 
 Cloud Deploy is available for progressive rollouts across environments; it earns
 its complexity only once promotion between several environments is a routine

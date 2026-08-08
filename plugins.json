@@ -11,9 +11,20 @@
       "requires": []
     },
     {
-      "name": "claude-design",
+      "name": "cicd",
       "scope": "user",
       "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "mise"
+      ]
+    },
+    {
+      "name": "cloudflare",
+      "scope": "user",
+      "optIn": true,
       "userOnly": false,
       "local": true,
       "dependencies": [],
@@ -21,6 +32,17 @@
     },
     {
       "name": "context7",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "pnpm"
+      ]
+    },
+    {
+      "name": "design-tools",
       "scope": "user",
       "optIn": false,
       "userOnly": false,
@@ -67,26 +89,6 @@
       "requires": []
     },
     {
-      "name": "github-actions",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
-      "local": true,
-      "dependencies": [],
-      "requires": [
-        "mise"
-      ]
-    },
-    {
-      "name": "lovable",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
-      "local": true,
-      "dependencies": [],
-      "requires": []
-    },
-    {
       "name": "markdown",
       "scope": "user",
       "optIn": false,
@@ -119,17 +121,6 @@
       ]
     },
     {
-      "name": "stitch",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
-      "local": true,
-      "dependencies": [],
-      "requires": [
-        "pnpm"
-      ]
-    },
-    {
       "name": "typescript",
       "scope": "user",
       "optIn": false,
@@ -149,7 +140,6 @@
       "local": true,
       "dependencies": [
         "context7",
-        "github-actions",
         "markdown",
         "mempalace",
         "mise"

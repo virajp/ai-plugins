@@ -1,6 +1,0 @@
-{
-  "author": "Viraj Patel",
-  "description": "vwf design adapter for Lovable — imports screens and the published .lovable/design-system.json via Lovable's MCP server.",
-  "name": "lovable",
-  "version": "0.1.0"
-}

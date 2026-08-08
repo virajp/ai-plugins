@@ -92,7 +92,7 @@ to the relevant anchors rather than repeating.
      deploys — <project>-stage-v<x.y.z> → staging from develop,
      <project>-prod-v<x.y.z> → production from main, branch-validated —
      staging-is-not-a-release, and tested-before-release), each with its
-     pipeline/<rule> id. The github-actions plugin generates conforming
+     pipeline/<rule> id. The cicd plugin generates conforming
      workflows from this anchor. -->
 
 ## Shared patterns {#patterns}

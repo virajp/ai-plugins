@@ -67,8 +67,8 @@ exception:
 
 ## /cicd:workflow
 
-`/cicd:workflow [workflow-name | ci | release | deploy]` follows a
-**resolve → detect → ask → write → report** flow:
+`/cicd:workflow [workflow-name | ci | release | deploy]` follows a **resolve →
+detect → ask → write → report** flow:
 
 1. **Resolve** the CI system (above).
 2. **Detect.** It inspects the repo for layout (monorepo signals —
@@ -91,10 +91,10 @@ exception:
 When it detects a monorepo, the skill lists the packages it found and asks which
 approach to generate. Each maps onto the CI system's own fan-out primitive:
 
-| Strategy                    | What it does                                                                                                                                                  |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Strategy                    | What it does                                                                                                                                                   |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Change-filtered fan-out** | A filter job emits the affected-package list (shared/root paths folded into every filter) and the build job fans out over it, so only affected packages build. |
-| **Static fan-out**          | Every package, every run.                                                                                                                                     |
+| **Static fan-out**          | Every package, every run.                                                                                                                                      |
 | **Root aggregator**         | One job running a root fan-out task (`turbo run` / `melos run` / `nx affected`).                                                                               |
 
 A polyrepo is the simple single-job case: checkout → install mise → the phase

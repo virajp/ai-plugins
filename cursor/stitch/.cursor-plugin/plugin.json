@@ -1,6 +1,0 @@
-{
-  "author": "Viraj Patel",
-  "description": "vwf design adapter for Google Stitch — imports generated screens and derives design tokens via @google/stitch-sdk.",
-  "name": "stitch",
-  "version": "0.1.0"
-}

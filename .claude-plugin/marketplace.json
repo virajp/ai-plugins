@@ -24,16 +24,38 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Claude Design MCP server plus the vwf design-adapter skills (import-screens, import-design-system) — connects the agent to claude.ai/design (https://api.anthropic.com/v1/design/mcp).",
-      "name": "claude-design",
-      "source": "./claude/plugins/claude-design",
+      "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; polyrepo and monorepo layouts are both supported.",
+      "name": "cicd",
+      "source": "./claude/plugins/cicd",
       "strict": true,
       "tags": [
-        "claude-design",
-        "mcp",
-        "design",
-        "mockups",
-        "vwf-design-adapter"
+        "cicd",
+        "ci",
+        "cd",
+        "pipeline",
+        "mise",
+        "workflow",
+        "monorepo",
+        "polyrepo",
+        "skills"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "Cloudflare stack plugin for vwf — **scope is deliberately parked**. It currently covers **Zero Trust Access** only: putting a project that must not be publicly reachable behind an identity-aware proxy on its own hostname, independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered yet and arrive under their own dedicated plan — so the menu says what it does not cover rather than coming back quietly short. Implements the vwf stack-adapter contract.",
+      "name": "cloudflare",
+      "source": "./claude/plugins/cloudflare",
+      "strict": true,
+      "tags": [
+        "cloudflare",
+        "zero-trust",
+        "access",
+        "private-plane",
+        "vwf-stack-adapter"
       ],
       "version": "0.1.0"
     },
@@ -54,6 +76,26 @@
         "libraries"
       ],
       "version": "1.1.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
+      "description": "The vwf design adapter — two skills (import-screens, import-design-system) that resolve the design tool per project and speak Claude Design, Lovable or Google Stitch. Ships the Claude Design MCP server (https://api.anthropic.com/v1/design/mcp).",
+      "name": "design-tools",
+      "source": "./claude/plugins/design-tools",
+      "strict": true,
+      "tags": [
+        "design",
+        "mcp",
+        "mockups",
+        "claude-design",
+        "lovable",
+        "stitch",
+        "vwf-design-adapter"
+      ],
+      "version": "0.1.0"
     },
     {
       "author": {
@@ -135,43 +177,6 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts — via the /github-actions:workflow skill.",
-      "name": "github-actions",
-      "source": "./claude/plugins/github-actions",
-      "strict": true,
-      "tags": [
-        "github-actions",
-        "ci",
-        "cd",
-        "mise",
-        "workflow",
-        "monorepo",
-        "polyrepo",
-        "skills"
-      ],
-      "version": "0.5.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
-      "description": "vwf design adapter for Lovable — imports screens and the published .lovable/design-system.json via Lovable's MCP server.",
-      "name": "lovable",
-      "source": "./claude/plugins/lovable",
-      "strict": true,
-      "tags": [
-        "lovable",
-        "design",
-        "vwf-design-adapter"
-      ],
-      "version": "0.1.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
       "description": "Opinionated Markdown & documentation standards — writing style, CHANGELOGs, and mermaid diagrams — that auto-apply to every Markdown file, plus a /markdown:readme skill that scans the repo and writes/updates its README.",
       "name": "markdown",
       "source": "./claude/plugins/markdown",
@@ -220,22 +225,6 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "vwf design adapter for Google Stitch — imports generated screens and derives design tokens via @google/stitch-sdk.",
-      "name": "stitch",
-      "source": "./claude/plugins/stitch",
-      "strict": true,
-      "tags": [
-        "stitch",
-        "design",
-        "vwf-design-adapter"
-      ],
-      "version": "0.1.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
       "description": "Opinionated plain-TypeScript plugin — a `typescript` router skill (lean SKILL.md routing to on-demand references: the coding standards baseline, Vitest testing, the build pipeline for single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, and `lint-format`, and the TypeScript/JavaScript language server. Effect-TS doctrine lives in the separate `effect` plugin, which depends on this one.",
       "name": "typescript",
       "source": "./claude/plugins/typescript",
@@ -264,10 +253,6 @@
         {
           "marketplace": "virajp-plugins",
           "name": "context7"
-        },
-        {
-          "marketplace": "virajp-plugins",
-          "name": "github-actions"
         },
         {
           "marketplace": "virajp-plugins",

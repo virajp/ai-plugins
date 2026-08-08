@@ -1,6 +1,0 @@
-{
-  "author": "Viraj Patel",
-  "description": "Generate GitHub Actions workflows that install every tool through jdx/mise-action (mise only) and support both polyrepo and monorepo layouts — via the /github-actions:workflow skill.",
-  "name": "github-actions",
-  "version": "0.5.0"
-}
