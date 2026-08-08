@@ -12,7 +12,7 @@ flags — is identical across stacks; only the commands *inside* `code/*` and
 
 These tasks ship as ready-made templates with this plugin under `assets/tasks/`
 (a shared `common/` set plus a `node/`, `flutter/`, or `python/` overlay).
-**`<%= it.cmd("mise:scaffold") %>` copies them in** — author from those, not from scratch. The
+**`<%= it.cmd("devtools:scaffold") %>` copies them in** — author from those, not from scratch. The
 snippets below show the shape; the templates are the source of truth.
 
 ## Task-file anatomy

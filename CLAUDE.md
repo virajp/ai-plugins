@@ -176,7 +176,7 @@ design (a plugin may hold skills versioned on their own cadence).
 | `flutter`                | `templates/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers. Also owns the `dart-flutter` **stack template** (the `frontend` role) and the two vwf stack-adapter skills. Self-contained (no cross-marketplace deps)                                                                                                                                              |
 | `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep). Kept **for its skills** — its bundled stdio MCP server is toggled off, since vwf declares the same server over HTTP                                                                                                                                                                                                                                                                                                                                                                 |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). A **vwf dependency** — no longer opt-in, since the workflow wants those pillars on by default                                                                                                                                                                                                                                                                                                                                             |
-| `mise`                   | `templates/mise`           | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` skill                                                                                                                                                                                                                                                                                                                                                                                   |
+| `devtools`               | `templates/devtools`       | The **developer-machine toolchain** — the mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, node-gpg workaround) + `/devtools:scaffold`, `doppler` (**development** secrets only; no `secrets` plugin exists), `docker`, and the repo-level gates the stack templates name: `dprint`, `eslint`, `gitleaks`, `grype`, `pre-commit`. Owns the provider-neutral `container-generic` **deploy** template (no `container` capability plugin) + the two vwf stack-adapter skills. A **vwf dep**          |
 | `cicd`                   | `templates/cicd`           | A `/cicd:workflow` skill that resolves the repo's CI system (per-project `cicd.tool`, else repo detection, else ask — **never** a silent default) and reads only that tool's `references/<tool>.md`; GitHub Actions is the one implemented today. Neutral rules live in SKILL.md (mise installs everything, both layouts, vwf's delivery-pipeline contract); adding a CI system is one reference file. **Independent — not a vwf dep** (vwf states the contract, `cicd` implements it)                                                         |
 | `cloudflare`             | `templates/cloudflare`     | Cloudflare stack plugin for vwf — **scope deliberately parked at Zero Trust Access**: a private plane in front of a project that must not be publicly reachable, whichever cloud hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered and arrive under their own dedicated plan; the menu states what it does not cover rather than coming back quietly short. **Opt-in**                                                                                                                      |
 | `gcp`                    | `templates/gcp`            | Google Cloud stack plugin for vwf — the judgment an SDK reference cannot give: which service to pick and when it stops being the answer, how each bills, which have local emulators, least-privilege IAM. Ships `firebase`/`cloud-sql` (backing) and `cloud-run`/`gke` (deploy) plus `gcp-cost`, `gcp-iam`, `gcp-local-stack`. Observability is OTLP only — GCP services are sinks, never SDKs. **Opt-in**                                                                                                                                     |
@@ -492,11 +492,29 @@ catalog/erDiagram sync, the released-API additive-only diff).
 ### Dependencies
 
 `vwf` depends on exactly three plugins — `mempalace`, `andrej-karpathy-skills`,
-and `mise` — **all resolved from the `virajp-plugins` marketplace itself**, so
-installing `vwf` needs no other marketplace registered. `mise` is authored here;
-the other two are not — they are **re-listed** via a `url` source (pointing at
-their upstream repos) so they live under `virajp-plugins`. **No third-party code
-is vendored into this repo.**
+and `devtools` — **all resolved from the `virajp-plugins` marketplace itself**,
+so installing `vwf` needs no other marketplace registered. `devtools` is
+authored here; the other two are not — they are **re-listed** via a `url` source
+(pointing at their upstream repos) so they live under `virajp-plugins`. **No
+third-party code is vendored into this repo.**
+
+**`devtools` is load-bearing, not tidiness.** `/vwf:setup` orchestrates
+`/devtools:scaffold`, and a skill vwf cannot see fails **silently** — it looks
+exactly like a skill that ran and returned nothing. Note that `mise`
+legitimately appears in two different keys with two different meanings: the
+**plugin** `devtools` ships its doctrine skill (`dependencies:`), while the
+**binary** `mise` is a mandate `/vwf:doctor` blocks on (`requires:`).
+
+**A plugin's `requires:` is a hard install gate, not a bibliography.** The CLI
+computes the required-tool union over the *dependency-expanded* set and that
+gate is explicitly not overridable by `--force`, so the test is "does this
+plugin shell out to it", never "does it document it". `devtools` therefore
+requires `mise` alone — `doppler`, `dprint`, `eslint`, `gitleaks`, `grype` and
+`pre-commit` are all documented here and executed by the user's own repo.
+Because `devtools` is a vwf dependency and vwf is in `--all`, adding one of them
+would hard-fail a bare `pnpx @askviraj/ai-plugins --all` for every user lacking
+that binary — and with no `DEP_HINTS` entry it would fail while naming no way to
+fix itself.
 
 `markdown` and `context7` used to be on that list and are gone as plugins: vwf
 **absorbed** them. Their two skills (`documentation-standards`, `readme`) are
@@ -940,13 +958,14 @@ Before flipping a skill to `user`, grep for its command reference across
 prose addressed to the user. Adding a delegation to a user-only skill is the
 reverse trap: it will never fire.
 
-This applies across plugins too — `mise:scaffold` is `both` **because
+This applies across plugins too — `devtools:scaffold` is `both` **because
 `/vwf:setup` orchestrates it**, per its own "orchestrate, don't reimplement"
-rule. So is `/vwf:readme`, for the same reason and now within one plugin: the
-absorption moved the skill, not the delegation, so flipping it to `user` would
-still break setup silently. `cicd:workflow` stays `user`: nothing delegates to
-it — vwf's two mentions of it are prose recommending it to the user, which the
-rename from `github-actions:workflow` did not change.
+rule; so are `devtools`' two stack-adapter skills, which vwf invokes by name. So
+is `/vwf:readme`, for the same reason and now within one plugin: the absorption
+moved the skill, not the delegation, so flipping it to `user` would still break
+setup silently. `cicd:workflow` stays `user`: nothing delegates to it — vwf's
+two mentions of it are prose recommending it to the user, which the rename from
+`github-actions:workflow` did not change.
 
 **How each target spells it** (all verified against a real install or vendor
 source — do not infer these):
@@ -978,16 +997,16 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
 Available plugin names: `vwf`, `typescript`, `flutter`, `mempalace`,
-`design-tools`, `mise`, `cicd`, `cloudflare`, `gcp`, `datastore`, `identity`,
-`observability`, `orchestration`, `object-storage`, `andrej-karpathy-skills`
-(external). (The statusline is not a plugin — install it via
-`pnpx @askviraj/ai-plugins …`; see The installer & statusline CLI.)
+`design-tools`, `devtools`, `cicd`, `cloudflare`, `gcp`, `datastore`,
+`identity`, `observability`, `orchestration`, `object-storage`,
+`andrej-karpathy-skills` (external). (The statusline is not a plugin — install
+it via `pnpx @askviraj/ai-plugins …`; see The installer & statusline CLI.)
 
 Installing `vwf` pulls in its dependencies (`mempalace`,
-`andrej-karpathy-skills`, `mise`) automatically from the same `virajp-plugins`
-marketplace — no other marketplace needs to be registered. `cicd` is **not**
-among them; install it by name when you want pipelines generated. See the
-Dependencies section above.
+`andrej-karpathy-skills`, `devtools`) automatically from the same
+`virajp-plugins` marketplace — no other marketplace needs to be registered.
+`cicd` is **not** among them; install it by name when you want pipelines
+generated. See the Dependencies section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
 `--platform opencode` target, which copies each plugin's rendered `opencode/`

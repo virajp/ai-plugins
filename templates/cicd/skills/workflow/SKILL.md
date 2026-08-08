@@ -92,7 +92,7 @@ Inspect the target repo before writing — do not assume:
   last one decides how far the pipeline is split.
 
 If there is **no mise config**, stop and tell the user to run
-<%= it.cmd("mise:scaffold") %> first (the pipeline depends on mise providing the
+<%= it.cmd("devtools:scaffold") %> first (the pipeline depends on mise providing the
 toolchain). Only proceed with a minimal `mise.toml` if they insist.
 
 ## 4. Ask (one batched round — only what you cannot infer)
@@ -182,7 +182,7 @@ chosen, and the prerequisites the user must satisfy:
 - the mise config must declare every tool the steps need under `[tools]` (and a
   `mise.ci.toml` if `MISE_ENV: ci` was set);
 - any task names the steps call must exist (`mise tasks`); if no task library
-  exists, suggest <%= it.cmd("mise:scaffold") %>;
+  exists, suggest <%= it.cmd("devtools:scaffold") %>;
 - any secrets / OIDC / registries the pipeline references must be configured in
   the CI system's own settings.
 

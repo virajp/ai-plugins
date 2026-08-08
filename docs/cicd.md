@@ -18,9 +18,9 @@ single user-invoked skill; nothing auto-applies.
 pnpx @askviraj/ai-plugins --user cicd
 ```
 
-It pairs naturally with the [`mise`](./mise.md) plugin: the pipelines it writes
-assume mise provides the toolchain, so a repo with no mise config should run
-[`/mise:scaffold`](./mise.md#misescaffold) first.
+It pairs naturally with the [`devtools`](./devtools.md) plugin: the pipelines it
+writes assume mise provides the toolchain, so a repo with no mise config should
+run [`/devtools:scaffold`](./devtools.md#devtoolsscaffold) first.
 
 **It is not a `vwf` dependency.** vwf owns the *contract* a delivery pipeline
 must satisfy (`assets/delivery-pipeline.md`); this plugin owns the *mechanism*
@@ -138,4 +138,5 @@ expressed in that system's syntax. Nothing else changes.
 ## See also
 
 - [../readme.md](../readme.md)
-- [mise plugin](./mise.md) — the toolchain the generated pipelines rely on.
+- [devtools plugin](./devtools.md) — the toolchain the generated pipelines rely
+  on.

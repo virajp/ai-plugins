@@ -53,7 +53,7 @@ repo never needs it.
 - **Worktree-safe; all git via `git-workflow`.** Operate in an isolated
   worktree; never delete; never overwrite without consent. Keep the worktree
   local.
-- **Don't duplicate tools.** Use `mise:scaffold` for mise config and
+- **Don't duplicate tools.** Use `devtools:scaffold` for mise config and
   `<%= it.cmd("vwf:readme") %>` for the README — orchestrate, don't reimplement.
 - **Idempotent.** A re-run detects what already conforms and migrates only the
   delta; a conforming repo yields an empty plan.
@@ -189,9 +189,9 @@ consents), set up an isolated worktree via `<%= it.cmd("vwf:git-workflow") %>`.
 
 ### 5. Tooling
 
-If mise config is missing or incomplete, invoke **mise:scaffold**. Note any
+If mise config is missing or incomplete, invoke **devtools:scaffold**. Note any
 other runtimes the detected stacks need — do not install them. If
-`mise:scaffold` fails, report the error, offer to continue without it (leaving
+`devtools:scaffold` fails, report the error, offer to continue without it (leaving
 mise config for the user), and record the skip in `setup_progress`.
 
 ### 6. Migrate (consent-gated)

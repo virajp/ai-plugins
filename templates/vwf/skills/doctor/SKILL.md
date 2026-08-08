@@ -139,7 +139,7 @@ pre-commit and merge goes through it) and the toolchain manager the §3 checks
 resolve against. Missing from `PATH` → **blocking**, remedy
 `curl https://mise.run | sh`. A repo with no `.config/mise*.toml` at all is the
 same finding one level up: report it and nudge `<%= it.cmd("vwf:setup") %>`, which delegates to
-`mise:scaffold`.
+`devtools:scaffold`.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
