@@ -3,7 +3,6 @@
   "name": "vwf",
   "version": "14.0.0",
   "dependencies": [
-    "mempalace",
     "andrej-karpathy-skills",
     "devtools"
   ],

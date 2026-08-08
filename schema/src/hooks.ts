@@ -25,6 +25,10 @@ export const Event = z.enum([
   "sessionStart",
   "sessionEnd",
   "userPromptSubmit",
+  /** The agent finished responding — the surface a "save a checkpoint" hook wants. */
+  "stop",
+  /** About to compact the conversation, i.e. the last chance to persist context. */
+  "preCompact",
 ]);
 export type Event = z.infer<typeof Event>;
 

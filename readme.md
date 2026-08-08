@@ -22,7 +22,7 @@ a time while authoring, running unattended while executing — and never merges
 until you approve. The whole manual, command by command, is
 **[docs/vwf.md](./docs/vwf.md)**.
 
-Around it the marketplace ships **fourteen more plugins** — languages, clouds,
+Around it the marketplace ships **thirteen more plugins** — languages, clouds,
 capabilities, tooling and design. That is the point of the split: vwf owns the
 workflow and names no technology at all, so every concrete choice lives in a
 plugin you install only if your product uses it. All of them, plus a
@@ -81,7 +81,7 @@ see [the installer CLI](#the-installer-cli) for the full flag reference.
 
 ## The plugins
 
-Fifteen plugins, each with its own guide. Install the workflow, then whichever
+Fourteen plugins, each with its own guide. Install the workflow, then whichever
 ones match the product you are building.
 
 ### The workflow
@@ -91,10 +91,10 @@ whole arc: onboard a repo, pin the outcome contract, model the system, sweep a
 whole-product blueprint to complete coverage, plan one slice as a reviewable
 diff, execute it unattended behind one merge gate, verify the deploy, and route
 what production teaches you back to the document that fixes it. It carries
-cross-session memory, a knowledge-graph layer, session handoff and recall, and
-the Markdown and Context7 docs surfaces it absorbed. It names **no** technology
-— no language, no framework, no cloud — which is what lets the rest of this list
-exist. `--user vwf`
+[cross-session memory](./docs/mempalace.md), a knowledge-graph layer, session
+handoff and recall, and the Markdown and Context7 docs surfaces it absorbed. It
+names **no** technology — no language, no framework, no cloud — which is what
+lets the rest of this list exist. `--user vwf`
 
 ### Languages
 
@@ -187,15 +187,10 @@ Independent — vwf states the contract, this implements it. `--user cicd`
 
 ### External, re-listed here
 
-**[mempalace](./docs/mempalace.md)** — the AI memory system behind vwf's
-cross-session recall: decisions, findings, plan rationale, gaps, run journals
-and handoffs, filed per project and searchable. A `vwf` dependency, installed
-automatically. `--user mempalace`
-
 **[andrej-karpathy-skills](./docs/andrej-karpathy-skills.md)** — behavioral
 guidelines that cut the coding mistakes LLMs most reliably make. vwf enforces
 the same pillars structurally inside the pipeline; this covers the ad-hoc,
-off-pipeline case. Also a `vwf` dependency.
+off-pipeline case. A `vwf` dependency, and the only external one.
 `--user`/`--project andrej-karpathy-skills`
 
 ```sh
@@ -323,12 +318,13 @@ Per selected plugin the CLI:
   opencode` plus the git post-commit hook, both
   idempotent, both soft-skipping).
 
-**Skipped, with a note**: the url-sourced plugins `mempalace` and
-`andrej-karpathy-skills` have no rendered bundle — nothing to copy — so an
-OpenCode install of `vwf` leaves you to install those two yourself. The
-statusline is Claude-only. `--uninstall` and `--upgrade` replay the receipt
-(uninstall never removes a dependency you didn't name); `--version` compares
-this build's versions against the manifest on `main`.
+**Skipped, with a note**: the url-sourced `andrej-karpathy-skills` has no
+rendered bundle — nothing to copy — so an OpenCode install of `vwf` leaves you
+to install it yourself. Memory used to be skipped the same way, which is why
+mempalace's skills are now [vendored into `vwf`](./docs/mempalace.md) and ship
+on every target. The statusline is Claude-only. `--uninstall` and `--upgrade`
+replay the receipt (uninstall never removes a dependency you didn't name);
+`--version` compares this build's versions against the manifest on `main`.
 
 ## Credits & acknowledgements
 
@@ -340,7 +336,8 @@ maintainers. 🙏
   [Anthropic](https://anthropic.com) — the host these plugins, hooks, and
   statusline plug into.
 - **[MemPalace](https://github.com/MemPalace/mempalace)** — the AI memory system
-  that powers `vwf`'s cross-session recall (re-listed here as a dependency).
+  that powers `vwf`'s cross-session recall. Its two skills are vendored into
+  `vwf` under MIT; see `templates/vwf/vendor/mempalace/`.
 - **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
   — behavioral coding guidelines derived from Andrej Karpathy's observations,
   re-listed here as a `vwf` dependency.

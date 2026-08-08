@@ -217,12 +217,16 @@ describe("servers", () => {
 
 describe("hooks", () => {
   it("wires each shipped hook as an extension module", () => {
-    // The two hooks live in different plugins: npm-normalize is JS/TS-specific
-    // and belongs to `typescript`; vwf keeps only the rtk observer.
+    // npm-normalize is JS/TS-specific and belongs to `typescript`; vwf keeps
+    // the rtk observer plus the two MemPalace checkpoint hooks.
     const vwfPkg = JSON.parse(text("vwf/package.json")) as {
       omp: { extensions: string[]; };
     };
-    expect(vwfPkg.omp.extensions).toEqual(["./hooks/rtk.ts"]);
+    expect(vwfPkg.omp.extensions).toEqual([
+      "./hooks/rtk.ts",
+      "./hooks/mempalace-save.ts",
+      "./hooks/mempalace-precompact.ts",
+    ]);
 
     const tsPkg = JSON.parse(text("typescript/package.json")) as {
       omp: { extensions: string[]; };

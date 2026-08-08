@@ -173,7 +173,7 @@ describe("config fragments", () => {
     expect(fragment("vwf").version).toBe(
       workspace.plugins.find(p => p.manifest.name === "vwf")!.manifest.version,
     );
-    expect(fragment("vwf").dependencies).toContain("mempalace");
+    expect(fragment("vwf").dependencies).toContain("devtools");
   });
 });
 

@@ -193,16 +193,6 @@
       "version": "0.1.0"
     },
     {
-      "category": "development",
-      "description": "AI memory system — mine projects and conversations into a searchable palace. 33 MCP tools, auto-save hooks, guided setup.",
-      "homepage": "https://github.com/MemPalace/mempalace.git",
-      "name": "mempalace",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/MemPalace/mempalace.git"
-      }
-    },
-    {
       "author": {
         "name": "Viraj Patel"
       },
@@ -292,10 +282,6 @@
       },
       "category": "development",
       "dependencies": [
-        {
-          "marketplace": "virajp-plugins",
-          "name": "mempalace"
-        },
         {
           "marketplace": "virajp-plugins",
           "name": "andrej-karpathy-skills"

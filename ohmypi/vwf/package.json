@@ -2,7 +2,9 @@
   "name": "vwf",
   "omp": {
     "extensions": [
-      "./hooks/rtk.ts"
+      "./hooks/rtk.ts",
+      "./hooks/mempalace-save.ts",
+      "./hooks/mempalace-precompact.ts"
     ]
   },
   "private": true,

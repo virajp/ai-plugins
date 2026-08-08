@@ -1,45 +1,88 @@
 # mempalace
 
 `mempalace` is an AI memory system — it mines projects and conversations into a
-searchable "memory palace" so Claude can recall past decisions and findings
-across sessions. It ships 33 MCP tools, auto-save hooks, and guided setup.
+searchable "memory palace" so an agent can recall past decisions and findings
+across sessions. It ships 33 MCP tools and guided setup, and it is what backs
+`vwf`'s cross-session memory.
 
-It is maintained externally at
-[MemPalace/mempalace](https://github.com/MemPalace/mempalace) and **re-listed**
-in the `virajp-plugins` marketplace under a `url` source, so it installs from
-the same place as the rest without any third-party code being vendored into this
-repo. It is one of `vwf`'s three dependencies.
+**It is not a plugin in this marketplace.** It was one — a `url`-sourced
+re-listing of the upstream repo, and a `vwf` dependency — until its memory layer
+was folded into `vwf` itself. Two skills are now vendored under
+`templates/vwf/skills/`, the auto-save hooks are reimplemented in `vwf`, and the
+MCP server is declared by `vwf`. There is nothing to install by name.
 
-## Install
+It is still maintained externally at
+[MemPalace/mempalace](https://github.com/MemPalace/mempalace), under MIT.
+Provenance, the version taken, the local edits and the resync policy are
+recorded in `templates/vwf/vendor/mempalace/`, which ships in every rendered
+bundle.
 
-```sh
-pnpx @askviraj/ai-plugins --user mempalace
-```
+## Why it was vendored
 
-When you install `vwf`, `mempalace` is pulled in and enabled automatically — you
-only need this command to install it on its own.
+A url-sourced plugin has no rendered bundle in this repo, and the OpenCode
+adapter can only copy a rendered bundle — so `cli/src/plan.ts` skipped it (the
+`localOnly` branch). The result was that **OpenCode users got no memory layer at
+all**, silently: the plugin was listed, the install reported a skip note, and
+the thing `vwf` leans on hardest was simply absent. The three marketplace
+targets were fine, which is what made it easy to miss.
 
-`mempalace` is **user-level only** — per-user memory has no per-project install,
-so a `--project mempalace` request is redirected to user scope with a note.
-
-Being url-sourced changes what each target can do with it. The three targets
-with a native marketplace — **Claude**, **Cursor** and **Oh-My-Pi** — install it
-from its own upstream repo, so nothing about it is rendered here. **OpenCode**
-has no plugin concept and its adapter can only copy a rendered bundle, so
-`mempalace` has nothing to copy and is **skipped with a note**: an OpenCode
-install of `vwf` leaves you to install mempalace yourself, from upstream.
+Vendoring is what makes memory ship on every target. It is a deliberate one-time
+fork, not a mirror and not a submodule — nothing automated watches upstream, so
+the **Version taken** row in `templates/vwf/vendor/mempalace/README.md` is the
+only thing that makes drift detectable.
 
 ## Skills
 
-Two, both from upstream — this repo neither authors nor renders them:
+Two, both from upstream, now shipped as `vwf` skills on every target:
 
-| Skill                        | What it does                                                                                  |
-| ---------------------------- | --------------------------------------------------------------------------------------------- |
-| `mempalace:mempalace`        | Setup and mining — wings, rooms, drawers; turning projects and conversations into the palace. |
-| `mempalace:mempalace-recall` | The recall protocol — search the palace before answering about past work or prior decisions.  |
+| Skill                   | What it does                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `/vwf:mempalace`        | Setup and mining — wings, rooms, drawers; turning projects and conversations into the palace. |
+| `/vwf:mempalace-recall` | The recall protocol — search the palace before answering about past work or prior decisions.  |
 
-The MCP tools are a separate surface from the skills, and the two are wired
-differently here: the skills come from this plugin, the server comes from `vwf`.
+Deliberately **not** taken: the Python package, the MCP server implementation,
+and the `integrations/` tree. `vwf` declares the server itself and the daemon is
+installed out-of-band — which is why `uv`, mempalace's Python runtime, is one of
+`vwf`'s `requires:`.
+
+## Auto-save
+
+Upstream ships an auto-save hook; `vwf` **reimplements** it rather than
+vendoring it, because the upstream one works on exactly one target. It counts
+human messages by parsing `transcript_path` — a Claude Code JSONL transcript —
+and breaks its own save loop with `stop_hook_active`. Neither exists on Cursor,
+Oh-My-Pi or OpenCode, so wrapping that script for them yields a hook that runs,
+finds no transcript, and does nothing: green in a coverage report, dead in
+practice.
+
+What `vwf` ships instead:
+
+- **`hooks/mempalace-checkpoint.sh`** — POSIX sh, on the neutral `stop` event.
+  It counts *stops* in a state file under
+  `$XDG_STATE_HOME/ai-plugins/mempalace`, which needs nothing from the payload
+  but a session id, and every target supplies one. Every 15th stop
+  (`MEMPALACE_SAVE_INTERVAL` overrides) it asks the model to write a diary entry
+  and persist it through the mempalace MCP tools. A payload carrying
+  `stop_hook_active: true` resets the counter and passes, so a save cycle cannot
+  re-trigger itself.
+- **`hooks/mempalace-precompact.sh`** — the `preCompact` half: always speaks,
+  and resets the count. It is a one-line `exec` wrapper passing `--compact`
+  rather than an argument in `hooks.yaml`, because the neutral hook schema names
+  a script and passes it nothing.
+- **`opencode-plugin/mempalace-autosave.ts`** — OpenCode only, which is why both
+  shell hooks carry `skipTargets: [ opencode ]`. OpenCode has no stop to block;
+  its equivalent surface is a bus event plus a server API you inject a message
+  into. This counts real user messages via that API on `session.idle` and
+  re-saves after `session.compacted`.
+
+Both honour mempalace's own opt-out, so a user who turned auto-save off upstream
+stays off here: `MEMPALACE_HOOKS_AUTO_SAVE=false|0|no`, or
+`{"hooks": {"auto_save": false}}` in `~/.mempalace/config.json`.
+
+Two OpenCode limits are documented rather than papered over: `session.compacted`
+fires *after* compaction, so it persists only what the model still holds; and
+there is no usable session-exit event, so the interval saves cover it
+indirectly.
 
 ## Running the server (HTTP daemon)
 
@@ -58,13 +101,13 @@ instance at once — every target, all repos, all worktrees, in parallel
 (mempalace serializes concurrent writes). Its logs are also yours to read, which
 is what makes a flaky memory layer diagnosable.
 
-**Turn the plugin's own stdio server off.** The upstream `mempalace` plugin
-bundles `{"command": "mempalace-mcp"}`, and mempalace holds a **single writer
-lease** — its docs are explicit that two server processes must not point at the
-same backend. Toggle it off in `/mcp`; Claude Code records that in
-`~/.claude.json` under `disabledMcpServers` (which covers plugin servers) and
-the plugin, including its skills, stays installed. The toggle is per project.
-Confirm with `/mcp` that exactly **one** mempalace server is connected.
+**If you also install the upstream plugin, turn its stdio server off.** Nothing
+here installs it any more, but the upstream `mempalace` plugin bundles
+`{"command": "mempalace-mcp"}`, and mempalace holds a **single writer lease** —
+its docs are explicit that two server processes must not point at the same
+backend. Toggle it off in `/mcp`; Claude Code records that in `~/.claude.json`
+under `disabledMcpServers` (which covers plugin servers). The toggle is per
+project. Confirm with `/mcp` that exactly **one** mempalace server is connected.
 
 **Keeping it alive.** The property that matters is restart-on-crash, since a
 dead daemon is the failure you are designing out. Docker gives it with one key
@@ -117,15 +160,15 @@ Three things that are easy to get wrong:
   mempalace refuses a non-loopback bind without a token unless this is passed.
   The actual boundary is `127.0.0.1:8765:8765` — nothing off the host can reach
   it, the same exposure as the palace already readable at `~/.mempalace`. A
-  token would mean committing a secret to `plugin.json`, which is worse.
+  token would mean committing a secret to the manifest, which is worse.
 - **The cache volume is not optional in practice.** The embedding model (~80 MB,
   ChromaDB's `minilm`) lazy-downloads under `$HOME/.cache` on first use; without
   a volume it re-downloads on every container recreate.
 
-Run **one** server: stop any host-side `mempalace serve`, keep the mempalace
-plugin's stdio server toggled off, and mine through the container
-(`docker compose exec mempalace mempalace mine …`) rather than from the host, so
-nothing else touches the palace while the server holds its writer lease.
+Run **one** server: stop any host-side `mempalace serve`, and mine through the
+container (`docker compose exec mempalace mempalace mine …`) rather than from
+the host, so nothing else touches the palace while the server holds its writer
+lease.
 
 If `docker pull` returns 401, the published image isn't reachable — build from a
 clone instead (`docker build -t mempalace .`; the upstream `Dockerfile` is a
@@ -169,7 +212,7 @@ further: it always writes **both** the drawer and the committed
 - [../readme.md](../readme.md) — the marketplace overview and full plugin list.
 - [vwf](./vwf.md) — how the Product → Blueprint → Plan → Execute workflow uses
   memory, and the `assets/memory.md` protocol that is authoritative for it.
-- [andrej-karpathy-skills](./andrej-karpathy-skills.md) — the other url-sourced
-  `vwf` dependency.
+- [andrej-karpathy-skills](./andrej-karpathy-skills.md) — the one url-sourced
+  `vwf` dependency that remains.
 - [MemPalace upstream](https://github.com/MemPalace/mempalace) — full feature
   and tool documentation.

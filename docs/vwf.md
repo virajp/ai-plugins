@@ -45,15 +45,21 @@ instead of blocking every Bash call.
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
 with `mempalace serve --host 127.0.0.1 --port 8765` (loopback needs no token).
-One daemon serves every Claude Code instance at once, survives session restarts,
-and reconnects instead of dying with the session. Toggle the mempalace
-**plugin's** own stdio server off in `/mcp` — two servers would contend for
-mempalace's single writer lease. See [mempalace](./mempalace.md).
+One daemon serves every agent instance at once, survives session restarts, and
+reconnects instead of dying with the session. If you separately install the
+upstream `mempalace` plugin, toggle **its** stdio server off in `/mcp` — two
+servers would contend for mempalace's single writer lease. See
+[mempalace](./mempalace.md).
 
-`vwf` also depends on three plugins — `mempalace`, `andrej-karpathy-skills`, and
-`devtools` — all resolved from the same `virajp-plugins` marketplace. Claude
-Code **auto-installs and auto-enables** them when you enable `vwf` (requires
-Claude Code ≥ 2.1.143). `devtools` is a dependency rather than an optional extra
+Nothing else about memory needs installing. The two mempalace skills are
+**vendored into `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its
+auto-save hooks are reimplemented here, so memory ships on all four targets
+rather than only the three with a marketplace.
+
+`vwf` also depends on two plugins — `andrej-karpathy-skills` and `devtools` —
+both resolved from the same `virajp-plugins` marketplace. Claude Code
+**auto-installs and auto-enables** them when you enable `vwf` (requires Claude
+Code ≥ 2.1.143). `devtools` is a dependency rather than an optional extra
 because `/vwf:setup` orchestrates `/devtools:scaffold`, and a skill vwf cannot
 see fails silently.
 
@@ -1232,10 +1238,10 @@ protocol**:
 
 ## Memory
 
-`vwf` uses the `mempalace` plugin as cross-session memory so each cycle builds
-on the last instead of re-deriving it. It recalls prior decisions and findings
-before working, and persists durable outcomes after. Memory is keyed by your
-project (the **wing**) and split into rooms:
+`vwf` uses mempalace as cross-session memory so each cycle builds on the last
+instead of re-deriving it. It recalls prior decisions and findings before
+working, and persists durable outcomes after. Memory is keyed by your project
+(the **wing**) and split into rooms:
 
 | Room        | Holds                                                                                |
 | ----------- | ------------------------------------------------------------------------------------ |
@@ -1250,8 +1256,17 @@ Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds — except `handoff`/`recall`, which fall back to
 `docs/memory/handoff/<name>.md` (the handoff *is* the deliverable); the reserved
 `next` handoff writes that file unconditionally, outage or not. Gaps are also
-mirrored into the plan doc, so they survive a memory outage. See
-**[mempalace](./mempalace.md)**.
+mirrored into the plan doc, so they survive a memory outage.
+
+Saving is not left entirely to the workflow steps. `vwf` ships an **auto-save
+hook** that asks the model to persist a diary entry every 15th stop, and again
+when the conversation is about to be compacted — the point where unpersisted
+context is about to be lost. It honours mempalace's own opt-out
+(`MEMPALACE_HOOKS_AUTO_SAVE=false`, or `hooks.auto_save` in
+`~/.mempalace/config.json`), and `MEMPALACE_SAVE_INTERVAL` changes the count.
+
+See **[mempalace](./mempalace.md)** for the daemon, the hooks and what was
+vendored.
 
 ## Code intelligence
 
@@ -1378,13 +1393,20 @@ One more absorbed skill is user-invoked rather than doctrine:
 [`/vwf:readme`](#vwfreadme), which writes a repo's README against the same
 standards.
 
+Two more come from outside: **`/vwf:mempalace`** (palace setup and mining) and
+**`/vwf:mempalace-recall`** (the search-before-answer protocol) are vendored
+from [MemPalace](https://github.com/MemPalace/mempalace) under MIT. They are
+here rather than in a plugin of their own because a url-sourced plugin has no
+rendered bundle for OpenCode to copy, so memory silently did not ship there at
+all — see [mempalace](./mempalace.md).
+
 The minimal-code behaviors that a "karpathy guidelines" skill would cover are
 already enforced structurally across the workflow — elicitation (think before
 coding), the plan-as-a-diff and the coder's "nothing not in the plan" (surgical
 changes, YAGNI/the minimalism ladder), and TDD with a coverage gate (goal-driven
 execution). The external
 **[andrej-karpathy-skills](./andrej-karpathy-skills.md)** plugin covers the
-ad-hoc, off-pipeline case, and installs with `vwf` as one of its three
+ad-hoc, off-pipeline case, and installs with `vwf` as one of its two
 dependencies.
 
 ## Tips
@@ -1479,9 +1501,11 @@ rules:
 ### mempalace — memory, over HTTP
 
 Declared as `transport: http` against `http://127.0.0.1:8765/mcp` — a daemon you
-run yourself rather than a stdio subprocess the agent owns. Setup, why HTTP, and
-the writer-lease trap are in [Prerequisites](#prerequisites) above and
-[mempalace](./mempalace.md) in full.
+run yourself rather than a stdio subprocess the agent owns. The two skills that
+drive it are vendored into `vwf` under MIT, which is what lets memory ship on
+every target rather than only where a marketplace reaches. Setup, why HTTP, the
+writer-lease trap and the provenance record are in
+[Prerequisites](#prerequisites) above and [mempalace](./mempalace.md) in full.
 
 ### Context7 — current library docs
 
@@ -1514,8 +1538,8 @@ queries that library's documentation when a question is about a specific library
 
 - [../readme.md](../readme.md) — the marketplace overview and the full plugin
   list.
-- [mempalace](./mempalace.md) — the memory system behind `/vwf:handoff` and
-  `/vwf:recall`.
+- [mempalace](./mempalace.md) — the memory layer behind `/vwf:handoff` and
+  `/vwf:recall`: the daemon, the auto-save hooks, and what was vendored.
 - [design-tools](./design-tools.md) — the design adapter `/vwf:screens` and
   `/vwf:design-system` import through.
 - [devtools](./devtools.md) — a vwf dependency; `/vwf:setup` orchestrates

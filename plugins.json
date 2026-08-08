@@ -93,18 +93,6 @@
       "requires": []
     },
     {
-      "name": "mempalace",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": true,
-      "local": false,
-      "dependencies": [],
-      "requires": [
-        "mise",
-        "uv"
-      ]
-    },
-    {
       "name": "object-storage",
       "scope": "user",
       "optIn": true,
@@ -151,8 +139,7 @@
       "local": true,
       "dependencies": [
         "andrej-karpathy-skills",
-        "devtools",
-        "mempalace"
+        "devtools"
       ],
       "requires": [
         "graphify",

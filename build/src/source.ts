@@ -36,6 +36,16 @@ export interface PluginSource {
   readonly hooks: Hooks["hooks"];
   /** Files copied through untouched: assets/, references/, hook scripts. */
   readonly files: readonly FileSource[];
+  /**
+   * Modules for OpenCode's plugin API, which hooks.yaml cannot express.
+   *
+   * A hook is a tool-lifecycle callback wrapping an external script; these are
+   * whole modules driving OpenCode's own event bus and server API, so there is
+   * no script for a generated wrapper to call. Split out here rather than
+   * filtered in each target, so the three targets that cannot use them never
+   * see them and cannot ship them as dead files inside a bundle.
+   */
+  readonly openCodePlugins: readonly FileSource[];
   readonly root: string;
 }
 
@@ -86,6 +96,15 @@ export function readWorkspace(templatesRoot: string): Workspace {
 /** Files the reader interprets rather than copies. */
 const OWNED = new Set(["plugin.yaml", "hooks/hooks.yaml"]);
 
+/**
+ * Where a plugin authors OpenCode plugin modules.
+ *
+ * Singular, matching the directory they are emitted into. OpenCode discovers
+ * `{plugin,plugins}/*.{ts,js}` — both names and both extensions — so the
+ * modules ship as authored TypeScript with no transform.
+ */
+const OPENCODE_PLUGIN_DIR = "opencode-plugin";
+
 export function readPlugin(root: string): PluginSource {
   const manifest = Manifest.parse(
     parseYaml(readFileSync(join(root, "plugin.yaml"), "utf8")),
@@ -111,13 +130,23 @@ export function readPlugin(root: string): PluginSource {
   // their mode bits.
   const files = globSync("**/*", { cwd: root })
     .filter(p =>
-      !OWNED.has(p) && !p.startsWith("skills/") && !p.startsWith("agents/")
+      !OWNED.has(p)
+      && !p.startsWith("skills/")
+      && !p.startsWith("agents/")
+      && !p.startsWith(`${OPENCODE_PLUGIN_DIR}/`)
     )
     .map(path => fileSource(root, path))
     .filter((f): f is FileSource => f !== null)
     .sort((a, b) => a.path.localeCompare(b.path));
 
-  return { manifest, skills, agents, hooks, files, root };
+  const openCodePlugins = globSync(`${OPENCODE_PLUGIN_DIR}/*.{ts,js}`, {
+    cwd: root,
+  })
+    .map(path => fileSource(root, path))
+    .filter((f): f is FileSource => f !== null)
+    .sort((a, b) => a.path.localeCompare(b.path));
+
+  return { manifest, skills, agents, hooks, files, openCodePlugins, root };
 }
 
 function readSkill(root: string, path: string): SkillSource {

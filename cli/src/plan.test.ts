@@ -180,7 +180,7 @@ describe("readPluginIndex", () => {
     const vwf = real.plugins.find(p => p.name === "vwf");
     // Declared in templates/vwf/plugin.yaml, and the reason the CLI no longer
     // needs its own copy of the dependency list.
-    expect(vwf?.dependencies).toContain("mempalace");
+    expect(vwf?.dependencies).toContain("devtools");
     expect(real.plugins.find(p => p.name === "flutter")?.scope).toBe("project");
   });
 });

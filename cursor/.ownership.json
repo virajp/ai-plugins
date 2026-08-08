@@ -420,6 +420,10 @@
   "vwf/assets/topologies/repo.md": "vwf",
   "vwf/assets/vwf-config.md": "vwf",
   "vwf/hooks/hooks.json": "vwf",
+  "vwf/hooks/mempalace-checkpoint.sh": "vwf",
+  "vwf/hooks/mempalace-precompact.cursor.sh": "vwf",
+  "vwf/hooks/mempalace-precompact.sh": "vwf",
+  "vwf/hooks/mempalace-save.cursor.sh": "vwf",
   "vwf/mcp.json": "vwf",
   "vwf/skills/architecture/references/platforms.md": "vwf",
   "vwf/skills/architecture/references/stack-menu.md": "vwf",
@@ -466,6 +470,8 @@
   "vwf/skills/git-workflow/references/worktree-setup.md": "vwf",
   "vwf/skills/git-workflow/SKILL.md": "vwf",
   "vwf/skills/handoff/SKILL.md": "vwf",
+  "vwf/skills/mempalace-recall/SKILL.md": "vwf",
+  "vwf/skills/mempalace/SKILL.md": "vwf",
   "vwf/skills/mockups/SKILL.md": "vwf",
   "vwf/skills/plan/references/delta-checks.md": "vwf",
   "vwf/skills/plan/references/plan-doc.md": "vwf",
@@ -517,5 +523,7 @@
   "vwf/skills/setup/references/memory-tree.md": "vwf",
   "vwf/skills/setup/SKILL.md": "vwf",
   "vwf/skills/verify/references/release-freeze.md": "vwf",
-  "vwf/skills/verify/SKILL.md": "vwf"
+  "vwf/skills/verify/SKILL.md": "vwf",
+  "vwf/vendor/mempalace/LICENSE": "vwf",
+  "vwf/vendor/mempalace/README.md": "vwf"
 }

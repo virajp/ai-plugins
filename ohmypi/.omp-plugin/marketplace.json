@@ -64,13 +64,6 @@
     },
     {
       "category": "development",
-      "description": "AI memory system — mine projects and conversations into a searchable palace. 33 MCP tools, auto-save hooks, guided setup.",
-      "homepage": "https://github.com/MemPalace/mempalace.git",
-      "name": "mempalace",
-      "source": "https://github.com/MemPalace/mempalace.git"
-    },
-    {
-      "category": "development",
       "description": "Object-storage capability plugin for vwf — **contract only, and deliberately so**. It owns the neutral vocabulary and requirements (buckets, object lifecycle, signed access, retention, the never-proxy-bytes rule) and ships **no provider of its own**: every object store worth using is a cloud's, so the flavour comes from the project's cloud plugin — Cloud Storage from `gcp`, R2 from `cloudflare` once that plugin is unparked. Its menu says that out loud rather than coming back empty, because an empty menu is indistinguishable from a broken adapter. Implements the vwf stack-adapter contract.",
       "name": "object-storage",
       "source": "./object-storage"

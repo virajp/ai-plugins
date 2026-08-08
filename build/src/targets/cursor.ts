@@ -304,6 +304,15 @@ function cursorEvent(hook: Hook): string | null {
       return "stop";
     case "sessionStart":
       return null;
+    case "stop":
+      // Cursor's `stop` fires when the agent finishes responding, which is
+      // this event rather than `sessionEnd` — the two share a surface here.
+      return "stop";
+    case "preCompact":
+      // Spelled the same as ours. Verified against cursor.com/docs/hooks,
+      // whose event list carries both `preCompact` and `stop` — an earlier
+      // reading of this file's own mapping suggested it had neither.
+      return "preCompact";
   }
 }
 

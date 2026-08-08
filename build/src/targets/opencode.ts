@@ -10,6 +10,7 @@ import type {
   Manifest,
 } from "@ai-plugins/schema";
 import { readFileSync } from "node:fs";
+import { basename } from "node:path";
 import type {
   FileSource,
   PluginSource,
@@ -218,6 +219,17 @@ function renderPlugin(
         severity: "degraded",
       });
     }
+  }
+
+  // Authored modules for OpenCode's own plugin API, copied byte-for-byte into
+  // the same global `plugin/` dir the hook wrappers land in. Prefixed with the
+  // plugin name because that directory is shared and a bare `mempalace-autosave`
+  // would collide with any other plugin shipping the same filename.
+  for (const module of plugin.openCodePlugins) {
+    outputs.push({
+      path: `plugin/${name}-${basename(module.path)}`,
+      contents: { copyFrom: module.absolute },
+    });
   }
 
   outputs.push({

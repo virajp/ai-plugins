@@ -139,6 +139,12 @@ allows one Trusted Publisher and validates the entry-point filename):
   hook lives in the **language** plugin, not in `vwf`: a JS/TS rewrite has no
   business in a language-agnostic workflow plugin.
 - **`vitest run`** — schema, renderer and checker suites.
+- **`tsc --noEmit`** per TypeScript project — `schema/`, `build/`, `cli/`, and
+  **`templates/`**. That last one exists solely so the `opencode-plugin/`
+  modules are type-checked: they ship as authored TypeScript with nothing
+  transforming them on the way out, so without a project covering them they
+  would carry the extension and none of the guarantee. Its `include` is
+  `*/opencode-plugin/*.ts` — the rest of `templates/` is prose.
 
 `plugins:check` is deliberately smaller than the Python task it replaced. Whole
 families of the old assertions became *unrepresentable* rather than merely
@@ -174,11 +180,10 @@ design (a plugin may hold skills versioned on their own cadence).
 
 | Plugin                   | Source                     | What it provides                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`                    | `templates/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills, incl. the absorbed `documentation-standards` + `readme`), subagents, the guarded `rtk` Bash hook, and **two** MCP servers — mempalace over **HTTP** (see mempalace: skills from the plugin, MCP from vwf) and the absorbed Context7 docs server over stdio. Names **no** technology: no stack templates, no language list                                                                                                                                                                                |
+| `vwf`                    | `templates/vwf`            | Skills (slash-invocable workflow skills + auto-applying doctrine skills, incl. the absorbed `documentation-standards` + `readme` and the vendored `mempalace` + `mempalace-recall`), subagents, the guarded `rtk` Bash hook plus the two mempalace auto-save hooks, and **two** MCP servers — mempalace over **HTTP** (see The memory layer: vendored skills, vwf's server) and the absorbed Context7 docs server over stdio. Names **no** technology: no stack templates, no language list                                                                                       |
 | `typescript`             | `templates/typescript`     | The **TypeScript language plugin** — one plugin per language, covering `typescript` and `javascript`. A `typescript` router skill (lean SKILL.md → on-demand standards/vitest/build references, single-package and monorepo) plus an `effect` router skill (effect/effect-runtime/testing references, folded back in — a framework is not a plugin boundary), `package-json`, `pnpm`, `tsconfig`, `lint-format`, the TypeScript/JavaScript language server, the npm→pnpm/bun normalizing hook, and **all ten** TypeScript stack templates behind the two vwf stack-adapter skills |
 | `design-tools`           | `templates/design-tools`   | The **vwf design adapter** — two skills (`design-tools-import-screens`, `design-tools-import-design-system`) that resolve the design tool **per project** and dispatch to a per-tool reference (`claude-design`, `lovable`, `stitch`), read on demand. Ships the Claude Design MCP server. Not a vwf dependency                                                                                                                                                                                                                                                                   |
 | `flutter`                | `templates/flutter`        | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers. Also owns the `dart-flutter` **stack template** (the `frontend` role) and the two vwf stack-adapter skills. Self-contained (no cross-marketplace deps)                                                                                                                                                                                 |
-| `mempalace`              | external (url)             | Re-listed in `virajp-plugins`; AI memory system (vwf dep). Kept **for its skills** — its bundled stdio MCP server is toggled off, since vwf declares the same server over HTTP                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `andrej-karpathy-skills` | external (url)             | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). A **vwf dependency** — no longer opt-in, since the workflow wants those pillars on by default                                                                                                                                                                                                                                                                                                                                                                                |
 | `devtools`               | `templates/devtools`       | The **developer-machine toolchain** — the mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, node-gpg workaround) + `/devtools:scaffold`, `doppler` (**development** secrets only; no `secrets` plugin exists), `docker`, and the repo-level gates the stack templates name: `dprint`, `eslint`, `gitleaks`, `grype`, `pre-commit`. Owns the provider-neutral `container-generic` **deploy** template (no `container` capability plugin) + the two vwf stack-adapter skills. A **vwf dep**                                             |
 | `cicd`                   | `templates/cicd`           | A `/cicd:workflow` skill that resolves the repo's CI system (the per-project `cicd` key, else ask — **never** repo detection, **never** a silent default) and reads only that tool's `references/<tool>.md`; GitHub Actions is the one implemented today. Neutral rules live in SKILL.md (mise installs everything, both layouts, vwf's delivery-pipeline contract); adding a CI system is one reference file. **Independent — not a vwf dep** (vwf states the contract, `cicd` implements it)                                                                                    |
@@ -247,6 +252,15 @@ do not need to be listed in `plugin.yaml`:
 - `hooks/hooks.yaml` → hooks, declared as *intent* (`event`, `matcher`,
   `action`, `script`) so each renderer can emit its own mechanism (see Hooks
   below)
+- `opencode-plugin/*.{ts,js}` → **OpenCode plugin modules**, for behaviour no
+  neutral hook can express (vwf's mempalace auto-save is the first). `source.ts`
+  reads them into `openCodePlugins`, deliberately **not** into `files`, so the
+  other three targets never ship them as dead bundle files; the OpenCode target
+  copies each to `plugin/<plugin>-<basename>` with an ownership stamp, so the
+  existing install/uninstall/receipt machinery covers them with no adapter
+  change. **They ship as authored TypeScript, untranspiled** — verified against
+  OpenCode's source: its discovery glob is `{plugin,plugins}/*.{ts,js}` and its
+  loader is Bun. No transform, no new dependency.
 
 ### Marketplace manifests
 
@@ -378,9 +392,14 @@ Two traps, each verified by running the real tool and each silent when wrong:
   | `docs-sync.md`                         | The docs-ship-with-the-change rule for runs that change reality (`execute`, `architecture`/`product` update mode). `blueprint`/`plan` are exempt — they document intent                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
   | `format-check.md` + `blueprint-format` | The format-drift preflight: compare the repo's stamp to the shipped integer (**20**) and nudge `/vwf:setup`. Since vwf is user-scoped, this usage-time check is what reaches each repo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
   | `minimalism.md`                        | The Ponytail decision ladder — what gets **built** (scope). Prose density is a separate bar, in the blueprint-authoring skill                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-- `hooks/hooks.yaml` — the guarded `rtk` Bash hook, and nothing else. The
+- `hooks/hooks.yaml` — the guarded `rtk` Bash hook plus the two mempalace
+  auto-save hooks (`stop` + `preCompact`), whose scripts sit beside it; the
+  OpenCode equivalent is `opencode-plugin/mempalace-autosave.ts`. The
   npm→pnpm/bun normalizer moved to `typescript`, where the language it rewrites
   for lives.
+- `vendor/mempalace/` — provenance, MIT licence and resync policy for the two
+  vendored memory skills. Ships in every rendered bundle, which is the point:
+  the licence travels with the code.
 
 Docs the commands maintain live under `docs/blueprint/` (the outcome contract
 `product.md` — problem/users/goals/slice-priority + the `/vwf:feedback`-owned
@@ -497,12 +516,15 @@ catalog/erDiagram sync, the released-API additive-only diff).
 
 ### Dependencies
 
-`vwf` depends on exactly three plugins — `mempalace`, `andrej-karpathy-skills`,
-and `devtools` — **all resolved from the `virajp-plugins` marketplace itself**,
-so installing `vwf` needs no other marketplace registered. `devtools` is
-authored here; the other two are not — they are **re-listed** via a `url` source
-(pointing at their upstream repos) so they live under `virajp-plugins`. **No
-third-party code is vendored into this repo.**
+`vwf` depends on exactly two plugins — `andrej-karpathy-skills` and `devtools` —
+**both resolved from the `virajp-plugins` marketplace itself**, so installing
+`vwf` needs no other marketplace registered. `devtools` is authored here;
+`andrej-karpathy-skills` is not — it is **re-listed** via a `url` source
+(pointing at its upstream repo) so it lives under `virajp-plugins`.
+
+`mempalace` used to be the third, and is gone as a plugin: vwf **vendored** its
+two skills. That is the one place third-party code is vendored into this repo,
+and it buys something a dependency could not — see The memory layer below.
 
 **`devtools` is load-bearing, not tidiness.** `/vwf:setup` orchestrates
 `/devtools:scaffold`, and a skill vwf cannot see fails **silently** — it looks
@@ -558,12 +580,35 @@ auto-enables** these dependencies at the same scope. Key rules:
   enabled — not on a continuous reconcile. If a dependency is later disabled on
   its own, re-enable it directly or toggle `vwf` off/on.
 
-#### mempalace: skills from the plugin, MCP from vwf
+#### The memory layer: vendored skills, vwf's server
 
-The `mempalace` dependency is kept **for its skills**, not its MCP server. vwf
-declares its own mempalace server in `plugin.yaml` — `transport: http` against
-`http://127.0.0.1:8765/mcp` — so the memory layer is a **long-lived process you
-run yourself**, not a stdio subprocess Claude Code owns:
+The memory layer arrives in three pieces, from three different places, and it is
+worth knowing which is which: **the skills are vendored**, **the MCP server is
+declared by vwf**, and **the daemon is a process you run yourself**.
+
+**Why vendored rather than depended on.** `mempalace` was a `url`-sourced entry
+and a vwf dependency. A url-sourced plugin has no rendered bundle, and the
+OpenCode adapter can only copy one — so `cli/src/plan.ts`'s `localOnly` branch
+skipped it, and **OpenCode users got no memory layer at all**. Silently: the
+plugin was listed, the install printed a skip note, and the thing vwf leans on
+hardest was simply absent. The three marketplace targets were fine, which is
+what made it easy to miss for so long. Vendoring is what makes memory ship on
+every target.
+
+What was taken is **two skills and nothing else** — not the Python package, not
+the server implementation, not `integrations/`. Provenance, the version taken,
+the MIT licence, the one local edit and the resync policy live in
+`templates/vwf/vendor/mempalace/`, which ships in every rendered bundle. It is a
+one-time fork, deliberately re-synced: nothing watches upstream, so the
+**Version taken** row is the only thing that makes drift detectable, and it is
+the one edit a resync must not skip.
+
+**The auto-save hooks are reimplemented, not vendored** — see Hooks below for
+why upstream's could not be wrapped.
+
+vwf declares its own mempalace server in `plugin.yaml` — `transport: http`
+against `http://127.0.0.1:8765/mcp` — so the memory layer is a **long-lived
+process you run yourself**, not a stdio subprocess Claude Code owns:
 
 ```sh
 mempalace serve --host 127.0.0.1 --port 8765   # loopback needs no token
@@ -575,22 +620,23 @@ session restarts, one daemon serves **every** Claude Code instance (all repos,
 all worktrees, in parallel — mempalace serializes concurrent writes), and its
 logs are yours to read.
 
-**The mempalace plugin's own stdio server must be turned off**, or two processes
-contend for mempalace's single writer lease (its docs: *"don't point two server
-processes at the same backend collection"*). Toggle it off in `/mcp` — Claude
-Code records that in `~/.claude.json` under `disabledMcpServers`, which covers
-plugin servers, and the plugin (and its skills) stays installed. The toggle is
-recorded **per project**. Confirm with `/mcp` that exactly one mempalace server
-is connected.
+**If the upstream mempalace plugin is separately installed, its own stdio server
+must be turned off**, or two processes contend for mempalace's single writer
+lease (its docs: *"don't point two server processes at the same backend
+collection"*). Nothing here installs it any more, so this only bites a user who
+adds it themselves. Toggle it off in `/mcp` — Claude Code records that in
+`~/.claude.json` under `disabledMcpServers`, which covers plugin servers. The
+toggle is recorded **per project**. Confirm with `/mcp` that exactly one
+mempalace server is connected.
 
 **Tool names are scoped to whichever plugin declares the server**, so the
 execute subagents' `tools:` lists carry **both** —
 `mcp__plugin_vwf_mempalace__*` (this manifest) and
 `mcp__plugin_mempalace_mempalace__*` (the upstream plugin's stdio server). An
 allowlist entry for a server that isn't connected is inert, so carrying both
-means vwf works under either wiring. **Drop one and the subagents silently lose
-memory**: the orchestrator still has it, so recall keeps working while the
-findings loop-back quietly stops persisting.
+means vwf works under either wiring — which is exactly the case above. **Drop
+one and the subagents silently lose memory**: the orchestrator still has it, so
+recall keeps working while the findings loop-back quietly stops persisting.
 
 ## The installer & statusline CLI
 
@@ -887,9 +933,9 @@ gh release create vX.Y.Z --title vX.Y.Z --notes-file <notes> --verify-tag
 
 ## Hooks
 
-Two plugins ship a `PreToolUse` / `Bash` hook, each authored in its own
-`hooks/hooks.yaml` as *intent* (`event`, `matcher`, `action`, `script`) so every
-renderer emits its own mechanism — Claude a `hooks.json` with `updatedInput`,
+Hooks are authored in each plugin's `hooks/hooks.yaml` as *intent* (`event`,
+`matcher`, `action`, `script`) so every renderer emits its own mechanism — for a
+`PreToolUse` / `Bash` rewrite, Claude a `hooks.json` with `updatedInput`,
 OpenCode a generated JS plugin mutating `output.args`, Cursor and Oh-My-Pi a
 deny-with-correction, since neither can rewrite a command:
 
@@ -903,12 +949,42 @@ deny-with-correction, since neither can rewrite a command:
   distinguishes them. It lives in the **language** plugin, not in `vwf`: a JS/TS
   rewrite is a TypeScript fact, and `vwf` names no technology.
 - `templates/vwf/hooks/hooks.yaml` → `rtk hook claude` — **optional**, and vwf's
-  only hook. The entry is guarded
+  only `Bash` hook. The entry is guarded
   (`command -v rtk >/dev/null 2>&1 && rtk hook claude || true`) so a missing
   `rtk` never blocks a Bash call; `/vwf:doctor` carries the warning instead of
   the hook emitting one per command, which would be unusable noise. Installed
   out-of-band via `brew install --formulae rtk`; plugin install does **not**
   provide it.
+- `templates/vwf/hooks/mempalace-checkpoint.sh` (`stop`) +
+  `mempalace-precompact.sh` (`preCompact`) — the mempalace auto-save, **written
+  here rather than vendored**. Upstream's hook counts human messages by parsing
+  `transcript_path`, a Claude JSONL transcript, and breaks its own save loop
+  with `stop_hook_active` — both Claude-only, so wrapping it for the other three
+  targets yields a hook that runs, finds no transcript and does nothing: green
+  in the coverage report, dead in practice. Counting *stops* in a state file
+  under `$XDG_STATE_HOME/ai-plugins/mempalace` needs only a session id, which
+  every target supplies. It speaks every 15th stop (`MEMPALACE_SAVE_INTERVAL`
+  overrides), honours mempalace's own opt-out (`MEMPALACE_HOOKS_AUTO_SAVE`, or
+  `hooks.auto_save` in `~/.mempalace/config.json`) so a user who turned
+  auto-save off upstream stays off, and resets the counter on
+  `stop_hook_active: true` so a save cycle cannot re-trigger itself. The
+  pre-compact half is a **second file** that `exec`s the first with `--compact`,
+  because the neutral schema names a script and passes it no arguments.
+- `templates/vwf/opencode-plugin/mempalace-autosave.ts` — the same behaviour for
+  the one target the shell hooks skip (`skipTargets: [ opencode ]`). OpenCode
+  has no stop to block; its equivalent surface is a bus event plus a server API
+  you inject a message into, so this counts real user messages on `session.idle`
+  and re-saves after `session.compacted`.
+
+**Two neutral events exist for these**: `stop` and `preCompact`, in
+`schema/src/hooks.ts`. Claude spells them `Stop` / `PreCompact` (mechanical
+capitalisation, so its renderer needed no change); Oh-My-Pi `session_stop` /
+`session_before_compact`; Cursor has `stop` and **no compaction hook at all**,
+which is gap-reported rather than silently dropped. Oh-My-Pi's renderer grew a
+**session-shaped wrapper variant** for them: a session event carries
+`{session_id, stop_hook_active}` instead of `{tool_name, tool_input}`, and
+answers `{continue: true, additionalContext: REASON}` instead of
+`{block: true, reason: REASON}`.
 
 Things to know when editing hooks here:
 
@@ -1005,17 +1081,17 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `typescript`, `flutter`, `mempalace`,
-`design-tools`, `devtools`, `cicd`, `cloudflare`, `gcp`, `datastore`,
-`identity`, `observability`, `orchestration`, `object-storage`,
-`andrej-karpathy-skills` (external). (The statusline is not a plugin — install
-it via `pnpx @askviraj/ai-plugins …`; see The installer & statusline CLI.)
+Available plugin names: `vwf`, `typescript`, `flutter`, `design-tools`,
+`devtools`, `cicd`, `cloudflare`, `gcp`, `datastore`, `identity`,
+`observability`, `orchestration`, `object-storage`, `andrej-karpathy-skills`
+(external). (The statusline is not a plugin — install it via
+`pnpx @askviraj/ai-plugins …`; see The installer & statusline CLI.)
 
-Installing `vwf` pulls in its dependencies (`mempalace`,
-`andrej-karpathy-skills`, `devtools`) automatically from the same
-`virajp-plugins` marketplace — no other marketplace needs to be registered.
-`cicd` is **not** among them; install it by name when you want pipelines
-generated. See the Dependencies section above.
+Installing `vwf` pulls in its dependencies (`andrej-karpathy-skills`,
+`devtools`) automatically from the same `virajp-plugins` marketplace — no other
+marketplace needs to be registered. `cicd` is **not** among them; install it by
+name when you want pipelines generated. `mempalace` is not a name here at all —
+its memory layer ships inside `vwf`. See the Dependencies section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
 `--platform opencode` target, which copies each plugin's rendered `opencode/`

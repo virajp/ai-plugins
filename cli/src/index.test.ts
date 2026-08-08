@@ -113,13 +113,13 @@ describe("buildJobs", () => {
     );
 
     expect(jobs[0]?.[1].user).toEqual(["vwf"]);
-    expect(jobs[1]?.[1].user).toContain("mempalace");
+    expect(jobs[1]?.[1].user).toContain("devtools");
   });
 
   it("skips url-sourced plugins only for the copy-based target", () => {
     const jobs = buildJobs(
       [fake("opencode", true), fake("ohmypi", true)],
-      { user: ["mempalace"] },
+      { user: ["andrej-karpathy-skills"] },
       repoRoot,
       () => {},
     );
@@ -127,7 +127,7 @@ describe("buildJobs", () => {
     // OpenCode installs by copying a rendered bundle, and a url-sourced plugin
     // has none.
     expect(jobs[0]?.[1].user).toEqual([]);
-    expect(jobs[1]?.[1].user).toEqual(["mempalace"]);
+    expect(jobs[1]?.[1].user).toEqual(["andrej-karpathy-skills"]);
   });
 });
 

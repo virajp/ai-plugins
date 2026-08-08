@@ -35,7 +35,10 @@ strict: true
 source:
   kind: local
 dependencies:
-  - mempalace
+  # mempalace is NOT here: its skills and auto-save hooks are vendored into this
+  # plugin (see vendor/mempalace/). As a url-sourced dependency it had no
+  # rendered bundle, so the installer skipped it and OpenCode users got no
+  # memory layer at all — the thing vwf leans on hardest.
   - andrej-karpathy-skills
   # Load-bearing, not tidiness: /vwf:setup orchestrates devtools:scaffold, and a
   # skill vwf cannot see fails SILENTLY — indistinguishable from one that ran

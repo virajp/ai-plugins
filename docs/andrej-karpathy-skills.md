@@ -9,7 +9,7 @@ It is maintained externally at
 [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)
 and **re-listed** in the `virajp-plugins` marketplace under a `url` source, so
 it installs from the same place as the rest without any third-party code being
-vendored into this repo. It is one of `vwf`'s three dependencies.
+vendored into this repo. It is one of `vwf`'s two dependencies.
 
 ## Install
 
@@ -33,12 +33,17 @@ off-pipeline turn — a quick fix, a question, anything not running under
 these skills name occur. So the guidelines are now on by default rather than
 something you remember to add.
 
-Being url-sourced changes what each target can do with it, exactly as it does
-for [mempalace](./mempalace.md). The three targets with a native marketplace —
-**Claude**, **Cursor** and **Oh-My-Pi** — install it from its own upstream repo.
-**OpenCode** can only copy a rendered bundle, and there is none to copy, so it
-is **skipped with a note**: an OpenCode install of `vwf` leaves you to install
-this one yourself, from upstream.
+Being url-sourced changes what each target can do with it. The three targets
+with a native marketplace — **Claude**, **Cursor** and **Oh-My-Pi** — install it
+from its own upstream repo. **OpenCode** can only copy a rendered bundle, and
+there is none to copy, so it is **skipped with a note**: an OpenCode install of
+`vwf` leaves you to install this one yourself, from upstream.
+
+This is a tolerable gap here and was not for [mempalace](./mempalace.md), which
+used to sit in the same position: guidelines missing on one target degrade
+quality, whereas a missing memory layer breaks `/vwf:handoff` and `/vwf:recall`
+outright. That is why mempalace's skills were vendored into `vwf` and these were
+not.
 
 ## Skills
 
@@ -52,6 +57,7 @@ no slash command to learn.
 - [../readme.md](../readme.md) — the marketplace overview and full plugin list.
 - [vwf](./vwf.md) — the workflow that depends on it, and where each pillar is
   already enforced structurally.
-- [mempalace](./mempalace.md) — the other url-sourced `vwf` dependency.
+- [mempalace](./mempalace.md) — the memory layer, vendored into `vwf` rather
+  than re-listed as this one is.
 - [upstream](https://github.com/multica-ai/andrej-karpathy-skills) — the
   authoritative skill list and its rationale.

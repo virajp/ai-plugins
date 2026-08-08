@@ -22,6 +22,7 @@
   "command/vwf-setup.md": "vwf",
   "command/vwf-verify.md": "vwf",
   "plugin/typescript-npm-normalize.js": "typescript",
+  "plugin/vwf-mempalace-autosave.ts": "vwf",
   "plugin/vwf-rtk.js": "vwf",
   "virajp-plugins/cicd/commands/workflow/index.md": "cicd",
   "virajp-plugins/cicd/commands/workflow/references/delivery-pipeline.md": "cicd",
@@ -432,6 +433,8 @@
   "virajp-plugins/vwf/commands/setup/references/memory-tree.md": "vwf",
   "virajp-plugins/vwf/commands/verify/index.md": "vwf",
   "virajp-plugins/vwf/commands/verify/references/release-freeze.md": "vwf",
+  "virajp-plugins/vwf/hooks/mempalace-checkpoint.sh": "vwf",
+  "virajp-plugins/vwf/hooks/mempalace-precompact.sh": "vwf",
   "virajp-plugins/vwf/opencode.config.json": "vwf",
   "virajp-plugins/vwf/skills/architecture/references/platforms.md": "vwf",
   "virajp-plugins/vwf/skills/architecture/references/stack-menu.md": "vwf",
@@ -477,6 +480,8 @@
   "virajp-plugins/vwf/skills/git-workflow/references/worktree-setup.md": "vwf",
   "virajp-plugins/vwf/skills/git-workflow/SKILL.md": "vwf",
   "virajp-plugins/vwf/skills/handoff/SKILL.md": "vwf",
+  "virajp-plugins/vwf/skills/mempalace-recall/SKILL.md": "vwf",
+  "virajp-plugins/vwf/skills/mempalace/SKILL.md": "vwf",
   "virajp-plugins/vwf/skills/plan/references/delta-checks.md": "vwf",
   "virajp-plugins/vwf/skills/plan/references/plan-doc.md": "vwf",
   "virajp-plugins/vwf/skills/plan/SKILL.md": "vwf",
@@ -520,5 +525,7 @@
   "virajp-plugins/vwf/skills/rest-api-design/SKILL.md": "vwf",
   "virajp-plugins/vwf/skills/screens/references/import-mode.md": "vwf",
   "virajp-plugins/vwf/skills/screens/references/prompt-mode.md": "vwf",
-  "virajp-plugins/vwf/skills/screens/SKILL.md": "vwf"
+  "virajp-plugins/vwf/skills/screens/SKILL.md": "vwf",
+  "virajp-plugins/vwf/vendor/mempalace/LICENSE": "vwf",
+  "virajp-plugins/vwf/vendor/mempalace/README.md": "vwf"
 }

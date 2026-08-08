@@ -177,6 +177,72 @@ describe("opencode adapter", () => {
       .toThrow(/malformed/);
   });
 
+  // The whole point of vendoring mempalace: as a url-sourced dependency it had
+  // no rendered bundle, so `resolvePlan`'s localOnly branch skipped it and an
+  // OpenCode user got no memory layer at all. These three assert it arrives.
+  describe("the memory layer reaches OpenCode", () => {
+    it("installs mempalace's skills as vwf's own", () => {
+      opencode.apply(context, planFor(["vwf"]));
+
+      const skills = join(bundle("vwf"), "skills");
+      expect(existsSync(join(skills, "mempalace", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(skills, "mempalace-recall", "SKILL.md")))
+        .toBe(true);
+    });
+
+    it("installs the auto-save module as authored TypeScript", () => {
+      opencode.apply(context, planFor(["vwf"]));
+
+      // OpenCode discovers `{plugin,plugins}/*.{ts,js}` and its loader is Bun,
+      // so the module ships untranspiled. A `.js` here would mean someone added
+      // a transform that is not needed.
+      const module = join(
+        home,
+        ".config",
+        "opencode",
+        "plugin",
+        "vwf-mempalace-autosave.ts",
+      );
+      expect(existsSync(module)).toBe(true);
+      expect(readFileSync(module, "utf8")).toContain("session.idle");
+    });
+
+    it("removes the auto-save module on revert", () => {
+      const module = join(
+        home,
+        ".config",
+        "opencode",
+        "plugin",
+        "vwf-mempalace-autosave.ts",
+      );
+
+      const { receipt } = opencode.apply(context, planFor(["vwf"]));
+      expect(existsSync(module)).toBe(true);
+
+      opencode.revert(context, receipt);
+      expect(existsSync(module)).toBe(false);
+    });
+
+    it("leaves another plugin's module alone", () => {
+      // `plugin/` is shared, so removal has to be driven by ownership rather
+      // than by clearing the directory.
+      opencode.apply(context, planFor(["typescript"]));
+      const theirs = join(
+        home,
+        ".config",
+        "opencode",
+        "plugin",
+        "typescript-npm-normalize.js",
+      );
+      expect(existsSync(theirs)).toBe(true);
+
+      const { receipt } = opencode.apply(context, planFor(["vwf"]));
+      opencode.revert(context, receipt);
+
+      expect(existsSync(theirs)).toBe(true);
+    });
+  });
+
   it("installs at project scope into .opencode/", () => {
     opencode.apply(context, {
       target: "opencode",
