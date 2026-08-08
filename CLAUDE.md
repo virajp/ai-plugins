@@ -170,15 +170,13 @@ design (a plugin may hold skills versioned on their own cadence).
 
 | Plugin                   | Source                   | What it provides                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`                    | `templates/vwf`          | Skills (slash-invocable workflow skills + auto-applying doctrine skills), subagents, an npm→pnpm/bun normalizing hook, and the mempalace MCP server over **HTTP** (see mempalace: skills from the plugin, MCP from vwf)                                                                                                                                                                                                                                                                |
-| `markdown`               | `templates/markdown`     | Opinionated Markdown/doc-writing skill, path-scoped to `**/*.md` + a `/markdown:readme` skill that scans a repo and writes/updates its README                                                                                                                                                                                                                                                                                                                                          |
+| `vwf`                    | `templates/vwf`          | Skills (slash-invocable workflow skills + auto-applying doctrine skills, incl. the absorbed `documentation-standards` + `readme`), subagents, an npm→pnpm/bun normalizing hook, and **two** MCP servers — mempalace over **HTTP** (see mempalace: skills from the plugin, MCP from vwf) and the absorbed Context7 docs server over stdio                                                                                                                                               |
 | `typescript`             | `templates/typescript`   | Opinionated **plain** TypeScript skills — a `typescript` router skill (lean SKILL.md → on-demand standards/vitest/build references, single-package and monorepo) plus `package-json`, `pnpm`, `tsconfig`, `lint-format` + the TypeScript/JavaScript language server (launched via `pnpm dlx`). Effect-TS doctrine lives in `effect`, not here                                                                                                                                          |
 | `effect`                 | `templates/effect`       | Effect-TS doctrine, split out of `typescript` so plain TypeScript need not carry it — an `effect` router skill (effect/effect-runtime/testing references) plus the `packages` **stack template** and the two vwf stack-adapter skills. Depends on `typescript`. **Opt-in**                                                                                                                                                                                                             |
-| `context7`               | `templates/context7`     | Context7 MCP docs server                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `design-tools`           | `templates/design-tools` | The **vwf design adapter** — two skills (`design-tools-import-screens`, `design-tools-import-design-system`) that resolve the design tool **per project** and dispatch to a per-tool reference (`claude-design`, `lovable`, `stitch`), read on demand. Ships the Claude Design MCP server. Not a vwf dependency                                                                                                                                                                        |
 | `flutter`                | `templates/flutter`      | Opinionated Flutter skills — `dart` & `swift` router skills (lean SKILL.md → on-demand topic references) plus `kotlin`, `pubspec`, `analysis-options`, `internationalization` + bundled Dart, Kotlin & Swift (SourceKit) language servers; self-contained (no cross-marketplace deps)                                                                                                                                                                                                  |
 | `mempalace`              | external (url)           | Re-listed in `virajp-plugins`; AI memory system (vwf dep). Kept **for its skills** — its bundled stdio MCP server is toggled off, since vwf declares the same server over HTTP                                                                                                                                                                                                                                                                                                         |
-| `andrej-karpathy-skills` | external (url)           | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). **Opt-in** — excluded from installer `--all`, installed only via `--user`/`--project`. Not a vwf dep (the workflow already enforces these pillars)                                                                                                                                                                                                                                |
+| `andrej-karpathy-skills` | external (url)           | Re-listed in `virajp-plugins`; behavioral guidelines reducing common LLM coding mistakes (Karpathy). A **vwf dependency** — no longer opt-in, since the workflow wants those pillars on by default                                                                                                                                                                                                                                                                                     |
 | `mise`                   | `templates/mise`         | Opinionated mise skill (the `.config/` three-file `MISE_ENV` split, tool/env placement, file-based tasks, CI node-gpg workaround) + a `/mise:scaffold` skill                                                                                                                                                                                                                                                                                                                           |
 | `cicd`                   | `templates/cicd`         | A `/cicd:workflow` skill that resolves the repo's CI system (per-project `cicd.tool`, else repo detection, else ask — **never** a silent default) and reads only that tool's `references/<tool>.md`; GitHub Actions is the one implemented today. Neutral rules live in SKILL.md (mise installs everything, both layouts, vwf's delivery-pipeline contract); adding a CI system is one reference file. **Independent — not a vwf dep** (vwf states the contract, `cicd` implements it) |
 | `cloudflare`             | `templates/cloudflare`   | Cloudflare stack plugin for vwf — **scope deliberately parked at Zero Trust Access**: a private plane in front of a project that must not be publicly reachable, whichever cloud hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered and arrive under their own dedicated plan; the menu states what it does not cover rather than coming back quietly short. **Opt-in**                                                              |
@@ -215,7 +213,8 @@ Plugins may declare any combination of:
   `sourcekit-lsp` (Swift), which invoke system-installed binaries on `PATH`.
   Cursor has no LSP surface at all; the build reports it as a gap.
 - **`mcpServers`** — MCP server definitions, a discriminated union on
-  `transport` (`stdio` or `http`). See `templates/context7/plugin.yaml`.
+  `transport` (`stdio` or `http`). See `templates/vwf/plugin.yaml`, which
+  declares one of each.
 - **`dependencies`** — other plugins this plugin requires (see below), as a
   plain list of names; `vwf` is the only one that declares them, all resolved
   within `virajp-plugins` itself. `plugins:check` enforces that each names a
@@ -305,6 +304,7 @@ Two traps, each verified by running the real tool and each silent when wrong:
   | `doctor`             | Checks the repo against `.config/vwf.yaml` — per-language LSP + toolchain, frameworks/deps vs each manifest, `repo.stack`, harness task names, health paths, the mempalace wing/room set, the graphify CLI/graph/hook, format-stamp drift. Reports to room `doctor`; never writes uninvited, never builds a graph | never halts — a mandate is a **blocking** finding, and `setup` + `execute` both halt on one (`execute` also gates on LSP) |
   | `git-workflow`       | Internal: worktree isolation, commits, merges, pushes — every other skill delegates git here                                                                                                                                                                                                                      | —                                                                                                                         |
   | `handoff` / `recall` | session handoff written to **both** memory stores; the reserved **`next`** handoff is the argument-less default, is mirrored to `docs/memory/handoff/next.md` (gitignored — a handoff is personal), and `recall next` resumes without a gate                                                                      | —                                                                                                                         |
+  | `readme`             | Scans the repo and writes/updates its README against the eight required sections. Absorbed from the retired `markdown` plugin; `invocation: both` **because `setup` orchestrates it**                                                                                                                             | —                                                                                                                         |
 
   Ordering and what each gate means: **Foundations & ordering** below. The
   execute stage pipeline (`code` → `review` ‖ `security` → `acceptance` + `ux`,
@@ -344,6 +344,7 @@ Two traps, each verified by running the real tool and each silent when wrong:
   | `design-system-authoring` | `docs/blueprint/design-system` — tokens, typography, spacing, motion, accessibility, component behaviors/anti-patterns, and terminal-ux (required when a project declares platform `cli`)                                                                                                                                                                                                                                  |
   | `project-setup`           | Onboarding + migration: topology detection plus the **topology menu** (`repo`/`monorepo`/`polyrepo` under `assets/topologies/` — a menu since format 19, not enforced; `enforcement.structure` retired with it), the **stack-template axes** (`architecture` presents each), harness-capability detection, consent-gated dry-run migration, and the format-version drift map. Used by `/vwf:setup`                         |
   | `rest-api-design`         | API contract depth — resources, methods, errors, pagination, idempotency, versioning                                                                                                                                                                                                                                                                                                                                       |
+  | `documentation-standards` | `**/*.md` — writing style, heading hierarchy, links, front matter, CHANGELOGs, and the mermaid rules. Absorbed from the retired `markdown` plugin                                                                                                                                                                                                                                                                          |
 - `assets/` — the shared doctrine and data every skill and agent reads. **Each
   file is authoritative for its own subject**; this is a map of which one owns
   what, not a summary of their contents:
@@ -485,19 +486,25 @@ catalog/erDiagram sync, the released-API additive-only diff).
 
 ### Dependencies
 
-`vwf` depends on `context7`, `markdown`, `mempalace`, and `mise` — **all
-resolved from the `virajp-plugins` marketplace itself**, so installing `vwf`
-needs no other marketplace registered. `context7`, `markdown`, and `mise` are
-authored here; `mempalace` is not — it is **re-listed** in
-`.claude-plugin/marketplace.json` via a `url` source (pointing at its upstream
-repo) so it lives under `virajp-plugins`.
+`vwf` depends on exactly three plugins — `mempalace`, `andrej-karpathy-skills`,
+and `mise` — **all resolved from the `virajp-plugins` marketplace itself**, so
+installing `vwf` needs no other marketplace registered. `mise` is authored here;
+the other two are not — they are **re-listed** via a `url` source (pointing at
+their upstream repos) so they live under `virajp-plugins`. **No third-party code
+is vendored into this repo.**
 
-The dependency list is declared in **one** place — `templates/vwf/plugin.yaml` →
-`context7`, `markdown`, `mempalace`, `mise` — and the marketplace entry is
-generated from it, so the two can no longer drift. (Before the template layer
-they were separate files kept in sync by hand, which is what `plugins:check`
-used to compare.) The checker now verifies each name resolves to a real plugin
-instead.
+`markdown` and `context7` used to be on that list and are gone as plugins: vwf
+**absorbed** them. Their two skills (`documentation-standards`, `readme`) are
+vwf skills now, and the Context7 docs server is one of vwf's two `mcpServers`.
+Both were authored here, required by the workflow, and useful only alongside it
+— a separate plugin bought nothing but a dependency edge. `/markdown:readme` is
+therefore `/vwf:readme`, and vwf-only; that is intended.
+
+The dependency list is declared in **one** place — `templates/vwf/plugin.yaml` —
+and the marketplace entry is generated from it, so the two can no longer drift.
+(Before the template layer they were separate files kept in sync by hand, which
+is what `plugins:check` used to compare.) The checker now verifies each name
+resolves to a real plugin instead.
 
 **`design-tools` is deliberately *not* a dependency.** vwf is decoupled from any
 design tool: it calls two fixed adapter skill names and the adapter resolves
@@ -657,14 +664,14 @@ Layout:
 
 **Plugins.** `--all` installs every **user-scoped, non-opt-in** plugin at user
 scope; `--user <name>` / `--project <name>` (both repeatable) name plugins at a
-scope. Project-scoped plugins (`flutter`) and opt-in ones
-(`andrej-karpathy-skills`) are excluded from `--all` and reached by name. Every
-one of those sets is **derived from `plugin.yaml` via `plugins.json`**, not
-hardcoded — the old `PLUGINS` / `PROJECT_SCOPED` / `OPT_IN` / `USER_ONLY` /
-`PLUGIN_DEPS` constants and the `plugins:check` assertion that kept them honest
-are both gone, because there is no longer a second copy to disagree. Names are
-bare and validated against that index, so an `@marketplace` or path qualifier is
-simply not a known name and the CLI can only install from `virajp-plugins`.
+scope. Project-scoped plugins (`flutter`) and opt-in ones (`cloudflare`,
+`effect`, `gcp`) are excluded from `--all` and reached by name. Every one of
+those sets is **derived from `plugin.yaml` via `plugins.json`**, not hardcoded —
+the old `PLUGINS` / `PROJECT_SCOPED` / `OPT_IN` / `USER_ONLY` / `PLUGIN_DEPS`
+constants and the `plugins:check` assertion that kept them honest are both gone,
+because there is no longer a second copy to disagree. Names are bare and
+validated against that index, so an `@marketplace` or path qualifier is simply
+not a known name and the CLI can only install from `virajp-plugins`.
 
 **Targets.** `--platform` (repeatable) selects among `claude`, `cursor`,
 `ohmypi`, `opencode`; omitted, every tool detected on `PATH` is targeted. A
@@ -928,11 +935,13 @@ Before flipping a skill to `user`, grep for its command reference across
 prose addressed to the user. Adding a delegation to a user-only skill is the
 reverse trap: it will never fire.
 
-This applies across plugins too — `mise:scaffold` and `markdown:readme` are
-`both` **because `/vwf:setup` orchestrates them**, per its own "orchestrate,
-don't reimplement" rule. `cicd:workflow` stays `user`: nothing delegates to it —
-vwf's two mentions of it are prose recommending it to the user, which the rename
-from `github-actions:workflow` did not change.
+This applies across plugins too — `mise:scaffold` is `both` **because
+`/vwf:setup` orchestrates it**, per its own "orchestrate, don't reimplement"
+rule. So is `/vwf:readme`, for the same reason and now within one plugin: the
+absorption moved the skill, not the delegation, so flipping it to `user` would
+still break setup silently. `cicd:workflow` stays `user`: nothing delegates to
+it — vwf's two mentions of it are prose recommending it to the user, which the
+rename from `github-actions:workflow` did not change.
 
 **How each target spells it** (all verified against a real install or vendor
 source — do not infer these):
@@ -963,16 +972,16 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `markdown`, `typescript`, `effect`, `flutter`,
-`mempalace`, `design-tools`, `context7`, `mise`, `cicd`, `cloudflare`, `gcp`,
-`andrej-karpathy-skills` (external, opt-in). (The statusline is not a plugin —
-install it via `pnpx @askviraj/ai-plugins …`; see The installer & statusline
-CLI.)
+Available plugin names: `vwf`, `typescript`, `effect`, `flutter`, `mempalace`,
+`design-tools`, `mise`, `cicd`, `cloudflare`, `gcp`, `andrej-karpathy-skills`
+(external). (The statusline is not a plugin — install it via
+`pnpx @askviraj/ai-plugins …`; see The installer & statusline CLI.)
 
-Installing `vwf` pulls in its dependencies (`context7`, `markdown`, `mempalace`,
-`mise`) automatically from the same `virajp-plugins` marketplace — no other
-marketplace needs to be registered. `cicd` is **not** among them; install it by
-name when you want pipelines generated. See the Dependencies section above.
+Installing `vwf` pulls in its dependencies (`mempalace`,
+`andrej-karpathy-skills`, `mise`) automatically from the same `virajp-plugins`
+marketplace — no other marketplace needs to be registered. `cicd` is **not**
+among them; install it by name when you want pipelines generated. See the
+Dependencies section above.
 
 For **OpenCode** there is no marketplace: install via the CLI's
 `--platform opencode` target, which copies each plugin's rendered `opencode/`
