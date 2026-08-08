@@ -104,9 +104,9 @@ A project carries exactly one **`role`**. Seven tokens:
 | `site`      | Web UI that calls someone else's API                     | `page`             | cloud     |
 | `fullstack` | Web UI **and** its own API, one deployable               | `page`             | cloud     |
 | `frontend`  | Client-side app (mobile / tablet / desktop / auto / cli) | `entity`           | device    |
-| `infra`     | Infrastructure-as-code (Pulumi, Terraform, …)            | `module`           | n/a       |
+| `iac`       | Infrastructure-as-code (Pulumi, Terraform, …)            | `module`           | n/a       |
 
-`service`, `worker`, `packages`, `site`, `fullstack` and `infra` are
+`service`, `worker`, `packages`, `site`, `fullstack` and `iac` are
 cloud-hosted or cloud-targeting; `frontend` runs on the client and ships through
 whatever distribution channel the project uses.
 
@@ -121,9 +121,13 @@ plus the `operator-rbac` capability — one deployable serving both an operator
 API and its UI. The capability, not a role name, is what marks the admin
 surface, and it remains the **sole** holder of admin routes.
 
-**`infra` is registered but exempt from blueprint coverage** — it carries no
+**`iac` is registered but exempt from blueprint coverage** — it carries no
 flows, screens or API contracts, and the coverage stamp ignores it. Record it so
-`plan`, `doctor` and `execute` can see it.
+`plan`, `doctor` and `execute` can see it. Its `path` is whatever the
+orchestrator elicited and passes you: an `iac` project lives in **its own repo**
+(`<%= it.root %>/assets/topologies/`), so its path routinely points outside
+the product tree. Write what you are given — never rewrite it to a directory
+under the product root, and never invent one.
 
 **Synonyms** are recognized and normalized, never stored: `api` → `service`,
 `web` → `site`, `app` → `frontend`, `library` → `packages`. Write the canonical

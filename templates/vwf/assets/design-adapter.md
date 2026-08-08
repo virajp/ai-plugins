@@ -50,9 +50,10 @@ The value is a **tool token** the adapter recognises — `claude-design`,
 reference file to the `design-tools` plugin; it never means a config value that
 has to resolve to an installed plugin.
 
-> **Legacy fallback.** A product-wide `design.tool: <token>` (the pre-per-project
-> shape) is still honored for every project, with a nudge to run
-> `<%= it.cmd("vwf:setup") %>` for the config migration.
+A product-wide `design.tool` is the pre-`config_format`-13 shape and is **not**
+read: it is drift `<%= it.cmd("vwf:setup") %>`'s `12 → 13` migration copies down onto each UI
+project. An adapter that silently honored it would make the migration optional,
+and the config would keep two answers to one question.
 
 ### Both adapter skills MUST be `invocation: both`
 

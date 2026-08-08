@@ -1,5 +1,5 @@
 ---
-role: infra
+role: iac
 name: TypeScript · Pulumi
 languages: [ typescript ]
 optional_languages: []
@@ -7,16 +7,21 @@ frameworks: [ pulumi ]
 dependencies: [ vitest ]
 ---
 
-# Infra — TypeScript · Pulumi
+# IaC — TypeScript · Pulumi
 
-An `infra` project provisions the product's infrastructure as code with
+An `iac` project provisions the product's infrastructure as code with
 [Pulumi](https://pulumi.com), in the same language as the rest of a TypeScript
 workspace — so the type system, formatter, linter and test runner are the ones
 the team already uses.
 
-**`infra` is exempt from blueprint coverage.** It carries no flows, screens or
+**`iac` is exempt from blueprint coverage.** It carries no flows, screens or
 API contracts, and the coverage stamp ignores it. It is registered so `plan`,
 `doctor` and `execute` can see it and change it as part of a slice.
+
+**An `iac` project lives in its own repo** — independent, or a submodule of the
+product parent. vwf enforces this (`<%= it.cmd("vwf:doctor") %>` raises a violation as
+blocking); the reasoning is in the vwf plugin's `assets/topologies/`. So this
+template scaffolds a **repo**, not a directory in someone else's.
 
 ## Stack
 
@@ -44,6 +49,6 @@ API contracts, and the coverage stamp ignores it. It is registered so `plan`,
 ## Change discipline
 
 Infrastructure changes are irreversible far more often than application changes,
-so an `infra` step in a plan states its **blast radius** and whether the apply
+so an `iac` step in a plan states its **blast radius** and whether the apply
 is reversible. `<%= it.cmd("vwf:execute") %>` treats an irreversible infrastructure apply as a
 halt for human confirmation, like any other irreversible decision.
