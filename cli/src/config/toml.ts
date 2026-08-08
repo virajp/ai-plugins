@@ -1,5 +1,9 @@
 /**
- * Edits to TOML files — Codex's `~/.codex/config.toml`.
+ * Edits to TOML files, for any target whose config is TOML.
+ *
+ * **No adapter uses it today** — the one that did has been dropped. It stays
+ * beside the JSON and JSONC editors as the third config format an adapter may
+ * meet.
  *
  * **This is not a format-preserving parser, and cannot be one.** `smol-toml`
  * parses to plain data and stringifies from it; a round-trip drops comments and

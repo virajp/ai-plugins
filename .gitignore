@@ -36,9 +36,9 @@ cli/dist/
 *.tsbuildinfo
 
 # Build output: tsup bundles cli/ into bin/, and bin/ is what npm publishes.
-# Not committed — unlike the rendered trees at the repo root (claude/, codex/,
-# cursor/, ohmypi/, opencode/), which are meant to be diffed in review. A bundle
-# diff is noise, and `i:build` regenerates it before every publish.
+# Not committed — unlike the rendered trees at the repo root (claude/, cursor/,
+# ohmypi/, opencode/), which are meant to be diffed in review. A bundle diff is
+# noise, and `i:build` regenerates it before every publish.
 bin/
 
 # Per-platform binaries and their archives, assembled by `i:binaries`. Build

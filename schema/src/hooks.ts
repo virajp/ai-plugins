@@ -9,7 +9,6 @@ import { z } from "zod";
  * | target   | mechanism                          | can rewrite? |
  * |----------|------------------------------------|--------------|
  * | claude   | `hooks.json`, `updatedInput`       | yes          |
- * | codex    | `hooks/hooks.json`, `updatedInput` | yes          |
  * | opencode | JS plugin, mutable `output.args`   | yes          |
  * | cursor   | `hooks.json`, allow/deny/ask       | **no**       |
  * | ohmypi   | TS extension, `{block, reason}`    | **no**       |

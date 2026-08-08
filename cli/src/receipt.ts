@@ -54,10 +54,10 @@ export type Entry =
    * A command we ran, and the command that undoes it.
    *
    * The marketplace targets install by driving their own CLI, which owns
-   * bookkeeping this tool has no business editing — Codex's cache tree,
-   * Oh-My-Pi's `node_modules` and lockfile. Undoing those by deleting the files
-   * we can see would leave the tool's own records claiming an install that is
-   * no longer there, so the CLI has to unmake what it made.
+   * bookkeeping this tool has no business editing — Oh-My-Pi's `node_modules`
+   * and lockfile. Undoing those by deleting the files we can see would leave
+   * the tool's own records claiming an install that is no longer there, so the
+   * CLI has to unmake what it made.
    *
    * Recorded only when the command actually changed something: re-registering
    * an already-registered marketplace is a no-op whose "undo" would remove one

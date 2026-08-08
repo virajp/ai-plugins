@@ -43,7 +43,6 @@ export const TargetId = z.enum([
   "opencode",
   "cursor",
   "ohmypi",
-  "codex",
 ]);
 export type TargetId = z.infer<typeof TargetId>;
 
@@ -53,7 +52,6 @@ export type TargetId = z.infer<typeof TargetId>;
  * - opencode: anomalyco/opencode `packages/core/src/v1/config/*`, `plugin/src/index.ts`
  * - cursor:   cursor.com/docs {skills,subagents,hooks,mcp,plugins}; LSP absent (forum #156751)
  * - ohmypi:   can1357/oh-my-pi `docs/{skills,hooks,mcp-config,lsp-config,marketplace}.md`
- * - codex:    openai/codex rust-v0.146.1 `codex-rs/hooks/**`, `ext/skills/**`; LSP absent (#8745)
  */
 export const CAPABILITIES: Record<TargetId, Capabilities> = {
   claude: {
@@ -126,25 +124,6 @@ export const CAPABILITIES: Record<TargetId, Capabilities> = {
     mcpStdio: true,
     mcpHttp: true,
     lsp: true,
-    marketplace: true,
-    pluginRootVariable: false,
-  },
-  codex: {
-    modelInvokedSkills: true,
-    pathScopedSkills: "no",
-    // `openai.yaml` → `policy.allow_implicit_invocation: false`.
-    userOnlySkills: true,
-    // `~/.codex/prompts` is user-scope-only and deprecated; skills replace it.
-    commandArguments: false,
-    subagents: true,
-    // The plugin manifest has no `agents` key — they drop as loose TOML.
-    subagentsInBundle: false,
-    agentToolAllowlist: "sandbox-only",
-    hookGate: true,
-    hookRewrite: true,
-    mcpStdio: true,
-    mcpHttp: true,
-    lsp: false,
     marketplace: true,
     pluginRootVariable: false,
   },

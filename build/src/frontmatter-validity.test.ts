@@ -9,7 +9,6 @@ import { parse as parseYaml } from "yaml";
 import { readWorkspace } from "./source.ts";
 import type { Target } from "./target.ts";
 import { claude } from "./targets/claude.ts";
-import { codex } from "./targets/codex.ts";
 import { cursor } from "./targets/cursor.ts";
 import { ohmypi } from "./targets/ohmypi.ts";
 import { opencode } from "./targets/opencode.ts";
@@ -26,8 +25,8 @@ const workspace = readWorkspace(join(repoRoot, "templates"));
  * A colon-space inside a multi-line plain scalar makes the document invalid
  * YAML, and the failure is silent in exactly the way that matters: Claude's
  * parser accepts it, so byte-parity stayed clean and every structural
- * assertion passed, while Codex's strict parser dropped the whole skill and
- * `/vwf:setup` simply did not exist there.
+ * assertion passed, while a target running a strict parser dropped the whole
+ * skill and `/vwf:setup` simply did not exist there.
  *
  * The renderers re-emit frontmatter verbatim as ordered (key, raw) pairs — by
  * design, to preserve key order and fold widths — so a malformed scalar is
@@ -39,7 +38,6 @@ const TARGETS: readonly (readonly [string, Target])[] = [
   ["opencode", opencode],
   ["cursor", cursor],
   ["ohmypi", ohmypi],
-  ["codex", codex],
 ];
 
 function frontmatterOf(contents: string): string | null {

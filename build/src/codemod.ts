@@ -226,8 +226,8 @@ interface LspJson {
 /**
  * OpenCode keys LSP config by its own built-in server ids, so the mapping the
  * installer holds as `LSP_ID_MAP` moves into the manifest where the server is
- * declared. Verified against `codex-rs`-independent OpenCode source: the ids
- * `typescript`, `dart`, `kotlin-ls` and `sourcekit-lsp` all exist verbatim.
+ * declared. Verified against OpenCode's own source: the ids `typescript`,
+ * `dart`, `kotlin-ls` and `sourcekit-lsp` all exist verbatim.
  */
 const OPENCODE_LSP_IDS: Record<string, string> = {
   "typescript-lsp": "typescript",

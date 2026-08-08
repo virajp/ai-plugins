@@ -1,7 +1,7 @@
 /**
  * Oh-My-Pi.
  *
- * Like Codex, `omp` owns its plugin state — an npm-shaped tree under
+ * `omp` owns its plugin state — an npm-shaped tree under
  * `<root>/.omp/plugins/` with a `package.json`, a lockfile and
  * `installed_plugins.json` — so this adapter drives the CLI rather than writing
  * any of it. Its marketplace takes a local path, so an install reads the

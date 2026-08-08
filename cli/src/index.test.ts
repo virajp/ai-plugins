@@ -72,7 +72,7 @@ describe("wantsStatusline", () => {
 
 describe("selectAdapters", () => {
   it("defaults to every tool actually present", () => {
-    const adapters = [fake("claude", true), fake("codex", false)];
+    const adapters = [fake("claude", true), fake("cursor", false)];
 
     expect(selectAdapters([], context, adapters).map(a => a.id))
       .toEqual(["claude"]);
@@ -80,10 +80,10 @@ describe("selectAdapters", () => {
 
   it("takes named platforms regardless of detection", () => {
     // Pairs with the executor's `force`: naming a target is a deliberate act.
-    const adapters = [fake("claude", true), fake("codex", false)];
+    const adapters = [fake("claude", true), fake("cursor", false)];
 
-    expect(selectAdapters(["codex"], context, adapters).map(a => a.id))
-      .toEqual(["codex"]);
+    expect(selectAdapters(["cursor"], context, adapters).map(a => a.id))
+      .toEqual(["cursor"]);
   });
 
   it("rejects an unknown platform by name", () => {
@@ -94,7 +94,6 @@ describe("selectAdapters", () => {
   it("ships every target", () => {
     expect([...ADAPTERS].map(a => a.id).sort()).toEqual([
       "claude",
-      "codex",
       "cursor",
       "ohmypi",
       "opencode",
@@ -107,7 +106,7 @@ describe("buildJobs", () => {
     // Claude's CLI installs its own; expanding here would record undos for
     // plugins it manages.
     const jobs = buildJobs(
-      [fake("claude", true), fake("codex", true)],
+      [fake("claude", true), fake("ohmypi", true)],
       { user: ["vwf"] },
       repoRoot,
       () => {},
@@ -119,7 +118,7 @@ describe("buildJobs", () => {
 
   it("skips url-sourced plugins only for the copy-based target", () => {
     const jobs = buildJobs(
-      [fake("opencode", true), fake("codex", true)],
+      [fake("opencode", true), fake("ohmypi", true)],
       { user: ["mempalace"] },
       repoRoot,
       () => {},

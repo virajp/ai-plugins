@@ -9,7 +9,6 @@ ignores:
   # Rendered output. Generated from templates/ and committed; linting it would
   # report every finding twice and, worse, invite fixes in the wrong tree.
   - "claude/**"
-  - "codex/**"
   - "cursor/**"
   - "ohmypi/**"
   - "opencode/**"

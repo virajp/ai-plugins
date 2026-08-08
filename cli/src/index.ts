@@ -38,7 +38,6 @@ import {
 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { claude } from "./adapters/claude.ts";
-import { codex } from "./adapters/codex.ts";
 import { cursor } from "./adapters/cursor.ts";
 import { ohmypi } from "./adapters/ohmypi.ts";
 import { opencode } from "./adapters/opencode.ts";
@@ -87,7 +86,6 @@ const PACKAGE_NAME = "@askviraj/ai-plugins";
 
 export const ADAPTERS: readonly Adapter[] = [
   claude,
-  codex,
   cursor,
   ohmypi,
   opencode,
@@ -213,7 +211,7 @@ const main = defineCommand({
     platform: {
       type: "string",
       description:
-        "Target an agent: claude, codex, cursor, ohmypi, opencode (repeatable). Defaults to every one installed",
+        "Target an agent: claude, cursor, ohmypi, opencode (repeatable). Defaults to every one installed",
     },
     statusline: {
       type: "boolean",

@@ -86,7 +86,6 @@
     ".config/mise.*.lock": true,
     ".config/mise.lock": true,
     "claude/": true,
-    "codex/": true,
     "cursor/": true,
     "ohmypi/": true,
     "opencode/": true,
@@ -132,7 +131,6 @@
   "outline.showKeys": true,
   "search.exclude": {
     "claude/": true,
-    "codex/": true,
     "cursor/": true,
     "ohmypi/": true,
     "opencode/": true,

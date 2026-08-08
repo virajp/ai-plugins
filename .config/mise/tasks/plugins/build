@@ -3,9 +3,9 @@
 #MISE dir="{{ config_root }}"
 
 # Renders the authored, target-agnostic templates/ tree into the committed
-# <repo>/<target>/ trees — one per agent (claude, opencode, cursor, ohmypi,
-# codex). Each target directory is removed first, so a deleted skill disappears
-# from the output rather than lingering: the render must be a pure function of
+# <repo>/<target>/ trees — one per agent (claude, opencode, cursor, ohmypi).
+# Each target directory is removed first, so a deleted skill disappears from
+# the output rather than lingering: the render must be a pure function of
 # templates/, or `git status` stops meaning anything.
 #
 # The output is committed on purpose. What users install is then inspectable and

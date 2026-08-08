@@ -104,7 +104,7 @@ describe("jsonc", () => {
 });
 
 describe("toml", () => {
-  const source = `# Codex config, hand-maintained.
+  const source = `# Agent config, hand-maintained.
 model = "gpt-5.2"
 
 [tui]
@@ -118,7 +118,7 @@ theme = "dark"
       args: ["dlx", "@upstash/context7-mcp"],
     });
 
-    expect(out).toContain("# Codex config, hand-maintained.");
+    expect(out).toContain("# Agent config, hand-maintained.");
     expect(out).toContain("# A comment inside a foreign table.");
     expect(out).toContain("theme = \"dark\"");
 

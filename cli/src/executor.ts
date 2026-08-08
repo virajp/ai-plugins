@@ -6,7 +6,7 @@
  * and this keeps the layer above from growing a second path of its own.
  *
  * **A failing adapter does not abort the others.** Targets are independent —
- * Codex failing says nothing about OpenCode — and stopping halfway would leave
+ * Cursor failing says nothing about OpenCode — and stopping halfway would leave
  * some installed, some not, with no receipt for the ones that succeeded. Each
  * target's outcome is collected and reported, and the caller exits non-zero if
  * any failed.
@@ -79,7 +79,7 @@ export function execute(
     }
     if (options.force !== true && !adapter.detect(options.context)) {
       // Not an error: `--platform` defaults to every tool present, so a machine
-      // without Codex should say so and move on, not fail the run.
+      // without Cursor should say so and move on, not fail the run.
       outcomes.push({
         target: adapter.id,
         actions: [],

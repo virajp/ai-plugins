@@ -53,8 +53,8 @@ describe("setupGraphify", () => {
   });
 
   it("does nothing for targets graphify does not support", () => {
-    // Codex, Cursor and Oh-My-Pi are not graphify platforms.
-    setupGraphify(context, ["codex", "cursor", "ohmypi"], present);
+    // Cursor and Oh-My-Pi are not graphify platforms.
+    setupGraphify(context, ["cursor", "ohmypi"], present);
 
     expect(ran).toEqual([]);
   });
