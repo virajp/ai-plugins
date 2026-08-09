@@ -1,6 +1,7 @@
 {
-  "enabledPlugins": {},
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "effort": "high",
+  "enabledPlugins": {},
   "model": "opus[1m]",
-  "effort": "high"
+  "respectGitignore": false
 }
