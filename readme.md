@@ -172,11 +172,12 @@ pre-commit. A `vwf` dependency, because `/vwf:setup` orchestrates its scaffold
 skill. `--user devtools`
 
 **[design-tools](./docs/design-tools.md)** — the design adapter vwf imports
-screens and design systems through. Two skills resolve the design tool **per
-project** — `claude-design`, `lovable` or `stitch` — so a product can design its
-website in one and its app in another. Ships the Claude Design MCP server.
-Deliberately not a vwf dependency: an adapter is chosen, not inherited.
-`--user design-tools`
+screens, design systems and design review conversations through. Three skills
+resolve the design tool **per project** — `claude-design`, `lovable` or `stitch`
+— so a product can design its website in one and its app in another. Only some
+tools have a review conversation at all; the ones that do not say so plainly
+rather than returning empty. Ships the Claude Design MCP server. Deliberately
+not a vwf dependency: an adapter is chosen, not inherited. `--user design-tools`
 
 **[cicd](./docs/cicd.md)** — one `/cicd:workflow` skill that resolves the repo's
 CI system from config and generates its delivery pipeline: every tool installed
