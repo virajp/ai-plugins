@@ -1,5 +1,5 @@
 name: orchestration
-version: 0.1.0
+version: 0.1.1
 description: "Async orchestration capability plugin for vwf — the neutral
   contract every durable-work backend must satisfy (at-least-once delivery and
   the idempotency it forces, retry and back-off discipline, the poison-message

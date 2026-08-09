@@ -58,8 +58,10 @@ decision rather than a fault.
 ## Rules
 
 - **This list is exhaustive.** If a composition is not here, the `devtools`
-  plugin does not offer it; vwf falls back to `template: custom` and records
-  what the user describes. Do not fill the gap from general container knowledge.
+  plugin does not offer it. There is no `custom` fallback — vwf retired it in
+  `config_format` 14 and halts instead, naming the two ways forward (install a
+  plugin that has it, or write one). Do not fill the gap from general container
+  knowledge, and never invent an entry to spare the user that halt.
 - **The project and repo axes are not ours to answer here.** Packaging does not
   decide the language, framework or package manager a project uses, so a
   `devtools` menu entry never carries a `role`. The repo-level tooling this

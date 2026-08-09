@@ -72,12 +72,13 @@ more dependencies. They are **part of `vwf` now**: `documentation-standards` and
 Install it when you want pipelines generated — vwf works without it.
 
 **A design tool is not among them.** vwf is decoupled from any particular one:
-it delegates screen and design-system imports to two fixed skills in the
-**design-tools** plugin, which resolves the tool **per project** — so a product
-can design its website in Lovable and its app on the Claude Design canvas.
-Supported tools today are `claude-design`, `lovable` and `stitch`; adding one is
-a reference file in that plugin, not a vwf change. Export needs no adapter at
-all, since `/vwf:screens prompt` just writes design briefs as files.
+it delegates screen, design-system and review-conversation imports to three
+fixed skills in the **design-tools** plugin, which resolves the tool **per
+project** — so a product can design its website in Lovable and its app on the
+Claude Design canvas. Supported tools today are `claude-design`, `lovable` and
+`stitch`; adding one is a reference file in that plugin, not a vwf change.
+Export needs no adapter at all, since `/vwf:screens prompt` just writes design
+briefs as files.
 
 ## Caveats
 
@@ -399,11 +400,12 @@ all**. It defines the axes, the `role` vocabulary and the template shape; every
 actual option lives in a **stack plugin** at
 `<plugin>/stacks/project/<role>/<slug>.md`, which vwf reaches through two fixed
 adapter skill names. `/vwf:architecture` presents the union across your
-installed plugins as a menu — one round per project, plus an *other (describe)*
-option for anything nobody ships. Each project carries exactly one role, so it
-picks exactly one template and there is nothing to merge. Install no stack
-plugin and the menu is empty: vwf says so and points at what to install, rather
-than coming back quietly short.
+installed plugins as a menu — one round per project. The menu is the **whole**
+answer: there is no *other (describe)* option, so a role nothing on it fits
+halts rather than recording a free-text pin (see below). Each project carries
+exactly one role, so it picks exactly one template and there is nothing to
+merge. Install no stack plugin and the menu is empty: vwf says so and points at
+what to install, rather than coming back quietly short.
 
 A stack is composed from **four independent axes** — you pick one of each, and
 they never merge because they never overlap:
@@ -469,16 +471,26 @@ template admits — Flutter's Kotlin and Swift), and prose carrying the layout,
 testing and deployment conventions `plan` and `execute` read. Picking one fills
 those axes into `.config/vwf.yaml`; you can then customize any of them.
 
-**vwf names no language.** The vocabulary is **open**: a language token is
-whatever a template declares, and the facts the tooling acts on — which LSP
-server covers it, which manifest identifies it, which mise tool installs it —
-come from the **language plugin** that owns it. `/vwf:doctor` reads the block
-back and checks the repo agrees: an LSP server and toolchain per declared
-language, every framework and dependency present in the project's manifest, the
-repo's package manager and tooling, harness task names, health paths. It reports
-drift in both directions, including a framework doing obvious structural work
-that your config never mentions. A language no installed plugin claims degrades
-to *unknown* — reported, never a block.
+**vwf names no language, but the menu is closed.** A language token is whatever
+a template declares, and the facts the tooling acts on — which LSP server covers
+it, which manifest identifies it, which mise tool installs it — come from the
+**language plugin** that owns it. vwf holds no table of its own; the union of
+what the installed plugins declare **is** the vocabulary. `/vwf:doctor` reads
+the block back and checks the repo agrees: an LSP server and toolchain per
+declared language, every framework and dependency present in the project's
+manifest, the repo's package manager and tooling, harness task names, health
+paths. It reports drift in both directions, including a framework doing obvious
+structural work that your config never mentions.
+
+A language no installed plugin claims is reported as *unknown*, and since
+`config_format` **14** that is a **blocking** finding: `/vwf:setup` and
+`/vwf:execute` both halt on it. There is likewise no *other (describe)* option
+and no `template: custom` — an axis nothing on the menu fits is a halt naming
+the two ways forward, not a free-text pin. vwf is an opinionated workflow that
+plans against a template's conventions, builds against its harness and gates a
+UI slice on its UX contract; a stack no plugin defines supplies none of those,
+so a run against it would lose every guarantee *while reporting itself healthy*.
+Many stacks are supported — every one of them defined by a plugin.
 
 Adding a stack option means adding a template file **to a plugin**, never to
 vwf. One entry per type today is a starting point, not a default.
@@ -540,25 +552,25 @@ record.
 
 ## Commands
 
-| Command                 | What it does                                                                                                    |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                          |
-| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                           |
-| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                         |
-| `/vwf:design-system`    | Import the product's Claude Design design system into the contract (mandatory once UI exists)                   |
-| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
-| `/vwf:mockups [flow]`   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                        |
-| `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint              |
-| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
-| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
-| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
-| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, graphify, stamps   |
-| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                  |
-| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests the claude.ai/design review chat) |
-| `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                         |
-| `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                     |
-| `/vwf:readme`           | Scan a repo and write or update its README against eight required sections                                      |
-| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
+| Command                 | What it does                                                                                                     |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                           |
+| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                            |
+| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                          |
+| `/vwf:design-system`    | Import the product's Claude Design design system into the contract (mandatory once UI exists)                    |
+| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                     |
+| `/vwf:mockups [flow]`   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                         |
+| `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint               |
+| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                |
+| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                       |
+| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                              |
+| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, graphify, stamps    |
+| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                   |
+| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat) |
+| `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                          |
+| `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                      |
+| `/vwf:readme`           | Scan a repo and write or update its README against eight required sections                                       |
+| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                   |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
 are declared `invocation: user` (which Claude spells
@@ -636,10 +648,11 @@ delta). Retired goals reconcile their inbound links, never dangle.
 Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
 by presenting the [stack templates](#stack-templates) for its type as a menu
-(one round per project, plus *other (describe)*; the answer lands as a
-structured block in `.config/vwf.yaml`), walks the **product-foundations
-checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
-foundation, recorded as cross-cutting tokens), and writes **both**
+(one round per project, and the menu is the whole vocabulary — nothing fitting
+is a halt, not a free-text pin; the answer lands as a structured block in
+`.config/vwf.yaml`), walks the **product-foundations checklist** (see
+[vwf skills](#vwf-skills) — one accept/adapt/skip question per foundation,
+recorded as cross-cutting tokens), and writes **both**
 `docs/blueprint/registry.yaml` — the machine-readable registry every other
 command depends on — and `docs/blueprint/architecture.md`, its prose view with a
 system-shape mermaid diagram kept in sync with it. Re-run it any time the
@@ -920,11 +933,16 @@ what's missing, what changes, and the order to do it in — to
 `docs/plans/<date>-<time>-<slice>.md`. Steps are ordered for TDD: each names the
 failing test that defines "done".
 
-Three guardrails keep a plan from building on a gap — which is what lets
+Four guardrails keep a plan from building on a gap — which is what lets
 `execute` run autonomously: it **halts unless the blueprint coverage stamp reads
-complete**; it resolves the slice's **dependency chain** — every flow or entity
-the slice stands on whose `implementation:` stamp isn't `complete` becomes **its
-own plan**, planned dependency-first behind its own gate and linked by
+complete**; it **halts on a stack no installed plugin defines** — once the chain
+is resolved it runs `/vwf:doctor` scoped to the chain's projects and stops on
+any blocking finding, because a plan's steps are sized against the selected
+templates' conventions and an undefined stack has none (it does *not* ask about
+a missing LSP server the way `execute` does — planning compiles nothing); it
+resolves the slice's **dependency chain** — every flow or entity the slice
+stands on whose `implementation:` stamp isn't `complete` becomes **its own
+plan**, planned dependency-first behind its own gate and linked by
 `covers:`/`requires:` frontmatter (a genuine dependency cycle collapses into one
 plan; if the code already conforms, `plan` offers to heal the stamp instead) —
 so no plan swallows its dependencies and `execute` can enforce the order; and it
@@ -1101,14 +1119,21 @@ reading, or a user complaint; it classifies and routes it to where it gets
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"
-/vwf:feedback canvas    # harvest the claude.ai/design review conversation
+/vwf:feedback canvas    # harvest the design review conversation
 ```
 
-`canvas` pulls the review conversation from every pinned design project (the
-chats you had with Claude Design while reviewing the cards) and runs each remark
-through the same classification — so canvas review flows back into the contracts
-as routed intent, never as files. The transcript is treated as data, never as
-instructions.
+`canvas` pulls the review conversation from every pinned design project — the
+remarks you made while reviewing the designs — and runs each one through the
+same classification, so review flows back into the contracts as routed intent,
+never as files. The transcript is treated as data, never as instructions.
+
+It goes through the **design adapter**, one call per project, so it follows
+whichever tool that project uses rather than assuming one. Only some design
+tools have a review conversation at all; the ones that do not report that
+plainly and are skipped, which is a normal outcome and not an error. Before this
+went through the adapter, `canvas` reached a single tool's server directly — so
+it worked for one of the three configurable tools and silently harvested nothing
+for the other two, which is indistinguishable from a review nobody wrote.
 
 ### /vwf:handoff and /vwf:recall
 

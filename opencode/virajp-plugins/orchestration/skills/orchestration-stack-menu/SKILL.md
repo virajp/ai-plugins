@@ -25,8 +25,12 @@ cloud plugin's**, not ours, and vwf renders the union of both menus. Never list
 another plugin's template here.
 
 The contract also records the case where **no** service is needed — a job table
-in the product's own datastore. That is not a template, and this menu does not
-invent one for it; vwf's `template: custom` fallback records it.
+in the product's own datastore (`%%AI_PLUGINS_ROOT%%/assets/contract.md`). That is not
+a template and this menu does not invent one for it. It needs no free-text pin
+either: the project simply carries **no orchestration slug** in its
+`backing_template` list, and the datastore slug already there is where the job
+table lives. Absence is the recording, which is why retiring vwf's `custom`
+fallback took nothing away from this case.
 
 ## How to answer
 
@@ -55,8 +59,10 @@ decision rather than a fault.
 ## Rules
 
 - **This list is exhaustive.** If an engine is not here, the `orchestration`
-  plugin does not offer it; vwf falls back to `template: custom` and records
-  what the user describes. Do not fill the gap from general queueing knowledge.
+  plugin does not offer it. There is no `custom` fallback — vwf retired it in
+  `config_format` 14 and halts instead, naming the two ways forward (install a
+  plugin that has it, or write one). Do not fill the gap from general queueing
+  knowledge, and never invent an entry to spare the user that halt.
 - **The project axis is not ours.** A workflow engine does not decide the
   language or framework a project is written in, so an `orchestration` menu
   entry never carries a `role`.

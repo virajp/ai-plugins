@@ -94,7 +94,9 @@ supplies it and vwf asks that plugin separately:
 
 The menu skill never lists another plugin's template, and never fills a gap from
 general database knowledge: if a provider is not in the list, this plugin does
-not offer it and vwf falls back to `template: custom`.
+not offer it. Since `config_format` 14 there is no `template: custom` fallback —
+vwf halts and names the two ways forward: install a plugin that ships it, or
+write one.
 
 One rule decides the cross-project case, and it lives in vwf's
 `capability-vocabulary.md` rather than here: **consumers follow the publisher.**

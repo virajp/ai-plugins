@@ -53,8 +53,10 @@ decision rather than a fault.
 ## Rules
 
 - **This list is exhaustive.** If a provider is not here, the `datastore` plugin
-  does not offer it; vwf falls back to `template: custom` and records what the
-  user describes. Do not fill the gap from general database knowledge.
+  does not offer it. There is no `custom` fallback — vwf retired it in
+  `config_format` 14 and halts instead, naming the two ways forward (install a
+  plugin that has it, or write one). Do not fill the gap from general database
+  knowledge, and never invent an entry to spare the user that halt.
 - **The project axis is not ours.** A datastore does not decide the language or
   framework a project is written in, so a `datastore` menu entry never carries a
   `role`.

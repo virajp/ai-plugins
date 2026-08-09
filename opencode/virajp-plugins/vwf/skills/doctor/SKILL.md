@@ -47,13 +47,18 @@ halt on a blocking finding they were never told about.
   user runs it. This matches the installer CLI's own rule and keeps doctor safe
   to run anywhere — and it is why §8 never triggers a graph build, which is a
   long LLM-driven job reserved for `/vwf-setup`.
-- **Unavailable ≠ missing.** A language with no LSP shipped in this marketplace
-  is reported as *unavailable* with no suggested command. Only a language that
-  *has* a plugin and isn't installed is a finding.
+- **Unavailable ≠ missing ≠ unknown.** A language with no LSP shipped in this
+  marketplace is reported as *unavailable* with no suggested command; only a
+  language that *has* a plugin and isn't installed is a *missing* finding.
+  Both presuppose an installed plugin **declares** the language. One that no
+  plugin declares at all is *unknown*, and unknown is **blocking** — vwf's stack
+  menu is closed to what the installed plugins define
+  (`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`).
 - **Never halt.** Doctor always finishes and reports, even when everything is
   broken — a mandate is expressed as a **blocking finding**, never as doctor
-  stopping early. Callers decide what a finding means: `setup` and `execute`
-  both halt on `blocking`, `execute` additionally gates on the LSP check.
+  stopping early. Callers decide what a finding means: `setup`, `plan` and
+  `execute` all halt on `blocking`, and `execute` additionally gates on the LSP
+  check — `plan` does not, since planning compiles nothing.
 
 ---
 
@@ -91,18 +96,21 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, framework/dependency drift per manifest, the four stack axes, the `iac` own-repo rule, `mise`, `repo.stack`. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the four stack axes, the `iac` own-repo rule, `mise`, `repo.stack`. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` wing/room contract and the markdown mirror |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, the workspace-root graph, the refresh hook, staleness. **Blocking findings live here** |
 
 ### 9. Report & persist
 
 One table, findings first, grouped by kind — **blocking** (something *mandatory*
-is absent or misplaced: mise, the graphify CLI, a workspace-root graph, an `iac`
-project inside another repo; callers must halt),
+is absent or misplaced, or the stack is one no installed plugin defines: mise,
+the graphify CLI, a workspace-root graph, an `iac` project inside another repo,
+an **unknown** language, a `custom` template pin; callers must halt),
 **drift** (config and repo disagree), **missing** (something declared has no
 install), **unavailable** (nothing shipped here to install), **unknown**
-(outside the vocabulary), **degraded** (something optional is absent and a
+(no installed plugin declares it — always blocking, listed separately so the
+remedy reads as *install or write the plugin*, never *install this one*),
+**degraded** (something optional is absent and a
 fallback is carrying the work). Mark anything the §1 recall already carried as
 **known**, so a repeat run reads as a diff rather than a re-accusation. State
 the count of checks that passed rather than listing them.
@@ -110,7 +118,11 @@ the count of checks that passed rather than listing them.
 Close with the remedies, each as a runnable line, and offer to apply only the
 ones that are pure config edits (a stale `stack` entry, a harness task rename, a
 missing room in a `mempalace.yaml`). Anything that installs, or that changes
-code, is reported and left to the user.
+code, is reported and left to the user — as is anything needing a **choice**: a
+`custom` pin and an unknown language both look like one-line config edits and are
+not, since resolving either means picking off a menu or installing a plugin.
+Nudge `/vwf-setup` and stop there; a template doctor guessed would silently
+change what `plan` and `execute` read.
 
 **Persist.** File this run's findings to room `doctor` — one compressed line per
 finding per the memory asset's AAAK style, plus what was fixed if the user
@@ -118,7 +130,11 @@ accepted a remedy. That is what lets the next run say **known**. Skip silently
 if mempalace is unavailable.
 
 **Callers.** `/vwf-setup` step 10 runs this over the whole repo and records what
-it finds. `execute` runs it scoped to the plan's projects. **Both halt on
-any `blocking` finding** — the mandated tooling is what the pipeline is built
-on, so proceeding without it produces a run that fails later and less clearly.
-`execute` additionally gates on the LSP findings, as it always has.
+it finds. `plan` runs it scoped to its dependency chain's projects, once
+the chain is approved and before its survey. `execute` runs it scoped to
+the plan's projects. **All three halt on any `blocking` finding** — the mandated
+tooling is what the pipeline is built on, and the stack menu is what its
+conventions and harness come from, so proceeding without either produces a run
+that fails later and less clearly, or one that fails to fail at all.
+`execute` additionally gates on the LSP findings, as it always has;
+`plan` does not, since it compiles nothing.

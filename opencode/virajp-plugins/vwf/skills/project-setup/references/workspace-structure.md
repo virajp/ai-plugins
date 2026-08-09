@@ -78,10 +78,11 @@ Which plugins are asked is the product-wide `stacks:` roster in
 `.config/vwf.yaml`; which template each project picks is per project.
 
 **One entry per role is not a default.** `architecture` presents the menu
-for the project's role and the user picks, always — plus an **other (describe)**
-option that records `template: custom` and the axes they give. A stack matching
-no template is a normal answer: there is no deviation, no `enforcement` entry,
-and nothing to justify.
+for the project's role and the user picks, always. The menu is also the *whole*
+vocabulary: there is no **other (describe)** option and `template: custom` is
+retired (`config_format` 14), so a role no installed plugin ships a template for
+is a **halt** — install the plugin that has one, or write it. A pick off the menu
+needs no `enforcement` entry and nothing justified.
 
 Each template's frontmatter carries the four axes (`languages` /
 `optional_languages` / `frameworks` / `dependencies`) that land in

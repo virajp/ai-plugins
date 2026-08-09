@@ -6,7 +6,8 @@ description: Produce reviewable cycle plans as diffs for one slice of the
   slice's transitive dependency chain and plans each unimplemented dependency
   as its own plan doc first, in order; routes any blueprint gap it uncovers
   back through blueprint before writing — so no cycle builds on a gap.
-  Requires the blueprint coverage stamp to read complete.
+  Requires the blueprint coverage stamp to read complete, and halts on any
+  doctor blocking finding across the chain's projects.
 ---
 
 # plan — Cycle Plans (Diffs, Chained by Dependency)
@@ -110,6 +111,32 @@ slice, is the **chain**.
   record it under Risks / drift of every downstream plan in the chain), or
   **abort**. A chain of length 1 (no unbuilt dependencies) proceeds without
   ceremony.
+
+**Stack gate.** Once the chain is approved, run `doctor` scoped to every
+registry project the chain's elements map to, and **halt on any `blocking`
+finding** — report it with its remedy and stop. A stack no installed plugin
+defines (an **unknown** language, a `custom` template pin) is the finding this
+gate exists for: a plan's steps are sized against the selected templates'
+conventions, and when there is no template there are no conventions — the plan
+would read as ordinary while resting on nothing
+(`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`).
+
+Three things about its placement and scope, each deliberate:
+
+- **Here, not in §1.** The scope is the *chain's* projects, not the requested
+  slice's — a dependency planned into another project must be gated too, and
+  which projects those are is not known until the chain resolves.
+- **Before §3, because §3 is the expensive part.** The surveyor is the largest
+  inline read in the workflow; halting after it would spend exactly the work the
+  gate exists to avoid.
+- **Blocking only.** Unlike `execute` this gate does **not** ask about a
+  missing LSP server, and notes the rest rather than acting on it: planning
+  compiles nothing, so an absent toolchain is `execute`'s question to ask, not
+  this command's to ask twice.
+
+This is a delegation, never a second copy of the rule — the finding kinds and
+their remedies live in `doctor` alone, so closing the menu further never means
+editing this file.
 
 Then run §§3–8 **once per chain element, in order** — each element produces its
 own plan doc behind its own approval gate.

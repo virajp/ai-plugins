@@ -2,9 +2,9 @@
 
 Read this before running §3. It covers the three per-project stack checks:
 languages (LSP + toolchain), frameworks and dependencies against each manifest,
-and the repo/axis tooling. §5 is the only section here that can produce a
-**blocking** finding — a missing `mise`, or an `iac` project inside another
-repo.
+and the repo/axis tooling. **Blocking** findings live in §3 (a language no
+installed plugin claims) and §5 (a `custom` template pin, a missing `mise`, an
+`iac` project inside another repo).
 
 ## 3. Languages — LSP and toolchain
 
@@ -14,8 +14,13 @@ stack vocabulary:
 - **LSP** — the row names a plugin. Check it is active
   (`claude plugin list --scope project`, falling back to user scope). Missing →
   finding, with `/plugin` as the remedy. Row says `none` → report *no LSP
-  available in this marketplace* and move on. Token not in the table → report
-  **unknown language**, check nothing else for it.
+  available in this marketplace* and move on. **No installed plugin declares the
+  token at all** → report **unknown language** as a **blocking** finding: nothing
+  else can be checked for it, and a stack vwf has no template for is one it
+  cannot plan or build against. The remedy is two lines — install the stack
+  plugin that declares the language, or write one
+  (`<%= it.root %>/assets/stack-adapter.md`) — never a suggestion to
+  drop the token, which would only hide the project.
 - **Toolchain** — the row names a mise tool. Check it appears in the repo's mise
   config (`.config/mise*.toml`, per the mise skill's three-file split) or
   resolves on `PATH`. Missing → finding, with the `mise use` line as the remedy.
@@ -56,8 +61,11 @@ installed stack plugin actually offers: `projects.<name>.stack.template`
 (project axis), each entry of `projects.<name>.stack.backing_template`,
 `projects.<name>.stack.deploy_template`, and `repo.stack.template`. A pin naming
 a template that isn't there is **drift** — usually a template renamed under the
-user's feet, or a stack plugin that was never installed. A `custom` pin is
-checked for its axes only, never for a file. A `frontend` project's
+user's feet, or a stack plugin that was never installed. A **`custom` pin is
+`13` drift and blocking**: the value was retired in `config_format` 14, and it
+names a stack with no `conventions` for `plan` and `execute` to read and no
+`harness` block to check against — remedy `<%= it.cmd("vwf:setup") %>`, which
+walks the axis back through the menu. A `frontend` project's
 `deploy_template: n/a` is correct, not missing — unless its platform is `cli`,
 which ships to a package registry and should pin `deploy/npm-package`; an `iac`
 project's `n/a` is likewise correct, since it *is* the deploy path.

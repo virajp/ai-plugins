@@ -7,6 +7,7 @@ import {
 } from "vitest";
 import {
   check,
+  prescribes,
   resolves,
 } from "./check.ts";
 import type { CheckResult } from "./check.ts";
@@ -87,6 +88,64 @@ describe("check", () => {
           .toBeGreaterThan(0);
       }
     }
+  });
+});
+
+describe("prescription vs enumeration", () => {
+  // The distinction the tool-name guard turns on: naming ONE tool tells the
+  // reader what to use; listing the alternatives describes the domain of a
+  // config key vwf owns. Both directions are pinned, because a guard that
+  // exempts too much is indistinguishable from one that was deleted.
+
+  it("flags a tool named on its own", () => {
+    expect(prescribes("Load the claude-design MCP tool.", "claude-design"))
+      .toBe(true);
+    expect(prescribes("run it on cloud-run", "cloud-run")).toBe(true);
+  });
+
+  it("exempts a tool listed beside its alternatives", () => {
+    expect(
+      prescribes(
+        "a token — `claude-design`, `lovable`, `stitch`",
+        "claude-design",
+      ),
+    )
+      .toBe(false);
+  });
+
+  it("exempts an enumeration that wraps mid-list", () => {
+    // Every real enumeration in the corpus wraps, so a line-based rule would
+    // flag the first line of each one. This is why the window is by character.
+    expect(
+      prescribes(
+        "Which tool answers (`claude-design`,\n`lovable`, `stitch`, …) is the\nproduct's choice",
+        "claude-design",
+      ),
+    )
+      .toBe(false);
+  });
+
+  it("counts a peer that is not itself a banned token", () => {
+    // `lovable` and `stitch` are ordinary English words and cannot be banned,
+    // but their presence is still what proves a passage is a vocabulary.
+    expect(prescribes("`claude-design` or `lovable`", "claude-design"))
+      .toBe(false);
+  });
+
+  it("still flags a second, prescriptive mention elsewhere in the same file", () => {
+    // The exemption is per occurrence, not per document — otherwise one
+    // enumeration would licence every other mention in the file.
+    const body = "the tokens `claude-design`, `lovable`, `stitch`.\n"
+      + "x".repeat(400)
+      + "\nDefault it to claude-design.";
+    expect(prescribes(body, "claude-design")).toBe(true);
+  });
+
+  it("does not treat a distant token as a peer", () => {
+    // The separators matter: the guard is anchored, so a token butted straight
+    // against a letter is not a match at all.
+    const body = `claude-design ${"x ".repeat(200)} lovable`;
+    expect(prescribes(body, "claude-design")).toBe(true);
   });
 });
 

@@ -57,7 +57,7 @@
         "private-plane",
         "vwf-stack-adapter"
       ],
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "author": {
@@ -76,7 +76,7 @@
         "capability",
         "vwf-stack-adapter"
       ],
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "author": {
@@ -96,7 +96,7 @@
         "stitch",
         "vwf-design-adapter"
       ],
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "author": {
@@ -121,7 +121,7 @@
         "skills",
         "vwf-stack-adapter"
       ],
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "author": {
@@ -149,7 +149,7 @@
         "lsp",
         "vwf-stack-adapter"
       ],
-      "version": "0.8.0"
+      "version": "0.8.1"
     },
     {
       "author": {
@@ -171,7 +171,7 @@
         "emulators",
         "vwf-stack-adapter"
       ],
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "author": {
@@ -190,7 +190,7 @@
         "capability",
         "vwf-stack-adapter"
       ],
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "author": {
@@ -228,7 +228,7 @@
         "capability",
         "vwf-stack-adapter"
       ],
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "author": {
@@ -247,7 +247,7 @@
         "capability",
         "vwf-stack-adapter"
       ],
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "author": {
@@ -274,7 +274,7 @@
         "lsp",
         "vwf-stack-adapter"
       ],
-      "version": "2.0.0"
+      "version": "2.0.1"
     },
     {
       "author": {
@@ -314,7 +314,7 @@
         "tdd",
         "git-workflow"
       ],
-      "version": "14.0.0"
+      "version": "15.0.0"
     }
   ]
 }

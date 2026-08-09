@@ -17,13 +17,17 @@ axes, the design tool and the CI tool all live under `projects.<name>`, because
 a product may legitimately host its site on one cloud and its API on another,
 and design its app in one tool and its website in another. Only `repo` (per
 repo) and the canvas state under `design:` remain outside that scope. Since
+**format 14** the stack is **closed to the menu**: every axis pins a template an
+installed stack plugin ships and every language token is one such a plugin
+declares, `template: custom` is retired, and anything outside that is a blocking
+`/doctor` finding rather than a value recorded and then ignored. Since
 **blueprint-format 6** this file replaces the old stamp at
 `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 13)
+## Schema (config_format 14)
 
 ```yaml
-config_format: 13 # this file's own schema version — setup migrates it
+config_format: 14 # this file's own schema version — setup migrates it
 blueprint_format: 20 # the docs/blueprint format stamp
 
 product:
@@ -41,14 +45,14 @@ integrations: true # external integration/secret exists → environment.md requi
 
 repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in polyrepo topology the parent and each member carry their own
   stack:
-    template: repo/<slug> # a repo-axis template from a stack plugin, or `custom`
+    template: repo/<slug> # a repo-axis template an INSTALLED stack plugin ships. No `custom` — that value was retired in format 14; nothing on the menu means a halt, not a free-text pin
     package_manager: <tool> # only where the language has one; the repo template names the permitted values
     tools: [] # open, lowercase-kebab — whatever the repo template names
 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /doctor cannot check what was never recorded
-      template: project/<role>/<slug> # the PROJECT-axis template under assets/stacks/project/, or `custom`. NOT a default: /architecture presents the menu and the user picks
+      template: project/<role>/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin. NOT a default: /architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a role nothing fits halts rather than recording free text
       backing_template: [
         <slug>,
       ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` or `frontend` project usually does not)
@@ -56,7 +60,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing managers
       languages: [
         <token>,
-      ] # CLOSED vocabulary — assets/stack-vocabulary.md. At least one; drives doctor's LSP + toolchain checks
+      ] # CLOSED vocabulary — the union of what the INSTALLED stack plugins declare (assets/stack-vocabulary.md); vwf holds no table of its own. At least one; drives doctor's LSP + toolchain checks. A token no plugin declares is doctor's BLOCKING `unknown` finding, never a recorded-and-ignored value
       frameworks: [] # open, lowercase-kebab; 0..n. What the code is written against
       dependencies: [] # open, lowercase-kebab; the few that characterize the stack
       note: <one
@@ -263,8 +267,10 @@ earlier than 65/90/80), never loosen.
      language with only one manager moves to having it implied. Optionally add
      a per-project `package_manager` where a hybrid repo mixes managers.
   4. **`design.tool`** is added, naming the adapter **plugin**. Default it to
-     `claude-design` for any repo carrying a `design.design_system_id` — that is
-     the tool it was already using. The pin itself stays, now adapter-scoped.
+     **the tool that canvas pin came from** for any repo carrying a
+     `design.design_system_id` — that is the tool it was already using, and at
+     format 11 only one had a canvas to pin. The pin itself stays, now
+     adapter-scoped.
   5. **`memory`** — nothing changes in the config, but `/setup` creates
      `docs/memory/` and gitignores `handoff/`, `doctor/` and `runs/`, then moves
      a pre-19 `docs/handoffs/next.md` to `docs/memory/handoff/next.md`.
@@ -309,7 +315,7 @@ earlier than 65/90/80), never loosen.
      with no surfaces never had a design tool and must not acquire one. Then
      drop `design.tool`; the rest of the `design:` block is canvas state and
      stays exactly where it is. A repo with no `design.tool` and a
-     `design_system_id` takes `claude-design`, on the same reasoning the
+     `design_system_id` takes **the same default**, on the same reasoning the
      `11 → 12` migration used.
   4. **`cicd`** is **new** — there was no product-wide key to copy down. Detect
      it once from the repo (`.github/workflows/` → `github-actions`,
@@ -327,6 +333,39 @@ earlier than 65/90/80), never loosen.
   Bump `config_format` to `13` and `blueprint_format` to `20` together, for the
   same reason `12`/`19` shipped together.
 
+- **`13 → 14` migration** (performed by `/setup`): **the stack menu closes.**
+  vwf supports many stacks but only *defined* ones — every axis must pin a
+  template an installed stack plugin ships, and every `languages` token must be
+  one an installed plugin declares
+  (`%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`). Two things this file
+  used to accept stop being values:
+
+  1. **`template: custom` is retired**, on all four axes
+     (`projects.<name>.stack.template`, `backing_template` entries,
+     `deploy_template`, `repo.stack.template`). For each `custom` pin, present
+     that axis's menu and have the user pick. **Never map one automatically** —
+     a `custom` pin's free-text axes were never a template, so any guess silently
+     changes the `conventions` prose `plan` and `execute` read and the `harness`
+     block `/doctor` checks. When nothing on the menu fits, halt naming the
+     two ways forward: install the stack plugin that has a fitting template, or
+     write one (`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`).
+  2. **An unclaimed `languages` token becomes blocking.** It is not fixable by
+     editing this file: report which projects carry each such token, then halt
+     with the same two remedies. The expected resolution is **installing the
+     plugin**, which needs no config edit at all — the token was already correct,
+     nothing declared it.
+
+  **Bump `config_format` to `14` only once both hold.** A halted migration leaves
+  the stamp at `13`, so the drift nudge keeps firing and a re-run resumes; a `14`
+  stamped over an unresolved `custom` pin would assert a guarantee the repo does
+  not meet. `blueprint_format` stays **20** — nothing under `docs/blueprint/`
+  changes, which is exactly the case this file's stamp rule anticipates, and the
+  first config bump since `11` to ship without a paired blueprint bump.
+
+  Readers treat a `custom` pin, or a token no installed plugin declares, as `13`
+  drift **and** as a blocking `/doctor` finding — the drift says the repo is
+  behind, the blocking finding says vwf will not build against it meanwhile.
+
 - **`10 → 11` migration** (performed by `/setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat
   `projects.<name>.stack` list becomes the structured block above. Per project:
@@ -334,9 +373,11 @@ earlier than 65/90/80), never loosen.
     closed language vocabulary (`assets/stack-vocabulary.md`) become
     `languages`, the rest split between `frameworks` and `dependencies` per that
     asset's rule. Set `template:` to the `assets/stacks/<type>/<slug>.md` whose
-    frontmatter matches, else `custom`. Any `stack_reason` moves verbatim to
-    `note` — the reason was recorded as a *deviation justification*, and under a
-    menu there is nothing to deviate from, but the rationale is still worth
+    frontmatter matches, else `custom` — a value **format 14 retires**, so a repo
+    running this delta today writes it only as an intermediate and the `13 → 14`
+    step above resolves it before the run ends. Any `stack_reason` moves verbatim
+    to `note` — the reason was recorded as a *deviation justification*, and under
+    a menu there is nothing to deviate from, but the rationale is still worth
     keeping.
   - **had no `stack:` key** (the old "accept the reference" case) → **write the
     block out in full** from the template that was previously enforced for its
