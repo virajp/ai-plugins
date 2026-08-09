@@ -310,7 +310,14 @@ export function removeSkillsPath(text: string, scope: Scope): string {
   return removeFromJsonArray(text, ["skills", "paths"], [skillsPath]);
 }
 
-function configDir(context: AdapterContext, scope: Scope): string {
+/**
+ * Where OpenCode reads its config from.
+ *
+ * Exported because the OpenCode status line writes into the same directory —
+ * `tui.json` sits beside `opencode.jsonc` — and the two disagreeing would put a
+ * TUI plugin somewhere OpenCode never looks.
+ */
+export function configDir(context: AdapterContext, scope: Scope): string {
   return scope === "project"
     ? join(context.cwd, ".opencode")
     : join(context.home, ".config", "opencode");

@@ -33,6 +33,11 @@ import {
   revertStatuslineOhmypi,
 } from "./statusline-ohmypi.ts";
 import {
+  installStatuslineOpencode,
+  planStatuslineOpencode,
+  revertStatuslineOpencode,
+} from "./statusline-opencode.ts";
+import {
   installStatusline,
   planStatusline,
   revertStatusline,
@@ -43,7 +48,11 @@ import {
  * plugin — but both are reported beside them, so the reporter needs one row
  * type rather than three.
  */
-export type OutcomeId = TargetId | "statusline" | "statusline:ohmypi";
+export type OutcomeId =
+  | TargetId
+  | "statusline"
+  | "statusline:ohmypi"
+  | "statusline:opencode";
 
 export interface TargetOutcome {
   readonly target: OutcomeId;
@@ -376,6 +385,96 @@ export function revertStatuslineOhmypiInstall(
   catch (error) {
     return {
       target: "statusline:ohmypi",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
+}
+
+/**
+ * The OpenCode statusline's receipt.
+ *
+ * A third file, for the third surface, for the same reason the second one
+ * exists: the three are selected together but installed independently, and one
+ * shared record would have an uninstall on a Claude-only machine try to undo a
+ * `tui.json` it never wrote.
+ */
+export function opencodeStatuslineReceiptPath(receiptDir: string): string {
+  return join(receiptDir, "statusline-opencode.json");
+}
+
+/** Has the OpenCode statusline been installed by this CLI? */
+export function opencodeStatuslineInstalled(options: ExecuteOptions): boolean {
+  return readReceipt(opencodeStatuslineReceiptPath(options.receiptDir))
+    !== undefined;
+}
+
+/**
+ * Install the OpenCode TUI statusline, or describe it under `--dry-run`.
+ *
+ * `opencode` absent is a **skip, not a failure** — the same rule the target loop
+ * and the Oh-My-Pi half follow. Writing a `tui.json` for a tool that is not on
+ * the machine leaves config behind for something that will never read it.
+ */
+export function executeStatuslineOpencode(
+  options: ExecuteOptions,
+): TargetOutcome {
+  if (!hasBin("opencode")) {
+    return {
+      target: "statusline:opencode",
+      actions: [],
+      skipped: "not-installed",
+    };
+  }
+  try {
+    if (options.dryRun) {
+      return {
+        target: "statusline:opencode",
+        actions: planStatuslineOpencode(options.context),
+      };
+    }
+    const result = installStatuslineOpencode(options.context);
+    writeReceipt(
+      opencodeStatuslineReceiptPath(options.receiptDir),
+      result.receipt,
+    );
+    return { target: "statusline:opencode", actions: result.actions };
+  }
+  catch (error) {
+    return {
+      target: "statusline:opencode",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
+}
+
+/**
+ * Undo an OpenCode statusline install from its receipt.
+ *
+ * Unlike Oh-My-Pi's, this does **not** need `opencode` on `PATH`: everything it
+ * wrote is files this CLI owns, so it can put them back whether or not the tool
+ * is still installed.
+ */
+export function revertStatuslineOpencodeInstall(
+  options: ExecuteOptions,
+): TargetOutcome {
+  const path = opencodeStatuslineReceiptPath(options.receiptDir);
+  const receipt = readReceipt(path);
+  if (receipt === undefined) {
+    return { target: "statusline:opencode", actions: [], skipped: "empty" };
+  }
+  try {
+    revertStatuslineOpencode(receipt);
+    rmSync(path, { force: true });
+    return {
+      target: "statusline:opencode",
+      actions: [{ summary: "reverted the OpenCode statusline", path }],
+    };
+  }
+  catch (error) {
+    return {
+      target: "statusline:opencode",
       actions: [],
       error: (error as Error).message,
     };

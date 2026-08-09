@@ -59,13 +59,16 @@ import {
   execute,
   executeStatusline,
   executeStatuslineOhmypi,
+  executeStatuslineOpencode,
   failed,
   ohmypiStatuslineInstalled,
+  opencodeStatuslineInstalled,
   renderDiff,
   renderProgress,
   revert,
   revertStatuslineInstall,
   revertStatuslineOhmypiInstall,
+  revertStatuslineOpencodeInstall,
   statuslineInstalled,
   upgradeJobs,
 } from "./executor.ts";
@@ -166,26 +169,29 @@ export function buildJobs(
   });
 }
 
-/** Which status surfaces a run reaches. Neither is a plugin, so neither is a target. */
+/** Which status surfaces a run reaches. None is a plugin, so none is a target. */
 export interface StatuslineSelection {
   /** The copied script bar plus the caps hook. */
   readonly claude: boolean;
   /** `omp config` keys mirroring the same information. */
   readonly ohmypi: boolean;
+  /** A TUI plugin copied in and registered in `tui.json`. */
+  readonly opencode: boolean;
 }
 
 /**
  * Which status surfaces should this run touch?
  *
- * Resolved **per target**, because the two are different installs of the same
+ * Resolved **per target**, because the three are different installs of the same
  * idea: Claude gets a script this CLI copies and points `settings.json` at,
- * Oh-My-Pi gets its own renderer configured through `omp config`. Cursor and
- * OpenCode expose no status surface at all, so a run targeting only those still
- * has nothing to install.
+ * Oh-My-Pi gets its own renderer configured through `omp config`, OpenCode gets
+ * a TUI plugin registered in `tui.json`. **Cursor** is the one target left with
+ * no status surface at all, so a run targeting only Cursor still has nothing to
+ * install.
  *
  * The note is printed only for an **explicit** `--statusline`: under `--all` on
- * a machine with neither, the bar was never separately asked for, and saying so
- * every time would be noise.
+ * a machine with none of them, the bar was never separately asked for, and
+ * saying so every time would be noise.
  */
 export function statuslineSelected(
   wanted: boolean,
@@ -194,16 +200,18 @@ export function statuslineSelected(
   log: (message: string) => void,
 ): StatuslineSelection {
   if (!wanted) {
-    return { claude: false, ohmypi: false };
+    return { claude: false, ohmypi: false, opencode: false };
   }
   const selection = {
     claude: adapters.some(a => a.id === "claude"),
     ohmypi: adapters.some(a => a.id === "ohmypi"),
+    opencode: adapters.some(a => a.id === "opencode"),
   };
-  if (explicit && !selection.claude && !selection.ohmypi) {
+  const reached = selection.claude || selection.ohmypi || selection.opencode;
+  if (explicit && !reached) {
     log(
-      "statusline: skipped — only Claude Code and Oh-My-Pi have a status "
-        + "surface to install into",
+      "statusline: skipped — Cursor is the only selected target with no "
+        + "status surface to install into",
     );
   }
   return selection;
@@ -321,6 +329,9 @@ const main = defineCommand({
       if (statusline.ohmypi) {
         outcomes.push(revertStatuslineOhmypiInstall(options));
       }
+      if (statusline.opencode) {
+        outcomes.push(revertStatuslineOpencodeInstall(options));
+      }
       process.stderr.write(`${renderProgress(outcomes)}\n`);
       process.exit(failed(outcomes) ? 1 : 0);
     }
@@ -353,6 +364,9 @@ const main = defineCommand({
       if (ohmypiStatuslineInstalled(options)) {
         outcomes.push(executeStatuslineOhmypi(options));
       }
+      if (opencodeStatuslineInstalled(options)) {
+        outcomes.push(executeStatuslineOpencode(options));
+      }
       if (outcomes.length === 0) {
         context.log("nothing installed by this CLI yet — nothing to upgrade");
       }
@@ -371,6 +385,7 @@ const main = defineCommand({
       // `--statusline` on its own is a complete request: it is not a plugin.
       && !statusline.claude
       && !statusline.ohmypi
+      && !statusline.opencode
     ) {
       process.stderr.write(
         "nothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
@@ -409,6 +424,9 @@ const main = defineCommand({
     }
     if (statusline.ohmypi) {
       outcomes.push(executeStatuslineOhmypi(options));
+    }
+    if (statusline.opencode) {
+      outcomes.push(executeStatuslineOpencode(options));
     }
 
     // After the install, and only for targets that actually took it: vwf's

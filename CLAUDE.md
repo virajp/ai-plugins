@@ -644,13 +644,15 @@ The statusline is **not** a plugin — it ships inside `@askviraj/ai-plugins`, t
 `citty` CLI that installs the toolkit across all four targets (marketplace
 registration or a copied tree, plus the statusline).
 
-**"The statusline" is two installs of one idea.** Claude Code gets the powerline
-script this CLI copies and points `settings.json` at. Oh-My-Pi gets its **own**
-renderer configured through `omp config set` — it exposes no scriptable status
-surface, so there is nothing to point at, and the target is **information
-parity, not visual parity**: same segments, Oh-My-Pi's separators and palette.
-Cursor and OpenCode expose no status surface at all, so a run targeting only
-those still installs nothing.
+**"The statusline" is three installs of one idea**, because each target offers a
+different kind of hook and none of them offers ours. Claude Code has a config
+key, so it gets the powerline script this CLI copies and points `settings.json`
+at. Oh-My-Pi has a renderer of its own, so it gets four `omp config set` keys.
+OpenCode has neither — it has an **extension point**, so it gets a TUI plugin
+copied into the config dir and registered in `tui.json`. In both of the latter
+two the target is **information parity, not visual parity**: the same segments,
+drawn with their separators and palette. **Cursor** is the one target exposing
+no status surface at all, so a run targeting only it still installs nothing.
 
 **`cli/` is the source; `bin/` is the build output, and `bin/` is what npm
 publishes.** tsup bundles `cli/src/index.ts` → `bin/ai-plugins.mjs`, and two
@@ -742,6 +744,33 @@ Layout:
   default: semantically identical, not byte-identical, which is the price of
   restoring key by key rather than rewriting a file the user also edits. **`omp`
   does not validate segment names** — a typo installs cleanly and draws nothing.
+- `cli/src/statusline-opencode.ts` — the OpenCode third, again with its own
+  receipt. It copies `tools/statusline/opencode-tui.tsx` into the config dir
+  (reusing the OpenCode adapter's `configDir`, so the two cannot disagree about
+  where OpenCode reads) and appends its relative path to **`tui.json`** through
+  the same format-preserving JSONC helpers the adapter uses. Three verified
+  facts, none of them in the published docs: **`tui.json` is a separate file
+  from `opencode.json`** (OpenCode routes `server` plugins to the latter and
+  everything else to the former, and the wrong one is accepted and never
+  loaded); **TUI plugins are not auto-discovered** — the
+  `{plugin,plugins}/*.{ts,js}` glob that loads vwf's mempalace auto-save does
+  not reach them, so the `tui.json` entry *is* the registration; and **there is
+  no build step**, since OpenCode's loader is Bun and resolves the plugin's two
+  imports itself. A `tui.json` this CLI created is undone by deleting it, one
+  that already existed key by key at the **shallowest new key**; the `$schema`
+  key and the formatting pass are both creation-only, because on the user's file
+  a reflow would break the byte-identical round-trip the receipt promises.
+- `tools/statusline/opencode-tui.tsx` — the TUI plugin itself, and the authority
+  on what it draws. **Deliberately not covered by any tsconfig**: type-checking
+  it would mean adding `@opentui/solid` and `@opencode-ai/plugin` as
+  devDependencies purely to resolve two imports in a file nothing here builds,
+  putting two packages into the lockfile and the osv scan that ship nothing and
+  pinning them against an OpenCode runtime we do not control. `tools/` is
+  already an unchecked island for the same reason (`statusline`,
+  `context-caps.js`, `mempalace-hooks.js` are all plain JS). What stands in for
+  the compiler is the file's own discipline: **every read is optional and every
+  segment is built inside a `try`**, because a plugin that throws in a render
+  slot takes the frame down with it.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
 - Tests live beside the source under `cli/src/**/*.test.ts` and run under
@@ -781,14 +810,18 @@ installed into the others. `--force` acts on it anyway.
 
 **Statusline.** `--statusline` installs whichever surfaces the selected targets
 have: for Claude both `statusLine` and `subagentStatusLine` plus the caps hook,
-for Oh-My-Pi the four `omp config` keys. **Tri-state**: `--statusline` asks,
-`--no-statusline` refuses, unset defers to `--all` — so a bare `--all` installs
-the bar. Only an *explicit* `--statusline` on a run reaching **neither** prints
-the skip note. `omp` missing from `PATH` is a skip with a note rather than a
-failure, the same rule the plugin targets follow. The **caps hook is
-Claude-only** and stays that way: its sensor is the Claude bar, which mirrors
-`context_window` / `rate_limits` to a usage file, and Oh-My-Pi surfaces no
-equivalent.
+for Oh-My-Pi the four `omp config` keys, for OpenCode the TUI plugin and its
+`tui.json` entry. **Tri-state**: `--statusline` asks, `--no-statusline` refuses,
+unset defers to `--all` — so a bare `--all` installs the bar. Only an *explicit*
+`--statusline` on a run reaching **none of the three** prints the skip note,
+which now means a Cursor-only run. `omp` or `opencode` missing from `PATH` is a
+skip with a note rather than a failure, the same rule the plugin targets follow
+— though the OpenCode **uninstall** needs no binary, since everything it wrote
+is files this CLI owns. The **caps hook is Claude-only** and stays that way: its
+sensor is the Claude bar, which mirrors `context_window` / `rate_limits` to a
+usage file, and neither of the other two surfaces the equivalent — OpenCode
+exposes no ambient rate-limit state at all, which is also why its bar carries no
+5-hour / 7-day segments.
 
 **`--version` / `--upgrade`.** See `cli/src/version.ts` above for what
 `--version` compares. `--upgrade` replays each target's receipt: **installing is

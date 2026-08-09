@@ -5,8 +5,8 @@ A powerline-style
 installed by the `@askviraj/ai-plugins` CLI. One script drives **two surfaces**
 — the main two-line status bar and the subagent panel — and everything it draws
 is data-driven from JSON, so you can restyle it per repo without touching code.
-The same flag configures [Oh-My-Pi's own status line](#oh-my-pi) to show the
-same information.
+The same flag brings the same information to [Oh-My-Pi](#oh-my-pi) and
+[OpenCode](#opencode), each through its own mechanism.
 
 - Script: [`tools/statusline/statusline`](../tools/statusline/statusline)
 - Defaults:
@@ -14,6 +14,8 @@ same information.
 - Schema: [`schemas/statusline.schema.json`](../schemas/statusline.schema.json)
 - Caps hook:
   [`tools/statusline/context-caps.js`](../tools/statusline/context-caps.js)
+- OpenCode TUI plugin:
+  [`tools/statusline/opencode-tui.tsx`](../tools/statusline/opencode-tui.tsx)
 
 > **Requires a [Nerd Font](https://www.nerdfonts.com/).** The separators and
 > most symbols are private-use glyphs; without a patched font they render as
@@ -59,10 +61,10 @@ Everything above describes the **Claude Code** surface (it lives under
 `~/.claude`). The CLI drives four targets — `claude`, `cursor`, `ohmypi` and
 `opencode` — and `--statusline` installs whichever surfaces the selected targets
 have: the script bar for Claude Code, [Oh-My-Pi's own status line](#oh-my-pi)
-for `ohmypi`. Cursor and OpenCode expose none, so on a run reaching neither (say
-`--platform opencode`) `--statusline` is skipped with a note. The note is
-printed only when you asked for it **explicitly**, so a bare `--all` on a
-machine with neither stays quiet.
+for `ohmypi`, a [TUI plugin](#opencode) for `opencode`. **Cursor** is the one
+target exposing none, so on a run reaching only it (`--platform cursor`)
+`--statusline` is skipped with a note. The note is printed only when you asked
+for it **explicitly**, so a bare `--all` on a Cursor-only machine stays quiet.
 
 The blocks it writes:
 
@@ -174,10 +176,79 @@ the ordinary case.
 If `omp` is not on `PATH`, this is skipped with a note rather than failing — the
 same rule the plugin targets follow.
 
+## OpenCode
+
+OpenCode has neither a config key to point at a script nor a status renderer to
+configure. What it has is an **extension point**: a TUI plugin can register a
+slot, and `app_bottom` is the bottom row. So `--statusline` on a run targeting
+`opencode` copies
+[`tools/statusline/opencode-tui.tsx`](../tools/statusline/opencode-tui.tsx) into
+the OpenCode config dir as `ai-plugins-statusline.tsx` and registers it:
+
+```jsonc
+// ~/.config/opencode/tui.json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["./ai-plugins-statusline.tsx"],
+}
+```
+
+Three things about that are worth knowing, none of which the published docs get
+right:
+
+- **`tui.json` is a different file from `opencode.json`.** OpenCode routes
+  plugins by kind — a `server` plugin goes in `opencode.json`, everything else
+  in `tui.json`. An entry in the wrong one is accepted and never loaded.
+- **TUI plugins are not auto-discovered.** The `{plugin,plugins}/*.{ts,js}` glob
+  that picks up server plugins (vwf's mempalace auto-save among them) does not
+  reach them. The `tui.json` entry *is* the registration.
+- **There is no build step.** The plugin ships as authored `.tsx`. OpenCode's
+  loader is Bun: it honours the `@jsxImportSource` pragma and resolves both
+  `@opentui/solid` and `@opencode-ai/plugin/tui` itself, so nothing is
+  transpiled, bundled, or installed alongside it.
+
+**Information parity, not visual parity** — the same trade as Oh-My-Pi, for the
+same reason. OpenCode owns the frame and the palette, so the line is drawn with
+its styling and none of ours:
+
+| Claude bar            | OpenCode                                | Note                                      |
+| --------------------- | --------------------------------------- | ----------------------------------------- |
+| `model` (+ `effort`)  | `session.get(id).model`                 | `variant` is the nearest thing to effort  |
+| `context`             | last assistant `tokens` ÷ model `limit` | summed here; a single number there        |
+| `cost`                | `session.get(id).cost`                  |                                           |
+| `duration`            | `session.get(id).time`                  | **wall clock**, not Claude's active time  |
+| `session`             | `session.get(id).title`                 |                                           |
+| `project`, `worktree` | `state.path()`                          | worktree basename + the subpath inside it |
+| `branch`              | `state.vcs().branch`                    | branch only — no dirty or ahead counts    |
+| `rl5h` + `rl7d`       | **omitted**                             | no ambient rate-limit state — see below   |
+
+Two of those rows are gaps rather than translations, and both are deliberate:
+
+- **The rate-limit windows are omitted, not approximated.** OpenCode exposes no
+  ambient rate-limit state at all — it parses provider headers on error paths
+  and nowhere else. Oh-My-Pi at least has a `usage` segment to record as a known
+  gap; here there is nothing to point at, and a made-up number would be worse
+  than a missing one.
+- **The branch carries no dirty or ahead marks.** `state.vcs()` returns the
+  branch and the default branch, and that is all. The Claude bar gets the rest
+  by shelling out to git, which this must not do: the slot renders on every
+  frame, and a `git` process per frame is not a status line.
+
+The **caps hook is not installed here** either, for the Oh-My-Pi reason: its
+sensor is the Claude bar, which mirrors `context_window` and `rate_limits` to a
+usage file after every render.
+
+`--uninstall --statusline` removes the copied plugin and takes the entry back
+out of `tui.json` — deleting the file outright if this CLI created it, and
+otherwise restoring it key by key so a TUI plugin you registered yourself
+survives. If `opencode` is not on `PATH`, the install is skipped with a note
+rather than failing.
+
 ## Configuration
 
 Everything from here down describes the **Claude Code** script. Oh-My-Pi's
-status line is configured through `omp config`, not through these files.
+status line is configured through `omp config`, and OpenCode's is a TUI plugin
+with no configuration of its own — neither reads these files.
 
 Configuration is layered. Two files are deep-merged at render time, in
 increasing precedence (a higher layer overrides the same key in a lower one):

@@ -135,36 +135,44 @@ describe("statuslineSelected", () => {
   const claudeOnly = [fake("claude", true)];
   const ohmypiOnly = [fake("ohmypi", true)];
   const openCodeOnly = [fake("opencode", true)];
+  const cursorOnly = [fake("cursor", true)];
 
-  it("resolves per target: a script bar for Claude, config for Oh-My-Pi", () => {
-    // The two are different installs of the same information, so a run
-    // targeting both gets both.
+  it("resolves per target: three installs of the same information", () => {
+    // A script bar for Claude, `omp config` for Oh-My-Pi, a TUI plugin for
+    // OpenCode — so a run targeting all three gets all three.
     expect(statuslineSelected(true, true, claudeOnly, () => {}))
-      .toEqual({ claude: true, ohmypi: false });
+      .toEqual({ claude: true, ohmypi: false, opencode: false });
     expect(statuslineSelected(true, true, ohmypiOnly, () => {}))
-      .toEqual({ claude: false, ohmypi: true });
+      .toEqual({ claude: false, ohmypi: true, opencode: false });
+    expect(statuslineSelected(true, true, openCodeOnly, () => {}))
+      .toEqual({ claude: false, ohmypi: false, opencode: true });
     expect(
-      statuslineSelected(true, true, [...claudeOnly, ...ohmypiOnly], () => {}),
+      statuslineSelected(
+        true,
+        true,
+        [...claudeOnly, ...ohmypiOnly, ...openCodeOnly],
+        () => {},
+      ),
     )
-      .toEqual({ claude: true, ohmypi: true });
+      .toEqual({ claude: true, ohmypi: true, opencode: true });
   });
 
   it("skips a target set with no status surface at all", () => {
-    // Cursor and OpenCode expose none, so there is nothing to install.
-    expect(statuslineSelected(true, false, openCodeOnly, () => {}))
-      .toEqual({ claude: false, ohmypi: false });
+    // Cursor is the last one exposing none, so there is nothing to install.
+    expect(statuslineSelected(true, false, cursorOnly, () => {}))
+      .toEqual({ claude: false, ohmypi: false, opencode: false });
   });
 
   it("notes the skip only when the flag was explicit", () => {
     const noted: string[] = [];
-    statuslineSelected(true, false, openCodeOnly, m => noted.push(m));
+    statuslineSelected(true, false, cursorOnly, m => noted.push(m));
     expect(noted).toEqual([]);
 
-    statuslineSelected(true, true, openCodeOnly, m => noted.push(m));
-    expect(noted[0]).toMatch(/Claude Code and Oh-My-Pi/);
+    statuslineSelected(true, true, cursorOnly, m => noted.push(m));
+    expect(noted[0]).toMatch(/Cursor/);
   });
 
-  it("says nothing when one of the two surfaces is reachable", () => {
+  it("says nothing when one of the three surfaces is reachable", () => {
     const noted: string[] = [];
     statuslineSelected(true, true, ohmypiOnly, m => noted.push(m));
     expect(noted).toEqual([]);
@@ -173,7 +181,7 @@ describe("statuslineSelected", () => {
   it("says nothing at all when it was not wanted", () => {
     const noted: string[] = [];
     expect(statuslineSelected(false, true, claudeOnly, m => noted.push(m)))
-      .toEqual({ claude: false, ohmypi: false });
+      .toEqual({ claude: false, ohmypi: false, opencode: false });
     expect(noted).toEqual([]);
   });
 });
