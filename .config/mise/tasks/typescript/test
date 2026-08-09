@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+#MISE description="Unit-test the typescript npm-normalize hook (table-driven)"
+#MISE dir="{{ config_root }}"
+
+# Feeds crafted PreToolUse payloads through templates/typescript/hooks/npm-normalize.sh
+# and asserts the rewritten command, for BOTH package managers this plugin allows. Each
+# table runs inside a temp dir seeded with the lockfile that selects the
+# manager, so the resolution path is exercised too — not just the rewrite. Runs
+# under the system sed (BSD sed on macOS), the portability guarantee CLAUDE.md
+# requires of this hook.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+# The authored script. Hook scripts are copied byte-for-byte rather than
+# rendered (only .md goes through the template engine), so testing the source
+# tests exactly what every target ships.
+HOOK="templates/typescript/hooks/npm-normalize.sh"
+
+command -v jq >/dev/null 2>&1 || { print_error "jq is required to run the hook tests"; exit 1; }
+[[ -f "$HOOK" ]] || { print_error "Hook not found: $HOOK"; exit 1; }
+
+# Each case is "input command :: expected command". When expected == input the
+# hook must no-op (emit {}); otherwise it must rewrite to exactly expected.
+pnpm_cases=(
+  'npx create-vite app :: pnpm dlx create-vite app'
+  'npx -y cowsay hi :: pnpm dlx -y cowsay hi'
+  'npm install :: pnpm install'
+  'npm ci :: pnpm install --frozen-lockfile'
+  'npm run build :: pnpm run build'
+  'npm install && npm run test :: pnpm install && pnpm run test'
+  'echo hi; npm test :: echo hi; pnpm test'
+  'npm ci && npx -y prettier . :: pnpm install --frozen-lockfile && pnpm dlx -y prettier .'
+  'echo $(npm config get registry) :: echo $(pnpm config get registry)'
+  'ls -la :: ls -la'
+  'echo deploy-npm-pkg :: echo deploy-npm-pkg'
+)
+
+bun_cases=(
+  'npx create-vite app :: bunx create-vite app'
+  'npx -y cowsay hi :: bunx -y cowsay hi'
+  'npm install :: bun install'
+  'npm ci :: bun install --frozen-lockfile'
+  'npm run build :: bun run build'
+  'npm install && npm run test :: bun install && bun run test'
+  'echo hi; npm test :: echo hi; bun test'
+  'npm ci && npx -y prettier . :: bun install --frozen-lockfile && bunx -y prettier .'
+  'echo $(npm config get registry) :: echo $(bun config get registry)'
+  'ls -la :: ls -la'
+  'echo deploy-npm-pkg :: echo deploy-npm-pkg'
+)
+
+print_header "Testing $HOOK ..."
+
+HOOK_ABS="$MISE_PROJECT_ROOT/$HOOK"
+fail=0
+total=0
+
+# Run one table inside a temp dir seeded with $marker, so the hook's lockfile
+# walk-up resolves the manager under test. An empty $marker exercises the
+# documented default (no lockfile anywhere above → pnpm).
+run_table() {
+  local label="$1" marker="$2"
+  shift 2
+  local sandbox input expected payload result updated actual
+  sandbox=$(mktemp -d)
+  [[ -n "$marker" ]] && : > "$sandbox/$marker"
+
+  print_yellow "  -- $label"
+  for case in "$@"; do
+    input="${case%% :: *}"
+    expected="${case##* :: }"
+    total=$((total + 1))
+
+    payload=$(jq -n --arg c "$input" '{tool_input: {command: $c}}')
+    result=$(cd "$sandbox" && printf '%s' "$payload" | bash "$HOOK_ABS")
+    updated=$(printf '%s' "$result" | jq -r '.hookSpecificOutput.updatedInput.command // empty')
+    actual="${updated:-$input}"
+
+    if [[ "$actual" == "$expected" ]]; then
+      print_yellow "  ok   $input"
+    else
+      print_error "  FAIL [$label] $input"
+      print_warn  "       expected: $expected"
+      print_warn  "       actual:   $actual"
+      fail=1
+    fi
+  done
+  rm -rf "$sandbox"
+}
+
+run_table "pnpm (pnpm-lock.yaml)" "pnpm-lock.yaml" "${pnpm_cases[@]}"
+run_table "bun (bun.lock)" "bun.lock" "${bun_cases[@]}"
+run_table "no lockfile → pnpm default" "" "${pnpm_cases[@]}"
+
+if [[ "$fail" -ne 0 ]]; then
+  print_error "npm-normalize hook tests failed"
+  exit 1
+fi
+
+print_header "All npm-normalize hook tests passed ($total cases)!"

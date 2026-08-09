@@ -17,19 +17,41 @@ repos:
 
   - repo: local
     hooks:
-      - id: vwf-hook-test
-        name: vwf npm→pnpm hook tests
-        entry: mise x -- mise run vwf:test
+      - id: typescript-hook-test
+        name: typescript npm→pnpm hook tests
+        entry: mise x -- mise run typescript:test
         language: system
         pass_filenames: false
-        files: ^plugins/vwf/hooks/
+        files: ^templates/typescript/hooks/
+        stages: [ pre-commit ]
+      # The rendered trees are generated, so they are rebuilt before they are
+      # validated: a template edit that was never re-rendered would otherwise
+      # pass the checker against a stale tree. The render is deterministic and
+      # destructive per target, so running it here is safe and makes
+      # `render-clean` below meaningful.
+      - id: plugins-build
+        name: render every target
+        entry: mise x -- mise run plugins:build
+        language: system
+        pass_filenames: false
+        files: ^(templates/|build/|schema/)
         stages: [ pre-commit ]
       - id: plugins-check
         name: plugin tree static validation
         entry: mise x -- mise run plugins:check
         language: system
         pass_filenames: false
-        files: ^(plugins/|\.claude-plugin/marketplace\.json$)
+        files: ^(templates/|build/|schema/|claude/|cursor/|ohmypi/|opencode/)
+        stages: [ pre-commit ]
+      # The committed render must be exactly what templates/ renders to. Catches
+      # the case the two hooks above cannot: output edited by hand, or a render
+      # whose result was never staged.
+      - id: render-clean
+        name: rendered trees match a fresh render
+        entry: mise x -- mise run plugins:render-clean
+        language: system
+        pass_filenames: false
+        files: ^(templates/|build/|schema/|claude/|cursor/|ohmypi/|opencode/)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -75,6 +97,11 @@ repos:
       - id: linter
         name: Linter
         entry: mise x -- pnpm dlx @askviraj/linter --fix
+        # The root trees are rendered output. pre-commit passes staged paths
+        # explicitly, and the linter warns on each one it is configured to
+        # ignore — enough warnings to fail the run. Keep them out of the
+        # argument list entirely.
+        exclude: ^(claude|cursor|ohmypi|opencode)/
         language: system
         stages: [ pre-commit ]
 

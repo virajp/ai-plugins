@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#MISE description="Bootstrap the project: toolchain, dependencies, pre-commit"
+#MISE depends=["init"]
+
+#USAGE flag "--clean" help="Delete node_modules/lockfiles/caches before installing"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+line_sep "="
+mise run setup:mise
+
+if [[ "${usage_clean:-false}" == "true" ]]; then
+  line_sep "="
+  mise run setup:pnpm:cleanup
+fi
+
+line_sep "="
+mise run setup:pnpm:upgrade
+
+line_sep "="
+mise run setup:pnpm:outdated
+
+line_sep "="
+mise run setup:pnpm:audit
+
+line_sep "="
+print_header "Linter setup ..."
+pnpm dlx @askviraj/linter@latest --init
+
+line_sep "="
+mise run setup:precommit
+
+line_sep "="
+print_header "Setup complete!"

@@ -1,5 +1,21 @@
-# pnpm settings (this repo is a single package, not a workspace — pnpm reads its
-# settings from here regardless).
+# pnpm workspace. The root package is the published installer CLI; `schema` and
+# `build` are private packages that never ship to npm (end users install from the
+# committed `dist/` tree, so they never run the renderer).
+packages:
+  - schema
+  - build
+  - cli
+
+# Install scripts are blocked by default. esbuild is the one exception: it is
+# tsup's engine — which builds `cli/` into the published `bin/` — and its
+# postinstall links the platform-specific binary, so the build cannot run at
+# all without it.
+#
+# `allowBuilds`, not the older `onlyBuiltDependencies`: pnpm replaced that key
+# in v10.26 and this repo is on 11.x, where the old spelling parses fine and
+# silently does nothing.
+allowBuilds:
+  esbuild: true
 
 # Supply-chain hardening: refuse to install a dependency version until it has been
 # public for at least this many MINUTES. A compromised release is usually caught

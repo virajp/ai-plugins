@@ -28,3 +28,18 @@ docs/scratchpad/
 # Node / CLI
 # ============================================================
 node_modules/
+
+# TypeScript build artifacts.
+schema/dist/
+build/dist/
+cli/dist/
+*.tsbuildinfo
+
+# Build output: tsup bundles cli/ into bin/, and bin/ is what npm publishes.
+# Not committed — unlike the rendered trees at the repo root (claude/, cursor/,
+# ohmypi/, opencode/), which are meant to be diffed in review. A bundle diff is
+# noise, and `i:build` regenerates it before every publish.
+bin/
+
+# Working notes and session handoffs — personal state, not the team's.
+docs/scratchpad/

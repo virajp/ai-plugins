@@ -1,0 +1,30 @@
+{
+  "servers": {
+    "typescript-lsp": {
+      "args": [
+        "x",
+        "--",
+        "pnpm",
+        "--package=typescript",
+        "--package=typescript-language-server",
+        "dlx",
+        "typescript-language-server",
+        "--stdio"
+      ],
+      "command": "mise",
+      "fileTypes": [
+        ".cjs",
+        ".cts",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".mts",
+        ".ts",
+        ".tsx"
+      ],
+      "rootMarkers": [
+        ".git"
+      ]
+    }
+  }
+}

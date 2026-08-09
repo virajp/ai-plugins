@@ -1,5 +1,0 @@
-{
-  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
-  "description": "vwf design adapter for Google Stitch — imports generated screens and derives design tokens via the Stitch SDK.",
-  "name": "stitch"
-}

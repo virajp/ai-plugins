@@ -1,0 +1,51 @@
+---
+name: flutter-stack-menu
+description: Return the Flutter stack templates this plugin offers, as a vwf
+  menu payload. Invoked by /architecture and /setup when `flutter` is
+  listed in the config's `stacks:` — not a general-purpose skill.
+---
+
+# flutter-stack-menu
+
+Return the templates the `flutter` plugin offers on vwf's `project` axis, per
+the stack-adapter contract. **Return the payload and nothing else** — no prose,
+no recommendation, no comparison. Choosing is the user's job and presenting the
+choice is vwf's.
+
+> **`invocation` must stay `both`.** A `user` skill is removed from the model's
+> context entirely and cannot be invoked programmatically — vwf does not get an
+> error, it gets an empty menu.
+
+## How to answer
+
+1. List `%%AI_PLUGINS_ROOT%%/stacks/project/*/*.md`. Each file is one template: its
+   **slug** is the filename without `.md`, its **role** is that file's `role:`
+   frontmatter key, and its `name` comes from the same frontmatter. Read no
+   further into the file than the frontmatter and its opening paragraph — the
+   body is `flutter-stack-template`'s to read, on demand.
+2. Return the payload below, filled from that listing.
+
+```yaml
+plugin: flutter
+templates:
+  - slug: <filename without .md>
+    axis: project
+    role: <the file's own role: key>
+    name: <display name>
+    summary: <one line — why you would pick it>
+```
+
+## Rules
+
+- **This list is exhaustive.** A composition not listed is one this plugin does
+  not offer; vwf falls back to `template: custom` and records what the user
+  describes. Do not fill the gap from general Flutter knowledge.
+- **Only the `frontend` role.** Flutter is the on-device app; a server, a
+  static site or a shared package belongs to the plugin owning that stack. A
+  `flutter` menu entry never claims another role.
+- **Kotlin and Swift are not separate offers here.** They appear on the Flutter
+  template as *optional* languages, for platform channels and native embedding.
+  Standalone Kotlin or Swift app templates are not offered by any plugin yet;
+  say so rather than inventing one.
+- Do not read the repo, the registry, or `.config/vwf.yaml`. This skill answers
+  the same way in every product.

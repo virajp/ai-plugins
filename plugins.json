@@ -1,0 +1,153 @@
+{
+  "marketplace": "virajp-plugins",
+  "plugins": [
+    {
+      "name": "andrej-karpathy-skills",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": false,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "cicd",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "mise"
+      ]
+    },
+    {
+      "name": "cloudflare",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "datastore",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "design-tools",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "pnpm"
+      ]
+    },
+    {
+      "name": "devtools",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "mise"
+      ]
+    },
+    {
+      "name": "flutter",
+      "scope": "project",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "kotlin-lsp",
+        "mise",
+        "sourcekit-lsp"
+      ]
+    },
+    {
+      "name": "gcp",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "identity",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "object-storage",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "observability",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "orchestration",
+      "scope": "user",
+      "optIn": true,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": []
+    },
+    {
+      "name": "typescript",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [],
+      "requires": [
+        "mise",
+        "pnpm"
+      ]
+    },
+    {
+      "name": "vwf",
+      "scope": "user",
+      "optIn": false,
+      "userOnly": false,
+      "local": true,
+      "dependencies": [
+        "andrej-karpathy-skills",
+        "devtools"
+      ],
+      "requires": [
+        "graphify",
+        "mise",
+        "pnpm",
+        "rtk",
+        "uv"
+      ]
+    }
+  ]
+}

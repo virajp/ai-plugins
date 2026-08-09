@@ -1,0 +1,6 @@
+{
+  "author": "Viraj Patel",
+  "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; polyrepo and monorepo layouts are both supported.",
+  "name": "cicd",
+  "version": "1.0.0"
+}

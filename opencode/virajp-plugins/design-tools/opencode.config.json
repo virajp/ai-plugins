@@ -1,0 +1,11 @@
+{
+  "configSchema": "https://opencode.ai/config.json",
+  "name": "design-tools",
+  "version": "0.1.0",
+  "mcp": {
+    "claude-design": {
+      "type": "remote",
+      "url": "https://api.anthropic.com/v1/design/mcp"
+    }
+  }
+}

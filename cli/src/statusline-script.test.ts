@@ -1,0 +1,202 @@
+/**
+ * The statusline script and its caps hook, as shipped.
+ *
+ * These exercise `tools/statusline/` — the two standalone CommonJS files this
+ * package installs but does not import — by running them as subprocesses, which
+ * is how Claude Code invokes them. Ported from `test/statusline.test.mjs`; they
+ * live beside the installer because `cli` is the package that ships them, and
+ * because vitest collects from the workspace packages only.
+ *
+ * Hermetic: temp dirs under the OS tmpdir, a fake `$HOME`, no writes anywhere
+ * real.
+ */
+import { spawnSync } from "node:child_process";
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+} from "vitest";
+
+const repoRoot = join(import.meta.dirname, "..", "..");
+const assets = join(repoRoot, "tools", "statusline");
+const SCRIPT = join(assets, "statusline");
+const CAPS_HOOK = join(assets, "context-caps.js");
+
+let tmp: string;
+let fakeHome: string;
+
+beforeAll(() => {
+  tmp = mkdtempSync(join(tmpdir(), "statusline-script-"));
+  // The script reads its defaults from `~/.config/statusline.json` and nowhere
+  // else — never the file beside itself. Without seeding it the render depends
+  // on whether the machine happens to have one installed, which passes on a dev
+  // box and renders an empty bar on a clean CI runner.
+  fakeHome = join(tmp, "home");
+  mkdirSync(join(fakeHome, ".config"), { recursive: true });
+  copyFileSync(
+    join(assets, "statusline.json"),
+    join(fakeHome, ".config", "statusline.json"),
+  );
+});
+afterAll(() => {
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+function runStatusline(payload: unknown, env: NodeJS.ProcessEnv = {}) {
+  return spawnSync(process.execPath, [SCRIPT], {
+    input: JSON.stringify(payload),
+    encoding: "utf8",
+    env: { ...process.env, HOME: fakeHome, ...env },
+  });
+}
+
+/** Distinct session ids per call keep the hook's per-session debounce out of the way. */
+function runCapsHook(sessionId: string, usage: unknown, cwd?: string) {
+  const usageDir = join(tmp, "caps-usage");
+  mkdirSync(usageDir, { recursive: true });
+  writeFileSync(join(usageDir, `${sessionId}.json`), JSON.stringify(usage));
+  return spawnSync(process.execPath, [CAPS_HOOK], {
+    input: JSON.stringify({ session_id: sessionId, cwd }),
+    encoding: "utf8",
+    env: { ...process.env, AI_PLUGINS_USAGE_DIR: usageDir },
+  });
+}
+
+describe("statusline script", () => {
+  it("renders the main bar and mirrors usage for the caps hook", () => {
+    const usageDir = join(tmp, "usage");
+    const sessionId = "test-session-123";
+    // Field shape mirrors the script's own documented example payload.
+    const payload = {
+      session_id: sessionId,
+      model: { display_name: "Opus 4.8" },
+      effort: { level: "high" },
+      session_name: "users-and-groups",
+      workspace: { current_dir: tmp },
+      cost: { total_cost_usd: 46.51, total_duration_ms: 33540000 },
+      context_window: {
+        used_percentage: 26,
+        context_window_size: 1000000,
+        total_input_tokens: 259000,
+      },
+      rate_limits: {
+        five_hour: { used_percentage: 7, resets_at: 1774200000 },
+        seven_day: { used_percentage: 1.0, resets_at: 1774600000 },
+      },
+    };
+
+    const result = runStatusline(payload, { AI_PLUGINS_USAGE_DIR: usageDir });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout.length).toBeGreaterThan(0);
+
+    const usage = JSON.parse(
+      readFileSync(join(usageDir, `${sessionId}.json`), "utf8"),
+    ) as Record<string, unknown>;
+    // The exact fields context-caps.js reads. This file is the only contract
+    // between the two, and nothing else would catch a rename.
+    for (
+      const key of [
+        "ctxPct",
+        "fiveHourPct",
+        "fiveHourResetsAt",
+        "sevenDayPct",
+        "sevenDayResetsAt",
+      ]
+    ) {
+      expect(usage, `usage file missing ${key}`).toHaveProperty(key);
+    }
+    expect(usage["ctxPct"]).toBe(26);
+    expect(usage["fiveHourPct"]).toBe(7);
+    expect(usage["sevenDayPct"]).toBe(1.0);
+  });
+
+  it("renders the subagent panel from a tasks payload", () => {
+    const result = runStatusline({
+      columns: 120,
+      tasks: [{
+        id: "t1",
+        name: "reviewer",
+        status: "running",
+        description: "Auditing auth flow",
+        tokenCount: 18234,
+        startTime: 1774200000000,
+      }],
+    });
+
+    expect(result.status, result.stderr).toBe(0);
+    // One NDJSON {id, content} row per task.
+    const row = JSON.parse(result.stdout.trim()) as {
+      id: string;
+      content: string;
+    };
+    expect(row.id).toBe("t1");
+    expect(row.content.length).toBeGreaterThan(0);
+  });
+});
+
+describe("context-caps hook", () => {
+  it("stays silent under the default cap and fires above it", () => {
+    const quiet = runCapsHook("caps-a", { ctxPct: 50 });
+    expect(quiet.status, quiet.stderr).toBe(0);
+    expect(quiet.stdout).toBe("");
+
+    const loud = runCapsHook("caps-b", { ctxPct: 70 });
+    expect(loud.status, loud.stderr).toBe(0);
+    expect(loud.stdout).toContain("cap 65%");
+  });
+
+  it("lets a repo config tighten the context cap", () => {
+    const repo = join(tmp, "repo-tight");
+    mkdirSync(join(repo, ".config"), { recursive: true });
+    writeFileSync(
+      join(repo, ".config", "vwf.yaml"),
+      "pipeline:\n  execute_caps:\n    context: 40\n",
+    );
+
+    const result = runCapsHook("caps-c", { ctxPct: 50 }, repo);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("cap 40%");
+  });
+
+  it("still honours the legacy autopilot_caps key", () => {
+    const repo = join(tmp, "repo-legacy");
+    mkdirSync(join(repo, ".config"), { recursive: true });
+    writeFileSync(
+      join(repo, ".config", "vwf.yaml"),
+      "pipeline:\n  autopilot_caps:\n    context: 40\n",
+    );
+
+    const result = runCapsHook("caps-e", { ctxPct: 50 }, repo);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("cap 40%");
+  });
+
+  it("never lets a repo config loosen a cap", () => {
+    const repo = join(tmp, "repo-loose");
+    mkdirSync(join(repo, ".config"), { recursive: true });
+    writeFileSync(
+      join(repo, ".config", "vwf.yaml"),
+      "pipeline:\n  execute_caps:\n    context: 90\n",
+    );
+
+    const result = runCapsHook("caps-d", { ctxPct: 70 }, repo);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("cap 65%");
+  });
+});

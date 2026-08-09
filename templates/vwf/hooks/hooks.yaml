@@ -1,0 +1,34 @@
+hooks:
+  - id: rtk
+    event: preToolUse
+    matcher: Bash
+    action: observe
+    command: command -v rtk >/dev/null 2>&1 && rtk hook claude || true
+
+  # MemPalace auto-save. Written here rather than vendored: upstream's hook
+  # counts human messages by parsing Claude's JSONL transcript, so it works on
+  # exactly one target. Counting stops in a state file needs only a session id,
+  # which every target supplies — one script, wrapped per target.
+  #
+  # Both skip OpenCode, whose equivalent surface is a bus event plus a server
+  # API you inject a message into rather than a stop to block. It is covered by
+  # `opencode-plugin/mempalace-autosave.ts`, which can count real messages.
+  - id: mempalace-save
+    event: stop
+    action: gate
+    script: mempalace-checkpoint.sh
+    timeout: 30
+    skipTargets: [ opencode ]
+    correction: >-
+      Save a MemPalace checkpoint — write a session diary entry and persist it
+      via the mempalace MCP tools, then continue.
+
+  - id: mempalace-precompact
+    event: preCompact
+    action: gate
+    script: mempalace-precompact.sh
+    timeout: 90
+    skipTargets: [ opencode ]
+    correction: >-
+      The conversation is about to be compacted. Persist what you still hold
+      via the mempalace MCP tools before it is lost.

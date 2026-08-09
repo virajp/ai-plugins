@@ -1,1 +1,10 @@
 graphify-out/graph.json merge=graphify
+
+# Rendered output. Committed so users install inspectable, CI-verified
+# artifacts, but marked generated so it collapses in review — every byte in
+# these trees is a pure function of templates/.
+claude/** linguist-generated=true
+cursor/** linguist-generated=true
+ohmypi/** linguist-generated=true
+opencode/** linguist-generated=true
+plugins.json linguist-generated=true

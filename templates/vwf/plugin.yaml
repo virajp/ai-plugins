@@ -1,0 +1,76 @@
+name: vwf
+version: 14.0.0
+description: Highly opinionated Product → Blueprint → Plan → Execute
+  workflow
+  for solo developers or small teams — enforced workspace structure with a
+  selectable stack-template menu checked by /vwf:doctor, a flow-first blueprint
+  (entities as data contracts, OpenAPI + JSON-Schema artifacts) with
+  whole-product coherence review, chained dependency plans, an autonomous
+  execute with review/security/acceptance/UX subagents behind one final merge
+  gate that stamps blueprint implementation state, post-deploy verify with
+  production release freezing + API backward-compat enforcement, feedback
+  intake, and mempalace-backed memory.
+category: development
+tags:
+  - agents
+  - skills
+  - workflow
+  - blueprint
+  - mockups
+  - plan
+  - execute
+  - archive
+  - coding
+  - review
+  - security
+  - architecture
+  - design-system
+  - onboarding
+  - tdd
+  - git-workflow
+repository: https://github.com/virajp/ai-plugins
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+dependencies:
+  # mempalace is NOT here: its skills and auto-save hooks are vendored into this
+  # plugin (see vendor/mempalace/). As a url-sourced dependency it had no
+  # rendered bundle, so the installer skipped it and OpenCode users got no
+  # memory layer at all — the thing vwf leans on hardest.
+  - andrej-karpathy-skills
+  # Load-bearing, not tidiness: /vwf:setup orchestrates devtools:scaffold, and a
+  # skill vwf cannot see fails SILENTLY — indistinguishable from one that ran
+  # and returned nothing.
+  - devtools
+# Binaries that must be on PATH, which is a different claim from depending on
+# the plugin that documents them. All four are tools vwf itself executes.
+requires:
+  # rtk backs vwf's Bash hook; graphify builds the knowledge graph vwf enforces
+  # at its own entry gate; uv is graphify's Python runtime. AI tooling, not dev
+  # tooling — they do not move to devtools.
+  - rtk
+  - graphify
+  - uv
+  # /vwf:doctor escalates a missing mise to blocking, so vwf requires the binary
+  # even though the devtools plugin owns the mise doctrine skill.
+  - mise
+  # vwf launches the context7 MCP server as `pnpm dlx @upstash/context7-mcp`, so
+  # pnpm is a runtime need here, not a JS opinion — same reasoning as mise
+  # above. Dropping it would leave the server failing to start with no error,
+  # since an un-gated missing binary is silent. vwf's prose still names no
+  # package manager.
+  - pnpm
+mcpServers:
+  mempalace:
+    transport: http
+    url: http://127.0.0.1:8765/mcp
+  context7:
+    transport: stdio
+    command: pnpm
+    args:
+      - dlx
+      - "@upstash/context7-mcp"
+    env:
+      CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}

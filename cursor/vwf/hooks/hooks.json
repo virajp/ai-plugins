@@ -1,0 +1,22 @@
+{
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "{ command -v rtk >/dev/null 2>&1 && rtk hook claude || true; } >/dev/null 2>&1; printf '{\"permission\":\"allow\"}\\n'"
+      }
+    ],
+    "stop": [
+      {
+        "command": "%%AI_PLUGINS_ROOT%%/hooks/mempalace-save.cursor.sh",
+        "timeout": 30
+      }
+    ],
+    "preCompact": [
+      {
+        "command": "%%AI_PLUGINS_ROOT%%/hooks/mempalace-precompact.cursor.sh",
+        "timeout": 90
+      }
+    ]
+  },
+  "version": 1
+}

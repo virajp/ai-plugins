@@ -1,0 +1,23 @@
+name: cloudflare
+version: 0.1.0
+description: "Cloudflare stack plugin for vwf — **scope is deliberately parked**.
+  It currently covers **Zero Trust Access** only: putting a project that must not
+  be publicly reachable behind an identity-aware proxy on its own hostname,
+  independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV,
+  Durable Objects, Queues, Images and Stream are **not** offered yet and arrive
+  under their own dedicated plan — so the menu says what it does not cover
+  rather than coming back quietly short. Implements the vwf stack-adapter
+  contract."
+category: development
+tags:
+  - cloudflare
+  - zero-trust
+  - access
+  - private-plane
+  - vwf-stack-adapter
+author:
+  name: Viraj Patel
+strict: true
+source:
+  kind: local
+optIn: true

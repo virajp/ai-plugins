@@ -1,0 +1,30 @@
+# docs/blueprint/entities/customer/schema.yaml — authoritative data model for the
+# Customer entity. Contract, not realization: logical types and constraints only.
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Customer
+description: A person who can place orders — the account an Order belongs to.
+type: object
+properties:
+  id:
+    type: string
+    description: Identifier (prefix cus_) — format per conventions.md#ids.
+  email:
+    type: string
+    format: email
+    description: RFC 5322 address; unique across non-deleted customers;
+      lowercased.
+  name:
+    type: string
+    description: Display name.
+    minLength: 1
+    maxLength: 120
+  status:
+    type: string
+    description: Lifecycle state — transitions in index.md Lifecycle.
+    enum: [ active, disabled ] # every lifecycle state
+  created_at:
+    type: string
+    format: date-time
+    description: UTC timestamp the account was created.
+required: [ id, email, name, status, created_at ]
+additionalProperties: false

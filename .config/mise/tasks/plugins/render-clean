@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#MISE description="Assert the committed render trees and marketplace manifests match a fresh render"
+#MISE dir="{{ config_root }}"
+
+# Renders every target and fails if that leaves anything uncommitted in the
+# rendered trees. The committed output is what users install, so it has to be a
+# pure function of templates/ — this is what catches a template edited without a
+# rebuild, or a rendered file edited by hand and never traced back to its
+# source.
+#
+# Used by pre-commit and by CI. In CI it is the whole gate: nothing there runs
+# the renderer for real, so without this a stale tree would ship.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+node --experimental-strip-types build/src/cli.ts render >/dev/null
+
+# .claude-plugin/ and .cursor-plugin/ are generated too: the marketplace
+# manifests Claude Code and Cursor read are written at the repo root, because
+# the sources inside them are root-relative and would resolve nowhere from
+# claude/ or cursor/.
+#
+# Only *unstaged* differences are a failure. In --porcelain the second status
+# column is the working tree, so `M ` (staged, tree clean) is precisely the
+# case this must allow: a commit that legitimately regenerates output has that
+# output staged. Failing on it would block every such commit — which is exactly
+# what the first version of this gate did.
+#
+# ` M`, `MM`, `??` and friends all carry a non-blank second column and are real
+# failures: the render produced something that is not what is being committed.
+# In CI nothing is staged, so any drift shows up there too.
+drift="$(git status --porcelain -- claude cursor ohmypi opencode plugins.json .claude-plugin .cursor-plugin | awk 'substr($0, 2, 1) != " "')"
+if [[ -n "$drift" ]]; then
+  print_error "generated output is not what templates/ renders to — re-run 'mise run plugins:build' and stage the result"
+  printf '%s\n' "$drift"
+  exit 1
+fi
+
+print_ok "generated output matches a fresh render"

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Lint files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "${MISE_PROJECT_ROOT}"
+
+print_header "Linting Python sources (ruff) ..."
+[[ "${usage_fix:-false}" == "true" ]] && FIX="--fix" || FIX=""
+uv run ruff check ${FIX} .
+
+print_header "Linting done"
