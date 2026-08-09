@@ -60,8 +60,9 @@ halt on a blocking finding they were never told about.
   (`<%= it.root %>/assets/stack-vocabulary.md`).
 - **Never halt.** Doctor always finishes and reports, even when everything is
   broken — a mandate is expressed as a **blocking finding**, never as doctor
-  stopping early. Callers decide what a finding means: `setup` and `execute`
-  both halt on `blocking`, `execute` additionally gates on the LSP check.
+  stopping early. Callers decide what a finding means: `setup`, `plan` and
+  `execute` all halt on `blocking`, and `execute` additionally gates on the LSP
+  check — `plan` does not, since planning compiles nothing.
 
 ---
 
@@ -133,7 +134,11 @@ accepted a remedy. That is what lets the next run say **known**. Skip silently
 if mempalace is unavailable.
 
 **Callers.** `<%= it.cmd("vwf:setup") %>` step 10 runs this over the whole repo and records what
-it finds. `<%= it.cmd("vwf:execute") %>` runs it scoped to the plan's projects. **Both halt on
-any `blocking` finding** — the mandated tooling is what the pipeline is built
-on, so proceeding without it produces a run that fails later and less clearly.
-`<%= it.cmd("vwf:execute") %>` additionally gates on the LSP findings, as it always has.
+it finds. `<%= it.cmd("vwf:plan") %>` runs it scoped to its dependency chain's projects, once
+the chain is approved and before its survey. `<%= it.cmd("vwf:execute") %>` runs it scoped to
+the plan's projects. **All three halt on any `blocking` finding** — the mandated
+tooling is what the pipeline is built on, and the stack menu is what its
+conventions and harness come from, so proceeding without either produces a run
+that fails later and less clearly, or one that fails to fail at all.
+`<%= it.cmd("vwf:execute") %>` additionally gates on the LSP findings, as it always has;
+`<%= it.cmd("vwf:plan") %>` does not, since it compiles nothing.

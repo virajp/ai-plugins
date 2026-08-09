@@ -932,11 +932,16 @@ what's missing, what changes, and the order to do it in — to
 `docs/plans/<date>-<time>-<slice>.md`. Steps are ordered for TDD: each names the
 failing test that defines "done".
 
-Three guardrails keep a plan from building on a gap — which is what lets
+Four guardrails keep a plan from building on a gap — which is what lets
 `execute` run autonomously: it **halts unless the blueprint coverage stamp reads
-complete**; it resolves the slice's **dependency chain** — every flow or entity
-the slice stands on whose `implementation:` stamp isn't `complete` becomes **its
-own plan**, planned dependency-first behind its own gate and linked by
+complete**; it **halts on a stack no installed plugin defines** — once the chain
+is resolved it runs `/vwf:doctor` scoped to the chain's projects and stops on
+any blocking finding, because a plan's steps are sized against the selected
+templates' conventions and an undefined stack has none (it does *not* ask about
+a missing LSP server the way `execute` does — planning compiles nothing); it
+resolves the slice's **dependency chain** — every flow or entity the slice
+stands on whose `implementation:` stamp isn't `complete` becomes **its own
+plan**, planned dependency-first behind its own gate and linked by
 `covers:`/`requires:` frontmatter (a genuine dependency cycle collapses into one
 plan; if the code already conforms, `plan` offers to heal the stamp instead) —
 so no plan swallows its dependencies and `execute` can enforce the order; and it
