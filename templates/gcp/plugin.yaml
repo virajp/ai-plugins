@@ -1,5 +1,5 @@
 name: gcp
-version: 0.1.0
+version: 0.1.1
 description: "Google Cloud stack plugin for vwf — the judgment layer an SDK
   reference cannot give you: which service to pick and when it stops being the
   answer, how each one bills and the traps that multiply it, which services have

@@ -399,11 +399,12 @@ all**. It defines the axes, the `role` vocabulary and the template shape; every
 actual option lives in a **stack plugin** at
 `<plugin>/stacks/project/<role>/<slug>.md`, which vwf reaches through two fixed
 adapter skill names. `/vwf:architecture` presents the union across your
-installed plugins as a menu — one round per project, plus an *other (describe)*
-option for anything nobody ships. Each project carries exactly one role, so it
-picks exactly one template and there is nothing to merge. Install no stack
-plugin and the menu is empty: vwf says so and points at what to install, rather
-than coming back quietly short.
+installed plugins as a menu — one round per project. The menu is the **whole**
+answer: there is no *other (describe)* option, so a role nothing on it fits
+halts rather than recording a free-text pin (see below). Each project carries
+exactly one role, so it picks exactly one template and there is nothing to
+merge. Install no stack plugin and the menu is empty: vwf says so and points at
+what to install, rather than coming back quietly short.
 
 A stack is composed from **four independent axes** — you pick one of each, and
 they never merge because they never overlap:
@@ -469,16 +470,26 @@ template admits — Flutter's Kotlin and Swift), and prose carrying the layout,
 testing and deployment conventions `plan` and `execute` read. Picking one fills
 those axes into `.config/vwf.yaml`; you can then customize any of them.
 
-**vwf names no language.** The vocabulary is **open**: a language token is
-whatever a template declares, and the facts the tooling acts on — which LSP
-server covers it, which manifest identifies it, which mise tool installs it —
-come from the **language plugin** that owns it. `/vwf:doctor` reads the block
-back and checks the repo agrees: an LSP server and toolchain per declared
-language, every framework and dependency present in the project's manifest, the
-repo's package manager and tooling, harness task names, health paths. It reports
-drift in both directions, including a framework doing obvious structural work
-that your config never mentions. A language no installed plugin claims degrades
-to *unknown* — reported, never a block.
+**vwf names no language, but the menu is closed.** A language token is whatever
+a template declares, and the facts the tooling acts on — which LSP server covers
+it, which manifest identifies it, which mise tool installs it — come from the
+**language plugin** that owns it. vwf holds no table of its own; the union of
+what the installed plugins declare **is** the vocabulary. `/vwf:doctor` reads
+the block back and checks the repo agrees: an LSP server and toolchain per
+declared language, every framework and dependency present in the project's
+manifest, the repo's package manager and tooling, harness task names, health
+paths. It reports drift in both directions, including a framework doing obvious
+structural work that your config never mentions.
+
+A language no installed plugin claims is reported as *unknown*, and since
+`config_format` **14** that is a **blocking** finding: `/vwf:setup` and
+`/vwf:execute` both halt on it. There is likewise no *other (describe)* option
+and no `template: custom` — an axis nothing on the menu fits is a halt naming
+the two ways forward, not a free-text pin. vwf is an opinionated workflow that
+plans against a template's conventions, builds against its harness and gates a
+UI slice on its UX contract; a stack no plugin defines supplies none of those,
+so a run against it would lose every guarantee *while reporting itself healthy*.
+Many stacks are supported — every one of them defined by a plugin.
 
 Adding a stack option means adding a template file **to a plugin**, never to
 vwf. One entry per type today is a starting point, not a default.
@@ -636,10 +647,11 @@ delta). Retired goals reconcile their inbound links, never dangle.
 Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
 by presenting the [stack templates](#stack-templates) for its type as a menu
-(one round per project, plus *other (describe)*; the answer lands as a
-structured block in `.config/vwf.yaml`), walks the **product-foundations
-checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
-foundation, recorded as cross-cutting tokens), and writes **both**
+(one round per project, and the menu is the whole vocabulary — nothing fitting
+is a halt, not a free-text pin; the answer lands as a structured block in
+`.config/vwf.yaml`), walks the **product-foundations checklist** (see
+[vwf skills](#vwf-skills) — one accept/adapt/skip question per foundation,
+recorded as cross-cutting tokens), and writes **both**
 `docs/blueprint/registry.yaml` — the machine-readable registry every other
 command depends on — and `docs/blueprint/architecture.md`, its prose view with a
 system-shape mermaid diagram kept in sync with it. Re-run it any time the

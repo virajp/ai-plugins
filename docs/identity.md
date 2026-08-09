@@ -113,7 +113,9 @@ plugin supplies it and vwf asks that plugin separately:
 
 The menu skill never lists another plugin's template, and never fills a gap from
 general auth knowledge: if a provider is not in the list, this plugin does not
-offer it and vwf falls back to `template: custom`.
+offer it. Since `config_format` 14 there is no `template: custom` fallback — vwf
+halts and names the two ways forward: install a plugin that ships it, or write
+one.
 
 The cross-project rule lives in vwf's `capability-vocabulary.md` rather than
 here: **consumers follow the publisher.** If project A publishes a capability

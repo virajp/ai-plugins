@@ -29,10 +29,17 @@ records it without a question, because it was never a choice.
 
 **An unrecognised manifest never fails detection.** The repo classifies on the
 structural signals above regardless, and its language is recorded verbatim with
-its facts marked `unknown`, per
-[stack-vocabulary](%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md). A codebase in a
-language nobody has written a plugin for is onboarded like any other — vwf just
-checks less for it, and says so.
+its facts marked `unknown`. Detection is **recognition**, and recognising a
+language vwf has no plugin for is a legitimate scan result — it is what lets
+setup describe the repo accurately instead of refusing to look at it.
+
+**It does not follow that the repo is onboarded.** `unknown` is a **blocking**
+finding, so setup's step-10 `doctor` run halts on it: vwf's stack menu is
+closed to what the installed plugins declare, and it will not plan or build
+against a language none of them covers
+([stack-vocabulary](%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md)). Detection
+records the fact; the gate decides what it means. Onboarding completes once a
+plugin declaring that language is installed.
 
 **Project role** — seven tokens, never literal tech. Each project carries
 exactly one, in the registry's `role` field.

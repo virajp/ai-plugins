@@ -51,8 +51,10 @@ templates:
 ## Rules
 
 - **This list is exhaustive.** If a composition is not here, the `gcp` plugin
-  does not offer it; vwf falls back to `template: custom` and records what the
-  user describes.
+  does not offer it. There is no `custom` fallback — vwf retired it in
+  `config_format` 14 and halts instead, naming the two ways forward (install a
+  plugin that has it, or write one). Never invent an entry to spare the user
+  that halt.
 - **The project axis is not ours.** GCP hosts code; it does not decide the
   language or framework a project is written in. A `gcp` menu entry never
   carries a `role`.

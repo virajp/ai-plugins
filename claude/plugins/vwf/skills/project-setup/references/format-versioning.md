@@ -7,7 +7,7 @@ and, on re-run, migrates the gap.
 `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 13
+config_format: 14
 blueprint_format: 20
 topology: monorepo # repo | monorepo | polyrepo
 ui: true # design-system required
@@ -37,8 +37,14 @@ is impossible and would be treated as 12, one stamped 17 as 16. `config_format`
 `19 → 20` delta below): the IaC role is spelled `iac` rather than the old
 abbreviation, and an `iac` project must live in its own repo — independent, or a
 submodule of the product parent — which `/vwf:doctor` raises as a **blocking**
-finding and `/vwf:setup` offers to restructure. It ships with `config_format` 13,
-which moves the backing, deploy, design and CI axes down to per-project keys.
+finding and `/vwf:setup` offers to restructure. It ships with `config_format` 14,
+which **closes the stack menu** — every axis pins a template an installed stack
+plugin ships, `template: custom` is retired, and a language token no plugin
+declares is blocking (the `13 → 14` delta in the vwf-config asset). `config_format`
+13, which it builds on, moved the backing, deploy, design and CI axes down to
+per-project keys. Note that 14 is the first config bump since 11 that ships
+**without** a paired blueprint bump: nothing under `docs/blueprint/` changes, so
+`blueprint_format` stays 20 — the case the stamp rule above anticipates.
 Format 19 = format 18 **plus** the **role model** (the
 `18 → 19` delta below): a registry project carries a single `role` instead of a
 `type`, `console` becomes `fullstack` + the `operator-rbac` capability, the IaC

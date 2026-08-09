@@ -91,8 +91,11 @@ templates:
 ## Rules
 
 - **This list is exhaustive.** A composition not listed is one this plugin does
-  not offer; vwf falls back to `template: custom` and records what the user
-  describes.
+  not offer. There is no `custom` fallback — vwf retired it in `config_format`
+  14, and its stack menu is now closed to what the installed plugins ship: vwf
+  halts and names the two ways forward (install a plugin that has it, or write
+  one). Return the menu as it is; never invent an entry to spare the user that
+  halt.
 - **Every project entry carries a `role`**, and no two share one — so the
   project-axis menu vwf renders for a given role is a single entry or none.
 - **The `backing` axis is not ours.** A language plugin does not decide the

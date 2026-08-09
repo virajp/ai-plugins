@@ -132,7 +132,11 @@ cloud plugin supplies it and vwf asks that plugin separately:
 
 The menu skill never lists another plugin's template, and never fills a gap from
 general queueing knowledge: if an engine is not in the list, this plugin does
-not offer it and vwf falls back to `template: custom`.
+not offer it. Since `config_format` 14 there is no `template: custom` fallback —
+vwf halts and names the two ways forward: install a plugin that ships it, or
+write one. (The contract's *no service at all* answer — a job table in the
+product's own datastore — is unaffected: the project simply carries no
+orchestration slug in its `backing_template` list.)
 
 The cross-project rule lives in vwf's `capability-vocabulary.md` rather than
 here: **consumers follow the publisher.** If project A publishes a capability

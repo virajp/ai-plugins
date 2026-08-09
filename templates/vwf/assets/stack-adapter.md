@@ -37,8 +37,11 @@ someone else's repo, never to tell them what to use. Any third case is a bug.
    verdict on the tool.
 
 Everything else that reads a repo — topology detection, harness detection —
-resolves through the installed stack plugins instead, and degrades to `unknown`
-rather than failing on a language nobody has written a plugin for.
+resolves through the installed stack plugins instead. A signal no plugin claims
+is recorded as `unknown`, which lets a **scan** finish on its other evidence but
+is a **blocking** finding the moment vwf is asked to plan or build: the menu is
+closed to what the installed plugins define
+(`<%= it.root %>/assets/stack-vocabulary.md`).
 
 ## Configuration
 

@@ -1,5 +1,5 @@
 name: typescript
-version: 2.0.0
+version: 2.0.1
 description: "The TypeScript language plugin — one plugin per language, covering
   both `typescript` and `javascript`. A `typescript` router skill (lean SKILL.md
   routing to on-demand references: the coding standards baseline, Vitest testing,

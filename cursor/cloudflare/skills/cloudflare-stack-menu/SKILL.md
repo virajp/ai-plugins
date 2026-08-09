@@ -54,9 +54,10 @@ decision rather than a fault.
 ## Rules
 
 - **This list is exhaustive.** If a composition is not here, the `cloudflare`
-  plugin does not offer it; vwf falls back to `template: custom` and records
-  what the user describes. Do not fill the gap from general Cloudflare
-  knowledge.
+  plugin does not offer it. There is no `custom` fallback — vwf retired it in
+  `config_format` 14 and halts instead, naming the two ways forward (install a
+  plugin that has it, or write one). Do not fill the gap from general Cloudflare
+  knowledge, and never invent an entry to spare the user that halt.
 - **The project axis is not ours.** Cloudflare fronts and hosts code; it does
   not decide the language or framework a project is written in. A `cloudflare`
   menu entry never carries a `role`.

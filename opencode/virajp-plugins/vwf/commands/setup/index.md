@@ -130,10 +130,12 @@ is no default and nothing to object to, so no `enforcement` entry: record
 `topology` and `topology_reason`.
 
 **Stacks are elicited, never stated.** For each project, present the templates
-the installed stack plugins offer for that role as a menu with an
-**other (describe)** option, plus their repo-level menus. vwf ships no stack
-template of its own, no default, and nothing to object to, so there
-is no `enforcement` entry for a stack. `architecture` owns this elicitation
+the installed stack plugins offer for that role as a menu, plus their repo-level
+menus. The menu is the **whole** vocabulary — there is no **other (describe)**
+option and no `template: custom` (retired in `config_format` 14), so a role
+nothing fits is a halt naming the two ways forward, never a free-text pin. vwf
+ships no stack template of its own, no default, and nothing to object to, so
+there is no `enforcement` entry for a stack. `architecture` owns this elicitation
 — hand off to it at step 7 rather than duplicating it here; what this step needs
 is only enough detection to populate the menu's starting point.
 
@@ -322,6 +324,17 @@ what the whole pipeline runs on, and by this step everything setup can fix has
 already been attempted. A remaining blocking finding means the repo cannot run
 vwf: report it with its remedy and stop, rather than stamping a config that
 describes a repo nothing can execute against.
+
+**A stack no installed plugin defines halts here too** — an **unknown** language,
+or a surviving `custom` template pin. This is the one blocking kind setup can
+reach on a repo that is otherwise perfectly onboarded, so say plainly what it
+means: vwf's stack menu is closed to what the installed plugins define, and the
+remedy is to install the stack plugin covering that language, or to write one
+(`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`). Everything migrated up to
+this point stays in the worktree with `setup_progress` recorded, exactly as for
+any other halt, so a re-run resumes here and completes once the plugin is
+installed. Never offer to drop the language token or invent a template to get
+past it — that stamps a config describing a repo vwf cannot build.
 
 **One exception: a declined graph build.** The graph step offers and the user
 may refuse; a recorded decline is a settled choice, not an unmet mandate. Note

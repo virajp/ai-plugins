@@ -13,8 +13,13 @@ If a language's LSP server is missing, ask and **wait**:
   retry. On a **resumed** run, don't re-ask — note it as a gap (degraded
   type-safety) and continue.
 - A language doctor reports as **unavailable** (no LSP ships in this
-  marketplace) or **unknown** is not a gate — there is nothing to install.
-  Note it as a gap and proceed.
+  marketplace) is not a gate — there is nothing to install. Note it as a gap and
+  proceed.
+- A language doctor reports as **unknown** is not handled here at all: no
+  installed plugin declares it, so it is a `blocking` finding and a hard halt in
+  `SKILL.md`. It is not a missing LSP — it is a stack vwf has no template,
+  conventions or harness for, and there is nothing to ask the user to continue
+  without.
 
 Everything else doctor reports is noted and carried into the run's gap list, not
 blocked on.

@@ -290,11 +290,13 @@ Once the writes are confirmed, read both yourself. Check:
 - Every `depends_on` entry names a real project in the `projects:` list (no
   dangling reference).
 - Every registry project has a `projects.<name>.stack` block in
-  `.config/vwf.yaml` — the block is mandatory since config-format 11, and every
-  `languages` token is one an installed stack plugin declares, or is recorded
-  verbatim as unknown (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). A flat list, an absent
-  block, or a legacy `enforcement.stacks` block is drift — migrate it. Every
-  `enforcement.rules` entry names a known rule and carries a reason.
+  `.config/vwf.yaml` — the block is mandatory since config-format 11 — and every
+  `languages` token is one an installed stack plugin declares, every axis a
+  template one ships (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). A token or pin
+  outside that is a **halt**, not a recorded value, and `template: custom` is
+  retired. A flat list, an absent block, or a legacy `enforcement.stacks` block
+  is drift — migrate it. Every `enforcement.rules` entry names a known rule and
+  carries a reason.
 - No dependency cycle: the `depends_on` edges form a DAG.
 
 **On a finding:** surface it to the user, ask for the missing information, then

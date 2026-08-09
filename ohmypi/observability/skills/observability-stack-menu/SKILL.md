@@ -50,8 +50,10 @@ decision rather than a fault.
 ## Rules
 
 - **This list is exhaustive.** If a backend is not here, the `observability`
-  plugin does not offer it; vwf falls back to `template: custom` and records
-  what the user describes. Do not fill the gap from general telemetry knowledge.
+  plugin does not offer it. There is no `custom` fallback — vwf retired it in
+  `config_format` 14 and halts instead, naming the two ways forward (install a
+  plugin that has it, or write one). Do not fill the gap from general telemetry
+  knowledge, and never invent an entry to spare the user that halt.
 - **The project axis is not ours.** A telemetry backend does not decide the
   language or framework a project is written in, so an `observability` menu
   entry never carries a `role`.

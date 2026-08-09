@@ -1,11 +1,11 @@
 # Stack Vocabulary
 
 The **shape of a language fact** — what vwf needs to know about any language, and
-what it does when it knows nothing. vwf holds no list of languages. Frameworks
-and dependencies are open too: any lowercase-kebab token is valid, because no
-useful check exists for them beyond presence in a manifest.
+what it does when no installed plugin claims one. vwf holds no list of languages.
+Frameworks and dependencies are open: any lowercase-kebab token is valid, because
+no useful check exists for them beyond presence in a manifest.
 
-## Languages — an open vocabulary
+## Languages — closed to what the installed plugins declare
 
 **vwf names no language.** A language token is whatever a stack template
 declares, and the facts `/skill:doctor` checks are supplied by the
@@ -19,19 +19,27 @@ what such a fact consists of:
 | manifest     | The file whose presence identifies a project of that language           |
 | toolchain    | The mise tool that installs it, where mise manages one                   |
 
-Any of these may legitimately be absent. A language whose toolchain does not
-come from mise has none; a language with no LSP in this marketplace is reported
-as *unavailable here* rather than *missing*, because there is no install command
-to suggest. Neither is a failure.
+Any of these may legitimately be absent, and no absence among them is a failure.
+A language whose toolchain does not come from mise has none; a language with no
+LSP in this marketplace is reported as *unavailable here* rather than *missing*,
+because there is no install command to suggest.
 
-**An unrecognised token degrades, it never blocks.** vwf records it verbatim,
-`doctor` checks nothing for it and says so, and topology detection classifies
-the repo on its other signals rather than failing. That is what makes a language
-nobody has written a plugin for usable today — the fallback is the feature, not
-a gap waiting to be filled by a longer table.
+**What is not open is the set of tokens.** vwf holds no list, but the union of
+what the installed stack plugins declare **is** the list. A token outside it is
+reported as `unknown`, and `unknown` is **blocking**: `doctor` raises it, and
+`/skill:setup` and `/skill:execute` both halt on it.
 
-Adding real support for a language means **shipping a plugin for it**, which is
-what supplies the rows this file used to hardcode. It does not mean editing vwf.
+**Why blocking rather than a graceful degrade.** vwf is an opinionated workflow
+— it plans against a template's conventions, builds against its harness, and
+gates a UI slice on its UX contract. A language no plugin claims supplies none of
+those, so a run against it loses every one of those guarantees *while reporting
+itself healthy*. That is worse than a refusal, because the run looks exactly like
+every other run. The menu is deliberately closed: many options, all of them
+defined by a plugin here. "Works with anything" is not a goal vwf has.
+
+Adding a language means **shipping a plugin for it**, which is what supplies the
+rows this file used to hardcode. It does not mean editing vwf. Until that plugin
+exists, vwf declines the repo rather than half-running against it.
 
 ## The four axes
 
@@ -138,7 +146,15 @@ only matters for how doctor checks a project — so keep it mechanical:
 
 There is no "recommended" or "default" marker on any template. vwf ships a menu:
 `/skill:architecture` presents every template for a project's `role` and the user
-picks, with an **other (describe)** path that records free-text axes and
-`template: custom`. A repo whose stack matches nothing shipped is a normal
-outcome, not a deviation — there is no `enforcement` entry for it and nothing to
-justify.
+picks. There is **no free-text escape hatch** — no *other (describe)* option, and
+`template: custom` is not a value the config accepts (retired in
+`config_format` 14). A role for which no installed plugin ships a fitting
+template is a **halt**, naming the two ways forward: install the stack plugin
+that has one, or write it (`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`,
+"Writing a stack plugin").
+
+That refusal is the point. A `custom` pin recorded a stack vwf had no template
+for — so no `conventions` prose for `plan` and `execute` to read, and no
+`harness` block for `/skill:doctor` to check — and the pipeline ran on with those
+inputs missing and said nothing. Closing it makes the menu the whole vocabulary,
+and makes adding to it a plugin rather than a config value.

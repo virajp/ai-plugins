@@ -238,10 +238,14 @@ silently if mempalace is unavailable.
    `stack.languages` from `.config/vwf.yaml` and checks LSP servers, toolchains,
    manifests, and the harness.
 
-   **Halt on any `blocking` finding** — mise, the graphify CLI, or no graph
-   reachable from either this worktree or the main checkout. These are mandated
-   tooling, so this is a hard halt with the remedy, not a question: a run
-   started without them fails later and less legibly. Report and stop.
+   **Halt on any `blocking` finding** — mise, the graphify CLI, no graph
+   reachable from either this worktree or the main checkout, or a stack no
+   installed plugin defines (an **unknown** language, a `custom` template pin).
+   These are mandated tooling and the closed stack menu, so this is a hard halt
+   with the remedy, not a question: a run started without them fails later and
+   less legibly, and one started against an undefined stack does not fail at all
+   — it builds with the conventions, harness and UX gate silently absent. Report
+   and stop.
 
    **Then gate on the LSP findings** — everything else doctor reports is noted
    and carried into the run's gap list, not blocked on. A missing LSP server is

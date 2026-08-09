@@ -41,8 +41,10 @@ templates:
 ## Rules
 
 - **This list is exhaustive.** A composition not listed is one this plugin does
-  not offer; vwf falls back to `template: custom` and records what the user
-  describes. Do not fill the gap from general Flutter knowledge.
+  not offer. There is no `custom` fallback — vwf retired it in `config_format`
+  14 and halts instead, naming the two ways forward (install a plugin that has
+  it, or write one). Do not fill the gap from general Flutter knowledge, and
+  never invent an entry to spare the user that halt.
 - **Only the `frontend` role.** Flutter is the on-device app; a server, a
   static site or a shared package belongs to the plugin owning that stack. A
   `flutter` menu entry never claims another role.
