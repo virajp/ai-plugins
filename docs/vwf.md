@@ -72,12 +72,13 @@ more dependencies. They are **part of `vwf` now**: `documentation-standards` and
 Install it when you want pipelines generated — vwf works without it.
 
 **A design tool is not among them.** vwf is decoupled from any particular one:
-it delegates screen and design-system imports to two fixed skills in the
-**design-tools** plugin, which resolves the tool **per project** — so a product
-can design its website in Lovable and its app on the Claude Design canvas.
-Supported tools today are `claude-design`, `lovable` and `stitch`; adding one is
-a reference file in that plugin, not a vwf change. Export needs no adapter at
-all, since `/vwf:screens prompt` just writes design briefs as files.
+it delegates screen, design-system and review-conversation imports to three
+fixed skills in the **design-tools** plugin, which resolves the tool **per
+project** — so a product can design its website in Lovable and its app on the
+Claude Design canvas. Supported tools today are `claude-design`, `lovable` and
+`stitch`; adding one is a reference file in that plugin, not a vwf change.
+Export needs no adapter at all, since `/vwf:screens prompt` just writes design
+briefs as files.
 
 ## Caveats
 
