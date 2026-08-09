@@ -13,6 +13,7 @@
  */
 import type { TargetId } from "@ai-plugins/schema";
 import { rmSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { hasBin } from "./adapters/support.ts";
 import type {
@@ -60,6 +61,12 @@ export interface TargetOutcome {
   /** Absent on success; the failure message otherwise. */
   readonly error?: string;
   readonly skipped?: "empty" | "not-installed";
+  /**
+   * How many plugins this target's plan named. Absent for the statusline
+   * outcomes, which install no plugin — the report says what they touched
+   * instead of pretending to a count of zero.
+   */
+  readonly plugins?: number;
 }
 
 export interface ExecuteOptions {
@@ -88,8 +95,14 @@ export function execute(
   const outcomes: TargetOutcome[] = [];
 
   for (const [adapter, plan] of jobs) {
+    const plugins = plan.user.length + plan.project.length;
     if (isEmptyPlan(plan)) {
-      outcomes.push({ target: adapter.id, actions: [], skipped: "empty" });
+      outcomes.push({
+        target: adapter.id,
+        actions: [],
+        skipped: "empty",
+        plugins,
+      });
       continue;
     }
     if (options.force !== true && !adapter.detect(options.context)) {
@@ -99,6 +112,7 @@ export function execute(
         target: adapter.id,
         actions: [],
         skipped: "not-installed",
+        plugins,
       });
       continue;
     }
@@ -108,6 +122,7 @@ export function execute(
         outcomes.push({
           target: adapter.id,
           actions: adapter.plan(options.context, plan),
+          plugins,
         });
         continue;
       }
@@ -116,13 +131,14 @@ export function execute(
         receiptPath(options.receiptDir, adapter.id),
         result.receipt,
       );
-      outcomes.push({ target: adapter.id, actions: result.actions });
+      outcomes.push({ target: adapter.id, actions: result.actions, plugins });
     }
     catch (error) {
       outcomes.push({
         target: adapter.id,
         actions: [],
         error: (error as Error).message,
+        plugins,
       });
     }
   }
@@ -512,25 +528,244 @@ export function verify(
 // Reporting
 // ---------------------------------------------------------------------------
 
+export interface ProgressReport {
+  readonly outcomes: readonly TargetOutcome[];
+  /**
+   * Everything the run wanted to say that is not a per-target result — a
+   * skipped plugin, a scope redirect, graphify wiring. **Collected, not
+   * printed as it happens**: interleaved with the results they read as noise
+   * before you know whether anything worked.
+   */
+  readonly notes?: readonly string[];
+  /** Shown in the header, so a pasted report says which build produced it. */
+  readonly version?: string;
+  readonly elapsedMs?: number;
+}
+
+const OK = "✔";
+const BAD = "✘";
+const SKIP = "–";
+
+interface Row {
+  readonly target: string;
+  readonly result: string;
+  readonly detail: string;
+}
+
+/** `3 plugins` / `1 plugin`, or nothing when the count is not meaningful. */
+function plural(n: number, one: string): string {
+  return `${n} ${n === 1 ? one : `${one}s`}`;
+}
+
+function rowFor(outcome: TargetOutcome): Row {
+  const target = outcome.target;
+  const count = outcome.plugins;
+  const scope = count === undefined ? undefined : plural(count, "plugin");
+
+  if (outcome.error !== undefined) {
+    // The table keeps a phrase; the whole error expands in Failures below, so
+    // one broken target cannot push the other rows out of alignment.
+    return {
+      target,
+      result: `${BAD} failed`,
+      detail: firstLine(outcome.error),
+    };
+  }
+  if (outcome.skipped === "not-installed") {
+    return { target, result: `${SKIP} skipped`, detail: "tool not on PATH" };
+  }
+  if (outcome.skipped === "empty") {
+    return { target, result: `${SKIP} skipped`, detail: "nothing requested" };
+  }
+  if (outcome.actions.length === 0) {
+    return {
+      target,
+      result: `${OK} current`,
+      detail: scope === undefined
+        ? "already up to date"
+        : `${scope}, already up to date`,
+    };
+  }
+  const files = plural(outcome.actions.length, "change");
+  return {
+    target,
+    result: `${OK} updated`,
+    detail: scope === undefined ? files : `${scope}, ${files}`,
+  };
+}
+
+function firstLine(text: string): string {
+  const line = text.split("\n")[0] ?? text;
+  return line.length > 64 ? `${line.slice(0, 61)}…` : line;
+}
+
+/** Which agent each statusline outcome installs into. */
+const STATUSLINE_SURFACE: Record<string, string> = {
+  statusline: "claude",
+  "statusline:ohmypi": "ohmypi",
+  "statusline:opencode": "opencode",
+};
+
 /**
- * Human-readable progress. **Goes to stderr**, so stdout stays parseable — a
- * caller piping this into `jq` should not have to filter out banners.
+ * The three statusline outcomes become one row.
+ *
+ * They are three installs of a single feature — a copied script, four `omp
+ * config` keys, a TUI plugin — so listing them as three targets both triples
+ * the apparent surface area and, because `statusline:opencode` is the longest
+ * label in the run, widens every other column to accommodate a name nobody
+ * needed to read.
  */
-export function renderProgress(outcomes: readonly TargetOutcome[]): string {
-  return outcomes
-    .map(outcome => {
-      if (outcome.error !== undefined) {
-        return `✘ ${outcome.target}: ${outcome.error}`;
-      }
-      if (outcome.skipped === "not-installed") {
-        return `- ${outcome.target}: not installed, skipping`;
-      }
-      if (outcome.skipped === "empty") {
-        return `- ${outcome.target}: nothing to do`;
-      }
-      return `✔ ${outcome.target}: ${outcome.actions.length} change(s)`;
-    })
-    .join("\n");
+function collapseStatusline(outcomes: readonly TargetOutcome[]): Row[] {
+  const bars = outcomes.filter(o => o.target in STATUSLINE_SURFACE);
+  const rows = outcomes
+    .filter(o => !(o.target in STATUSLINE_SURFACE))
+    .map(rowFor);
+  if (bars.length === 0) {
+    return rows;
+  }
+
+  const failedBars = bars.filter(o => o.error !== undefined);
+  if (failedBars.length > 0) {
+    rows.push({
+      target: "statusline",
+      result: `${BAD} failed`,
+      detail: firstLine(failedBars[0]?.error ?? ""),
+    });
+    return rows;
+  }
+  const changed = bars
+    .filter(o => o.skipped === undefined && o.actions.length > 0)
+    .map(o => STATUSLINE_SURFACE[o.target] ?? o.target);
+  rows.push({
+    target: "statusline",
+    result: changed.length > 0 ? `${OK} updated` : `${OK} current`,
+    detail: changed.length > 0
+      ? changed.join(", ")
+      : "already up to date",
+  });
+  return rows;
+}
+
+/**
+ * Collapse `$HOME` to `~` in a note.
+ *
+ * A pnpm store path is ~150 characters of content-addressed hash, and three of
+ * them turn the notes block into a wall. The prefix is the part carrying no
+ * information — every reader knows where their own home directory is.
+ */
+export function shorten(text: string, home: string = homedir()): string {
+  return home.length > 1 ? text.split(home).join("~") : text;
+}
+
+/** Wrap to `width`, continuation lines aligned under the first. */
+function wrap(text: string, width: number, indent: string): string[] {
+  const words = text.split(/\s+/).filter(w => w.length > 0);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    if (line.length > 0 && line.length + 1 + word.length > width) {
+      lines.push(line);
+      line = word;
+      continue;
+    }
+    line = line.length === 0 ? word : `${line} ${word}`;
+  }
+  if (line.length > 0) {
+    lines.push(line);
+  }
+  return lines.map((l, i) => (i === 0 ? `${indent}${l}` : `${indent}  ${l}`));
+}
+
+/**
+ * The run report. **Goes to stderr**, so stdout stays parseable — a caller
+ * piping this into `jq` should not have to filter out banners.
+ *
+ * Three blocks, in the order you need them: a per-target table you can scan
+ * down a column of, the notes that would otherwise interrupt it, and the full
+ * text of anything that failed. A one-line verdict closes it, so a green run
+ * is legible without reading any of the rest.
+ */
+export function renderProgress(
+  input: readonly TargetOutcome[] | ProgressReport,
+): string {
+  const report: ProgressReport = Array.isArray(input)
+    ? { outcomes: input as readonly TargetOutcome[] }
+    : input as ProgressReport;
+  const { outcomes } = report;
+  const notes = report.notes ?? [];
+  const blocks: string[] = [];
+
+  if (report.version !== undefined) {
+    blocks.push(`  @askviraj/ai-plugins ${report.version}`);
+  }
+
+  const rows = collapseStatusline(outcomes);
+  const wTarget = Math.max(6, ...rows.map(r => r.target.length));
+  const wResult = Math.max(6, ...rows.map(r => r.result.length));
+  const table = [
+    `  ${pad("TARGET", wTarget)}  ${pad("RESULT", wResult)}  DETAIL`,
+    ...rows.map(r =>
+      `  ${pad(r.target, wTarget)}  ${pad(r.result, wResult)}  ${r.detail}`
+        .trimEnd()
+    ),
+  ];
+  blocks.push(table.join("\n"));
+
+  if (notes.length > 0) {
+    blocks.push(
+      ["  Notes", ...notes.flatMap(n => wrap(shorten(n), 68, "    "))]
+        .join("\n"),
+    );
+  }
+
+  const failures = outcomes.filter(o => o.error !== undefined);
+  if (failures.length > 0) {
+    blocks.push(
+      [
+        "  Failures",
+        ...failures.flatMap(o => [
+          `    ${o.target}`,
+          ...(o.error ?? "").split("\n").map(l => `      ${l}`),
+        ]),
+      ]
+        .join("\n"),
+    );
+  }
+
+  blocks.push(`  ${verdict(outcomes, report.elapsedMs)}`);
+  return blocks.join("\n\n");
+}
+
+function verdict(
+  outcomes: readonly TargetOutcome[],
+  elapsedMs?: number,
+): string {
+  const failed = outcomes.filter(o => o.error !== undefined).length;
+  const took = elapsedMs === undefined
+    ? ""
+    : ` in ${(elapsedMs / 1000).toFixed(1)}s`;
+  if (failed > 0) {
+    return `${BAD} ${failed} of ${
+      plural(outcomes.length, "target")
+    } failed${took}`;
+  }
+  const changed = outcomes
+    .filter(o =>
+      o.error === undefined && o.skipped === undefined && o.actions.length > 0
+    )
+    .length;
+  if (changed === 0) {
+    return `${OK} everything already up to date${took}`;
+  }
+  return `${OK} ${plural(changed, "target")} updated${took}`;
+}
+
+function pad(text: string, width: number): string {
+  // Padding by code points, not UTF-16 units: the status glyphs are outside
+  // the BMP-safe assumption `String.length` makes, and a column that drifts by
+  // one on the rows that matter is worse than no column at all.
+  const length = [...text].length;
+  return text + " ".repeat(Math.max(0, width - length));
 }
 
 /**

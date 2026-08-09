@@ -71,7 +71,7 @@ if grep -q "missing required tool" <<<"$datastore_out"; then
   print_error "datastore should require no external tools"
   exit 1
 fi
-if ! grep -q "claude: not installed, skipping" <<<"$datastore_out"; then
+if ! grep -qE 'claude[[:space:]]+.*tool not on PATH' <<<"$datastore_out"; then
   print_error "datastore did not resolve to a known plugin"
   printf '%s\n' "$datastore_out"
   exit 1

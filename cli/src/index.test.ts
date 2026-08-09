@@ -116,18 +116,47 @@ describe("buildJobs", () => {
     expect(jobs[1]?.[1].user).toContain("devtools");
   });
 
-  it("skips url-sourced plugins only for the copy-based target", () => {
+  it("keeps a url-sourced plugin for Claude alone", () => {
+    // This test used to assert the opposite for ohmypi, and that is exactly
+    // how the bug shipped: `--all` requested andrej-karpathy-skills on every
+    // marketplace target, and it failed on two of them. Only Claude's
+    // marketplace accepts a `{source: "url"}` entry and fetches it. Cursor's
+    // manifest is generated from local plugins only; Oh-My-Pi's takes a URL
+    // string, parses it, and then silently drops the entry — `omp plugin
+    // discover` listed 13 of 14 with nothing saying why; OpenCode has no
+    // marketplace at all and copies a rendered bundle that does not exist.
     const jobs = buildJobs(
-      [fake("opencode", true), fake("ohmypi", true)],
+      [
+        fake("claude", true),
+        fake("cursor", true),
+        fake("ohmypi", true),
+        fake("opencode", true),
+      ],
       { user: ["andrej-karpathy-skills"] },
       repoRoot,
       () => {},
     );
 
-    // OpenCode installs by copying a rendered bundle, and a url-sourced plugin
-    // has none.
-    expect(jobs[0]?.[1].user).toEqual([]);
-    expect(jobs[1]?.[1].user).toEqual(["andrej-karpathy-skills"]);
+    expect(jobs[0]?.[1].user).toEqual(["andrej-karpathy-skills"]);
+    for (const job of jobs.slice(1)) {
+      expect(job[1].user, job[0].id).toEqual([]);
+    }
+  });
+
+  it("states a skipped plugin once, naming every target that skipped it", () => {
+    // One fact, not three: the same sentence per target reads as three
+    // separate problems.
+    const notes: string[] = [];
+    buildJobs(
+      [fake("cursor", true), fake("ohmypi", true), fake("opencode", true)],
+      { user: ["andrej-karpathy-skills"] },
+      repoRoot,
+      message => notes.push(message),
+    );
+
+    const skips = notes.filter(n => n.includes("andrej-karpathy-skills"));
+    expect(skips).toHaveLength(1);
+    expect(skips[0]).toContain("cursor, ohmypi and opencode");
   });
 });
 

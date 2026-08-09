@@ -3,7 +3,10 @@ import {
   mkdtempSync,
   rmSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
+import {
+  homedir,
+  tmpdir,
+} from "node:os";
 import { join } from "node:path";
 import {
   afterEach,
@@ -294,14 +297,57 @@ describe("revert", () => {
 describe("renderProgress", () => {
   it("distinguishes success, skip and failure", () => {
     const text = renderProgress([
-      { target: "opencode", actions: [{ summary: "a" }] },
+      { target: "opencode", actions: [{ summary: "a" }], plugins: 2 },
       { target: "claude", actions: [], skipped: "not-installed" },
       { target: "cursor", actions: [], error: "boom" },
     ]);
 
-    expect(text).toContain("✔ opencode: 1 change(s)");
-    expect(text).toContain("- claude: not installed");
-    expect(text).toContain("✘ cursor: boom");
+    expect(text).toContain("opencode");
+    expect(text).toContain("2 plugins, 1 change");
+    expect(text).toContain("tool not on PATH");
+    expect(text).toContain("✘ failed");
+    expect(text).toContain("boom");
+    expect(text).toContain("✘ 1 of 3 targets failed");
+  });
+
+  it("aligns the columns whatever the target names are", () => {
+    const lines = renderProgress([
+      { target: "opencode", actions: [{ summary: "a" }], plugins: 1 },
+      { target: "claude", actions: [], plugins: 1 },
+    ])
+      .split("\n")
+      .filter(l => l.includes("plugin"));
+
+    // The DETAIL column starts at the same offset on every row, which is the
+    // whole point of the table — a ragged one is just prose with extra spaces.
+    const offsets = lines.map(l => l.indexOf("1 plugin"));
+    expect(new Set(offsets).size).toBe(1);
+  });
+
+  it("collapses the three statusline outcomes into one row", () => {
+    // They are three installs of one feature. Listing them separately also
+    // made `statusline:opencode` the widest label in the run, padding every
+    // other column to fit a name nobody needed to read.
+    const text = renderProgress([
+      { target: "claude", actions: [{ summary: "a" }], plugins: 1 },
+      { target: "statusline", actions: [{ summary: "b" }] },
+      { target: "statusline:ohmypi", actions: [] },
+      { target: "statusline:opencode", actions: [{ summary: "c" }] },
+    ]);
+
+    expect(text).not.toContain("statusline:opencode");
+    expect(text).toContain("claude, opencode");
+    expect(text.match(/statusline/g)).toHaveLength(1);
+  });
+
+  it("replaces the home directory with ~ in notes", () => {
+    const text = renderProgress({
+      outcomes: [{ target: "claude", actions: [], plugins: 1 }],
+      notes: [`installing from ${homedir()}/Library/pnpm/store/v11/links`],
+    });
+
+    expect(text).toContain("~/Library/pnpm/store");
+    expect(text).not.toContain(homedir());
   });
 });
 

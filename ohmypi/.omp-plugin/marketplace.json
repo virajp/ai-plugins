@@ -9,13 +9,6 @@
   "plugins": [
     {
       "category": "development",
-      "description": "Behavioral guidelines to reduce common LLM coding mistakes, derived from Andrej Karpathy's observations — Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution. External; a vwf dependency.",
-      "homepage": "https://github.com/multica-ai/andrej-karpathy-skills",
-      "name": "andrej-karpathy-skills",
-      "source": "https://github.com/multica-ai/andrej-karpathy-skills.git"
-    },
-    {
-      "category": "development",
       "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; polyrepo and monorepo layouts are both supported.",
       "name": "cicd",
       "source": "./cicd"

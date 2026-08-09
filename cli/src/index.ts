@@ -72,6 +72,7 @@ import {
   statuslineInstalled,
   upgradeJobs,
 } from "./executor.ts";
+import type { TargetOutcome } from "./executor.ts";
 import { setupGraphify } from "./graphify.ts";
 import type { PlanRequest } from "./plan.ts";
 import {
@@ -159,14 +160,44 @@ export function buildJobs(
   log: (message: string) => void,
 ): (readonly [Adapter, AdapterPlan])[] {
   const index = readPluginIndex(sourceRoot);
-  return adapters.map(adapter => {
+  // plugin → the targets that could not take it. Aggregated so the run says
+  // "skipped on cursor, ohmypi and opencode" once, rather than repeating one
+  // sentence per target and making a single fact look like three failures.
+  const skips = new Map<string, string[]>();
+  const jobs = adapters.map(adapter => {
     const plan = resolvePlan(index, adapter.id as TargetId, request, {
       expandDependencies: adapter.id !== "claude",
-      localOnly: adapter.id === "opencode",
+      // Only Claude can install a plugin hosted in someone else's repo: its
+      // marketplace takes a `{source: "url"}` entry and fetches it. The other
+      // three cannot, each for its own reason — OpenCode has no marketplace at
+      // all and copies a rendered tree; Cursor's manifest is generated from
+      // local plugins only; Oh-My-Pi's accepts a URL string and then silently
+      // drops the entry, so `omp plugin discover` never lists it. Requesting
+      // one there fails, and used to: `--all` died on both.
+      localOnly: adapter.id !== "claude",
       log,
+      onSkip: (plugin, target) =>
+        skips.set(plugin, [...(skips.get(plugin) ?? []), target]),
     });
     return [adapter, plan] as const;
   });
+
+  for (const [plugin, targets] of skips) {
+    log(
+      `${plugin} installs from its own repo, so it is skipped on `
+        + `${list(targets)} — only Claude's marketplace can fetch a plugin `
+        + "hosted elsewhere.",
+    );
+  }
+  return jobs;
+}
+
+/** `a`, `a and b`, `a, b and c` — an English list, not a CSV. */
+export function list(items: readonly string[]): string {
+  if (items.length <= 1) {
+    return items[0] ?? "";
+  }
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
 
 /** Which status surfaces a run reaches. None is a plugin, so none is a target. */
@@ -275,15 +306,30 @@ const main = defineCommand({
     },
   },
   async run({ args }) {
+    const startedAt = Date.now();
+    // Collected rather than written as they happen: a note printed mid-run
+    // lands above the results, so you read caveats about an install before
+    // knowing whether it worked. `renderProgress` places them after the table.
+    const notes: string[] = [];
     const context: AdapterContext = {
       sourceRoot: packageRoot(),
       home: homedir(),
       cwd: process.cwd(),
       now: new Date().toISOString(),
-      // stderr: progress is not data.
-      log: message => process.stderr.write(`${message}\n`),
+      log: message => notes.push(message),
       exec: execCommand,
     };
+    const report = (outcomes: readonly TargetOutcome[]) =>
+      process.stderr.write(
+        `${
+          renderProgress({
+            outcomes,
+            notes,
+            version: readCliVersion(context.sourceRoot),
+            elapsedMs: Date.now() - startedAt,
+          })
+        }\n`,
+      );
 
     const options = {
       context,
@@ -332,7 +378,7 @@ const main = defineCommand({
       if (statusline.opencode) {
         outcomes.push(revertStatuslineOpencodeInstall(options));
       }
-      process.stderr.write(`${renderProgress(outcomes)}\n`);
+      report(outcomes);
       process.exit(failed(outcomes) ? 1 : 0);
     }
 
@@ -374,7 +420,7 @@ const main = defineCommand({
         if (options.dryRun) {
           process.stdout.write(`${renderDiff(outcomes)}\n`);
         }
-        process.stderr.write(`${renderProgress(outcomes)}\n`);
+        report(outcomes);
       }
       await noteNewerCli(context);
       process.exit(failed(outcomes) ? 1 : 0);
@@ -444,7 +490,7 @@ const main = defineCommand({
       // Data to stdout, so it can be piped or diffed.
       process.stdout.write(`${renderDiff(outcomes)}\n`);
     }
-    process.stderr.write(`${renderProgress(outcomes)}\n`);
+    report(outcomes);
     if (args.upgrade === true) {
       await noteNewerCli(context);
     }

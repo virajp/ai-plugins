@@ -51,17 +51,9 @@ export const ohmypi: Target = {
 
     for (const plugin of workspace.plugins) {
       if (plugin.manifest.source.kind !== "local") {
-        // Still catalogued below — an externally hosted plugin installs from
-        // its own repo, whose layout this build does not control.
-        gaps.push({
-          plugin: plugin.manifest.name,
-          capability: "marketplace",
-          detail:
-            "re-listed by URL, not rendered: the upstream repo ships Claude's "
-            + "bundle layout, so its agents and hook wiring reach Oh-My-Pi "
-            + "unconverted.",
-          severity: "degraded",
-        });
+        // Nothing to render, and `marketplaceJson` no longer catalogues it
+        // either — it reports that gap itself, with the reason. One gap per
+        // plugin, so the coverage report says what is actually true.
         continue;
       }
       const before = outputs.length;
@@ -73,7 +65,7 @@ export const ohmypi: Target = {
 
     outputs.push({
       path: ".omp-plugin/marketplace.json",
-      contents: marketplaceJson(workspace),
+      contents: marketplaceJson(workspace, gaps),
       unowned: true,
     });
 
@@ -492,8 +484,35 @@ function lspServer(server: LspServer): Record<string, unknown> {
 // Marketplace
 // ---------------------------------------------------------------------------
 
-function marketplaceJson(workspace: Workspace): string {
-  const plugins = workspace.plugins.map(plugin => {
+/**
+ * Only LOCAL plugins are listed.
+ *
+ * A url-sourced plugin used to be listed with its URL as the `source` string.
+ * The file parsed, the entry was there, and `omp` **silently dropped it**:
+ * `omp plugin discover` returned 13 of 14, and `omp plugin install <name>`
+ * answered "not found in marketplace" — so the manifest promised something the
+ * tool would never deliver, with nothing anywhere saying why. Omitting it is
+ * the honest shape, and `resolvePlan`'s `localOnly` branch keeps the CLI from
+ * asking for it in the first place.
+ */
+function marketplaceJson(workspace: Workspace, gaps: Gap[]): string {
+  const local = workspace.plugins.filter(p =>
+    p.manifest.source.kind === "local"
+  );
+  for (const plugin of workspace.plugins) {
+    if (plugin.manifest.source.kind === "local") {
+      continue;
+    }
+    gaps.push({
+      plugin: plugin.manifest.name,
+      capability: "marketplace",
+      detail: "not listed: it installs from its own repo, and Oh-My-Pi's "
+        + "marketplace accepts a local path only — a URL entry is parsed and "
+        + "then silently ignored by `omp`.",
+      severity: "dropped",
+    });
+  }
+  const plugins = local.map(plugin => {
     const m = plugin.manifest;
     const entry: Record<string, unknown> = {
       category: m.category,
@@ -503,7 +522,7 @@ function marketplaceJson(workspace: Workspace): string {
       // `.omp-plugin/`, i.e. `ohmypi/` itself. Spelling this from the repo
       // root instead resolves to `ohmypi/ohmypi/<name>`, and `omp
       // plugin install` fails with "Plugin source directory does not exist".
-      source: m.source.kind === "local" ? `./${m.name}` : m.source.url,
+      source: `./${m.name}`,
     };
     if (m.homepage) {
       entry["homepage"] = m.homepage;

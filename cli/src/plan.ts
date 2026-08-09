@@ -58,6 +58,15 @@ export interface ResolveOptions {
   /** Adapters that can only install a rendered bundle, so url-sourced plugins are skipped. */
   readonly localOnly: boolean;
   readonly log?: (message: string) => void;
+  /**
+   * Called instead of `log` when a plugin is skipped for this target.
+   *
+   * Reported rather than logged because the same plugin is skipped on every
+   * target that cannot host it — three identical sentences differing only in a
+   * name, which reads as three problems instead of one fact. The caller
+   * aggregates and states it once.
+   */
+  readonly onSkip?: (plugin: string, target: string) => void;
 }
 
 export function readPluginIndex(sourceRoot: string): PluginIndex {
@@ -133,7 +142,12 @@ export function resolvePlan(
     const [name, scope] of [...wanted].sort(([a], [b]) => a.localeCompare(b))
   ) {
     if (options.localOnly && byName.get(name)?.local !== true) {
-      log(`${name} has no rendered bundle for ${target}; skipping`);
+      if (options.onSkip !== undefined) {
+        options.onSkip(name, target);
+      }
+      else {
+        log(`${name} installs from its own repo; skipped on ${target}`);
+      }
       continue;
     }
     (scope === "project" ? project : user).push(name);

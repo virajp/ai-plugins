@@ -160,7 +160,27 @@ describe("resolvePlan", () => {
     );
 
     expect(plan.user).toEqual([]);
-    expect(logged.join("\n")).toMatch(/no rendered bundle/);
+    expect(logged.join("\n")).toMatch(/installs from its own repo/);
+  });
+
+  it("reports the skip through onSkip when the caller aggregates", () => {
+    const logged: string[] = [];
+    const skipped: [string, string][] = [];
+    const plan = resolvePlan(
+      index,
+      "opencode",
+      { user: ["remote"] },
+      opts({
+        localOnly: true,
+        log: m => void logged.push(m),
+        onSkip: (plugin, target) => void skipped.push([plugin, target]),
+      }),
+    );
+
+    expect(plan.user).toEqual([]);
+    expect(skipped).toEqual([["remote", "opencode"]]);
+    // Not both — the caller states it once for every target that skipped it.
+    expect(logged).toEqual([]);
   });
 
   it("rejects an unknown name, so only this marketplace is installable", () => {
