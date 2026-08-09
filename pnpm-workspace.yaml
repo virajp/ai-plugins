@@ -45,3 +45,14 @@ overrides:
   # Instead drop the subtree: `jake` is required only by ejs's CLI entrypoint
   # (bin/cli.js), never by the library (lib/ejs.js) that oclif loads.
   "ejs>jake": "-"
+
+  # esbuild GHSA-g7r4-m6w7-qqqr (dev server responds to any origin, so a page
+  # the developer visits can read what it serves). Low severity, and it reaches
+  # us only through devDependencies — but osv-scanner reads the lockfile and
+  # gates release.yml, so it blocked the v3.0.0 publish outright.
+  # Two paths, neither of which has shipped the fix: tsup 8.5.1 (via itself and
+  # bundle-require) and vitest 4.1.10 (via vite 8.2.1).
+  # Pinned to 0.28.1 — the first fixed version, and two months public — rather
+  # than the 0.28.2 released yesterday, which the `minimumReleaseAge` cooldown
+  # above exists to keep out of an install this close to its publish date.
+  "esbuild": "0.28.1"
