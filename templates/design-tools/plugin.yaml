@@ -1,5 +1,5 @@
 name: design-tools
-version: 0.1.0
+version: 0.2.0
 description: The vwf design adapter — two skills (import-screens,
   import-design-system) that resolve the design tool per project and speak
   Claude Design, Lovable or Google Stitch. Ships the Claude Design MCP server

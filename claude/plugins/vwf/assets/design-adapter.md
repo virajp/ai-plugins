@@ -20,17 +20,24 @@ speaking that tool's API.
 
 ## One adapter, many tools
 
-vwf calls **two fixed skill names**, always:
+vwf calls **three fixed skill names**, always:
 
 | Skill                                                       | Returns                     |
 | ------------------------------------------------------------- | --------------------------- |
 | `/design-tools:design-tools-import-screens <flow> <platform>` | a **screens payload**       |
 | `/design-tools:design-tools-import-design-system`             | a **design-system payload** |
+| `/design-tools:design-tools-import-conversations <project>`   | a **conversations payload** |
 
-**vwf never constructs a skill name from configuration.** It knows these two
+**vwf never constructs a skill name from configuration.** It knows these three
 names and nothing else. *Which* design tool answers is resolved **inside** the
 adapter, from the project's configuration — because that is a fact about the
 project, not about vwf's delegation.
+
+The third name is the newest and was added to close a real hole: `/vwf:feedback
+canvas` used to reach one specific tool's MCP server by hardcoded prefix, so two
+of the three tokens this contract advertises were **silently non-functional** for
+it. A broken menu entry is worse than a naming violation, because nothing
+distinguishes it from a tool that had nothing to say.
 
 ## Configuration — the tool is per project
 
@@ -55,7 +62,7 @@ read: it is drift `/vwf:setup`'s `12 → 13` migration copies down onto each UI
 project. An adapter that silently honored it would make the migration optional,
 and the config would keep two answers to one question.
 
-### Both adapter skills MUST be `invocation: both`
+### Every adapter skill MUST be `invocation: both`
 
 This is the single most important rule in this contract, and getting it wrong
 fails **silently**. On every target, an invocation of `user` removes the skill
@@ -70,9 +77,9 @@ place it is catchable.
 
 ### The preflight, because the failure mode is silence
 
-Before delegating, `/vwf:design-system` and `/vwf:screens import` **check the
-project's configured tool** rather than calling and inferring from the result —
-that inference is impossible.
+Before delegating, `/vwf:design-system`, `/vwf:screens import` and
+`/vwf:feedback canvas` **check the project's configured tool** rather than
+calling and inferring from the result — that inference is impossible.
 
 Three distinct halts, because they need three different fixes:
 
@@ -166,6 +173,54 @@ system and reconstruct it from what they generated. It must be recorded, because
 the freshness guarantee differs: a stored system is authoritative until changed,
 a derived one is a snapshot of one moment.
 
+## Payload 3 — conversations
+
+Returned by `/design-tools:design-tools-import-conversations <project>`, one call
+per registry project. Feeds `/vwf:feedback canvas`, which classifies and routes
+each remark through its normal pipeline.
+
+```yaml
+harvested: ok
+project: <registry-project>
+remarks:
+  - surface: screen | state | design-system | project # what the remark bears on
+    code: <NNN><letter> # the pinned screen code, or null when not recoverable
+    platform: mobile | tablet | desktop | web | auto # or null
+    kind: comment | change-request | observation
+    remark: <what was said, close to how it was said>
+    notes: [] # ambiguity, truncation, anything with no slot above
+source:
+  tool: <tool token>
+  reference: <canvas project id / url the remark came from>
+```
+
+**`code` is the join key here too**, and the same rule applies: `null` plus a
+`notes` line beats a guess, which would attach a remark to the wrong contract
+row.
+
+**A tool with no review surface returns `n/a`, and that is not a failure:**
+
+```yaml
+harvested: n/a
+reason: <one line — why this tool has no conversation to read>
+source: { tool: <tool token> }
+```
+
+This is the one payload that may legitimately come back empty-handed, and the
+distinction is load-bearing in **both** directions:
+
+- `n/a` means *this tool has no such surface* — vwf reports it plainly and stops.
+  It is not a gap, not a finding, and nothing to fix. Only one of the three
+  supported tokens has a review conversation at all, so this is the common
+  answer rather than the rare one.
+- `ERROR:` means *the surface exists and could not be read* — unreachable,
+  unauthorized, unparseable. That one is worth acting on.
+
+Collapsing them would send a Lovable or Stitch user to `/mcp` to repair a
+connection that was never the problem. This is also why `import-screens` and
+`import-design-system` have **no** `n/a` form and must halt instead: there, an
+empty result is indistinguishable from a design nobody authored.
+
 ## What stays vwf's job
 
 The adapter returns data. **Everything downstream is vwf's**, and no adapter
@@ -186,11 +241,15 @@ gets to do it:
 A new design tool is a **reference file inside the `design-tools` plugin**, not
 a new plugin and not a new vwf code path:
 
-1. Add `skills/design-tools-import-screens/references/<tool>.md` and
-   `skills/design-tools-import-design-system/references/<tool>.md`, each stating
-   how to read that tool and how to fill the payload.
-2. List the token in both skills' dispatch tables, so an unrecognised value
-   still halts and a recognised one routes.
+1. Add a reference under **each of the three** import skills —
+   `skills/design-tools-import-screens/references/<tool>.md`,
+   `…-import-design-system/references/<tool>.md` and
+   `…-import-conversations/references/<tool>.md` — each stating how to read that
+   tool and how to fill the payload. A tool with no review surface still gets the
+   third file; it returns `harvested: n/a` with the reason, which is what keeps
+   *unsupported* distinguishable from *unimplemented*.
+2. List the token in all three dispatch tables, so an unrecognised value still
+   halts and a recognised one routes.
 3. Each returns **only** the payload (YAML or JSON), nothing before or after —
    the same discipline as vwf's subagent return contracts.
 4. Unrecoverable fields are `null` with a line in `notes`. Never invent a screen

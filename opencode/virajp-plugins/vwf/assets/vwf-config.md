@@ -267,8 +267,10 @@ earlier than 65/90/80), never loosen.
      language with only one manager moves to having it implied. Optionally add
      a per-project `package_manager` where a hybrid repo mixes managers.
   4. **`design.tool`** is added, naming the adapter **plugin**. Default it to
-     `claude-design` for any repo carrying a `design.design_system_id` — that is
-     the tool it was already using. The pin itself stays, now adapter-scoped.
+     **the tool that canvas pin came from** for any repo carrying a
+     `design.design_system_id` — that is the tool it was already using, and at
+     format 11 only one had a canvas to pin. The pin itself stays, now
+     adapter-scoped.
   5. **`memory`** — nothing changes in the config, but `/vwf-setup` creates
      `docs/memory/` and gitignores `handoff/`, `doctor/` and `runs/`, then moves
      a pre-19 `docs/handoffs/next.md` to `docs/memory/handoff/next.md`.
@@ -313,7 +315,7 @@ earlier than 65/90/80), never loosen.
      with no surfaces never had a design tool and must not acquire one. Then
      drop `design.tool`; the rest of the `design:` block is canvas state and
      stays exactly where it is. A repo with no `design.tool` and a
-     `design_system_id` takes `claude-design`, on the same reasoning the
+     `design_system_id` takes **the same default**, on the same reasoning the
      `11 → 12` migration used.
   4. **`cicd`** is **new** — there was no product-wide key to copy down. Detect
      it once from the repo (`.github/workflows/` → `github-actions`,

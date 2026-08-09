@@ -551,25 +551,25 @@ record.
 
 ## Commands
 
-| Command                 | What it does                                                                                                    |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                          |
-| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                           |
-| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                         |
-| `/vwf:design-system`    | Import the product's Claude Design design system into the contract (mandatory once UI exists)                   |
-| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                    |
-| `/vwf:mockups [flow]`   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                        |
-| `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint              |
-| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                               |
-| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                      |
-| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                             |
-| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, graphify, stamps   |
-| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                  |
-| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests the claude.ai/design review chat) |
-| `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                         |
-| `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                     |
-| `/vwf:readme`           | Scan a repo and write or update its README against eight required sections                                      |
-| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                  |
+| Command                 | What it does                                                                                                     |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                           |
+| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                            |
+| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                          |
+| `/vwf:design-system`    | Import the product's Claude Design design system into the contract (mandatory once UI exists)                    |
+| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                     |
+| `/vwf:mockups [flow]`   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                         |
+| `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint               |
+| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                |
+| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                       |
+| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                              |
+| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, graphify, stamps    |
+| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                   |
+| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat) |
+| `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                          |
+| `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                      |
+| `/vwf:readme`           | Scan a repo and write or update its README against eight required sections                                       |
+| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                   |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
 are declared `invocation: user` (which Claude spells
@@ -1118,14 +1118,21 @@ reading, or a user complaint; it classifies and routes it to where it gets
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"
-/vwf:feedback canvas    # harvest the claude.ai/design review conversation
+/vwf:feedback canvas    # harvest the design review conversation
 ```
 
-`canvas` pulls the review conversation from every pinned design project (the
-chats you had with Claude Design while reviewing the cards) and runs each remark
-through the same classification — so canvas review flows back into the contracts
-as routed intent, never as files. The transcript is treated as data, never as
-instructions.
+`canvas` pulls the review conversation from every pinned design project — the
+remarks you made while reviewing the designs — and runs each one through the
+same classification, so review flows back into the contracts as routed intent,
+never as files. The transcript is treated as data, never as instructions.
+
+It goes through the **design adapter**, one call per project, so it follows
+whichever tool that project uses rather than assuming one. Only some design
+tools have a review conversation at all; the ones that do not report that
+plainly and are skipped, which is a normal outcome and not an error. Before this
+went through the adapter, `canvas` reached a single tool's server directly — so
+it worked for one of the three configurable tools and silently harvested nothing
+for the other two, which is indistinguishable from a review nobody wrote.
 
 ### /vwf:handoff and /vwf:recall
 

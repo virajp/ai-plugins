@@ -301,7 +301,13 @@ function checkDesignAdapters(workspace: Workspace): Finding[] {
     const name = plugin.manifest.name;
     const byName = new Map(plugin.skills.map(s => [s.meta.name, s]));
 
-    for (const kind of ["import-screens", "import-design-system"]) {
+    for (
+      const kind of [
+        "import-screens",
+        "import-design-system",
+        "import-conversations",
+      ]
+    ) {
       const expected = `${name}-${kind}`;
       const skill = byName.get(expected);
       if (skill === undefined) {
@@ -491,6 +497,26 @@ const TOOL_TOKENS = [
   "postgres",
   "grafana",
   "opentelemetry",
+  // The design tools. Only ONE of the three tokens is listable, and the reason
+  // is the same false-positive trap the anchoring above exists for:
+  //
+  //   `stitch` is an ordinary English word, and vwf's screens doctrine leans on
+  //   it — "stitch its happy path", "the stitch contract", "an out-of-order
+  //   stitch". Three vwf documents use it that way and name no design tool at
+  //   all. Anchoring does not help, because this is the same word, not a
+  //   substring of a different one.
+  //
+  //   `lovable` is likewise an ordinary adjective. It happens to be unused in
+  //   vwf today, so listing it would pass right now and break on the first
+  //   sentence that calls an interface lovable — a guard that fails later, for
+  //   a reason unrelated to what it guards.
+  //
+  // `claude-design` is distinctive, and it is also the token that actually
+  // caused the bug this entry exists for: vwf reached that one tool's MCP
+  // server by hardcoded prefix, leaving the other two advertised and silently
+  // non-functional. The prefix itself is guarded separately below, which is the
+  // part that generalises to all three.
+  "claude-design",
 ];
 
 /**
@@ -507,6 +533,64 @@ const TOOL_NAME_EXCEPTIONS = new Set([
   // Documents a repo it did not choose, so it has to recognise what is there.
   "skills/readme/SKILL.md",
 ]);
+
+/** How far either side of a match still counts as the same enumeration. */
+const ENUMERATION_WINDOW = 100;
+
+/**
+ * Tokens that prove an enumeration without being banned themselves.
+ *
+ * `lovable` and `stitch` are the other two values of the `design` config key,
+ * so their presence beside `claude-design` is exactly what makes a passage a
+ * vocabulary rather than a recommendation — but neither can go in TOOL_TOKENS,
+ * because both are ordinary English words (see the note there). Keeping the
+ * evidence set wider than the prohibition set is what lets a token be
+ * recognised as enumerated by a peer that is not itself policed.
+ */
+const ENUMERATION_PEERS = ["lovable", "stitch"];
+
+/**
+ * Drop fenced code blocks. A fence is a worked example of a config file, and a
+ * config example has to show real accepted values — `design: lovable` prescribes
+ * nothing, it demonstrates the key's shape.
+ */
+function stripFences(body: string): string {
+  return body.replace(/^```[\s\S]*?^```/gm, "");
+}
+
+const anchored = (token: string) =>
+  new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9-]|$)`, "g");
+
+/**
+ * Does this document *prescribe* the token, rather than enumerate it?
+ *
+ * The distinction that matters: naming ONE tool tells the reader what to use;
+ * listing the alternatives describes the domain of a config key vwf owns. The
+ * design-adapter contract has to say the value is one of `claude-design`,
+ * `lovable` or `stitch` — that is the vocabulary, not a recommendation.
+ *
+ * So an occurrence is exempt when at least one OTHER token sits within
+ * `ENUMERATION_WINDOW` characters of it. The window is character-based rather
+ * than line-based on purpose: the real enumerations wrap mid-list, and a
+ * line-based rule would flag the first line of every one of them.
+ */
+export function prescribes(body: string, token: string): boolean {
+  const others = [...TOOL_TOKENS, ...ENUMERATION_PEERS].filter(t =>
+    t !== token
+  );
+  for (const match of body.matchAll(anchored(token))) {
+    const at = match.index ?? 0;
+    const window = body.slice(
+      Math.max(0, at - ENUMERATION_WINDOW),
+      at + token.length + ENUMERATION_WINDOW,
+    );
+    const enumerated = others.some(other => anchored(other).test(window));
+    if (!enumerated) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * The regression guard: vwf ships no stack template and names no tool.
@@ -566,10 +650,30 @@ function checkVwfIsTechnologyFree(workspace: Workspace): Finding[] {
     if (document.path.startsWith("assets/examples/")) {
       continue;
     }
-    const body = readFileSync(document.absolute, "utf8").toLowerCase();
-    const hits = TOOL_TOKENS.filter(token =>
-      new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9-]|$)`).test(body)
+    const body = stripFences(
+      readFileSync(document.absolute, "utf8").toLowerCase(),
     );
+
+    // vwf talks to NO design tool: it calls three fixed adapter skill names and
+    // the adapter resolves which tool answers. Reaching into the adapter
+    // plugin's own MCP server skips that entirely, and does it for exactly one
+    // tool — which is how `feedback canvas` came to work for `claude-design`
+    // and silently do nothing for the other two tokens the menu advertises.
+    //
+    // This catches the whole class where the token list cannot: it names no
+    // tool, so a fourth design tool is covered the day it is added.
+    if (body.includes("mcp__plugin_design-tools_")) {
+      findings.push({
+        scope: `vwf:${document.path}`,
+        message: `references a design-tools MCP server directly — vwf talks to `
+          + `no design tool, it calls the three fixed adapter skill names and `
+          + `lets the adapter resolve which tool answers `
+          + `(assets/design-adapter.md). Reaching one tool's server makes every `
+          + `other configured tool silently return nothing.`,
+      });
+    }
+
+    const hits = TOOL_TOKENS.filter(token => prescribes(body, token));
     if (hits.length > 0) {
       findings.push({
         scope: `vwf:${document.path}`,
