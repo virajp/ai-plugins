@@ -58,11 +58,14 @@ import {
 import {
   execute,
   executeStatusline,
+  executeStatuslineOhmypi,
   failed,
+  ohmypiStatuslineInstalled,
   renderDiff,
   renderProgress,
   revert,
   revertStatuslineInstall,
+  revertStatuslineOhmypiInstall,
   statuslineInstalled,
   upgradeJobs,
 } from "./executor.ts";
@@ -163,30 +166,47 @@ export function buildJobs(
   });
 }
 
+/** Which status surfaces a run reaches. Neither is a plugin, so neither is a target. */
+export interface StatuslineSelection {
+  /** The copied script bar plus the caps hook. */
+  readonly claude: boolean;
+  /** `omp config` keys mirroring the same information. */
+  readonly ohmypi: boolean;
+}
+
 /**
- * Should this run touch the statusline?
+ * Which status surfaces should this run touch?
  *
- * It is Claude Code's alone, so a run that is not targeting Claude skips it.
+ * Resolved **per target**, because the two are different installs of the same
+ * idea: Claude gets a script this CLI copies and points `settings.json` at,
+ * Oh-My-Pi gets its own renderer configured through `omp config`. Cursor and
+ * OpenCode expose no status surface at all, so a run targeting only those still
+ * has nothing to install.
+ *
  * The note is printed only for an **explicit** `--statusline`: under `--all` on
- * an OpenCode-only machine the bar was never separately asked for, and saying
- * so every time would be noise.
+ * a machine with neither, the bar was never separately asked for, and saying so
+ * every time would be noise.
  */
 export function statuslineSelected(
   wanted: boolean,
   explicit: boolean,
   adapters: readonly Adapter[],
   log: (message: string) => void,
-): boolean {
+): StatuslineSelection {
   if (!wanted) {
-    return false;
+    return { claude: false, ohmypi: false };
   }
-  if (adapters.some(a => a.id === "claude")) {
-    return true;
+  const selection = {
+    claude: adapters.some(a => a.id === "claude"),
+    ohmypi: adapters.some(a => a.id === "ohmypi"),
+  };
+  if (explicit && !selection.claude && !selection.ohmypi) {
+    log(
+      "statusline: skipped — only Claude Code and Oh-My-Pi have a status "
+        + "surface to install into",
+    );
   }
-  if (explicit) {
-    log("statusline: skipped — it is a Claude Code feature only");
-  }
-  return false;
+  return selection;
 }
 
 const main = defineCommand({
@@ -295,8 +315,11 @@ const main = defineCommand({
 
     if (args.uninstall === true) {
       const outcomes = revert(adapters, options);
-      if (statusline) {
+      if (statusline.claude) {
         outcomes.push(revertStatuslineInstall(options));
+      }
+      if (statusline.ohmypi) {
+        outcomes.push(revertStatuslineOhmypiInstall(options));
       }
       process.stderr.write(`${renderProgress(outcomes)}\n`);
       process.exit(failed(outcomes) ? 1 : 0);
@@ -327,6 +350,9 @@ const main = defineCommand({
       if (statuslineInstalled(options)) {
         outcomes.push(executeStatusline(options));
       }
+      if (ohmypiStatuslineInstalled(options)) {
+        outcomes.push(executeStatuslineOhmypi(options));
+      }
       if (outcomes.length === 0) {
         context.log("nothing installed by this CLI yet — nothing to upgrade");
       }
@@ -343,7 +369,8 @@ const main = defineCommand({
     if (
       !named
       // `--statusline` on its own is a complete request: it is not a plugin.
-      && !statusline
+      && !statusline.claude
+      && !statusline.ohmypi
     ) {
       process.stderr.write(
         "nothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
@@ -377,8 +404,11 @@ const main = defineCommand({
     }
 
     const outcomes = execute(jobs, options);
-    if (statusline) {
+    if (statusline.claude) {
       outcomes.push(executeStatusline(options));
+    }
+    if (statusline.ohmypi) {
+      outcomes.push(executeStatuslineOhmypi(options));
     }
 
     // After the install, and only for targets that actually took it: vwf's

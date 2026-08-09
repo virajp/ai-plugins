@@ -133,15 +133,26 @@ describe("buildJobs", () => {
 
 describe("statuslineSelected", () => {
   const claudeOnly = [fake("claude", true)];
+  const ohmypiOnly = [fake("ohmypi", true)];
   const openCodeOnly = [fake("opencode", true)];
 
-  it("installs when Claude Code is among the targets", () => {
-    expect(statuslineSelected(true, true, claudeOnly, () => {})).toBe(true);
+  it("resolves per target: a script bar for Claude, config for Oh-My-Pi", () => {
+    // The two are different installs of the same information, so a run
+    // targeting both gets both.
+    expect(statuslineSelected(true, true, claudeOnly, () => {}))
+      .toEqual({ claude: true, ohmypi: false });
+    expect(statuslineSelected(true, true, ohmypiOnly, () => {}))
+      .toEqual({ claude: false, ohmypi: true });
+    expect(
+      statuslineSelected(true, true, [...claudeOnly, ...ohmypiOnly], () => {}),
+    )
+      .toEqual({ claude: true, ohmypi: true });
   });
 
-  it("skips a target set without Claude Code", () => {
-    // It is a Claude Code feature; there is nothing to install elsewhere.
-    expect(statuslineSelected(true, false, openCodeOnly, () => {})).toBe(false);
+  it("skips a target set with no status surface at all", () => {
+    // Cursor and OpenCode expose none, so there is nothing to install.
+    expect(statuslineSelected(true, false, openCodeOnly, () => {}))
+      .toEqual({ claude: false, ohmypi: false });
   });
 
   it("notes the skip only when the flag was explicit", () => {
@@ -150,13 +161,19 @@ describe("statuslineSelected", () => {
     expect(noted).toEqual([]);
 
     statuslineSelected(true, true, openCodeOnly, m => noted.push(m));
-    expect(noted[0]).toMatch(/Claude Code/);
+    expect(noted[0]).toMatch(/Claude Code and Oh-My-Pi/);
+  });
+
+  it("says nothing when one of the two surfaces is reachable", () => {
+    const noted: string[] = [];
+    statuslineSelected(true, true, ohmypiOnly, m => noted.push(m));
+    expect(noted).toEqual([]);
   });
 
   it("says nothing at all when it was not wanted", () => {
     const noted: string[] = [];
     expect(statuslineSelected(false, true, claudeOnly, m => noted.push(m)))
-      .toBe(false);
+      .toEqual({ claude: false, ohmypi: false });
     expect(noted).toEqual([]);
   });
 });

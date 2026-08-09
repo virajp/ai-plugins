@@ -642,7 +642,15 @@ recall keeps working while the findings loop-back quietly stops persisting.
 
 The statusline is **not** a plugin — it ships inside `@askviraj/ai-plugins`, the
 `citty` CLI that installs the toolkit across all four targets (marketplace
-registration or a copied tree, plus the powerline statusline).
+registration or a copied tree, plus the statusline).
+
+**"The statusline" is two installs of one idea.** Claude Code gets the powerline
+script this CLI copies and points `settings.json` at. Oh-My-Pi gets its **own**
+renderer configured through `omp config set` — it exposes no scriptable status
+surface, so there is nothing to point at, and the target is **information
+parity, not visual parity**: same segments, Oh-My-Pi's separators and palette.
+Cursor and OpenCode expose no status surface at all, so a run targeting only
+those still installs nothing.
 
 **`cli/` is the source; `bin/` is the build output, and `bin/` is what npm
 publishes.** tsup bundles `cli/src/index.ts` → `bin/ai-plugins.mjs`, and two
@@ -716,9 +724,24 @@ Layout:
   in place or copies it — so the local manifest against the one on `main`
   answers it for all four at once. A plugin here but not on `main` is labelled
   `(not on main yet)` rather than left bare, which read as a failed lookup.
-- `cli/src/statusline.ts` — the statusline installer. Not a plugin and therefore
-  not an adapter; wired straight from the router with its own receipt. See
-  Statusline below.
+- `cli/src/statusline.ts` — the Claude statusline installer. Not a plugin and
+  therefore not an adapter; wired straight from the router with its own receipt.
+  See Statusline below.
+- `cli/src/statusline-ohmypi.ts` — the Oh-My-Pi half, with a receipt file of its
+  own so uninstalling one surface never touches the other. It sets four keys
+  (`statusLine.preset` `custom`, plus `leftSegments` / `rightSegments` /
+  `segmentOptions`) through `omp config set`, reading each one's prior value
+  first so the undo restores it — and recording an undo **only when the value
+  changed**, since re-setting an identical value is a no-op whose undo would
+  clobber a choice the user made. Two verified `omp` facts shape it:
+  `omp config get` prints exactly the form `set` takes back (bare for an enum,
+  compact JSON otherwise), and **`omp config reset` does not remove a key** — it
+  writes the default back as explicit YAML. So byte-identity on uninstall rests
+  on one extra receipt entry filing the `config.yml` `omp` created, and a key
+  that was absent from a *pre-existing* config comes back as its explicit
+  default: semantically identical, not byte-identical, which is the price of
+  restoring key by key rather than rewriting a file the user also edits. **`omp`
+  does not validate segment names** — a typo installs cleanly and draws nothing.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
 - Tests live beside the source under `cli/src/**/*.test.ts` and run under
@@ -756,11 +779,16 @@ selected target whose tool is absent is *skipped with a note*, not failed —
 targets are independent, and one missing agent should not fail a run that
 installed into the others. `--force` acts on it anyway.
 
-**Statusline.** `--statusline` installs both `statusLine` and
-`subagentStatusLine` plus the caps hook. **Tri-state**: `--statusline` asks,
+**Statusline.** `--statusline` installs whichever surfaces the selected targets
+have: for Claude both `statusLine` and `subagentStatusLine` plus the caps hook,
+for Oh-My-Pi the four `omp config` keys. **Tri-state**: `--statusline` asks,
 `--no-statusline` refuses, unset defers to `--all` — so a bare `--all` installs
-the bar. Only an *explicit* `--statusline` on a run not targeting Claude prints
-the Claude-only skip note.
+the bar. Only an *explicit* `--statusline` on a run reaching **neither** prints
+the skip note. `omp` missing from `PATH` is a skip with a note rather than a
+failure, the same rule the plugin targets follow. The **caps hook is
+Claude-only** and stays that way: its sensor is the Claude bar, which mirrors
+`context_window` / `rate_limits` to a usage file, and Oh-My-Pi surfaces no
+equivalent.
 
 **`--version` / `--upgrade`.** See `cli/src/version.ts` above for what
 `--version` compares. `--upgrade` replays each target's receipt: **installing is

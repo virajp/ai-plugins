@@ -206,6 +206,13 @@ installs through the same CLI — not the plugin marketplace — copying the scr
 to `~/.claude/scripts/` and writing the chosen key(s) into
 `~/.claude/settings.json`. Requires a [Nerd Font](https://www.nerdfonts.com/).
 
+On **Oh-My-Pi** the same flag configures Oh-My-Pi's own status line instead
+(`omp config set statusLine.*`), showing the same information — model and
+thinking level, path, git, context, usage, cost, time spent, session. It has no
+scriptable status surface, so this is **information parity, not visual parity**:
+the separators and palette stay Oh-My-Pi's. Cursor and OpenCode expose no status
+surface at all.
+
 ![The statusline: model and effort, context used, rate-limit windows, session spend, repo and branch](./docs/how-it-looks.png)
 
 ```sh
@@ -216,9 +223,10 @@ pnpx @askviraj/ai-plugins --statusline
 It also comes along with `--all`, which installs the whole toolkit; pass
 `--no-statusline` there to skip it.
 
-Installing the statusline also wires a **context & rate-limit caps hook** — it
-pauses long `/vwf:execute` runs at budget thresholds (context over 65%, 5-hour
-over 90%, 7-day over 80%) by triggering a handoff.
+Installing the **Claude** statusline also wires a **context & rate-limit caps
+hook** — it pauses long `/vwf:execute` runs at budget thresholds (context over
+65%, 5-hour over 90%, 7-day over 80%) by triggering a handoff. It is Claude-only
+because its sensor is that bar; Oh-My-Pi surfaces no equivalent numbers.
 
 See **[docs/statusline.md](./docs/statusline.md)** for setup and the full
 configuration reference.
@@ -276,8 +284,8 @@ Notes:
   `object-storage`) are **opt-in** — also excluded from `--all`; install them by
   name at whichever scope you want.
 - `--all` means the whole toolkit, so it **includes the statusline** (Claude
-  Code only) — pass `--no-statusline` for a plugins-only run. The same applies
-  in reverse: `--uninstall --all` removes the statusline too.
+  Code and Oh-My-Pi) — pass `--no-statusline` for a plugins-only run. The same
+  applies in reverse: `--uninstall --all` removes the statusline too.
 - Scope is chosen by the flag: `--user <name>` installs at user scope,
   `--project <name>` at project scope (you can mix both in one run). The
   marketplace add is always user-scoped.
@@ -322,9 +330,10 @@ Per selected plugin the CLI:
 rendered bundle — nothing to copy — so an OpenCode install of `vwf` leaves you
 to install it yourself. Memory used to be skipped the same way, which is why
 mempalace's skills are now [vendored into `vwf`](./docs/mempalace.md) and ship
-on every target. The statusline is Claude-only. `--uninstall` and `--upgrade`
-replay the receipt (uninstall never removes a dependency you didn't name);
-`--version` compares this build's versions against the manifest on `main`.
+on every target. The statusline reaches Claude Code and Oh-My-Pi, not OpenCode —
+it has no status surface to install into. `--uninstall` and `--upgrade` replay
+the receipt (uninstall never removes a dependency you didn't name); `--version`
+compares this build's versions against the manifest on `main`.
 
 ## Credits & acknowledgements
 

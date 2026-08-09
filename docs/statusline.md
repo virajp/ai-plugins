@@ -5,6 +5,8 @@ A powerline-style
 installed by the `@askviraj/ai-plugins` CLI. One script drives **two surfaces**
 — the main two-line status bar and the subagent panel — and everything it draws
 is data-driven from JSON, so you can restyle it per repo without touching code.
+The same flag configures [Oh-My-Pi's own status line](#oh-my-pi) to show the
+same information.
 
 - Script: [`tools/statusline/statusline`](../tools/statusline/statusline)
 - Defaults:
@@ -39,7 +41,7 @@ inside it. Windows runs the same `pnpx` command everyone else does.
 `--all` installs the whole toolkit and so brings the statusline with it; pass
 `--no-statusline` alongside it for a plugins-only run.
 
-The CLI:
+On Claude Code, the CLI:
 
 - copies the statusline script into `~/.claude/scripts/` (made executable),
 - seeds `~/.config/statusline.json` with the bundled defaults — or, if it
@@ -53,13 +55,14 @@ The CLI:
 If a target key already exists, the CLI prints the current value and asks before
 overwriting. Pass `--yes` (`-y`) to overwrite without prompting.
 
-The statusline is a **Claude Code surface** (it lives under `~/.claude`). The
-CLI drives four targets — `claude`, `cursor`, `ohmypi` and `opencode` — and the
-statusline reaches only the first: on a run that does not target Claude Code
-(say `--platform opencode`), `--statusline` is skipped with a note. The note is
+Everything above describes the **Claude Code** surface (it lives under
+`~/.claude`). The CLI drives four targets — `claude`, `cursor`, `ohmypi` and
+`opencode` — and `--statusline` installs whichever surfaces the selected targets
+have: the script bar for Claude Code, [Oh-My-Pi's own status line](#oh-my-pi)
+for `ohmypi`. Cursor and OpenCode expose none, so on a run reaching neither (say
+`--platform opencode`) `--statusline` is skipped with a note. The note is
 printed only when you asked for it **explicitly**, so a bare `--all` on a
-Claude-less machine stays quiet. None of the other three exposes a scriptable
-status surface to install into.
+machine with neither stays quiet.
 
 The blocks it writes:
 
@@ -116,7 +119,65 @@ is written otherwise) and its directives reference `vwf` commands, so it's only
 useful with the `vwf` plugin installed. `--uninstall --statusline` removes the
 hook, its env var, and the script.
 
+## Oh-My-Pi
+
+Oh-My-Pi exposes no scriptable status surface — there is no key to point at a
+script of ours. It ships a segment renderer instead, so `--statusline` on a run
+targeting `ohmypi` configures **that**, through four `omp config set` calls:
+
+```sh
+omp config set statusLine.preset custom
+omp config set statusLine.leftSegments '["model","path","git"]'
+omp config set statusLine.rightSegments '["context_pct","context_total","usage","cost","time_spent","session_name"]'
+omp config set statusLine.segmentOptions '{"model":{"showThinkingLevel":true},"path":{"abbreviate":true,"maxLength":40,"stripWorkPrefix":true},"git":{"showBranch":true,"showStaged":true,"showUnstaged":true,"showUntracked":true}}'
+```
+
+`preset: custom` is what makes the other three take effect; the named presets
+ignore the segment lists entirely. Everything lands in Oh-My-Pi's global
+`config.yml` (under `$HOME/.omp/agent`, or wherever `PI_CODING_AGENT_DIR`
+points), written by `omp` itself — this CLI never opens it.
+
+**Information parity, not visual parity.** The powerline styling is deliberately
+dropped: the separators and palette are Oh-My-Pi's, and reproducing ours would
+mean fighting a renderer we do not own. What is mirrored is the *content* of the
+Claude bar:
+
+| Claude bar            | Oh-My-Pi                        | Note                                   |
+| --------------------- | ------------------------------- | -------------------------------------- |
+| `model` (+ `effort`)  | `model`                         | `showThinkingLevel` carries the effort |
+| `project`, `worktree` | `path`                          | abbreviated, work prefix stripped      |
+| `branch`              | `git`                           | built in there; we shell out to git    |
+| `context`             | `context_pct` + `context_total` | one segment there is two here          |
+| `cost`                | `cost`                          |                                        |
+| `duration`            | `time_spent`                    | active agent time, not wall clock      |
+| `session`             | `session_name`                  |                                        |
+| `rl5h` + `rl7d`       | `usage`                         | **not an equivalent** — see below      |
+
+`usage` is the closest available and is **not** the same reading: Oh-My-Pi
+exposes no Anthropic 5-hour / 7-day window percentages, and what `usage` reports
+is provider-dependent. That is a known gap, not parity.
+
+The **caps hook is not installed here**, for the same reason: its sensor is the
+Claude bar, which mirrors `context_window` and `rate_limits` to a usage file
+after every render. Nothing equivalent exists on this side.
+
+`--uninstall --statusline` puts each key back to the value it had before the
+install — read with `omp config get` first, and recorded only for keys that
+actually changed, so a setting you chose yourself is never overwritten by an
+uninstall that changed nothing. One caveat, and it is Oh-My-Pi's:
+`omp config reset` does not *remove* a key, it writes the default back as
+explicit YAML. So a key that was absent from a `config.yml` you already had
+comes back as its explicit default — semantically identical, a couple of lines
+longer. A `config.yml` that did not exist at all is deleted outright, which is
+the ordinary case.
+
+If `omp` is not on `PATH`, this is skipped with a note rather than failing — the
+same rule the plugin targets follow.
+
 ## Configuration
+
+Everything from here down describes the **Claude Code** script. Oh-My-Pi's
+status line is configured through `omp config`, not through these files.
 
 Configuration is layered. Two files are deep-merged at render time, in
 increasing precedence (a higher layer overrides the same key in a lower one):

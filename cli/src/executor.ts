@@ -14,6 +14,7 @@
 import type { TargetId } from "@ai-plugins/schema";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
+import { hasBin } from "./adapters/support.ts";
 import type {
   Action,
   Adapter,
@@ -27,17 +28,22 @@ import {
   writeReceipt,
 } from "./receipt.ts";
 import {
+  installStatuslineOhmypi,
+  planStatuslineOhmypi,
+  revertStatuslineOhmypi,
+} from "./statusline-ohmypi.ts";
+import {
   installStatusline,
   planStatusline,
   revertStatusline,
 } from "./statusline.ts";
 
 /**
- * What an outcome can be about. The statusline is not a target — it is not a
- * plugin and belongs to Claude Code alone — but it is reported beside them, so
- * the reporter needs one row type rather than two.
+ * What an outcome can be about. Neither statusline is a target — neither is a
+ * plugin — but both are reported beside them, so the reporter needs one row
+ * type rather than three.
  */
-export type OutcomeId = TargetId | "statusline";
+export type OutcomeId = TargetId | "statusline" | "statusline:ohmypi";
 
 export interface TargetOutcome {
   readonly target: OutcomeId;
@@ -278,6 +284,98 @@ export function revertStatuslineInstall(
   catch (error) {
     return {
       target: "statusline",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
+}
+
+/**
+ * The Oh-My-Pi statusline's receipt.
+ *
+ * A file of its own rather than a section of Claude's: the two configure
+ * different surfaces on different machines, and sharing one record would have
+ * an uninstall on a Claude-only run try to undo `omp config` keys it never set.
+ */
+export function ohmypiStatuslineReceiptPath(receiptDir: string): string {
+  return join(receiptDir, "statusline-ohmypi.json");
+}
+
+/** Has the Oh-My-Pi statusline been configured by this CLI? */
+export function ohmypiStatuslineInstalled(options: ExecuteOptions): boolean {
+  return readReceipt(ohmypiStatuslineReceiptPath(options.receiptDir))
+    !== undefined;
+}
+
+/**
+ * Configure the Oh-My-Pi statusline, or describe it under `--dry-run`.
+ *
+ * `omp` absent is a **skip, not a failure** — the same rule the target loop
+ * follows, and for the same reason: this runs whenever Oh-My-Pi is among the
+ * selected targets, and a machine without it should say so and move on.
+ * Everything here is driven through the CLI, so there is no half-install to
+ * fall back to.
+ */
+export function executeStatuslineOhmypi(
+  options: ExecuteOptions,
+): TargetOutcome {
+  if (!hasBin("omp")) {
+    return {
+      target: "statusline:ohmypi",
+      actions: [],
+      skipped: "not-installed",
+    };
+  }
+  try {
+    if (options.dryRun) {
+      return {
+        target: "statusline:ohmypi",
+        actions: planStatuslineOhmypi(options.context),
+      };
+    }
+    const result = installStatuslineOhmypi(options.context);
+    writeReceipt(
+      ohmypiStatuslineReceiptPath(options.receiptDir),
+      result.receipt,
+    );
+    return { target: "statusline:ohmypi", actions: result.actions };
+  }
+  catch (error) {
+    return {
+      target: "statusline:ohmypi",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
+}
+
+/** Undo an Oh-My-Pi statusline install from its receipt. */
+export function revertStatuslineOhmypiInstall(
+  options: ExecuteOptions,
+): TargetOutcome {
+  const path = ohmypiStatuslineReceiptPath(options.receiptDir);
+  const receipt = readReceipt(path);
+  if (receipt === undefined) {
+    return { target: "statusline:ohmypi", actions: [], skipped: "empty" };
+  }
+  if (!hasBin("omp")) {
+    return {
+      target: "statusline:ohmypi",
+      actions: [],
+      skipped: "not-installed",
+    };
+  }
+  try {
+    revertStatuslineOhmypi(options.context, receipt);
+    rmSync(path, { force: true });
+    return {
+      target: "statusline:ohmypi",
+      actions: [{ summary: "reverted the Oh-My-Pi statusline", path }],
+    };
+  }
+  catch (error) {
+    return {
+      target: "statusline:ohmypi",
       actions: [],
       error: (error as Error).message,
     };
