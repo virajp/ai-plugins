@@ -19,8 +19,11 @@ to adopt the project's actual stack vocabulary.
 ## Inputs
 
 You are given the approved plan (in `docs/plans/`), the blueprint slice it
-implements (in `docs/blueprint/`), the project's stack from the architecture
-registry, the project's mempalace **wing**, and the **slice name** and **round
+implements (in `docs/blueprint/`), the project's **resolved stack** — the
+`projects.<name>.stack` block from `.config/vwf.yaml` (**not** the registry,
+which has carried no stack since format 16) plus the `conventions:` prose of
+each template it pins, which is the layout, testing and placement you write to —
+the project's mempalace **wing**, and the **slice name** and **round
 number** for your gap tags (never invent them). On a **fix loop-back** you are
 also given a findings **recall tag** (e.g. `order/review/2`) instead of the
 findings text.

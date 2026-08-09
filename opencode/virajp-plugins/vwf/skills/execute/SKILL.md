@@ -253,7 +253,16 @@ silently if mempalace is unavailable.
    passing the declared preferences (isolate without prompting; commit-only, no
    post-commit prompt; never merge/push). All subsequent work and commits happen
    here.
-3. **Dependency order.** Read the plan's "Delta — ordered steps", build the
+3. **Stack conventions.** Fetch the `conventions:` prose for every template this
+   plan's projects pin, per *Resolving the conventions* in
+   `%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md` — deduped by slug, **once
+   for the whole run**, here rather than per step. The config block names the
+   templates; the prose is what the code is actually written to, and every stage
+   below that touches code is passed it. A failed fetch halts: the preflight
+   already proved each pin resolves, so a failure now is the plugin being
+   unreachable, and code written to conventions nobody read is the thing this
+   whole gate exists to prevent.
+4. **Dependency order.** Read the plan's "Delta — ordered steps", build the
    dependency order, and record the sequence you will execute. **Open the run
    journal** in mempalace (room `runs`, drawer `<plan>`) with that ordered
    sequence, every step pending. The loop appends a node record beneath it per

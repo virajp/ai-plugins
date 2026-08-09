@@ -35,10 +35,12 @@ so one boot of the local stack serves both. Each is conditional — skipped
 Per-stage dispatch contract:
 
 - **code** — dispatch `execute-coder` with the plan (or the plan step), the
-  **blueprint slice** it implements, the **resolved stack** (from
-  `.config/vwf.yaml` `projects.<name>.stack`, defaulting to the type's reference
-  stack — the blueprint carries none), the project wing, the **slice name** and
-  **round number** (for its gap tags), and any recall hits. It implements under
+  **blueprint slice** it implements, the **resolved stack** — both halves: the
+  `projects.<name>.stack` block from `.config/vwf.yaml` (the blueprint carries
+  none) **and the `conventions:` prose** Setup step 3 fetched for each of its
+  templates, which is what the code is actually written to — the project wing,
+  the **slice name** and **round number** (for its gap tags), and any recall
+  hits. It implements under
   strict TDD — RED → GREEN → REFACTOR for every change — and runs the suite to
   the coverage gate, returning the coverage report: `100%`, `<100%` with the
   uncovered `file:line` list, or `n/a` when the project has no coverage tooling.
@@ -48,9 +50,11 @@ Per-stage dispatch contract:
   **tag** (not the text) — the coder recalls the detail from mempalace before
   fixing.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
-  **slice** and **round number** for its recall tag). It reviews the code
-  adversarially against the **plan, the blueprint, conventions, and the registry
-  stack**, using `/code-review` as its engine. When the plan touches a service's
+  **slice** and **round number** for its recall tag, plus the same **resolved
+  stack** the coder got — block and `conventions:` prose both; a reviewer holding
+  less than the coder cannot tell a convention breach from a style preference).
+  It reviews the code adversarially against the **plan, the blueprint,
+  `conventions.md`, and the resolved stack**, using `/code-review` as its engine. When the plan touches a service's
   API surface, also pass the **living contract**
   (`docs/blueprint/apis/<project>.openapi.yaml`) and the **latest released
   snapshot** (highest semver under `docs/blueprint/apis/released/`, when one

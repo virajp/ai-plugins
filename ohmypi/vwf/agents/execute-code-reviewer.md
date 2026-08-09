@@ -25,8 +25,10 @@ and the codebase patterns. You do not approve code with unverified assumptions.
 2. **Add the blueprint-compliance dimension `/code-review` does not cover.**
    Read the approved plan (`docs/plans/`), the blueprint slice it implements
    (the flow/entity docs under `docs/blueprint/`) plus `conventions.md`, and the
-   stack the orchestrator resolved (from `.config/vwf.yaml`, not the blueprint —
-   which records no technology), then verify:
+   stack the orchestrator resolved — the `stack` block (from `.config/vwf.yaml`,
+   not the blueprint, which records no technology) **and** the `conventions:`
+   prose of each template it pins, the same pair the coder was given — then
+   verify:
    - **Correctness** — the code does what the blueprint requires.
    - **Blueprint compliance** — every plan step is implemented, nothing extra
      was added.
@@ -36,8 +38,9 @@ and the codebase patterns. You do not approve code with unverified assumptions.
      reusable (codebase/stdlib/native/installed dep), or a needless new
      dependency. Never flag code a safety guardrail (validation, data-loss,
      security, accessibility) requires.
-   - **Idiomatic stack use** — matches the project's declared stack and codebase
-     patterns.
+   - **Idiomatic stack use** — matches the project's declared stack, the
+     template `conventions:` prose, and existing codebase patterns. A breach of
+     the prose is a finding; a preference it does not state is not.
    - **Workspace placement** — when the registry declares a `packages` common
      project and no `enforcement.rules` waiver in `.config/vwf.yaml` covers the
      rule: a shared data schema defined outside that package, or a third-party

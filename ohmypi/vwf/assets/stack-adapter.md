@@ -166,6 +166,38 @@ The `harness` block is what replaces the tool names vwf used to carry. vwf asks
 via a browser driver". `/skill:doctor` checks the task exists; it never checks
 *which* tool.
 
+### Resolving the conventions
+
+`.config/vwf.yaml` records **which** templates a project picked; it does not
+record what they say. The `conventions:` prose — layout, testing, placement — is
+the template's, and reaching it means asking the plugin. `/skill:plan` sizes its
+steps against that prose and `/skill:execute` writes code to it, so both resolve
+it the same way:
+
+1. **Collect the pins** for every project in scope — `template`, each
+   `backing_template` entry, `deploy_template`, and the repo's
+   `repo.stack.template`. Skip `n/a`; it is an answer, not a pin.
+2. **Dedupe by (plugin, slug) and fetch each once**, calling
+   `/<plugin>:<plugin>-stack-template <slug>`. A monorepo whose projects share a
+   repo template fetches it once, not once per project.
+3. **Resolve once per run, before the work starts**, and pass the result down to
+   every subagent that needs it. Re-fetching per element or per step would
+   re-pay the call for prose that cannot change mid-run.
+
+**A fetch that fails is a halt, not a degrade.** By this point the stack gate has
+already confirmed every pin names a template an installed plugin ships, so a
+failure here is the plugin being unreachable or returning garbage — an
+infrastructure fault, not a config one. Report it with the slug and stop.
+Continuing would produce exactly what the closed menu exists to prevent: a run
+sized and written against conventions nobody read, indistinguishable from one
+where the conventions happened to say nothing.
+
+**The prose informs code, never the contract.** These conventions reach
+`docs/plans/` and the repo's source. They never reach `docs/blueprint/` — that is
+the line that keeps a vendor name structurally impossible in a blueprint doc
+rather than merely discouraged, and it is why the stack lives in config in the
+first place.
+
 ## The UX gate
 
 `execute-ux-reviewer` no longer knows how to render anything. For a UI slice it

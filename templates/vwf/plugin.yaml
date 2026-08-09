@@ -1,5 +1,5 @@
 name: vwf
-version: 15.0.0
+version: 15.1.0
 description: Highly opinionated Product → Blueprint → Plan → Execute
   workflow
   for solo developers or small teams — enforced workspace structure with a

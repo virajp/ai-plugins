@@ -138,6 +138,19 @@ This is a delegation, never a second copy of the rule — the finding kinds and
 their remedies live in `doctor` alone, so closing the menu further never means
 editing this file.
 
+**Resolve the stack conventions.** With the gate clean, fetch the `conventions:`
+prose for every template the chain's projects pin, per *Resolving the
+conventions* in `%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md` — deduped by
+slug, **once for the whole chain**, before §3. The config block names the
+templates; only the plugin holds what they say, and the *how* questions this
+command settles — where a file goes, what a test looks like, which existing
+shape to extend — are answered by that prose. Sizing steps without it is
+guessing at a layout the repo already has an opinion about.
+
+Once per chain rather than per element, because every element of a chain sits in
+the same few projects and the prose cannot change between them. Hold the result
+for §§3–7.
+
 Then run §§3–8 **once per chain element, in order** — each element produces its
 own plan doc behind its own approval gate.
 
@@ -157,8 +170,16 @@ own plan doc behind its own approval gate.
 element rather than reading the codebase yourself — this is the largest inline
 read in the workflow, and everything it loads would otherwise tax every
 subsequent turn of the pass. Pass it the element's blueprint doc path(s), the
-registry `projects:` block, the relevant `conventions.md` anchors, and the API
-contract path(s) the element references. It surveys **graph-first** per
+registry `projects:` block, **each project's `stack` block** from
+`.config/vwf.yaml` (the registry carries none — the surveyor's Inputs require
+it, and it is what lets a reuse candidate be recognised as one), the relevant
+`conventions.md` anchors, and the API contract path(s) the element references.
+
+The resolved **stack conventions prose** stays here rather than going with it.
+The surveyor answers *what exists*; the prose answers *where a new thing
+belongs*, which is this command's question when it sizes the steps. Sending it
+along would grow the workflow's largest read to settle a question the surveyor is
+not asked. It surveys **graph-first** per
 `%%AI_PLUGINS_ROOT%%/assets/graphify.md` (falling back silently to direct
 reads when no graph is reachable) and returns terse `PRESENT:` / `PARTIAL:` /
 `ABSENT:` / `REUSE CANDIDATES:` / `CONTRADICTIONS:` / `HARNESS:` lines with

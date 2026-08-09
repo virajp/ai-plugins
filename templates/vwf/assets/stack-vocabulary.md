@@ -126,9 +126,15 @@ tools: [] # the tooling that defines the template
 ---
 ```
 
-The prose below the frontmatter is the template's **conventions**. `plan` and
-`execute` read it for each of the four selected templates; nothing in
-`docs/blueprint/` ever does.
+The prose below the frontmatter is the template's **conventions**. It reaches
+`<%= it.cmd("vwf:plan") %>` and `<%= it.cmd("vwf:execute") %>` as the `conventions:` field of the
+template payload — neither reads a template file, and the config block records
+only which template was picked, never what it says. The fetch rule (deduped by
+slug, once per run, a failure halts) is *Resolving the conventions* in
+`<%= it.root %>/assets/stack-adapter.md`.
+
+Nothing in `docs/blueprint/` ever reads it, and nothing should: the prose names
+technology, which is exactly what a blueprint doc may not.
 
 ## Frameworks vs dependencies
 

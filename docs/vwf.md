@@ -468,8 +468,17 @@ nothing else about repo shape is enforced.
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
 template admits — Flutter's Kotlin and Swift), and prose carrying the layout,
-testing and deployment conventions `plan` and `execute` read. Picking one fills
-those axes into `.config/vwf.yaml`; you can then customize any of them.
+testing and deployment **conventions**. Picking one fills those axes into
+`.config/vwf.yaml`; you can then customize any of them.
+
+Only the axes land in the config — the conventions prose stays with the plugin,
+and `/vwf:plan` and `/vwf:execute` fetch it when they run: deduped by template
+slug, once per run, before any work starts. That is what they size steps and
+write code against, so a fetch that fails halts rather than degrading — code
+written to conventions nobody read is indistinguishable from code written to
+conventions that said nothing. The prose reaches `docs/plans/` and your source,
+and never `docs/blueprint/`: it names technology, which is exactly what a
+blueprint doc may not.
 
 **vwf names no language, but the menu is closed.** A language token is whatever
 a template declares, and the facts the tooling acts on — which LSP server covers
