@@ -303,26 +303,68 @@ function branch(api: Api): string | undefined {
 // ---------------------------------------------------------------------------
 
 /**
- * The active session id.
+ * The active session id, found rather than assumed.
  *
- * `api.route.current` is `{ name: "home" }` at idle and carries the id inside a
- * session — but which key holds it could not be verified, because reaching that
- * state needs provider auth. Two spellings are in play upstream: `session_id`
- * (what the `sidebar_content` slot receives as a prop) and `sessionID` (what the
- * internal route data uses). **All three shapes are accepted deliberately**, the
- * same way this repo's Oh-My-Pi hook wrapper accepts `tool ?? tool_name`: an
- * unknown shape has to degrade to rendering less, never to throwing.
+ * `api.route` is the TUI's screen router — `home` on launch, `session` inside a
+ * conversation — and `current` is which screen is up. It is the only route to
+ * the session id a plugin has: OpenCode's own footer reads `route.data` through
+ * `useRoute()`, a Solid hook inside its component tree that no plugin can reach.
+ *
+ * **Which key holds the id is genuinely unknown**, and could not be settled:
+ * reaching a session needs provider auth, and the shape is normalised on the way
+ * out to plugins (`name` here, `type` internally), so the id may well be
+ * renamed with it. Upstream uses `session_id` in the `sidebar_content` slot's
+ * props and `sessionID` in its internal route data.
+ *
+ * So this searches instead of guessing. The known spellings are tried first,
+ * then any key that reads as a session id, over the route object and one level
+ * below it — which is where a `data` wrapper would put it. Bounded at depth two
+ * on purpose: deep enough for every shape actually seen, shallow enough that it
+ * cannot wander into unrelated state and return a stranger's id.
+ *
+ * The failure mode is the point. An unrecognised shape yields `undefined`, the
+ * session-derived segments drop out, and the bar still shows project and branch
+ * — it renders less, never throws, and never invents an id.
  */
 function sessionId(api: Api): string | undefined {
   const current = read<Record<string, unknown>>(api.route?.current);
-  if (current === undefined) {
+  if (current === undefined || current === null) {
     return undefined;
   }
-  const data = current["data"] as Record<string, unknown> | undefined;
-  const id = current["session_id"]
-    ?? current["sessionID"]
-    ?? data?.["sessionID"];
-  return typeof id === "string" && id.length > 0 ? id : undefined;
+  return idIn(current) ?? idBelow(current);
+}
+
+/** Session-id-shaped keys, in preference order, then anything that reads like one. */
+function idIn(source: Record<string, unknown>): string | undefined {
+  const known = source["session_id"]
+    ?? source["sessionID"]
+    ?? source["sessionId"];
+  if (typeof known === "string" && known.length > 0) {
+    return known;
+  }
+  for (const [key, value] of Object.entries(source)) {
+    if (
+      typeof value === "string"
+      && value.length > 0
+      && /^session[_-]?id$/i.test(key)
+    ) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+/** One level down — where a `data` or `params` wrapper would hold it. */
+function idBelow(source: Record<string, unknown>): string | undefined {
+  for (const value of Object.values(source)) {
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      const found = idIn(value as Record<string, unknown>);
+      if (found !== undefined) {
+        return found;
+      }
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -342,8 +384,13 @@ function session(api: Api, id: string | undefined): Session | undefined {
  * Tokens on the most recent message that carries any.
  *
  * Walked from the end rather than filtered by role: the counts live on the
- * assistant message, but whether they sit on the entry or under an `info`
- * wrapper was not verifiable, so both are read and the first hit wins.
+ * assistant message, and the newest one that has them is the current usage.
+ *
+ * **They sit under the `info` wrapper** — confirmed, so that is read first.
+ * A message is `{ info, parts }`, which is the same shape vwf's mempalace
+ * auto-save reads when it filters on `info.role`. The bare `tokens` fallback
+ * is kept only so an older or reshaped message still yields a number rather
+ * than blanking the segment.
  */
 function usedTokens(api: Api, id: string | undefined): number | undefined {
   if (id === undefined) {
@@ -356,7 +403,7 @@ function usedTokens(api: Api, id: string | undefined): number | undefined {
   for (let i = messages.length - 1; i >= 0; i--) {
     const entry = messages[i] as Record<string, unknown> | undefined;
     const info = entry?.["info"] as Record<string, unknown> | undefined;
-    const tokens = (entry?.["tokens"] ?? info?.["tokens"]) as
+    const tokens = (info?.["tokens"] ?? entry?.["tokens"]) as
       | Tokens
       | undefined;
     if (tokens === undefined || tokens === null) {
