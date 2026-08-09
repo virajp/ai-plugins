@@ -20,7 +20,13 @@ repo agrees. Everything here is a **read** — doctor reports and offers, it nev
 edits without consent.
 
 Scope to the projects named in `$ARGUMENTS`; with no argument, check every
-project in the registry.
+project in the registry. **That scope narrows §§3–5 only.** The harness, the
+memory config and the code-intelligence graph belong to the repo rather than to
+any one project, so **§§6–8 run in full on every invocation**, scoped or not —
+and their references are read every run, not just when no argument was given.
+Narrowing them is how a scoped run comes back clean while a blocking finding
+sits unread, and `/vwf:setup` / `/vwf:execute`
+halt on a blocking finding they were never told about.
 
 ## Doc Paths
 
