@@ -225,16 +225,39 @@ describe("claude adapter", () => {
     expect(existsSync(stray)).toBe(false);
   });
 
-  it("removes the payload on uninstall, even after two installs", () => {
-    // The case `createdFile` exists for, one level up. Recording the tree as
-    // pre-existing on the second run would make this uninstall restore the
-    // first run's payload rather than remove it.
+  it("fully uninstalls after a repeat install, not just the payload", () => {
+    // The receipt is rewritten every run, so what a *no-op* run records is
+    // what an uninstall gets. Undos used to be recorded only when a command
+    // changed something, while the payload was recorded unconditionally — so
+    // a second install produced a receipt naming only the tree, and uninstall
+    // deleted the payload while leaving the plugin enabled against a
+    // marketplace whose directory had just been removed. Worse than the
+    // no-op it replaced.
     claude.apply(context, planFor(["markdown"]));
     const { receipt } = claude.apply(context, planFor(["markdown"]));
 
     claude.revert(context, receipt);
 
     expect(existsSync(marketplaceRoot())).toBe(false);
+    expect(read(userSettings())["enabledPlugins"]).toEqual({});
+    expect(read(userSettings())["extraKnownMarketplaces"]).toBeUndefined();
+  });
+
+  it("records the undos without re-running the commands", () => {
+    // The other half: recording an undo for state already in place must not
+    // turn a no-op run back into a re-install. `ran` stays empty; only the
+    // receipt grows.
+    claude.apply(context, planFor(["markdown"]));
+    ran = [];
+
+    const { receipt } = claude.apply(context, planFor(["markdown"]));
+
+    expect(ran).toEqual([]);
+    expect(receipt.entries.map(e => e.kind)).toEqual([
+      "tree",
+      "command",
+      "command",
+    ]);
   });
 
   it("declares the marketplace, then installs each plugin", () => {

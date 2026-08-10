@@ -163,22 +163,29 @@ function run(
   for (const scope of ["user", "project"] as const) {
     for (const name of scope === "user" ? plan.user : plan.project) {
       const selector = `${name}@${marketplace}`;
-      if (isInstalled(context, scope, selector)) {
-        continue;
-      }
       // No dependency expansion: `claude plugin install` pulls them in itself,
       // and naming them here would record undos for plugins it manages.
       const install = ["plugin", "install", selector, "--scope", scope];
+      const uninstall = ["plugin", "uninstall", name, "--scope", scope];
+      if (isInstalled(context, scope, selector)) {
+        // Already installed, so nothing to run — but the undo is still
+        // recorded. Each run overwrites the receipt, so skipping it here left
+        // a repeat install with a receipt naming only the payload, and an
+        // uninstall that deleted the payload while leaving the plugin enabled
+        // against a marketplace whose directory had just been removed.
+        //
+        // Recording it is safe because the plan **named** this plugin: the
+        // caller asked this tool to manage it, which is a different question
+        // from whether this particular run is what put it there.
+        if (!dryRun) {
+          receipt.command(install, uninstall);
+        }
+        continue;
+      }
       actions.push({ summary: `${BIN} ${install.join(" ")}` });
       if (!dryRun) {
         runOrThrow(context, install);
-        receipt.command(install, [
-          "plugin",
-          "uninstall",
-          name,
-          "--scope",
-          scope,
-        ]);
+        receipt.command(install, uninstall);
       }
     }
   }
@@ -261,6 +268,22 @@ function registerMarketplace(
 
   const root = claudeMarketplaceRoot(context.home);
   if (declared === root) {
+    // Already pointing where this run would point it, so `add` is not re-run —
+    // but the undo is still recorded, for the same reason as the plugins
+    // above: the receipt is rewritten every run, and one that omits this
+    // leaves an uninstall that removes the payload and abandons the
+    // declaration naming it.
+    //
+    // Safe here in a way it was not before this path was managed. `root` is
+    // inside the tool's own data directory, so a pin equal to it cannot be one
+    // the user set up — the case the "already points at" branch below exists
+    // to protect.
+    if (!dryRun) {
+      receipt.command(
+        ["plugin", "marketplace", "add", root],
+        ["plugin", "marketplace", "remove", marketplace, "--scope", "user"],
+      );
+    }
     return [];
   }
   const stale = typeof declared === "string"

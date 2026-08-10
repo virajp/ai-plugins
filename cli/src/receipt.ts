@@ -80,9 +80,20 @@ export type Entry =
    * the tool's own records claiming an install that is no longer there, so the
    * CLI has to unmake what it made.
    *
-   * Recorded only when the command actually changed something: re-registering
-   * an already-registered marketplace is a no-op whose "undo" would remove one
-   * the user set up themselves.
+   * Recorded when the command changed something, **or when the state it would
+   * have produced is provably this tool's** — not merely whenever the command
+   * was skipped. The distinction is ownership, not activity.
+   *
+   * The original rule was activity alone, and it broke as soon as a receipt
+   * mixed activity-gated entries with unconditional ones: a no-op re-install
+   * wrote a receipt naming the payload and nothing else, so an uninstall
+   * removed the payload and left the registration pointing at it. Since every
+   * run overwrites the receipt, what a *no-op* run records is what an
+   * uninstall gets.
+   *
+   * What the original rule protects is still protected: a marketplace pin
+   * naming a path outside this tool's own directories is the user's, is never
+   * re-pointed, and never gets an undo recorded for it.
    */
   | {
     readonly kind: "command";

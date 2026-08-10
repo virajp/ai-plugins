@@ -114,9 +114,15 @@ closed (`addGitHubPlugin` throws). The redirect logs a note; it is never silent.
 An install returns a **receipt** recording prior state, so uninstall restores
 rather than guesses. For CLI-driven targets an entry pairs the command run with
 the command that undoes it — deleting their files directly would leave the
-tool's own records claiming an install that is gone. An undo is recorded **only
-when the command changed something**, so uninstall never removes a marketplace
-the user registered themselves.
+tool's own records claiming an install that is gone. An undo is recorded when
+the command changed something **or when the resulting state is provably this
+tool's** — the test is ownership, not activity. Gating on activity alone broke
+the moment a receipt mixed activity-gated entries with unconditional ones: a
+no-op re-install recorded the payload and nothing else, and since every run
+overwrites the receipt, the uninstall that followed deleted the payload and left
+the registration pointing at it. A pin outside this tool's own directories is
+still never re-pointed and never gets an undo, so uninstall still cannot remove
+a marketplace the user registered themselves.
 
 Entry kinds differ by **who else writes there**, which is the whole distinction:
 `file` and `configKey` capture prior contents because the path is shared; `dir`
