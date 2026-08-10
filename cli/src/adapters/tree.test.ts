@@ -1,8 +1,10 @@
 import {
+  chmodSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -82,6 +84,38 @@ describe("copyTree", () => {
     to,
     rootPath: "/installed/vwf",
     siblingRoot: (p: string) => `/installed/${p}`,
+  });
+
+  it("preserves the executable bit on a hook script", () => {
+    // `.sh` matches TEXT, so hook scripts go through `writeFileAtomic`, which
+    // writes a temp file and renames — dropping the source mode unless it is
+    // passed. Every rendered plugin's hooks are `.sh`, and OpenCode shipped
+    // them at 644 for two releases because of this: a hook that is not
+    // executable does not run.
+    const from = join(root, "src");
+    mkdirSync(join(from, "hooks"), { recursive: true });
+    const script = join(from, "hooks", "normalize.sh");
+    writeFileSync(script, "#!/usr/bin/env bash\necho hi\n");
+    chmodSync(script, 0o755);
+    const to = join(root, "out");
+
+    copyTree(options(from, to), new ReceiptBuilder(), false);
+
+    expect(statSync(join(to, "hooks", "normalize.sh")).mode & 0o777)
+      .toBe(0o755);
+  });
+
+  it("leaves a non-executable file non-executable", () => {
+    // The other direction, so the fix cannot be "chmod +x everything".
+    const from = join(root, "src");
+    mkdirSync(from, { recursive: true });
+    writeFileSync(join(from, "notes.md"), "plain\n");
+    chmodSync(join(from, "notes.md"), 0o644);
+    const to = join(root, "out");
+
+    copyTree(options(from, to), new ReceiptBuilder(), false);
+
+    expect(statSync(join(to, "notes.md")).mode & 0o111).toBe(0);
   });
 
   it("substitutes in text files and copies binaries verbatim", () => {

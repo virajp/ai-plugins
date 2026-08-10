@@ -101,18 +101,27 @@ function copyFiles(
         diff: { before, after },
       });
       if (!dryRun) {
+        const mode = statSync(source).mode & 0o777;
         recordDirs(receipt, options.to, destination);
-        receipt.file(destination);
+        receipt.file(destination, mode);
         mkdirSync(dirOf(destination), { recursive: true });
-        writeFileAtomic.sync(destination, after);
+        // `mode` is passed explicitly because `writeFileAtomic` writes through
+        // a temp file and renames: without it the result carries the default
+        // mode, not the source's. Every rendered hook script is a `.sh`, which
+        // `TEXT` matches, so this branch is exactly where an executable bit
+        // goes missing — and a hook that is not executable does not run.
+        writeFileAtomic.sync(destination, after, { mode });
       }
     }
     else {
       actions.push({ summary: `copy ${destination}`, path: destination });
       if (!dryRun) {
         recordDirs(receipt, options.to, destination);
-        receipt.file(destination);
+        receipt.file(destination, statSync(source).mode & 0o777);
         mkdirSync(dirOf(destination), { recursive: true });
+        // `cpSync` carries the mode itself — the mode-carrying files with no
+        // extension (mise task scripts) survive here, which is why the bug
+        // only ever showed on the branch above.
         cpSync(source, destination);
       }
     }
