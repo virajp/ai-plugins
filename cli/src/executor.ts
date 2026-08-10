@@ -732,28 +732,27 @@ export function renderProgress(
     );
   }
 
-  blocks.push(`  ${verdict(outcomes, report.elapsedMs)}`);
+  blocks.push(`  ${verdict(rows, report.elapsedMs)}`);
   return blocks.join("\n\n");
 }
 
-function verdict(
-  outcomes: readonly TargetOutcome[],
-  elapsedMs?: number,
-): string {
-  const failed = outcomes.filter(o => o.error !== undefined).length;
+/**
+ * Counted over the **rows**, not the raw outcomes.
+ *
+ * The three statusline outcomes collapse into one row, so counting outcomes
+ * made the verdict disagree with the table right above it — "1 of 7 targets
+ * failed" printed under five rows, which reads as two targets having gone
+ * unreported.
+ */
+function verdict(rows: readonly Row[], elapsedMs?: number): string {
+  const failed = rows.filter(r => r.result.startsWith(BAD)).length;
   const took = elapsedMs === undefined
     ? ""
     : ` in ${(elapsedMs / 1000).toFixed(1)}s`;
   if (failed > 0) {
-    return `${BAD} ${failed} of ${
-      plural(outcomes.length, "target")
-    } failed${took}`;
+    return `${BAD} ${failed} of ${plural(rows.length, "target")} failed${took}`;
   }
-  const changed = outcomes
-    .filter(o =>
-      o.error === undefined && o.skipped === undefined && o.actions.length > 0
-    )
-    .length;
+  const changed = rows.filter(r => r.result.includes("updated")).length;
   if (changed === 0) {
     return `${OK} everything already up to date${took}`;
   }

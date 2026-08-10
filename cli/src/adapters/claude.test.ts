@@ -199,6 +199,55 @@ describe("claude adapter", () => {
     expect(logged.join("\n")).toMatch(/already points at/);
   });
 
+  it("re-points a pin left by an older install of this package", () => {
+    // `pnpx` resolves to a version-specific store path, so every upgrade moves
+    // sourceRoot. Declining to re-point meant a marketplace added by 3.0.0
+    // kept serving 3.0.0's rendered trees forever, while `--upgrade` reported
+    // "already up to date" — the upgrade silently did nothing.
+    // A real package-shaped root: the guard reads the marketplace name out of
+    // it, and the path has to look like a node_modules install for the pin to
+    // count as this CLI's own rather than the user's.
+    const store = mkdtempSync(join(tmpdir(), "ai-plugins-store-"));
+    const newer = join(store, "node_modules", "@askviraj", "ai-plugins");
+    mkdirSync(join(newer, ".claude-plugin"), { recursive: true });
+    write(
+      join(newer, ".claude-plugin", "marketplace.json"),
+      { name: "virajp-plugins", plugins: [] },
+    );
+    const older = newer.replace("ai-plugins-store-", "ai-plugins-store-old-");
+    write(userSettings(), {
+      extraKnownMarketplaces: {
+        "virajp-plugins": { source: { source: "directory", path: older } },
+      },
+    });
+
+    claude.apply({ ...context, sourceRoot: newer }, planFor(["markdown"]));
+
+    const marketplace = ran.filter(c => c.includes("marketplace"));
+    // Remove then add, in that order — `claude` has no re-point command.
+    expect(marketplace[0]?.includes("remove")).toBe(true);
+    expect(marketplace[1]?.includes("add")).toBe(true);
+    expect(marketplace[1]?.at(-1)).toBe(newer);
+    expect(logged.join("\n")).toMatch(/re-pointed/);
+  });
+
+  it("leaves a pin that is not an install of this package alone", () => {
+    // A git clone, or anywhere else the user pointed it deliberately. Only a
+    // path inside a node_modules copy of this package counts as ours to move.
+    write(userSettings(), {
+      extraKnownMarketplaces: {
+        "virajp-plugins": {
+          source: { source: "directory", path: "/home/me/src/ai-plugins" },
+        },
+      },
+    });
+
+    claude.apply(context, planFor(["markdown"]));
+
+    expect(ran.some(c => c.includes("marketplace"))).toBe(false);
+    expect(logged.join("\n")).toMatch(/already points at/);
+  });
+
   it("skips a plugin that is already installed", () => {
     claude.apply(context, planFor(["markdown"]));
     ran = [];

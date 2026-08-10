@@ -28,7 +28,11 @@ import {
   ReceiptBuilder,
   revert as revertReceipt,
 } from "../receipt.ts";
-import { hasBin } from "./support.ts";
+import {
+  hasBin,
+  isStalePin,
+  PACKAGE_NAME,
+} from "./support.ts";
 import type {
   Action,
   Adapter,
@@ -119,13 +123,29 @@ function run(
 
   // Re-adding an existing marketplace fails outright, and recording an undo for
   // one we did not add would remove the user's own registration.
-  if (!isRegistered(context, marketplace)) {
-    const add = [
-      "plugin",
-      "marketplace",
-      "add",
-      join(context.sourceRoot, TREE),
-    ];
+  const want = join(context.sourceRoot, TREE);
+  const entry = registryEntry(context, marketplace);
+  // Registered but with no recorded URI: leave it. We cannot tell whether it
+  // is stale, and re-adding is a hard error in `omp` — guessing would turn an
+  // unknown into a failed run.
+  const stale = entry?.sourceUri !== undefined
+    && isStalePin(entry.sourceUri, want, PACKAGE_NAME);
+  if (entry === undefined || stale) {
+    if (stale) {
+      // Same trap as Claude's: the pin names the store path of whichever
+      // version registered it, so an upgrade kept serving the previous
+      // package's rendered tree. `omp` has no repoint, so it is remove + add.
+      const drop = ["plugin", "marketplace", "remove", marketplace];
+      actions.push({ summary: `${BIN} ${drop.join(" ")}` });
+      if (!dryRun) {
+        runOrThrow(context, drop);
+      }
+      context.log(
+        `ohmypi: marketplace \`${marketplace}\` re-pointed from a previous `
+          + "install of this package to the running one",
+      );
+    }
+    const add = ["plugin", "marketplace", "add", want];
     actions.push({ summary: `${BIN} ${add.join(" ")}` });
     if (!dryRun) {
       runOrThrow(context, add);
@@ -137,12 +157,20 @@ function run(
     for (const name of scope === "user" ? plan.user : plan.project) {
       // Always the `<name>@<marketplace>` form: with a bare name `--scope` is
       // ignored with a warning, and the plugin lands at the default scope.
+      // `--force` is not optional here. `omp plugin install` **errors** on a
+      // plugin it already has ("Use force option to reinstall"), so without it
+      // the first run succeeded and every run after it failed outright — which
+      // is exactly what `--upgrade` does. It is also the only way to refresh:
+      // `omp` copies the bundle into `~/.omp/plugins/cache/`, so skipping an
+      // already-installed plugin would pin it to the content it was first
+      // installed with, and an upgrade would quietly change nothing.
       const install = [
         "plugin",
         "install",
         `${name}@${marketplace}`,
         "--scope",
         scope,
+        "--force",
       ];
       actions.push({ summary: `${BIN} ${install.join(" ")}` });
       if (!dryRun) {
@@ -170,21 +198,32 @@ function readMarketplaceName(context: AdapterContext): string {
   return (JSON.parse(readFileSync(path, "utf8")) as { name: string; }).name;
 }
 
-function isRegistered(context: AdapterContext, name: string): boolean {
+/**
+ * The path a registered marketplace currently points at, or `undefined` when
+ * it is not registered at all.
+ *
+ * The URI matters as much as the name: a marketplace registered by an earlier
+ * version of this package still exists under the right name while serving the
+ * wrong tree.
+ */
+function registryEntry(
+  context: AdapterContext,
+  name: string,
+): { name?: string; sourceUri?: string; } | undefined {
   const path = join(context.home, ".omp", "marketplaces.json");
   if (!existsSync(path)) {
-    return false;
+    return undefined;
   }
   try {
     const parsed = JSON.parse(readFileSync(path, "utf8")) as {
-      marketplaces?: readonly { name?: string; }[];
+      marketplaces?: readonly { name?: string; sourceUri?: string; }[];
     };
-    return (parsed.marketplaces ?? []).some(entry => entry.name === name);
+    return (parsed.marketplaces ?? []).find(entry => entry.name === name);
   }
   catch {
     // An unreadable registry is Oh-My-Pi's to complain about; treating it as
     // "not registered" lets the CLI produce the real error message.
-    return false;
+    return undefined;
   }
 }
 

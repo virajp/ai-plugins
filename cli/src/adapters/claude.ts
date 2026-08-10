@@ -40,6 +40,8 @@ import {
 import {
   claudeConfigDir,
   hasBin,
+  isStalePin,
+  PACKAGE_NAME,
 } from "./support.ts";
 import type {
   Action,
@@ -170,7 +172,9 @@ function registerMarketplace(
   if (declared === context.sourceRoot) {
     return [];
   }
-  if (declared !== undefined) {
+  const stale = typeof declared === "string"
+    && isStalePin(declared, context.sourceRoot, PACKAGE_NAME);
+  if (declared !== undefined && !stale) {
     // Re-adding would repoint a marketplace the user configured — and the
     // common case is a name collision with the *published* GitHub source, where
     // silently continuing installs from the wrong copy.
@@ -181,9 +185,33 @@ function registerMarketplace(
     );
     return [];
   }
+
+  const actions: Action[] = [];
+  if (stale) {
+    // One version of this package handing over to another. Without this the
+    // pin keeps naming the store path of whatever version first registered it,
+    // so every later `--upgrade` re-installs from the OLD tree and truthfully
+    // reports "already up to date" — the upgrade silently does nothing.
+    const remove = [
+      "plugin",
+      "marketplace",
+      "remove",
+      marketplace,
+      "--scope",
+      "user",
+    ];
+    actions.push({ summary: `${BIN} ${remove.join(" ")}` });
+    if (!dryRun) {
+      runOrThrow(context, remove);
+    }
+    context.log(
+      `claude: marketplace \`${marketplace}\` re-pointed from a previous `
+        + "install of this package to the running one",
+    );
+  }
   // `claude plugin marketplace add` rejects a bare `.`, so this is absolute.
   const add = ["plugin", "marketplace", "add", context.sourceRoot];
-  const actions: Action[] = [{ summary: `${BIN} ${add.join(" ")}` }];
+  actions.push({ summary: `${BIN} ${add.join(" ")}` });
   if (!dryRun) {
     runOrThrow(context, add);
     receipt.command(add, [

@@ -44,6 +44,7 @@ import { opencode } from "./adapters/opencode.ts";
 import {
   execCommand,
   hasBin,
+  PACKAGE_NAME,
 } from "./adapters/support.ts";
 import type {
   Adapter,
@@ -88,8 +89,7 @@ import {
   renderVersionReport,
 } from "./version.ts";
 
-/** The published package, used to locate its root from either build layout. */
-const PACKAGE_NAME = "@askviraj/ai-plugins";
+export { PACKAGE_NAME } from "./adapters/support.ts";
 
 export const ADAPTERS: readonly Adapter[] = [
   claude,

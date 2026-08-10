@@ -78,3 +78,48 @@ export function shallowestNew(
   }
   return path;
 }
+
+/**
+ * Is `path` an installed copy of this package, rather than somewhere a user
+ * pointed us on purpose?
+ *
+ * `pnpx` resolves to a **version-specific** store path, so every upgrade moves
+ * `sourceRoot`. Both CLI-driven targets record that path in their marketplace
+ * registry and, being written to never clobber a registration they did not
+ * make, then declined to update it — so a marketplace added by 3.0.0 kept
+ * serving 3.0.0's rendered trees after 3.0.1 was installed. Claude reported
+ * "already up to date" while reading the old package, which is the worst
+ * possible shape for that bug: the upgrade silently did nothing.
+ *
+ * The test is deliberately narrow. Only a path *inside a node_modules install
+ * of this package* counts, so a marketplace the user added from a git clone,
+ * a GitHub source, or anywhere else is still left exactly alone — repointing
+ * one of those is the clobbering the guard exists to prevent.
+ */
+export function isPackageInstall(path: string, packageName: string): boolean {
+  return path.includes(`node_modules/${packageName}`);
+}
+
+/**
+ * Should a marketplace pin be moved from `declared` to `current`?
+ *
+ * True only when they differ **and both** are installs of this package — one
+ * version of it handing over to another. Anything else is the user's.
+ */
+export function isStalePin(
+  declared: string,
+  current: string,
+  packageName: string,
+): boolean {
+  return declared !== current
+    && isPackageInstall(declared, packageName)
+    && isPackageInstall(current, packageName);
+}
+
+/**
+ * The published package name.
+ *
+ * Lives here rather than in `index.ts` because two adapters need it to tell
+ * their own stale marketplace pin from one the user made.
+ */
+export const PACKAGE_NAME = "@askviraj/ai-plugins";

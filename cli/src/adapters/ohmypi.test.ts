@@ -92,7 +92,7 @@ describe("ohmypi adapter", () => {
 
     expect(ran.map(c => c.join(" "))).toEqual([
       `omp plugin marketplace add ${join(repoRoot, "ohmypi")}`,
-      "omp plugin install markdown@virajp-plugins --scope user",
+      "omp plugin install markdown@virajp-plugins --scope user --force",
     ]);
   });
 
@@ -103,7 +103,7 @@ describe("ohmypi adapter", () => {
 
     const install = ran.find(c => c.includes("install"));
     expect(install?.[3]).toBe("markdown@virajp-plugins");
-    expect(install?.slice(-2)).toEqual(["--scope", "project"]);
+    expect(install?.slice(-3)).toEqual(["--scope", "project", "--force"]);
   });
 
   it("installs both scopes in one run, without redirecting either", () => {
@@ -111,11 +111,11 @@ describe("ohmypi adapter", () => {
     ohmypi.apply(context, planFor(["markdown"], ["mise"]));
 
     const installs = ran.filter(c => c.includes("install")).map(c =>
-      c.slice(-3).join(" ")
+      c.slice(-4).join(" ")
     );
     expect(installs).toEqual([
-      "markdown@virajp-plugins --scope user",
-      "mise@virajp-plugins --scope project",
+      "markdown@virajp-plugins --scope user --force",
+      "mise@virajp-plugins --scope project --force",
     ]);
   });
 
@@ -125,6 +125,61 @@ describe("ohmypi adapter", () => {
     ohmypi.apply(context, planFor(["markdown"]));
 
     expect(env[0]?.["HOME"]).toBe(home);
+  });
+
+  it("forces every install, so a second run is not a hard error", () => {
+    // `omp plugin install` errors on a plugin it already has ("Use force
+    // option to reinstall"), so without --force the first run succeeded and
+    // every run after it failed — which is exactly what `--upgrade` does. It
+    // is also the only refresh: omp COPIES the bundle into its cache, so
+    // skipping an installed plugin would pin it to the original content.
+    ohmypi.apply(context, planFor(["markdown"]));
+
+    const install = ran.find(c => c.includes("install"));
+    expect(install?.at(-1)).toBe("--force");
+  });
+
+  it("re-points a marketplace left by an older install of this package", () => {
+    mkdirSync(join(home, ".omp"), { recursive: true });
+    writeFileSync(
+      registryPath(),
+      JSON.stringify({
+        marketplaces: [{
+          name: "virajp-plugins",
+          sourceUri: "/store/node_modules/@askviraj/ai-plugins/ohmypi",
+        }],
+      }),
+    );
+    // A real package-shaped root: the adapter reads the marketplace name out
+    // of it, and the path must look like a node_modules install for the pin to
+    // count as this CLI's own rather than the user's.
+    const newer = join(home, "node_modules", "@askviraj", "ai-plugins");
+    mkdirSync(join(newer, "ohmypi", ".omp-plugin"), { recursive: true });
+    writeFileSync(
+      join(newer, "ohmypi", ".omp-plugin", "marketplace.json"),
+      JSON.stringify({ name: "virajp-plugins", plugins: [] }),
+    );
+
+    ohmypi.apply({ ...context, sourceRoot: newer }, planFor(["markdown"]));
+
+    const marketplace = ran.filter(c => c.includes("marketplace"));
+    expect(marketplace[0]?.includes("remove")).toBe(true);
+    expect(marketplace[1]?.includes("add")).toBe(true);
+    expect(marketplace[1]?.at(-1)).toBe(join(newer, "ohmypi"));
+  });
+
+  it("leaves a registered marketplace with no recorded URI alone", () => {
+    // Cannot tell whether it is stale, and re-adding is a hard error — so
+    // guessing would turn an unknown into a failed run.
+    mkdirSync(join(home, ".omp"), { recursive: true });
+    writeFileSync(
+      registryPath(),
+      JSON.stringify({ marketplaces: [{ name: "virajp-plugins" }] }),
+    );
+
+    ohmypi.apply(context, planFor(["markdown"]));
+
+    expect(ran.some(c => c.includes("marketplace"))).toBe(false);
   });
 
   it("does not re-register a marketplace that is already configured", () => {
@@ -146,7 +201,7 @@ describe("ohmypi adapter", () => {
     expect(ran).toEqual([]);
     expect(actions.map(a => a.summary)).toEqual([
       `omp plugin marketplace add ${join(repoRoot, "ohmypi")}`,
-      "omp plugin install markdown@virajp-plugins --scope user",
+      "omp plugin install markdown@virajp-plugins --scope user --force",
     ]);
   });
 
