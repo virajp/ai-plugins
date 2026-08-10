@@ -101,7 +101,7 @@ describe("ohmypi statusline install", () => {
       "statusLine.preset custom",
       "statusLine.leftSegments [\"model\",\"path\",\"git\"]",
       "statusLine.rightSegments "
-      + "[\"context_pct\",\"context_total\",\"usage\",\"cost\",\"time_spent\",\"session_name\"]",
+      + "[\"context_pct\",\"usage\",\"cost\",\"time_spent\"]",
       "statusLine.segmentOptions "
       + "{\"model\":{\"showThinkingLevel\":true},"
       + "\"path\":{\"abbreviate\":true,\"maxLength\":40,\"stripWorkPrefix\":true},"
@@ -188,7 +188,7 @@ describe("ohmypi statusline install", () => {
       "omp config set statusLine.preset custom",
       "omp config set statusLine.leftSegments [\"model\",\"path\",\"git\"]",
       "omp config set statusLine.rightSegments "
-      + "[\"context_pct\",\"context_total\",\"usage\",\"cost\",\"time_spent\",\"session_name\"]",
+      + "[\"context_pct\",\"usage\",\"cost\",\"time_spent\"]",
       "omp config set statusLine.segmentOptions "
       + "{\"model\":{\"showThinkingLevel\":true},"
       + "\"path\":{\"abbreviate\":true,\"maxLength\":40,\"stripWorkPrefix\":true},"

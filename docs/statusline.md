@@ -130,7 +130,7 @@ targeting `ohmypi` configures **that**, through four `omp config set` calls:
 ```sh
 omp config set statusLine.preset custom
 omp config set statusLine.leftSegments '["model","path","git"]'
-omp config set statusLine.rightSegments '["context_pct","context_total","usage","cost","time_spent","session_name"]'
+omp config set statusLine.rightSegments '["context_pct","usage","cost","time_spent"]'
 omp config set statusLine.segmentOptions '{"model":{"showThinkingLevel":true},"path":{"abbreviate":true,"maxLength":40,"stripWorkPrefix":true},"git":{"showBranch":true,"showStaged":true,"showUnstaged":true,"showUntracked":true}}'
 ```
 
@@ -144,20 +144,31 @@ dropped: the separators and palette are Oh-My-Pi's, and reproducing ours would
 mean fighting a renderer we do not own. What is mirrored is the *content* of the
 Claude bar:
 
-| Claude bar            | Oh-My-Pi                        | Note                                   |
-| --------------------- | ------------------------------- | -------------------------------------- |
-| `model` (+ `effort`)  | `model`                         | `showThinkingLevel` carries the effort |
-| `project`, `worktree` | `path`                          | abbreviated, work prefix stripped      |
-| `branch`              | `git`                           | built in there; we shell out to git    |
-| `context`             | `context_pct` + `context_total` | one segment there is two here          |
-| `cost`                | `cost`                          |                                        |
-| `duration`            | `time_spent`                    | active agent time, not wall clock      |
-| `session`             | `session_name`                  |                                        |
-| `rl5h` + `rl7d`       | `usage`                         | **not an equivalent** — see below      |
+| Claude bar            | Oh-My-Pi      | Note                                   |
+| --------------------- | ------------- | -------------------------------------- |
+| `model` (+ `effort`)  | `model`       | `showThinkingLevel` carries the effort |
+| `project`, `worktree` | `path`        | abbreviated, work prefix stripped      |
+| `branch`              | `git`         | built in there; we shell out to git    |
+| `context`             | `context_pct` | already carries the total              |
+| `cost`                | `cost`        |                                        |
+| `duration`            | `time_spent`  | active agent time, not wall clock      |
+| `rl5h` + `rl7d`       | `usage`       | **not an equivalent** — see below      |
 
 `usage` is the closest available and is **not** the same reading: Oh-My-Pi
 exposes no Anthropic 5-hour / 7-day window percentages, and what `usage` reports
 is provider-dependent. That is a known gap, not parity.
+
+**Two segments are deliberately not carried, and both are width decisions.** The
+bar is one line and Oh-My-Pi pads every segment, so a segment costs space
+whether or not it says anything new:
+
+- **`context_total` is redundant, not missing.** `context_pct` renders the
+  window alongside the percentage (`7.1%/1M`), and `context_total` renders that
+  same window and nothing else — so the pair drew `1M` twice.
+- **`session_name` is dropped for width.** It is the one segment whose length is
+  unbounded: a session title runs to a full sentence and crowded the numeric
+  segments off the line. The Claude and OpenCode bars keep theirs; this is the
+  one place the three diverge on content rather than styling.
 
 The **caps hook is not installed here**, for the same reason: its sensor is the
 Claude bar, which mirrors `context_window` and `rate_limits` to a usage file

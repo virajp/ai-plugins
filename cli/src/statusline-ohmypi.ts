@@ -19,16 +19,27 @@
  * | `model` (+ `effort`)  | `model`                         | `showThinkingLevel` carries the effort |
  * | `project`, `worktree` | `path`                          | abbreviated, work prefix stripped      |
  * | `branch`              | `git`                           | built in there; we shell out to git    |
- * | `context`             | `context_pct` + `context_total` | one segment there is two here          |
+ * | `context`             | `context_pct`                   | already carries the total              |
  * | `cost`                | `cost`                          |                                        |
  * | `duration`            | `time_spent`                    | active agent time, not wall clock      |
- * | `session`             | `session_name`                  |                                        |
  * | `rl5h` + `rl7d`       | `usage`                         | **not parity** — see below             |
  *
  * `usage` is the closest available and is **not** an equivalent: Oh-My-Pi
  * exposes no Anthropic 5-hour / 7-day window percentages, and what `usage`
  * reports is provider-dependent. That is a known gap, recorded here rather than
  * papered over.
+ *
+ * **Two segments are deliberately not carried, and both are width decisions.**
+ * The bar is one line and Oh-My-Pi pads every segment, so the cost of a segment
+ * is paid whether or not it says anything new:
+ *
+ * - **`context_total` is redundant, not missing.** `context_pct` renders the
+ *   window alongside the percentage (`7.1%/1M`), and `context_total` renders
+ *   that same window and nothing else — so the pair drew `1M` twice.
+ * - **`session_name` is dropped for width.** It is the one segment whose length
+ *   is unbounded — a session title runs to a full sentence and crowded the
+ *   numeric segments off the line. The Claude and OpenCode bars keep theirs;
+ *   this is the one place the three diverge on content rather than styling.
  *
  * **`context-caps` is Claude-only and stays that way.** It reads a usage file
  * the Claude bar writes, and there is no equivalent sensor here.
@@ -86,11 +97,9 @@ const KEYS: readonly (readonly [string, unknown])[] = [
   ["statusLine.leftSegments", ["model", "path", "git"]],
   ["statusLine.rightSegments", [
     "context_pct",
-    "context_total",
     "usage",
     "cost",
     "time_spent",
-    "session_name",
   ]],
   ["statusLine.segmentOptions", {
     model: { showThinkingLevel: true },
