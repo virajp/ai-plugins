@@ -16,7 +16,13 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-node --experimental-strip-types build/src/cli.ts render >/dev/null
+# Deliberately the `plugins:build` task rather than the renderer it wraps.
+# Rendering is no longer the whole pipeline — the task sorts the Oh-My-Pi
+# bundles' package.json afterwards — so calling the renderer directly would
+# compare the committed tree against output no consumer ever produces, and fail
+# on the sort every time. Whatever `plugins:build` does is by definition what
+# this must assert, so there is one pipeline and not two.
+mise run plugins:build >/dev/null
 
 # .claude-plugin/ and .cursor-plugin/ are generated too: the marketplace
 # manifests Claude Code and Cursor read are written at the repo root, because

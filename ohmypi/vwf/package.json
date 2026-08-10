@@ -1,12 +1,12 @@
 {
   "name": "vwf",
+  "version": "15.1.0",
+  "private": true,
   "omp": {
     "extensions": [
       "./hooks/rtk.ts",
       "./hooks/mempalace-save.ts",
       "./hooks/mempalace-precompact.ts"
     ]
-  },
-  "private": true,
-  "version": "15.1.0"
+  }
 }

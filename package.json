@@ -49,6 +49,7 @@
   "devDependencies": {
     "@types/node": "^26.1.2",
     "@types/write-file-atomic": "^4.0.3",
+    "sort-package-json": "^4.0.0",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10",

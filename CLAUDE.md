@@ -115,10 +115,21 @@ allows one Trusted Publisher and validates the entry-point filename):
 
 - **`plugins:build`** — renders `templates/` into every `<repo>/<target>/`. Each
   target directory is removed first, so a deleted skill disappears rather than
-  lingering.
-- **`plugins:render-clean`** — renders, then fails if that produced anything not
-  already staged. This is what catches a template edited without a rebuild;
-  nothing else can, because the rendered trees are committed.
+  lingering. It then **sorts the Oh-My-Pi bundles' `package.json`** — the only
+  `package.json` the render emits, and one `code:format` checks against
+  sort-package-json's canonical key order like any other. Sorting here rather
+  than hand-ordering the generator is what stops the two drifting the next time
+  a key is added. The sorter is a **pinned devDependency run through
+  `pnpm exec`**, never `pnpm dlx`: this rewrites committed output, so an
+  unpinned sorter picking up a new upstream key order would fail
+  `plugins:render-clean` in CI with nothing having changed locally.
+- **`plugins:render-clean`** — runs `plugins:build`, then fails if that produced
+  anything not already staged. This is what catches a template edited without a
+  rebuild; nothing else can, because the rendered trees are committed. It calls
+  the **task**, not the renderer it wraps: rendering stopped being the whole
+  pipeline when the sort was added, so invoking the renderer directly would
+  compare the tree against output no consumer produces and fail on the sort
+  every time.
 - **`plugins:check`** — validates `templates/` **and** all four rendered
   targets, then prints the per-target coverage report. On the source: manifest
   name↔dir, dependencies resolving within the marketplace, hook scripts existing

@@ -20,4 +20,17 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-exec node --experimental-strip-types build/src/cli.ts render "$@"
+node --experimental-strip-types build/src/cli.ts render "$@"
+
+# The rendered Oh-My-Pi bundles are the only part of the output carrying a
+# package.json, and `code:format` checks every package.json in the repo against
+# sort-package-json's canonical key order. Sorting here rather than hand-ordering
+# the generator is what keeps the two from drifting the next time a key is added.
+#
+# `pnpm exec`, never `pnpm dlx`: this rewrites **committed** output, so an
+# unpinned sorter that picked up a new upstream key order would fail
+# `plugins:render-clean` in CI with nothing having changed locally. The pinned
+# devDependency is what makes a render reproducible. `code:format` runs the same
+# binary the same way, so the write and the check can never disagree.
+print_header "Sorting rendered package.json files ..."
+pnpm exec sort-package-json "ohmypi/*/package.json"

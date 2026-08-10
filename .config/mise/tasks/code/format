@@ -17,7 +17,10 @@ dprint ${CMD} \
   --allow-no-files \
   --log-level ${LOG_LEVEL}
 
+# `pnpm exec`, not `pnpm dlx` — the same pinned binary `plugins:build` sorts the
+# rendered bundles with. An unpinned checker here could disagree with the pinned
+# writer there and fail a tree that was sorted correctly.
 print_header "Sorting package.json files ..."
-pnpm dlx sort-package-json ${SORT_PKGJSON} "**/package.json" --ignore "**/node_modules"
+pnpm exec sort-package-json ${SORT_PKGJSON} "**/package.json" --ignore "**/node_modules"
 
 print_header "Formatting done"
