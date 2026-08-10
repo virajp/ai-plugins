@@ -80,6 +80,7 @@ import {
   readPluginIndex,
   resolvePlan,
 } from "./plan.ts";
+import { createProgress } from "./progress.ts";
 import {
   buildVersionReport,
   cmpVer,
@@ -319,7 +320,11 @@ const main = defineCommand({
       log: message => notes.push(message),
       exec: execCommand,
     };
-    const report = (outcomes: readonly TargetOutcome[]) =>
+    const progress = createProgress(process.stderr);
+    const report = (outcomes: readonly TargetOutcome[]): void => {
+      // Always erase the live step first: it shares stderr with the report,
+      // and a half-written line would run into the header.
+      progress.clear();
       process.stderr.write(
         `${
           renderProgress({
@@ -330,12 +335,14 @@ const main = defineCommand({
           })
         }\n`,
       );
+    };
 
     const options = {
       context,
       dryRun: args["dry-run"] === true,
       receiptDir: receiptDir(),
       force: args.force === true,
+      progress,
     };
 
     if (args.version === true) {
@@ -418,6 +425,9 @@ const main = defineCommand({
       }
       else {
         if (options.dryRun) {
+          // The diff goes to stdout while the step sits on stderr; in a terminal
+          // they share a screen, so an uncleared step runs into the first line.
+          progress.clear();
           process.stdout.write(`${renderDiff(outcomes)}\n`);
         }
         report(outcomes);
@@ -439,6 +449,7 @@ const main = defineCommand({
       process.exit(1);
     }
 
+    progress.step("resolving plugins");
     const jobs = buildJobs(adapters, request, context.sourceRoot, context.log);
 
     // Refuse before touching anything: a plugin whose tools are absent installs
@@ -478,6 +489,8 @@ const main = defineCommand({
     // After the install, and only for targets that actually took it: vwf's
     // commands halt at their own entry gate without this.
     if (!options.dryRun && wanted.includes("vwf")) {
+      // The slowest tail of a run, and previously the longest silence in it.
+      progress.step("wiring graphify");
       setupGraphify(
         context,
         outcomes
@@ -488,6 +501,9 @@ const main = defineCommand({
 
     if (options.dryRun) {
       // Data to stdout, so it can be piped or diffed.
+      // The diff goes to stdout while the step sits on stderr; in a terminal
+      // they share a screen, so an uncleared step runs into the first line.
+      progress.clear();
       process.stdout.write(`${renderDiff(outcomes)}\n`);
     }
     report(outcomes);

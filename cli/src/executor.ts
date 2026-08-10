@@ -23,6 +23,7 @@ import type {
   AdapterPlan,
 } from "./adapters/types.ts";
 import { isEmptyPlan } from "./adapters/types.ts";
+import type { Progress } from "./progress.ts";
 import type { Receipt } from "./receipt.ts";
 import {
   readReceipt,
@@ -76,6 +77,11 @@ export interface ExecuteOptions {
   readonly receiptDir: string;
   /** Install into a target whose tool is not on PATH. Off by default. */
   readonly force?: boolean;
+  /**
+   * The live step indicator. Every adapter blocks on `spawnSync`, so this is
+   * the only feedback a run gives between starting and its final report.
+   */
+  readonly progress?: Progress;
 }
 
 export function receiptPath(receiptDir: string, target: TargetId): string {
@@ -96,6 +102,9 @@ export function execute(
 
   for (const [adapter, plan] of jobs) {
     const plugins = plan.user.length + plan.project.length;
+    options.progress?.step(
+      `${options.dryRun ? "planning" : "installing"} ${adapter.id}`,
+    );
     if (isEmptyPlan(plan)) {
       outcomes.push({
         target: adapter.id,
@@ -160,6 +169,7 @@ export function revert(
   const outcomes: TargetOutcome[] = [];
 
   for (const adapter of adapters) {
+    options.progress?.step(`reverting ${adapter.id}`);
     const path = receiptPath(options.receiptDir, adapter.id);
     const receipt = readReceipt(path);
     if (receipt === undefined) {
@@ -270,6 +280,7 @@ export function statuslineReceiptPath(receiptDir: string): string {
 
 /** Install the statusline, or describe the install under `--dry-run`. */
 export function executeStatusline(options: ExecuteOptions): TargetOutcome {
+  options.progress?.step("installing statusline (claude)");
   try {
     if (options.dryRun) {
       return {
@@ -344,6 +355,7 @@ export function ohmypiStatuslineInstalled(options: ExecuteOptions): boolean {
 export function executeStatuslineOhmypi(
   options: ExecuteOptions,
 ): TargetOutcome {
+  options.progress?.step("installing statusline (ohmypi)");
   if (!hasBin("omp")) {
     return {
       target: "statusline:ohmypi",
@@ -435,6 +447,7 @@ export function opencodeStatuslineInstalled(options: ExecuteOptions): boolean {
 export function executeStatuslineOpencode(
   options: ExecuteOptions,
 ): TargetOutcome {
+  options.progress?.step("installing statusline (opencode)");
   if (!hasBin("opencode")) {
     return {
       target: "statusline:opencode",
