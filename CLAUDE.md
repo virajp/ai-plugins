@@ -800,11 +800,11 @@ Layout:
   devDependencies purely to resolve two imports in a file nothing here builds,
   putting two packages into the lockfile and the osv scan that ship nothing and
   pinning them against an OpenCode runtime we do not control. `tools/` is
-  already an unchecked island for the same reason (`statusline`,
-  `context-caps.js`, `mempalace-hooks.js` are all plain JS). What stands in for
-  the compiler is the file's own discipline: **every read is optional and every
-  segment is built inside a `try`**, because a plugin that throws in a render
-  slot takes the frame down with it.
+  already an unchecked island for the same reason (`statusline` and
+  `context-caps.js` are both plain JS). What stands in for the compiler is the
+  file's own discipline: **every read is optional and every segment is built
+  inside a `try`**, because a plugin that throws in a render slot takes the
+  frame down with it.
 - `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
   hook, bundled with the main `statusLine` install (see Statusline below).
 - Tests live beside the source under `cli/src/**/*.test.ts` and run under
