@@ -22,12 +22,19 @@
  * | `context`             | `context_pct`                   | already carries the total              |
  * | `cost`                | `cost`                          |                                        |
  * | `duration`            | `time_spent`                    | active agent time, not wall clock      |
- * | `rl5h` + `rl7d`       | `usage`                         | **not parity** — see below             |
+ * | `rl5h` + `rl7d`       | `usage`                         | parity, on Anthropic only — see below  |
  *
- * `usage` is the closest available and is **not** an equivalent: Oh-My-Pi
- * exposes no Anthropic 5-hour / 7-day window percentages, and what `usage`
- * reports is provider-dependent. That is a known gap, recorded here rather than
- * papered over.
+ * **`usage` is real parity, and this comment used to say otherwise.** Read
+ * against omp 17.2.12's own segment registry, it renders `5h <pct>%` and
+ * `7d <pct>%` from `scope.windowId`, `amount.usedFraction` and
+ * `window.resetsAt` — the Anthropic OAuth usage shape — and adds a reset
+ * countdown and tier label the Claude bar does not show. So it is a superset,
+ * not a gap.
+ *
+ * The one real caveat is that it is **per-provider**: the segment hides itself
+ * (`visible: false`) unless the active provider reported a five-hour or
+ * seven-day window, so on a non-Anthropic model the bar simply has no
+ * rate-limit reading to give. That is an absent input, not a missing feature.
  *
  * **Two segments are deliberately not carried, and both are width decisions.**
  * The bar is one line and Oh-My-Pi pads every segment, so the cost of a segment

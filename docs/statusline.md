@@ -152,11 +152,16 @@ Claude bar:
 | `context`             | `context_pct` | already carries the total              |
 | `cost`                | `cost`        |                                        |
 | `duration`            | `time_spent`  | active agent time, not wall clock      |
-| `rl5h` + `rl7d`       | `usage`       | **not an equivalent** — see below      |
+| `rl5h` + `rl7d`       | `usage`       | parity, on Anthropic only — see below  |
 
-`usage` is the closest available and is **not** the same reading: Oh-My-Pi
-exposes no Anthropic 5-hour / 7-day window percentages, and what `usage` reports
-is provider-dependent. That is a known gap, not parity.
+`usage` gives the **same** reading, and a little more: it renders `5h <pct>%`
+and `7d <pct>%` from the Anthropic OAuth usage response, plus a reset countdown
+and tier label the Claude bar does not show.
+
+The caveat is that it is **per-provider**. The segment hides itself unless the
+active provider reported a five-hour or seven-day window, so on a non-Anthropic
+model the bar simply has no rate-limit reading to give — an absent input rather
+than a missing feature.
 
 **Two segments are deliberately not carried, and both are width decisions.** The
 bar is one line and Oh-My-Pi pads every segment, so a segment costs space

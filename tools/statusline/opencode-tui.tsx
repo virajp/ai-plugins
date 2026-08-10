@@ -310,11 +310,16 @@ function branch(api: Api): string | undefined {
  * the session id a plugin has: OpenCode's own footer reads `route.data` through
  * `useRoute()`, a Solid hook inside its component tree that no plugin can reach.
  *
- * **Which key holds the id is genuinely unknown**, and could not be settled:
- * reaching a session needs provider auth, and the shape is normalised on the way
- * out to plugins (`name` here, `type` internally), so the id may well be
- * renamed with it. Upstream uses `session_id` in the `sidebar_content` slot's
- * props and `sessionID` in its internal route data.
+ * **Which key holds the id is not pinned down**, and deliberately still is not.
+ * The shape is normalised on the way out to plugins (`name` here, `type`
+ * internally), so the id may be renamed with it. Upstream uses `session_id` in
+ * the `sidebar_content` slot's props and `sessionID` in its internal route data.
+ *
+ * The search below **is confirmed to resolve** — verified on OpenCode 1.18.16
+ * against a live session, where all five session-derived segments (model,
+ * context, cost, duration, title) drew. Which of the three spellings won was not
+ * determined, and that is the point: the search costs nothing per frame and
+ * survives a rename that a pinned key would not.
  *
  * So this searches instead of guessing. The known spellings are tried first,
  * then any key that reads as a session id, over the route object and one level

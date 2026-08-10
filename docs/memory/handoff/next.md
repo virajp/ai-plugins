@@ -78,14 +78,26 @@ rejects.** A fake that says yes to everything only tests that you called it.
 2. **OpenCode reports 274 changes on every run.** It copies unconditionally, so
    a no-op run still reads as a large update. Not a failure, but it makes a
    genuine change indistinguishable from noise.
-3. **The OpenCode TUI statusline is still unverified in the real world.** Its
-   one unproven assumption is which key inside `api.route.current` holds the
-   session id — `tools/statusline/opencode-tui.tsx` searches rather than
-   guessing. If the bar shows only project and branch, that search is why.
-4. **`plan`'s stack read.** Now wired (it fetches template `conventions:` prose
+3. **`plan`'s stack read.** Now wired (it fetches template `conventions:` prose
    at its stack gate), but the surveyor deliberately does **not** receive that
    prose — it answers *what exists*, not *where a new thing belongs*. Revisit
    only if reuse candidates turn out to need it.
+
+## Verified on 2026-08-10
+
+Both remaining statusline unknowns were closed by running the real thing.
+
+**The OpenCode TUI bar works** (1.18.16) — all seven segments draw, so the
+`api.route.current` session-id search resolves. Its token figure matches
+OpenCode's own to the rounding, which independently checks the `info.tokens`
+walk and the provider-catalog context limit.
+
+**The Oh-My-Pi bar works**, and its parity note was wrong: `usage` renders the
+Anthropic 5h/7d windows *plus* reset countdown and tier, so it is a superset of
+`rl5h`/`rl7d`, not the gap the comment claimed. It hides itself on a
+non-Anthropic provider, which is an absent input rather than a missing feature.
+Both files now say so. The bar also dropped `context_total` (redundant with
+`context_pct`) and `session_name` (unbounded width).
 
 ## Stale scratchpad
 
