@@ -34,7 +34,7 @@ Adding a topology means **adding a template file** under
 ## Detecting and recording
 
 Classify the repo per
-[topology detection](<%= it.root %>/skills/project-setup/references/topology-detection.md),
+[topology detection](references/topology-detection.md),
 present the matching template for confirmation, and record `topology:` plus
 `topology_reason:` in `.config/vwf.yaml`. In a polyrepo, classify **each member
 on its own signals** — a member may be a `repo` or a `monorepo`, and each
@@ -45,7 +45,7 @@ a **restructure proposal** folded into the setup migration plan: in-repo layout
 moves (`projects/` / `packages/` grouping, project naming) as normal
 consent-gated batches. Anything crossing a repo boundary — splitting a repo into
 parent + submodules — is only ever a **written recommendation**, per
-[migration & consent](<%= it.root %>/skills/project-setup/references/migration-and-consent.md).
+[migration & consent](references/migration-and-consent.md).
 A decline is settled and not re-proposed.
 
 ## Adding and removing repos or projects

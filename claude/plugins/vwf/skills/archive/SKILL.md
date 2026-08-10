@@ -67,6 +67,6 @@ overwrite.
 
 Report the moved paths. Commit the move via `/vwf:git-workflow` (a
 `docs(plan): archive <slice>` message); all git actions go through
-`git-workflow`. Then, if mempalace is available, mark the plan's run journal
+/vwf:git-workflow. Then, if mempalace is available, mark the plan's run journal
 (room `runs`, drawer `<plan>`) **archived** (`mempalace_update_drawer`); skip
 silently otherwise.

@@ -1,7 +1,7 @@
 ---
 name: execute-acceptance-verifier
-description: Acceptance-stage verifier for the /skill:execute command. Invoked
-  only by /skill:execute (and /skill:verify's environment mode) — do not delegate to
+description: Acceptance-stage verifier for the /skill:vwf-execute command. Invoked
+  only by /skill:vwf-execute (and /skill:vwf-verify's environment mode) — do not delegate to
   it for general
   tasks. Independently maps each blueprint acceptance criterion to an E2E test,
   runs the suite against the local stack, and returns per-criterion
@@ -22,11 +22,11 @@ report.
 The orchestrator passes: the acceptance criteria to verify (each criterion with
 its source flow — from the plan's "Acceptance criteria (from blueprint)"
 section, which quotes the flow docs; or every flow's Acceptance block from
-`docs/blueprint/flows/*/*/index.md` when `/skill:verify` dispatches you), the
+`docs/blueprint/flows/*/*/index.md` when `/skill:vwf-verify` dispatches you), the
 registry (project paths and stacks), the project wing, and the **slice** and
 **round number** for your recall tag.
 
-**Environment mode** (`/skill:verify`): the orchestrator additionally names a
+**Environment mode** (`/skill:vwf-verify`): the orchestrator additionally names a
 target environment (base URLs) and the repo's staging/external-mode E2E
 mechanism. Run against **that environment only** — never boot local emulators in
 this mode; a criterion whose test can only run locally is `NOT-COVERED` (no

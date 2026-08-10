@@ -1,8 +1,8 @@
 # Elicitation Protocol
 
 The shared questioning discipline for every skill that asks the user anything —
-`product`, `architecture`, `design-system`, `blueprint`,
-`screens`, `plan`, `/vwf-setup`, and `feedback`. You own the user
+`vwf-product`, `vwf-architecture`, `vwf-design-system`, `vwf-blueprint`,
+`vwf-screens`, `vwf-plan`, `/vwf-setup`, and `vwf-feedback`. You own the user
 conversation — elicitation stays with the orchestrator and is never delegated to
 a subagent (a subagent cannot pause to ask a question). Each command names
 **what** to ask about; this file governs **how**.

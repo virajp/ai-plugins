@@ -1,6 +1,6 @@
 ---
-description: Security reviewer for the execute command. Invoked only by
-  execute — do not delegate to it for general tasks. Threat-models the
+description: Security reviewer for the vwf-execute command. Invoked only by
+  vwf-execute — do not delegate to it for general tasks. Threat-models the
   implemented changes against the project's declared capabilities, using
   /security-review as its engine. Returns rated findings only.
 mode: subagent

@@ -1,6 +1,6 @@
 ---
-description: Stateless density pass for the blueprint command. Invoked only
-  by blueprint — do not delegate to it for general tasks. Rewrites one
+description: Stateless density pass for the vwf-blueprint command. Invoked only
+  by vwf-blueprint — do not delegate to it for general tasks. Rewrites one
   over-budget flow or entity doc to the density bars, cutting commentary while
   preserving every decision verbatim in meaning. Never elicits, never decides.
 mode: subagent
@@ -37,7 +37,7 @@ cut — report it and leave the text alone.
 - **Context** — the `conventions.md` anchors and registry facts it references,
   so you can tell a restatement from an original statement.
 
-Read `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/density.md`
+Read `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/density.md`
 first. It is the bar; this file is only how to apply it.
 
 ## What you cut

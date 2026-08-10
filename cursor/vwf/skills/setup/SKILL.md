@@ -56,7 +56,7 @@ This skill's own references follow the same rule:
 - **Consent + dry-run.** Present the full migration plan (every create / move /
   update) and get approval before any write. Code restructuring is approved
   **per batch**.
-- **Worktree-safe; all git via `git-workflow`.** Operate in an isolated
+- **Worktree-safe; all git via /git-workflow.** Operate in an isolated
   worktree; never delete; never overwrite without consent. Keep the worktree
   local.
 - **Don't duplicate tools.** Use `devtools:scaffold` for mise config and

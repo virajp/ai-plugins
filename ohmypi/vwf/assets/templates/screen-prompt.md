@@ -1,11 +1,11 @@
-<!-- Template for /skill:screens prompt — written to
+<!-- Template for /skill:vwf-screens prompt — written to
      docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md.
      ONE brief per flow per platform (mobile.md, tablet.md, desktop.md,
      web.md, auto.md — mirroring the flow folder's platform files), each
      commissioning exactly ONE interactive
      page. A compact wireframe-level design brief for a claude.ai/design
      canvas session, NOT a blueprint doc: no OKF frontmatter. The user pastes
-     it into the canvas chat themselves — /skill:screens never runs it. The
+     it into the canvas chat themselves — /skill:vwf-screens never runs it. The
      brief is ALWAYS the flow's full screen blueprint — on a revision,
      regenerate the whole file in place (git keeps history); never write a
      change note. Replace every backticked `<placeholder>` with plain prose;
@@ -17,7 +17,7 @@
      the canvas project's own CLAUDE.md (its repo-side source is the sibling
      CLAUDE--<platform>.md, from the adapter's conventions template) and are never
      restated here; the brief carries only the per-flow payload. The page name
-     and frame codes are the sync keys — /skill:screens import matches by them;
+     and frame codes are the sync keys — /skill:vwf-screens import matches by them;
      never rename them. Send no design/visual instructions (no tokens, type,
      spacing, or styling) — the canvas picks the design system up from its
      Design System project, and visual treatment is decided in the canvas

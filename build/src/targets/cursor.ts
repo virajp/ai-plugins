@@ -85,6 +85,9 @@ function contextFor(): Context {
     // because `plugins:check` already forces skill names to be unique across
     // the whole marketplace, for exactly this class of flat namespace.
     cmd: ref => `/${ref.split(":").pop()}`,
+    // Neither target renames a skill directory, so the location is the
+    // authored name.
+    skillName: ref => ref.slice(ref.indexOf(":") + 1),
     target: { id: "cursor", caps: CAPABILITIES.cursor },
   };
 }

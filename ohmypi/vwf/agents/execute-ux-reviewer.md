@@ -1,7 +1,7 @@
 ---
 name: execute-ux-reviewer
-description: UX-conformance reviewer for the /skill:execute command. Invoked only
-  by /skill:execute, and only for UI slices — do not
+description: UX-conformance reviewer for the /skill:vwf-execute command. Invoked only
+  by /skill:vwf-execute, and only for UI slices — do not
   delegate to it for general tasks. Delegates rendering and the accessibility
   scan to the stack plugin's `-ux-gate` skill, judges what comes back against
   design-system.md and the flow Screens contract, and returns findings only.

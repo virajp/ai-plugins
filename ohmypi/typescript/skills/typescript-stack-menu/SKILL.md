@@ -1,7 +1,7 @@
 ---
 name: typescript-stack-menu
 description: Return the TypeScript stack templates this plugin offers, as a vwf
-  menu payload. Invoked by /skill:architecture and /skill:setup when `typescript` is
+  menu payload. Invoked by /skill:vwf-architecture and /skill:vwf-setup when `typescript` is
   listed in the config's `stacks:` — not a general-purpose skill.
 ---
 

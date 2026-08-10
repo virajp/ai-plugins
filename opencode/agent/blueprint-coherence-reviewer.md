@@ -1,6 +1,6 @@
 ---
-description: Stateless whole-product coherence reviewer for the blueprint
-  command. Invoked only by blueprint at the end of a sweep — do not
+description: Stateless whole-product coherence reviewer for the vwf-blueprint
+  command. Invoked only by vwf-blueprint at the end of a sweep — do not
   delegate to it for general tasks. Walks every flow end-to-end across
   entities, schemas, and API contracts and returns NO GAPS or a numbered gap
   list. Pass paths only (the blueprint root, goal-anchor list, registry path,

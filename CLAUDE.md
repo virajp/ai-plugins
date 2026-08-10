@@ -1185,12 +1185,41 @@ two mentions of it are prose recommending it to the user, which the rename from
 **How each target spells it** (all verified against a real install or vendor
 source — do not infer these):
 
-| Target   | `user`                              | `model`                 | Invocation                            |
-| -------- | ----------------------------------- | ----------------------- | ------------------------------------- |
-| Claude   | `disable-model-invocation: true`    | `user-invocable: false` | `/vwf:plan`                           |
-| OpenCode | moved to `command/<plugin>-<skill>` | bare, under `skills/`   | bare name; `/vwf-setup` for user-only |
-| Cursor   | `disable-model-invocation: true`    | bare + `paths:`         | `/plan`                               |
-| Oh-My-Pi | `disableModelInvocation: true`      | **bare — no key**       | `/skill:plan`                         |
+| Target   | `user`                              | `model`                 | Invocation                             |
+| -------- | ----------------------------------- | ----------------------- | -------------------------------------- |
+| Claude   | `disable-model-invocation: true`    | `user-invocable: false` | `/vwf:plan`                            |
+| OpenCode | moved to `command/<plugin>-<skill>` | bare, under `skills/`   | `vwf-plan`; `/vwf-setup` for user-only |
+| Cursor   | `disable-model-invocation: true`    | bare + `paths:`         | `/plan`                                |
+| Oh-My-Pi | `disableModelInvocation: true`      | **bare — no key**       | `/skill:vwf-plan`                      |
+
+### Skill names on the flat targets
+
+Claude and Cursor scope a skill to its plugin, so `plan` only has to be unique
+within its own bundle. **OpenCode and Oh-My-Pi discover every provider's skills
+into one flat namespace keyed by bare name**, where `plan`, `execute`, `verify`
+and `product` are generic enough to belong to nobody — and vwf's 25 skills are
+the largest single claim on that namespace here.
+
+So `plugin.yaml` carries **`prefixSkillNames`**, and vwf sets it: the two flat
+targets emit `vwf-plan`, matching OpenCode's existing `<plugin>-<skill>`
+convention for user-only wrappers. It is off by default and deliberately
+per-plugin — turning it on renames every skill a plugin ships. No other plugin
+sets it today.
+
+The prefix is applied by the **renderer**, never authored, so one source tree
+serves both shapes. Three places must agree, and `flatSkillName` in
+`build/src/target.ts` is the single point they all go through: the directory,
+the frontmatter `name:`, and every cross-reference. Two template helpers cover
+the references — **`it.cmd()`** for an *invocation* and **`it.skillName()`** for
+a *location* inside an `it.root`-anchored path. A link into a skill's own
+`references/` should be plain relative (`references/x.md`), which is correct on
+every target and needs neither helper.
+
+**Bare prose naming a prefixed skill is a `plugins:check` failure**, because it
+is right on Claude and resolves to nothing on the flat targets — and a skill
+reference that resolves to nothing is silent. The rule matches delegation-shaped
+mentions only (`via`, `through`, `delegates to`), since these names double as
+the workflow's own vocabulary and "the `plan` stage" is prose, not a call.
 
 One of these is counter-intuitive and was found only by checking a real install,
 having silently broken an entire class of skill:

@@ -10,7 +10,7 @@ status: draft # draft | reviewed | stable
 
 <!-- The product-wide UX/visual contract. A vwf foundation, peer of
      architecture.md; mandatory once the registry has a frontend/app project.
-     Authored by /skill:design-system; see the design-system-authoring skill. Record
+     Authored by /skill:vwf-design-system; see the design-system-authoring skill. Record
      semantic token VALUES and scales (code-independent); never name the
      component library, CSS framework, or design file (that is plan). Every
      blueprint Screens section references this doc. -->

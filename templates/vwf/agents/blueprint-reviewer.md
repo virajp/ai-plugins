@@ -148,7 +148,7 @@ orchestrator passes both. Verify the contract and every platform file:
 - [ ] Section-to-project mappings match the registry (by project **name** and
       `role` — the registry has no stack to match against).
 - [ ] **Density** — apply the bars in
-      `<%= it.root %>/skills/blueprint-authoring/references/density.md`.
+      `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every step, screen, and job
       traces to a **linked product-doc goal** (the Serves line) or a stated
       invariant — flag anything added "just in case". Never flag a surface a
@@ -203,7 +203,7 @@ The doc is `docs/blueprint/entities/<entity>/` — **always** `index.md` +
       `<%= it.root %>/assets/capability-vocabulary.md`, never the
       product.
 - [ ] **Density** — apply the bars in
-      `<%= it.root %>/skills/blueprint-authoring/references/density.md`.
+      `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every field, state, and
       relationship traces to a linked flow (the Used-by line) or a stated
       invariant. Never flag a surface a safety guardrail requires.

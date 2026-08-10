@@ -2,7 +2,7 @@
 name: orchestration-stack-template
 description: Return one async-orchestration stack template as a vwf template
   payload — its axis fields, per-capability harness mechanisms, and conventions.
-  Invoked by architecture and /vwf-setup after the user picks from the
+  Invoked by vwf-architecture and /vwf-setup after the user picks from the
   orchestration menu — not a general-purpose skill.
 ---
 

@@ -1,7 +1,7 @@
 # The vwf Config — `.config/vwf.yaml`
 
 **How vwf operates in this product.** One file per product (the parent repo in
-polyrepo topology; submodules never get their own), written by `/skill:setup` and
+polyrepo topology; submodules never get their own), written by `/skill:vwf-setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
 of the system description**: what the product *is* (projects, roles, paths,
 capabilities, platforms) lives in `docs/blueprint/registry.yaml`; this file
@@ -10,7 +10,7 @@ product that is realization rather than description: each project's **stack**.
 That lives here precisely so no blueprint-authoring or reviewing surface can
 reach it, which is what makes a vendor name in a blueprint doc structurally
 impossible rather than merely discouraged. Since **format 11** the stack is
-**structured** — a template selection plus the four axes `/skill:doctor` checks
+**structured** — a template selection plus the four axes `/skill:vwf-doctor` checks
 the repo against — and is written for **every** project, always. Since
 **format 13** every technology choice is **per project**: the backing and deploy
 axes, the design tool and the CI tool all live under `projects.<name>`, because
@@ -20,7 +20,7 @@ repo) and the canvas state under `design:` remain outside that scope. Since
 **format 14** the stack is **closed to the menu**: every axis pins a template an
 installed stack plugin ships and every language token is one such a plugin
 declares, `template: custom` is retired, and anything outside that is a blocking
-`/skill:doctor` finding rather than a value recorded and then ignored. Since
+`/skill:vwf-doctor` finding rather than a value recorded and then ignored. Since
 **blueprint-format 6** this file replaces the old stamp at
 `docs/blueprint/.vwf.yml`.
 
@@ -33,8 +33,8 @@ blueprint_format: 20 # the docs/blueprint format stamp
 product:
   name: <product-name> # display name; the default mempalace wing
 
-blueprint: # coverage stamp — written by /skill:blueprint after every sweep
-  coverage: complete # complete | partial — /skill:plan halts unless complete
+blueprint: # coverage stamp — written by /skill:vwf-blueprint after every sweep
+  coverage: complete # complete | partial — /skill:vwf-plan halts unless complete
   remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), density/<unit> (over its line budget — cleared by the sweep's condenser pass, or when the condenser reports every remaining line load-bearing), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
 topology: polyrepo # repo | monorepo | polyrepo — a MENU since format 19 (assets/topologies/), not enforced
@@ -51,8 +51,8 @@ repo: # REPO-level tooling, the counterpart to a project's stack. One block per 
 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
-    stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /skill:doctor cannot check what was never recorded
-      template: project/<role>/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin. NOT a default: /skill:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a role nothing fits halts rather than recording free text
+    stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /skill:vwf-doctor cannot check what was never recorded
+      template: project/<role>/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin. NOT a default: /skill:vwf-architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a role nothing fits halts rather than recording free text
       backing_template: [
         <slug>,
       ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` or `frontend` project usually does not)
@@ -91,14 +91,14 @@ pipeline: # bounded knobs — see the hard floor below
   models: {} # per-stage tier override, e.g. review: sonnet — ALWAYS reported at the gate as configured-vs-default
   execute_caps: {} # tighten-only: context/five_hour/seven_day below the shipped 65/90/80
 
-environments: # /skill:verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value); keys use the CANONICAL names development/staging/production per assets/delivery-pipeline.md — a synonym key (dev/test/stage/prod) is drift to propose fixing
+environments: # /skill:vwf-verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value); keys use the CANONICAL names development/staging/production per assets/delivery-pipeline.md — a synonym key (dev/test/stage/prod) is drift to propose fixing
   <env-name>:
     <project-name>: <base-url>
 
-production_env: production # optional — names the release environment for /skill:verify (default: the env literally named "production")
+production_env: production # optional — names the release environment for /skill:vwf-verify (default: the env literally named "production")
 
 design: # CANVAS STATE only — ids and flow names, never content. The design TOOL is not here: it is per project, at projects.<name>.design (format 13)
-  design_system_id: <uuid> # UNIVERSAL — one per product: the design system /skill:design-system imports from, as the design tool identifies it (its own canvas project); every mockup push binds it
+  design_system_id: <uuid> # UNIVERSAL — one per product: the design system /skill:vwf-design-system imports from, as the design tool identifies it (its own canvas project); every mockup push binds it
   projects: # one canvas design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
       <platform>: <uuid> # mobile | tablet | desktop | web | auto — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
@@ -110,7 +110,7 @@ memory:
 docs_sync:
   include: [] # extra human docs in the docs-sync scope (README/CLAUDE.md are always in)
 
-setup_progress: [] # transient — /skill:setup resume state, removed on completion
+setup_progress: [] # transient — /skill:vwf-setup resume state, removed on completion
 ```
 
 ## Semantics — who reads/writes what
@@ -149,31 +149,31 @@ earlier than 65/90/80), never loosen.
 
 - Commands read `.config/vwf.yaml`; when absent, fall back to the legacy
   `docs/blueprint/.vwf.yml` — its presence **is** format drift (pre-6): nudge
-  `/skill:setup`, which performs the move as the `5 → 6` migration.
+  `/skill:vwf-setup`, which performs the move as the `5 → 6` migration.
 - Unknown keys are preserved, never stripped; missing sections mean "the shipped
   default" — an empty file is valid. Exception: a missing `blueprint:` block
-  means **no sweep has stamped this repo** — `/skill:plan` halts until
-  `/skill:blueprint` runs (self-healing on repos configured before config_format
+  means **no sweep has stamped this repo** — `/skill:vwf-plan` halts until
+  `/skill:vwf-blueprint` runs (self-healing on repos configured before config_format
   2).
 - `config_format` versions this file's own schema; bump it (with a migration
   note here) when a key's shape changes.
-- **`1 → 2` migration** (performed by `/skill:setup`): rename
+- **`1 → 2` migration** (performed by `/skill:vwf-setup`): rename
   `pipeline.autopilot_caps` → `pipeline.execute_caps` (same shape and
   semantics); the statusline caps hook reads both names during the transition.
-- **`2 → 3` migration** (performed by `/skill:setup`): bump the number — no key is
+- **`2 → 3` migration** (performed by `/skill:vwf-setup`): bump the number — no key is
   reshaped. New semantics: the environment named `production` (or the one named
   by the new optional `production_env` key) is the **release environment** — a
-  clean `/skill:verify` run against it offers to freeze each deployed service's
+  clean `/skill:vwf-verify` run against it offers to freeze each deployed service's
   OpenAPI contract into `docs/blueprint/apis/released/`; the frozen snapshots
   (not this file) are the release record. If your production environment is
   named differently, set `production_env`.
-- **`3 → 4` migration** (performed by `/skill:setup`): rename `mockups:` →
+- **`3 → 4` migration** (performed by `/skill:vwf-setup`): rename `mockups:` →
   `design:` (`mockups.project_id` → `design.project_id`, same semantics — the
   pin now serves `design-system`, `mockups`, `feedback`, and `plan`, not just
   mockups). `design_system_id` and `flows_pushed` are new optional keys with no
   migration action. During the transition, readers fall back to the legacy
-  `mockups.project_id` and treat its presence as `3` drift (nudge `/skill:setup`).
-- **`4 → 5` migration** (performed by `/skill:setup`): the single
+  `mockups.project_id` and treat its presence as `3` drift (nudge `/skill:vwf-setup`).
+- **`4 → 5` migration** (performed by `/skill:vwf-setup`): the single
   `design.project_id` becomes the **per-registry-project map** `design.projects`
   — one entry per registry UI project, each keyed to the old shared uuid
   (sharing preserved; split later by re-pinning). The design system becomes
@@ -182,10 +182,10 @@ earlier than 65/90/80), never loosen.
   unchanged. Readers fall back to a legacy `design.project_id` (or the older
   `mockups.project_id`) as the shared pin for **every** UI project — its
   presence is `4` (or `3`) drift.
-- **`5 → 6` migration** (performed by `/skill:setup`): each
+- **`5 → 6` migration** (performed by `/skill:vwf-setup`): each
   `design.projects.<registry-project>` entry becomes a **per-platform map** —
   one canvas project per platform, since each platform canvas carries its own
-  conventions CLAUDE.md (device frame, layout; written by `/skill:screens`). An
+  conventions CLAUDE.md (device frame, layout; written by `/skill:vwf-screens`). An
   existing flat uuid becomes the pin for the project's **primary platform**
   (`mobile` for a `frontend` role, `desktop` for a `site` role); other declared
   platforms are pinned on next use (per the adapter contract). Readers fall back
@@ -193,7 +193,7 @@ earlier than 65/90/80), never loosen.
   pin — its presence is `5` drift. Two platforms must never share a uuid; a
   shared uuid found during migration is surfaced for re-pinning, never silently
   kept.
-- **`6 → 7` migration** (performed by `/skill:setup`, alongside the blueprint
+- **`6 → 7` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
   `12 → 14` delta): every flow identifier stored in this file **drops its
   `<device>` segment**, since format 14 moved the device out of the flow path
   and into the flow doc's `device:` frontmatter key. Concretely
@@ -202,15 +202,15 @@ earlier than 65/90/80), never loosen.
   entries do the same. Purely mechanical — no pin, stamp, or coverage value
   changes. Readers honor a legacy entry carrying a device segment by matching on
   the trailing `<project>/<NNN>-<flow>` — its presence is `6` drift.
-- **`7 → 8` migration** (performed by `/skill:setup`): `design.flows_pushed` is
+- **`7 → 8` migration** (performed by `/skill:vwf-setup`): `design.flows_pushed` is
   **renamed to `design.flows_rendered`** — mockups no longer push to the canvas;
   they render into the repo's gitignored `docs/scratchpad/` tree, and the stamp
   now records visual-review currency regardless of surface (a local scratchpad
   render, or canvas pages a screens import confirmed current). Entries are
   unchanged. Readers honor a legacy `flows_pushed` key as the same list — its
   presence is `7` drift. The `design.projects` pins stay: they serve
-  `/skill:screens` and `/skill:feedback canvas`, no longer mockups.
-- **`8 → 9` migration** (performed by `/skill:setup`, alongside the blueprint
+  `/skill:vwf-screens` and `/skill:vwf-feedback canvas`, no longer mockups.
+- **`8 → 9` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
   `14 → 15` delta): every flow identifier stored in this file **gains a
   `<platform>` leaf**, since format 15 moved screens into per-platform files.
   `design.flows_rendered` entries go `<project>/<NNN>-<flow>` →
@@ -223,7 +223,7 @@ earlier than 65/90/80), never loosen.
   becomes `web`. Flow numbers are renumbered by the blueprint migration; the
   entries here are rewritten to match. Readers honor a legacy entry without a
   platform leaf by matching the flow prefix — its presence is `8` drift.
-- **`9 → 10` migration** (performed by `/skill:setup`, alongside the blueprint
+- **`9 → 10` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
   `15 → 16` delta): the **stack moves here from the registry**. For each project
   in the old `architecture.md` Project Registry, compare its `stack:` to the
   reference stack for its `type` (since format 11 the templates live at
@@ -244,7 +244,7 @@ earlier than 65/90/80), never loosen.
   Nothing else reads a stack from the blueprint afterwards: `registry.yaml` has
   no `stack` key at all, which is what makes a vendor name in a blueprint doc a
   reviewer failure rather than a matter of authoring discipline.
-- **`11 → 12` migration** (performed by `/skill:setup`): the config catches up
+- **`11 → 12` migration** (performed by `/skill:vwf-setup`): the config catches up
   with blueprint-format 19. Six changes, all mechanical except where noted:
 
   1. **`topology`** — `workspace` becomes `polyrepo` (the shape is unchanged: a
@@ -271,7 +271,7 @@ earlier than 65/90/80), never loosen.
      `design.design_system_id` — that is the tool it was already using, and at
      format 11 only one had a canvas to pin. The pin itself stays, now
      adapter-scoped.
-  5. **`memory`** — nothing changes in the config, but `/skill:setup` creates
+  5. **`memory`** — nothing changes in the config, but `/skill:vwf-setup` creates
      `docs/memory/` and gitignores `handoff/`, `doctor/` and `runs/`, then moves
      a pre-19 `docs/handoffs/next.md` to `docs/memory/handoff/next.md`.
   6. **`projects.<name>.platforms` is removed** — the registry is the single
@@ -287,7 +287,7 @@ earlier than 65/90/80), never loosen.
   migrations ship in one release and a repo on one but not the other is a state
   neither migration expects.
 
-- **`12 → 13` migration** (performed by `/skill:setup`, alongside the blueprint
+- **`12 → 13` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
   `19 → 20` delta): **every technology axis becomes per project.** A product can
   legitimately mix providers — the site on one cloud, the API on another, the
   app designed in one tool and the website in another — and format 12 could not
@@ -328,12 +328,12 @@ earlier than 65/90/80), never loosen.
      back.
 
   Report any project left without a required axis — that is a real finding
-  `/skill:doctor` will raise on the next run, not noise.
+  `/skill:vwf-doctor` will raise on the next run, not noise.
 
   Bump `config_format` to `13` and `blueprint_format` to `20` together, for the
   same reason `12`/`19` shipped together.
 
-- **`13 → 14` migration** (performed by `/skill:setup`): **the stack menu closes.**
+- **`13 → 14` migration** (performed by `/skill:vwf-setup`): **the stack menu closes.**
   vwf supports many stacks but only *defined* ones — every axis must pin a
   template an installed stack plugin ships, and every `languages` token must be
   one an installed plugin declares
@@ -346,7 +346,7 @@ earlier than 65/90/80), never loosen.
      that axis's menu and have the user pick. **Never map one automatically** —
      a `custom` pin's free-text axes were never a template, so any guess silently
      changes the `conventions` prose `plan` and `execute` read and the `harness`
-     block `/skill:doctor` checks. When nothing on the menu fits, halt naming the
+     block `/skill:vwf-doctor` checks. When nothing on the menu fits, halt naming the
      two ways forward: install the stack plugin that has a fitting template, or
      write one (`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`).
   2. **An unclaimed `languages` token becomes blocking.** It is not fixable by
@@ -363,10 +363,10 @@ earlier than 65/90/80), never loosen.
   first config bump since `11` to ship without a paired blueprint bump.
 
   Readers treat a `custom` pin, or a token no installed plugin declares, as `13`
-  drift **and** as a blocking `/skill:doctor` finding — the drift says the repo is
+  drift **and** as a blocking `/skill:vwf-doctor` finding — the drift says the repo is
   behind, the blocking finding says vwf will not build against it meanwhile.
 
-- **`10 → 11` migration** (performed by `/skill:setup`): stacks stop being
+- **`10 → 11` migration** (performed by `/skill:vwf-setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat
   `projects.<name>.stack` list becomes the structured block above. Per project:
   - **had a `stack:` list** → map its entries onto the axes: tokens matching the

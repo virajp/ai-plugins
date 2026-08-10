@@ -26,11 +26,11 @@ Before writing, read:
 
 - `<%= it.root %>/assets/templates/entity.md` and
   `<%= it.root %>/assets/templates/schema.yaml` — the structures to fill;
-- `<%= it.root %>/skills/blueprint-authoring/references/entity-contract.md`
+- `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/entity-contract.md`
   — the completeness bar for lifecycle, relationships, invariants, concurrency;
-- `<%= it.root %>/skills/blueprint-authoring/references/api-and-schema-contracts.md`
+- `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/api-and-schema-contracts.md`
   — the `schema.yaml` bar and YAML path-typing;
-- `<%= it.root %>/skills/blueprint-authoring/references/frontmatter-and-links.md`
+- `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/frontmatter-and-links.md`
   — the OKF frontmatter block and typed-link form.
 
 Do not read the other references; they cover surfaces that are not yours.

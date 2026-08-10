@@ -1,7 +1,7 @@
 ---
 name: identity-stack-menu
 description: Return the identity templates this plugin offers, as a vwf menu
-  payload. Invoked by /skill:architecture and /skill:setup when `identity` is listed
+  payload. Invoked by /skill:vwf-architecture and /skill:vwf-setup when `identity` is listed
   in the config's `stacks:` — not a general-purpose skill.
 ---
 

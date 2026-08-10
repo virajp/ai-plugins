@@ -1,7 +1,7 @@
 ---
 name: flutter-stack-menu
 description: Return the Flutter stack templates this plugin offers, as a vwf
-  menu payload. Invoked by architecture and /vwf-setup when `flutter` is
+  menu payload. Invoked by vwf-architecture and /vwf-setup when `flutter` is
   listed in the config's `stacks:` — not a general-purpose skill.
 ---
 

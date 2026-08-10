@@ -1,6 +1,6 @@
 ---
 description: Per-flow mockup renderer for the /vwf-mockups command and
-  blueprint's §6a render step. Invoked only by those commands — do not
+  vwf-blueprint's §6a render step. Invoked only by those commands — do not
   delegate to it for general tasks. Turns one flow's Screens contract plus the
   design system into self-contained static HTML mockups in the given
   scratchpad directory and returns only a manifest.

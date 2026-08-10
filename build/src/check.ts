@@ -134,6 +134,7 @@ function checkTemplates(workspace: Workspace): Finding[] {
 
     findings.push(...checkHookScripts(plugin));
     findings.push(...checkAgentReferences(plugin));
+    findings.push(...checkSkillSelfReferences(plugin));
     findings.push(...checkFrontmatterYaml(plugin));
     findings.push(...checkExampleLinks(plugin));
   }
@@ -178,6 +179,49 @@ function checkHookScripts(plugin: PluginSource): Finding[] {
         scope: plugin.manifest.name,
         message: `hook "${hook.id}" script is not executable: ${hook.script}`,
       });
+    }
+  }
+  return findings;
+}
+
+/**
+ * A prefixed plugin must not name its own skills in bare prose.
+ *
+ * With `prefixSkillNames`, a skill is `plan` on Claude and `vwf-plan` on the
+ * flat targets, so the only spelling that is right everywhere is the one
+ * `it.cmd()` renders. A literal `` `plan` `` is right on Claude and resolves to
+ * nothing on OpenCode and Oh-My-Pi — and a skill reference that resolves to
+ * nothing is **silent**: the model reads a name, finds no such skill, and
+ * carries on. That is indistinguishable from a model that chose not to
+ * delegate, which is why this needs a checker rather than review.
+ *
+ * Only *delegation-shaped* mentions are flagged. These names double as the
+ * workflow's own vocabulary — "the `plan` stage", "once `execute` finishes" —
+ * and rewriting those to an invocation would be wrong, so the rule matches the
+ * verbs that mean "go and run it" rather than every backticked occurrence.
+ */
+function checkSkillSelfReferences(plugin: PluginSource): Finding[] {
+  if (!plugin.manifest.prefixSkillNames) {
+    return [];
+  }
+
+  const own = new Set(plugin.skills.map(s => s.meta.name));
+  const delegation =
+    /\b(?:via|through|delegates? to|routes? through|hands? off to)\s+`([a-z0-9-]+)`/g;
+  const findings: Finding[] = [];
+
+  for (const text of proseOf(plugin)) {
+    for (const name of captures(text, delegation)) {
+      if (own.has(name)) {
+        findings.push({
+          scope: plugin.manifest.name,
+          message: `delegates to \`${name}\` by bare name — this plugin sets `
+            + `\`prefixSkillNames\`, so that skill is \`${plugin.manifest.name}-`
+            + `${name}\` on OpenCode and Oh-My-Pi and the bare form resolves to `
+            + `nothing there. Use \`<%= it.cmd("${plugin.manifest.name}:`
+            + `${name}") %>\`, which spells it per target.`,
+        });
+      }
     }
   }
   return findings;

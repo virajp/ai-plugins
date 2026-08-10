@@ -1,8 +1,8 @@
 ---
 name: design-system-reviewer
-description: Stateless completeness reviewer for the /skill:design-system command.
+description: Stateless completeness reviewer for the /skill:vwf-design-system command.
   Invoked
-  only by /skill:design-system — do not delegate to it for general tasks. Checks a
+  only by /skill:vwf-design-system — do not delegate to it for general tasks. Checks a
   written design-system doc against the completeness checklist and returns NO
   GAPS or a numbered gap list. Pass only the design-system doc (single file or
   folder form) — no conversation context.

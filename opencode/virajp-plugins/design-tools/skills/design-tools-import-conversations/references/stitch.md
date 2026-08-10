@@ -34,8 +34,8 @@ Two temptations, both wrong here:
 
 - **Diffing screens against the flow's Screens contract** to infer what a
   reviewer must have wanted. That is not a harvest, it is
-  `screens import` — which already exists, already routes its deltas
-  through `blueprint`, and does it with the user confirming each one.
+  `vwf-screens import` — which already exists, already routes its deltas
+  through `vwf-blueprint`, and does it with the user confirming each one.
   Duplicating it here would route the same delta twice by two paths.
 - **Reading a screen's generation prompt as a remark.** A prompt is an
   instruction to the tool, not an observation about the result. It reads as a

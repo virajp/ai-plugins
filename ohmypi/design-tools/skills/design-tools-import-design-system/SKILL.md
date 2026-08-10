@@ -2,7 +2,7 @@
 name: design-tools-import-design-system
 description: Read the design system back from the project's design tool (Claude
   Design, Lovable or Google Stitch) and return it as a vwf design-system
-  payload. Invoked by /skill:design-system as its design adapter — not a
+  payload. Invoked by /skill:vwf-design-system as its design adapter — not a
   general-purpose skill.
 ---
 
@@ -36,7 +36,7 @@ against the registry project vwf named — never against "the product".
 
 Read `projects.<project>.design` in `.config/vwf.yaml`. That is the only key —
 there is no product-wide fallback. A config still carrying the pre-`13`
-`design.tool` is drift for `/skill:setup`'s `12 → 13` migration to copy down;
+`design.tool` is drift for `/skill:vwf-setup`'s `12 → 13` migration to copy down;
 reading it here would make that migration optional and leave two answers to one
 question in the config.
 

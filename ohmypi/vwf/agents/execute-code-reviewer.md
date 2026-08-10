@@ -1,8 +1,8 @@
 ---
 name: execute-code-reviewer
-description: Adversarial code reviewer for the /skill:execute command. Invoked
+description: Adversarial code reviewer for the /skill:vwf-execute command. Invoked
   only
-  by /skill:execute — do not delegate to it for general tasks. Reviews the code
+  by /skill:vwf-execute — do not delegate to it for general tasks. Reviews the code
   against the plan, the blueprint, conventions, and the resolved stack, using /code-review
   as its engine. Returns findings only.
 tools: ["Read","Bash","Grep","Glob","Skill","SlashCommand","mcp__plugin_vwf_mempalace__mempalace_search","mcp__plugin_mempalace_mempalace__mempalace_search","mcp__plugin_vwf_mempalace__mempalace_add_drawer","mcp__plugin_mempalace_mempalace__mempalace_add_drawer"]

@@ -5,7 +5,10 @@ import type {
 import { frontmatter as fm } from "@ai-plugins/schema";
 import { Eta } from "eta";
 import { readFileSync } from "node:fs";
-import type { Workspace } from "./source.ts";
+import type {
+  FileSource,
+  Workspace,
+} from "./source.ts";
 
 /**
  * A rendered file, ready to be written under `<repo>/<target>/`.
@@ -55,6 +58,46 @@ export interface Output {
    * excusing a real gap.
    */
   readonly unowned?: boolean;
+}
+
+/**
+ * A skill's name on a target that flattens every plugin into one namespace.
+ *
+ * OpenCode and Oh-My-Pi discover skills from every provider into a single
+ * namespace keyed by bare name, so `plan` is addressable as `plan` with no hint
+ * of which plugin owns it. Claude and Cursor scope by plugin (`/vwf:plan`) and
+ * need none of this — which is why the prefix is applied by the renderer rather
+ * than baked into the authored name.
+ *
+ * Opt-in per plugin (`prefixSkillNames`), so a plugin whose names are already
+ * distinctive keeps them.
+ *
+ * **Every place that names a skill on a flat target must go through here.**
+ * The identifier appears in the directory, in the frontmatter `name:`, and in
+ * every cross-reference `it.cmd()` renders — and the failure when they disagree
+ * is silent, because a skill that resolves nowhere reads exactly like one the
+ * model chose not to use.
+ */
+export function flatSkillName(
+  plugin: { readonly name: string; readonly prefixSkillNames: boolean; },
+  skill: string,
+): string {
+  return plugin.prefixSkillNames ? `${plugin.name}-${skill}` : skill;
+}
+
+/**
+ * Move a skill's bundled files to follow the skill's own directory.
+ *
+ * Both flat targets relocate a skill directory — OpenCode when a user-only
+ * skill becomes a command, and both of them when `prefixSkillNames` renames it
+ * — and a `references/` link in the body is relative to that directory, so the
+ * extras have to travel with it.
+ */
+export function relocate(
+  from: string,
+  to: string,
+): (f: FileSource) => FileSource {
+  return f => ({ ...f, path: `${to}${f.path.slice(from.length)}` });
 }
 
 /**
@@ -130,6 +173,21 @@ export interface Context {
   readonly pluginRoot: (name: string) => string;
   /** How `<plugin>:<skill>` is invoked on this target. */
   readonly cmd: (ref: string) => string;
+  /**
+   * The directory name a skill occupies, for a path built around `it.root`.
+   *
+   * `cmd` spells an *invocation*; this spells a *location*. They diverge on the
+   * flat targets, where `prefixSkillNames` renames the directory as well as the
+   * frontmatter — so a link like
+   * `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/x.md`
+   * resolves on every target, where the hardcoded directory resolved only on
+   * the ones that do not rename.
+   *
+   * Only needed when the link crosses *out* of the skill that owns the file —
+   * an agent or an asset naming a skill's reference. Inside a skill, a plain
+   * relative link (`references/x.md`) is correct everywhere and needs nothing.
+   */
+  readonly skillName: (ref: string) => string;
   readonly target: { readonly id: TargetId; readonly caps: Capabilities; };
 }
 

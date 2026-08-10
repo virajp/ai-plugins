@@ -1,6 +1,6 @@
 ---
-description: Acceptance-stage verifier for the execute command. Invoked
-  only by execute (and /vwf-verify's environment mode) — do not delegate to
+description: Acceptance-stage verifier for the vwf-execute command. Invoked
+  only by vwf-execute (and /vwf-verify's environment mode) — do not delegate to
   it for general
   tasks. Independently maps each blueprint acceptance criterion to an E2E test,
   runs the suite against the local stack, and returns per-criterion

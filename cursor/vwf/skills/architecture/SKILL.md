@@ -318,7 +318,7 @@ committing. Report what was synced, or `docs: nothing contradicted`.
 
 **If this command was invoked as a sub-step of `/blueprint` or
 `/execute` (registry reconciliation):** return control to the parent run.
-The parent pipeline commits via `git-workflow`; do not double-commit.
+The parent pipeline commits via /git-workflow; do not double-commit.
 
 **Otherwise (standalone invocation):** commit via `/git-workflow`.
 

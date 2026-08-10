@@ -322,7 +322,7 @@ committing. Report what was synced, or `docs: nothing contradicted`.
 
 **If this command was invoked as a sub-step of `<%= it.cmd("vwf:blueprint") %>` or
 `<%= it.cmd("vwf:execute") %>` (registry reconciliation):** return control to the parent run.
-The parent pipeline commits via `git-workflow`; do not double-commit.
+The parent pipeline commits via <%= it.cmd("vwf:git-workflow") %>; do not double-commit.
 
 **Otherwise (standalone invocation):** commit via `<%= it.cmd("vwf:git-workflow") %>`.
 

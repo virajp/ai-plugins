@@ -1,7 +1,7 @@
 ---
 description: Writes or updates docs/blueprint/registry.yaml and
-  docs/blueprint/architecture.md for the architecture command. Invoked only
-  by architecture — do not delegate to it for general tasks. Writes the
+  docs/blueprint/architecture.md for the vwf-architecture command. Invoked only
+  by vwf-architecture — do not delegate to it for general tasks. Writes the
   machine-readable registry and the prose doc that views it, keeping the two in
   sync.
 mode: subagent

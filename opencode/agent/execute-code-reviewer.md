@@ -1,7 +1,7 @@
 ---
-description: Adversarial code reviewer for the execute command. Invoked
+description: Adversarial code reviewer for the vwf-execute command. Invoked
   only
-  by execute — do not delegate to it for general tasks. Reviews the code
+  by vwf-execute — do not delegate to it for general tasks. Reviews the code
   against the plan, the blueprint, conventions, and the resolved stack, using /code-review
   as its engine. Returns findings only.
 mode: subagent

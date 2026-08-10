@@ -1,7 +1,7 @@
 # The Canvas Push Protocol — claude.ai/design
 
-Shared by every vwf surface that talks to Claude Design: `design-system`
-(token sheets, publish, import) and `screens` (surface resolution and the
+Shared by every vwf surface that talks to Claude Design: `vwf-design-system`
+(token sheets, publish, import) and `vwf-screens` (surface resolution and the
 per-project+platform pins its import/conventions files key off). Callers own
 *what* is pushed and their own approval gates; this asset owns *how*. **Mockups
 never travel through here** — `/vwf-mockups` and blueprint §6a render only into
@@ -33,11 +33,11 @@ never burnt on a push that cannot happen.
 Every mockup push targets the design project of a specific **registry UI project
 and platform** (`mobile` / `tablet` / `desktop` / `web` / `auto`) — one canvas
 project per platform, since each platform canvas carries its own conventions
-CLAUDE.md (device frame, layout — written by `screens`); **two platforms
+CLAUDE.md (device frame, layout — written by `vwf-screens`); **two platforms
 never share a canvas project**. A flow's `device:` frontmatter key names the
 platform (`mobile` → `mobile`, `web` → `desktop`, an in-car device → its in-car
 platform). (The design system itself lives in the `design.design_system_id`
-project — `design-system` imports *from* it; nothing in vwf pushes to it.)
+project — `vwf-design-system` imports *from* it; nothing in vwf pushes to it.)
 
 1. Read `design.projects.<registry-project>.<platform>` from `.config/vwf.yaml`.
    Legacy fallbacks — a flat `design.projects.<registry-project>` uuid
@@ -61,7 +61,7 @@ project — `design-system` imports *from* it; nothing in vwf pushes to it.)
 3. **Offer to pin** the resolved id under
    `design.projects.<registry-project>.<platform>` — confirmed with the user,
    never silently — so the next run asks nothing. The pin change is committed
-   via `git-workflow` (`chore(vwf): pin/stamp design project`), riding the
+   via `vwf-git-workflow` (`chore(vwf): pin/stamp design project`), riding the
    caller's commit when one exists.
 
 ## 3. Push

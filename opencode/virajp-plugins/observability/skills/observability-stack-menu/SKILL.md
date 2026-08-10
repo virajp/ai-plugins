@@ -1,7 +1,7 @@
 ---
 name: observability-stack-menu
 description: Return the observability templates this plugin offers, as a vwf
-  menu payload. Invoked by architecture and /vwf-setup when `observability`
+  menu payload. Invoked by vwf-architecture and /vwf-setup when `observability`
   is listed in the config's `stacks:` — not a general-purpose skill.
 ---
 

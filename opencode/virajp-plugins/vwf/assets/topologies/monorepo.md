@@ -45,7 +45,7 @@ instead.
 **A project with `role: iac` never lives in the monorepo.** It is an independent
 repo, or a submodule of a product parent — which turns a monorepo product into a
 two-member polyrepo the moment it acquires one. This is the single structural
-rule vwf **enforces**: `doctor` raises a violation as a **blocking** finding,
+rule vwf **enforces**: `vwf-doctor` raises a violation as a **blocking** finding,
 and `/vwf-setup` offers a consent-gated restructure. Everything else on this page
 is a menu.
 

@@ -44,7 +44,7 @@ What the contract requires the generated pipeline to express, on any CI system:
 - **Staging is not a release.** A `*-stage-v*` run never publishes packages,
   creates release records, or updates changelogs — those belong only to the
   `*-prod-v*` path, and the release *record* itself belongs to
-  /skill:verify, not CI.
+  /skill:vwf-verify, not CI.
 
 Without the contract, release triggers are elicited as normal (the skill's §4)
 — but offer this shape as the recommended default.

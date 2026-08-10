@@ -64,6 +64,6 @@ resolves it — the blueprint is never adjusted to match code silently.
      One terse line per gap: stage that found it · what the blueprint/plan
      under/mis-specified · the assumption execution proceeded on. The durable,
      mempalace-independent copy; full detail lives in the mempalace `gaps` room.
-     Reconciled into the blueprint (blueprint) and a re-plan (plan) at cycle end. -->
+     Reconciled into the blueprint (vwf-blueprint) and a re-plan (vwf-plan) at cycle end. -->
 
 - ...

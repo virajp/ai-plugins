@@ -1,6 +1,6 @@
 # Capability Vocabulary
 
-Shared by `/skill:architecture` (the registry elicitation offers these tokens as
+Shared by `/skill:vwf-architecture` (the registry elicitation offers these tokens as
 MCQ options) and the `architecture-writer` agent (which records them). Keep this
 list the single source of truth; both surfaces read it rather than carrying
 their own copy.

@@ -96,7 +96,7 @@ describe("opencode adapter", () => {
     opencode.apply(context, planFor(["vwf"]));
 
     const skill = readFileSync(
-      join(bundle("vwf"), "skills", "execute", "SKILL.md"),
+      join(bundle("vwf"), "skills", "vwf-execute", "SKILL.md"),
       "utf8",
     );
     // The build cannot know this path, so it emits a token the adapter fills.
@@ -198,8 +198,11 @@ describe("opencode adapter", () => {
       opencode.apply(context, planFor(["vwf"]));
 
       const skills = join(bundle("vwf"), "skills");
-      expect(existsSync(join(skills, "mempalace", "SKILL.md"))).toBe(true);
-      expect(existsSync(join(skills, "mempalace-recall", "SKILL.md")))
+      // Prefixed: vwf sets `prefixSkillNames`, and the vendored skills are
+      // vwf's like any other. That also disambiguates them from the upstream
+      // mempalace plugin's own skills, were both ever installed.
+      expect(existsSync(join(skills, "vwf-mempalace", "SKILL.md"))).toBe(true);
+      expect(existsSync(join(skills, "vwf-mempalace-recall", "SKILL.md")))
         .toBe(true);
     });
 

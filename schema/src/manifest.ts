@@ -77,6 +77,26 @@ export const Manifest = z.object({
   requires: z.array(z.string()).default([]),
 
   /**
+   * Prefix this plugin's skill names with the plugin name on the **flat**
+   * targets.
+   *
+   * Claude and Cursor scope a skill to its plugin — `/vwf:plan` — so a name
+   * only has to be unique within its own bundle. OpenCode and Oh-My-Pi
+   * discover every provider's skills into **one flat namespace** keyed by bare
+   * name, so the same skill is just `plan` there: no hint of where it came
+   * from, and one generic name away from colliding with another tool's.
+   *
+   * With this set, the flat targets emit `<plugin>-<skill>` instead —
+   * `vwf-plan` — which reads the same as OpenCode's own wrapper convention for
+   * user-only skills (`/vwf-setup`), already `<plugin>-<skill>`.
+   *
+   * Off by default, and deliberately per-plugin rather than global: turning it
+   * on renames every skill a plugin ships, so it is a decision each plugin
+   * makes once, when its names are generic enough to be worth qualifying.
+   */
+  prefixSkillNames: z.boolean().default(false),
+
+  /**
    * Languages this plugin owns the facts for — the LSP, the manifest, the
    * toolchain that `/vwf:doctor` checks a repo against.
    *

@@ -7,22 +7,22 @@ This repo uses the **vwf** Product → Blueprint → Plan → Execute workflow. 
 live under `docs/blueprint/` (the desired state) and `docs/plans/` (the diffs to
 apply).
 
-**Order:** `/vwf-setup` → `product` → `architecture` →
-`design-system` (once a UI exists) → `blueprint` (a full-product sweep
-— `plan` halts until its coverage stamp reads complete) → `plan <slice>` →
-`execute` → `/vwf-archive` — then, after you deploy, `/vwf-verify <env>`
-and `feedback` route what production says back into product/blueprint/plan.
+**Order:** `/vwf-setup` → `vwf-product` → `vwf-architecture` →
+`vwf-design-system` (once a UI exists) → `vwf-blueprint` (a full-product sweep
+— `plan` halts until its coverage stamp reads complete) → `vwf-plan <slice>` →
+`vwf-execute` → `/vwf-archive` — then, after you deploy, `/vwf-verify <env>`
+and `vwf-feedback` route what production says back into product/blueprint/plan.
 
 Blueprint flow passes render each flow's screens (happy & sad paths) into the
 gitignored `docs/scratchpad/` tree for visual review in your browser before the
 pass is approved — mockups are realizations for review, never part of the
 contract, and are never pushed to the design tool. Design-first instead:
-`screens prompt <flow>` writes a brief you paste into the canvas chat (one
+`vwf-screens prompt <flow>` writes a brief you paste into the canvas chat (one
 interactive page per platform, named `<flow>--<platform>`),
-`screens
+`vwf-screens
 import` folds the designs back through blueprint passes.
 `/vwf-mockups [flow]` batch re-renders (e.g. after a design-system change);
-`feedback canvas` harvests the canvas review conversation back into the
+`vwf-feedback canvas` harvests the canvas review conversation back into the
 contracts (as routed intent, never as files).
 
 **The blueprint is a code-independent contract.** It records only decisions that

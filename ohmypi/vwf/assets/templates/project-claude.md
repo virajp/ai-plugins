@@ -1,4 +1,4 @@
-<!-- Merged into a project's CLAUDE.md by /skill:setup, preserving existing content.
+<!-- Merged into a project's CLAUDE.md by /skill:vwf-setup, preserving existing content.
      Keep it short — a pointer into the workflow, not a copy of vwf's docs. -->
 
 ## vwf workflow
@@ -7,22 +7,22 @@ This repo uses the **vwf** Product → Blueprint → Plan → Execute workflow. 
 live under `docs/blueprint/` (the desired state) and `docs/plans/` (the diffs to
 apply).
 
-**Order:** `/skill:setup` → `/skill:product` → `/skill:architecture` →
-`/skill:design-system` (once a UI exists) → `/skill:blueprint` (a full-product sweep
-— `plan` halts until its coverage stamp reads complete) → `/skill:plan <slice>` →
-`/skill:execute` → `/skill:archive` — then, after you deploy, `/skill:verify <env>`
-and `/skill:feedback` route what production says back into product/blueprint/plan.
+**Order:** `/skill:vwf-setup` → `/skill:vwf-product` → `/skill:vwf-architecture` →
+`/skill:vwf-design-system` (once a UI exists) → `/skill:vwf-blueprint` (a full-product sweep
+— `plan` halts until its coverage stamp reads complete) → `/skill:vwf-plan <slice>` →
+`/skill:vwf-execute` → `/skill:vwf-archive` — then, after you deploy, `/skill:vwf-verify <env>`
+and `/skill:vwf-feedback` route what production says back into product/blueprint/plan.
 
 Blueprint flow passes render each flow's screens (happy & sad paths) into the
 gitignored `docs/scratchpad/` tree for visual review in your browser before the
 pass is approved — mockups are realizations for review, never part of the
 contract, and are never pushed to the design tool. Design-first instead:
-`/skill:screens prompt <flow>` writes a brief you paste into the canvas chat (one
+`/skill:vwf-screens prompt <flow>` writes a brief you paste into the canvas chat (one
 interactive page per platform, named `<flow>--<platform>`),
-`/skill:screens
+`/skill:vwf-screens
 import` folds the designs back through blueprint passes.
-`/skill:mockups [flow]` batch re-renders (e.g. after a design-system change);
-`/skill:feedback canvas` harvests the canvas review conversation back into the
+`/skill:vwf-mockups [flow]` batch re-renders (e.g. after a design-system change);
+`/skill:vwf-feedback canvas` harvests the canvas review conversation back into the
 contracts (as routed intent, never as files).
 
 **The blueprint is a code-independent contract.** It records only decisions that
@@ -63,5 +63,5 @@ relationships are markdown links. So it is portable: any OKF-aware tool (e.g.
 the OKF static-HTML graph visualizer) can render it, and it can be ingested by a
 knowledge-graph tool like graphify — no vwf-specific reader required.
 
-Re-run `/skill:setup` after upgrading vwf to migrate the docs to the latest
+Re-run `/skill:vwf-setup` after upgrading vwf to migrate the docs to the latest
 format.

@@ -2,7 +2,7 @@
 name: object-storage-stack-template
 description: Return one object-storage stack template as a vwf template payload
   — this plugin ships none, so every slug is an error naming the cloud plugins
-  that do. Invoked by /skill:architecture and /skill:setup after the user picks from
+  that do. Invoked by /skill:vwf-architecture and /skill:vwf-setup after the user picks from
   the object-storage menu — not a general-purpose skill.
 ---
 

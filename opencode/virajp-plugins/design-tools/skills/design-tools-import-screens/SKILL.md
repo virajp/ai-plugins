@@ -2,7 +2,7 @@
 name: design-tools-import-screens
 description: Read a flow's designed screens back from the project's design tool
   (Claude Design, Lovable or Google Stitch) and return them as a vwf screens
-  payload. Invoked by screens import as its design adapter — not a
+  payload. Invoked by vwf-screens import as its design adapter — not a
   general-purpose skill.
 ---
 
@@ -79,7 +79,7 @@ adapter reference for this tool.
   key and a fabricated one silently maps a design onto the wrong contract row.
 - **Report, don't interpret.** A component the design shows but the contract
   does not mention is still reported — deciding whether it is an addition or a
-  mistake is `screens import`'s job, and then `blueprint`'s.
+  mistake is `vwf-screens import`'s job, and then `vwf-blueprint`'s.
 - **Never write to the design tool, and never to `docs/blueprint/`.** Import is
   a read.
 

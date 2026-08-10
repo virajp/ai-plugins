@@ -11,8 +11,8 @@ reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 > **graphify is mandatory**, and the mandate is enforced at the **entry gate**,
 > never mid-run. Two different things are being checked:
 >
-> - **The CLI** is a hard requirement. Missing → `doctor` §8 reports it as
->   **blocking**, and `/vwf-setup` and `execute` halt on it the way
+> - **The CLI** is a hard requirement. Missing → `vwf-doctor` §8 reports it as
+>   **blocking**, and `/vwf-setup` and `vwf-execute` halt on it the way
 >   `execute` already halts on a missing LSP.
 > - **A graph is per-repo**, and its absence *at the workspace root* is equally
 >   blocking — `/vwf-setup` is what resolves it, behind consent.

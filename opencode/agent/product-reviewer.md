@@ -1,6 +1,6 @@
 ---
-description: Stateless completeness reviewer for the product command.
-  Invoked only by product — do not delegate to it for general tasks.
+description: Stateless completeness reviewer for the vwf-product command.
+  Invoked only by vwf-product — do not delegate to it for general tasks.
   Checks a written product doc against the completeness checklist and returns
   NO GAPS or a numbered gap list. Pass only the product doc — no conversation
   context.
@@ -54,7 +54,7 @@ re-elicit the missing decisions with the user.
 - [ ] No placeholder text remains.
 
 A **Metric readings** section, when present, is a dated log maintained by
-`feedback` — it is exempt from the checklist (do not flag its rows as
+`vwf-feedback` — it is exempt from the checklist (do not flag its rows as
 placeholders or unmeasured metrics).
 
 ## Return contract

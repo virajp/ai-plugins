@@ -48,17 +48,17 @@ describe("skills", () => {
     // The path glob is the only thing deciding whether OpenCode's model sees a
     // skill, so relocation *is* the user-only emulation — if a `SKILL.md`
     // survived under `commands/`, the model would load it anyway.
-    expect(paths).toContain("virajp-plugins/vwf/commands/setup/index.md");
-    expect(paths).not.toContain("virajp-plugins/vwf/skills/setup/SKILL.md");
+    expect(paths).toContain("virajp-plugins/vwf/commands/vwf-setup/index.md");
+    expect(paths).not.toContain("virajp-plugins/vwf/skills/vwf-setup/SKILL.md");
     expect(
       paths.filter(p => p.includes("/commands/") && p.endsWith("SKILL.md")),
     )
       .toEqual([]);
 
     // Model-invoked skills stay discoverable.
-    expect(paths).toContain("virajp-plugins/vwf/skills/blueprint/SKILL.md");
+    expect(paths).toContain("virajp-plugins/vwf/skills/vwf-blueprint/SKILL.md");
     expect(paths).toContain(
-      "virajp-plugins/vwf/skills/documentation-standards/SKILL.md",
+      "virajp-plugins/vwf/skills/vwf-documentation-standards/SKILL.md",
     );
   });
 
@@ -83,7 +83,7 @@ describe("skills", () => {
   it("points each wrapper at the installed skill and passes arguments", () => {
     const wrapper = text("command/vwf-setup.md");
     expect(wrapper).toContain(
-      `%%AI_PLUGINS_ROOT:vwf%%/commands/setup/index.md`,
+      `%%AI_PLUGINS_ROOT:vwf%%/commands/vwf-setup/index.md`,
     );
     expect(wrapper).toContain("$ARGUMENTS");
     // A folded description full of `: ` and dashes has to survive as one YAML
@@ -93,7 +93,7 @@ describe("skills", () => {
 
   it("drops frontmatter OpenCode does not read", () => {
     const skill = text(
-      "virajp-plugins/vwf/skills/documentation-standards/SKILL.md",
+      "virajp-plugins/vwf/skills/vwf-documentation-standards/SKILL.md",
     );
     const block = skill.slice(0, skill.indexOf("\n---\n", 4));
     for (const key of ["invocation", "paths", "tools", "model", "effort"]) {
@@ -227,7 +227,7 @@ describe("plugin roots", () => {
   it("rewrites command references to what OpenCode can actually reach", () => {
     // A user-only skill is reachable only through its wrapper; everything else
     // is addressed by bare name in OpenCode's flat skill namespace.
-    const plan = text("virajp-plugins/vwf/skills/plan/SKILL.md");
+    const plan = text("virajp-plugins/vwf/skills/vwf-plan/SKILL.md");
     expect(plan).toContain("/vwf-setup");
     expect(plan).not.toContain("/vwf:setup");
     expect(plan).not.toContain("/vwf:blueprint");

@@ -37,7 +37,7 @@ The parent holds everything product-wide: the blueprint, mise config, CI glue,
 the local stack. `/vwf-setup` and every other vwf command run **there**.
 
 Each member is classified on its own signals per
-[topology detection](%%AI_PLUGINS_ROOT%%/skills/project-setup/references/topology-detection.md)
+[topology detection](%%AI_PLUGINS_ROOT%%/skills/vwf-project-setup/references/topology-detection.md)
 — a member may be a monorepo or a single repo, and each carries its own
 `repo.stack` block.
 
@@ -46,7 +46,7 @@ Each member is classified on its own signals per
 A project with `role: iac` is **always its own repo** — here that means its own
 submodule, never a directory inside another member and never a directory in the
 parent. This is the one structural rule vwf enforces rather than offers:
-`doctor` raises a violation as **blocking**, and `/vwf-setup` offers a
+`vwf-doctor` raises a violation as **blocking**, and `/vwf-setup` offers a
 consent-gated restructure. The reasoning — blast radius, credentials, lifecycle,
 cadence — is in [monorepo](monorepo.md), where the rule is most surprising.
 

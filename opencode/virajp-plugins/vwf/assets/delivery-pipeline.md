@@ -2,7 +2,7 @@
 
 The canonical environment vocabulary and the CI/CD contract every product
 follows — **enforced, not elicited** (the engineering-baseline mechanism).
-`blueprint` seeds it into `conventions.md#pipeline` on first touch; the
+`vwf-blueprint` seeds it into `conventions.md#pipeline` on first touch; the
 **cicd** plugin's workflow generator conforms to it when writing
 pipelines; `/vwf-verify` resolves environments by it. Exceptions are the
 doc-note + `enforcement.rules` waiver pair (`pipeline/<rule>[/<unit>]`).
@@ -56,7 +56,7 @@ literally named `production`).
 
 ## How the surfaces apply it
 
-- **`blueprint`** seeds `#pipeline` into `conventions.md` on first touch
+- **`vwf-blueprint`** seeds `#pipeline` into `conventions.md` on first touch
   (beside `#baseline`) and normalizes environment synonyms it encounters in docs
   as drift to fix, never silently.
 - **`/vwf-verify`** resolves its target environment by canonical name (a synonym

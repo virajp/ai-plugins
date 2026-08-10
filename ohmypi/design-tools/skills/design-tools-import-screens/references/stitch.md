@@ -12,7 +12,7 @@ assumes.
 ## Why this tool fits vwf well
 
 Stitch returns **HTML per screen**, and vwf already reasons about screens as
-self-contained HTML (that is what `/skill:mockups` renders). Structure is
+self-contained HTML (that is what `/skill:vwf-mockups` renders). Structure is
 therefore directly legible — no code archaeology needed. Stitch's `generate`
 also takes a **platform** argument, which maps onto vwf's platform axis.
 

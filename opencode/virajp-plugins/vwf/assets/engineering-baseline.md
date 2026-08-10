@@ -1,7 +1,7 @@
 # Engineering Baseline
 
 The centralized technical rules every product follows by default — **enforced,
-not elicited**. `blueprint` seeds them into `conventions.md#baseline` as
+not elicited**. `vwf-blueprint` seeds them into `conventions.md#baseline` as
 canonical contract lines on first touch (like the shared-pattern placement
 rules); every doc and every cycle then follows them without being asked. Only
 **exceptions** are documented. Keep this list the single source of truth; the
@@ -122,7 +122,7 @@ them enforced rather than advisory)
 
 ## How the surfaces apply it
 
-- **`blueprint`** seeds `#baseline` into `conventions.md` on first touch
+- **`vwf-blueprint`** seeds `#baseline` into `conventions.md` on first touch
   (all 15 lines, minus any product-wide waivers) and applies the defaults while
   authoring: entity Concurrency defaults to rule 1, flow Consistency boundaries
   assume rule 2, API operations carry rules 7–9 — elicitation covers only

@@ -8,7 +8,7 @@ no useful check exists for them beyond presence in a manifest.
 ## Languages — closed to what the installed plugins declare
 
 **vwf names no language.** A language token is whatever a stack template
-declares, and the facts `doctor` checks are supplied by the
+declares, and the facts `vwf-doctor` checks are supplied by the
 **language plugin** that owns it, never by a table here. This file defines only
 what such a fact consists of:
 
@@ -27,7 +27,7 @@ because there is no install command to suggest.
 **What is not open is the set of tokens.** vwf holds no list, but the union of
 what the installed stack plugins declare **is** the list. A token outside it is
 reported as `unknown`, and `unknown` is **blocking**: `doctor` raises it, and
-`/vwf-setup` and `execute` both halt on it.
+`/vwf-setup` and `vwf-execute` both halt on it.
 
 **Why blocking rather than a graceful degrade.** vwf is an opinionated workflow
 — it plans against a template's conventions, builds against its harness, and
@@ -92,7 +92,7 @@ dependencies: [] # open, lowercase-kebab; the few that characterize the stack
 ```
 
 **Backing** templates declare which capability tokens they realize, so
-`architecture` can match a project's declared capabilities against them:
+`vwf-architecture` can match a project's declared capabilities against them:
 
 ```yaml
 ---
@@ -127,7 +127,7 @@ tools: [] # the tooling that defines the template
 ```
 
 The prose below the frontmatter is the template's **conventions**. It reaches
-`plan` and `execute` as the `conventions:` field of the
+`vwf-plan` and `vwf-execute` as the `conventions:` field of the
 template payload — neither reads a template file, and the config block records
 only which template was picked, never what it says. The fetch rule (deduped by
 slug, once per run, a failure halts) is *Resolving the conventions* in
@@ -151,7 +151,7 @@ only matters for how doctor checks a project — so keep it mechanical:
 ## What is deliberately absent
 
 There is no "recommended" or "default" marker on any template. vwf ships a menu:
-`architecture` presents every template for a project's `role` and the user
+`vwf-architecture` presents every template for a project's `role` and the user
 picks. There is **no free-text escape hatch** — no *other (describe)* option, and
 `template: custom` is not a value the config accepts (retired in
 `config_format` 14). A role for which no installed plugin ships a fitting
@@ -161,6 +161,6 @@ that has one, or write it (`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`,
 
 That refusal is the point. A `custom` pin recorded a stack vwf had no template
 for — so no `conventions` prose for `plan` and `execute` to read, and no
-`harness` block for `doctor` to check — and the pipeline ran on with those
+`harness` block for `vwf-doctor` to check — and the pipeline ran on with those
 inputs missing and said nothing. Closing it makes the menu the whole vocabulary,
 and makes adding to it a plugin rather than a config value.

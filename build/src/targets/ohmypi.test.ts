@@ -37,7 +37,7 @@ describe("skills", () => {
   it("renames `paths` to `globs` and pins them off always-apply", () => {
     // `blueprint-authoring` is the two-glob doctrine archetype: it exists to
     // auto-apply, so losing the scoping would make it load everywhere.
-    const doc = front("vwf/skills/blueprint-authoring/SKILL.md");
+    const doc = front("vwf/skills/vwf-blueprint-authoring/SKILL.md");
 
     expect(fm.get(doc, "paths")).toBeUndefined();
     expect(fm.sequence(doc, "globs")).toEqual([
@@ -54,18 +54,18 @@ describe("skills", () => {
     // slash-reachability is unaffected by either key.
 
     // user-only: withheld from the model, still reachable via `/skill:setup`.
-    const user = front("vwf/skills/setup/SKILL.md");
+    const user = front("vwf/skills/vwf-setup/SKILL.md");
     expect(fm.bool(user, "disableModelInvocation")).toBe(true);
 
     // Doctrine must stay model-visible, so it carries NEITHER key. `hide` here
     // would silently drop it from the prompt and stop it auto-applying — the
     // regression this assertion exists to catch.
-    const model = front("vwf/skills/blueprint-authoring/SKILL.md");
+    const model = front("vwf/skills/vwf-blueprint-authoring/SKILL.md");
     expect(fm.get(model, "hide")).toBeUndefined();
     expect(fm.get(model, "disableModelInvocation")).toBeUndefined();
 
     // The default carries no flag either.
-    const both = front("vwf/skills/plan/SKILL.md");
+    const both = front("vwf/skills/vwf-plan/SKILL.md");
     expect(fm.get(both, "hide")).toBeUndefined();
     expect(fm.get(both, "disableModelInvocation")).toBeUndefined();
   });
@@ -74,10 +74,16 @@ describe("skills", () => {
     // omp 17.2.9 triggers on /(^|\s)\/skill:([^\s/]+)(\s|$)/ and its parser
     // returns early on any other `/`-prefixed input. A bare `/plan` is not a
     // failed lookup — it is plain prose the model receives as a message.
-    const body = text("vwf/skills/execute/SKILL.md");
+    const body = text("vwf/skills/vwf-execute/SKILL.md");
 
-    expect(body).toContain("/skill:plan");
-    expect(body).toContain("/skill:git-workflow");
+    // Prefixed, because vwf sets `prefixSkillNames`: Oh-My-Pi resolves
+    // `/skill:<name>` against one flat namespace shared with every other
+    // provider, so the name it registers under is the name prose must spell.
+    expect(body).toContain("/skill:vwf-plan");
+    expect(body).toContain("/skill:vwf-git-workflow");
+    // The unqualified form must not survive anywhere — it resolves to nothing
+    // now, and a skill reference that resolves to nothing is silent.
+    expect(body).not.toMatch(/\/skill:(?!vwf-)/);
 
     // Neither Claude's namespaced spelling nor the bare one may survive.
     expect(body).not.toContain("/vwf:");

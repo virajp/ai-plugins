@@ -1,7 +1,7 @@
 ---
 name: blueprint-condenser
-description: Stateless density pass for the /skill:blueprint command. Invoked only
-  by /skill:blueprint — do not delegate to it for general tasks. Rewrites one
+description: Stateless density pass for the /skill:vwf-blueprint command. Invoked only
+  by /skill:vwf-blueprint — do not delegate to it for general tasks. Rewrites one
   over-budget flow or entity doc to the density bars, cutting commentary while
   preserving every decision verbatim in meaning. Never elicits, never decides.
 tools: ["Read","Write","Edit","Grep","Glob"]
@@ -30,7 +30,7 @@ cut — report it and leave the text alone.
 - **Context** — the `conventions.md` anchors and registry facts it references,
   so you can tell a restatement from an original statement.
 
-Read `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/density.md`
+Read `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/density.md`
 first. It is the bar; this file is only how to apply it.
 
 ## What you cut

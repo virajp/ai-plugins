@@ -118,7 +118,7 @@ template is authored in, and `plugins:check` enforces it.
 
 ### vwf preflights, because the failure mode is silence
 
-Before delegating, `architecture`, `/vwf-setup` and `doctor` **verify
+Before delegating, `vwf-architecture`, `/vwf-setup` and `vwf-doctor` **verify
 every plugin named in `stacks:` is installed** (`claude plugin list`). They do
 not attempt the call and infer from the result — that inference is impossible. A
 missing plugin is a **halt** with the install command, never an empty menu.
@@ -163,15 +163,15 @@ conventions: <prose> # layout, testing, placement — read by plan/execute
 
 The `harness` block is what replaces the tool names vwf used to carry. vwf asks
 "can this repo run `screenshots`?"; the plugin answers "yes — task `test:e2e`,
-via a browser driver". `doctor` checks the task exists; it never checks
+via a browser driver". `vwf-doctor` checks the task exists; it never checks
 *which* tool.
 
 ### Resolving the conventions
 
 `.config/vwf.yaml` records **which** templates a project picked; it does not
 record what they say. The `conventions:` prose — layout, testing, placement — is
-the template's, and reaching it means asking the plugin. `plan` sizes its
-steps against that prose and `execute` writes code to it, so both resolve
+the template's, and reaching it means asking the plugin. `vwf-plan` sizes its
+steps against that prose and `vwf-execute` writes code to it, so both resolve
 it the same way:
 
 1. **Collect the pins** for every project in scope — `template`, each

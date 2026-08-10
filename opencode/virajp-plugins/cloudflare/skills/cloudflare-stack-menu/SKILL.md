@@ -1,7 +1,7 @@
 ---
 name: cloudflare-stack-menu
 description: Return the Cloudflare stack templates this plugin offers, as a vwf
-  menu payload. Invoked by architecture and /vwf-setup when `cloudflare` is
+  menu payload. Invoked by vwf-architecture and /vwf-setup when `cloudflare` is
   listed in the config's `stacks:` — not a general-purpose skill.
 ---
 

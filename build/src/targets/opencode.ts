@@ -12,7 +12,6 @@ import type {
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 import type {
-  FileSource,
   PluginSource,
   SkillSource,
   Workspace,
@@ -24,6 +23,8 @@ import {
   type Output,
   type Target,
   bundledFiles,
+  flatSkillName,
+  relocate,
   renderDocument,
   renderTemplate,
   ROOT_TOKEN,
@@ -61,12 +62,15 @@ export const opencode: Target = {
     // everything else only by name. Built once, over every plugin — prose in
     // one plugin routinely names a skill in another.
     const invocations = new Map<string, Invocation>();
+    // The flat name of every skill in the workspace, for the same reason: a
+    // reference has to resolve to the name the *owning* plugin emits, which
+    // depends on that plugin's `prefixSkillNames`, not the referrer's.
+    const flatNames = new Map<string, string>();
     for (const plugin of workspace.plugins) {
       for (const skill of plugin.skills) {
-        invocations.set(
-          `${plugin.manifest.name}:${skill.meta.name}`,
-          skill.meta.invocation,
-        );
+        const ref = `${plugin.manifest.name}:${skill.meta.name}`;
+        invocations.set(ref, skill.meta.invocation);
+        flatNames.set(ref, flatSkillName(plugin.manifest, skill.meta.name));
       }
     }
 
@@ -75,7 +79,7 @@ export const opencode: Target = {
         continue;
       }
       const before = outputs.length;
-      const emission = renderPlugin(plugin, invocations);
+      const emission = renderPlugin(plugin, invocations, flatNames);
       outputs.push(...emission.outputs);
       stampOwner(outputs, before, plugin.manifest.name);
       gaps.push(...emission.gaps);
@@ -98,6 +102,7 @@ export const opencode: Target = {
 function contextFor(
   plugin: PluginSource,
   invocations: ReadonlyMap<string, Invocation>,
+  flatNames: ReadonlyMap<string, string>,
 ): Context {
   return {
     // OpenCode resolves nothing at runtime, so the install-time token stands in
@@ -106,14 +111,15 @@ function contextFor(
     pluginRoot: siblingRootToken,
     cmd: ref => {
       // A user-only skill exists here *only* as its wrapper command, which is
-      // typed `/<plugin>-<skill>`. Everything else is model-invoked, and
-      // OpenCode addresses skills by bare name in one flat namespace — which is
-      // why skill names are unique across plugins.
-      const bare = ref.slice(ref.indexOf(":") + 1);
+      // typed `/<plugin>-<skill>` — already qualified, and unchanged by
+      // `prefixSkillNames`. Everything else is model-invoked and addressed by
+      // the flat name, which is where the prefix shows up.
+      const flat = flatNames.get(ref) ?? ref.slice(ref.indexOf(":") + 1);
       return invocations.get(ref) === "user"
         ? `/${ref.replace(":", "-")}`
-        : bare;
+        : flat;
     },
+    skillName: ref => flatNames.get(ref) ?? ref.slice(ref.indexOf(":") + 1),
     target: { id: "opencode", caps: CAPABILITIES.opencode },
     ...{ plugin: plugin.manifest.name },
   };
@@ -125,10 +131,11 @@ const BUNDLE_DIR = "virajp-plugins";
 function renderPlugin(
   plugin: PluginSource,
   invocations: ReadonlyMap<string, Invocation>,
+  flatNames: ReadonlyMap<string, string>,
 ): Emission {
   const name = plugin.manifest.name;
   const base = `${BUNDLE_DIR}/${name}`;
-  const context = contextFor(plugin, invocations);
+  const context = contextFor(plugin, invocations, flatNames);
   const outputs: Output[] = [];
   const gaps: Gap[] = [];
 
@@ -156,7 +163,7 @@ function renderPlugin(
       // thing that decides whether the model sees a skill, so relocating the
       // file *is* the emulation.
       outputs.push(...renderSkill(plugin, skill, base, "commands", context));
-      outputs.push(wrapper(name, skill, context));
+      outputs.push(wrapper(plugin.manifest, skill, context));
     }
     else {
       if (meta.invocation === "both") {
@@ -343,15 +350,23 @@ function renderSkill(
   dir: "skills" | "commands",
   context: Context,
 ): Output[] {
+  const flat = flatSkillName(plugin.manifest, skill.meta.name);
   const from = `skills/${skill.meta.name}`;
-  const to = `${dir}/${skill.meta.name}`;
+  // The directory carries the flat name too, not just the frontmatter.
+  // OpenCode keys a skill by its `name:`, but the directory is what a
+  // `references/` link resolves against and what the wrapper command points
+  // at — so leaving it unprefixed would split one skill across two names.
+  const to = `${dir}/${flat}`;
   const file = dir === "commands" ? "index.md" : "SKILL.md";
 
   return [
     {
       path: `${base}/${to}/${file}`,
       contents: fm.emit(
-        toOpenCodeSkill(renderDocument(source(plugin, skill.path), context)),
+        toOpenCodeSkill(
+          renderDocument(source(plugin, skill.path), context),
+          flat,
+        ),
       ),
     },
     // References travel with their skill, so a relocated skill takes its whole
@@ -364,10 +379,6 @@ function renderSkill(
   ];
 }
 
-function relocate(from: string, to: string): (f: FileSource) => FileSource {
-  return f => ({ ...f, path: `${to}${f.path.slice(from.length)}` });
-}
-
 /**
  * The wrapper that restores a user-only skill's slash form.
  *
@@ -377,14 +388,15 @@ function relocate(from: string, to: string): (f: FileSource) => FileSource {
  * can never drift.
  */
 function wrapper(
-  plugin: string,
+  plugin: Manifest,
   skill: SkillSource,
   context: Context,
 ): Output {
   const meta = skill.meta;
-  const installed = `${
-    siblingRootToken(plugin)
-  }/commands/${meta.name}/index.md`;
+  // Must track `renderSkill`'s directory, which carries the flat name.
+  const installed = `${siblingRootToken(plugin.name)}/commands/${
+    flatSkillName(plugin, meta.name)
+  }/index.md`;
   // The description is a folded scalar in the source and routinely contains
   // `: ` and quotes; JSON is a valid YAML double-quoted scalar, so it survives.
   const description = JSON.stringify(
@@ -393,7 +405,7 @@ function wrapper(
   const hint = meta.argumentHint;
 
   return {
-    path: `command/${plugin}-${meta.name}.md`,
+    path: `command/${plugin.name}-${meta.name}.md`,
     contents: [
       "---",
       `description: ${description}`,
@@ -419,7 +431,7 @@ function wrapper(
  * runtime does not keep, so anything without a home is dropped — except the
  * provenance pair, which `metadata` can carry losslessly.
  */
-function toOpenCodeSkill(doc: fm.Document): fm.Document {
+function toOpenCodeSkill(doc: fm.Document, flatName: string): fm.Document {
   const meta = skillFromFrontmatter(doc);
 
   let out = fm.omit(
@@ -444,6 +456,11 @@ function toOpenCodeSkill(doc: fm.Document): fm.Document {
   ];
   if (provenance.length > 0) {
     out = fm.set(out, "metadata", `\n${provenance.join("\n")}`);
+  }
+  // `name:` is what OpenCode keys the skill by, so this is the line that makes
+  // the prefix real. A no-op when the plugin has not opted in.
+  if (flatName !== meta.name) {
+    out = fm.set(out, "name", ` ${flatName}`);
   }
 
   return fm.reorder(out, ["name", "description", "license", "metadata"]);

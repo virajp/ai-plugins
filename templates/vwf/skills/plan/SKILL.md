@@ -267,7 +267,7 @@ on.
 Everything above (§§2–5) reads the blueprint and code from the **current
 checkout** and is read-only — no worktree needed yet. Now, just before the first
 write, invoke `<%= it.cmd("vwf:git-workflow") %>` to ensure an isolated worktree. All git
-actions in this command go through `git-workflow`. Keep the worktree **local** —
+actions in this command go through <%= it.cmd("vwf:git-workflow") %>. Keep the worktree **local** —
 never push remotely here.
 
 ### 7. Write the plan

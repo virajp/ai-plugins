@@ -38,7 +38,7 @@ or an idea, and an edit's diff supports none of those readings on its own.
 Feeding it in would produce a stream of confident-looking items whose
 classification was invented here rather than read.
 
-`feedback` does hold that an edit request is itself a signal — but that
+`vwf-feedback` does hold that an edit request is itself a signal — but that
 holds where the request was **said**, in a conversation, alongside the reasoning
 that makes it routable. A bare commit is not that.
 

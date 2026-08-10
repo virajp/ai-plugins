@@ -1,10 +1,10 @@
 # The Canvas Push Protocol — claude.ai/design
 
-Shared by every vwf surface that talks to Claude Design: `/skill:design-system`
-(token sheets, publish, import) and `/skill:screens` (surface resolution and the
+Shared by every vwf surface that talks to Claude Design: `/skill:vwf-design-system`
+(token sheets, publish, import) and `/skill:vwf-screens` (surface resolution and the
 per-project+platform pins its import/conventions files key off). Callers own
 *what* is pushed and their own approval gates; this asset owns *how*. **Mockups
-never travel through here** — `/skill:mockups` and blueprint §6a render only into
+never travel through here** — `/skill:vwf-mockups` and blueprint §6a render only into
 the repo's gitignored `docs/scratchpad/` tree.
 
 ## 1. Resolve a surface
@@ -33,18 +33,18 @@ never burnt on a push that cannot happen.
 Every mockup push targets the design project of a specific **registry UI project
 and platform** (`mobile` / `tablet` / `desktop` / `web` / `auto`) — one canvas
 project per platform, since each platform canvas carries its own conventions
-CLAUDE.md (device frame, layout — written by `/skill:screens`); **two platforms
+CLAUDE.md (device frame, layout — written by `/skill:vwf-screens`); **two platforms
 never share a canvas project**. A flow's `device:` frontmatter key names the
 platform (`mobile` → `mobile`, `web` → `desktop`, an in-car device → its in-car
 platform). (The design system itself lives in the `design.design_system_id`
-project — `/skill:design-system` imports *from* it; nothing in vwf pushes to it.)
+project — `/skill:vwf-design-system` imports *from* it; nothing in vwf pushes to it.)
 
 1. Read `design.projects.<registry-project>.<platform>` from `.config/vwf.yaml`.
    Legacy fallbacks — a flat `design.projects.<registry-project>` uuid
    (config_format 5) acts as the pin for the project's **primary platform**
    (`mobile` for a `frontend` role, `desktop` for a `site` role); a single
    `design.project_id` (4) or `mockups.project_id` (3) as that shared
-   primary-platform pin for every UI project — honor them and nudge `/skill:setup`
+   primary-platform pin for every UI project — honor them and nudge `/skill:vwf-setup`
    for the config migration. If a pin is present, verify with `get_project`: it
    must exist, be `canEdit`, and be `type: PROJECT_TYPE_DESIGN_SYSTEM` (the type
    is immutable at creation; pushing to a regular project never converts it). On
@@ -61,7 +61,7 @@ project — `/skill:design-system` imports *from* it; nothing in vwf pushes to i
 3. **Offer to pin** the resolved id under
    `design.projects.<registry-project>.<platform>` — confirmed with the user,
    never silently — so the next run asks nothing. The pin change is committed
-   via `/skill:git-workflow` (`chore(vwf): pin/stamp design project`), riding the
+   via `/skill:vwf-git-workflow` (`chore(vwf): pin/stamp design project`), riding the
    caller's commit when one exists.
 
 ## 3. Push

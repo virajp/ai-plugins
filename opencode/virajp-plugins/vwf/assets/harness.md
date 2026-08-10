@@ -58,7 +58,7 @@ harness:
 - **New/empty repos** — `/vwf-setup` scaffolds the harness as part of the chosen
   topology's layout (the selected stack templates describe it), in the same
   consent-gated migration plan.
-- **Existing repos** — `plan` runs a **harness preflight**: read the stamp,
+- **Existing repos** — `vwf-plan` runs a **harness preflight**: read the stamp,
   re-verify just the capabilities this slice's gates will need (the repo may
   have changed since stamping), and **inject a bootstrap step** into the plan
   for each missing one — built by the coder under the normal

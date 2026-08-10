@@ -3,7 +3,7 @@ name: gcp-stack-template
 description: Return one Google Cloud stack template as a vwf template payload
   —
   its axis fields, per-capability harness mechanisms, and conventions. Invoked by
-  architecture and /vwf-setup after the user picks from the gcp menu — not a
+  vwf-architecture and /vwf-setup after the user picks from the gcp menu — not a
   general-purpose skill.
 ---
 

@@ -8,7 +8,7 @@ The split is deliberate and asymmetric:
 
 | Direction  | How it works                                                           | Needs an adapter? |
 | ---------- | ---------------------------------------------------------------------- | ----------------- |
-| **Export** | `screens prompt` writes design briefs to `docs/prompts/screens/…` | **No**            |
+| **Export** | `vwf-screens prompt` writes design briefs to `docs/prompts/screens/…` | **No**            |
 | **Import** | vwf delegates to the adapter and consumes what it returns              | **Yes**           |
 
 **Export needs no adapter at all.** The briefs are files — the deliverable is
@@ -33,7 +33,7 @@ names and nothing else. *Which* design tool answers is resolved **inside** the
 adapter, from the project's configuration — because that is a fact about the
 project, not about vwf's delegation.
 
-The third name is the newest and was added to close a real hole: `feedback
+The third name is the newest and was added to close a real hole: `vwf-feedback
 canvas` used to reach one specific tool's MCP server by hardcoded prefix, so two
 of the three tokens this contract advertises were **silently non-functional** for
 it. A broken menu entry is worse than a naming violation, because nothing
@@ -77,8 +77,8 @@ place it is catchable.
 
 ### The preflight, because the failure mode is silence
 
-Before delegating, `design-system`, `screens import` and
-`feedback canvas` **check the project's configured tool** rather than
+Before delegating, `vwf-design-system`, `vwf-screens import` and
+`vwf-feedback canvas` **check the project's configured tool** rather than
 calling and inferring from the result — that inference is impossible.
 
 Three distinct halts, because they need three different fixes:
@@ -97,7 +97,7 @@ never quietly return an empty result.
 ## Payload 1 — screens
 
 Returned by `design-tools-import-screens <flow> <platform>`. Shapes
-match the flow platform template, so `screens import` can diff it
+match the flow platform template, so `vwf-screens import` can diff it
 directly against the Screens contract.
 
 ```yaml
@@ -129,7 +129,7 @@ codes.
 ## Payload 2 — design system
 
 Returned by `design-tools-import-design-system`. Shapes match the
-design-system template's sections, so `design-system` can write the doc
+design-system template's sections, so `vwf-design-system` can write the doc
 from it.
 
 ```yaml
@@ -176,7 +176,7 @@ a derived one is a snapshot of one moment.
 ## Payload 3 — conversations
 
 Returned by `design-tools-import-conversations <project>`, one call
-per registry project. Feeds `feedback canvas`, which classifies and routes
+per registry project. Feeds `vwf-feedback canvas`, which classifies and routes
 each remark through its normal pipeline.
 
 ```yaml
@@ -227,7 +227,7 @@ The adapter returns data. **Everything downstream is vwf's**, and no adapter
 gets to do it:
 
 - Diffing a screens payload against the Screens contract.
-- Routing every accepted delta through `blueprint` — an adapter never edits
+- Routing every accepted delta through `vwf-blueprint` — an adapter never edits
   a flow doc.
 - Writing `design-system.md` from a design-system payload, gated by the
   `design-system-reviewer`.

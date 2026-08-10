@@ -2,7 +2,7 @@
 name: identity-stack-template
 description: Return one identity stack template as a vwf template payload — its
   axis fields, per-capability harness mechanisms, and conventions. Invoked by
-  architecture and /vwf-setup after the user picks from the identity menu
+  vwf-architecture and /vwf-setup after the user picks from the identity menu
   — not a general-purpose skill.
 ---
 

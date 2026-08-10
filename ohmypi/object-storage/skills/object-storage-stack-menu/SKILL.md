@@ -2,7 +2,7 @@
 name: object-storage-stack-menu
 description: Return the object-storage templates this plugin offers, as a vwf
   menu payload — deliberately none, with the reason. Invoked by
-  /skill:architecture and /skill:setup when `object-storage` is listed in the config's
+  /skill:vwf-architecture and /skill:vwf-setup when `object-storage` is listed in the config's
   `stacks:` — not a general-purpose skill.
 ---
 

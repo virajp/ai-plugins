@@ -66,6 +66,9 @@ function contextFor(plugin: PluginSource): Context {
     // and survives whatever absolute path the client chose.
     pluginRoot: name => `\${CLAUDE_PLUGIN_ROOT}/../${name}`,
     cmd: ref => `/${ref}`,
+    // Neither target renames a skill directory, so the location is the
+    // authored name.
+    skillName: ref => ref.slice(ref.indexOf(":") + 1),
     target: { id: "claude", caps: CAPABILITIES.claude },
     ...{ plugin: plugin.manifest.name },
   };

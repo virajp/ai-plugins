@@ -44,6 +44,13 @@ dependencies:
   # skill vwf cannot see fails SILENTLY — indistinguishable from one that ran
   # and returned nothing.
   - devtools
+# Skills are named for the workflow stage they run — `plan`, `execute`,
+# `verify`, `product` — which reads well scoped to a plugin and reads like
+# nobody's in particular on a target that flattens every provider into one
+# namespace. vwf ships 25 of them, so it is also the largest single claim on
+# that namespace in this marketplace. On OpenCode and Oh-My-Pi they render as
+# `vwf-plan`, `vwf-execute`, and so on.
+prefixSkillNames: true
 # Binaries that must be on PATH, which is a different claim from depending on
 # the plugin that documents them. All four are tools vwf itself executes.
 requires:

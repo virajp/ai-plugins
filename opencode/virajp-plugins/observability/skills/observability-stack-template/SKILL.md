@@ -2,7 +2,7 @@
 name: observability-stack-template
 description: Return one observability stack template as a vwf template payload —
   its axis fields, per-capability harness mechanisms, and conventions. Invoked by
-  architecture and /vwf-setup after the user picks from the observability
+  vwf-architecture and /vwf-setup after the user picks from the observability
   menu — not a general-purpose skill.
 ---
 

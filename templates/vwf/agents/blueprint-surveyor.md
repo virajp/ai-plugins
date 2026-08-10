@@ -59,7 +59,7 @@ condition; a unit may fail more than one (report the most blocking).
 7. **Stale coherence** — `coherence` present in the passed `remaining` list. 7a.
    **Over-budget doc (density)** — a flow `index.md` over **120** lines, a
    `<platform>.md` over **100**, or an entity `index.md` over **120**, per
-   `<%= it.root %>/skills/blueprint-authoring/references/density.md`.
+   `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/density.md`.
    Count lines only — do **not** judge whether the content is padded; that is
    the condenser's and the reviewer's call, and reading every doc to decide it
    would defeat the point of delegating the survey. Report as `density/<unit>`

@@ -1,7 +1,7 @@
 ---
-description: Code-stage implementer for the execute command. Invoked only
+description: Code-stage implementer for the vwf-execute command. Invoked only
   by
-  execute — do not delegate to it for general tasks. Implements the approved
+  vwf-execute — do not delegate to it for general tasks. Implements the approved
   plan under strict TDD and verifies the coverage gate before handoff to code
   review. Returns the coverage report.
 mode: subagent

@@ -21,6 +21,8 @@ import {
   type Output,
   type Target,
   bundledFiles,
+  flatSkillName,
+  relocate,
   renderDocument,
   ROOT_TOKEN,
   siblingRootToken,
@@ -49,6 +51,18 @@ export const ohmypi: Target = {
     const outputs: Output[] = [];
     const gaps: Gap[] = [];
 
+    // Built over every plugin: prose in one routinely names a skill in
+    // another, and the flat name depends on the *owning* plugin's opt-in.
+    const flatNames = new Map<string, string>();
+    for (const plugin of workspace.plugins) {
+      for (const skill of plugin.skills) {
+        flatNames.set(
+          `${plugin.manifest.name}:${skill.meta.name}`,
+          flatSkillName(plugin.manifest, skill.meta.name),
+        );
+      }
+    }
+
     for (const plugin of workspace.plugins) {
       if (plugin.manifest.source.kind !== "local") {
         // Nothing to render, and `marketplaceJson` no longer catalogues it
@@ -57,7 +71,7 @@ export const ohmypi: Target = {
         continue;
       }
       const before = outputs.length;
-      const emission = renderPlugin(plugin);
+      const emission = renderPlugin(plugin, flatNames);
       outputs.push(...emission.outputs);
       stampOwner(outputs, before, plugin.manifest.name);
       gaps.push(...emission.gaps);
@@ -79,7 +93,7 @@ export const ohmypi: Target = {
  * actually parses one, since 54 descriptions name a sibling command and a
  * spelling users cannot type is worse than no reference at all.
  */
-function contextFor(): Context {
+function contextFor(flatNames: ReadonlyMap<string, string>): Context {
   return {
     root: ROOT_TOKEN,
     pluginRoot: siblingRootToken,
@@ -94,27 +108,45 @@ function contextFor(): Context {
     //   trigger's `[^\s/]+` aside, Oh-My-Pi discovers skills from every
     //   provider into ONE flat namespace keyed by bare name. Cross-plugin
     //   names are already unique (the checker enforces it).
-    cmd: ref => `/skill:${ref.slice(ref.indexOf(":") + 1)}`,
+    //   Prefixed when the owning plugin asks for it, so the suffix is the
+    //   flat name rather than the authored one — `/skill:vwf-plan`.
+    cmd: ref =>
+      `/skill:${flatNames.get(ref) ?? ref.slice(ref.indexOf(":") + 1)}`,
+    skillName: ref => flatNames.get(ref) ?? ref.slice(ref.indexOf(":") + 1),
     target: { id: "ohmypi", caps: CAPABILITIES.ohmypi },
   };
 }
 
-function renderPlugin(plugin: PluginSource): Emission {
+function renderPlugin(
+  plugin: PluginSource,
+  flatNames: ReadonlyMap<string, string>,
+): Emission {
   const base = plugin.manifest.name;
-  const context = contextFor();
+  const context = contextFor(flatNames);
   const outputs: Output[] = [];
 
   for (const skill of plugin.skills) {
+    const flat = flatSkillName(plugin.manifest, skill.meta.name);
+    // The directory carries the flat name as well: a `references/` link in the
+    // body resolves against it, so leaving it authored-named would split one
+    // skill across two identifiers.
+    const from = `skills/${skill.meta.name}`;
+    const to = `skills/${flat}`;
     outputs.push({
-      path: `${base}/${skill.path}`,
+      path: `${base}/${skill.path.replace(from, to)}`,
       contents: fm.emit(
-        toOhMyPiSkill(renderDocument(
-          readFileSync(`${plugin.root}/${skill.path}`, "utf8"),
-          context,
-        )),
+        toOhMyPiSkill(
+          renderDocument(
+            readFileSync(`${plugin.root}/${skill.path}`, "utf8"),
+            context,
+          ),
+          flat,
+        ),
       ),
     });
-    outputs.push(...bundledFiles(skill.extras, base, context));
+    outputs.push(
+      ...bundledFiles(skill.extras.map(relocate(from, to)), base, context),
+    );
   }
 
   for (const agent of plugin.agents) {
@@ -194,8 +226,15 @@ function renderPlugin(plugin: PluginSource): Emission {
  *   stays user-invocable — which is what makes `user` work, and why `model`
  *   loses nothing by going bare.
  */
-function toOhMyPiSkill(doc: fm.Document): fm.Document {
+function toOhMyPiSkill(doc: fm.Document, flatName: string): fm.Document {
   let out = doc;
+
+  // Oh-My-Pi keys a skill by `name:` and resolves `/skill:<name>` by it, so
+  // this is the line that makes the prefix real. A no-op unless the plugin
+  // opted in.
+  if (fm.scalar(doc, "name") !== flatName) {
+    out = fm.set(out, "name", ` ${flatName}`);
+  }
 
   if (fm.get(doc, "paths") !== undefined) {
     out = fm.rename(out, "paths", "globs");

@@ -27,11 +27,11 @@ Before writing, read:
   `<platform>.md` (skip when the flow is non-UI);
 - `<%= it.root %>/assets/standard-flows.md` — the designated numbers, the
   platform vocabulary, and the screen-naming rule;
-- `<%= it.root %>/skills/blueprint-authoring/references/flow-contract.md`
+- `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/flow-contract.md`
   — the completeness bar for steps, jobs, acceptance, the screen home rule;
-- `<%= it.root %>/skills/blueprint-authoring/references/frontmatter-and-links.md`
+- `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/frontmatter-and-links.md`
   — the OKF frontmatter block and typed-link form;
-- `<%= it.root %>/skills/blueprint-authoring/references/ui-ux-contract.md`
+- `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/ui-ux-contract.md`
   — **only when the flow has a Screens section**.
 
 Do not read the other references; they cover surfaces that are not yours.

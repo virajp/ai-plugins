@@ -32,7 +32,7 @@ nothing else in the product to depend on.
 neighbour: it is its own repo, always. A single-repo product that provisions its
 own infrastructure as code therefore has **two** repos — the product, and the
 IaC one beside it — which makes it a small polyrepo, not a single repo. This is
-the one structural rule vwf enforces rather than offers: `doctor` raises a
+the one structural rule vwf enforces rather than offers: `vwf-doctor` raises a
 violation as **blocking**, and `/vwf-setup` offers a consent-gated restructure.
 The reasoning — blast radius, credentials, lifecycle, cadence — is in
 [monorepo](monorepo.md), and holds identically here; a smaller product does not

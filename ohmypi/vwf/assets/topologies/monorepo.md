@@ -27,7 +27,7 @@ my-product/
 ```
 
 Deployables under `projects/`, shared libraries under `packages/`. The grouping
-is a convention `/skill:setup` proposes, not a hard requirement — a repo that
+is a convention `/skill:vwf-setup` proposes, not a hard requirement — a repo that
 already groups its projects differently records what it has.
 
 `docs/blueprint/` lives at the repo root.
@@ -45,8 +45,8 @@ instead.
 **A project with `role: iac` never lives in the monorepo.** It is an independent
 repo, or a submodule of a product parent — which turns a monorepo product into a
 two-member polyrepo the moment it acquires one. This is the single structural
-rule vwf **enforces**: `/skill:doctor` raises a violation as a **blocking** finding,
-and `/skill:setup` offers a consent-gated restructure. Everything else on this page
+rule vwf **enforces**: `/skill:vwf-doctor` raises a violation as a **blocking** finding,
+and `/skill:vwf-setup` offers a consent-gated restructure. Everything else on this page
 is a menu.
 
 The rest of the topology model is deliberately unenforced — a repo shape is a

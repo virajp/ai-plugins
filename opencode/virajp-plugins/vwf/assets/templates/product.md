@@ -10,7 +10,7 @@ status: draft # draft | reviewed | stable
 # <Product Name> — Product
 
 > **Source of truth for why the product exists and what "good" means.** Lives at
-> `docs/blueprint/product.md`, authored by `product` — the Phase −1
+> `docs/blueprint/product.md`, authored by `vwf-product` — the Phase −1
 > foundation before `architecture`. Code- and stack-independent: no technology,
 > project, or screen names — those belong to the registry and the entity docs.
 > Every flow's Purpose links the goal(s) it serves (entities trace to goals
@@ -64,7 +64,7 @@ status: draft # draft | reviewed | stable
 
 <!-- The ordered "build next" list — flows first (the primary blueprint unit),
      entities only when a data contract is itself the slice — what
-     blueprint and plan pick up first, and why. Re-rank on each product re-run;
+     vwf-blueprint and vwf-plan pick up first, and why. Re-rank on each vwf-product re-run;
      history lives in git. With three or more slices, also draw the build order
      as a small mermaid flowchart (slice names only) so the roadmap reads at a
      glance — a view of the table, which stays authoritative. -->

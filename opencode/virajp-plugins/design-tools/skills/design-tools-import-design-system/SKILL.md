@@ -2,7 +2,7 @@
 name: design-tools-import-design-system
 description: Read the design system back from the project's design tool (Claude
   Design, Lovable or Google Stitch) and return it as a vwf design-system
-  payload. Invoked by design-system as its design adapter — not a
+  payload. Invoked by vwf-design-system as its design adapter — not a
   general-purpose skill.
 ---
 

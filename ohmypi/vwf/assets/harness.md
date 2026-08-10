@@ -1,7 +1,7 @@
 # Harness Contract
 
 What a repo must be able to **run** for vwf's verification gates to do their job
-— the capabilities behind the `acceptance` and `ux` stages and `/skill:verify`.
+— the capabilities behind the `acceptance` and `ux` stages and `/skill:vwf-verify`.
 One vocabulary for everyone: `setup` detects against it and stamps the result,
 `plan` injects repair steps against it, the verifiers name what is missing
 against it. A capability is never assumed — it is detected, stamped, and
@@ -31,7 +31,7 @@ observation. *How* the services are started and *how* readiness is signalled are
 the stack plugin's business. A product whose `e2e_local` needs no backing
 services never needs a local stack at all.
 
-## Detection (used by `/skill:setup`)
+## Detection (used by `/skill:vwf-setup`)
 
 Per capability: check the repo's task runner and package scripts for the
 canonical (then near-canonical) names; for `local_stack`, a service definition
@@ -55,10 +55,10 @@ harness:
 
 ## Provision & repair
 
-- **New/empty repos** — `/skill:setup` scaffolds the harness as part of the chosen
+- **New/empty repos** — `/skill:vwf-setup` scaffolds the harness as part of the chosen
   topology's layout (the selected stack templates describe it), in the same
   consent-gated migration plan.
-- **Existing repos** — `/skill:plan` runs a **harness preflight**: read the stamp,
+- **Existing repos** — `/skill:vwf-plan` runs a **harness preflight**: read the stamp,
   re-verify just the capabilities this slice's gates will need (the repo may
   have changed since stamping), and **inject a bootstrap step** into the plan
   for each missing one — built by the coder under the normal

@@ -2,7 +2,7 @@
 name: flow-writer
 description: Writes or updates one flow folder (index.md contract + one
   <platform>.md per implemented platform) and its catalog row for the
-  /skill:blueprint command. Invoked only by /skill:blueprint — do not delegate to it
+  /skill:vwf-blueprint command. Invoked only by /skill:vwf-blueprint — do not delegate to it
   for general tasks. Turns the orchestrator's elicited decisions into a
   format-conformant flow contract; never elicits, never invents a decision.
 tools: ["Read","Write","Edit","Grep","Glob"]
@@ -28,11 +28,11 @@ Before writing, read:
   `<platform>.md` (skip when the flow is non-UI);
 - `%%AI_PLUGINS_ROOT%%/assets/standard-flows.md` — the designated numbers, the
   platform vocabulary, and the screen-naming rule;
-- `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/flow-contract.md`
+- `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/flow-contract.md`
   — the completeness bar for steps, jobs, acceptance, the screen home rule;
-- `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/frontmatter-and-links.md`
+- `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/frontmatter-and-links.md`
   — the OKF frontmatter block and typed-link form;
-- `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/ui-ux-contract.md`
+- `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/ui-ux-contract.md`
   — **only when the flow has a Screens section**.
 
 Do not read the other references; they cover surfaces that are not yours.

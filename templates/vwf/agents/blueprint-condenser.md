@@ -29,7 +29,7 @@ cut — report it and leave the text alone.
 - **Context** — the `conventions.md` anchors and registry facts it references,
   so you can tell a restatement from an original statement.
 
-Read `<%= it.root %>/skills/blueprint-authoring/references/density.md`
+Read `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/density.md`
 first. It is the bar; this file is only how to apply it.
 
 ## What you cut

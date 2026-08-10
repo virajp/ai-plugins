@@ -1,7 +1,7 @@
 ---
 name: orchestration-stack-menu
 description: Return the async-orchestration templates this plugin offers, as a
-  vwf menu payload. Invoked by /skill:architecture and /skill:setup when
+  vwf menu payload. Invoked by /skill:vwf-architecture and /skill:vwf-setup when
   `orchestration` is listed in the config's `stacks:` — not a general-purpose
   skill.
 ---

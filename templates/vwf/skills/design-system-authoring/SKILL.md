@@ -31,15 +31,15 @@ library, CSS framework, or design file — that mapping is realization (`plan`).
 
 | Topic                                                                                                                         | When to read                                                          |
 | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [Foundations](<%= it.root %>/skills/design-system-authoring/references/foundations.md)                                 | **Read first.** What belongs here vs in plan; MASTER + override model |
-| [Color tokens](<%= it.root %>/skills/design-system-authoring/references/color-tokens.md)                               | Semantic, role-based color tokens with light/dark values and contrast |
-| [Typography](<%= it.root %>/skills/design-system-authoring/references/typography.md)                                   | Font pairing and the type scale                                       |
-| [Layout & spacing](<%= it.root %>/skills/design-system-authoring/references/layout-and-spacing.md)                     | Spacing scale, grid, breakpoints, radius, elevation                   |
-| [Motion](<%= it.root %>/skills/design-system-authoring/references/motion.md)                                           | Duration/easing tokens, motion principles, reduced-motion             |
-| [Accessibility](<%= it.root %>/skills/design-system-authoring/references/accessibility.md)                             | The committed accessibility standard (the gate)                       |
-| [Components & anti-patterns](<%= it.root %>/skills/design-system-authoring/references/components-and-anti-patterns.md) | Global component behaviors and what to avoid                          |
-| [Terminal UX](<%= it.root %>/skills/design-system-authoring/references/terminal-ux.md)                                 | CLI/TUI conventions — required when a project declares platform `cli` |
-| [Checklist](<%= it.root %>/skills/design-system-authoring/references/checklist.md)                                     | Pre-delivery gate for the design-system doc                           |
+| [Foundations](references/foundations.md)                                 | **Read first.** What belongs here vs in plan; MASTER + override model |
+| [Color tokens](references/color-tokens.md)                               | Semantic, role-based color tokens with light/dark values and contrast |
+| [Typography](references/typography.md)                                   | Font pairing and the type scale                                       |
+| [Layout & spacing](references/layout-and-spacing.md)                     | Spacing scale, grid, breakpoints, radius, elevation                   |
+| [Motion](references/motion.md)                                           | Duration/easing tokens, motion principles, reduced-motion             |
+| [Accessibility](references/accessibility.md)                             | The committed accessibility standard (the gate)                       |
+| [Components & anti-patterns](references/components-and-anti-patterns.md) | Global component behaviors and what to avoid                          |
+| [Terminal UX](references/terminal-ux.md)                                 | CLI/TUI conventions — required when a project declares platform `cli` |
+| [Checklist](references/checklist.md)                                     | Pre-delivery gate for the design-system doc                           |
 
 Authored by `<%= it.cmd("vwf:design-system") %>`, which elicits these decisions and writes
 `docs/blueprint/design-system.md`.

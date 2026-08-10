@@ -20,7 +20,7 @@ API contracts, and the coverage stamp ignores it. It is registered so `plan`,
 `doctor` and `execute` can see it and change it as part of a slice.
 
 **An `iac` project lives in its own repo** — independent, or a submodule of the
-product parent. vwf enforces this (`doctor` raises a violation as
+product parent. vwf enforces this (`vwf-doctor` raises a violation as
 blocking); the reasoning is in the vwf plugin's `assets/topologies/`. So this
 template scaffolds a **repo**, not a directory in someone else's.
 
@@ -51,5 +51,5 @@ template scaffolds a **repo**, not a directory in someone else's.
 
 Infrastructure changes are irreversible far more often than application changes,
 so an `iac` step in a plan states its **blast radius** and whether the apply
-is reversible. `execute` treats an irreversible infrastructure apply as a
+is reversible. `vwf-execute` treats an irreversible infrastructure apply as a
 halt for human confirmation, like any other irreversible decision.

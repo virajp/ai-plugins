@@ -37,7 +37,7 @@ The parent holds everything product-wide: the blueprint, mise config, CI glue,
 the local stack. `<%= it.cmd("vwf:setup") %>` and every other vwf command run **there**.
 
 Each member is classified on its own signals per
-[topology detection](<%= it.root %>/skills/project-setup/references/topology-detection.md)
+[topology detection](<%= it.root %>/skills/<%= it.skillName("vwf:project-setup") %>/references/topology-detection.md)
 — a member may be a monorepo or a single repo, and each carries its own
 `repo.stack` block.
 

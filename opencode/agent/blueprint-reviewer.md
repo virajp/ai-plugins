@@ -1,7 +1,7 @@
 ---
-description: Stateless completeness reviewer for the blueprint command.
+description: Stateless completeness reviewer for the vwf-blueprint command.
   Invoked
-  only by blueprint — do not delegate to it for general tasks. Checks a
+  only by vwf-blueprint — do not delegate to it for general tasks. Checks a
   written flow or entity doc against the completeness checklist for the mode
   the orchestrator names and returns NO GAPS or a numbered gap list. Pass only
   the doc plus the conventions anchors and registry block it references — no
@@ -156,7 +156,7 @@ orchestrator passes both. Verify the contract and every platform file:
 - [ ] Section-to-project mappings match the registry (by project **name** and
       `role` — the registry has no stack to match against).
 - [ ] **Density** — apply the bars in
-      `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/density.md`.
+      `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every step, screen, and job
       traces to a **linked product-doc goal** (the Serves line) or a stated
       invariant — flag anything added "just in case". Never flag a surface a
@@ -211,7 +211,7 @@ The doc is `docs/blueprint/entities/<entity>/` — **always** `index.md` +
       `%%AI_PLUGINS_ROOT%%/assets/capability-vocabulary.md`, never the
       product.
 - [ ] **Density** — apply the bars in
-      `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/density.md`.
+      `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every field, state, and
       relationship traces to a linked flow (the Used-by line) or a stated
       invariant. Never flag a surface a safety guardrail requires.

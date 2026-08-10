@@ -1,7 +1,7 @@
 ---
 name: blueprint-surveyor
-description: Stateless coverage surveyor for the /skill:blueprint command. Invoked
-  only by /skill:blueprint at the start of a sweep — do not delegate to it for
+description: Stateless coverage surveyor for the /skill:vwf-blueprint command. Invoked
+  only by /skill:vwf-blueprint at the start of a sweep — do not delegate to it for
   general tasks. Walks the blueprint bundle against the coverage conditions and
   returns the ordered worklist of units that fail. Pass paths only — no
   conversation context.
@@ -60,7 +60,7 @@ condition; a unit may fail more than one (report the most blocking).
 7. **Stale coherence** — `coherence` present in the passed `remaining` list. 7a.
    **Over-budget doc (density)** — a flow `index.md` over **120** lines, a
    `<platform>.md` over **100**, or an entity `index.md` over **120**, per
-   `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/density.md`.
+   `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/density.md`.
    Count lines only — do **not** judge whether the content is padded; that is
    the condenser's and the reviewer's call, and reading every doc to decide it
    would defeat the point of delegating the survey. Report as `density/<unit>`

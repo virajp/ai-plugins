@@ -1,7 +1,7 @@
 ---
 name: datastore-stack-menu
 description: Return the datastore templates this plugin offers, as a vwf menu
-  payload. Invoked by /skill:architecture and /skill:setup when `datastore` is listed
+  payload. Invoked by /skill:vwf-architecture and /skill:vwf-setup when `datastore` is listed
   in the config's `stacks:` — not a general-purpose skill.
 ---
 

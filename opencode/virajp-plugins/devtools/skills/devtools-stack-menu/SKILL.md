@@ -1,7 +1,7 @@
 ---
 name: devtools-stack-menu
 description: Return the stack templates the devtools plugin offers, as a vwf
-  menu payload. Invoked by architecture and /vwf-setup when `devtools` is
+  menu payload. Invoked by vwf-architecture and /vwf-setup when `devtools` is
   listed in the config's `stacks:` — not a general-purpose skill.
 ---
 

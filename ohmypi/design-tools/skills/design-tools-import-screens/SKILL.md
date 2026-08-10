@@ -2,7 +2,7 @@
 name: design-tools-import-screens
 description: Read a flow's designed screens back from the project's design tool
   (Claude Design, Lovable or Google Stitch) and return them as a vwf screens
-  payload. Invoked by /skill:screens import as its design adapter — not a
+  payload. Invoked by /skill:vwf-screens import as its design adapter — not a
   general-purpose skill.
 ---
 
@@ -37,7 +37,7 @@ the registry project vwf named — never against "the product".
 
 Read `projects.<project>.design` in `.config/vwf.yaml`. That is the only key —
 there is no product-wide fallback. A config still carrying the pre-`13`
-`design.tool` is drift for `/skill:setup`'s `12 → 13` migration to copy down;
+`design.tool` is drift for `/skill:vwf-setup`'s `12 → 13` migration to copy down;
 reading it here would make that migration optional and leave two answers to one
 question in the config.
 
@@ -79,7 +79,7 @@ adapter reference for this tool.
   key and a fabricated one silently maps a design onto the wrong contract row.
 - **Report, don't interpret.** A component the design shows but the contract
   does not mention is still reported — deciding whether it is an addition or a
-  mistake is `/skill:screens import`'s job, and then `/skill:blueprint`'s.
+  mistake is `/skill:vwf-screens import`'s job, and then `/skill:vwf-blueprint`'s.
 - **Never write to the design tool, and never to `docs/blueprint/`.** Import is
   a read.
 

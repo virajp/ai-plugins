@@ -1,7 +1,7 @@
 ---
 name: entity-writer
 description: Writes or updates one entity's index.md and schema.yaml plus its
-  catalog row for the /skill:blueprint command. Invoked only by /skill:blueprint —
+  catalog row for the /skill:vwf-blueprint command. Invoked only by /skill:vwf-blueprint —
   do not delegate to it for general tasks. Turns the orchestrator's elicited
   decisions into a format-conformant data contract; never elicits, never invents
   a decision.
@@ -27,11 +27,11 @@ Before writing, read:
 
 - `%%AI_PLUGINS_ROOT%%/assets/templates/entity.md` and
   `%%AI_PLUGINS_ROOT%%/assets/templates/schema.yaml` — the structures to fill;
-- `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/entity-contract.md`
+- `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/entity-contract.md`
   — the completeness bar for lifecycle, relationships, invariants, concurrency;
-- `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/api-and-schema-contracts.md`
+- `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/api-and-schema-contracts.md`
   — the `schema.yaml` bar and YAML path-typing;
-- `%%AI_PLUGINS_ROOT%%/skills/blueprint-authoring/references/frontmatter-and-links.md`
+- `%%AI_PLUGINS_ROOT%%/skills/vwf-blueprint-authoring/references/frontmatter-and-links.md`
   — the OKF frontmatter block and typed-link form.
 
 Do not read the other references; they cover surfaces that are not yours.

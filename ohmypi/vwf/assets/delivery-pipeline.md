@@ -2,9 +2,9 @@
 
 The canonical environment vocabulary and the CI/CD contract every product
 follows — **enforced, not elicited** (the engineering-baseline mechanism).
-`/skill:blueprint` seeds it into `conventions.md#pipeline` on first touch; the
+`/skill:vwf-blueprint` seeds it into `conventions.md#pipeline` on first touch; the
 **cicd** plugin's workflow generator conforms to it when writing
-pipelines; `/skill:verify` resolves environments by it. Exceptions are the
+pipelines; `/skill:vwf-verify` resolves environments by it. Exceptions are the
 doc-note + `enforcement.rules` waiver pair (`pipeline/<rule>[/<unit>]`).
 
 ## Environments (canonical names)
@@ -46,7 +46,7 @@ literally named `production`).
 4. **`pipeline/staging-is-not-a-release`** — a staging deploy is a test
    artifact, never a production release: nothing about it is announced,
    changelogged as released, or frozen. A production release is recorded only by
-   `/skill:verify`'s clean run against `production` (the `apis/released/`
+   `/skill:vwf-verify`'s clean run against `production` (the `apis/released/`
    snapshot + changelog per the release foundation).
 5. **`pipeline/tested-before-release`** — no deploy step runs until the tagged
    project's tests **and its dependents'** tests pass in the same workflow run.
@@ -56,10 +56,10 @@ literally named `production`).
 
 ## How the surfaces apply it
 
-- **`/skill:blueprint`** seeds `#pipeline` into `conventions.md` on first touch
+- **`/skill:vwf-blueprint`** seeds `#pipeline` into `conventions.md` on first touch
   (beside `#baseline`) and normalizes environment synonyms it encounters in docs
   as drift to fix, never silently.
-- **`/skill:verify`** resolves its target environment by canonical name (a synonym
+- **`/skill:vwf-verify`** resolves its target environment by canonical name (a synonym
   in `environments:` is flagged as drift); its release offer stays
   production-only — rule 4 is why.
 - **The cicd plugin** (`/skill:workflow`) generates release

@@ -12,7 +12,7 @@ MCQ.
 - a `.gitmodules` naming child repos (child dirs carrying their own `.git`) →
   **polyrepo**: a parent repo holding the vwf docs, with each child classified
   on its own signals. See
-  [structure](<%= it.root %>/skills/project-setup/references/workspace-structure.md)
+  [structure](references/workspace-structure.md)
   for the topology menu and how a choice is recorded.
 
 Manifests are language-specific and vwf holds no list of them. Recognise the

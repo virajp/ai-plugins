@@ -40,15 +40,15 @@ them on every turn — write for that reader, not for a human skimming a spec.
 
 | Topic                                                                                                             | When to read                                                                                                            |
 | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| [Contract vs realization](<%= it.root %>/skills/blueprint-authoring/references/contract-vs-realization.md) | **Read first.** Sorting any decision into blueprint / plan / execute; the code-independence test                        |
-| [Density](<%= it.root %>/skills/blueprint-authoring/references/density.md)                                 | **Read with it.** Per-doc line budgets, the delete test, and the anti-patterns that inflate a contract                  |
-| [Flow contract](<%= it.root %>/skills/blueprint-authoring/references/flow-contract.md)                     | The primary unit: per-flow sections, the screen home rule, jobs, the sequence diagram, acceptance, and `flows/index.md` |
-| [Entity contract](<%= it.root %>/skills/blueprint-authoring/references/entity-contract.md)                 | The slimmed entity: lifecycle, invariants, relationships, `Used by:`, the schema link — and what moved to flows         |
-| [API & schema contracts](<%= it.root %>/skills/blueprint-authoring/references/api-and-schema-contracts.md) | The YAML artifacts: `schema.yaml` and `apis/<project>.openapi.yaml` bars, path-typing, released-snapshot additive rule  |
-| [UI / UX contract](<%= it.root %>/skills/blueprint-authoring/references/ui-ux-contract.md)                 | Per-screen decisions (on the owning flow): navigation, interaction patterns, state UX, forms                            |
-| [Environment & secrets](<%= it.root %>/skills/blueprint-authoring/references/environment-catalog.md)       | The `environment.md` catalog: env-var/secret inventory, classification, no values, the config-mechanism line            |
-| [Frontmatter & links](<%= it.root %>/skills/blueprint-authoring/references/frontmatter-and-links.md)       | The OKF profile: mandatory frontmatter, the `type` vocabulary, the `implementation:` key, YAML path-typing, typed links |
-| [Quick reference](<%= it.root %>/skills/blueprint-authoring/references/quick-reference.md)                 | The sort test + per-surface completeness checklist (also the reviewer's bar)                                            |
+| [Contract vs realization](references/contract-vs-realization.md) | **Read first.** Sorting any decision into blueprint / plan / execute; the code-independence test                        |
+| [Density](references/density.md)                                 | **Read with it.** Per-doc line budgets, the delete test, and the anti-patterns that inflate a contract                  |
+| [Flow contract](references/flow-contract.md)                     | The primary unit: per-flow sections, the screen home rule, jobs, the sequence diagram, acceptance, and `flows/index.md` |
+| [Entity contract](references/entity-contract.md)                 | The slimmed entity: lifecycle, invariants, relationships, `Used by:`, the schema link — and what moved to flows         |
+| [API & schema contracts](references/api-and-schema-contracts.md) | The YAML artifacts: `schema.yaml` and `apis/<project>.openapi.yaml` bars, path-typing, released-snapshot additive rule  |
+| [UI / UX contract](references/ui-ux-contract.md)                 | Per-screen decisions (on the owning flow): navigation, interaction patterns, state UX, forms                            |
+| [Environment & secrets](references/environment-catalog.md)       | The `environment.md` catalog: env-var/secret inventory, classification, no values, the config-mechanism line            |
+| [Frontmatter & links](references/frontmatter-and-links.md)       | The OKF profile: mandatory frontmatter, the `type` vocabulary, the `implementation:` key, YAML path-typing, typed links |
+| [Quick reference](references/quick-reference.md)                 | The sort test + per-surface completeness checklist (also the reviewer's bar)                                            |
 | [Worked example](<%= it.root %>/assets/examples/blueprint/entities/order/index.md)                         | A format-valid conformance bundle (flows + entities + apis + conventions + design-system + environment)                 |
 
 For API contract depth (resources, methods, errors, pagination, idempotency,
@@ -59,6 +59,6 @@ versioning), use the **rest-api-design** skill — do not restate it here.
 skill — the entity completeness bars here do not apply to it. Plan and
 gap-report docs under `docs/plans/**` (types `vwf-plan` / `vwf-gap-report`) are
 in scope for **only** the
-[Frontmatter & links](<%= it.root %>/skills/blueprint-authoring/references/frontmatter-and-links.md)
+[Frontmatter & links](references/frontmatter-and-links.md)
 reference (valid frontmatter + resolving typed links) — none of the entity
 doctrine applies to them.
