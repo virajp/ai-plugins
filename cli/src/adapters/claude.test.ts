@@ -1,8 +1,10 @@
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -39,6 +41,18 @@ let cwd: string;
 let context: AdapterContext;
 let ran: string[][];
 let logged: string[];
+let savedXdgData: string | undefined;
+
+/**
+ * Where the payload lands, derived the same way the adapter derives it.
+ *
+ * `home` is the throwaway config dir, so this stays inside it — provided
+ * `XDG_DATA_HOME` is cleared, which `beforeEach` does. A developer with that
+ * variable exported would otherwise have these tests write into their real
+ * data directory.
+ */
+const marketplaceRoot = () =>
+  join(configDir, ".local", "share", "virajp", "ai-plugins", "claude");
 
 const userSettings = () => join(configDir, "settings.json");
 const projectSettings = () => join(cwd, ".claude", "settings.json");
@@ -102,6 +116,10 @@ beforeEach(() => {
   ran = [];
   logged = [];
   process.env["CLAUDE_CONFIG_DIR"] = configDir;
+  // Cleared, not set: `dataDir` prefers it over `home`, so a developer with it
+  // exported would have the payload copied into their real data directory.
+  savedXdgData = process.env["XDG_DATA_HOME"];
+  delete process.env["XDG_DATA_HOME"];
   context = {
     sourceRoot: repoRoot,
     home: configDir,
@@ -115,6 +133,12 @@ beforeEach(() => {
 });
 afterEach(() => {
   delete process.env["CLAUDE_CONFIG_DIR"];
+  if (savedXdgData === undefined) {
+    delete process.env["XDG_DATA_HOME"];
+  }
+  else {
+    process.env["XDG_DATA_HOME"] = savedXdgData;
+  }
   rmSync(configDir, { recursive: true, force: true });
   rmSync(cwd, { recursive: true, force: true });
 });
@@ -140,11 +164,84 @@ describe("claude adapter", () => {
     }
   });
 
+  it("copies the payload somewhere that outlives the pnpm store", () => {
+    // The whole point: `pnpx` is `pnpm dlx`, so sourceRoot is a temporary
+    // store path that `pnpm store prune` reclaims. Registering it left Claude
+    // pointed at a directory with a shorter life than the install.
+    claude.apply(context, planFor(["markdown"]));
+
+    const manifest = join(
+      marketplaceRoot(),
+      ".claude-plugin",
+      "marketplace.json",
+    );
+    expect(existsSync(manifest)).toBe(true);
+    // Byte-identical: the layout is preserved precisely so the manifest never
+    // has to be rewritten at install time.
+    expect(readFileSync(manifest, "utf8")).toBe(
+      readFileSync(
+        join(repoRoot, ".claude-plugin", "marketplace.json"),
+        "utf8",
+      ),
+    );
+    // `./claude/plugins/<name>` resolves against the marketplace root, which is
+    // why the doubled `claude` below is the contract rather than an accident.
+    expect(existsSync(join(marketplaceRoot(), "claude", "plugins", "vwf")))
+      .toBe(true);
+    expect(read(userSettings())["extraKnownMarketplaces"]["virajp-plugins"])
+      .toEqual({ source: { source: "directory", path: marketplaceRoot() } });
+  });
+
+  it("preserves the executable bit on hook scripts", () => {
+    // The regression guard for using `cpSync` over `copyTree`. `copyTree`
+    // writes anything matching its TEXT regex — which includes `sh` — through
+    // `writeFileAtomic`, losing the source mode. OpenCode ships its mempalace
+    // hooks at 644 for exactly this reason, and Claude runs its hooks
+    // directly, so a non-executable one is a hook that does not fire.
+    claude.apply(context, planFor(["vwf"]));
+
+    const hook = join(
+      marketplaceRoot(),
+      "claude",
+      "plugins",
+      "vwf",
+      "hooks",
+      "mempalace-checkpoint.sh",
+    );
+    expect(existsSync(hook)).toBe(true);
+    expect(statSync(hook).mode & 0o111).not.toBe(0);
+  });
+
+  it("drops content that no longer exists upstream", () => {
+    claude.apply(context, planFor(["markdown"]));
+    const stray = join(marketplaceRoot(), "claude", "plugins", "gone-away");
+    mkdirSync(stray, { recursive: true });
+    writeFileSync(join(stray, "SKILL.md"), "retired");
+
+    claude.apply(context, planFor(["markdown"]));
+
+    // Cleared before copying, the same rule `plugins:build` follows: a stale
+    // file nobody rendered is indistinguishable from a current one.
+    expect(existsSync(stray)).toBe(false);
+  });
+
+  it("removes the payload on uninstall, even after two installs", () => {
+    // The case `createdFile` exists for, one level up. Recording the tree as
+    // pre-existing on the second run would make this uninstall restore the
+    // first run's payload rather than remove it.
+    claude.apply(context, planFor(["markdown"]));
+    const { receipt } = claude.apply(context, planFor(["markdown"]));
+
+    claude.revert(context, receipt);
+
+    expect(existsSync(marketplaceRoot())).toBe(false);
+  });
+
   it("declares the marketplace, then installs each plugin", () => {
     claude.apply(context, planFor(["markdown"]));
 
     expect(ran.map(c => c.join(" "))).toEqual([
-      `claude plugin marketplace add ${repoRoot}`,
+      `claude plugin marketplace add ${marketplaceRoot()}`,
       "claude plugin install markdown@virajp-plugins --scope user",
     ]);
   });
@@ -154,7 +251,7 @@ describe("claude adapter", () => {
     claude.apply(context, planFor(["markdown"]));
 
     const add = ran.find(c => c.includes("marketplace"));
-    expect(add?.at(-1)).toBe(repoRoot);
+    expect(add?.at(-1)).toBe(marketplaceRoot());
     expect(add?.at(-1)?.startsWith("/")).toBe(true);
   });
 
@@ -224,6 +321,9 @@ describe("claude adapter", () => {
     const store = mkdtempSync(join(tmpdir(), "ai-plugins-store-"));
     const newer = join(store, "node_modules", "@askviraj", "ai-plugins");
     mkdirSync(join(newer, ".claude-plugin"), { recursive: true });
+    // The payload copy needs both halves present, since their relative
+    // positions are what the manifest's `./claude/plugins/…` sources rely on.
+    mkdirSync(join(newer, "claude", "plugins"), { recursive: true });
     write(
       join(newer, ".claude-plugin", "marketplace.json"),
       { name: "virajp-plugins", plugins: [] },
@@ -241,13 +341,17 @@ describe("claude adapter", () => {
     // Remove then add, in that order — `claude` has no re-point command.
     expect(marketplace[0]?.includes("remove")).toBe(true);
     expect(marketplace[1]?.includes("add")).toBe(true);
-    expect(marketplace[1]?.at(-1)).toBe(newer);
+    // The managed directory, NOT the store path it was read from. This is the
+    // migration: without it every existing user keeps a pin that their next
+    // `pnpm store prune` deletes.
+    expect(marketplace[1]?.at(-1)).toBe(marketplaceRoot());
     expect(logged.join("\n")).toMatch(/re-pointed/);
   });
 
   it("leaves a pin that is not an install of this package alone", () => {
     // A git clone, or anywhere else the user pointed it deliberately. Only a
-    // path inside a node_modules copy of this package counts as ours to move.
+    // path inside a node_modules copy of this package, or inside the managed
+    // data directory, counts as ours to move.
     write(userSettings(), {
       extraKnownMarketplaces: {
         "virajp-plugins": {
@@ -276,9 +380,14 @@ describe("claude adapter", () => {
 
     expect(ran).toEqual([]);
     expect(actions.map(a => a.summary)).toEqual([
-      `claude plugin marketplace add ${repoRoot}`,
+      `copy the marketplace payload to ${marketplaceRoot()}`,
+      `claude plugin marketplace add ${marketplaceRoot()}`,
       "claude plugin install markdown@virajp-plugins --scope user",
     ]);
+    // One line for 527 files. Recording them individually would bury the two
+    // commands that actually change Claude's state.
+    expect(actions).toHaveLength(3);
+    expect(existsSync(marketplaceRoot())).toBe(false);
   });
 
   it("reverts by running the CLI's own removals, in reverse", () => {

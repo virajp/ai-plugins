@@ -599,8 +599,31 @@ function walkUpForPackage(start: string): string | undefined {
  * cannot find the receipt has nothing to restore from.
  */
 function receiptDir(): string {
-  const base = process.env["XDG_CONFIG_HOME"] ?? join(homedir(), ".config");
-  return join(base, "ai-plugins", "receipts");
+  return join(configBase(), "ai-plugins", "receipts");
+}
+
+/**
+ * The config root, matching `dataDir`'s treatment of the data root.
+ *
+ * `XDG_CONFIG_HOME` wins, then the platform default. Windows gets `APPDATA`
+ * rather than a literal `~/.config`, which is a POSIX convention that means
+ * nothing there. Fixed alongside the data directory rather than separately:
+ * one of the two following the OS and the other not is the kind of split that
+ * only shows up as a bug report from the one platform nobody tests on.
+ */
+function configBase(): string {
+  const xdg = process.env["XDG_CONFIG_HOME"];
+  if (xdg !== undefined && xdg.length > 0) {
+    return xdg;
+  }
+  if (process.platform === "win32") {
+    const appData = process.env["APPDATA"];
+    if (appData !== undefined && appData.length > 0) {
+      return appData;
+    }
+    return join(homedir(), "AppData", "Roaming");
+  }
+  return join(homedir(), ".config");
 }
 
 /**

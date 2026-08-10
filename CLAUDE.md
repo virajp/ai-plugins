@@ -94,6 +94,17 @@ target, not chosen:
   with a lockfile. Cursor has no CLI, so its adapter writes the reference
   itself.
 
+**A marketplace adapter still has to answer *where the bytes live*.** Oh-My-Pi
+copies into its own cache and Cursor resolves from git, so both are done once
+the command returns. **Claude re-reads its `directory` source on every later
+session**, so the path outlives the run — and pointing it at
+`context.sourceRoot` pointed it at a `pnpm dlx` store path that
+`pnpm store prune` reclaims. It therefore copies the payload to
+`~/.local/share/virajp/ai-plugins/claude` (XDG, `LOCALAPPDATA` on Windows) and
+registers that. A `github` source would also be durable, but `marketplace add`
+takes no ref, so every user would track `main` instead of the version they
+installed.
+
 **Scope is declared by `plugin.yaml` and honoured where the target supports it;
 where it does not, the request falls back rather than failing.** Only OpenCode
 and Oh-My-Pi support both natively. Cursor is project-only — user-scope
@@ -106,6 +117,18 @@ the command that undoes it — deleting their files directly would leave the
 tool's own records claiming an install that is gone. An undo is recorded **only
 when the command changed something**, so uninstall never removes a marketplace
 the user registered themselves.
+
+Entry kinds differ by **who else writes there**, which is the whole distinction:
+`file` and `configKey` capture prior contents because the path is shared; `dir`
+removes only when empty, for the same reason; **`tree` removes recursively**,
+and is therefore only ever pointed at a directory nothing but this tool writes
+to. `tree` also keeps a bulk payload out of the entry list — Claude's
+marketplace is 527 files, and recording them one by one would be 527 lines of
+run report for one logical action, with an uninstall that still had to trust the
+list was complete. `RECEIPT_VERSION` is **3**; `readReceipt` refuses only a
+*future* version, so older receipts still revert, while an older CLI refuses a
+`tree` it would otherwise skip — a half-revert reported as a clean uninstall is
+the failure worth preventing.
 
 ### Tasks
 
@@ -757,9 +780,10 @@ Layout:
   installed the way `bin/claude.mjs` asked `claude plugin list --json`; with
   four targets that is four bookkeeping formats. Instead, a plugin's version *in
   this build* is what an install would give you — every target reads `<target>/`
-  in place or copies it — so the local manifest against the one on `main`
-  answers it for all four at once. A plugin here but not on `main` is labelled
-  `(not on main yet)` rather than left bare, which read as a failed lookup.
+  from this package, in place or copied — so the local manifest against the one
+  on `main` answers it for all four at once. A plugin here but not on `main` is
+  labelled `(not on main yet)` rather than left bare, which read as a failed
+  lookup.
 - `cli/src/statusline.ts` — the Claude statusline installer. Not a plugin and
   therefore not an adapter; wired straight from the router with its own receipt.
   See Statusline below.
@@ -859,10 +883,11 @@ exposes no ambient rate-limit state at all, which is also why its bar carries no
 
 **`--version` / `--upgrade`.** See `cli/src/version.ts` above for what
 `--version` compares. `--upgrade` replays each target's receipt: **installing is
-already upgrading**, since every target reads `<target>/` in place or copies it,
-so there is no per-tool update command to drive. Combined with an install
-request the install phase covers it, and only the newer-CLI note is kept. A
-receipt written before plans were recorded is reported, not silently skipped.
+already upgrading**, since every target reads `<target>/` from this package — in
+place or copied — so there is no per-tool update command to drive. Combined with
+an install request the install phase covers it, and only the newer-CLI note is
+kept. A receipt written before plans were recorded is reported, not silently
+skipped.
 
 **`--uninstall` / `--dry-run`.** Uninstall reverts from the receipt, which
 records prior state — so it restores rather than guessing, and leaves the seeded
@@ -877,13 +902,15 @@ Users run it via `pnpx @askviraj/ai-plugins …`.
 There is deliberately no standalone binary, no Homebrew tap and no Scoop bucket.
 
 A binary here could never be self-contained: Claude and Oh-My-Pi each register a
-marketplace whose source is a real rendered directory, which the agent re-reads
-*in place* on every later session, so the payload has to sit on disk beside the
-executable rather than inside it. That made every non-npm channel a per-platform
-archive plus a per-release checksum file plus an extract-and-symlink installer —
-a second distribution system to keep current, delivering exactly what the npm
-package already delivers. So `packageRoot()` resolves from `import.meta.dirname`
-alone, and Windows users run the same `pnpx` command everyone else does.
+marketplace whose source is a real rendered directory, so the payload has to
+exist on disk as files rather than inside the executable. (Claude copies its
+copy to `~/.local/share/virajp/ai-plugins` first — see the adapter note above —
+but that only moves *which* directory it is, not the fact that there has to be
+one.) That made every non-npm channel a per-platform archive plus a per-release
+checksum file plus an extract-and-symlink installer — a second distribution
+system to keep current, delivering exactly what the npm package already
+delivers. So `packageRoot()` resolves from `import.meta.dirname` alone, and
+Windows users run the same `pnpx` command everyone else does.
 
 **Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
 replace wholesale; either layer may be absent):

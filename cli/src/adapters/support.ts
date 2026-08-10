@@ -58,6 +58,54 @@ export function claudeConfigDir(home: string): string {
 }
 
 /**
+ * Where this tool keeps data it owns, as opposed to config it edits.
+ *
+ * `XDG_DATA_HOME` wins, then the platform default. Windows gets `LOCALAPPDATA`
+ * rather than a literal `~/.local/share`, which is a POSIX convention that
+ * means nothing there — and this is a payload, not a dotfile, so it belongs
+ * where the OS puts application data.
+ *
+ * Taken from the injected `home` rather than `homedir()`: the tests point a
+ * whole install at a throwaway directory, and an adapter reaching past the
+ * context writes into the developer's real one.
+ */
+export function dataDir(home: string): string {
+  const xdg = process.env["XDG_DATA_HOME"];
+  if (xdg !== undefined && xdg.length > 0) {
+    return join(xdg, "virajp", "ai-plugins");
+  }
+  if (process.platform === "win32") {
+    const local = process.env["LOCALAPPDATA"];
+    const base = local !== undefined && local.length > 0
+      ? local
+      : join(home, "AppData", "Local");
+    return join(base, "virajp", "ai-plugins");
+  }
+  return join(home, ".local", "share", "virajp", "ai-plugins");
+}
+
+/**
+ * The Claude marketplace root this tool maintains.
+ *
+ * **Fixed across versions on purpose.** A versioned path would change the pin
+ * on every release, forcing a `marketplace remove` + `add` each upgrade and
+ * accumulating dead trees. A fixed one keeps the property the adapter already
+ * relies on — Claude re-reads it in place, so refreshed content is picked up
+ * without re-registering — while moving the bytes somewhere that outlives a
+ * `pnpm store prune`.
+ *
+ * The doubled `claude` below is not a mistake. The manifest's plugin sources
+ * are `./claude/plugins/<name>` and resolve against the **marketplace root**,
+ * so the copy has to preserve the repo-root-relative layout for the manifest to
+ * stay byte-identical to the committed one. Flattening would mean rewriting
+ * every `source` at install time — an install-time mutation of generated
+ * output, which is the divergence `plugins:render-clean` exists to prevent.
+ */
+export function claudeMarketplaceRoot(home: string): string {
+  return join(dataDir(home), "claude");
+}
+
+/**
  * The shortest prefix of `path` that is absent from the document.
  *
  * That prefix is what this install creates, and therefore what an uninstall has
@@ -103,17 +151,32 @@ export function isPackageInstall(path: string, packageName: string): boolean {
 /**
  * Should a marketplace pin be moved from `declared` to `current`?
  *
- * True only when they differ **and both** are installs of this package — one
- * version of it handing over to another. Anything else is the user's.
+ * True only when they differ **and both** are paths this tool produced — one
+ * install of it handing over to another. Anything else is the user's, and
+ * re-pointing it would install from the wrong copy.
+ *
+ * A path is ours if it is inside a `node_modules` install of this package, or
+ * inside `managedBase` when one is given. Both halves are needed and neither
+ * alone suffices: the migration off the pnpm store is precisely the case where
+ * `declared` is a package install and `current` is the managed directory, so
+ * testing only one would leave every existing user pinned to a path their next
+ * `pnpm store prune` deletes.
  */
 export function isStalePin(
   declared: string,
   current: string,
   packageName: string,
+  managedBase?: string,
 ): boolean {
-  return declared !== current
-    && isPackageInstall(declared, packageName)
-    && isPackageInstall(current, packageName);
+  const ours = (path: string) =>
+    isPackageInstall(path, packageName)
+    || (managedBase !== undefined && isInside(path, managedBase));
+  return declared !== current && ours(declared) && ours(current);
+}
+
+/** Is `path` `base` itself, or beneath it? */
+function isInside(path: string, base: string): boolean {
+  return path === base || path.startsWith(`${base}/`);
 }
 
 /**

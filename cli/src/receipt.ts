@@ -23,10 +23,16 @@ import writeFileAtomic from "write-file-atomic";
 import type { Scope } from "./adapters/types.ts";
 
 /**
- * 2 added the `command` entry. A v1 receipt still reverts correctly, so the
- * guard in `readReceipt` only refuses receipts from a *future* version.
+ * 2 added the `command` entry; 3 added `tree`. A v1 or v2 receipt still reverts
+ * correctly, so the guard in `readReceipt` only refuses receipts from a *future*
+ * version.
+ *
+ * 3 is the first bump that had to happen. An older CLI meeting a `tree` entry
+ * would fall through its `switch` and silently leave the whole directory behind
+ * — a half-revert reported as a clean uninstall. Refusing the receipt outright
+ * is the honest failure, and that is what the version guard buys.
  */
-export const RECEIPT_VERSION = 2;
+export const RECEIPT_VERSION = 3;
 
 export type Entry =
   /** A file we wrote. `previous` is absent when we created it. */
@@ -38,6 +44,21 @@ export type Entry =
   }
   /** A directory we created; removed on revert only if it is empty. */
   | { readonly kind: "dir"; readonly path: string; }
+  /**
+   * A directory this tool owns **outright**, removed recursively on revert.
+   *
+   * The distinction from `dir` is who else writes there. `dir` guards a
+   * directory the user shares — `~/.claude/scripts` — so it is removed only
+   * when empty. A `tree` is a path nothing but this tool ever writes to, which
+   * is what makes recursive removal safe rather than reckless.
+   *
+   * It also exists to keep a payload out of the entry list. Recording the
+   * Claude marketplace file by file would be 527 entries and 527 lines of run
+   * report for one logical action, and an uninstall would still have to trust
+   * that the list was complete — where removing the root cannot miss a file
+   * a later version added.
+   */
+  | { readonly kind: "tree"; readonly path: string; }
   /**
    * A key we set inside someone else's config. `previous` is absent when the
    * key did not exist — that is the signal to delete rather than restore, and
@@ -137,6 +158,19 @@ export class ReceiptBuilder {
     if (!existsSync(path)) {
       this.entries.push({ kind: "dir", path });
     }
+    return this;
+  }
+
+  /**
+   * Record a directory this tool owns outright, to be removed recursively.
+   *
+   * Recorded unconditionally, unlike `dir`. A tree already on disk holding our
+   * bytes is ours whichever run put it there — the same reasoning as
+   * `createdFile`, and for the same reason: capturing it as pre-existing would
+   * make an uninstall *after a second install* leave the payload behind.
+   */
+  tree(path: string): this {
+    this.entries.push({ kind: "tree", path });
     return this;
   }
 
@@ -249,6 +283,13 @@ export function revert(receipt: Receipt, hooks: RevertHooks): void {
         catch {
           // A directory we cannot remove is not a failed uninstall.
         }
+        break;
+      }
+      case "tree": {
+        // Recursive, because nothing but this tool writes here. `force` covers
+        // the path already being gone, which an interrupted uninstall or a
+        // hand-deleted payload both produce.
+        rmSync(entry.path, { recursive: true, force: true });
         break;
       }
       case "configKey": {
