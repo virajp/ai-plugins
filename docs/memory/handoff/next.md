@@ -1,97 +1,110 @@
 # Handoff: next
 
-The vwf re-architecture ran to completion. All eight waves landed, every gate is
-green, nothing is pushed. Two follow-up items were then directed by the user and
-are **not started**.
+The stack-closure work and four releases are **done, merged, and published**.
+Nothing is in flight. `main` is clean and in sync with `origin/main`.
+
+Written 2026-08-10, superseding the re-architecture handoff (that work landed in
+`v3.0.0`).
 
 ## Workspace
 
-|                       |                                                                                                         |
-| --------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Worktree**          | `/Users/virajpatel/Projects/github.com/virajp/ai-plugins/.claude/worktrees/template-build-architecture` |
-| **Branch**            | `worktree-template-build-architecture`                                                                  |
-| **HEAD**              | `dc4082a`                                                                                               |
-| **Ahead of `main`**   | 81 commits; `main` untouched at `94478e4`                                                               |
-| **Tree**              | clean; rendered trees match a fresh render                                                              |
-| **Pushed / released** | no, and no — version `2.7.3` unbumped                                                                   |
+|               |                                                                |
+| ------------- | -------------------------------------------------------------- |
+| **Checkout**  | `~/Projects/github.com/virajp/ai-plugins` (main, no worktrees) |
+| **`main`**    | in sync with `origin/main`                                     |
+| **Published** | `@askviraj/ai-plugins@3.1.0`, `latest` on npm                  |
+| **Tree**      | clean; rendered trees match a fresh render                     |
 
-Do **not** use `EnterWorktree` or branch from `origin/main`; that ref does not
-contain this work. The branch descends from 34 commits recovered from dangling
-objects — never rebase it.
+## What shipped
 
-## The long-form handoff
+**`v3.0.0` — the re-architecture, plus closing vwf's stack model.** vwf names no
+technology; its stack menu is now **closed** to what the installed plugins
+define. An unknown language and a `custom` template pin are both **blocking**
+`doctor` findings, so `setup`, `plan` and `execute` all halt rather than
+building against a stack with no conventions, harness or UX gate.
+`config_format` 13 → 14. `plan` gained the same gate (scoped to its dependency
+chain, before the surveyor). `/vwf:feedback canvas` stopped reaching one design
+tool's MCP server directly and now goes through a third adapter skill,
+`design-tools-import-conversations`.
 
-**`docs/scratchpad/next.md` in the MAIN checkout is the detailed handoff** and
-is the first thing to read. It is gitignored, so it exists only there — not in
-this worktree, not in git. It carries the full state, the gate set, the review
-priorities, both new work items with their traps, the open decisions and the
-parked scope. This drawer is the pointer; that file is the content.
+**`v3.0.1` — `--all` failed on Cursor and Oh-My-Pi.** Only Claude's marketplace
+can fetch a url-sourced plugin (`andrej-karpathy-skills`); the skip that knew
+this was gated on OpenCode alone. Also redesigned the run report: aligned table,
+notes collected after the results, one line per skipped plugin, statusline rows
+collapsed, closing verdict.
 
-The plan it executed is `docs/scratchpad/re-architecture/` (also main checkout,
-also gitignored): master `README.md` plus sixteen slice files.
+**`v3.0.2` — repeat runs, and `--upgrade` actually upgrading.**
+`omp plugin
+install` errors on a plugin it already has, so Oh-My-Pi failed on
+every run after the first; it now passes `--force`, which is also the only way
+to refresh, since omp copies into its own cache. The worse half was silent:
+`pnpx` resolves to a **version-specific** store path, so both CLI-driven
+adapters kept a marketplace pin naming whichever version first registered it —
+Claude was reading 3.0.0's rendered trees while reporting "already up to date".
+Both now re-point a pin when old and new are **both** inside a `node_modules`
+install of this package.
 
-## What landed
+**`v3.1.0` — a live step indicator.** Collecting the notes had left the run
+silent for seconds at a time. It is a step indicator, not a spinner: every
+adapter blocks on `spawnSync`, so a timer-driven spinner would freeze on one
+frame. Off entirely when stderr is not a TTY.
 
-Waves 0–7, sixteen slices, each closing on a green gate:
+## The lesson worth carrying
 
-- Rendered trees moved `dist/<target>/` → repo root; Codex dropped (four
-  targets); binary channel dropped (npm only).
-- 15 plugins now, each with a `docs/<plugin>.md`. `effect`, `markdown`,
-  `context7`, `mise`, `claude-design`, `lovable`, `stitch` and `github-actions`
-  are absorbed or renamed.
-- **vwf ships no stack templates and names no tool**, and `plugins:check` now
-  fails if either regresses. All three guards were tested by breaking them.
-- `blueprint_format` 20, `config_format` 13, role `iac`, per-project axes.
-- `readme.md` is a 368-line landing page; vwf's manual is `docs/vwf.md`.
+**Three of four releases fixed something found by running the real command.**
+Every one of those bugs appeared only on the **second** run, and nothing in the
+suites ran anything twice — `i:test` covers a first run against a throwaway
+`HOME`, so the whole class was invisible.
 
-Three mise tasks were renamed: `plugins:dist-clean` → `plugins:render-clean`,
-`vwf:test` → `typescript:test`. An old name fails as "task not found", which
-reads like a broken gate rather than a rename.
+Two things now guard it, and the second matters more than the first:
 
-## Open items (not started)
+- Each adapter suite has a **`survives three consecutive installs`** test.
+- The Oh-My-Pi fake now **refuses what the real `omp` refuses**. Its
+  permissiveness was the actual root cause: it accepted any `plugin install`
+  while the real tool errors on a duplicate, so the suite stayed green while
+  every user's second run failed. Verified by reverting the `--force` fix and
+  watching the new test go red.
 
-1. **Port `tools/opencode/mempalace-hooks.js` to TypeScript and install it for
-   OpenCode.** mempalace does not install on OpenCode at all today —
-   `cli/src/plan.ts:135` skips any plugin with no rendered bundle, and
-   url-sourced plugins have none. The hook file is currently dead code with no
-   consumer anywhere in `cli/`, `build/`, `.config/` or `package.json`.
-2. **Fold mempalace's skills into vwf and drop the upstream dependency**, so
-   memory ships with the workflow on every target. **This supersedes decision 15
-   of the plan** ("mempalace stays url-sourced… no third-party code is
-   vendored") — the plan's Decisions table still says the old thing; the user
-   changed it after the run. Handle licence/attribution, upstream drift, and
-   skill-name collisions against vwf's existing 23 skills before moving.
-3. **Test everything** — unit tests for the ported hook, an OpenCode install
-   test, a test that OpenCode actually gets the skills, then the full gate set.
-   Note `vitest.config.mts` collects only `{schema,build,cli}/src/**/*.test.ts`;
-   a test file anywhere else is silently never run.
-4. **Review before merging.** 81 commits. Highest-value target is
-   `git diff main...HEAD -- templates/vwf/skills/` — wave 5 restructured eleven
-   skills, and "no always-applies rule moved into a reference" is the one claim
-   no gate can check.
-5. Two undecided: whether to extend the regression guard's token list to design
-   tools, and what happens to the `mempalace` marketplace entry.
+**When adding an adapter or a fake, make the fake reject what the tool
+rejects.** A fake that says yes to everything only tests that you called it.
 
-## Next prompt
+## Open, in priority order
 
-```text
-Read /Users/virajpatel/Projects/github.com/virajp/ai-plugins/docs/scratchpad/next.md
-in full. Work in the EXISTING worktree .claude/worktrees/template-build-architecture
-(branch worktree-template-build-architecture @ dc4082a) — do NOT create a new
-worktree from origin/main and do NOT rebase.
+1. **`i:test` still only covers a first run.** The unit-level repeat tests use
+   fakes; there is no end-to-end "install, then install again" against real
+   binaries. CI has neither `claude` nor `omp`, so a real-binary test would skip
+   there — it would need stub executables on `PATH`. Worth doing, not urgent now
+   that the fakes are honest.
+2. **OpenCode reports 274 changes on every run.** It copies unconditionally, so
+   a no-op run still reads as a large update. Not a failure, but it makes a
+   genuine change indistinguishable from noise.
+3. **The OpenCode TUI statusline is still unverified in the real world.** Its
+   one unproven assumption is which key inside `api.route.current` holds the
+   session id — `tools/statusline/opencode-tui.tsx` searches rather than
+   guessing. If the bar shows only project and branch, that search is why.
+4. **`plan`'s stack read.** Now wired (it fetches template `conventions:` prose
+   at its stack gate), but the surveyor deliberately does **not** receive that
+   prose — it answers *what exists*, not *where a new thing belongs*. Revisit
+   only if reuse candidates turn out to need it.
 
-Implement section 2 of that file: port tools/opencode/mempalace-hooks.js to
-TypeScript and wire it into the OpenCode adapter so it installs and uninstalls
-with a receipt entry, then fold mempalace's skills into vwf and remove mempalace
-from vwf's dependencies. Section 2b supersedes decision 15 of the re-architecture
-plan — the plan's Decisions table is stale on that one point and must not be
-"fixed" back.
+## Stale scratchpad
 
-Then do section 3: unit tests for the hook, an OpenCode install test, a test that
-OpenCode actually receives the skills, and the full gate set in the file's gate
-section — every command, green, before you report.
+`docs/scratchpad/` holds `stack-closure.md` (fully executed), plus
+`re-architecture.md`, `gaps.md` and its own `next.md` from the previous effort.
+All are gitignored and none is current. Safe to delete; kept only as a record.
 
-Check skill-name collisions against vwf's existing skills before moving anything;
-names are a flat global namespace and plugins:check fails on a collision. Do not
-push and do not release.
-```
+## Rules that bit during this work
+
+- **Work in a worktree, never the main checkout.** Slipped once and had to move
+  the edit across.
+- **`EnterWorktree` branches from `origin/main`, not local `main`.** With
+  unpushed commits a fresh worktree silently misses them — run
+  `git merge --ff-only main` right after creating one.
+- **A backtick in `git commit -m` is command substitution in fish.** Use
+  `-F <file>`.
+- **`i:release` needs explicit go-ahead** (hard rule in `CLAUDE.md`), and every
+  tag gets a GitHub Release right after.
+- **osv-scanner gates the publish.** It blocked `v3.0.0` on a low-severity
+  `esbuild` advisory; the fix is an entry in `pnpm-workspace.yaml`'s
+  `overrides`. Run `mise x -- osv-scanner --lockfile=pnpm-lock.yaml` before
+  releasing.

@@ -68,6 +68,19 @@ const settings = () =>
   readJsonc<any>(readFileSync(settingsPath(), "utf8")) as any;
 
 describe("cursor adapter", () => {
+  it("survives three consecutive installs", () => {
+    // See the note in ohmypi.test.ts: the whole 3.0.x bug class only showed
+    // up on a repeat run, which nothing in these suites exercised.
+    for (const attempt of [1, 2, 3]) {
+      expect(
+        () => cursor.apply(context, planFor(["typescript"])),
+        `attempt ${attempt}`,
+      )
+        .not
+        .toThrow();
+    }
+  });
+
   it("registers a plugin as a git reference under its marketplace key", () => {
     cursor.apply(context, planFor(["typescript"]));
 

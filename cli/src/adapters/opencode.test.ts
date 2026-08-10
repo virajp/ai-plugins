@@ -71,6 +71,19 @@ const bundle = (plugin: string) =>
 // case. Swapping in a plugin missing any one of those fails a different test
 // each time.
 describe("opencode adapter", () => {
+  it("survives three consecutive installs", () => {
+    // See the note in ohmypi.test.ts: the whole 3.0.x bug class only showed
+    // up on a repeat run, which nothing in these suites exercised.
+    for (const attempt of [1, 2, 3]) {
+      expect(
+        () => opencode.apply(context, planFor(["typescript"])),
+        `attempt ${attempt}`,
+      )
+        .not
+        .toThrow();
+    }
+  });
+
   it("installs a plugin's bundle and registers its skills path", () => {
     opencode.apply(context, planFor(["datastore"]));
 

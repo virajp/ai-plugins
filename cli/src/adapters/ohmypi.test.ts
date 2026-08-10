@@ -37,6 +37,19 @@ let env: (NodeJS.ProcessEnv | undefined)[];
 
 const registryPath = () => join(home, ".omp", "marketplaces.json");
 
+/**
+ * A stand-in for `omp` that **refuses what the real one refuses**.
+ *
+ * The permissiveness of this fake is how a shipped bug survived: it used to
+ * accept any `plugin install`, while the real `omp` errors on a plugin it
+ * already has. So the suite was green while a second run of the CLI failed
+ * outright on every machine. A fake that says yes to everything only tests
+ * that we called it.
+ *
+ * Both refusals below were copied from real `omp` output, not guessed.
+ */
+const installed = new Set<string>();
+
 const fakeOmp: Exec = (command, args, options) => {
   ran.push([command, ...args]);
   env.push(options?.env);
@@ -51,12 +64,37 @@ const fakeOmp: Exec = (command, args, options) => {
       registryPath(),
       JSON.stringify({
         version: 1,
-        marketplaces: [{ name: "virajp-plugins", sourceType: "local" }],
+        marketplaces: [{
+          name: "virajp-plugins",
+          sourceType: "local",
+          // The real registry records where it points, which is what lets a
+          // pin left by an older install of this package be recognised.
+          sourceUri: rest[1],
+        }],
       }),
     );
   }
   else if (action === "marketplace" && rest[0] === "remove") {
     rmSync(registryPath(), { force: true });
+  }
+  else if (action === "install") {
+    const selector = rest[0] ?? "";
+    if (installed.has(selector) && !args.includes("--force")) {
+      return {
+        status: 1,
+        stdout: "",
+        stderr: `Failed to install ${selector}: Error: Plugin "${selector}" `
+          + "is already installed. Use force option to reinstall.",
+      };
+    }
+    installed.add(selector);
+  }
+  else if (action === "uninstall") {
+    for (const selector of [...installed]) {
+      if (selector.startsWith(`${rest[0]}@`)) {
+        installed.delete(selector);
+      }
+    }
   }
   return { status: 0, stdout: "", stderr: "" };
 };
@@ -66,6 +104,7 @@ beforeEach(() => {
   cwd = mkdtempSync(join(tmpdir(), "ai-plugins-omp-cwd-"));
   ran = [];
   env = [];
+  installed.clear();
   context = {
     sourceRoot: repoRoot,
     home,
@@ -125,6 +164,21 @@ describe("ohmypi adapter", () => {
     ohmypi.apply(context, planFor(["markdown"]));
 
     expect(env[0]?.["HOME"]).toBe(home);
+  });
+
+  it("survives three consecutive installs", () => {
+    // The regression that shipped. Every bug in 3.0.1 and 3.0.2 appeared only
+    // on the SECOND run, and nothing in this suite ran anything twice — so
+    // three runs, because two proves repeatability and three proves it is not
+    // an alternating state machine.
+    for (const attempt of [1, 2, 3]) {
+      expect(
+        () => ohmypi.apply(context, planFor(["markdown"], ["mise"])),
+        `attempt ${attempt}`,
+      )
+        .not
+        .toThrow();
+    }
   });
 
   it("forces every install, so a second run is not a hard error", () => {

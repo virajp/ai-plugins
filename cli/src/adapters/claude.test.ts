@@ -126,6 +126,20 @@ const planFor = (user: string[], project: string[] = []): AdapterPlan => ({
 });
 
 describe("claude adapter", () => {
+  it("survives three consecutive installs", () => {
+    // Every bug in 3.0.1 and 3.0.2 appeared only on the SECOND run, and
+    // nothing here ran anything twice. Three, because two proves
+    // repeatability and three proves it is not an alternating state machine.
+    for (const attempt of [1, 2, 3]) {
+      expect(
+        () => claude.apply(context, planFor(["markdown"], ["mise"])),
+        `attempt ${attempt}`,
+      )
+        .not
+        .toThrow();
+    }
+  });
+
   it("declares the marketplace, then installs each plugin", () => {
     claude.apply(context, planFor(["markdown"]));
 
