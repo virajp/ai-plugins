@@ -195,6 +195,57 @@ describe("cursor adapter", () => {
     expect(readFileSync(settingsPath(), "utf8")).toBe(once);
   });
 
+  // Idempotent on disk is not the same as idempotent in the receipt, and this
+  // is where the two came apart: the second install found every key already
+  // right, skipped both records, and returned an **empty** receipt — which then
+  // overwrote the complete one. The uninstall after it reported success and
+  // left the whole install in place. `--upgrade` reaches the same path, so
+  // upgrading alone was enough to trigger it.
+  it("removes what it created, even after a repeat install", () => {
+    cursor.apply(context, planFor(["typescript"]));
+    const { receipt } = cursor.apply(context, planFor(["typescript"]));
+
+    cursor.revert(context, receipt);
+
+    expect(existsSync(settingsPath())).toBe(false);
+    expect(existsSync(join(cwd, ".cursor"))).toBe(false);
+  });
+
+  it("restores existing settings byte-identically after a repeat install", () => {
+    mkdirSync(join(cwd, ".cursor"), { recursive: true });
+    const original = `{
+  // Keep me.
+  "someSetting": true
+}
+`;
+    writeFileSync(settingsPath(), original);
+
+    cursor.apply(context, planFor(["typescript"]));
+    const { receipt } = cursor.apply(context, planFor(["typescript"]));
+
+    cursor.revert(context, receipt);
+
+    // The worse half of the same bug: the file cannot simply be deleted, so a
+    // dropped claim welded our key into the user's settings permanently.
+    expect(readFileSync(settingsPath(), "utf8")).toBe(original);
+  });
+
+  it("keeps another marketplace's plugin key while removing its own", () => {
+    mkdirSync(join(cwd, ".cursor"), { recursive: true });
+    const original = `{
+  "plugins": { "someone-else/thing": { "enabled": true } }
+}
+`;
+    writeFileSync(settingsPath(), original);
+
+    cursor.apply(context, planFor(["typescript"]));
+    const { receipt } = cursor.apply(context, planFor(["typescript"]));
+
+    cursor.revert(context, receipt);
+
+    expect(readFileSync(settingsPath(), "utf8")).toBe(original);
+  });
+
   it("refuses to edit malformed settings rather than clobbering them", () => {
     mkdirSync(join(cwd, ".cursor"), { recursive: true });
     writeFileSync(settingsPath(), "{ this is not json");

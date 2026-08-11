@@ -35,6 +35,7 @@ import {
   dirname,
   join,
 } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import writeFileAtomic from "write-file-atomic";
 import {
   getPath,
@@ -182,23 +183,26 @@ function mergeSettings(
     throw new Error(`refusing to edit malformed Cursor settings: ${file}`);
   }
 
-  let text = before;
-  for (const name of names) {
+  const wanted = names.map(name => {
     const entry = plugins.get(name);
     if (entry === undefined) {
       throw new Error(
         `${name} is not listed in ${MANIFEST} — run \`mise run plugins:build\``,
       );
     }
-
-    const path = ["plugins", `${marketplace}/${name}`];
-    const desired = {
-      enabled: true,
-      gitUrl: entry.source.url,
-      ...(entry.source.ref ? { gitRef: entry.source.ref } : {}),
-      ...(entry.source.path ? { gitPath: entry.source.path } : {}),
+    return {
+      path: ["plugins", `${marketplace}/${name}`],
+      desired: {
+        enabled: true,
+        gitUrl: entry.source.url,
+        ...(entry.source.ref ? { gitRef: entry.source.ref } : {}),
+        ...(entry.source.path ? { gitPath: entry.source.path } : {}),
+      },
     };
+  });
 
+  let text = before;
+  for (const { path, desired } of wanted) {
     // Already exactly right — leave the bytes alone. Rewriting an identical
     // value is not a no-op: `modify` only formats when the document was empty,
     // so the second write would collapse the entry onto one line and a
@@ -209,23 +213,50 @@ function mergeSettings(
     ) {
       continue;
     }
-
-    // A file we create is undone by deleting it; one that already existed is
-    // undone key by key, so a concurrent edit by another tool survives our
-    // uninstall. Recording both would have revert fight itself.
-    if (existed) {
-      const owned = shallowestNew(parsed, path);
-      const present = parsed !== undefined
-        && getPath(parsed, owned) !== undefined;
-      receipt.configKey(
-        file,
-        owned,
-        present
-          ? { present, value: getPath(parsed, owned) }
-          : { present: false },
-      );
-    }
     text = setJsonPath(text, path, desired);
+  }
+
+  // **Ownership, not existence** — and the claim is recorded even when this run
+  // writes nothing. Skipping it on an unchanged key (the `continue` above) and
+  // on an unchanged file (the no-op return below) meant a *second* install
+  // produced an empty receipt, which then overwrote the complete one from the
+  // first: the uninstall after it reported success and left the whole install
+  // in place. `--upgrade` reaches the same path, so upgrading alone was enough.
+  //
+  // `basis` is the file as it would be without our own entries, which is what
+  // run 1 actually saw — a plugin key holding exactly the value we would write
+  // is one an earlier run of ours wrote, whatever is on disk now. Computing the
+  // claim against that makes every run record what run 1 recorded.
+  const basis = withoutOwnEntries(parsed, wanted);
+
+  if (!dryRun) {
+    // Directory before file: revert replays in reverse, so recording it second
+    // would try to remove `.cursor/` while our settings file is still in it,
+    // and a non-empty directory is left alone.
+    if (basis === undefined) {
+      // Nothing here is anyone else's. `ownedDir`, not `dir`: the guarded form
+      // skips a directory that is already there, so on run 2 it recorded
+      // nothing and `.cursor/` survived the uninstall.
+      receipt.ownedDir(dirname(file));
+      receipt.createdFile(file);
+    }
+    else {
+      receipt.dir(dirname(file));
+      // A file that is also the user's is undone key by key, so a concurrent
+      // edit by another tool survives our uninstall. Recording both would have
+      // revert fight itself.
+      for (const { path } of wanted) {
+        const owned = shallowestNew(basis, path);
+        const previous = getPath(basis, owned);
+        receipt.configKey(
+          file,
+          owned,
+          previous === undefined
+            ? { present: false }
+            : { present: true, value: previous },
+        );
+      }
+    }
   }
 
   if (text === before) {
@@ -238,17 +269,50 @@ function mergeSettings(
     diff: { before, after: text },
   };
   if (!dryRun) {
-    // Directory before file: revert replays in reverse, so recording it second
-    // would try to remove `.cursor/` while our settings file is still in it,
-    // and a non-empty directory is left alone.
-    receipt.dir(dirname(file));
-    if (!existed) {
-      receipt.file(file);
-    }
     mkdirSync(dirname(file), { recursive: true });
     writeFileAtomic.sync(file, text);
   }
   return [action];
+}
+
+/**
+ * The settings file as it would be without this tool's own plugin entries.
+ *
+ * A key holding exactly the value we would write is ours, whichever run put it
+ * there — so taking those out reconstructs what the *first* run saw, and a
+ * claim computed against it is the same on every run. Parents emptied by the
+ * removal go too, matching `shallowestNew`'s rule that a container we created
+ * is ours to remove rather than leave behind as an orphaned `"plugins": {}`.
+ *
+ * `undefined` means nothing else is in the file: it is ours outright.
+ */
+function withoutOwnEntries(
+  parsed: Record<string, unknown> | undefined,
+  wanted: readonly { path: string[]; desired: unknown; }[],
+): Record<string, unknown> | undefined {
+  if (parsed === undefined) {
+    return undefined;
+  }
+  const rest = structuredClone(parsed);
+  for (const { path, desired } of wanted) {
+    if (!isDeepStrictEqual(getPath(rest, path), desired)) {
+      continue;
+    }
+    for (let depth = path.length; depth > 0; depth--) {
+      const parent = depth === 1
+        ? rest
+        : getPath(rest, path.slice(0, depth - 1));
+      if (parent === null || typeof parent !== "object") {
+        break;
+      }
+      const container = parent as Record<string, unknown>;
+      delete container[path[depth - 1] as string];
+      if (Object.keys(container).length > 0) {
+        break;
+      }
+    }
+  }
+  return Object.keys(rest).length === 0 ? undefined : rest;
 }
 
 /**

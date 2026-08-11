@@ -76,7 +76,7 @@ rather than guesses.
 
 > **Working on one:** the pruning rules, where each target's payload lives, the
 > scope fallbacks, the receipt entry kinds and the receipt-completeness bug that
-> has now shipped five times are in `.claude/skills/installer-cli/`, which
+> has now shipped in every adapter are in `.claude/skills/installer-cli/`, which
 > auto-applies while you edit `cli/`.
 
 ### Tasks

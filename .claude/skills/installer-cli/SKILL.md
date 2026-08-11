@@ -33,22 +33,30 @@ there is *the first run's own output*. Run 2's receipt then claims less than run
 1's, and since every run overwrites the receipt, the uninstall after it leaves
 that path behind.
 
-Five instances so far. Three needed a new receipt kind — `createdFile`, `tree`,
-and `ownedDir`, where `dir` skipped the already-existing bundle root so
-`virajp-plugins/` survived as an empty directory. The other two are OpenCode's
-two config files, and needed only the ownership *test*, since `createdFile`
-already existed:
+**It has now been found in every adapter**, which is why this is stated as a
+rule rather than a list of bugs. Three instances needed a new receipt kind —
+`createdFile`, `tree`, and `ownedDir`, where `dir` skipped the already-existing
+bundle root so `virajp-plugins/` survived as an empty directory. The rest needed
+only the ownership *test*, and each failed differently, which is why finding one
+never found the next:
 
-- **`opencode.jsonc`** — `existsSync` flipped the claim from *we created this
-  file* to a key-by-key restore whose `previous` value was our own, so uninstall
-  restored a `skills.paths` pointing at the bundle it had just removed.
-- **`tui.json`** — the statusline's half, and the same bug by a different route:
-  run 2 found the file already registered, took the early return, and recorded
-  **nothing at all**, so the receipt it overwrote lost the only claim on it.
+| Where                      | Run 2 did this                                            | So uninstall left                     |
+| -------------------------- | --------------------------------------------------------- | ------------------------------------- |
+| `opencode.jsonc`           | *downgraded* the claim to a key restore of our own value  | a `skills.paths` to a deleted bundle  |
+| `tui.json`                 | hit the already-registered early return, recorded nothing | the config, pointing at the plugin    |
+| Cursor `settings.json`     | recorded **an empty receipt**, overwriting the full one   | the entire install, reporting success |
+| Oh-My-Pi `marketplace add` | skipped the undo, since this run did not add it           | the marketplace, at a removed path    |
 
-Both now decide ownership by comparing what is on disk against what their own
-merge would produce from an empty file — identical means an earlier run of ours
-wrote it, whatever `existsSync` says.
+Each is fixed by comparing what is on disk against what this tool's own merge
+would produce — identical means an earlier run of ours wrote it, whatever
+`existsSync` says. Cursor's `withoutOwnEntries` is the strongest form and the
+one to copy: it reconstructs the file **without** our entries, so the claim is
+computed against what run 1 actually saw and every run records the same thing.
+
+**Still open**: `statusline-ohmypi` has the same empty-receipt shape, and cannot
+use that test — `config.yml` belongs to `omp`, is YAML, and this CLI ships no
+YAML parser. The general fix is carrying run 1's undo commands forward out of
+the previous receipt.
 
 **A single install passes either way; only a repeat run shows it**, which is why
 `i:test` installs twice before uninstalling. Preserve that.

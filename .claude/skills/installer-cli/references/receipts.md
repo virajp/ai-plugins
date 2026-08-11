@@ -62,16 +62,41 @@ failed differently, which is why finding one did not find the other:
 `opencode.jsonc` *downgraded* its claim to a key restore of our own value, while
 `tui.json` hit its already-registered early return and recorded nothing at all.
 
-**A residual remains in the mixed case**, and it is narrower. When the user
-already had a config, a repeat run cannot tell which keys it introduced on the
-first one: `opencode.jsonc` records the *current* value of such a key as that
-key's `previous` and restores our own value, while `tui.json` returns early and
-records nothing. Either way our entry stays. The file must survive there — it is
-the user's — so the symptom is a stale entry rather than a stale file.
+**Cursor's `withoutOwnEntries` is the strongest form of the test, and the one to
+copy.** Rather than asking *is this whole file ours*, it reconstructs the file
+**without** our entries — a plugin key holding exactly the value we would write
+is ours, whichever run wrote it — and computes the claim against that. The
+result is what run 1 actually saw, so every run records what run 1 recorded, and
+a user's own settings come back byte-identically even after a repeat install.
+Parents emptied by the removal go too, so an undo cannot leave an orphaned
+`"plugins": {}` behind.
 
-Resolving it needs the run to reconstruct the user's pre-merge config by
-un-merging its own contribution, which is also what would finally give the
-long-dead `removeSkillsPath` export a caller.
+**A residual remains for the OpenCode pair**, which still use the weaker
+whole-file test. When the user already had a config, a repeat run cannot tell
+which keys it introduced on the first: `opencode.jsonc` records the *current*
+value of such a key as its `previous` and restores our own value, while
+`tui.json` returns early and records nothing. Either way our entry stays. The
+file must survive — it is the user's — so the symptom is a stale entry rather
+than a stale file. Porting `withoutOwnEntries` closes both, and would finally
+give the long-dead `removeSkillsPath` export a caller.
+
+## Command entries have the same trap
+
+A CLI-driven claim fails the same way and needs the same rule. Oh-My-Pi's
+`marketplace add` undo was recorded only when *this run* did the adding, so a
+repeat install dropped it and the uninstall after it left `virajp-plugins`
+registered at the path it had just deleted — after which installing any *other*
+plugin from it fails with "Plugin source directory does not exist". The fix is
+the ownership question again: the pin names our own managed directory, which
+nobody else would have registered, so the undo is recorded whether or not this
+run put it there. A pin pointing anywhere else is still left strictly alone.
+
+**`statusline-ohmypi` is the one case the test cannot reach.** Its four
+`omp config set` undos and its `createdFile` claim are all skipped on a repeat
+run, leaving an empty receipt — but `config.yml` is `omp`'s own YAML and this
+CLI ships no YAML parser, so there is nothing to compare against. The general
+answer is to carry run 1's undo commands forward out of the previous receipt,
+which is also the only durable ownership record a CLI-driven installer has.
 
 ## When a `command` entry gets an undo
 

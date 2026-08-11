@@ -170,6 +170,23 @@ function run(
       receipt.command(add, ["plugin", "marketplace", "remove", marketplace]);
     }
   }
+  else if (!dryRun && entry.sourceUri === want) {
+    // Registered already, by an earlier run of ours — the pin names our own
+    // managed directory, which nobody else would have registered.
+    //
+    // **Ownership, not activity**, which is the rule `receipt.ts` states for
+    // command entries: an undo is recorded when the command changed something
+    // *or when the state it would have produced is provably this tool's*.
+    // Keying it on "did this run add it" instead meant run 2's receipt dropped
+    // the un-register, so the uninstall after it deleted the payload and left
+    // `virajp-plugins` registered at the path it had just removed — after which
+    // a later `omp plugin install <other>@virajp-plugins` fails outright with
+    // "Plugin source directory does not exist".
+    receipt.command(
+      ["plugin", "marketplace", "add", want],
+      ["plugin", "marketplace", "remove", marketplace],
+    );
+  }
 
   for (const scope of ["user", "project"] as const) {
     for (const name of scope === "user" ? plan.user : plan.project) {
@@ -193,10 +210,15 @@ function run(
       actions.push({ summary: `${BIN} ${install.join(" ")}` });
       if (!dryRun) {
         runOrThrow(context, install);
+        // `<name>@<marketplace>` on the undo too, for the same reason as the
+        // install and one worse consequence: given a bare name `omp` exits 0
+        // and prints "✔ Uninstalled" while only half-removing — the plugin
+        // stays in `omp plugin list`, and its record, symlink and cache dir all
+        // survive. The qualified form removes all three.
         receipt.command(install, [
           "plugin",
           "uninstall",
-          name,
+          `${name}@${marketplace}`,
           "--scope",
           scope,
         ]);

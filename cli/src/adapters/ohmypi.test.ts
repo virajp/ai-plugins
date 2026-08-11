@@ -297,10 +297,29 @@ describe("ohmypi adapter", () => {
 
     ohmypi.revert(context, receipt);
 
+    // `<name>@<marketplace>` on the uninstall too: given a bare name `omp`
+    // exits 0 and prints success while leaving the record, the symlink and the
+    // cache dir in place.
     expect(ran.map(c => c.join(" "))).toEqual([
-      "omp plugin uninstall markdown --scope user",
+      "omp plugin uninstall markdown@virajp-plugins --scope user",
       "omp plugin marketplace remove virajp-plugins",
     ]);
+  });
+
+  // The second run takes the "already registered" branch, so keying the undo on
+  // *did this run add it* dropped the un-register from run 2's receipt — and
+  // the uninstall after it deleted the payload while leaving `virajp-plugins`
+  // pointed at the path it had just removed.
+  it("still un-registers the marketplace after a repeat install", () => {
+    ohmypi.apply(context, planFor(["markdown"]));
+    const { receipt } = ohmypi.apply(context, planFor(["markdown"]));
+    ran = [];
+
+    ohmypi.revert(context, receipt);
+
+    expect(ran.map(c => c.join(" "))).toContain(
+      "omp plugin marketplace remove virajp-plugins",
+    );
   });
 
   it("does not remove a marketplace it did not add", () => {
