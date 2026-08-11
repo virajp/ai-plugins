@@ -25,7 +25,6 @@ python.compile      = false
 python.uv_venv_auto = "create|source"
 
 [env]
-DISABLE_TELEMETRY = 1
 
 [tools]
 # Language RUNTIME only — the minimum to run/build the project anywhere

@@ -20,8 +20,7 @@ osv-scanner = { version = "latest" }
 pnpm        = { version = "latest" }
 
 [env]
-DISABLE_TELEMETRY = 1
-_.path            = { path = "node_modules/.bin", tools = true }
+_.path = { path = "node_modules/.bin", tools = true }
 
 [tasks.init]
 description = "Initialize mise tasks"
