@@ -154,6 +154,14 @@ if [[ -d "$E2E_CONFIG/virajp-plugins" ]]; then
   find "$E2E_CONFIG/virajp-plugins" | head -20
   exit 1
 fi
+# The config is the other half of the same claim, and the half that survived
+# a repeat install: a registration left pointing at the bundle just removed is
+# worse than a leftover file, because OpenCode reads it.
+if [[ -f "$E2E_CONFIG/opencode.jsonc" ]]; then
+  print_error "Uninstall left the OpenCode config behind"
+  cat "$E2E_CONFIG/opencode.jsonc"
+  exit 1
+fi
 
 rm -rf "$E2E_HOME"
 trap - EXIT

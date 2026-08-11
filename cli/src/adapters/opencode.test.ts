@@ -343,6 +343,47 @@ describe("opencode adapter", () => {
     expect(readFileSync(configPath(), "utf8")).toBe(once);
   });
 
+  it("deletes a config it created", () => {
+    const { receipt } = opencode.apply(context, planFor(["datastore"]));
+    expect(existsSync(configPath())).toBe(true);
+
+    opencode.revert(context, receipt);
+
+    expect(existsSync(configPath())).toBe(false);
+  });
+
+  // The second-install trap in its config shape, and the reason the claim is
+  // keyed on ownership rather than `existsSync`: run 1 created the file, run 2
+  // found it sitting there and downgraded the claim to a key-by-key restore
+  // whose `previous` was our own value — so the uninstall after it restored a
+  // `skills.paths` pointing at the bundle it had just removed. A single install
+  // passes either way.
+  it("deletes a config it created, even after a repeat install", () => {
+    opencode.apply(context, planFor(["datastore"]));
+    const { receipt } = opencode.apply(context, planFor(["datastore"]));
+
+    opencode.revert(context, receipt);
+
+    expect(existsSync(configPath())).toBe(false);
+  });
+
+  // The other half of that rule: ownership has to stay narrow enough that a
+  // config with anything of the user's in it is never deleted, however many
+  // times they install.
+  it("never deletes a config holding keys of its own", () => {
+    mkdirSync(join(home, ".config", "opencode"), { recursive: true });
+    writeFileSync(configPath(), `{ "theme": "tokyonight" }\n`);
+
+    opencode.apply(context, planFor(["datastore"]));
+    const { receipt } = opencode.apply(context, planFor(["datastore"]));
+
+    opencode.revert(context, receipt);
+
+    expect(existsSync(configPath())).toBe(true);
+    expect(readJsonc<any>(readFileSync(configPath(), "utf8")).theme)
+      .toBe("tokyonight");
+  });
+
   it("refuses to edit a malformed config rather than clobbering it", () => {
     mkdirSync(join(home, ".config", "opencode"), { recursive: true });
     writeFileSync(configPath(), "{ this is not json");

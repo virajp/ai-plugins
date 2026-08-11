@@ -25,6 +25,7 @@ import {
   dirname,
   join,
 } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import writeFileAtomic from "write-file-atomic";
 import {
   appendToJsonArray,
@@ -279,30 +280,15 @@ function mergeConfig(
     );
   }
 
-  let text = before;
-  // A file we create is undone by deleting it; a file that was already there
-  // is undone key by key, so a concurrent edit by another tool survives our
-  // uninstall. Recording both would have revert fight itself — restoring the
-  // whole file and then deleting keys out of the restored copy.
-  const note = existed
-    ? (path: readonly (string | number)[]) => {
-      // Record the SHALLOWEST key that did not already exist. Setting
-      // `skills.paths` on a config with no `skills` creates the whole object,
-      // so undoing only `paths` leaves an orphaned `"skills": {}` behind —
-      // close to byte-identical, which is not the same thing.
-      const owned = shallowestNew(parsed, path);
-      const present = parsed !== undefined
-        && getPath(parsed, owned) !== undefined;
-      receipt.configKey(
-        file,
-        owned,
-        present
-          ? { present, value: getPath(parsed, owned) }
-          : { present: false },
-      );
-    }
-    : () => {};
+  // Portable spelling, so the config stays movable between machines.
+  const skillsPath = scope === "project"
+    ? `.opencode/${BUNDLE_DIR}`
+    : `~/.config/opencode/${BUNDLE_DIR}`;
 
+  // Collected before anything is written, so the identical set can be applied
+  // twice — to the user's file, and to an empty one. The second application is
+  // what decides ownership below.
+  const sets: { path: (string | number)[]; value: unknown; }[] = [];
   for (const plugin of plugins) {
     const fragmentPath = join(tree, BUNDLE_DIR, plugin, "opencode.config.json");
     if (!existsSync(fragmentPath)) {
@@ -321,18 +307,55 @@ function mergeConfig(
         continue;
       }
       for (const [id, value] of Object.entries(section)) {
-        note([key, id]);
-        text = setJsonPath(text, [key, id], value);
+        sets.push({ path: [key, id], value });
       }
     }
   }
 
-  // Portable spelling, so the config stays movable between machines.
-  const skillsPath = scope === "project"
-    ? `.opencode/${BUNDLE_DIR}`
-    : `~/.config/opencode/${BUNDLE_DIR}`;
-  note(["skills", "paths"]);
-  text = appendToJsonArray(text, ["skills", "paths"], [skillsPath]);
+  const merge = (start: string): string => {
+    let merged = start;
+    for (const { path, value } of sets) {
+      merged = setJsonPath(merged, path, value);
+    }
+    return appendToJsonArray(merged, ["skills", "paths"], [skillsPath]);
+  };
+
+  const text = merge(before);
+
+  // **Ownership, not existence** — `createdFile`'s rule, applied to a file
+  // whose other keys may not be ours. A config holding nothing but what we
+  // write is one an earlier run of ours created, so it is ours to delete
+  // however many runs ago that was.
+  //
+  // Keying this on `existsSync` alone is the second-install trap in its config
+  // shape: run 2 found run 1's file, downgraded the claim from "we created it"
+  // to a key-by-key restore whose `previous` was our *own* value, and the
+  // uninstall after it dutifully restored a `skills.paths` pointing at the
+  // bundle it had just removed.
+  const ours = !existed
+    || isDeepStrictEqual(
+      parsed,
+      readJsonc<Record<string, unknown>>(merge("")),
+    );
+
+  // Recorded before the no-op check below: a repeat run writes nothing and must
+  // still claim what an earlier one created, or the receipt it overwrites
+  // forgets the file and the uninstall after it leaves the file behind.
+  if (!dryRun) {
+    if (ours) {
+      receipt.createdFile(file);
+    }
+    else {
+      // A file that was already the user's is undone key by key, so a
+      // concurrent edit by another tool survives our uninstall. Recording both
+      // would have revert fight itself — restoring the whole file and then
+      // deleting keys out of the restored copy.
+      for (const { path } of sets) {
+        note(path);
+      }
+      note(["skills", "paths"]);
+    }
+  }
 
   if (text === before) {
     return [];
@@ -344,13 +367,29 @@ function mergeConfig(
     diff: { before, after: text },
   };
   if (!dryRun) {
-    if (!existed) {
-      receipt.file(file);
-    }
     mkdirSync(dirname(file), { recursive: true });
     writeFileAtomic.sync(file, text);
   }
   return [action];
+
+  /**
+   * Record the SHALLOWEST key that did not already exist. Setting
+   * `skills.paths` on a config with no `skills` creates the whole object, so
+   * undoing only `paths` leaves an orphaned `"skills": {}` behind — close to
+   * byte-identical, which is not the same thing.
+   */
+  function note(path: readonly (string | number)[]): void {
+    const owned = shallowestNew(parsed, path);
+    const present = parsed !== undefined
+      && getPath(parsed, owned) !== undefined;
+    receipt.configKey(
+      file,
+      owned,
+      present
+        ? { present, value: getPath(parsed, owned) }
+        : { present: false },
+    );
+  }
 }
 
 /** Remove our own `skills.paths` entry, leaving foreign ones alone. */
