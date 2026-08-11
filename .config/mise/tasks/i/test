@@ -83,6 +83,81 @@ if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user devtools 2>&1 | g
   exit 1
 fi
 
+# ---------------------------------------------------------------------------
+# End-to-end: install, install again, uninstall — against the BUILT bundle.
+#
+# Everything above this line exits before an adapter runs, so until now nothing
+# here ever wrote a file. The 3.0.x bug class only ever showed up on a repeat
+# run, and the unit tests that cover it use fakes.
+#
+# OpenCode is the target used because its adapter shells out to nothing: the
+# binary only has to exist for `detect()`, and every write below is the real
+# copy, prune, ownership record, config merge and receipt. Stubbing `claude` or
+# `omp` instead would test this tool against our own fiction of their CLIs —
+# their command sequences are already covered by the adapter suites, and the
+# packaging risk this file exists for (a missing external, a broken package-root
+# walk) is identical whichever adapter runs the bundle.
+# ---------------------------------------------------------------------------
+print_header "Installing twice, then uninstalling, against a throwaway HOME ..."
+
+E2E_HOME="$(mktemp -d)"
+trap 'rm -rf "$E2E_HOME"' EXIT
+
+mkdir -p "$E2E_HOME/bin"
+printf '#!/bin/sh\nexit 0\n' >"$E2E_HOME/bin/opencode"
+chmod +x "$E2E_HOME/bin/opencode"
+
+# HOME drives `context.home`; the two XDG vars keep the receipt and any managed
+# payload inside the throwaway too. Without all three a "hermetic" run still
+# writes into the developer's own config.
+e2e() {
+  env \
+    PATH="$NODE_DIR:$E2E_HOME/bin" \
+    HOME="$E2E_HOME" \
+    XDG_CONFIG_HOME="$E2E_HOME/.config" \
+    XDG_DATA_HOME="$E2E_HOME/.local/share" \
+    "${CLI[@]}" "$@"
+}
+
+E2E_CONFIG="$E2E_HOME/.config/opencode"
+
+# `datastore` is the plugin asserted above to require no external tools, so the
+# run reaches the adapter instead of stopping at the dependency gate.
+if ! e2e --platform opencode --user datastore >/dev/null; then
+  print_error "First install failed"
+  exit 1
+fi
+if [[ ! -d "$E2E_CONFIG/virajp-plugins/datastore" ]]; then
+  print_error "First install wrote no bundle"
+  exit 1
+fi
+first="$(cd "$E2E_CONFIG" && find . -type f | sort)"
+
+if ! e2e --platform opencode --user datastore >/dev/null; then
+  print_error "Second install failed — the repeat-run path is broken"
+  exit 1
+fi
+second="$(cd "$E2E_CONFIG" && find . -type f | sort)"
+
+if [[ "$first" != "$second" ]]; then
+  print_error "Second install changed the tree; it must be idempotent"
+  diff <(printf '%s\n' "$first") <(printf '%s\n' "$second") || true
+  exit 1
+fi
+
+if ! e2e --platform opencode --uninstall >/dev/null; then
+  print_error "Uninstall failed"
+  exit 1
+fi
+if [[ -d "$E2E_CONFIG/virajp-plugins" ]]; then
+  print_error "Uninstall left the bundle behind"
+  find "$E2E_CONFIG/virajp-plugins" | head -20
+  exit 1
+fi
+
+rm -rf "$E2E_HOME"
+trap - EXIT
+
 print_header "Running the vitest suites ..."
 pnpm exec vitest run
 

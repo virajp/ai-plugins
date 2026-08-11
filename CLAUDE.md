@@ -898,6 +898,19 @@ Layout:
   then runs the vitest suites too, so `release.yml` cannot publish something no
   gate validated; `plugins.yml` runs them independently.
 
+  Most of it exits before an adapter runs, but it ends with a **real install →
+  install again → uninstall** against a throwaway `HOME` (plus `XDG_CONFIG_HOME`
+  and `XDG_DATA_HOME`, or a "hermetic" run still writes into the developer's own
+  config). It drives **OpenCode**, whose adapter shells out to nothing — the
+  binary need only exist for `detect()`, so every write is the real copy, prune,
+  ownership record, config merge and receipt. Stubbing `claude` or `omp` instead
+  would test this tool against our own fiction of their CLIs; their command
+  sequences are covered by the adapter suites with fakes, and the packaging risk
+  is identical whichever adapter runs the bundle. It installs `datastore`
+  because that is the plugin with no `requires:`, so the run reaches the adapter
+  rather than stopping at the dependency gate. This is what caught the
+  `ownedDir` bug above, on its first run.
+
   **`vitest.config.mts` restricts collection to
   `{schema,build,cli}/src/**/*.test.ts`.** A test file anywhere else — beside
   `tools/`, or at the repo root — is silently never run rather than failing.
