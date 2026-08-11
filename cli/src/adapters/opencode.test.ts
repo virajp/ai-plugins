@@ -87,6 +87,84 @@ describe("opencode adapter", () => {
     }
   });
 
+  describe("recording the bundle as one entry, not one per file", () => {
+    // Regression: every bundle file was a `file` entry plus its directory
+    // chain, so a five-plugin install wrote a 413-entry receipt and reported
+    // 281 changes on a run that altered nothing — a genuine change was
+    // indistinguishable from the copy that happens every time.
+    it("records each plugin bundle as a single tree entry", () => {
+      const { receipt } = opencode.apply(context, planFor(["vwf"]));
+
+      const trees = receipt.entries.filter(e => e.kind === "tree");
+      expect(trees.map(e => e.path)).toContain(bundle("vwf"));
+
+      // Nothing under the bundle may be recorded individually — that is what
+      // made the receipt large, and a `tree` already covers it recursively.
+      const individual = receipt
+        .entries
+        .filter(e => e.kind === "file" || e.kind === "dir")
+        .map(e => e.path)
+        .filter(p => p.startsWith(`${bundle("vwf")}/`));
+      expect(individual).toEqual([]);
+    });
+
+    it("still records the shared flat dirs file by file", () => {
+      const { receipt } = opencode.apply(context, planFor(["vwf"]));
+      const flat = join(home, ".config", "opencode", "agent");
+
+      // These are shared with OpenCode itself and with graphify, so an
+      // uninstall has to remove exactly what it wrote — never the directory.
+      const files = receipt
+        .entries
+        .filter(e => e.kind === "file")
+        .map(e => e.path)
+        .filter(p => p.startsWith(`${flat}/`));
+      expect(files.length).toBeGreaterThan(0);
+      expect(receipt.entries.some(e => e.kind === "tree" && e.path === flat))
+        .toBe(false);
+    });
+
+    it("collapses the run report to one line per bundle", () => {
+      const actions = opencode.plan(context, planFor(["datastore"]));
+      const copies = actions.filter(a => a.path === bundle("datastore"));
+
+      expect(copies).toHaveLength(1);
+      expect(copies[0]?.summary).toMatch(/^copy \d+ files to /);
+    });
+
+    // Installing TWICE is the whole point. `receipt.dir` skips a path that
+    // already exists, so run 2's receipt recorded no bundle root at all and the
+    // uninstall after it left an empty `virajp-plugins/` behind. A single
+    // install passes either way — this is the `createdFile`/`tree` second-run
+    // trap, in the one shape that had no guarded variant.
+    it("leaves nothing behind when the last plugin is uninstalled", () => {
+      opencode.apply(context, planFor(["datastore"]));
+      const { receipt } = opencode.apply(context, planFor(["datastore"]));
+      expect(existsSync(bundle("datastore"))).toBe(true);
+
+      opencode.revert(context, receipt);
+
+      expect(existsSync(bundle("datastore"))).toBe(false);
+      expect(existsSync(join(home, ".config", "opencode", "virajp-plugins")))
+        .toBe(false);
+    });
+
+    it("keeps the bundle root when another plugin is still installed", () => {
+      opencode.apply(context, planFor(["datastore"]));
+      const { receipt } = opencode.apply(context, planFor(["cicd"]));
+
+      opencode.revert(context, receipt);
+
+      // Removal is conditional on emptiness, which is what makes recording the
+      // root unconditionally safe: uninstalling one plugin must not take out a
+      // sibling this run was never asked about.
+      expect(existsSync(bundle("cicd"))).toBe(false);
+      expect(existsSync(bundle("datastore"))).toBe(true);
+      expect(existsSync(join(home, ".config", "opencode", "virajp-plugins")))
+        .toBe(true);
+    });
+  });
+
   describe("pruning what it no longer emits", () => {
     const configRoot = () => join(home, ".config", "opencode");
 

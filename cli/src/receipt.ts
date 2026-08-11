@@ -173,6 +173,24 @@ export class ReceiptBuilder {
   }
 
   /**
+   * Record a directory this tool owns, **removed only when empty**.
+   *
+   * The third member of the `createdFile` / `tree` family, and it exists for the
+   * same second-install trap: `dir` skips a path that is already there, so a
+   * root created by run 1 was invisible to run 2's receipt and survived the
+   * uninstall that followed as an empty directory.
+   *
+   * Distinct from `tree` in what it *removes*, not in what it claims. A bundle
+   * root holds one directory per plugin, and a run naming only some of them
+   * must not delete the others — so removal stays conditional on emptiness,
+   * which makes recording it unconditionally safe.
+   */
+  ownedDir(path: string): this {
+    this.entries.push({ kind: "dir", path });
+    return this;
+  }
+
+  /**
    * Record a directory this tool owns outright, to be removed recursively.
    *
    * Recorded unconditionally, unlike `dir`. A tree already on disk holding our

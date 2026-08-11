@@ -97,7 +97,13 @@ export const opencode: Adapter = {
     void context;
     const missing: string[] = [];
     for (const entry of receipt.entries) {
-      if (entry.kind === "file" && !existsSync(entry.path)) {
+      // `tree` as well as `file`: since the bundles are recorded as one entry
+      // each, checking only `file` would verify the handful of shared flat-dir
+      // writes and silently skip every plugin payload.
+      if (
+        (entry.kind === "file" || entry.kind === "tree")
+        && !existsSync(entry.path)
+      ) {
         missing.push(entry.path);
       }
     }
@@ -173,6 +179,15 @@ function installScope(
     ...prune(tree, bundleRoot, plugins, ownership, dryRun),
   );
 
+  // The bundle root holds nothing but our own plugin directories, so it is
+  // removed when empty — the plugin trees below take themselves out
+  // recursively, and without this the emptied root would survive an uninstall.
+  // `ownedDir`, not `dir`: the latter skips a path that already exists, so on
+  // every run after the first this recorded nothing at all.
+  if (!dryRun) {
+    receipt.ownedDir(bundleRoot);
+  }
+
   for (const plugin of plugins) {
     actions.push(...copyTree(
       {
@@ -180,6 +195,10 @@ function installScope(
         to: rootFor(plugin),
         rootPath: rootFor(plugin),
         siblingRoot: rootFor,
+        // `virajp-plugins/<plugin>/` is exclusively ours — `prune` already
+        // clears it wholesale — so it is recorded as one entry rather than one
+        // per file. The flat dirs below are shared and must stay per-file.
+        record: "tree",
       },
       receipt,
       dryRun,

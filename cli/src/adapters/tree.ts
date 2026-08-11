@@ -45,6 +45,22 @@ export interface CopyOptions {
   readonly rootPath: string;
   /** Resolves a sibling plugin's root, for cross-plugin references. */
   readonly siblingRoot: (plugin: string) => string;
+  /**
+   * How the copy is recorded, which is dictated by **who else writes to `to`**.
+   *
+   * `files` (the default) records one `file` entry per write plus the directory
+   * chain, so an uninstall removes exactly what it wrote and removes a directory
+   * only when empty. That is the only safe shape for a destination shared with
+   * another writer.
+   *
+   * `tree` records the destination as a single recursive entry and emits one
+   * summary action. Only correct when `to` is a directory nothing but this tool
+   * writes to — the same precondition `receipt.tree` carries — and it is what
+   * keeps a 250-file bundle from becoming 250 lines of run report and 380
+   * receipt entries, where one genuine change is indistinguishable from the
+   * copy that happens every run.
+   */
+  readonly record?: "files" | "tree";
 }
 
 /**
@@ -82,6 +98,13 @@ function copyFiles(
   dryRun: boolean,
 ): Action[] {
   const actions: Action[] = [];
+  const asTree = options.record === "tree";
+
+  // Recorded once, before any write, so an interrupted install still has the
+  // whole destination in its receipt rather than the prefix it managed to copy.
+  if (asTree && !dryRun) {
+    receipt.tree(options.to);
+  }
 
   for (const [source, destination] of files) {
     const relPath = source;
@@ -95,15 +118,19 @@ function copyFiles(
         options.rootPath,
         options.siblingRoot,
       );
-      actions.push({
-        summary: `write ${destination}`,
-        path: destination,
-        diff: { before, after },
-      });
+      if (!asTree) {
+        actions.push({
+          summary: `write ${destination}`,
+          path: destination,
+          diff: { before, after },
+        });
+      }
       if (!dryRun) {
         const mode = statSync(source).mode & 0o777;
-        recordDirs(receipt, options.to, destination);
-        receipt.file(destination, mode);
+        if (!asTree) {
+          recordDirs(receipt, options.to, destination);
+          receipt.file(destination, mode);
+        }
         mkdirSync(dirOf(destination), { recursive: true });
         // `mode` is passed explicitly because `writeFileAtomic` writes through
         // a temp file and renames: without it the result carries the default
@@ -114,10 +141,14 @@ function copyFiles(
       }
     }
     else {
-      actions.push({ summary: `copy ${destination}`, path: destination });
+      if (!asTree) {
+        actions.push({ summary: `copy ${destination}`, path: destination });
+      }
       if (!dryRun) {
-        recordDirs(receipt, options.to, destination);
-        receipt.file(destination, statSync(source).mode & 0o777);
+        if (!asTree) {
+          recordDirs(receipt, options.to, destination);
+          receipt.file(destination, statSync(source).mode & 0o777);
+        }
         mkdirSync(dirOf(destination), { recursive: true });
         // `cpSync` carries the mode itself — the mode-carrying files with no
         // extension (mise task scripts) survive here, which is why the bug
@@ -125,6 +156,16 @@ function copyFiles(
         cpSync(source, destination);
       }
     }
+  }
+
+  // One line for the whole bundle. No per-file diff: the destination is
+  // exclusively ours and is rewritten wholesale every run, so the diff was
+  // always the entire tree rather than the change worth reading.
+  if (asTree) {
+    actions.push({
+      summary: `copy ${files.length} files to ${options.to}`,
+      path: options.to,
+    });
   }
   return actions;
 }

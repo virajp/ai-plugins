@@ -156,10 +156,28 @@ and is therefore only ever pointed at a directory nothing but this tool writes
 to. `tree` also keeps a bulk payload out of the entry list — Claude's
 marketplace is 527 files, and recording them one by one would be 527 lines of
 run report for one logical action, with an uninstall that still had to trust the
-list was complete. `RECEIPT_VERSION` is **3**; `readReceipt` refuses only a
-*future* version, so older receipts still revert, while an older CLI refuses a
-`tree` it would otherwise skip — a half-revert reported as a clean uninstall is
-the failure worth preventing.
+list was complete. **OpenCode records its bundles the same way**, one `tree` per
+plugin rather than per file, which took its receipt from 413 entries to 32 and
+its run report from 281 changes to 37; the granularity stays per-plugin because
+a partial install must not remove a bundle it was not asked about, and the
+shared flat dirs stay per-file for the reason above. Its `copyTree` takes a
+`record: "files" | "tree"` for exactly that split.
+
+**Three kinds are recorded unconditionally, and it is always the same bug.**
+`createdFile`, `tree` and `ownedDir` all exist because their guarded
+counterparts skip a path that is already there — so run 2's receipt omits what
+run 1 created, and since every run overwrites the receipt, the uninstall after
+it leaves that path behind. `ownedDir` is the third and newest: `dir` skipped
+the already-existing bundle root, so `virajp-plugins/` survived as an empty
+directory. It differs from `tree` in what it *removes*, not in what it claims —
+removal stays conditional on emptiness, which is what makes claiming it safe. A
+single install passes either way; only a repeat run shows it, which is why
+`i:test` now installs twice before uninstalling.
+
+`RECEIPT_VERSION` is **3**; `readReceipt` refuses only a *future* version, so
+older receipts still revert, while an older CLI refuses a `tree` it would
+otherwise skip — a half-revert reported as a clean uninstall is the failure
+worth preventing.
 
 ### Tasks
 
