@@ -37,42 +37,23 @@ bin/ai-plugins.mjs         gitignored build output — the published entrypoint
 ```
 
 **Four top-level directories are rendered output**, and one of them reads
-confusingly beside its neighbours: `claude/` sits next to `.claude/` (which
-holds the worktrees) and `.claude-plugin/` (the generated Claude marketplace
-manifest). The dot prefixes keep them distinct on disk, but a reader skimming
-the root will not infer it — `claude/` is machine-written and never edited by
-hand, the other two are not.
+confusingly beside its neighbours: `claude/` sits next to `.claude/` (the
+worktrees, plus this repo's own skills and agents) and `.claude-plugin/` (the
+generated Claude marketplace manifest). The dot prefixes keep them distinct on
+disk, but a reader skimming the root will not infer it — `claude/` is
+machine-written and never edited by hand, the other two are not.
 
-- **`templates/`** is the only thing authored. `plugin.yaml` is the neutral
-  manifest, merging what used to be split between `plugin.json` and the
-  marketplace entry — so those two can no longer disagree. Prose uses Eta
-  helpers (`<%= it.root %>`, `<%= it.cmd('vwf:plan') %>`) wherever a target
-  needs a different spelling.
-- **`schema/`** holds the neutral contract: order-preserving frontmatter, zod
-  schemas, and the verified per-target capability matrix. Frontmatter is
-  modelled as ordered `(key, raw)` pairs and re-emitted **verbatim** — never
-  round-tripped through a YAML serialiser, because the corpus uses nine key
-  orders and folds descriptions at irregular widths.
-- **The rendered trees** are committed, so what users install is inspectable and
-  diffable in review, and CI can assert they match a fresh render. The frozen
-  pre-migration tree `plugins/` is **gone**, deleted with the installer cutover.
-  It existed for two reasons and outlived both: it was the Claude renderer's
-  byte-parity ground truth, and the published installer's OpenCode path read it
-  from the `main` tarball at run time. That second consumer disappeared when
-  `bin/` became build output, and the two had to go in one commit — deleting
-  `plugins/` while any published version still fetched it would have broken
-  `pnpx @askviraj/ai-plugins --platform opencode` for **already-released**
-  versions, not just future ones.
+`templates/` is the only thing authored: `plugin.yaml` is the neutral manifest,
+and prose uses Eta helpers wherever a target needs a different spelling.
+`schema/` holds the neutral contract — order-preserving frontmatter, zod
+schemas, and the verified per-target capability matrix. The rendered trees are
+**committed**, so what users install is inspectable and diffable in review, and
+CI can assert they match a fresh render.
 
-Retiring it retires the byte-parity gate with it. That gate was never automated
-— it was a manual `diff -rq plugins claude/plugins`, which settled at **3
-justified hunks** (two of the then-separate design adapters dropping a
-`description` duplicated from the marketplace entry; `git-workflow` dropping
-`user-invocable: true`, which is the default). All four targets now stand on the
-same footing: `plugins:check` plus the schema and renderer suites are the whole
-defence, and `schema/src/frontmatter.test.ts` still proves
-`emit(parse(x)) === x` over every authored document — the parity property in
-miniature, and the part that actually generalised.
+> **Authoring one:** the Eta helpers, verbatim frontmatter re-emission, what
+> `plugins:check` asserts and the dprint exclusions live in
+> `.claude/skills/plugin-authoring/`, which auto-applies while you edit
+> `templates/`.
 
 ### Targets and adapters
 
@@ -84,100 +65,19 @@ renderer, and what let the OpenCode installer shrink from a 1189-line renderer
 to a copier.
 
 Adapters come in two kinds, and which kind a target gets is dictated by the
-target, not chosen:
-
-- **Copy** — OpenCode alone, because it has no plugin concept: skills, agents
-  and commands go into well-known directories and the rest is config to merge.
-  **Copying is not idempotent on its own** — it writes what the render contains
-  and says nothing about what it used to — so the adapter prunes first, by three
-  rules that differ in *who else writes there*. A plugin's own bundle
-  (`virajp-plugins/<plugin>/`) is exclusively ours and is cleared wholesale, per
-  plugin so a partial install cannot delete a bundle it was not asked about. A
-  directory under the bundle root naming no known plugin is a retired plugin and
-  goes. The flat dirs (`agent/`, `command/`, `plugin/`) are **shared** — with
-  OpenCode itself and with graphify — so a file there is removed only when the
-  ownership record a previous run left says it was ours *and* this render no
-  longer emits it. That last rule catches the non-obvious case: a skill whose
-  `invocation:` flips `user` → `both` stops emitting its `command/` wrapper
-  while the plugin stays installed.
-- **Marketplace** — everyone else. Claude and Oh-My-Pi are driven through their
-  own CLI (`plugin marketplace add` + `plugin install`), because each owns
-  bookkeeping this tool has no business editing — Oh-My-Pi an npm-shaped tree
-  with a lockfile. Cursor has no CLI, so its adapter writes the reference
-  itself.
-
-**A marketplace adapter still has to answer *where the bytes live*.** Cursor
-resolves from git, so it is done once the command returns. **Claude and Oh-My-Pi
-both re-read the path they registered**, so it outlives the run — and pointing
-it at `context.sourceRoot` pointed it at a `pnpm dlx` store path that
-`pnpm store prune` reclaims. Both therefore copy the payload under
-`~/.local/share/virajp/ai-plugins/` (XDG, `LOCALAPPDATA` on Windows) — `claude`
-and `ohmypi` beside each other — and register that. A `github` source would also
-be durable, but `marketplace add` takes no ref, so every user would track `main`
-instead of the version they installed.
-
-**Oh-My-Pi was the late addition, because it looked exempt.** It copies each
-installed bundle into `~/.omp/plugins/cache/`, so plugins already installed keep
-working after the source is reclaimed — which is the whole of what "copies into
-its own cache" bought. The registration still names the source, and `omp`
-re-reads it to install anything *else*: with the path gone,
-`omp plugin discover` still lists every plugin from its cached catalog while
-`omp plugin install <name>@virajp-plugins` fails with "Plugin source directory
-does not exist". That is the same shape as the url-sourced entry
-`marketplaceJson` already refuses to emit — a catalog promising something the
-tool will never deliver — and it is invisible until the first install of a
-plugin the user did not already have. The migration rides `isStalePin`'s
-`managedBase` arm, which exists precisely for a pin that is a package install
-moving to the managed directory.
-
-**Scope is declared by `plugin.yaml` and honoured where the target supports it;
-where it does not, the request falls back rather than failing.** Only OpenCode
-and Oh-My-Pi support both natively. Cursor is project-only — user-scope
-marketplace installs are account-side, and the local file that once held them is
-closed (`addGitHubPlugin` throws). The redirect logs a note; it is never silent.
+target, not chosen: **copy** for OpenCode, which has no plugin concept at all,
+and **marketplace** for the other three, each of which owns bookkeeping this
+tool has no business editing. Scope is declared by `plugin.yaml` and honoured
+where the target supports it; where it does not, the request falls back rather
+than failing, and says so.
 
 An install returns a **receipt** recording prior state, so uninstall restores
-rather than guesses. For CLI-driven targets an entry pairs the command run with
-the command that undoes it — deleting their files directly would leave the
-tool's own records claiming an install that is gone. An undo is recorded when
-the command changed something **or when the resulting state is provably this
-tool's** — the test is ownership, not activity. Gating on activity alone broke
-the moment a receipt mixed activity-gated entries with unconditional ones: a
-no-op re-install recorded the payload and nothing else, and since every run
-overwrites the receipt, the uninstall that followed deleted the payload and left
-the registration pointing at it. A pin outside this tool's own directories is
-still never re-pointed and never gets an undo, so uninstall still cannot remove
-a marketplace the user registered themselves.
+rather than guesses.
 
-Entry kinds differ by **who else writes there**, which is the whole distinction:
-`file` and `configKey` capture prior contents because the path is shared; `dir`
-removes only when empty, for the same reason; **`tree` removes recursively**,
-and is therefore only ever pointed at a directory nothing but this tool writes
-to. `tree` also keeps a bulk payload out of the entry list — Claude's
-marketplace is 527 files, and recording them one by one would be 527 lines of
-run report for one logical action, with an uninstall that still had to trust the
-list was complete. **OpenCode records its bundles the same way**, one `tree` per
-plugin rather than per file, which took its receipt from 413 entries to 32 and
-its run report from 281 changes to 37; the granularity stays per-plugin because
-a partial install must not remove a bundle it was not asked about, and the
-shared flat dirs stay per-file for the reason above. Its `copyTree` takes a
-`record: "files" | "tree"` for exactly that split.
-
-**Three kinds are recorded unconditionally, and it is always the same bug.**
-`createdFile`, `tree` and `ownedDir` all exist because their guarded
-counterparts skip a path that is already there — so run 2's receipt omits what
-run 1 created, and since every run overwrites the receipt, the uninstall after
-it leaves that path behind. `ownedDir` is the third and newest: `dir` skipped
-the already-existing bundle root, so `virajp-plugins/` survived as an empty
-directory. It differs from `tree` in what it *removes*, not in what it claims —
-removal stays conditional on emptiness, which is what makes claiming it safe. A
-single install passes either way; only a repeat run shows it, which is why
-`i:test` now installs twice before uninstalling.
-
-`RECEIPT_VERSION` is **3**; `readReceipt` refuses only a *future* version, so
-older receipts still revert, while an older CLI refuses a `tree` it would
-otherwise skip — a half-revert reported as a clean uninstall is the failure
-worth preventing.
+> **Working on one:** the pruning rules, where each target's payload lives, the
+> scope fallbacks, the receipt entry kinds and the receipt-completeness bug that
+> has now shipped four times are in `.claude/skills/installer-cli/`, which
+> auto-applies while you edit `cli/`.
 
 ### Tasks
 
@@ -216,24 +116,10 @@ allows one Trusted Publisher and validates the entry-point filename):
   strict-YAML frontmatter, and every root-relative reference resolving to
   something actually emitted.
 
-  The technology-free guard has two halves, and the second is the one that
-  generalises. `TOOL_TOKENS` bans vwf naming a concrete technology — **but only
-  where the mention prescribes**: an occurrence is exempt when another token of
-  the same vocabulary sits within 100 characters, because listing the
-  alternatives describes the domain of a config key vwf owns rather than
-  recommending one. Fenced blocks are stripped first (a config example must show
-  real values). The window is character-based because every real enumeration in
-  the corpus wraps mid-list. Separately, `mcp__plugin_design-tools_` is banned
-  outright in vwf prose — that names no tool, so it covers a fourth design tool
-  the day one is added, and it is what would have caught `feedback canvas`.
-
-  **Two design tokens are deliberately unbannable.** `stitch` is an ordinary
-  English word vwf's own screens doctrine leans on ("stitch its happy path",
-  "the stitch contract"), and `lovable` is an ordinary adjective — listing
-  either reproduces the `hono`/"honor" false positive the anchoring exists to
-  prevent. They live in `ENUMERATION_PEERS` instead: they prove an enumeration
-  without being policed, which is why the evidence set is wider than the
-  prohibition set.
+  The technology-free guard bans vwf naming a concrete technology **only where
+  the mention prescribes**, which is subtler than it sounds — how the anchoring
+  window works, and why two design tokens are deliberately unbannable, is in
+  `.claude/skills/plugin-authoring/references/rendering.md`.
 - **`typescript:test`** — table-tests the `typescript` `npm-normalize.sh` hook
   through the system sed (the BSD-sed portability guarantee), for **both**
   package managers: each table runs in a temp dir seeded with the lockfile that
@@ -262,23 +148,14 @@ design (a plugin may hold skills versioned on their own cadence).
 
 ### Traps worth knowing
 
-- **Eta needs `autoEscape: false` AND `autoTrim: false`.** `autoTrim` strips the
-  newline next to a tag, which silently reflows folded YAML scalars — same text,
-  different bytes, parity gone.
-- **dprint deliberately excludes `templates/**/*.md`** — and every rendered tree
-  (`claude/`, `cursor/`, `ohmypi/`, `opencode/`) plus `plugins.json` with it. It
-  re-wraps markdown, but Eta expressions are wider than what they render to, so
-  formatting the templates mis-wraps the rendered output — and formatting the
-  output itself would make it differ from a fresh render, failing
-  `plugins:render-clean`. Match the existing fold width rather than fighting it.
-  `CLAUDE.md` and `readme.md` *are* formatted, so widening one table cell
-  re-pads every row.
 - **The rendered trees are committed; `bin/` and the per-package `dist/` are
   gitignored.** A rendered tree is meant to be diffed in review; a bundle diff
   is noise.
-- **Frontmatter must be strict-YAML valid.** Claude's parser is lenient and will
-  accept what a strict parser rejects outright — and a rejected skill is dropped
-  silently, with no error and no warning.
+- `CLAUDE.md` and `readme.md` **are** dprint-formatted, so widening one table
+  cell re-pads every row.
+- The template-authoring traps — Eta's `autoTrim` reflowing folded scalars, the
+  dprint exclusions, strict-YAML frontmatter, and bare prose naming a prefixed
+  skill — are in `.claude/skills/plugin-authoring/`.
 
 ## Plugins
 
@@ -313,66 +190,36 @@ Everything else defaults: `category` to `development`, `scope` to `user`,
 `source` to local, and `optIn`/`userOnly` to false. The schema is
 `schema/src/manifest.ts`, which is authoritative.
 
-This one file replaces what used to be split between
-`plugins/<name>/.claude-plugin/plugin.json` (servers, dependencies) and the
-plugin's entry in `.claude-plugin/marketplace.json` (version, category, tags,
-source) — two files that had to be kept in sync by hand, and a whole class of
-drift `plugins:check` existed to catch. The marketplace manifest is now
-**generated** from the manifests, so a plugin cannot be unregistered, orphaned,
-or disagree with its own entry.
+This one file replaces what used to be split between a `plugin.json` and a
+hand-written marketplace entry — two files that had to be kept in sync by hand,
+and a whole class of drift `plugins:check` existed to catch. The marketplace
+manifest is now **generated** from the manifests, so a plugin cannot be
+unregistered, orphaned, or disagree with its own entry.
 
-Plugins may declare any combination of:
+A plugin may additionally declare `lspServers`, `mcpServers`, `dependencies`,
+`requires` (a **hard install gate**, not a bibliography) and `prefixSkillNames`.
+Skills, agents, and hooks are **auto-discovered by directory convention** and
+are never listed in `plugin.yaml`:
 
-- **`lspServers`** — LSP server definitions keyed by language ID. Each entry
-  needs `command`, `args`, `extensions`, and optionally `startupTimeout` and
-  per-target `idAliases` (OpenCode keys LSP config by its own built-in ids, so
-  `typescript-lsp` has to be written as `typescript` there). `templates/flutter`
-  bundles three — `dart-lsp` (run via `mise`) plus `kotlin-lsp` and
-  `sourcekit-lsp` (Swift), which invoke system-installed binaries on `PATH`.
-  Cursor has no LSP surface at all; the build reports it as a gap.
-- **`mcpServers`** — MCP server definitions, a discriminated union on
-  `transport` (`stdio` or `http`). See `templates/vwf/plugin.yaml`, which
-  declares one of each.
-- **`dependencies`** — other plugins this plugin requires (see below), as a
-  plain list of names; `vwf` is the only one that declares them, all resolved
-  within `virajp-plugins` itself. `plugins:check` enforces that each names a
-  real plugin. A dependency *may* point at **another marketplace** (each entry
-  carries its own `marketplace`), but cross-marketplace deps are **blocked at
-  install time** unless the ROOT `marketplace.json` allowlists that foreign
-  marketplace via top-level `allowCrossMarketplaceDependenciesOn` (not
-  transitive — only the installing marketplace's allowlist applies). No plugin
-  here currently uses one, so that allowlist is absent; re-add it if a
-  cross-marketplace dependency is introduced.
-
-Skills, agents, and hooks are **auto-discovered by directory convention** — they
-do not need to be listed in `plugin.yaml`:
-
-- `skills/<name>/SKILL.md` → skills. Invocation is the neutral three-valued
-  `invocation:` key — `model` (auto-applying doctrine), `user` (slash only) or
-  `both` (the default) — which each renderer projects down to its target's
-  spelling. This repo has **no `commands/` dirs**: former commands are skills,
-  so one artifact serves every target.
+- `skills/<name>/SKILL.md` → skills, carrying the neutral three-valued
+  `invocation:` key. This repo has **no `commands/` dirs**: former commands are
+  skills, so one artifact serves every target.
 - `agents/<name>.md` → subagents
-- `hooks/hooks.yaml` → hooks, declared as *intent* (`event`, `matcher`,
-  `action`, `script`) so each renderer can emit its own mechanism (see Hooks
-  below)
-- `opencode-plugin/*.{ts,js}` → **OpenCode plugin modules**, for behaviour no
-  neutral hook can express (vwf's mempalace auto-save is the first). `source.ts`
-  reads them into `openCodePlugins`, deliberately **not** into `files`, so the
-  other three targets never ship them as dead bundle files; the OpenCode target
-  copies each to `plugin/<plugin>-<basename>` with an ownership stamp, so the
-  existing install/uninstall/receipt machinery covers them with no adapter
-  change. **They ship as authored TypeScript, untranspiled** — verified against
-  OpenCode's source: its discovery glob is `{plugin,plugins}/*.{ts,js}` and its
-  loader is Bun. No transform, no new dependency.
+- `hooks/hooks.yaml` → hooks, declared as *intent* so each renderer can emit its
+  own mechanism
+- `opencode-plugin/*.{ts,js}` → OpenCode plugin modules, for behaviour no
+  neutral hook can express
+
+> Field by field, including the cross-marketplace dependency rules:
+> `.claude/skills/plugin-authoring/references/manifests.md`.
 
 ### Marketplace manifests
 
 Three of the four targets have a native plugin marketplace, so `plugins:build`
 generates one per target from the manifests. **Only OpenCode has none** — it has
-no plugin concept at all, which is why its installer copies a rendered tree
-while the other three register a marketplace and let the tool do the installing.
-Do not edit any of them by hand; `plugins:render-clean` will fail.
+no plugin concept, which is why its installer copies a rendered tree while the
+other three register a marketplace and let the tool do the installing. Do not
+edit any of them by hand; `plugins:render-clean` will fail.
 
 | Target   | Manifest                          | Plugin source                  |
 | -------- | --------------------------------- | ------------------------------ |
@@ -380,36 +227,12 @@ Do not edit any of them by hand; `plugins:render-clean` will fail.
 | Cursor   | `.cursor-plugin/marketplace.json` | `git-subdir` → `cursor/<name>` |
 | Oh-My-Pi | `ohmypi/.omp-plugin/…json`        | `./<name>`                     |
 
-Two manifests live at the **repo root** rather than under `<repo>/<target>/`,
-because that is where the tool looks when the marketplace is added from this
-repo, and their sources are root-relative and would resolve nowhere else.
-Cursor's must be there for a second reason: Cursor accepts
-`.claude-plugin/marketplace.json` as a fallback, and checks `.cursor-plugin/`
-**first** — so without ours at the root it would read Claude's and resolve every
-plugin to a Claude-rendered bundle.
-
-Three traps, each verified by running the real tool and each silent when wrong:
-
-- **Sources resolve against the marketplace root**, not the repo root.
-  Oh-My-Pi's were once spelled from the repo root and resolved to
-  `ohmypi/ohmypi/<name>`, failing every install. `plugins:check` cannot catch
-  this — the path exists, just not where the tool looks.
-- **Cursor's sources are git-only** — a bare string, or an object tagged
-  `github` / `url` / `git-subdir`; there is no local-path variant. So a Cursor
-  install clones this repo and reads whatever ref it resolves, rather than the
-  `cursor/` tree beside it. It is the one target where the committed-render
-  guarantee does not reach, and the only one needing `marketplace.yaml`'s
-  `repository` field.
-- **Every entry must state its own `version`.** Omitting it does not leave the
-  version unset — it makes `omp` fall back, and the fallback resolves by
-  accident. Its order (read off the shipped 17.2.12 binary) is the entry's
-  `version`, then `.claude-plugin/plugin.json`, `plugin.json` and `package.json`
-  under the bundle, then a git `sha`, then the literal `"0.0.0"`. This render
-  emits none of those three files except a `package.json`, and only for a plugin
-  with **wired hooks** — so `typescript` and `vwf` reported correctly while
-  every other plugin listed as `0.0.0`, which reads as an unversioned plugin
-  rather than a missing field. Nothing fails: the install succeeds, and the
-  version is wrong only where a hook happens to be absent.
+Two live at the **repo root** rather than under `<repo>/<target>/`, because that
+is where the tool looks when the marketplace is added from this repo, and their
+sources are root-relative. Three traps ride on these — sources resolving against
+the marketplace root, Cursor's git-only sources, and the mandatory per-entry
+`version` — each verified by running the real tool and each silent when wrong:
+`.claude/skills/plugin-authoring/references/manifests.md`.
 
 ## The vwf Plugin
 
@@ -758,246 +581,36 @@ recall keeps working while the findings loop-back quietly stops persisting.
 
 The statusline is **not** a plugin — it ships inside `@askviraj/ai-plugins`, the
 `citty` CLI that installs the toolkit across all four targets (marketplace
-registration or a copied tree, plus the statusline).
+registration or a copied tree, plus the statusline). Users run it via
+`pnpx @askviraj/ai-plugins …`, which is the only distribution channel.
 
 **"The statusline" is three installs of one idea**, because each target offers a
-different kind of hook and none of them offers ours. Claude Code has a config
-key, so it gets the powerline script this CLI copies and points `settings.json`
-at. Oh-My-Pi has a renderer of its own, so it gets four `omp config set` keys.
-OpenCode has neither — it has an **extension point**, so it gets a TUI plugin
-copied into the config dir and registered in `tui.json`. In both of the latter
-two the target is **information parity, not visual parity**: the same segments,
-drawn with their separators and palette. **Cursor** is the one target exposing
-no status surface at all, so a run targeting only it still installs nothing.
+different kind of hook and none of them offers ours: a config key on Claude,
+four `omp config` keys on Oh-My-Pi, a TUI plugin on OpenCode. **Cursor** exposes
+no status surface at all.
 
 **`cli/` is the source; `bin/` is the build output, and `bin/` is what npm
-publishes.** tsup bundles `cli/src/index.ts` → `bin/ai-plugins.mjs`, and two
-things make that split load-bearing rather than stylistic: `@ai-plugins/schema`
-is a private workspace package that would not resolve from an installed tarball
-(every import of it is `import type`, so the bundle erases it), and shipping
-`cli/src/*.ts` directly would raise `engines.node` from `>=18` to `>=22.18`,
-where Node strips types unflagged. **`bin/` is gitignored** — note the asymmetry
-with the rendered trees, which are committed because a *rendered* tree is meant
-to be diffed in review, whereas a bundle diff is noise. `i:build` regenerates
-it, and `release.yml` already calls `i:build` before publishing, so its trigger
-surface is untouched.
+publishes.** tsup bundles `cli/src/index.ts` → `bin/ai-plugins.mjs`; `bin/` is
+gitignored and `i:build` regenerates it. The published tarball is `bin` +
+`tools` + the four rendered trees + `plugins.json` + both root marketplace
+manifests — about 12 MB, which is the cost of the committed-render guarantee:
+what a user installs is what CI validated.
 
-The published tarball is `bin` + `tools` + the four rendered trees +
-`plugins.json` + both root marketplace manifests: every adapter reads
-`<target>/` at install time through `context.sourceRoot`, and the Claude and
-Cursor adapters read `.claude-plugin/marketplace.json` and
-`.cursor-plugin/marketplace.json` from the package root. That makes the package
-~12 MB, which is the cost of the committed-render guarantee — what a user
-installs is what CI validated.
+| Path                     | Is                                                                |
+| ------------------------ | ----------------------------------------------------------------- |
+| `cli/src/index.ts`       | the citty router — parse, resolve, gate, execute, report, exit    |
+| `cli/src/adapters/`      | one per target                                                    |
+| `cli/src/receipt.ts`     | prior state, so uninstall restores rather than guesses            |
+| `cli/src/deps.ts`        | the external-tool gate, derived from each plugin's `requires:`    |
+| `cli/src/graphify.ts`    | `graphify install` + `hook install` when vwf is installed         |
+| `cli/src/version.ts`     | `--version` — the local manifest against the one on `main`        |
+| `cli/src/statusline*.ts` | the three statusline surfaces, each with its own receipt          |
+| `tools/statusline/`      | the script, its defaults, the caps hook, the OpenCode TUI plugin  |
+| `cli/src/**/*.test.ts`   | vitest; `i:test` smoke-tests the **built** bundle, not the source |
 
-Layout:
-
-- `tools/statusline/statusline` — the executable Node script (node shebang).
-  Drives **both** surfaces from one file: a stdin payload with a `tasks` array
-  renders the subagent panel, anything else the main two-line bar.
-- `tools/statusline/statusline.json` — the bundled default config (every
-  constant: palette, powerline glyphs, symbols, per-segment styling, line
-  layout, subagent panel). The installer seeds this into
-  `~/.config/statusline.json`.
-- `package.json` (root) — the npm package: `bin` `ai-plugins` →
-  `./bin/ai-plugins.mjs`. Runtime deps are whatever the bundle leaves external
-  (`citty`, `jsonc-parser`, `smol-toml`, `write-file-atomic`); tsup treats
-  `dependencies` as external and inlines everything else, so **a runtime import
-  that is only a `devDependency` gets silently bundled** — it works, and it
-  hides that package from `osv-scanner`, which reads the lockfile. The package
-  `type` stays `commonjs`: the bundle is ESM by its `.mjs` extension, while the
-  standalone `tools/statusline/` scripts (run outside this package, with no
-  package.json beside them) must remain CommonJS — so the ESM/CJS split is
-  carried per-file, not by a package-wide `type: module`.
-- `tsup.config.ts` — one entry, `outDir: bin`, ESM, `target: node18`,
-  `clean: true`. The hashbang on `cli/src/index.ts` is not decoration: tsup
-  copies it through and marks the output executable, which is what lets `bin`
-  point straight at the bundle.
-- `cli/src/index.ts` — the citty router: parse, resolve, gate, execute, report,
-  exit. It resolves the package root by **walking up for a `package.json` whose
-  name matches**, rather than counting `..` segments, because it runs from two
-  depths (`cli/src/` in the repo, `bin/` once bundled) and a fixed offset would
-  be right in one and silently wrong in the other.
-- `cli/src/deps.ts` — the external-tool gate. Each plugin declares its own
-  `requires:` in `plugin.yaml`; the build projects it into `plugins.json`, and
-  the union over the dependency-expanded set is checked before anything is
-  written. The old installer kept this as a hand-maintained `PLUGIN_EXTRA_DEPS`
-  map whose entries rolled their dependencies' tools up by hand — the derived
-  union reproduces every one of those entries exactly, and a test pins that.
-  **Not overridable by `--force`**, which means something narrower (act on a
-  target whose own CLI is missing): there is no useful state on the far side of
-  installing vwf without graphify. `DEP_HINTS` stays CLI-side because it
-  describes *this toolchain*, not the plugin — so a tool with no hint still
-  reports as missing rather than needing the two lists kept in sync.
-- `cli/src/graphify.ts` — runs `graphify install --platform <target>` plus
-  `graphify hook install` when vwf is installed, for the two targets graphify
-  supports (claude, opencode). Not optional: vwf enforces graphify at its own
-  entry gate, so an install that skips this produces a plugin that halts.
-  Soft-skips throughout — the hook needs a git work tree, and failing here would
-  undo an install that already succeeded.
-- `cli/src/version.ts` — `--version`. It does **not** ask each tool what it has
-  installed the way `bin/claude.mjs` asked `claude plugin list --json`; with
-  four targets that is four bookkeeping formats. Instead, a plugin's version *in
-  this build* is what an install would give you — every target reads `<target>/`
-  from this package, in place or copied — so the local manifest against the one
-  on `main` answers it for all four at once. A plugin here but not on `main` is
-  labelled `(not on main yet)` rather than left bare, which read as a failed
-  lookup.
-- `cli/src/statusline.ts` — the Claude statusline installer. Not a plugin and
-  therefore not an adapter; wired straight from the router with its own receipt.
-  See Statusline below.
-- `cli/src/statusline-ohmypi.ts` — the Oh-My-Pi half, with a receipt file of its
-  own so uninstalling one surface never touches the other. It sets four keys
-  (`statusLine.preset` `custom`, plus `leftSegments` / `rightSegments` /
-  `segmentOptions`) through `omp config set`, reading each one's prior value
-  first so the undo restores it — and recording an undo **only when the value
-  changed**, since re-setting an identical value is a no-op whose undo would
-  clobber a choice the user made. Two verified `omp` facts shape it:
-  `omp config get` prints exactly the form `set` takes back (bare for an enum,
-  compact JSON otherwise), and **`omp config reset` does not remove a key** — it
-  writes the default back as explicit YAML. So byte-identity on uninstall rests
-  on one extra receipt entry filing the `config.yml` `omp` created, and a key
-  that was absent from a *pre-existing* config comes back as its explicit
-  default: semantically identical, not byte-identical, which is the price of
-  restoring key by key rather than rewriting a file the user also edits. **`omp`
-  does not validate segment names** — a typo installs cleanly and draws nothing.
-- `cli/src/statusline-opencode.ts` — the OpenCode third, again with its own
-  receipt. It copies `tools/statusline/opencode-tui.tsx` into the config dir
-  (reusing the OpenCode adapter's `configDir`, so the two cannot disagree about
-  where OpenCode reads) and appends its relative path to **`tui.json`** through
-  the same format-preserving JSONC helpers the adapter uses. Three verified
-  facts, none of them in the published docs: **`tui.json` is a separate file
-  from `opencode.json`** (OpenCode routes `server` plugins to the latter and
-  everything else to the former, and the wrong one is accepted and never
-  loaded); **TUI plugins are not auto-discovered** — the
-  `{plugin,plugins}/*.{ts,js}` glob that loads vwf's mempalace auto-save does
-  not reach them, so the `tui.json` entry *is* the registration; and **there is
-  no build step**, since OpenCode's loader is Bun and resolves the plugin's two
-  imports itself. A `tui.json` this CLI created is undone by deleting it, one
-  that already existed key by key at the **shallowest new key**; the `$schema`
-  key and the formatting pass are both creation-only, because on the user's file
-  a reflow would break the byte-identical round-trip the receipt promises.
-- `tools/statusline/opencode-tui.tsx` — the TUI plugin itself, and the authority
-  on what it draws. **Deliberately not covered by any tsconfig**: type-checking
-  it would mean adding `@opentui/solid` and `@opencode-ai/plugin` as
-  devDependencies purely to resolve two imports in a file nothing here builds,
-  putting two packages into the lockfile and the osv scan that ship nothing and
-  pinning them against an OpenCode runtime we do not control. `tools/` is
-  already an unchecked island for the same reason (`statusline` and
-  `context-caps.js` are both plain JS). What stands in for the compiler is the
-  file's own discipline: **every read is optional and every segment is built
-  inside a `try`**, because a plugin that throws in a render slot takes the
-  frame down with it.
-- `tools/statusline/context-caps.js` — the context/rate-limit caps `PostToolUse`
-  hook, bundled with the main `statusLine` install (see Statusline below).
-- Tests live beside the source under `cli/src/**/*.test.ts` and run under
-  **vitest**. `i:test` bundles first and then smoke-tests
-  **`bin/ai-plugins.mjs`, not `cli/src/index.ts`** — a packaging mistake (a
-  missing external, a broken package-root walk) only shows up in the built
-  artifact, because in the repo everything resolves through the workspace. It
-  then runs the vitest suites too, so `release.yml` cannot publish something no
-  gate validated; `plugins.yml` runs them independently.
-
-  Most of it exits before an adapter runs, but it ends with a **real install →
-  install again → uninstall** against a throwaway `HOME` (plus `XDG_CONFIG_HOME`
-  and `XDG_DATA_HOME`, or a "hermetic" run still writes into the developer's own
-  config). It drives **OpenCode**, whose adapter shells out to nothing — the
-  binary need only exist for `detect()`, so every write is the real copy, prune,
-  ownership record, config merge and receipt. Stubbing `claude` or `omp` instead
-  would test this tool against our own fiction of their CLIs; their command
-  sequences are covered by the adapter suites with fakes, and the packaging risk
-  is identical whichever adapter runs the bundle. It installs `datastore`
-  because that is the plugin with no `requires:`, so the run reaches the adapter
-  rather than stopping at the dependency gate. This is what caught the
-  `ownedDir` bug above, on its first run.
-
-  **`vitest.config.mts` restricts collection to
-  `{schema,build,cli}/src/**/*.test.ts`.** A test file anywhere else — beside
-  `tools/`, or at the repo root — is silently never run rather than failing.
-  That is why the statusline *script* tests live at
-  `cli/src/statusline-script.test.ts` even though what they exercise is
-  `tools/statusline/`.
-
-### Flags
-
-**Plugins.** `--all` installs every **user-scoped, non-opt-in** plugin at user
-scope; `--user <name>` / `--project <name>` (both repeatable) name plugins at a
-scope. Project-scoped plugins (`flutter`) and opt-in ones (the two cloud plugins
-`cloudflare` + `gcp`, and all five capability plugins) are excluded from `--all`
-and reached by name. Every one of those sets is **derived from `plugin.yaml` via
-`plugins.json`**, not hardcoded — the old `PLUGINS` / `PROJECT_SCOPED` /
-`OPT_IN` / `USER_ONLY` / `PLUGIN_DEPS` constants and the `plugins:check`
-assertion that kept them honest are both gone, because there is no longer a
-second copy to disagree. Names are bare and validated against that index, so an
-`@marketplace` or path qualifier is simply not a known name and the CLI can only
-install from `virajp-plugins`.
-
-**Targets.** `--platform` (repeatable) selects among `claude`, `cursor`,
-`ohmypi`, `opencode`; omitted, every tool detected on `PATH` is targeted. A
-selected target whose tool is absent is *skipped with a note*, not failed —
-targets are independent, and one missing agent should not fail a run that
-installed into the others. `--force` acts on it anyway.
-
-**Statusline.** `--statusline` installs whichever surfaces the selected targets
-have: for Claude both `statusLine` and `subagentStatusLine` plus the caps hook,
-for Oh-My-Pi the four `omp config` keys, for OpenCode the TUI plugin and its
-`tui.json` entry. **Tri-state**: `--statusline` asks, `--no-statusline` refuses,
-unset defers to `--all` — so a bare `--all` installs the bar. Only an *explicit*
-`--statusline` on a run reaching **none of the three** prints the skip note,
-which now means a Cursor-only run. `omp` or `opencode` missing from `PATH` is a
-skip with a note rather than a failure, the same rule the plugin targets follow
-— though the OpenCode **uninstall** needs no binary, since everything it wrote
-is files this CLI owns. The **caps hook is Claude-only** and stays that way: its
-sensor is the Claude bar, which mirrors `context_window` / `rate_limits` to a
-usage file, and neither of the other two surfaces the equivalent — OpenCode
-exposes no ambient rate-limit state at all, which is also why its bar carries no
-5-hour / 7-day segments.
-
-**`--version` / `--upgrade`.** See `cli/src/version.ts` above for what
-`--version` compares. `--upgrade` replays each target's receipt: **installing is
-already upgrading**, since every target reads `<target>/` from this package — in
-place or copied — so there is no per-tool update command to drive. Combined with
-an install request the install phase covers it, and only the newer-CLI note is
-kept. A receipt written before plans were recorded is reported, not silently
-skipped.
-
-**`--uninstall` / `--dry-run`.** Uninstall reverts from the receipt, which
-records prior state — so it restores rather than guessing, and leaves the seeded
-`~/.config/statusline.json` (it may hold user edits). A dry run writes nothing
-and prints the full diff to stdout, progress to stderr.
-
-Users run it via `pnpx @askviraj/ai-plugins …`.
-
-### Distribution
-
-**npm is the only channel** — `pnpx @askviraj/ai-plugins`, which needs Node.
-There is deliberately no standalone binary, no Homebrew tap and no Scoop bucket.
-
-A binary here could never be self-contained: Claude and Oh-My-Pi each register a
-marketplace whose source is a real rendered directory, so the payload has to
-exist on disk as files rather than inside the executable. (Claude copies its
-copy to `~/.local/share/virajp/ai-plugins` first — see the adapter note above —
-but that only moves *which* directory it is, not the fact that there has to be
-one.) That made every non-npm channel a per-platform archive plus a per-release
-checksum file plus an extract-and-symlink installer — a second distribution
-system to keep current, delivering exactly what the npm package already
-delivers. So `packageRoot()` resolves from `import.meta.dirname` alone, and
-Windows users run the same `pnpx` command everyone else does.
-
-**Two-layer config**, deep-merged low → high (objects merge key-by-key, arrays
-replace wholesale; either layer may be absent):
-
-1. `~/.config/statusline.json` (lowest) — per-user; the installer seeds this
-   with the full defaults and deep-merges missing settings on re-run. The script
-   reads defaults **only** from here, never from a file beside itself.
-2. `<repo-root>/.config/statusline.json` — per-repo (highest).
-
-The JSON Schema lives at the **repo root** under
-`schemas/statusline.schema.json` (consumed only via its raw GitHub URL,
-referenced by `$schema`). User-facing reference docs are at
-`docs/statusline.md`. When changing the config shape, keep the script,
-`tools/statusline/statusline.json`, `schemas/statusline.schema.json`, and
-`docs/statusline.md` in sync.
+> **Working here:** the flag surface, the receipt invariant, the packaging traps
+> and every per-tool statusline fact are in `.claude/skills/installer-cli/`,
+> which auto-applies while you edit `cli/` or `tools/`.
 
 ## CI & Releases
 
@@ -1076,54 +689,22 @@ potentially compromised — releases.
 
 ### One-time manual setup (not automatable here)
 
-- On **npmjs.com**, add this repo + `release.yml` as the **Trusted Publisher**
-  for `@askviraj/ai-plugins` (enables OIDC). The workflow-filename field takes a
-  **single file** and a package has **exactly one** Trusted Publisher — set it
-  to `release.yml` only (not a comma-separated list, and not `deps-update.yml`,
-  which publishes by *dispatching* `release.yml`). A mismatch surfaces only at
-  publish time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
-- To cut a release: run **`mise run i:release`** (`--minor`/`--major` to choose
-  the bump) — it requires a clean tree, runs the tests, bumps the version,
-  commits, and creates the `vX.Y.Z` tag, then (interactively) **pushes the
-  commit and tag and watches the `release.yml` run to completion**
-  (`gh run watch
-  --exit-status`), so the task only succeeds if the npm-publish
-  pipeline does (needs `gh` installed + authenticated). **Passing `--ci` stops
-  after the tag** (no push/watch) — `deps-update.yml` passes it and does its own
-  push + dispatch publish. Prefer releasing via CI over local `i:publish` so
-  every version keeps the strongest npm trust level (trusted publisher).
+On **npmjs.com**, add this repo + `release.yml` as the **Trusted Publisher** for
+`@askviraj/ai-plugins` (enables OIDC). The workflow-filename field takes a
+**single file** and a package has **exactly one** Trusted Publisher — set it to
+`release.yml` only (not a comma-separated list, and not `deps-update.yml`, which
+publishes by *dispatching* `release.yml`). A mismatch surfaces only at publish
+time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
 
-### GitHub Releases
+### Cutting a release
 
-Every `vX.Y.Z` tag carries a **GitHub Release** with a generated changelog. The
-tag is the npm-publish trigger; the Release is the human-readable record beside
-it. Backfilled for all 30 historical tags (`v1.2.1` … `v2.7.2`) on 2026-07-30;
-**cut one for every release from here on**, right after `i:release` pushes the
-tag.
+`mise run i:release` (`--minor`/`--major` to choose the bump), then a GitHub
+Release for the tag — every `vX.Y.Z` tag carries one, so a missing Release means
+a missed step. **Ask the user before running it.** Prefer releasing via CI over
+the local `i:publish`, so every version keeps the strongest npm trust level.
 
-```sh
-gh release create vX.Y.Z --title vX.Y.Z --notes-file <notes> --verify-tag
-```
-
-- **`v*` is the installer CLI's namespace**, matching `package.json` — not a
-  plugin version. Marketplace plugin versions are **not** separately tagged;
-  they ride the CLI release that carries them, and the notes record which moved.
-- **Creating a Release never publishes.** `release.yml` triggers on
-  `push: tags: v*`; no workflow listens for `release` events. `--verify-tag`
-  keeps it that way by refusing to invent a tag (which *would* push and
-  publish).
-- **Notes follow `.config/git-conventional-commits.yaml`** — the same config the
-  repo already uses: only `feat`/`fix`/`refactor`/`perf` plus breaking changes,
-  `includeInvalidCommits: false` (so `ops:`/`docs:`/`chore:` are excluded), WIP
-  skipped, scopes bolded, each entry linking its commit via the `commitUrl`
-  pattern. Do not invent a second changelog format.
-- **Shape of a release note:** an optional `**Plugin versions:**` line (only the
-  marketplace entries whose version changed since the previous tag), the
-  changelog sections, and a `**Full Changelog**` compare link. A tag with no
-  eligible commits still gets a Release, saying it is a maintenance release —
-  the tag→Release mapping stays 1:1, so a missing Release means a missed step.
-- **`--latest`** resolves by publish date, so a normal forward release is
-  correct by default. Pass `--latest=false` when backfilling out of order.
+> The full ritual, the release-note format, and the CI facts that make a failed
+> publish legible are in `.claude/skills/release/` — run `/release`.
 
 ## Hooks
 
@@ -1131,64 +712,21 @@ Hooks are authored in each plugin's `hooks/hooks.yaml` as *intent* (`event`,
 `matcher`, `action`, `script`) so every renderer emits its own mechanism — for a
 `PreToolUse` / `Bash` rewrite, Claude a `hooks.json` with `updatedInput`,
 OpenCode a generated JS plugin mutating `output.args`, Cursor and Oh-My-Pi a
-deny-with-correction, since neither can rewrite a command:
+deny-with-correction, since neither can rewrite a command.
 
-- `templates/typescript/hooks/npm-normalize.sh` — rewrites `npm`/`npx` to the
-  repo's package manager. Exactly two are allowed for JS/TS — **pnpm** and
-  **bun** — and the hook resolves which by walking up from cwd for a lockfile
-  (`bun.lock`/`bun.lockb` → bun, `pnpm-lock.yaml` → pnpm), then a
-  `package_manager: bun` line in `.config/vwf.yaml` (for a project scaffolded
-  but not yet installed), then defaulting to **pnpm**. The lockfile is ground
-  truth because bun reuses npm's `workspaces` field, so nothing else
-  distinguishes them. It lives in the **language** plugin, not in `vwf`: a JS/TS
-  rewrite is a TypeScript fact, and `vwf` names no technology.
-- `templates/vwf/hooks/hooks.yaml` → `rtk hook claude` — **optional**, and vwf's
-  only `Bash` hook. The entry is guarded
-  (`command -v rtk >/dev/null 2>&1 && rtk hook claude || true`) so a missing
-  `rtk` never blocks a Bash call; `/vwf:doctor` carries the warning instead of
-  the hook emitting one per command, which would be unusable noise. Installed
-  out-of-band via `brew install --formulae rtk`; plugin install does **not**
-  provide it.
-- `templates/vwf/hooks/mempalace-checkpoint.sh` (`stop`) +
-  `mempalace-precompact.sh` (`preCompact`) — the mempalace auto-save, **written
-  here rather than vendored**. Upstream's hook counts human messages by parsing
-  `transcript_path`, a Claude JSONL transcript, and breaks its own save loop
-  with `stop_hook_active` — both Claude-only, so wrapping it for the other three
-  targets yields a hook that runs, finds no transcript and does nothing: green
-  in the coverage report, dead in practice. Counting *stops* in a state file
-  under `$XDG_STATE_HOME/ai-plugins/mempalace` needs only a session id, which
-  every target supplies. It speaks every 15th stop (`MEMPALACE_SAVE_INTERVAL`
-  overrides), honours mempalace's own opt-out (`MEMPALACE_HOOKS_AUTO_SAVE`, or
-  `hooks.auto_save` in `~/.mempalace/config.json`) so a user who turned
-  auto-save off upstream stays off, and resets the counter on
-  `stop_hook_active: true` so a save cycle cannot re-trigger itself. The
-  pre-compact half is a **second file** that `exec`s the first with `--compact`,
-  because the neutral schema names a script and passes it no arguments.
-- `templates/vwf/opencode-plugin/mempalace-autosave.ts` — the same behaviour for
-  the one target the shell hooks skip (`skipTargets: [ opencode ]`). OpenCode
-  has no stop to block; its equivalent surface is a bus event plus a server API
-  you inject a message into, so this counts real user messages on `session.idle`
-  and re-saves after `session.compacted`.
+What ships today: the `typescript` npm→pnpm/bun normalizer, vwf's guarded `rtk`
+Bash hook, and vwf's two mempalace auto-save hooks (`stop` + `preCompact`), with
+`opencode-plugin/mempalace-autosave.ts` standing in for the one target the shell
+hooks skip.
 
-**Two neutral events exist for these**: `stop` and `preCompact`, in
-`schema/src/hooks.ts`. Claude spells them `Stop` / `PreCompact` (mechanical
-capitalisation, so its renderer needed no change); Oh-My-Pi `session_stop` /
-`session_before_compact`; Cursor has `stop` and **no compaction hook at all**,
-which is gap-reported rather than silently dropped. Oh-My-Pi's renderer grew a
-**session-shaped wrapper variant** for them: a session event carries
-`{session_id, stop_hook_active}` instead of `{tool_name, tool_input}`, and
-answers `{continue: true, additionalContext: REASON}` instead of
-`{block: true, reason: REASON}`.
+Two rules that bite: hook scripts must be portable to macOS **BSD `sed`** (no
+`\s`, no `\b`), and **plugin hooks are never written to `settings.json`** — they
+are auto-discovered from the rendered `hooks/hooks.json`, so verify them with
+`/hooks`.
 
-Things to know when editing hooks here:
-
-- **Plugin hooks are never written to `settings.json`.** They are
-  auto-discovered from the rendered `hooks/hooks.json` and loaded in-memory at
-  session start. Verify active hooks with `/hooks`, not by inspecting
-  `settings.json`.
-- **Hook scripts must be portable to macOS BSD `sed`.** BSD `sed` does not
-  support `\s` or `\b` — use POSIX classes (`[[:space:]]`) and explicit
-  boundaries instead. `npm-normalize.sh` follows this.
+> Details, including the neutral event vocabulary and why the mempalace hooks
+> are reimplemented rather than vendored:
+> `.claude/skills/plugin-authoring/references/hooks.md`.
 
 ## Adding a Plugin
 
@@ -1212,89 +750,20 @@ Oh-My-Pi). Then pick the invocation mode per the policy below, and run
 ### Invocation policy
 
 Skills declare the neutral `invocation:` key — `model`, `user`, or `both` (the
-default). It is **not cosmetic**: on every target, `user` removes the skill from
-the model's context entirely, so a `user` skill **cannot be invoked by another
-skill**, and the failure is silent — the delegating skill simply can't see it.
+default) — which each renderer projects down to its target's spelling. It is
+**not cosmetic**: on every target, `user` removes the skill from the model's
+context entirely, so a `user` skill **cannot be invoked by another skill**, and
+the failure is silent. The rule: **`both`** when anything delegates to it,
+**`user`** when nothing does and the user owns the timing, **`model`** for
+auto-applying doctrine, paired with `paths:`.
 
-That makes the vwf mesh the deciding constraint — every workflow skill is
-delegated to by name somewhere. The rule:
+Skill names must also be unique across **all** local plugins, since skills share
+one flat namespace on OpenCode and Oh-My-Pi; vwf sets `prefixSkillNames` and
+emits `vwf-plan` there.
 
-- **`both` when anything delegates to it.** `git-workflow` (every skill commits
-  through it), `blueprint` / `plan` / `execute` (`/vwf:recall` routes its
-  continuation through all three — resuming a cap-paused run is recall's primary
-  use), `product` / `architecture` / `design-system` / `doctor` (`setup`
-  orchestrates them — and `doctor` has two more callers, `plan` and `execute`,
-  which both run it scoped and halt on a blocking finding), `handoff` (`execute`
-  runs it at a resource cap, and the statusline caps hook instructs it),
-  `feedback` (`verify` routes failures through it), `screens` (`feedback canvas`
-  routes into it).
-- **`user` when nothing does**, and the user owns the timing: `setup`, `verify`,
-  `mockups`, `archive`, `recall`. Every reference to these from another skill
-  must read as a **recommendation to the user**, never an invocation — `execute`
-  tells the user to run `/vwf:archive`, it does not call it.
-- **`model`** is the auto-applying doctrine archetype, paired with `paths:`.
-
-Before flipping a skill to `user`, grep for its command reference across
-`templates/vwf/skills/` and `templates/vwf/agents/` and confirm every hit is
-prose addressed to the user. Adding a delegation to a user-only skill is the
-reverse trap: it will never fire.
-
-This applies across plugins too — `devtools:scaffold` is `both` **because
-`/vwf:setup` orchestrates it**, per its own "orchestrate, don't reimplement"
-rule; so are `devtools`' two stack-adapter skills, which vwf invokes by name. So
-is `/vwf:readme`, for the same reason and now within one plugin: the absorption
-moved the skill, not the delegation, so flipping it to `user` would still break
-setup silently. `cicd:workflow` stays `user`: nothing delegates to it — vwf's
-two mentions of it are prose recommending it to the user, which the rename from
-`github-actions:workflow` did not change.
-
-**How each target spells it** (all verified against a real install or vendor
-source — do not infer these):
-
-| Target   | `user`                              | `model`                 | Invocation                             |
-| -------- | ----------------------------------- | ----------------------- | -------------------------------------- |
-| Claude   | `disable-model-invocation: true`    | `user-invocable: false` | `/vwf:plan`                            |
-| OpenCode | moved to `command/<plugin>-<skill>` | bare, under `skills/`   | `vwf-plan`; `/vwf-setup` for user-only |
-| Cursor   | `disable-model-invocation: true`    | bare + `paths:`         | `/plan`                                |
-| Oh-My-Pi | `disableModelInvocation: true`      | **bare — no key**       | `/skill:vwf-plan`                      |
-
-### Skill names on the flat targets
-
-Claude and Cursor scope a skill to its plugin, so `plan` only has to be unique
-within its own bundle. **OpenCode and Oh-My-Pi discover every provider's skills
-into one flat namespace keyed by bare name**, where `plan`, `execute`, `verify`
-and `product` are generic enough to belong to nobody — and vwf's 25 skills are
-the largest single claim on that namespace here.
-
-So `plugin.yaml` carries **`prefixSkillNames`**, and vwf sets it: the two flat
-targets emit `vwf-plan`, matching OpenCode's existing `<plugin>-<skill>`
-convention for user-only wrappers. It is off by default and deliberately
-per-plugin — turning it on renames every skill a plugin ships. No other plugin
-sets it today.
-
-The prefix is applied by the **renderer**, never authored, so one source tree
-serves both shapes. Three places must agree, and `flatSkillName` in
-`build/src/target.ts` is the single point they all go through: the directory,
-the frontmatter `name:`, and every cross-reference. Two template helpers cover
-the references — **`it.cmd()`** for an *invocation* and **`it.skillName()`** for
-a *location* inside an `it.root`-anchored path. A link into a skill's own
-`references/` should be plain relative (`references/x.md`), which is correct on
-every target and needs neither helper.
-
-**Bare prose naming a prefixed skill is a `plugins:check` failure**, because it
-is right on Claude and resolves to nothing on the flat targets — and a skill
-reference that resolves to nothing is silent. The rule matches delegation-shaped
-mentions only (`via`, `through`, `delegates to`), since these names double as
-the workflow's own vocabulary and "the `plan` stage" is prose, not a call.
-
-One of these is counter-intuitive and was found only by checking a real install,
-having silently broken an entire class of skill:
-
-- **Oh-My-Pi has one axis, not two.** `hide` and `disableModelInvocation` are
-  aliases the loader ORs into a single flag meaning *hidden from the model*.
-  Doctrine must therefore carry **neither** — emitting `hide` on it drops it
-  from the prompt, and the skill still loads and still lists while never firing.
-  Nothing can hide a skill from the slash menu alone.
+> The per-skill rulings, the per-target spellings, the `flatSkillName` machinery
+> and the Oh-My-Pi one-axis trap are in
+> `.claude/skills/plugin-authoring/references/invocation.md`.
 
 ## Installation (end-user)
 
