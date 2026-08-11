@@ -54,3 +54,13 @@ docs/scratchpad/
 docs/memory/handoff/
 docs/memory/doctor/
 docs/memory/runs/
+
+# This repo's own Cursor plugin install, which is a developer's choice rather
+# than the project's. Cursor has no user scope — marketplace installs there are
+# account-side — so `--platform cursor` always lands in the working project, and
+# here that working project is this repo. Committing it would also pin every
+# reader to `main` via `gitUrl`, since a Cursor source takes no ref.
+#
+# Not to be confused with `cursor/`, the committed render tree, or
+# `.cursor-plugin/`, the generated marketplace manifest at the repo root.
+.cursor/
