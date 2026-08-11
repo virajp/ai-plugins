@@ -106,16 +106,29 @@ target, not chosen:
   with a lockfile. Cursor has no CLI, so its adapter writes the reference
   itself.
 
-**A marketplace adapter still has to answer *where the bytes live*.** Oh-My-Pi
-copies into its own cache and Cursor resolves from git, so both are done once
-the command returns. **Claude re-reads its `directory` source on every later
-session**, so the path outlives the run — and pointing it at
-`context.sourceRoot` pointed it at a `pnpm dlx` store path that
-`pnpm store prune` reclaims. It therefore copies the payload to
-`~/.local/share/virajp/ai-plugins/claude` (XDG, `LOCALAPPDATA` on Windows) and
-registers that. A `github` source would also be durable, but `marketplace add`
-takes no ref, so every user would track `main` instead of the version they
-installed.
+**A marketplace adapter still has to answer *where the bytes live*.** Cursor
+resolves from git, so it is done once the command returns. **Claude and Oh-My-Pi
+both re-read the path they registered**, so it outlives the run — and pointing
+it at `context.sourceRoot` pointed it at a `pnpm dlx` store path that
+`pnpm store prune` reclaims. Both therefore copy the payload under
+`~/.local/share/virajp/ai-plugins/` (XDG, `LOCALAPPDATA` on Windows) — `claude`
+and `ohmypi` beside each other — and register that. A `github` source would also
+be durable, but `marketplace add` takes no ref, so every user would track `main`
+instead of the version they installed.
+
+**Oh-My-Pi was the late addition, because it looked exempt.** It copies each
+installed bundle into `~/.omp/plugins/cache/`, so plugins already installed keep
+working after the source is reclaimed — which is the whole of what "copies into
+its own cache" bought. The registration still names the source, and `omp`
+re-reads it to install anything *else*: with the path gone,
+`omp plugin discover` still lists every plugin from its cached catalog while
+`omp plugin install <name>@virajp-plugins` fails with "Plugin source directory
+does not exist". That is the same shape as the url-sourced entry
+`marketplaceJson` already refuses to emit — a catalog promising something the
+tool will never deliver — and it is invisible until the first install of a
+plugin the user did not already have. The migration rides `isStalePin`'s
+`managedBase` arm, which exists precisely for a pin that is a package install
+moving to the managed directory.
 
 **Scope is declared by `plugin.yaml` and honoured where the target supports it;
 where it does not, the request falls back rather than failing.** Only OpenCode

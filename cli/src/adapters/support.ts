@@ -106,6 +106,27 @@ export function claudeMarketplaceRoot(home: string): string {
 }
 
 /**
+ * The Oh-My-Pi marketplace root this tool maintains.
+ *
+ * Here for the same reason as Claude's, against a narrower failure. `omp`
+ * copies each installed bundle into `~/.omp/plugins/cache/`, so plugins already
+ * installed keep working after the source path is reclaimed — which is why this
+ * looked safe. But the marketplace registration keeps naming the source, and
+ * `omp` re-reads it to install anything *else*: with the path gone,
+ * `omp plugin discover` still lists every plugin from its cached catalog while
+ * `omp plugin install <name>@virajp-plugins` fails with "Plugin source
+ * directory does not exist". Verified by deleting the source of a throwaway
+ * marketplace and watching exactly that split.
+ *
+ * No doubled segment, unlike Claude's: Oh-My-Pi's plugin sources are `./<name>`
+ * against the marketplace root, so the root *is* the rendered `ohmypi/` tree
+ * and the copy needs no repo-root-relative shape around it.
+ */
+export function ohmypiMarketplaceRoot(home: string): string {
+  return join(dataDir(home), "ohmypi");
+}
+
+/**
  * The shortest prefix of `path` that is absent from the document.
  *
  * That prefix is what this install creates, and therefore what an uninstall has

@@ -5,7 +5,8 @@
  * `<root>/.omp/plugins/` with a `package.json`, a lockfile and
  * `installed_plugins.json` — so this adapter drives the CLI rather than writing
  * any of it. Its marketplace takes a local path, so an install reads the
- * committed `ohmypi/` tree.
+ * committed `ohmypi/` tree — from a copy under `ohmypiMarketplaceRoot`, not
+ * from `sourceRoot`, because `omp` re-reads that path on every later install.
  *
  * Verified by running `omp` against a throwaway `HOME`:
  *
@@ -20,8 +21,10 @@
  *   Both work, so unlike every other adapter here nothing is redirected.
  */
 import {
+  cpSync,
   existsSync,
   readFileSync,
+  rmSync,
 } from "node:fs";
 import { join } from "node:path";
 import {
@@ -29,8 +32,10 @@ import {
   revert as revertReceipt,
 } from "../receipt.ts";
 import {
+  dataDir,
   hasBin,
   isStalePin,
+  ohmypiMarketplaceRoot,
   PACKAGE_NAME,
 } from "./support.ts";
 import type {
@@ -121,28 +126,41 @@ function run(
 
   const marketplace = readMarketplaceName(context);
 
+  // Copy before registering, so the path exists by the time `omp` reads it —
+  // and so revert, which walks entries backwards, un-registers the marketplace
+  // before deleting what it pointed at.
+  actions.push(...installPayload(context, receipt, dryRun));
+
   // Re-adding an existing marketplace fails outright, and recording an undo for
   // one we did not add would remove the user's own registration.
-  const want = join(context.sourceRoot, TREE);
+  const want = ohmypiMarketplaceRoot(context.home);
   const entry = registryEntry(context, marketplace);
   // Registered but with no recorded URI: leave it. We cannot tell whether it
   // is stale, and re-adding is a hard error in `omp` — guessing would turn an
   // unknown into a failed run.
   const stale = entry?.sourceUri !== undefined
-    && isStalePin(entry.sourceUri, want, PACKAGE_NAME);
+    && isStalePin(
+      entry.sourceUri,
+      want,
+      PACKAGE_NAME,
+      dataDir(context.home),
+    );
   if (entry === undefined || stale) {
     if (stale) {
       // Same trap as Claude's: the pin names the store path of whichever
       // version registered it, so an upgrade kept serving the previous
       // package's rendered tree. `omp` has no repoint, so it is remove + add.
+      // `managedBase` above is what carries an existing user across: their pin
+      // is a package install and `want` is now the managed directory, so
+      // without it the migration off the store path would never fire.
       const drop = ["plugin", "marketplace", "remove", marketplace];
       actions.push({ summary: `${BIN} ${drop.join(" ")}` });
       if (!dryRun) {
         runOrThrow(context, drop);
       }
       context.log(
-        `ohmypi: marketplace \`${marketplace}\` re-pointed from a previous `
-          + "install of this package to the running one",
+        `ohmypi: marketplace \`${marketplace}\` re-pointed from `
+          + `\`${entry?.sourceUri ?? "an earlier install"}\` to \`${want}\``,
       );
     }
     const add = ["plugin", "marketplace", "add", want];
@@ -187,6 +205,53 @@ function run(
   }
 
   return { receipt: receipt.build(context.now, planPlugins(plan)), actions };
+}
+
+/**
+ * Copy the marketplace payload somewhere that outlives the runner.
+ *
+ * `context.sourceRoot` is the unpacked package, and under `pnpx` that is a
+ * `pnpm dlx` store path — reclaimed by `pnpm store prune`. `omp` records the
+ * path it was given and re-reads it for every later install, so registering the
+ * store path left a marketplace whose catalog still advertised all 13 plugins
+ * while installing any not-yet-installed one failed outright.
+ *
+ * `cpSync` rather than `copyTree`, for the same two reasons as Claude's: this
+ * tree carries no `%%AI_PLUGINS_ROOT%%` tokens, and `copyTree` routes text
+ * through `writeFileAtomic`, which drops the source mode — Oh-My-Pi's bundles
+ * ship no executables today, but the hook extensions are `.ts` beside them and
+ * the asymmetry is not worth inheriting.
+ *
+ * The destination is cleared first, so a plugin or skill deleted upstream
+ * disappears rather than lingering — the same rule `plugins:build` follows for
+ * the rendered trees.
+ */
+function installPayload(
+  context: AdapterContext,
+  receipt: ReceiptBuilder,
+  dryRun: boolean,
+): Action[] {
+  const to = ohmypiMarketplaceRoot(context.home);
+  const from = join(context.sourceRoot, TREE);
+
+  if (!existsSync(from)) {
+    throw new Error(`missing ${from} — run \`mise run plugins:build\``);
+  }
+
+  const actions: Action[] = [{
+    summary: `copy the marketplace payload to ${to}`,
+    path: to,
+  }];
+  if (dryRun) {
+    return actions;
+  }
+
+  // Recorded before the write, so an interrupted install still has the tree in
+  // its receipt. Recorded unconditionally: a payload already there is ours.
+  receipt.tree(to);
+  rmSync(to, { recursive: true, force: true });
+  cpSync(from, to, { recursive: true, preserveTimestamps: true });
+  return actions;
 }
 
 /** The marketplace's own name, so the CLI selector matches what it registered. */

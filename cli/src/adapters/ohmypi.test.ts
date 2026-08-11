@@ -119,6 +119,16 @@ afterEach(() => {
   rmSync(cwd, { recursive: true, force: true });
 });
 
+/**
+ * Where the payload is copied, and therefore what the marketplace is pinned to.
+ *
+ * Deliberately not `sourceRoot`: `omp` re-reads the registered path for every
+ * later install, so a `pnpm dlx` store path leaves a catalog that still lists
+ * all 13 plugins while installing an uninstalled one fails.
+ */
+const payloadRoot = () =>
+  join(home, ".local", "share", "virajp", "ai-plugins", "ohmypi");
+
 const planFor = (user: string[], project: string[] = []): AdapterPlan => ({
   target: "ohmypi",
   user,
@@ -130,9 +140,28 @@ describe("ohmypi adapter", () => {
     ohmypi.apply(context, planFor(["markdown"]));
 
     expect(ran.map(c => c.join(" "))).toEqual([
-      `omp plugin marketplace add ${join(repoRoot, "ohmypi")}`,
+      `omp plugin marketplace add ${payloadRoot()}`,
       "omp plugin install markdown@virajp-plugins --scope user --force",
     ]);
+    // The pin is only durable if the bytes are actually there — registering a
+    // path this run did not populate is the failure being fixed, inverted.
+    expect(existsSync(join(payloadRoot(), "vwf"))).toBe(true);
+    expect(existsSync(join(payloadRoot(), ".omp-plugin", "marketplace.json")))
+      .toBe(true);
+  });
+
+  it("re-copies the payload, dropping anything no longer rendered", () => {
+    ohmypi.apply(context, planFor(["markdown"]));
+    const stray = join(payloadRoot(), "gone-away");
+    mkdirSync(stray, { recursive: true });
+
+    ohmypi.apply(context, planFor(["markdown"]));
+
+    // A bundle deleted upstream has to disappear: `omp` resolves `./<name>`
+    // against this root, so a lingering directory is indistinguishable from a
+    // plugin that still ships.
+    expect(existsSync(stray)).toBe(false);
+    expect(existsSync(join(payloadRoot(), "vwf"))).toBe(true);
   });
 
   it("always uses the <name>@<marketplace> form, so --scope is honoured", () => {
@@ -219,7 +248,7 @@ describe("ohmypi adapter", () => {
     const marketplace = ran.filter(c => c.includes("marketplace"));
     expect(marketplace[0]?.includes("remove")).toBe(true);
     expect(marketplace[1]?.includes("add")).toBe(true);
-    expect(marketplace[1]?.at(-1)).toBe(join(newer, "ohmypi"));
+    expect(marketplace[1]?.at(-1)).toBe(payloadRoot());
   });
 
   it("leaves a registered marketplace with no recorded URI alone", () => {
@@ -254,9 +283,12 @@ describe("ohmypi adapter", () => {
 
     expect(ran).toEqual([]);
     expect(actions.map(a => a.summary)).toEqual([
-      `omp plugin marketplace add ${join(repoRoot, "ohmypi")}`,
+      `copy the marketplace payload to ${payloadRoot()}`,
+      `omp plugin marketplace add ${payloadRoot()}`,
       "omp plugin install markdown@virajp-plugins --scope user --force",
     ]);
+    // A dry run describes the copy without making it.
+    expect(existsSync(payloadRoot())).toBe(false);
   });
 
   it("reverts by running the CLI's own removals, in reverse", () => {
