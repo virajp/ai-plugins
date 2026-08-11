@@ -161,7 +161,12 @@ describe("marketplace", () => {
   const catalog = JSON.parse(text(".omp-plugin/marketplace.json")) as {
     name: string;
     owner: { name: string; };
-    plugins: { name: string; description: string; source: string; }[];
+    plugins: {
+      name: string;
+      description: string;
+      source: string;
+      version?: string;
+    }[];
   };
 
   it("lists every local plugin against its rendered bundle", () => {
@@ -189,6 +194,28 @@ describe("marketplace", () => {
         expect(plugin.source, plugin.name).not.toContain("ohmypi/");
       }
     }
+  });
+
+  // Regression: the entry carried no `version`, so `omp` fell through to its
+  // next source — a `package.json` under the bundle, which this render emits
+  // only for a plugin with wired hooks. `typescript` and `vwf` therefore
+  // reported correctly and every other plugin listed as `0.0.0`, which reads
+  // as an unversioned plugin rather than a missing field.
+  it("carries the version every manifest declares", () => {
+    const declared = new Map(
+      workspace
+        .plugins
+        .filter(p => p.manifest.source.kind === "local")
+        .map(p => [p.manifest.name, p.manifest.version]),
+    );
+
+    for (const plugin of catalog.plugins) {
+      expect(plugin.version, plugin.name).toBe(declared.get(plugin.name));
+    }
+    // The fallback is only reachable when a manifest declares no version, so a
+    // corpus that quietly lost the field would make the check above vacuous.
+    expect([...declared.values()].filter(Boolean).length)
+      .toBe(declared.size);
   });
 
   it("keeps the plugin-name rules Oh-My-Pi enforces", () => {

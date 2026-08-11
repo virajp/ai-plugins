@@ -11,79 +11,92 @@
       "category": "development",
       "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; polyrepo and monorepo layouts are both supported.",
       "name": "cicd",
-      "source": "./cicd"
+      "source": "./cicd",
+      "version": "1.0.0"
     },
     {
       "category": "development",
       "description": "Cloudflare stack plugin for vwf — **scope is deliberately parked**. It currently covers **Zero Trust Access** only: putting a project that must not be publicly reachable behind an identity-aware proxy on its own hostname, independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered yet and arrive under their own dedicated plan — so the menu says what it does not cover rather than coming back quietly short. Implements the vwf stack-adapter contract.",
       "name": "cloudflare",
-      "source": "./cloudflare"
+      "source": "./cloudflare",
+      "version": "0.1.1"
     },
     {
       "category": "development",
       "description": "Datastore capability plugin for vwf — the neutral contract every datastore must satisfy (write versioning, transactional multi-record writes, server-generated time, the services-layer access rule, a deterministic local stack) plus the one provider that needs no cloud: **PostgreSQL**, self-hosted or managed anywhere. Managed flavours — Firestore, Cloud SQL, and the rest — come from the project's own cloud plugin, not from here. Implements the vwf stack-adapter contract.",
       "name": "datastore",
-      "source": "./datastore"
+      "source": "./datastore",
+      "version": "0.1.1"
     },
     {
       "category": "development",
       "description": "The vwf design adapter — two skills (import-screens, import-design-system) that resolve the design tool per project and speak Claude Design, Lovable or Google Stitch. Ships the Claude Design MCP server (https://api.anthropic.com/v1/design/mcp).",
       "name": "design-tools",
-      "source": "./design-tools"
+      "source": "./design-tools",
+      "version": "0.2.0"
     },
     {
       "category": "development",
       "description": "The developer-machine toolchain in one plugin — mise (the .config/ three-file MISE_ENV split, tool/env placement, the file-based task library, the CI node-gpg workaround) plus /devtools:scaffold, Doppler for **development** secrets, Docker/OCI, and the repo-level quality gates the stack templates name: dprint, ESLint, gitleaks, grype, pre-commit. Owns the provider-neutral container-generic deploy template, so it also implements the vwf stack-adapter contract. Production secrets are a cloud plugin's, never this one's.",
       "name": "devtools",
-      "source": "./devtools"
+      "source": "./devtools",
+      "version": "1.0.1"
     },
     {
       "category": "development",
       "description": "Opinionated Flutter plugin — a `dart` router skill (lean SKILL.md routing to on-demand references: GetX, a Firebase suite of auth/analytics/app-check/crashlytics/messaging/storage, and feature areas of architecture, state, navigation, theming, layouts, animations, performance, maps, webview, webrtc, revenuecat, image handling, http/json, concurrency, caching, testing, flavors, app-size, coverage, build) and a `swift` router skill (Swift, SwiftUI, Xcode), plus `kotlin`, `pubspec`, `analysis-options`, and `internationalization`, and bundled Dart, Kotlin & Swift (SourceKit) language servers. Also owns the `dart-flutter` **stack template** and the two vwf stack-adapter skills, so a `frontend` project can be composed without vwf naming Flutter. Self-contained — no cross-marketplace dependencies.",
       "name": "flutter",
-      "source": "./flutter"
+      "source": "./flutter",
+      "version": "0.8.1"
     },
     {
       "category": "development",
       "description": "Google Cloud stack plugin for vwf — the judgment layer an SDK reference cannot give you: which service to pick and when it stops being the answer, how each one bills and the traps that multiply it, which services have local emulators (and where they lie), and least-privilege IAM shapes. Covers the full Firebase suite plus Cloud SQL, AlloyDB, Memorystore, Bigtable, BigQuery, Pub/Sub, Cloud Tasks, Scheduler, Eventarc, Workflows, Cloud Storage, Cloud Run, GKE, Artifact Registry, Cloud Deploy, Cloud Armor, VPC, DNS, Load Balancing, CDN, KMS, Backup & DR, reCAPTCHA Enterprise and Vertex AI. Observability is OpenTelemetry only — GCP services appear as OTLP sinks, never as vendor SDKs. Implements the vwf stack-adapter contract.",
       "name": "gcp",
-      "source": "./gcp"
+      "source": "./gcp",
+      "version": "0.1.1"
     },
     {
       "category": "development",
       "description": "Identity capability plugin for vwf — the neutral contract every identity provider must satisfy (token verification at the edge of every authenticated route, what a token claim may and may not carry, session and revocation shape, the operator plane) plus the one provider that belongs to no cloud: any **OIDC** issuer, self-hosted or managed. Managed flavours — Firebase Auth, Identity Platform, and the rest — come from the project's own cloud plugin, not from here. Implements the vwf stack-adapter contract.",
       "name": "identity",
-      "source": "./identity"
+      "source": "./identity",
+      "version": "0.1.1"
     },
     {
       "category": "development",
       "description": "Object-storage capability plugin for vwf — **contract only, and deliberately so**. It owns the neutral vocabulary and requirements (buckets, object lifecycle, signed access, retention, the never-proxy-bytes rule) and ships **no provider of its own**: every object store worth using is a cloud's, so the flavour comes from the project's cloud plugin — Cloud Storage from `gcp`, R2 from `cloudflare` once that plugin is unparked. Its menu says that out loud rather than coming back empty, because an empty menu is indistinguishable from a broken adapter. Implements the vwf stack-adapter contract.",
       "name": "object-storage",
-      "source": "./object-storage"
+      "source": "./object-storage",
+      "version": "0.1.0"
     },
     {
       "category": "development",
       "description": "Observability capability plugin for vwf — the neutral contract every telemetry backend must satisfy (the product emits **OTLP** and never a vendor SDK, one correlated trace/metric/log story, cardinality as a design decision, retention and cost) plus the self-hosted sink that needs no cloud: **OpenTelemetry into a Grafana OTel-LGTM stack**. Managed flavours — Cloud Monitoring and the rest — come from the project's own cloud plugin, and appear only as OTLP destinations. Implements the vwf stack-adapter contract.",
       "name": "observability",
-      "source": "./observability"
+      "source": "./observability",
+      "version": "0.1.1"
     },
     {
       "category": "development",
       "description": "Async orchestration capability plugin for vwf — the neutral contract every durable-work backend must satisfy (at-least-once delivery and the idempotency it forces, retry and back-off discipline, the poison-message path, visibility into work in flight) plus the self-hosted engine that belongs to no cloud: **Temporal**. Managed flavours — Cloud Workflows, Pub/Sub, task queues and the rest — come from the project's own cloud plugin, not from here. Implements the vwf stack-adapter contract.",
       "name": "orchestration",
-      "source": "./orchestration"
+      "source": "./orchestration",
+      "version": "0.1.1"
     },
     {
       "category": "development",
       "description": "The TypeScript language plugin — one plugin per language, covering both `typescript` and `javascript`. A `typescript` router skill (lean SKILL.md routing to on-demand references: the coding standards baseline, Vitest testing, the build pipeline for single-package and monorepo) plus an `effect` router skill for Effect-TS doctrine, `package-json`, `pnpm`, `tsconfig`, `lint-format`, and the TypeScript/JavaScript language server. Owns every TypeScript stack template — 7 project roles, the npm-package deploy target and the pnpm/bun repo choices — and implements the vwf stack-adapter contract.",
       "name": "typescript",
-      "source": "./typescript"
+      "source": "./typescript",
+      "version": "2.0.1"
     },
     {
       "category": "development",
       "description": "Highly opinionated Product → Blueprint → Plan → Execute workflow for solo developers or small teams — enforced workspace structure with a selectable stack-template menu checked by /vwf:doctor, a flow-first blueprint (entities as data contracts, OpenAPI + JSON-Schema artifacts) with whole-product coherence review, chained dependency plans, an autonomous execute with review/security/acceptance/UX subagents behind one final merge gate that stamps blueprint implementation state, post-deploy verify with production release freezing + API backward-compat enforcement, feedback intake, and mempalace-backed memory.",
       "name": "vwf",
-      "source": "./vwf"
+      "source": "./vwf",
+      "version": "15.1.0"
     }
   ]
 }

@@ -566,6 +566,19 @@ function marketplaceJson(workspace: Workspace, gaps: Gap[]): string {
     if (m.homepage) {
       entry["homepage"] = m.homepage;
     }
+    // Omitting this does not leave the version unset — it makes `omp` fall
+    // back, and the fallback only works by accident. Verified against the
+    // shipped 17.2.12 binary, its resolution order is: the entry's `version`,
+    // then `.claude-plugin/plugin.json`, `plugin.json` and `package.json`
+    // under the bundle, then a git `sha`, then the literal `"0.0.0"`. This
+    // render emits none of those three files except a `package.json`, and only
+    // for a plugin with wired hooks — so `typescript` and `vwf` resolved
+    // correctly while every other plugin listed as `0.0.0`. Stating it here is
+    // what makes the version a property of the manifest rather than of whether
+    // the plugin happens to declare a hook.
+    if (m.version) {
+      entry["version"] = m.version;
+    }
     return sortKeys(entry);
   });
 

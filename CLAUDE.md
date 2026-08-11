@@ -357,7 +357,7 @@ Cursor's must be there for a second reason: Cursor accepts
 **first** — so without ours at the root it would read Claude's and resolve every
 plugin to a Claude-rendered bundle.
 
-Two traps, each verified by running the real tool and each silent when wrong:
+Three traps, each verified by running the real tool and each silent when wrong:
 
 - **Sources resolve against the marketplace root**, not the repo root.
   Oh-My-Pi's were once spelled from the repo root and resolved to
@@ -369,6 +369,16 @@ Two traps, each verified by running the real tool and each silent when wrong:
   `cursor/` tree beside it. It is the one target where the committed-render
   guarantee does not reach, and the only one needing `marketplace.yaml`'s
   `repository` field.
+- **Every entry must state its own `version`.** Omitting it does not leave the
+  version unset — it makes `omp` fall back, and the fallback resolves by
+  accident. Its order (read off the shipped 17.2.12 binary) is the entry's
+  `version`, then `.claude-plugin/plugin.json`, `plugin.json` and `package.json`
+  under the bundle, then a git `sha`, then the literal `"0.0.0"`. This render
+  emits none of those three files except a `package.json`, and only for a plugin
+  with **wired hooks** — so `typescript` and `vwf` reported correctly while
+  every other plugin listed as `0.0.0`, which reads as an unversioned plugin
+  rather than a missing field. Nothing fails: the install succeeds, and the
+  version is wrong only where a hook happens to be absent.
 
 ## The vwf Plugin
 
