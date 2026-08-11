@@ -44,6 +44,7 @@ import {
   dirname,
   join,
 } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import writeFileAtomic from "write-file-atomic";
 import { configDir } from "./adapters/opencode.ts";
 import { shallowestNew } from "./adapters/support.ts";
@@ -210,21 +211,43 @@ function register(
   // compact splice `modify` emits by default is unreadable, while on the user's
   // file the pass would reflow the array it touches — and an install/uninstall
   // round-trip has to come back byte-identical.
+  const created = `${
+    appendToJsonArray(
+      setJsonPath("", ["$schema"], SCHEMA, NEW_FILE_FORMAT),
+      [...PLUGIN_PATH],
+      [ENTRY],
+      NEW_FILE_FORMAT,
+    )
+  }\n`;
   const text = existed
     ? appendToJsonArray(before, [...PLUGIN_PATH], [ENTRY])
-    : `${
-      appendToJsonArray(
-        setJsonPath("", ["$schema"], SCHEMA, NEW_FILE_FORMAT),
-        [...PLUGIN_PATH],
-        [ENTRY],
-        NEW_FILE_FORMAT,
-      )
-    }\n`;
+    : created;
+
+  // **Ownership, not existence** — the same rule `createdFile` states, and the
+  // same trap the OpenCode adapter hit on `opencode.jsonc`. A `tui.json`
+  // holding nothing but what we author is one of our own earlier runs, so it is
+  // ours to delete whichever run put it there.
+  //
+  // Asking `existsSync` alone is what made a *repeat* install forget it: run 2
+  // found run 1's file, matched it exactly, took the already-registered return
+  // below and recorded nothing at all — so the receipt it overwrote lost the
+  // only claim on the file, and the uninstall after it left a `tui.json`
+  // pointing at the plugin it had just removed.
+  const ours = !existed
+    || isDeepStrictEqual(parsed, readJsonc<Record<string, unknown>>(created));
+
+  if (!dryRun && ours) {
+    // Directory before file: revert replays in reverse, so recording it second
+    // would try to remove the directory while the file was still inside it.
+    receipt.dir(dirname(file));
+    receipt.createdFile(file);
+  }
 
   if (text === before) {
-    // Already registered. Recording the key here would capture an array that
-    // *includes our own entry* as the prior state, so a later uninstall would
-    // dutifully put it back.
+    // Already registered. On a file of the user's, recording the key here would
+    // capture an array that *includes our own entry* as the prior state, so a
+    // later uninstall would dutifully put it back. One of ours is already
+    // claimed above, which is the half a repeat run used to lose.
     return [];
   }
 
@@ -234,10 +257,8 @@ function register(
     diff: { before, after: text },
   };
   if (!dryRun) {
-    // Directory before file: revert replays in reverse, so recording it second
-    // would try to remove the directory while the file was still inside it.
-    receipt.dir(dirname(file));
-    if (existed) {
+    if (!ours) {
+      receipt.dir(dirname(file));
       // Record the SHALLOWEST key that did not already exist. Setting `plugin`
       // on a config that has no such key means the key itself is ours; undoing
       // only its contents would leave an orphaned `"plugin": []` behind.
@@ -250,9 +271,6 @@ function register(
           ? { present: false }
           : { present: true, value: previous },
       );
-    }
-    else {
-      receipt.file(file);
     }
     mkdirSync(dirname(file), { recursive: true });
     writeFileAtomic.sync(file, text);

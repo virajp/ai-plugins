@@ -48,19 +48,27 @@ so, record it anyway.
 ### The same trap on a shared file
 
 A file the user may also own cannot simply be claimed unconditionally, so the
-fix there is the ownership *test* rather than a fourth kind. The OpenCode
-adapter's `mergeConfig` decides between `createdFile` and a key-by-key
-`configKey` restore by comparing the config on disk against the one its own
+fix there is the ownership *test* rather than a new kind. Both OpenCode config
+writers — the adapter's `mergeConfig` on `opencode.jsonc`, and the statusline's
+`register` on `tui.json` — decide between `createdFile` and a key-by-key
+`configKey` restore by comparing the file on disk against the one their own
 merge would produce from empty: identical means an earlier run of ours wrote it,
-whatever `existsSync` says. Keying that on existence alone is what left
-`opencode.jsonc` behind after install → install → uninstall, still registering
-the bundle directory the same uninstall had just deleted.
+whatever `existsSync` says.
 
-**A residual remains in the mixed case**, and it is narrower: when the user
-already had a config, a repeat run records the *current* value of a key we
-introduced on the first run as that key's `previous`, so revert restores our own
-value instead of removing it. The file must survive there — it is the user's —
-so the symptom is a stale `skills.paths` entry rather than a stale file.
+Keying that on existence alone left both files behind after install → install →
+uninstall, each still registering something the same uninstall had just deleted
+— the bundle directory in one case, the copied TUI plugin in the other. They
+failed differently, which is why finding one did not find the other:
+`opencode.jsonc` *downgraded* its claim to a key restore of our own value, while
+`tui.json` hit its already-registered early return and recorded nothing at all.
+
+**A residual remains in the mixed case**, and it is narrower. When the user
+already had a config, a repeat run cannot tell which keys it introduced on the
+first one: `opencode.jsonc` records the *current* value of such a key as that
+key's `previous` and restores our own value, while `tui.json` returns early and
+records nothing. Either way our entry stays. The file must survive there — it is
+the user's — so the symptom is a stale entry rather than a stale file.
+
 Resolving it needs the run to reconstruct the user's pre-merge config by
 un-merging its own contribution, which is also what would finally give the
 long-dead `removeSkillsPath` export a caller.

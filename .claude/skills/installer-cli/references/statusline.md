@@ -77,9 +77,12 @@ Three verified facts, none of them in the published docs:
   plugin's two imports itself.
 
 A `tui.json` this CLI created is undone by deleting it; one that already existed
-is undone key by key at the **shallowest new key**. The `$schema` key and the
-formatting pass are both creation-only, because on the user's file a reflow
-would break the byte-identical round-trip the receipt promises.
+is undone key by key at the **shallowest new key**. Which of the two it is comes
+from **ownership, not `existsSync`** — the file is ours when it matches what
+this installer's own merge produces from empty, so a repeat install still claims
+the file its first run wrote (see [receipts.md](receipts.md)). The `$schema` key
+and the formatting pass are both creation-only, because on the user's file a
+reflow would break the byte-identical round-trip the receipt promises.
 
 `tools/statusline/opencode-tui.tsx` is **deliberately not covered by any
 tsconfig**: type-checking it would mean adding `@opentui/solid` and

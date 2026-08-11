@@ -197,12 +197,42 @@ describe("the OpenCode statusline", () => {
   it("uninstalls cleanly after a second install", () => {
     // `createdFile`: the plugin path is ours outright, so the second install
     // must not capture the first one's output as prior state and restore it.
+    //
+    // The config is the other half of the same claim, and the half that used to
+    // go missing: run 2 found run 1's `tui.json` already registered, returned
+    // early and recorded nothing, so the receipt it overwrote lost the file and
+    // the uninstall left it behind — still pointing at the plugin just removed.
     installStatuslineOpencode(context);
     const { receipt } = installStatuslineOpencode(context);
 
     revertStatuslineOpencode(receipt);
 
     expect(existsSync(pluginFile())).toBe(false);
+    expect(existsSync(tuiConfig())).toBe(false);
+  });
+
+  // The other half of the ownership rule: a `tui.json` with anything of the
+  // user's in it is never deleted, however many times they install.
+  it("never deletes a tui.json holding entries of its own", () => {
+    mkdirSync(configDir(), { recursive: true });
+    const original = `{
+  // Chosen by hand.
+  "theme": "tokyonight",
+  "plugin": ["./their-own-plugin.ts"]
+}
+`;
+    writeFileSync(tuiConfig(), original);
+
+    installStatuslineOpencode(context);
+    const { receipt } = installStatuslineOpencode(context);
+
+    revertStatuslineOpencode(receipt);
+
+    expect(existsSync(tuiConfig())).toBe(true);
+    expect(readFileSync(tuiConfig(), "utf8")).toContain(
+      "./their-own-plugin.ts",
+    );
+    expect(readFileSync(tuiConfig(), "utf8")).toContain("// Chosen by hand.");
   });
 
   it("refuses to edit a malformed config rather than clobbering it", () => {

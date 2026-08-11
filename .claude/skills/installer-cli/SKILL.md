@@ -33,13 +33,22 @@ there is *the first run's own output*. Run 2's receipt then claims less than run
 1's, and since every run overwrites the receipt, the uninstall after it leaves
 that path behind.
 
-Four instances so far: `createdFile`, `tree`, `ownedDir` (where `dir` skipped
-the already-existing bundle root, so `virajp-plugins/` survived as an empty
-directory), and the OpenCode config, where `existsSync` flipped the claim from
-*we created this file* to a key-by-key restore whose `previous` value was our
-own — so uninstall restored a `skills.paths` pointing at the bundle it had just
-removed. The first three needed a new receipt kind; the fourth needed only the
-ownership test, since `createdFile` already existed.
+Five instances so far. Three needed a new receipt kind — `createdFile`, `tree`,
+and `ownedDir`, where `dir` skipped the already-existing bundle root so
+`virajp-plugins/` survived as an empty directory. The other two are OpenCode's
+two config files, and needed only the ownership *test*, since `createdFile`
+already existed:
+
+- **`opencode.jsonc`** — `existsSync` flipped the claim from *we created this
+  file* to a key-by-key restore whose `previous` value was our own, so uninstall
+  restored a `skills.paths` pointing at the bundle it had just removed.
+- **`tui.json`** — the statusline's half, and the same bug by a different route:
+  run 2 found the file already registered, took the early return, and recorded
+  **nothing at all**, so the receipt it overwrote lost the only claim on it.
+
+Both now decide ownership by comparing what is on disk against what their own
+merge would produce from an empty file — identical means an earlier run of ours
+wrote it, whatever `existsSync` says.
 
 **A single install passes either way; only a repeat run shows it**, which is why
 `i:test` installs twice before uninstalling. Preserve that.
