@@ -3,5 +3,5 @@
   "effort": "high",
   "enabledPlugins": {},
   "model": "opus[1m]",
-  "respectGitignore": false
+  "respectGitignore": true
 }
