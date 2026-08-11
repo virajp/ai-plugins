@@ -7,7 +7,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import {
+  dirname,
+  join,
+} from "node:path";
 import {
   afterEach,
   beforeEach,
@@ -82,6 +85,85 @@ describe("opencode adapter", () => {
         .not
         .toThrow();
     }
+  });
+
+  describe("pruning what it no longer emits", () => {
+    const configRoot = () => join(home, ".config", "opencode");
+
+    it("clears a plugin's own bundle before copying it", () => {
+      opencode.apply(context, planFor(["datastore"]));
+      const stray = join(bundle("datastore"), "skills", "gone-away");
+      mkdirSync(stray, { recursive: true });
+      writeFileSync(join(stray, "SKILL.md"), "retired");
+
+      opencode.apply(context, planFor(["datastore"]));
+
+      // A renamed skill directory is the common case — every vwf skill moved
+      // when `prefixSkillNames` landed — and a copy alone would leave both.
+      expect(existsSync(stray)).toBe(false);
+      expect(existsSync(join(bundle("datastore"), "skills"))).toBe(true);
+    });
+
+    it("removes a bundle for a plugin that no longer exists", () => {
+      opencode.apply(context, planFor(["datastore"]));
+      const retired = join(configRoot(), "virajp-plugins", "markdown");
+      mkdirSync(retired, { recursive: true });
+      writeFileSync(join(retired, "marker"), "absorbed into vwf");
+
+      opencode.apply(context, planFor(["datastore"]));
+
+      // `claude-design`, `markdown`, `mise`, `mempalace` and `github-actions`
+      // all sat here for months after being renamed or absorbed. Nothing but
+      // this installer writes under the bundle root, so a directory naming no
+      // known plugin can only be one we left.
+      expect(existsSync(retired)).toBe(false);
+    });
+
+    it("keeps the bundle of a plugin this run is not installing", () => {
+      opencode.apply(context, planFor(["typescript"]));
+      opencode.apply(context, planFor(["datastore"]));
+
+      // The reason the sweep is per-plugin rather than wholesale: `--user vwf`
+      // must not uninstall everything else.
+      expect(existsSync(bundle("typescript"))).toBe(true);
+      expect(existsSync(bundle("datastore"))).toBe(true);
+    });
+
+    it("removes a flat file its owner stopped emitting", () => {
+      opencode.apply(context, planFor(["typescript"]));
+      // Forge a record of a file we no longer render. This is the shape of a
+      // skill whose `invocation:` flipped from `user` to `both`: the command
+      // wrapper stops being emitted while the plugin stays installed, which is
+      // how nine orphaned `vwf-*.md` commands accumulated.
+      const orphan = join(configRoot(), "command", "typescript-gone.md");
+      mkdirSync(dirname(orphan), { recursive: true });
+      writeFileSync(orphan, "stale wrapper");
+      const record = join(configRoot(), "virajp-plugins", ".ownership.json");
+      const owned = JSON.parse(readFileSync(record, "utf8")) as Record<
+        string,
+        string
+      >;
+      owned["command/typescript-gone.md"] = "typescript";
+      writeFileSync(record, JSON.stringify(owned));
+
+      opencode.apply(context, planFor(["typescript"]));
+
+      expect(existsSync(orphan)).toBe(false);
+    });
+
+    it("never touches a flat file it does not own", () => {
+      opencode.apply(context, planFor(["typescript"]));
+      // graphify writes here too, and its plugin is what wires the knowledge
+      // graph vwf enforces at its own entry gate. Sweeping the directory would
+      // silently break it.
+      const foreign = join(configRoot(), "plugin", "graphify.js");
+      mkdirSync(dirname(foreign), { recursive: true });
+      writeFileSync(foreign, "// not ours");
+
+      opencode.apply(context, planFor(["typescript"]));
+
+      expect(existsSync(foreign)).toBe(true);
+    });
   });
 
   it("installs a plugin's bundle and registers its skills path", () => {

@@ -88,6 +88,18 @@ target, not chosen:
 
 - **Copy** — OpenCode alone, because it has no plugin concept: skills, agents
   and commands go into well-known directories and the rest is config to merge.
+  **Copying is not idempotent on its own** — it writes what the render contains
+  and says nothing about what it used to — so the adapter prunes first, by three
+  rules that differ in *who else writes there*. A plugin's own bundle
+  (`virajp-plugins/<plugin>/`) is exclusively ours and is cleared wholesale, per
+  plugin so a partial install cannot delete a bundle it was not asked about. A
+  directory under the bundle root naming no known plugin is a retired plugin and
+  goes. The flat dirs (`agent/`, `command/`, `plugin/`) are **shared** — with
+  OpenCode itself and with graphify — so a file there is removed only when the
+  ownership record a previous run left says it was ours *and* this render no
+  longer emits it. That last rule catches the non-obvious case: a skill whose
+  `invocation:` flips `user` → `both` stops emitting its `command/` wrapper
+  while the plugin stays installed.
 - **Marketplace** — everyone else. Claude and Oh-My-Pi are driven through their
   own CLI (`plugin marketplace add` + `plugin install`), because each owns
   bookkeeping this tool has no business editing — Oh-My-Pi an npm-shaped tree

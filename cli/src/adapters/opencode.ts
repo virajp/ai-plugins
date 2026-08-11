@@ -17,7 +17,9 @@
 import {
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
+  rmSync,
 } from "node:fs";
 import {
   dirname,
@@ -52,6 +54,12 @@ import { planPlugins } from "./types.ts";
 
 /** Named after the marketplace, mirroring where the plugins come from. */
 const BUNDLE_DIR = "virajp-plugins";
+
+/**
+ * The installed ownership record, kept in the bundle root because that is the
+ * one directory here this tool owns outright.
+ */
+const OWNERSHIP = ".ownership.json";
 
 /**
  * OpenCode merges every config filename in a directory, with `opencode.jsonc`
@@ -161,6 +169,10 @@ function installScope(
 
   const rootFor = (plugin: string) => join(bundleRoot, plugin);
 
+  actions.push(
+    ...prune(tree, bundleRoot, plugins, ownership, dryRun),
+  );
+
   for (const plugin of plugins) {
     actions.push(...copyTree(
       {
@@ -195,6 +207,26 @@ function installScope(
       receipt,
       dryRun,
     ));
+  }
+
+  // The record the *next* run prunes against. Merged with what was already
+  // there rather than replacing it: a partial install must not forget the
+  // files a different plugin owns, or the run after it would sweep them.
+  const record = { ...readInstalledOwnership(bundleRoot) };
+  for (const [path, owner] of Object.entries(ownership)) {
+    if (plugins.includes(owner)) {
+      record[path] = owner;
+    }
+  }
+  const recordPath = join(bundleRoot, OWNERSHIP);
+  actions.push({ summary: `write ${recordPath}`, path: recordPath });
+  if (!dryRun) {
+    receipt.createdFile(recordPath);
+    mkdirSync(bundleRoot, { recursive: true });
+    writeFileAtomic.sync(
+      recordPath,
+      `${JSON.stringify(record, null, 2)}\n`,
+    );
   }
 
   actions.push(
@@ -333,6 +365,112 @@ function configFile(context: AdapterContext, scope: Scope): string {
     }
   }
   return join(dir, CONFIG_FILES[0]);
+}
+
+/**
+ * Remove what this installer left behind and no longer emits.
+ *
+ * Copying is not idempotent on its own: it writes what the render contains and
+ * says nothing about what it used to contain. Three things go stale, and they
+ * need three different rules because they differ in **who else writes there**.
+ *
+ * 1. **A plugin's own bundle** (`virajp-plugins/<plugin>/`) is exclusively
+ *    ours, so it is cleared wholesale before the copy — the same rule
+ *    `plugins:build` follows for the rendered trees. Per plugin, never the
+ *    whole directory: a partial install (`--user vwf`) must not delete a
+ *    bundle some earlier run installed.
+ * 2. **A retired plugin's bundle** — a directory under `virajp-plugins/`
+ *    naming no plugin this build ships. Nothing else writes there, so it can
+ *    only be something we left; `claude-design`, `markdown`, `mise`,
+ *    `mempalace` and `github-actions` all sat there for months after being
+ *    renamed or absorbed.
+ * 3. **Flat files** (`agent/`, `command/`, `plugin/`) are shared with OpenCode
+ *    itself and with other tools — graphify writes `plugin/graphify.js` — so
+ *    they are pruned by *ownership*, never swept. A file is removed only when
+ *    the record we wrote last time says it was ours and this render no longer
+ *    emits it. That covers both a retired plugin and, less obviously, a skill
+ *    whose `invocation:` flipped from `user` to `both`: its `command/` wrapper
+ *    stops being emitted while the plugin is very much still installed, which
+ *    is how nine orphaned `vwf-*.md` commands accumulated.
+ *
+ * The previous ownership record is the copy of `.ownership.json` this function
+ * leaves in the bundle root — not the receipt, which only knows the last run
+ * and so cannot see a file orphaned three releases ago.
+ */
+function prune(
+  tree: string,
+  bundleRoot: string,
+  plugins: readonly string[],
+  ownership: Record<string, string>,
+  dryRun: boolean,
+): Action[] {
+  const actions: Action[] = [];
+  const remove = (path: string, why: string) => {
+    if (!existsSync(path)) {
+      return;
+    }
+    actions.push({ summary: `remove ${path} (${why})`, path });
+    if (!dryRun) {
+      rmSync(path, { recursive: true, force: true });
+    }
+  };
+
+  // (1) and (2): everything under the bundle root is ours to reason about.
+  const shipped = new Set(
+    Object
+      .keys(readOwnership(tree))
+      .filter(p => p.startsWith(`${BUNDLE_DIR}/`))
+      .map(p => p.split("/")[1] ?? ""),
+  );
+  if (existsSync(bundleRoot)) {
+    for (const entry of readdirSync(bundleRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      if (plugins.includes(entry.name)) {
+        remove(join(bundleRoot, entry.name), "replaced by this install");
+      }
+      else if (!shipped.has(entry.name)) {
+        remove(join(bundleRoot, entry.name), "no longer a plugin");
+      }
+    }
+  }
+
+  // (3): only files a previous run recorded as ours, and only for plugins this
+  // run is responsible for. A plugin we are not installing keeps its files.
+  const previous = readInstalledOwnership(bundleRoot);
+  const emitted = new Set(Object.keys(ownership));
+  const scope = new Set(plugins);
+  for (const [path, owner] of Object.entries(previous)) {
+    if (path.startsWith(`${BUNDLE_DIR}/`) || emitted.has(path)) {
+      continue;
+    }
+    if (scope.has(owner) || !shipped.has(owner)) {
+      remove(join(configRoot(bundleRoot), path), `${owner} no longer emits it`);
+    }
+  }
+
+  return actions;
+}
+
+/** The OpenCode config dir — the bundle root's parent. */
+function configRoot(bundleRoot: string): string {
+  return dirname(bundleRoot);
+}
+
+/** The ownership record a previous install left, or empty on a first run. */
+function readInstalledOwnership(bundleRoot: string): Record<string, string> {
+  const path = join(bundleRoot, OWNERSHIP);
+  if (!existsSync(path)) {
+    return {};
+  }
+  try {
+    return JSON.parse(readFileSync(path, "utf8")) as Record<string, string>;
+  }
+  catch {
+    // A corrupt record prunes nothing rather than everything.
+    return {};
+  }
 }
 
 function readOwnership(tree: string): Record<string, string> {
