@@ -6,7 +6,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import {
+  dirname,
+  join,
+} from "node:path";
 import {
   afterEach,
   beforeEach,
@@ -310,6 +313,20 @@ describe("ohmypi adapter", () => {
   // *did this run add it* dropped the un-register from run 2's receipt — and
   // the uninstall after it deleted the payload while leaving `virajp-plugins`
   // pointed at the path it had just removed.
+  it("takes its own parent directories with it on revert", () => {
+    // `cpSync` creates `<data>/virajp/` and `<data>/virajp/ai-plugins/`, and
+    // nothing recorded them — so every uninstall left two empty directories
+    // behind. Claimed with `ownedDir`, which removes only when empty.
+    const { receipt } = ohmypi.apply(context, planFor(["markdown"]));
+    const parent = dirname(payloadRoot());
+
+    ohmypi.revert(context, receipt);
+
+    expect(existsSync(payloadRoot())).toBe(false);
+    expect(existsSync(parent)).toBe(false);
+    expect(existsSync(dirname(parent))).toBe(false);
+  });
+
   it("still un-registers the marketplace after a repeat install", () => {
     ohmypi.apply(context, planFor(["markdown"]));
     const { receipt } = ohmypi.apply(context, planFor(["markdown"]));

@@ -1,5 +1,6 @@
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   rmSync,
 } from "node:fs";
@@ -7,7 +8,10 @@ import {
   homedir,
   tmpdir,
 } from "node:os";
-import { join } from "node:path";
+import {
+  dirname,
+  join,
+} from "node:path";
 import {
   afterEach,
   beforeEach,
@@ -232,6 +236,24 @@ describe("execute", () => {
 });
 
 describe("revert", () => {
+  it("takes the receipt directory with it once the last one is consumed", () => {
+    // No receipt can record the directory holding itself, so these were left
+    // behind empty by every uninstall. The parent is only removed when it is
+    // our own `ai-plugins/` — walking up blindly would target whatever holds
+    // the receipt dir.
+    const nested = join(receiptDir, "ai-plugins", "receipts");
+    mkdirSync(nested, { recursive: true });
+    const nestedOptions = { context, dryRun: false, receiptDir: nested };
+    execute([[fakeAdapter(), planFor(["markdown"])]], nestedOptions);
+
+    revert([fakeAdapter()], nestedOptions);
+
+    expect(existsSync(nested)).toBe(false);
+    expect(existsSync(dirname(nested))).toBe(false);
+    // The directory above ours is untouched, whatever it is.
+    expect(existsSync(receiptDir)).toBe(true);
+  });
+
   it("refuses to revert a target with no receipt", () => {
     let called = false;
     const outcomes = revert(

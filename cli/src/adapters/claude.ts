@@ -47,7 +47,10 @@ import {
   readFileSync,
   rmSync,
 } from "node:fs";
-import { join } from "node:path";
+import {
+  dirname,
+  join,
+} from "node:path";
 import {
   getPath,
   readJsonc,
@@ -237,6 +240,13 @@ function installPayload(
     return actions;
   }
 
+  // Outermost first: revert replays backwards, so the payload comes out before
+  // the directories holding it are asked whether they are empty. `cpSync`
+  // creates both parents (`<data>/virajp/` and `<data>/virajp/ai-plugins/`) and
+  // nothing was recording them, so they survived every uninstall. `ownedDir`
+  // removes only when empty, which is what makes claiming them safe.
+  receipt.ownedDir(dirname(dirname(to)));
+  receipt.ownedDir(dirname(to));
   // Recorded before the write, so an interrupted install still has the tree in
   // its receipt. Recorded unconditionally: a payload already there is ours.
   receipt.tree(to);

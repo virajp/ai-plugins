@@ -254,10 +254,28 @@ describe("claude adapter", () => {
 
     expect(ran).toEqual([]);
     expect(receipt.entries.map(e => e.kind)).toEqual([
+      // The two `dir` entries are the payload's parent directories, claimed so
+      // they do not survive the uninstall as empties.
+      "dir",
+      "dir",
       "tree",
       "command",
       "command",
     ]);
+  });
+
+  it("takes its own parent directories with it on revert", () => {
+    // `cpSync` creates `<data>/virajp/` and `<data>/virajp/ai-plugins/`, and
+    // nothing recorded them — so every uninstall left two empty directories
+    // behind. Claimed with `ownedDir`, which removes only when empty.
+    const { receipt } = claude.apply(context, planFor(["markdown"]));
+    const parent = dirname(marketplaceRoot());
+
+    claude.revert(context, receipt);
+
+    expect(existsSync(marketplaceRoot())).toBe(false);
+    expect(existsSync(parent)).toBe(false);
+    expect(existsSync(dirname(parent))).toBe(false);
   });
 
   it("declares the marketplace, then installs each plugin", () => {

@@ -98,6 +98,28 @@ CLI ships no YAML parser, so there is nothing to compare against. The general
 answer is to carry run 1's undo commands forward out of the previous receipt,
 which is also the only durable ownership record a CLI-driven installer has.
 
+## Directories nobody claimed
+
+The other thing four real-install verifications all found: **empty directories
+this tool created survived every uninstall**, because only the leaf was ever
+recorded. `receipt.tree(<data>/virajp/ai-plugins/<target>)` says nothing about
+the two parents `cpSync` made on the way down, so `virajp/` and `ai-plugins/`
+were left behind. Both are now `ownedDir`, recorded **outermost first** — revert
+replays backwards, so the payload comes out before its containers are asked
+whether they are empty.
+
+The receipt directory is the one case an entry cannot cover, since no receipt
+can record the directory holding itself. `revert` removes it after the last
+receipt is consumed, and removes its parent **only when that parent is our own
+`ai-plugins/`** — walking up blindly would target whatever happens to hold the
+receipt dir, which under a test is `/tmp`.
+
+What is deliberately *not* claimed: another tool's config directory.
+`<config>/opencode/` survives an uninstall empty, and that is the right trade —
+removing a directory OpenCode owns is a worse failure than leaving an empty one.
+The rule is the same ownership question as everywhere else in this file; it just
+answers "no" here.
+
 ## When a `command` entry gets an undo
 
 An undo is recorded when the command **changed something**, *or when the

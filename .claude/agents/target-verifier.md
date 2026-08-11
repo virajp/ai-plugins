@@ -38,6 +38,12 @@ never would have, and `i:test` covers only the OpenCode path.
    is missing, say so and stop.
 4. **Read the flag surface from `cli/src/index.ts`** rather than trusting any
    document, including this one.
+5. **Compare with `/usr/bin/diff`, never bare `diff`.** On this machine `diff`
+   is aliased to `diff-so-fancy`, which pretty-prints and **always exits 0** —
+   so `diff a b && echo identical` reads clean on files that differ, and a whole
+   comparison-based verification silently proves nothing. Two separate agents
+   hit this and caught it only mid-run. The same caution applies to any tool you
+   are using for its exit status: check it is the real binary.
 
 ## Per-target notes
 

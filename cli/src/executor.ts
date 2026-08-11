@@ -12,9 +12,17 @@
  * any failed.
  */
 import type { TargetId } from "@ai-plugins/schema";
-import { rmSync } from "node:fs";
+import {
+  readdirSync,
+  rmdirSync,
+  rmSync,
+} from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import {
+  basename,
+  dirname,
+  join,
+} from "node:path";
 import { hasBin } from "./adapters/support.ts";
 import type {
   Action,
@@ -83,6 +91,14 @@ export interface ExecuteOptions {
    */
   readonly progress?: Progress;
 }
+
+/**
+ * Our own directory under the user's config base — `<config>/ai-plugins/`.
+ *
+ * Named here so the uninstall cleanup can prove the directory it is about to
+ * remove is ours, rather than trusting that the receipt dir's parent must be.
+ */
+const PACKAGE_DIR = "ai-plugins";
 
 export function receiptPath(receiptDir: string, target: TargetId): string {
   return join(receiptDir, `${target}.json`);
@@ -199,7 +215,35 @@ export function revert(
     }
   }
 
+  // The receipts live in directories this tool created, and no receipt can
+  // record the directory holding itself — so after the last one is consumed
+  // they were left behind, empty. Removed here rather than as receipt entries,
+  // and only while empty, so a partial uninstall that leaves another target's
+  // receipt in place keeps the directory it needs.
+  //
+  // The parent is removed **only when it is our own `ai-plugins/`**. Walking up
+  // blindly would point this at whatever holds the receipt dir — `/tmp` under a
+  // test, or a directory the user chose — and an empty one there is not ours to
+  // delete.
+  removeIfEmpty(options.receiptDir);
+  const parent = dirname(options.receiptDir);
+  if (basename(parent) === PACKAGE_DIR) {
+    removeIfEmpty(parent);
+  }
+
   return outcomes;
+}
+
+/** Remove a directory only when nothing is left in it. Never throws. */
+function removeIfEmpty(path: string): void {
+  try {
+    if (readdirSync(path).length === 0) {
+      rmdirSync(path);
+    }
+  }
+  catch {
+    // Absent, not a directory, or not ours to remove: nothing to clean up.
+  }
 }
 
 /**
