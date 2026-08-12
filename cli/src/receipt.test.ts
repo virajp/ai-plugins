@@ -154,4 +154,70 @@ describe("receipts", () => {
     writeFileSync(bad, "{ not json");
     expect(readReceipt(bad)).toBeUndefined();
   });
+
+  describe("merging with what is already recorded", () => {
+    // A receipt describes an install, not a run. Overwriting it wholesale meant
+    // installing a second plugin discarded the first one's claims: the
+    // uninstall removed half the install and reported success.
+    it("keeps the earlier run's entries when a later run adds its own", () => {
+      const path = join(root, "merge.json");
+      writeReceipt(
+        path,
+        new ReceiptBuilder().tree(join(root, "datastore")).build("t1", [
+          { name: "datastore", scope: "user" },
+        ]),
+      );
+
+      writeReceipt(
+        path,
+        new ReceiptBuilder().tree(join(root, "identity")).build("t2", [
+          { name: "identity", scope: "user" },
+        ]),
+      );
+
+      const merged = readReceipt(path);
+      expect(merged?.entries.map(e => (e as { path: string; }).path)).toEqual([
+        join(root, "datastore"),
+        join(root, "identity"),
+      ]);
+      // `--upgrade` replays this list, and datastore is still installed.
+      expect(merged?.plugins).toEqual([
+        { name: "datastore", scope: "user" },
+        { name: "identity", scope: "user" },
+      ]);
+      expect(merged?.installedAt).toBe("t2");
+    });
+
+    it("keeps the OLDER claim when both runs name the same path", () => {
+      // The two differ only in what they captured as prior state, and run 2
+      // read a machine run 1 had already changed.
+      const file = join(root, "settings.json");
+      writeFileSync(file, "original");
+      const path = join(root, "collide.json");
+      writeReceipt(path, new ReceiptBuilder().file(file).build("t1"));
+
+      writeFileSync(file, "ours");
+      writeReceipt(path, new ReceiptBuilder().file(file).build("t2"));
+
+      const merged = readReceipt(path);
+      expect(merged?.entries).toHaveLength(1);
+      expect((merged?.entries[0] as { previous: string; }).previous)
+        .toBe("original");
+    });
+
+    it("carries a no-op run's claims forward rather than losing them", () => {
+      // The statusline shape: everything was already set, so the run recorded
+      // nothing — and that empty receipt used to replace the real one.
+      const path = join(root, "noop.json");
+      const first = new ReceiptBuilder()
+        .createdFile(join(root, "config.yml"))
+        .command(["config", "set", "k", "v"], ["config", "set", "k", ""])
+        .build("t1");
+      writeReceipt(path, first);
+
+      writeReceipt(path, new ReceiptBuilder().build("t2"));
+
+      expect(readReceipt(path)?.entries).toEqual(first.entries);
+    });
+  });
 });

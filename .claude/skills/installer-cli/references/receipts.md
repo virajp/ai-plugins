@@ -91,12 +91,38 @@ the ownership question again: the pin names our own managed directory, which
 nobody else would have registered, so the undo is recorded whether or not this
 run put it there. A pin pointing anywhere else is still left strictly alone.
 
-**`statusline-ohmypi` is the one case the test cannot reach.** Its four
-`omp config set` undos and its `createdFile` claim are all skipped on a repeat
-run, leaving an empty receipt — but `config.yml` is `omp`'s own YAML and this
-CLI ships no YAML parser, so there is nothing to compare against. The general
-answer is to carry run 1's undo commands forward out of the previous receipt,
-which is also the only durable ownership record a CLI-driven installer has.
+**`statusline-ohmypi` is the one case the file test cannot reach**, since
+`config.yml` is `omp`'s own YAML and this CLI ships no YAML parser. It is fixed
+by the merge below instead — the previous receipt *is* the durable ownership
+record a CLI-driven installer has.
+
+## A receipt describes an install, not a run
+
+`writeReceipt` merges with whatever is already at the path. Without it, a run
+that recorded less than its predecessor replaced the fuller record, and
+installing a second plugin discarded the first one's claims entirely — so the
+uninstall removed half the install and reported success, and `--upgrade`
+replayed half the plan.
+
+Two rules make the merge safe. **The older entry wins a collision**, because two
+runs claiming the same path differ only in what they captured as prior state and
+run 2 read a machine run 1 had already changed. **Order is preserved
+oldest-first**, so revert — which replays backwards — undoes the most recent
+claims before the ones underneath them.
+
+It lives in `writeReceipt` rather than at the four call sites on purpose: this
+bug class recurred across every adapter precisely because each site decided for
+itself.
+
+## Uninstall asks the receipt, not the flags
+
+The statusline surfaces had a second, separate defect that hid the first: a
+plain `--uninstall` never reverted them at all. The tri-state `--statusline`
+defers to `--all` when unset, and there is no `--all` on the way out — so a user
+who installed with `--all` had to know to pass `--statusline` to remove a bar
+they never separately asked for. `revertsStatusline` gates on the receipt
+instead, the same question `--upgrade` already asks. `--no-statusline` still
+refuses, and a run naming one target never strips another's bar.
 
 ## Directories nobody claimed
 

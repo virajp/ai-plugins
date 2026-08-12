@@ -238,9 +238,79 @@ export class ReceiptBuilder {
   }
 }
 
+/**
+ * Write a receipt, **merged with whatever is already at that path**.
+ *
+ * A receipt describes an install, not a run — and those came apart the moment
+ * anyone installed twice. Each run used to overwrite the record wholesale, so
+ * installing `identity` after `datastore` produced a receipt naming only
+ * `identity`: the uninstall then removed half the install and reported success,
+ * and `--upgrade` replayed half the plan. Every adapter had this, because every
+ * adapter got its own fresh `ReceiptBuilder` and none of them could see what an
+ * earlier run had claimed.
+ *
+ * Merging here rather than at each call site is deliberate. Four writers reach
+ * this function — the adapters and the three statusline surfaces — and the
+ * receipt-completeness bug recurred all week precisely because each site
+ * decided for itself. There is now one place to get it right.
+ *
+ * **The older entry wins a collision.** Two runs claiming the same path differ
+ * only in what they captured as prior state, and the earlier capture is the
+ * truer one: run 2 read a machine run 1 had already changed. Entry order is
+ * preserved oldest-first, so revert — which replays backwards — undoes the most
+ * recent claims before the ones underneath them.
+ */
 export function writeReceipt(path: string, receipt: Receipt): void {
+  const merged = mergeReceipts(readReceipt(path), receipt);
   mkdirSync(dirname(path), { recursive: true });
-  writeFileAtomic.sync(path, `${JSON.stringify(receipt, null, 2)}\n`);
+  writeFileAtomic.sync(path, `${JSON.stringify(merged, null, 2)}\n`);
+}
+
+/**
+ * What makes two entries the same claim.
+ *
+ * Deliberately not the whole entry: the point is to recognise a path this tool
+ * has already claimed *whatever it captured about it*, so the captured state is
+ * excluded from the identity and the older one is kept.
+ */
+function identity(entry: Entry): string {
+  switch (entry.kind) {
+    case "command":
+      return `command ${entry.ran.join(" ")}`;
+    case "configKey":
+      return `configKey ${entry.file} ${entry.path.join(" ")}`;
+    default:
+      return `${entry.kind} ${entry.path}`;
+  }
+}
+
+export function mergeReceipts(
+  previous: Receipt | undefined,
+  current: Receipt,
+): Receipt {
+  if (previous === undefined) {
+    return current;
+  }
+  const seen = new Set(previous.entries.map(identity));
+  const entries = [
+    ...previous.entries,
+    ...current.entries.filter(entry => !seen.has(identity(entry))),
+  ];
+
+  // Union by name+scope, current last: `--upgrade` replays this list, and a
+  // plugin installed by an earlier run is still installed.
+  const plugins = [...previous.plugins ?? [], ...current.plugins ?? []];
+  const unique = plugins.filter((plugin, index) =>
+    plugins.findIndex(other =>
+      other.name === plugin.name && other.scope === plugin.scope
+    ) === index
+  );
+
+  return {
+    ...current,
+    entries,
+    ...(unique.length === 0 ? {} : { plugins: unique }),
+  };
 }
 
 /**

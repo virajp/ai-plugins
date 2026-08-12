@@ -10,6 +10,7 @@ import type {
 import {
   ADAPTERS,
   buildJobs,
+  revertsStatusline,
   selectAdapters,
   statuslineSelected,
   toList,
@@ -212,5 +213,35 @@ describe("statuslineSelected", () => {
     expect(statuslineSelected(false, true, claudeOnly, m => noted.push(m)))
       .toEqual({ claude: false, ohmypi: false, opencode: false });
     expect(noted).toEqual([]);
+  });
+});
+
+describe("revertsStatusline", () => {
+  // The install-side default is `--all`; there is no `--all` on the way out, so
+  // a plain `--uninstall` used to leave every statusline surface installed.
+  it("undoes a surface this tool installed, with no flag given", () => {
+    expect(revertsStatusline(true, false, false, () => true)).toBe(true);
+  });
+
+  it("leaves a surface alone when nothing installed it", () => {
+    expect(revertsStatusline(true, false, false, () => false)).toBe(false);
+  });
+
+  it("refuses outright on --no-statusline, receipt or not", () => {
+    expect(revertsStatusline(true, true, true, () => true)).toBe(false);
+  });
+
+  it("never strips a surface the run does not target", () => {
+    // `--uninstall --platform claude` must not remove the Oh-My-Pi bar.
+    expect(revertsStatusline(false, true, false, () => true)).toBe(false);
+  });
+
+  it("does not consult the receipt when the flag already asked", () => {
+    let asked = false;
+    revertsStatusline(true, true, false, () => {
+      asked = true;
+      return false;
+    });
+    expect(asked).toBe(false);
   });
 });

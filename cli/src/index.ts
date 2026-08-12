@@ -125,6 +125,32 @@ export function wantsStatusline(
   return flag ?? all;
 }
 
+/**
+ * Should an uninstall undo a statusline surface?
+ *
+ * The install-side question is `wantsStatusline`; this is the other end of it,
+ * and it is not the same question. On the way in an unset flag defers to
+ * `--all`. On the way out there is no `--all`, so deferring to it meant a plain
+ * `--uninstall` left every statusline installed — the user had to know to pass
+ * `--statusline` to remove something they never separately asked to install.
+ *
+ * The gate is the **receipt**: uninstall undoes what this tool did, and the
+ * receipt is the record of that. `--upgrade` already asks the same way.
+ * `--no-statusline` still refuses outright, and `reachable` keeps a run that
+ * names one target from stripping another's bar.
+ */
+export function revertsStatusline(
+  reachable: boolean,
+  selected: boolean,
+  refused: boolean,
+  installed: () => boolean,
+): boolean {
+  if (refused || !reachable) {
+    return false;
+  }
+  return selected || installed();
+}
+
 /** Which targets to act on: those named, else every tool actually present. */
 export function selectAdapters(
   platforms: readonly string[],
@@ -376,14 +402,42 @@ const main = defineCommand({
 
     if (args.uninstall === true) {
       const outcomes = revert(adapters, options);
-      if (statusline.claude) {
-        outcomes.push(revertStatuslineInstall(options));
-      }
-      if (statusline.ohmypi) {
-        outcomes.push(revertStatuslineOhmypiInstall(options));
-      }
-      if (statusline.opencode) {
-        outcomes.push(revertStatuslineOpencodeInstall(options));
+      // An uninstall undoes what this tool installed, so the gate is the
+      // **receipt**, not `--all`. The tri-state still governs — an explicit
+      // `--no-statusline` refuses — but an unset flag cannot mean "leave the
+      // bar configured": on the way in it defers to `--all`, and there is no
+      // `--all` on the way out, so a plain `--uninstall` silently left every
+      // statusline surface installed. `--upgrade` already gates on the receipt
+      // this way; this is the same question asked at the other end.
+      //
+      // Still restricted to the selected targets: uninstalling Claude alone
+      // must not strip the Oh-My-Pi bar.
+      const reaches = (id: TargetId) => adapters.some(a => a.id === id);
+      const refused = args.statusline === false;
+      const undo: [boolean, boolean, () => boolean, () => TargetOutcome][] = [
+        [
+          reaches("claude"),
+          statusline.claude,
+          () => statuslineInstalled(options),
+          () => revertStatuslineInstall(options),
+        ],
+        [
+          reaches("ohmypi"),
+          statusline.ohmypi,
+          () => ohmypiStatuslineInstalled(options),
+          () => revertStatuslineOhmypiInstall(options),
+        ],
+        [
+          reaches("opencode"),
+          statusline.opencode,
+          () => opencodeStatuslineInstalled(options),
+          () => revertStatuslineOpencodeInstall(options),
+        ],
+      ];
+      for (const [reachable, selected, installed, run] of undo) {
+        if (revertsStatusline(reachable, selected, refused, installed)) {
+          outcomes.push(run());
+        }
       }
       report(outcomes);
       process.exit(failed(outcomes) ? 1 : 0);

@@ -53,10 +53,16 @@ would produce — identical means an earlier run of ours wrote it, whatever
 one to copy: it reconstructs the file **without** our entries, so the claim is
 computed against what run 1 actually saw and every run records the same thing.
 
-**Still open**: `statusline-ohmypi` has the same empty-receipt shape, and cannot
-use that test — `config.yml` belongs to `omp`, is YAML, and this CLI ships no
-YAML parser. The general fix is carrying run 1's undo commands forward out of
-the previous receipt.
+**And one fix underneath all of them**: a receipt now **merges with whatever is
+already at its path**, in `writeReceipt`. A receipt describes an install, not a
+run — overwriting it wholesale is what let a second run record less than the
+first, and it is also why installing `identity` after `datastore` produced a
+receipt naming only `identity`. Merging in the one place every writer passes
+through is deliberate: this bug recurred all week precisely because each site
+decided for itself. The **older** entry wins a collision, since run 2 read a
+machine run 1 had already changed. That closes `statusline-ohmypi`, which could
+not use the file-comparison test at all — `config.yml` is `omp`'s own YAML and
+this CLI ships no YAML parser.
 
 **A single install passes either way; only a repeat run shows it**, which is why
 `i:test` installs twice before uninstalling. Preserve that.
