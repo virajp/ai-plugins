@@ -165,10 +165,6 @@ describe("readPluginIndex", () => {
     // needs its own copy of the dependency list.
     expect(vwf?.dependencies).toContain("devtools");
     // The `--all` set, from templates/marketplace.yaml.
-    expect(real.defaultInstall).toEqual([
-      "vwf",
-      "devtools",
-      "andrej-karpathy-skills",
-    ]);
+    expect(real.defaultInstall).toEqual(["vwf", "devtools"]);
   });
 });

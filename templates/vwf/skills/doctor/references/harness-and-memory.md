@@ -1,7 +1,9 @@
 # Harness, Health & Memory Config (§§6–7)
 
-Read this before running §6. Neither section produces a **blocking** finding —
-they yield drift, recorded gaps, and degradations.
+Read this before running §6. §6 produces no **blocking** finding — only drift,
+recorded gaps, and degradations. §7 does: the four placement-and-secrets checks
+below are blocking, because each one silently disables the memory layer or
+publishes a credential into it.
 
 ## 6. Harness and health
 
@@ -24,27 +26,50 @@ every later recall come back empty. Nothing else in vwf catches that; this
 section is where it gets caught. Per `<%= it.root %>/assets/memory.md`,
 check:
 
-- **A `mempalace.yaml` at every repo root** — the parent and each submodule.
-  Missing → finding; that repo's files are never mined.
-- **One wing across all of them**, equal to `memory.wing` in `.config/vwf.yaml`
-  (or `product.name` when the key is absent). A file naming a different wing is
-  the highest-value finding here: writes and recalls silently address different
-  palaces, and nothing else would ever surface it.
-- **All seven protocol rooms present** in each file — `decisions`, `problems`,
-  `planning`, `gaps`, `runs`, `doctor`, `handoff`. Report a missing one as
-  drift; report a room whose name is a **near-miss** of a protocol room
-  (`decision`, `run`, `handoffs`) as its own finding, since that is the typo
-  case the closed set exists to catch.
+- **Exactly one `mempalace.yaml`, at the repo root.** Walk the whole product
+  tree — the root, `.config/`, every submodule root — and count. Three
+  **blocking** outcomes:
+  - **More than one** anywhere in the tree. Two configs mean two answers to
+    which rooms exist, and only the root one is ever read.
+  - **One, but not at the repo root.** Mining reads the config only from the
+    directory it is pointed at — there is no parent search, no `.config/`
+    convention, and no flag to name one — so a config elsewhere is **silently
+    inert**: the mine runs, falls back to auto-detected defaults, and files
+    everything into `general`. Say that in the finding text; a config that looks
+    tidy in `.config/` is indistinguishable from one that works.
+  - **None at all.** Nothing is mined; the palace holds only what vwf wrote into
+    it by hand.
+- **The secret excludes are configured** — `exclude_patterns` carries the
+  denylist from the memory asset's *Secrets* section. **Blocking**: the failure
+  is a credential indexed into a store agents read back into context, deleting
+  the source file does not remove the drawer, and it is unobservable from
+  outside. Check only that the **patterns are present** — doctor never scans
+  file contents for credentials; that belongs to a dedicated secret scanner, and
+  the `devtools` plugin already ships that doctrine.
+- **The wing matches `memory.wing`** in `.config/vwf.yaml` (or `product.name`
+  when the key is absent). A file naming a different wing is the highest-value
+  drift finding here: writes and recalls silently address different palaces, and
+  nothing else would ever surface it.
+- **All seven protocol rooms present** — `decisions`, `problems`, `planning`,
+  `gaps`, `runs`, `doctor`, `handoff`. Report a missing one as drift; report a
+  room whose name is a **near-miss** of a protocol room (`decision`, `run`,
+  `handoffs`, `plans` for `planning`) as its own finding, since that is the typo
+  case the closed set exists to catch — mempalace creates the mistyped room on
+  first write, so it fills up while every recall against the real name returns
+  empty.
 - **No shadowing keyword** — routing walks path parts outermost-first and
   returns on the first match, so a room keyed on a directory that contains
   another room's path swallows it (`documentation` keyed on `docs` captures
   `docs/memory/handoff/` before `handoff` is tested). Flag every such pair.
-- **The parent's `exclude_patterns`** covers each submodule path, or the parent
-  mine double-files their contents into the shared wing.
-- **Cross-repo room-name collisions** where the same name means different things
-  (a backend `configuration` of `deploy/` versus a frontend `configuration` of
-  `config/`). The wing is shared, so those merge into one room. Report as drift
-  to reconcile — not an error; merging `documentation` is usually right.
+- **No submodule path in `exclude_patterns`.** One config mines the whole
+  product tree, and each submodule's own `.gitignore` is honoured on the way in,
+  so an inherited exclude now drops that project from the palace entirely.
+  Report as drift with the line to delete.
+- **Room-name collisions across projects** where the same name means different
+  things (a backend `configuration` of `deploy/` versus a frontend
+  `configuration` of `config/`). One config, one wing, so those are one room
+  holding two subjects. Report as drift to reconcile — not an error; merging
+  `documentation` across the product is usually right.
 
 **The markdown mirror.** Check `docs/memory/` exists with the seven room
 directories, and that `.gitignore` covers `docs/memory/handoff/`,

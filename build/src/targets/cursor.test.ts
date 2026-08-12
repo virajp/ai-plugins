@@ -1,4 +1,10 @@
 import { frontmatter as fm } from "@ai-plugins/schema";
+import {
+  mkdirSync,
+  mkdtempSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   describe,
@@ -10,9 +16,8 @@ import type { Emission } from "../target.ts";
 import { cursor } from "./cursor.ts";
 
 const repoRoot = join(import.meta.dirname, "..", "..", "..");
-const emission: Emission = cursor.render(
-  readWorkspace(join(repoRoot, "templates")),
-);
+const templatesRoot = join(repoRoot, "templates");
+const emission: Emission = cursor.render(readWorkspace(templatesRoot));
 
 /** Rendered text of one output; copied files have no text to inspect. */
 function text(path: string): string {
@@ -39,10 +44,34 @@ describe("plugin bundles", () => {
       .map(o => o.path.split("/")[0]);
 
     expect(manifests).toContain("vwf");
-    // `mempalace` and `andrej-karpathy-skills` are re-listed url sources: they
-    // are somebody else's repo, so there is nothing local to render.
-    expect(manifests).not.toContain("mempalace");
-    expect(manifests).not.toContain("andrej-karpathy-skills");
+    // Every plugin in the real marketplace is local today, so every one of
+    // them renders.
+    expect(manifests).toHaveLength(readWorkspace(templatesRoot).plugins.length);
+  });
+
+  it("renders no bundle for a url-sourced plugin", () => {
+    // A url source is somebody else's repo, so there is nothing local to
+    // render and this target silently ships nothing for it. That used to be
+    // true of the real `mempalace` and `andrej-karpathy-skills` entries — both
+    // vendored into `vwf` now, precisely because of this absence — so the
+    // workspace here is synthetic. The rule is still live code.
+    const root = mkdtempSync(join(tmpdir(), "ai-plugins-cursor-"));
+    writeFileSync(
+      join(root, "marketplace.yaml"),
+      "name: test-marketplace\nowner:\n  name: Tester\n",
+    );
+    mkdirSync(join(root, "elsewhere"));
+    writeFileSync(
+      join(root, "elsewhere", "plugin.yaml"),
+      "name: elsewhere\nsource:\n  kind: url\n"
+        + "  url: https://example.com/elsewhere.git\n",
+    );
+
+    const remote = cursor.render(readWorkspace(root));
+
+    expect(remote.outputs.map(o => o.path)).not.toContain(
+      "elsewhere/.cursor-plugin/plugin.json",
+    );
   });
 
   it("fills the four fields Cursor requires", () => {

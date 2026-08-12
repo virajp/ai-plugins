@@ -8,4 +8,3 @@ repository: https://github.com/virajp/ai-plugins.git
 defaultInstall:
   - vwf
   - devtools
-  - andrej-karpathy-skills

@@ -20,10 +20,10 @@ describe("repeatable flags", () => {
       "--user",
       "devtools",
       "--user",
-      "andrej-karpathy-skills",
+      "typescript",
     ]);
 
-    expect(args.user).toEqual(["vwf", "devtools", "andrej-karpathy-skills"]);
+    expect(args.user).toEqual(["vwf", "devtools", "typescript"]);
   });
 
   it("gives a single occurrence an array too, so callers never branch", () => {

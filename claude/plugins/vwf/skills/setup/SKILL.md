@@ -35,7 +35,7 @@ throughout.
 | Stack templates   | from the installed stack plugins, never from vwf                |
 | Stack vocabulary  | `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`             |
 | Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`                       |
-| mempalace config  | `mempalace.yaml` (parent **and** each submodule)               |
+| mempalace config  | `mempalace.yaml` (**one**, at the repo root)                   |
 | Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                      |
 
 Doctrine: the **project-setup** skill — a router. Read each reference at the
@@ -51,7 +51,7 @@ This skill's own references follow the same rule:
 | ---------------------------------------------------------- | ------------------------------------------------------------------ |
 | [format-reconcile](references/format-reconcile.md)         | §3 — computing the delta and judging layout drift                  |
 | [environment-bootstrap](references/environment-bootstrap.md) | §6 — the registry declares integrations or a secrets-manager config |
-| [memory-tree](references/memory-tree.md)                   | §9 — writing `docs/memory/` and each repo's `mempalace.yaml`       |
+| [memory-tree](references/memory-tree.md)                   | §9 — writing `docs/memory/` and the product's one `mempalace.yaml` |
 
 ## Hard Rules
 
@@ -282,13 +282,18 @@ run diffs against, and how every vwf command operates in this repo:
   them.
 
 **Write the memory tree and the mempalace config.** `docs/memory/` with its
-seven room directories (three of them gitignored), and a `mempalace.yaml` in
-**each repo root** — the parent and every submodule — all naming the single
-confirmed `memory.wing`. The layout, the seeded rooms, and the two routing traps
-are in [the memory tree](references/memory-tree.md); read it at this step. Two
-rules hold regardless: present the files as part of the step-4 dry-run and
-confirm the wing (one MCQ) before writing, and an existing `mempalace.yaml` is
-**merged, never overwritten**.
+seven room directories (three of them gitignored), and **exactly one**
+`mempalace.yaml` at the **repo root** naming the confirmed `memory.wing` —
+mining the whole product tree, submodules included. Any config found elsewhere
+(`.config/`, a submodule root) is consolidated into it and removed: mining reads
+the config only from the directory it is pointed at, so a stray one is silently
+inert rather than wrong-looking. The consolidation steps, the seeded rooms, the
+secret excludes and the routing traps are in
+[the memory tree](references/memory-tree.md); read it at this step. Three rules
+hold regardless: present the merged file and every deletion as part of the
+step-4 dry-run and confirm the wing (one MCQ) before writing; an existing
+`mempalace.yaml` is **merged, never overwritten**; and a room name carrying two
+conflicting descriptions is a question, not a silent merge.
 
 On the `5 → 6` migration, `git mv` the legacy stamp to the new path first (move,
 never delete), then restructure — per format-versioning. Also migrate any

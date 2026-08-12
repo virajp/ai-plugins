@@ -44,8 +44,7 @@ interface FlagDoc {
 const FLAGS: readonly FlagDoc[] = [
   {
     display: "--all",
-    description:
-      "Install the default set at user scope: vwf, devtools, karpathy",
+    description: "Install the default set at user scope: vwf, devtools",
   },
   {
     display: "--user <name>",

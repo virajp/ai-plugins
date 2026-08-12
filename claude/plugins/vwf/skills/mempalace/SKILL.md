@@ -22,6 +22,22 @@ If not installed (uv recommended):
 uv tool install mempalace   # or: pip install mempalace
 ```
 
+Or install it as a managed tool and run the server as a **long-lived host
+daemon** — the shape vwf assumes, since vwf connects to mempalace over HTTP
+rather than spawning it:
+
+```bash
+mise use -g "pipx:mempalace@latest"    # installs the CLI and mempalace-mcp
+mempalace-mcp --transport http --host 127.0.0.1 --port 8765 \
+  --palace "$HOME/.local/share/mempalace"
+```
+
+Keep that under a process supervisor (pitchfork, launchd, systemd) rather than
+starting it by hand: a client reconnects to an HTTP daemon, but nothing
+restarts one for you. Pass the palace path as a **flag**, not through the
+environment — a supervised daemon inherits the *supervisor's* environment, so a
+variable fixed after the supervisor started is not the one the daemon sees.
+
 ## Usage
 
 MemPalace provides dynamic, version-correct instructions via the CLI. To get instructions for any operation:

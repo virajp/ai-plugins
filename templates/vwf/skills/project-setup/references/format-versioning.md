@@ -8,7 +8,7 @@ and, on re-run, migrates the gap.
 
 ```yaml
 config_format: 14
-blueprint_format: 20
+blueprint_format: 21
 topology: monorepo # repo | monorepo | polyrepo
 ui: true # design-system required
 integrations: true # environment.md required (external integration / secret exists)
@@ -29,10 +29,16 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 20.** (13 and 17 are deliberately **skipped** — no
+**Current format = 21.** (13 and 17 are deliberately **skipped** — no
 *blueprint* format ever carried either; a repo whose `blueprint_format` reads 13
 is impossible and would be treated as 12, one stamped 17 as 16. `config_format`
 13 is a different number line and is real — see the vwf-config asset.) Format
+21 = format 20 **plus** the **one mempalace config per product** (the
+`20 → 21` delta below): a workspace carries exactly one `mempalace.yaml`, at the
+repo root, mining the whole product tree with the submodule excludes gone and a
+secret denylist added — and `<%= it.cmd("vwf:doctor") %>` raises a duplicate, a misplaced one,
+a missing one, or one with no secret excludes as **blocking**. It introduces no
+config key, so `config_format` stays **14**. Format
 20 = format 19 **plus** the **`iac` role rename and the own-repo rule** (the
 `19 → 20` delta below): the IaC role is spelled `iac` rather than the old
 abbreviation, and an `iac` project must live in its own repo — independent, or a
@@ -681,6 +687,60 @@ the current format and apply the delta:
   screen codes, entity docs, the coverage stamp, and every `enforcement.rules`
   waiver. An `iac` project stays exempt from blueprint coverage — the rename
   changes its spelling, not its treatment.
+
+- **`20 → 21`** → **one mempalace config per product**. Every step is
+  mechanical, and the whole migration is **idempotent**: run against a repo
+  already on 21 it finds one root config with the excludes present and changes
+  nothing.
+
+  1. **Find every `mempalace.yaml` in the product tree** — the repo root,
+     `.config/`, and each submodule root. A repo onboarded before this format
+     usually has one per repo; some have one in `.config/` and some have none at
+     all, and in both of those cases mining has been running on auto-detected
+     defaults the whole time without ever saying so.
+  2. **Union them into one.** Merge the room lists (name, description, keywords)
+     and the `exclude_patterns`, preferring what the user wrote over what
+     `setup` seeded. A room name appearing twice with **conflicting
+     descriptions** stops for a question: that is two projects meaning different
+     things by one word, and choosing silently discards one project's routing.
+  3. **Drop every submodule path from `exclude_patterns`.** The parent used to
+     exclude them because each submodule mined itself. One config mines the
+     whole tree — descending into each submodule and picking up its own
+     `.gitignore` on the way in — so an inherited exclude now removes that
+     project from the palace entirely.
+  4. **Add the secret excludes** from the memory asset's *Secrets* section, if
+     the union does not already carry them. `.gitignore` is the primary layer
+     and it works by default; this denylist is the backstop for a credential
+     that was committed anyway, which `.gitignore` by definition cannot catch.
+     Nothing here scans file contents — the patterns being configured is the
+     whole check.
+  5. **Seed any protocol room the union is missing**, and rename a **near-miss**
+     to its protocol spelling (`plans` → `planning`, `decision` → `decisions`),
+     carrying its keywords across. This is the step with the evidence behind it:
+     a live reference palace was found holding 13,312 drawers in eight rooms,
+     **every one path-derived and not one of them a protocol room** — mined
+     content was searchable while every `<%= it.cmd("vwf:handoff") %>`, every findings
+     loop-back and every persisted decision either created a room implicitly on
+     first write or landed in `general`, and every later recall against the real
+     room name came back empty with no error. An earlier snapshot of the same
+     palace showed the softer version: a `plans` room with 212 drawers where the
+     protocol expects `planning`, one letter away and silently unreachable.
+     Renaming the room in the config does **not** move drawers already filed
+     under the old name; report what was found so the user can decide, and
+     never rewrite a live palace as part of a format migration.
+  6. **Write `<repo-root>/mempalace.yaml` and `git rm` the strays**, under this
+     skill's migration-and-consent discipline: the merged file in full and every
+     deletion go into the same dry run as the rest of the migration, and a
+     decline changes nothing.
+  7. Bump the stamp to `21`. **`config_format` stays `14`** — this delta
+     introduces no config key, so unlike the last three bumps there is no paired
+     config migration to run beside it.
+
+  **What does not change:** every doc under `docs/blueprint/`, the coverage
+  stamp, `docs/memory/` and its seven room directories, the wing (still one per
+  product, still `memory.wing`), and every `enforcement.rules` waiver. This
+  format moves one config file and rewrites its contents; the blueprint itself
+  is untouched.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

@@ -20,9 +20,9 @@ reviewed product through four disciplined phases.
 You drive it with slash commands. Claude does the work — asking one question at
 a time while authoring, running unattended while executing — and never merges
 until you approve. The whole manual, command by command, is
-**[docs/vwf.md](./docs/vwf.md)**.
+**[docs/plugins/vwf.md](./docs/plugins/vwf.md)**.
 
-Around it the marketplace ships **thirteen more plugins** — languages, clouds,
+Around it the marketplace ships **twelve more plugins** — languages, clouds,
 capabilities, tooling and design. That is the point of the split: vwf owns the
 workflow and names no technology at all, so every concrete choice lives in a
 plugin you install only if your product uses it. All of them, plus a
@@ -57,12 +57,12 @@ blocker rather than a preference. Know this before you install.
 
 The full discussion — how model and effort are tiered per surface, what
 delegating read-heavy work buys, and the rest of the fit questions — is in
-[docs/vwf.md](./docs/vwf.md#caveats).
+[docs/plugins/vwf.md](./docs/plugins/vwf.md#caveats).
 
 ## Install
 
 ```sh
-# The workflow and what it needs — vwf, devtools, andrej-karpathy-skills —
+# The workflow and what it needs — vwf, devtools —
 # plus the statusline, for every agent found on your PATH
 pnpx @askviraj/ai-plugins --all
 
@@ -75,32 +75,34 @@ Windows included. Restart your agent afterward so the commands, hooks and
 dependencies load. (The examples here use `pnpx`; if you don't use `pnpm`, swap
 in `npx`.)
 
-`--all` is a fixed set of three — `vwf`, `devtools`, `andrej-karpathy-skills` —
-installed at user scope. Everything else is named explicitly, at whichever scope
-you ask for, because which language, cloud and capability plugins you want is a
-question about your product rather than about the toolkit. See
+`--all` is a fixed set of two — `vwf` and `devtools` — installed at user scope.
+Everything else is named explicitly, at whichever scope you ask for, because
+which language, cloud and capability plugins you want is a question about your
+product rather than about the toolkit. See
 [the installer CLI](#the-installer-cli) for the full flag reference.
 
 ## The plugins
 
-Fourteen plugins, each with its own guide. Install the workflow, then whichever
+Thirteen plugins, each with its own guide. Install the workflow, then whichever
 ones match the product you are building.
 
 ### The workflow
 
-**[vwf](./docs/vwf.md)** — the flagship. Fifteen `/vwf:` commands covering the
-whole arc: onboard a repo, pin the outcome contract, model the system, sweep a
-whole-product blueprint to complete coverage, plan one slice as a reviewable
-diff, execute it unattended behind one merge gate, verify the deploy, and route
-what production teaches you back to the document that fixes it. It carries
-[cross-session memory](./docs/mempalace.md), a knowledge-graph layer, session
-handoff and recall, and the Markdown and Context7 docs surfaces it absorbed. It
-names **no** technology — no language, no framework, no cloud — which is what
-lets the rest of this list exist. `--user vwf`
+**[vwf](./docs/plugins/vwf.md)** — the flagship. Fifteen `/vwf:` commands
+covering the whole arc: onboard a repo, pin the outcome contract, model the
+system, sweep a whole-product blueprint to complete coverage, plan one slice as
+a reviewable diff, execute it unattended behind one merge gate, verify the
+deploy, and route what production teaches you back to the document that fixes
+it. It carries [cross-session memory](./docs/plugins/mempalace.md), a
+knowledge-graph layer, session handoff and recall, the
+[Karpathy coding guidelines](./docs/plugins/karpathy-guidelines.md), and the
+Markdown and Context7 docs surfaces it absorbed. It names **no** technology — no
+language, no framework, no cloud — which is what lets the rest of this list
+exist. `--user vwf`
 
 ### Languages
 
-**[typescript](./docs/typescript.md)** — the TypeScript language plugin,
+**[typescript](./docs/plugins/typescript.md)** — the TypeScript language plugin,
 covering TypeScript and JavaScript. A `typescript` router skill plus an `effect`
 one for Effect-TS, and opinionated standards for `package.json`, pnpm, tsconfig
 and the lint/format gate. It bundles the TypeScript language server, the
@@ -108,23 +110,23 @@ npm→pnpm/bun normalizing hook, and every TypeScript stack template vwf can off
 — service, fullstack, site, worker, CLI, IaC and shared packages, plus the
 npm-package and repo-level choices. `--user typescript`
 
-**[flutter](./docs/flutter.md)** — Flutter and Dart done to one standard: `dart`
-and `swift` router skills plus `kotlin`, `pubspec`, `analysis-options` and
-internationalization, with Dart, Kotlin and SourceKit (Swift) language servers
-bundled. It owns the `dart-flutter` stack template for a `frontend` project.
-`--project flutter` from the app's own repo, or `--user flutter` if you build
-them often enough for it to be a habit.
+**[flutter](./docs/plugins/flutter.md)** — Flutter and Dart done to one
+standard: `dart` and `swift` router skills plus `kotlin`, `pubspec`,
+`analysis-options` and internationalization, with Dart, Kotlin and SourceKit
+(Swift) language servers bundled. It owns the `dart-flutter` stack template for
+a `frontend` project. `--project flutter` from the app's own repo, or
+`--user flutter` if you build them often enough for it to be a habit.
 
 ### Clouds
 
-**[gcp](./docs/gcp.md)** — Google Cloud, as the judgment an SDK reference cannot
-give you: which service to pick, when it stops being the answer, how each one
-bills, which have local emulators, and what least-privilege IAM looks like. It
-supplies Firebase and Cloud SQL as backing choices and Cloud Run and GKE as
-deploy targets. Opt-in. `--user gcp`
+**[gcp](./docs/plugins/gcp.md)** — Google Cloud, as the judgment an SDK
+reference cannot give you: which service to pick, when it stops being the
+answer, how each one bills, which have local emulators, and what least-privilege
+IAM looks like. It supplies Firebase and Cloud SQL as backing choices and Cloud
+Run and GKE as deploy targets. Opt-in. `--user gcp`
 
-**[cloudflare](./docs/cloudflare.md)** — **deliberately parked at Zero Trust
-Access**: a private plane in front of a project that must not be publicly
+**[cloudflare](./docs/plugins/cloudflare.md)** — **deliberately parked at Zero
+Trust Access**: a private plane in front of a project that must not be publicly
 reachable, whichever cloud hosts it. Workers, Pages, R2, D1, KV and the rest are
 not offered here and arrive under their own plan; the menu says so out loud
 rather than coming back quietly short. Opt-in. `--user cloudflare`
@@ -136,66 +138,65 @@ guarantee, regardless of who provides it — and, where one exists, the provider
 that belongs to no cloud. Managed flavours come from your cloud plugin. The
 capability states the requirement; the provider states the mechanism.
 
-**[datastore](./docs/datastore.md)** — the datastore contract: write versioning,
-atomic multi-record writes, server-authoritative time, the services-layer access
-rule, and a deterministic local stack. Ships **Postgres**. Opt-in.
-`--user datastore`
+**[datastore](./docs/plugins/datastore.md)** — the datastore contract: write
+versioning, atomic multi-record writes, server-authoritative time, the
+services-layer access rule, and a deterministic local stack. Ships **Postgres**.
+Opt-in. `--user datastore`
 
-**[identity](./docs/identity.md)** — the identity contract: verification per
-route, the *claims carry status, never roles* rule, revocation, and the operator
-plane. Ships any **OIDC** issuer. Opt-in. `--user identity`
+**[identity](./docs/plugins/identity.md)** — the identity contract: verification
+per route, the *claims carry status, never roles* rule, revocation, and the
+operator plane. Ships any **OIDC** issuer. Opt-in. `--user identity`
 
-**[observability](./docs/observability.md)** — the telemetry contract: **your
-product emits OTLP and never a vendor SDK**, signals correlate, cardinality is a
-design decision, retention is chosen. Ships the self-hosted **OpenTelemetry →
-Grafana OTel-LGTM** sink; a managed backend is a destination, not an import.
-Opt-in. `--user observability`
+**[observability](./docs/plugins/observability.md)** — the telemetry contract:
+**your product emits OTLP and never a vendor SDK**, signals correlate,
+cardinality is a design decision, retention is chosen. Ships the self-hosted
+**OpenTelemetry → Grafana OTel-LGTM** sink; a managed backend is a destination,
+not an import. Opt-in. `--user observability`
 
-**[orchestration](./docs/orchestration.md)** — the contract for work that
-happens later: at-least-once delivery and the idempotency it forces, bounded
-retry, the poison path, work-in-flight visibility, and when a queue beats a bus
-beats a scheduler beats a workflow engine. Ships **Temporal**. Opt-in.
-`--user orchestration`
+**[orchestration](./docs/plugins/orchestration.md)** — the contract for work
+that happens later: at-least-once delivery and the idempotency it forces,
+bounded retry, the poison path, work-in-flight visibility, and when a queue
+beats a bus beats a scheduler beats a workflow engine. Ships **Temporal**.
+Opt-in. `--user orchestration`
 
-**[object-storage](./docs/object-storage.md)** — **contract-only by design**:
-buckets, lifecycle as a bucket policy, signed access, prefix-scoped credentials,
-the never-proxy-bytes rule, egress cost. Every object store is some cloud's, so
-the flavour comes from `gcp` or `cloudflare` — and this plugin says that
-explicitly rather than returning an empty menu, which would be indistinguishable
-from a broken adapter. Opt-in. `--user object-storage`
+**[object-storage](./docs/plugins/object-storage.md)** — **contract-only by
+design**: buckets, lifecycle as a bucket policy, signed access, prefix-scoped
+credentials, the never-proxy-bytes rule, egress cost. Every object store is some
+cloud's, so the flavour comes from `gcp` or `cloudflare` — and this plugin says
+that explicitly rather than returning an empty menu, which would be
+indistinguishable from a broken adapter. Opt-in. `--user object-storage`
 
 ### Tooling, design and delivery
 
-**[devtools](./docs/devtools.md)** — the developer-machine toolchain in one
-plugin: mise (the three-file `MISE_ENV` split, tool placement, the file-based
-task library) with a `/devtools:scaffold` skill, Doppler for **development**
-secrets, Docker/OCI and the provider-neutral `container-generic` deploy target,
-and the repo gates the stack templates name — dprint, ESLint, gitleaks, grype,
-pre-commit. A `vwf` dependency, because `/vwf:setup` orchestrates its scaffold
-skill. `--user devtools`
+**[devtools](./docs/plugins/devtools.md)** — the developer-machine toolchain in
+one plugin: mise (the three-file `MISE_ENV` split, tool placement, the
+file-based task library) with a `/devtools:scaffold` skill, Doppler for
+**development** secrets, Docker/OCI and the provider-neutral `container-generic`
+deploy target, and the repo gates the stack templates name — dprint, ESLint,
+gitleaks, grype, pre-commit. A `vwf` dependency, because `/vwf:setup`
+orchestrates its scaffold skill. `--user devtools`
 
-**[design-tools](./docs/design-tools.md)** — the design adapter vwf imports
-screens, design systems and design review conversations through. Three skills
-resolve the design tool **per project** — `claude-design`, `lovable` or `stitch`
-— so a product can design its website in one and its app in another. Only some
-tools have a review conversation at all; the ones that do not say so plainly
-rather than returning empty. Ships the Claude Design MCP server. Deliberately
-not a vwf dependency: an adapter is chosen, not inherited. `--user design-tools`
+**[design-tools](./docs/plugins/design-tools.md)** — the design adapter vwf
+imports screens, design systems and design review conversations through. Three
+skills resolve the design tool **per project** — `claude-design`, `lovable` or
+`stitch` — so a product can design its website in one and its app in another.
+Only some tools have a review conversation at all; the ones that do not say so
+plainly rather than returning empty. Ships the Claude Design MCP server.
+Deliberately not a vwf dependency: an adapter is chosen, not inherited.
+`--user design-tools`
 
-**[cicd](./docs/cicd.md)** — one `/cicd:workflow` skill that resolves the repo's
-CI system from config and generates its delivery pipeline: every tool installed
-through mise, both polyrepo and monorepo layouts, conforming to vwf's
+**[cicd](./docs/plugins/cicd.md)** — one `/cicd:workflow` skill that resolves
+the repo's CI system from config and generates its delivery pipeline: every tool
+installed through mise, both polyrepo and monorepo layouts, conforming to vwf's
 tag-triggered, branch-validated, tested-before-release contract. GitHub Actions
 is the one implementation today; adding a CI system is a single reference file.
 Independent — vwf states the contract, this implements it. `--user cicd`
 
-### External, re-listed here
-
-**[andrej-karpathy-skills](./docs/andrej-karpathy-skills.md)** — behavioral
-guidelines that cut the coding mistakes LLMs most reliably make. vwf enforces
-the same pillars structurally inside the pipeline; this covers the ad-hoc,
-off-pipeline case. A `vwf` dependency, and the only external one.
-`--user`/`--project andrej-karpathy-skills`
+Every plugin above is authored here. Nothing in this marketplace is re-listed
+from another repo any more: the last one that was — the Karpathy coding
+guidelines — is now a
+[skill vendored inside `vwf`](./docs/plugins/karpathy-guidelines.md) and
+installs with it.
 
 ```sh
 pnpx @askviraj/ai-plugins --user vwf --user typescript --project flutter
@@ -222,7 +223,7 @@ no rate-limit windows: OpenCode exposes no ambient rate-limit state, and a
 made-up number would be worse than a missing one. **Cursor** is the one target
 with no status surface at all.
 
-![The statusline: model and effort, context used, rate-limit windows, session spend, repo and branch](./docs/how-it-looks.png)
+![The statusline: model and effort, context used, rate-limit windows, session spend, repo and branch](./docs/plugins/how-it-looks.png)
 
 ```sh
 # install the statusline (both the main bar and the subagent panel)
@@ -238,20 +239,28 @@ hook** — it pauses long `/vwf:execute` runs at budget thresholds (context over
 because its sensor is that bar; neither of the other two surfaces the numbers it
 reads.
 
-See **[docs/statusline.md](./docs/statusline.md)** for setup and the full
-configuration reference.
+See **[docs/plugins/statusline.md](./docs/plugins/statusline.md)** for setup and
+the full configuration reference.
 
 ## The installer CLI
 
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins)
 installs the toolkit across **four agents** — Claude Code, Cursor, Oh-My-Pi and
 OpenCode. Three of them have a native plugin marketplace, so the CLI registers
-`virajp-plugins` and lets the agent's own CLI do the installing. OpenCode has no
-plugin concept, so its bundle is copied into place.
+`virajp-plugins` and lets the tool own the installing. For Claude Code and
+Oh-My-Pi that means driving their own CLI; **Cursor has no CLI**, so its adapter
+writes the marketplace reference into Cursor's settings itself. OpenCode has no
+plugin concept at all, so its bundle is copied into place.
 
 `--platform` picks the target (repeatable: `claude`, `cursor`, `ohmypi`,
 `opencode`); omitted, the CLI **detects** which tools are on `PATH` and installs
 for every one it finds.
+
+**[docs/cli/](./docs/cli/)** is the full reference —
+[usage](./docs/cli/usage.md) for the flag surface,
+[targets](./docs/cli/targets.md) for what each agent gets and where it lands,
+[statusline](./docs/cli/statusline.md) for why the bar ships here rather than as
+a plugin, and [internals](./docs/cli/internals.md) for the maintainer's map.
 
 ### Installing it
 
@@ -284,13 +293,13 @@ pnpx @askviraj/ai-plugins --uninstall --all
 
 Notes:
 
-- `--all` installs a **fixed set of three** at user scope — `vwf`, `devtools`
-  and `andrej-karpathy-skills`, which is the workflow plus exactly what it hard-
-  depends on. Every other plugin is installed **by name**: the languages
-  (`typescript`, `flutter`), the clouds (`cloudflare`, `gcp`), the five
-  capabilities (`datastore`, `identity`, `observability`, `orchestration`,
-  `object-storage`), plus `cicd` and `design-tools`. Nothing is pinned to a
-  scope — any plugin installs at user or project scope on request.
+- `--all` installs a **fixed set of two** at user scope — `vwf` and `devtools`,
+  which is the workflow plus exactly what it hard-depends on. Every other plugin
+  is installed **by name**: the languages (`typescript`, `flutter`), the clouds
+  (`cloudflare`, `gcp`), the five capabilities (`datastore`, `identity`,
+  `observability`, `orchestration`, `object-storage`), plus `cicd` and
+  `design-tools`. Nothing is pinned to a scope — any plugin installs at user or
+  project scope on request.
 - `--all` means the whole toolkit, so it **includes the statusline** (Claude
   Code, Oh-My-Pi and OpenCode) — pass `--no-statusline` for a plugins-only run.
   The same applies in reverse: `--uninstall --all` removes the statusline too.
@@ -305,8 +314,11 @@ Notes:
   The bar's own files are installed either way, so a declined machine is one
   `--statusline` away from a working statusline rather than back at the start.
 - **There is no `--upgrade`.** Plugin content ships inside the npm package, so
-  re-running the install *is* the upgrade — there is nothing remote to fetch and
-  no per-tool version to bump. Run the same command again.
+  re-running the install *is* the upgrade — there is nothing remote to fetch.
+  Run the same command again. Two targets keep their own caches and are nudged
+  for you: Claude gets a `plugin update` when its recorded version differs, and
+  Oh-My-Pi a `marketplace update` so its catalog stops describing the release
+  you first installed. Restart Claude afterward.
 - **An invocation that installs nothing prints the help and exits 1** — a bare
   run, or one carrying only modifiers like `--platform`. `--help` prints the
   same text on stdout and exits 0, and an unknown flag is an error naming
@@ -356,15 +368,17 @@ Per selected plugin the CLI:
   opencode` plus the git post-commit hook, both
   idempotent, both soft-skipping).
 
-**Skipped, with a note**: the url-sourced `andrej-karpathy-skills` has no
-rendered bundle — nothing to copy — so an OpenCode install of `vwf` leaves you
-to install it yourself. Memory used to be skipped the same way, which is why
-mempalace's skills are now [vendored into `vwf`](./docs/mempalace.md) and ship
-on every target. The statusline **does** reach OpenCode, as a TUI plugin
-registered in `tui.json`; Cursor is the one target with no status surface to
-install into. `--uninstall` replays the receipt (it never removes a dependency
-you didn't name); `--version` compares this build's versions against the
-manifest on `main`.
+**Nothing is skipped any more.** A url-sourced plugin has no rendered bundle for
+the copy adapter to copy, so OpenCode used to install `vwf` and silently go
+without whatever was re-listed rather than authored here — first memory, then
+the Karpathy guidelines. Both are now vendored into `vwf`
+([memory](./docs/plugins/mempalace.md),
+[guidelines](./docs/plugins/karpathy-guidelines.md)) and ship on every target,
+and no plugin in this marketplace is url-sourced today. The statusline **does**
+reach OpenCode, as a TUI plugin registered in `tui.json`; Cursor is the one
+target with no status surface to install into. `--uninstall` replays the receipt
+(it never removes a dependency you didn't name); `--version` compares this
+build's versions against the manifest on `main`.
 
 ## Credits & acknowledgements
 
@@ -379,8 +393,9 @@ maintainers. 🙏
   that powers `vwf`'s cross-session recall. Its two skills are vendored into
   `vwf` under MIT; see `templates/vwf/vendor/mempalace/`.
 - **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
-  — behavioral coding guidelines derived from Andrej Karpathy's observations,
-  re-listed here as a `vwf` dependency.
+  by `forrestchang` — behavioral coding guidelines derived from Andrej
+  Karpathy's observations. Its `karpathy-guidelines` skill is vendored into
+  `vwf`; see `templates/vwf/vendor/andrej-karpathy-skills/`.
 - **[Context7](https://github.com/upstash/context7)** by
   [Upstash](https://upstash.com) — the MCP docs server `vwf` declares.
 - **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the

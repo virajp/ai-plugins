@@ -1,5 +1,5 @@
 name: vwf
-version: 15.1.1
+version: 16.0.0
 description: Highly opinionated Product → Blueprint → Plan → Execute
   workflow
   for solo developers or small teams — enforced workspace structure with a
@@ -35,11 +35,11 @@ strict: true
 source:
   kind: local
 dependencies:
-  # mempalace is NOT here: its skills and auto-save hooks are vendored into this
-  # plugin (see vendor/mempalace/). As a url-sourced dependency it had no
-  # rendered bundle, so the installer skipped it and OpenCode users got no
-  # memory layer at all — the thing vwf leans on hardest.
-  - andrej-karpathy-skills
+  # Neither mempalace nor andrej-karpathy-skills is here: both are vendored into
+  # this plugin (see vendor/mempalace/ and vendor/andrej-karpathy-skills/). As
+  # url-sourced dependencies they had no rendered bundle, so the installer
+  # skipped them and OpenCode users got no memory layer and none of the coding
+  # guidelines at all.
   # Load-bearing, not tidiness: /vwf:setup orchestrates devtools:scaffold, and a
   # skill vwf cannot see fails SILENTLY — indistinguishable from one that ran
   # and returned nothing.
@@ -47,7 +47,7 @@ dependencies:
 # Skills are named for the workflow stage they run — `plan`, `execute`,
 # `verify`, `product` — which reads well scoped to a plugin and reads like
 # nobody's in particular on a target that flattens every provider into one
-# namespace. vwf ships 25 of them, so it is also the largest single claim on
+# namespace. vwf ships 26 of them, so it is also the largest single claim on
 # that namespace in this marketplace. On OpenCode and Oh-My-Pi they render as
 # `vwf-plan`, `vwf-execute`, and so on.
 prefixSkillNames: true

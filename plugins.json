@@ -2,16 +2,9 @@
   "marketplace": "virajp-plugins",
   "defaultInstall": [
     "vwf",
-    "devtools",
-    "andrej-karpathy-skills"
+    "devtools"
   ],
   "plugins": [
-    {
-      "name": "andrej-karpathy-skills",
-      "local": false,
-      "dependencies": [],
-      "requires": []
-    },
     {
       "name": "cicd",
       "local": true,
@@ -101,7 +94,6 @@
       "name": "vwf",
       "local": true,
       "dependencies": [
-        "andrej-karpathy-skills",
         "devtools"
       ],
       "requires": [

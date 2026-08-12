@@ -1,9 +1,0 @@
-name: andrej-karpathy-skills
-description: Behavioral guidelines to reduce common LLM coding mistakes, derived
-  from Andrej Karpathy's observations — Think Before Coding, Simplicity First,
-  Surgical Changes, Goal-Driven Execution. External; a vwf dependency.
-category: development
-homepage: https://github.com/multica-ai/andrej-karpathy-skills
-source:
-  kind: url
-  url: https://github.com/multica-ai/andrej-karpathy-skills.git

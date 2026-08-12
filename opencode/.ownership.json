@@ -484,6 +484,7 @@
   "virajp-plugins/vwf/skills/vwf-git-workflow/references/worktree-setup.md": "vwf",
   "virajp-plugins/vwf/skills/vwf-git-workflow/SKILL.md": "vwf",
   "virajp-plugins/vwf/skills/vwf-handoff/SKILL.md": "vwf",
+  "virajp-plugins/vwf/skills/vwf-karpathy-guidelines/SKILL.md": "vwf",
   "virajp-plugins/vwf/skills/vwf-mempalace-recall/SKILL.md": "vwf",
   "virajp-plugins/vwf/skills/vwf-mempalace/SKILL.md": "vwf",
   "virajp-plugins/vwf/skills/vwf-plan/references/delta-checks.md": "vwf",
@@ -530,6 +531,8 @@
   "virajp-plugins/vwf/skills/vwf-screens/references/import-mode.md": "vwf",
   "virajp-plugins/vwf/skills/vwf-screens/references/prompt-mode.md": "vwf",
   "virajp-plugins/vwf/skills/vwf-screens/SKILL.md": "vwf",
+  "virajp-plugins/vwf/vendor/andrej-karpathy-skills/NOTICE.md": "vwf",
+  "virajp-plugins/vwf/vendor/andrej-karpathy-skills/README.md": "vwf",
   "virajp-plugins/vwf/vendor/mempalace/LICENSE": "vwf",
   "virajp-plugins/vwf/vendor/mempalace/README.md": "vwf"
 }

@@ -1,4 +1,10 @@
 import {
+  mkdtempSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
   describe,
   expect,
   it,
@@ -42,6 +48,30 @@ function fake(id: string, detected: boolean): Adapter {
     verify: () => [],
     revert: () => {},
   };
+}
+
+/**
+ * A one-plugin marketplace whose single entry is url-sourced, written to disk
+ * because `buildJobs` reads its index from `sourceRoot` rather than taking one.
+ *
+ * The fixture stands in for `andrej-karpathy-skills`, which is what these tests
+ * used to name. It was the last url-sourced entry in the shipped marketplace
+ * and it is now vendored into `vwf`, so nothing real exercises `localOnly` /
+ * `onSkip` any more — while both are still live code, reachable again the day
+ * another external plugin is re-listed. A synthetic entry keeps the path
+ * covered rather than letting it go dark.
+ */
+function urlSourcedRoot(): string {
+  const root = mkdtempSync(join(tmpdir(), "ai-plugins-url-"));
+  writeFileSync(
+    join(root, "plugins.json"),
+    JSON.stringify({
+      marketplace: "test-marketplace",
+      defaultInstall: ["elsewhere"],
+      plugins: [{ name: "elsewhere", local: false, dependencies: [] }],
+    }),
+  );
+  return root;
 }
 
 describe("wantsStatusline", () => {
@@ -107,13 +137,16 @@ describe("buildJobs", () => {
 
   it("keeps a url-sourced plugin for Claude alone", () => {
     // This test used to assert the opposite for ohmypi, and that is exactly
-    // how the bug shipped: `--all` requested andrej-karpathy-skills on every
+    // how the bug shipped: `--all` requested the url-sourced plugin on every
     // marketplace target, and it failed on two of them. Only Claude's
     // marketplace accepts a `{source: "url"}` entry and fetches it. Cursor's
     // manifest is generated from local plugins only; Oh-My-Pi's takes a URL
     // string, parses it, and then silently drops the entry — `omp plugin
     // discover` listed 13 of 14 with nothing saying why; OpenCode has no
     // marketplace at all and copies a rendered bundle that does not exist.
+    //
+    // `elsewhere` is the fixture standing in for andrej-karpathy-skills, which
+    // is the plugin the bug actually shipped against.
     const jobs = buildJobs(
       [
         fake("claude", true),
@@ -121,12 +154,12 @@ describe("buildJobs", () => {
         fake("ohmypi", true),
         fake("opencode", true),
       ],
-      { user: ["andrej-karpathy-skills"] },
-      repoRoot,
+      { user: ["elsewhere"] },
+      urlSourcedRoot(),
       () => {},
     );
 
-    expect(jobs[0]?.[1].user).toEqual(["andrej-karpathy-skills"]);
+    expect(jobs[0]?.[1].user).toEqual(["elsewhere"]);
     for (const job of jobs.slice(1)) {
       expect(job[1].user, job[0].id).toEqual([]);
     }
@@ -138,12 +171,12 @@ describe("buildJobs", () => {
     const notes: string[] = [];
     buildJobs(
       [fake("cursor", true), fake("ohmypi", true), fake("opencode", true)],
-      { user: ["andrej-karpathy-skills"] },
-      repoRoot,
+      { user: ["elsewhere"] },
+      urlSourcedRoot(),
       message => notes.push(message),
     );
 
-    const skips = notes.filter(n => n.includes("andrej-karpathy-skills"));
+    const skips = notes.filter(n => n.includes("elsewhere"));
     expect(skips).toHaveLength(1);
     expect(skips[0]).toContain("cursor, ohmypi and opencode");
   });

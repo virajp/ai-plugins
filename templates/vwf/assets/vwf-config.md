@@ -28,7 +28,7 @@ declares, `template: custom` is retired, and anything outside that is a blocking
 
 ```yaml
 config_format: 14 # this file's own schema version — setup migrates it
-blueprint_format: 20 # the docs/blueprint format stamp
+blueprint_format: 21 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -358,7 +358,7 @@ earlier than 65/90/80), never loosen.
   **Bump `config_format` to `14` only once both hold.** A halted migration leaves
   the stamp at `13`, so the drift nudge keeps firing and a re-run resumes; a `14`
   stamped over an unresolved `custom` pin would assert a guarantee the repo does
-  not meet. `blueprint_format` stays **20** — nothing under `docs/blueprint/`
+  not meet. `blueprint_format` is **untouched** — nothing under `docs/blueprint/`
   changes, which is exactly the case this file's stamp rule anticipates, and the
   first config bump since `11` to ship without a paired blueprint bump.
 

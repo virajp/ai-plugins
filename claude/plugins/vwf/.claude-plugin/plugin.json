@@ -3,10 +3,6 @@
   "dependencies": [
     {
       "marketplace": "virajp-plugins",
-      "name": "andrej-karpathy-skills"
-    },
-    {
-      "marketplace": "virajp-plugins",
       "name": "devtools"
     }
   ],

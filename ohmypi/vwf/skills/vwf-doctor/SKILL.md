@@ -34,7 +34,7 @@ halt on a blocking finding they were never told about.
 | Stack templates   | from the installed stack plugins, never from vwf                |
 | Harness contract  | `%%AI_PLUGINS_ROOT%%/assets/harness.md`                      |
 | Memory protocol   | `%%AI_PLUGINS_ROOT%%/assets/memory.md`                       |
-| mempalace config  | `mempalace.yaml` (one per repo — parent + submodules)          |
+| mempalace config  | `mempalace.yaml` (**one**, at the repo root)                   |
 | Graphify protocol | `%%AI_PLUGINS_ROOT%%/assets/graphify.md`                     |
 | Knowledge graph   | `graphify-out/graph.json` (workspace root)                     |
 | Format stamp      | `%%AI_PLUGINS_ROOT%%/assets/blueprint-format`                |
@@ -97,7 +97,7 @@ optional, and no reference restates a rule that lives above.
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the four stack axes, the `iac` own-repo rule, `mise`, `repo.stack`. **Blocking findings live here** |
-| **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` wing/room contract and the markdown mirror |
+| **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, the workspace-root graph, the refresh hook, staleness. **Blocking findings live here** |
 
 ### 9. Report & persist
@@ -105,7 +105,8 @@ optional, and no reference restates a rule that lives above.
 One table, findings first, grouped by kind — **blocking** (something *mandatory*
 is absent or misplaced, or the stack is one no installed plugin defines: mise,
 the graphify CLI, a workspace-root graph, an `iac` project inside another repo,
-an **unknown** language, a `custom` template pin; callers must halt),
+an **unknown** language, a `custom` template pin, a misplaced / duplicated /
+missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 **drift** (config and repo disagree), **missing** (something declared has no
 install), **unavailable** (nothing shipped here to install), **unknown**
 (no installed plugin declares it — always blocking, listed separately so the

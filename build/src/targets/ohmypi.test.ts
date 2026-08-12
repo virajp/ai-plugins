@@ -1,4 +1,10 @@
 import { frontmatter as fm } from "@ai-plugins/schema";
+import {
+  mkdirSync,
+  mkdtempSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   describe,
@@ -306,19 +312,30 @@ describe("gaps", () => {
 
 describe("output", () => {
   it("skips plugins that are not sourced locally", () => {
-    const external = workspace
-      .plugins
-      .filter(p => p.manifest.source.kind !== "local")
-      .map(p => p.manifest.name);
-    expect(external.length).toBeGreaterThan(0);
+    // The workspace here is synthetic because the real one no longer has a
+    // url-sourced plugin: `mempalace` and `andrej-karpathy-skills` were the
+    // last two, and both are vendored into `vwf` now — Oh-My-Pi parses the URL
+    // and then silently drops the entry, which is part of why. The rule is
+    // still live code, so it is still covered.
+    const root = mkdtempSync(join(tmpdir(), "ai-plugins-ohmypi-"));
+    writeFileSync(
+      join(root, "marketplace.yaml"),
+      "name: test-marketplace\nowner:\n  name: Tester\n",
+    );
+    mkdirSync(join(root, "elsewhere"));
+    writeFileSync(
+      join(root, "elsewhere", "plugin.yaml"),
+      "name: elsewhere\nsource:\n  kind: url\n"
+        + "  url: https://example.com/elsewhere.git\n",
+    );
 
-    for (const name of external) {
-      expect(emission.outputs.some(o => o.path.startsWith(`${name}/`))).toBe(
-        false,
-      );
-      // Still catalogued, and still reported as a gap.
-      expect(emission.gaps.some(g => g.plugin === name)).toBe(true);
-    }
+    const remote = ohmypi.render(readWorkspace(root));
+
+    expect(remote.outputs.some(o => o.path.startsWith("elsewhere/"))).toBe(
+      false,
+    );
+    // Still catalogued, and still reported as a gap.
+    expect(remote.gaps.some(g => g.plugin === "elsewhere")).toBe(true);
   });
 
   it("leaves no Claude plugin-root variable anywhere in the output", () => {

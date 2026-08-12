@@ -474,6 +474,7 @@
   "vwf/skills/git-workflow/references/worktree-setup.md": "vwf",
   "vwf/skills/git-workflow/SKILL.md": "vwf",
   "vwf/skills/handoff/SKILL.md": "vwf",
+  "vwf/skills/karpathy-guidelines/SKILL.md": "vwf",
   "vwf/skills/mempalace-recall/SKILL.md": "vwf",
   "vwf/skills/mempalace/SKILL.md": "vwf",
   "vwf/skills/mockups/SKILL.md": "vwf",
@@ -528,6 +529,8 @@
   "vwf/skills/setup/SKILL.md": "vwf",
   "vwf/skills/verify/references/release-freeze.md": "vwf",
   "vwf/skills/verify/SKILL.md": "vwf",
+  "vwf/vendor/andrej-karpathy-skills/NOTICE.md": "vwf",
+  "vwf/vendor/andrej-karpathy-skills/README.md": "vwf",
   "vwf/vendor/mempalace/LICENSE": "vwf",
   "vwf/vendor/mempalace/README.md": "vwf"
 }

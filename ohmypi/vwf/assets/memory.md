@@ -103,21 +103,45 @@ run record. Both still exist locally, and both still survive a mempalace outage
 
 ## Repo config — `mempalace.yaml`
 
-`mempalace mine` reads a `mempalace.yaml` at each **repo root** — so a workspace
-gets one per repo (the parent and every submodule), not one for the product.
-`/skill:vwf-setup` writes them all.
+**One product, one wing, one config file — at the repo root.** A workspace gets
+**exactly one** `mempalace.yaml`, at the product's parent repo root, and it
+mines the whole product tree. Submodules get **none**, and there is no copy in
+`.config/`. `/skill:vwf-setup` writes that one file; `/skill:vwf-doctor` reports a second
+one, or one sitting anywhere else, as **blocking**.
 
-**One wing per product.** Every one of those files names the **same** wing (the
-`memory.wing` resolved above). Submodules are not their own wings: recall would
-otherwise have to guess which of three wings holds an answer, and vwf's own
-rooms are product-wide by nature — a decision about the API contract is not a
-`backend` fact.
+**The path is not a preference.** `mempalace mine` looks for `mempalace.yaml` in
+the directory it is pointed at and nowhere else — no parent search, no
+`.config/` convention, and the CLI has no flag to name one. A config anywhere
+else is therefore **silently inert**: the mine still runs, reports that it found
+no config and is using auto-detected defaults, and files everything into
+`general`. Nothing errors, so the only symptom is recall coming back empty
+months later.
+
+**One wing per product.** The file names the `memory.wing` resolved above.
+Submodules are not their own wings: recall would otherwise have to guess which
+of three wings holds an answer, and vwf's own rooms are product-wide by nature —
+a decision about the API contract is not a `backend` fact.
+
+**Submodules are mined by the parent, not excluded from it.** The walk descends
+into every submodule directory, and each directory's own `.gitignore` joins the
+active matchers as it goes (they apply in ancestor order), so a submodule's
+ignores are honoured without a config of its own. A submodule path in
+`exclude_patterns` is now a bug: it drops that project's files from the palace
+entirely.
 
 ```yaml
 wing: <memory.wing>
-exclude_patterns: # parent repo only — each submodule files its own files
-  - backend/
-  - frontend/
+exclude_patterns: # secrets first, then trees not worth mining
+  - .env*
+  - "*.pem"
+  - "*.key"
+  - "*.p12"
+  - "*credentials*"
+  - "*secret*"
+  - .doppler/
+  - .git/
+  - node_modules/
+  - dist/
 rooms:
   - name: handoff
     description: Session handoffs from docs/memory/handoff/
@@ -127,12 +151,16 @@ rooms:
     keywords: []
 ```
 
+`exclude_patterns` takes gitignore syntax and survives for exactly two jobs: the
+secret denylist below, and trees no one gains from mining (dependency
+directories, build output). Never a submodule path.
+
 **The rooms vwf requires.** Seed **all seven** protocol rooms — `decisions`,
-`problems`, `planning`, `gaps`, `runs`, `doctor`, `handoff` — in **every**
-repo's file, then add path-derived rooms for what that repo actually holds
-(`documentation`, `testing`, `configuration`, …). Without the seed, the first
-write creates the room implicitly, with no keywords, so a `mine` routes nothing
-to it and the room only ever holds what vwf put there by hand.
+`problems`, `planning`, `gaps`, `runs`, `doctor`, `handoff` — then add
+path-derived rooms for what the product actually holds (`documentation`,
+`testing`, `configuration`, …). Without the seed, the first write creates the
+room implicitly, with no keywords, so a `mine` routes nothing to it and the room
+only ever holds what vwf put there by hand.
 
 **Room routing walks path parts outermost-first and returns on the first
 match.** So a broad keyword shadows every narrower room beneath it: a
@@ -141,12 +169,51 @@ match.** So a broad keyword shadows every narrower room beneath it: a
 `blueprint`, `plans`, `prompts` — never on the bare parent directory that
 contains another room's path.
 
-**Collisions merge.** Because the wing is shared, a room name used in two repos
-is one room holding both repos' files. That is right for `documentation` and
-harmless for `general`; it is misleading where the same name means different
-things (a backend `configuration` of `deploy/` versus a frontend `configuration`
-of `config/`). Propose a distinguishing name in that case — never silently merge
-two unrelated meanings.
+**Collisions merge — now inside the one file.** A path-derived room covers every
+project at once, so one `documentation` room holds all of the product's docs.
+That is right for `documentation` and harmless for `general`; it is misleading
+where the same word means different things per project (a backend
+`configuration` of `deploy/` versus a frontend `configuration` of `config/`) —
+the single room then quietly mixes two subjects. Name those apart rather than
+letting one keyword claim both. This is also the shape `/skill:vwf-setup` meets when
+it unions several pre-existing per-repo files into one: the **same room name
+carrying two different descriptions is a question for the user**, never a silent
+merge.
+
+## Secrets — what must never be mined
+
+Mining ingests file **contents** into a semantic index that agents query and
+read back into context. A secret that reaches the palace is not merely stored:
+it is retrievable, it re-surfaces in an unrelated recall months later, and
+deleting the source file does not delete the drawer. Treat the palace as a
+published surface.
+
+Two layers, and **both** are required:
+
+1. **`.gitignore` is the primary, and it already works.** Mining honours every
+   `.gitignore` in the tree **by default** — so `.env` files, untracked scratch
+   and local credentials stay out because the repo already maintains and reviews
+   that denylist for its own reasons. **Never disable it** (there is a flag to;
+   it exists for non-git trees, not for repos).
+2. **A pattern denylist in `exclude_patterns` is the backstop** — the block
+   above. It catches the one case `.gitignore` cannot: **a secret that was
+   committed anyway**, which is by definition not ignored. It also covers a tree
+   that is not git-backed at all, where there is no `.gitignore` to honour.
+
+Neither alone is enough: `.gitignore` is blind to what is already tracked, and a
+hand-written pattern list is blind to everything nobody thought to name.
+
+**Mine the checkout itself** — never an export, a copy, or a temporary tree.
+Every drawer records the `source_path` it came from, so mining a copy points
+recall at paths that do not exist and breaks the prune pass, which matches
+drawers against those same paths to drop what has been gitignored, deleted or
+moved.
+
+**Neither `/skill:vwf-setup` nor `/skill:vwf-doctor` scans for actual secrets.** They check
+only that the patterns are *configured*. Detecting credentials in a repo is a
+dedicated scanner's job, and the `devtools` plugin already ships that doctrine —
+two tools scanning for credentials under different rules produces a false sense
+of coverage, not more of it.
 
 ## Recall — before work
 

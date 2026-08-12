@@ -28,8 +28,11 @@ Two skills, and nothing else:
 
 Deliberately **not** taken: the Python package, the MCP server implementation,
 and the `integrations/` tree. vwf declares the MCP server over HTTP in its own
-`plugin.yaml` and the daemon is installed out-of-band via `uv` — which is why
-`uv` is one of vwf's `requires:`. Only the agent-facing prose is vendored.
+`plugin.yaml`, and the daemon is installed out-of-band by whatever tool manager
+the machine uses — vwf neither installs nor supervises it. (`uv` is in vwf's
+`requires:` for **graphify's** Python runtime, per the comment in
+`plugin.yaml`; it is not there for mempalace, whatever the install path
+happens to be.) Only the agent-facing prose is vendored.
 
 **The auto-save hooks are not vendored either — they are reimplemented.**
 Upstream's `mempal_save_hook.sh` counts human messages by parsing
@@ -48,6 +51,15 @@ Also not taken: upstream's `.claude-plugin/hooks/hooks.json`. It references
 `3.7.0` tree, where every script is underscored.
 
 ## Local edits
+
+One addition, in `mempalace`: the **Prerequisites** section gains a second
+install path beside upstream's `uv tool install` — the managed-tool install
+(`mise use -g "pipx:mempalace@latest"`) plus running `mempalace-mcp` as a
+supervised HTTP daemon, and the rule that the palace path is passed as a flag
+rather than through the environment. Upstream documents only the stdio shape,
+which is not the shape vwf uses: vwf declares the server over HTTP in its
+`plugin.yaml`, so a reader following upstream's prose ends up with a
+subprocess vwf never connects to. Re-apply this on any resync.
 
 One word, in `mempalace-recall`: the adjective describing time-ordered
 knowledge graphs was replaced with "time-aware". That adjective is spelled
