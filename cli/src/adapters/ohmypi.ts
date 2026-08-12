@@ -173,22 +173,43 @@ function run(
       receipt.command(add, ["plugin", "marketplace", "remove", marketplace]);
     }
   }
-  else if (!dryRun && entry.sourceUri === want) {
+  else if (entry.sourceUri === want) {
     // Registered already, by an earlier run of ours — the pin names our own
     // managed directory, which nobody else would have registered.
     //
-    // **Ownership, not activity**, which is the rule `receipt.ts` states for
-    // command entries: an undo is recorded when the command changed something
-    // *or when the state it would have produced is provably this tool's*.
-    // Keying it on "did this run add it" instead meant run 2's receipt dropped
-    // the un-register, so the uninstall after it deleted the payload and left
-    // `virajp-plugins` registered at the path it had just removed — after which
-    // a later `omp plugin install <other>@virajp-plugins` fails outright with
-    // "Plugin source directory does not exist".
-    receipt.command(
-      ["plugin", "marketplace", "add", want],
-      ["plugin", "marketplace", "remove", marketplace],
-    );
+    // The path is right, but `omp` caches the marketplace **catalog** it read
+    // when the pin was added, under `plugins/cache/marketplaces/`, and nothing
+    // re-reads it. So an upgrade refreshed the payload while the catalog kept
+    // describing the previous release: `omp plugin list` reported the old
+    // version, and — the part that actually breaks — a plugin **added** in a
+    // later release could not be installed at all, failing with
+    // `Plugin "<name>" not found in marketplace "virajp-plugins"`, with no
+    // remedy short of removing the marketplace by hand.
+    //
+    // Unconditional, unlike Claude's version-gated update: the catalog is
+    // `omp`'s own cache with no version to compare against, so there is no
+    // cheap staleness test — and the refresh is idempotent.
+    const refresh = ["plugin", "marketplace", "update", marketplace];
+    actions.push({ summary: `${BIN} ${refresh.join(" ")}` });
+    if (!dryRun) {
+      runOrThrow(context, refresh);
+      // **Ownership, not activity**, which is the rule `receipt.ts` states for
+      // command entries: an undo is recorded when the command changed
+      // something *or when the state it would have produced is provably this
+      // tool's*. Keying it on "did this run add it" instead meant run 2's
+      // receipt dropped the un-register, so the uninstall after it deleted the
+      // payload and left `virajp-plugins` registered at the path it had just
+      // removed — after which a later
+      // `omp plugin install <other>@virajp-plugins` fails outright with
+      // "Plugin source directory does not exist".
+      //
+      // The refresh itself records no undo: it restores no prior state and
+      // there is nothing to roll a catalog back to.
+      receipt.command(
+        ["plugin", "marketplace", "add", want],
+        ["plugin", "marketplace", "remove", marketplace],
+      );
+    }
   }
 
   for (const scope of ["user", "project"] as const) {

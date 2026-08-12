@@ -306,6 +306,104 @@ describe("claude adapter", () => {
     expect(installs[0]?.[3]).toBe("vwf@virajp-plugins");
   });
 
+  // Claude caches plugin content per version and keeps serving the cached one,
+  // so copying a newer payload over the marketplace directory is not an
+  // upgrade. Re-running the installer is this tool's documented upgrade path
+  // (there is no `--upgrade`), and before this it delivered nothing at all to
+  // anyone who already had the plugin enabled: `plugin install` answers
+  // "already installed" and the old version stays live.
+  const seedInstalled = (selector: string, version: string, scope = "user") => {
+    write(join(configDir, "plugins", "installed_plugins.json"), {
+      version: 2,
+      plugins: { [selector]: [{ scope, version, installPath: "/x" }] },
+    });
+  };
+
+  it("updates a plugin whose installed version is behind the marketplace", () => {
+    claude.apply(context, planFor(["vwf"]));
+    ran = [];
+    // The manifest in this repo advertises a version; pretend Claude still has
+    // an older one cached, which is exactly the in-place-upgrade shape.
+    seedInstalled("vwf@virajp-plugins", "0.0.1");
+
+    claude.apply(context, planFor(["vwf"]));
+
+    const updates = ran.filter(c => c[1] === "plugin" && c[2] === "update");
+    expect(updates).toHaveLength(1);
+    // The SELECTOR, not the bare name. `plugin update` spells its argument the
+    // way `install` does, not the way `uninstall` does; the bare name fails
+    // with `Plugin "vwf" not found`, and because the payload copy runs first
+    // and the throw escapes before the receipt is written, that failure
+    // stranded the install with nothing to uninstall from. The fake accepts
+    // any argument, so only this assertion holds the form.
+    expect(updates[0]).toEqual([
+      "claude",
+      "plugin",
+      "update",
+      "vwf@virajp-plugins",
+      "--scope",
+      "user",
+    ]);
+  });
+
+  it("keeps going, with a note, when the update itself fails", () => {
+    claude.apply(context, planFor(["vwf"]));
+    seedInstalled("vwf@virajp-plugins", "0.0.1");
+    const failing: Exec = (command, args) => {
+      if (args[1] === "update") {
+        ran.push([command, ...args]);
+        return { status: 1, stdout: "", stderr: "Plugin not found" };
+      }
+      return fakeClaude(command, args, {} as never);
+    };
+
+    // A failed version bump must not fail the target. The payload copy has
+    // already succeeded and a throw escapes before the receipt is written,
+    // which left the install on disk with nothing to uninstall from.
+    const { receipt } = claude.apply(
+      { ...context, exec: failing },
+      planFor(["vwf"]),
+    );
+
+    expect(receipt.entries.length).toBeGreaterThan(0);
+    expect(logged.some(m => m.includes("plugin update` failed"))).toBe(true);
+  });
+
+  it("does not update when the installed version already matches", () => {
+    claude.apply(context, planFor(["vwf"]));
+    const manifest = JSON.parse(
+      readFileSync(
+        join(repoRoot, ".claude-plugin", "marketplace.json"),
+        "utf8",
+      ),
+    ) as { plugins: { name: string; version: string; }[]; };
+    const current = manifest.plugins.find(p => p.name === "vwf")?.version;
+    expect(current).toBeDefined();
+    seedInstalled("vwf@virajp-plugins", current as string);
+    ran = [];
+
+    claude.apply(context, planFor(["vwf"]));
+
+    // A no-change re-run must stay a no-op rather than churning the cache.
+    expect(ran.filter(c => c.includes("update"))).toHaveLength(0);
+  });
+
+  it("does not update when Claude's bookkeeping is unreadable", () => {
+    claude.apply(context, planFor(["vwf"]));
+    write(join(configDir, "plugins", "installed_plugins.json"), {});
+    writeFileSync(
+      join(configDir, "plugins", "installed_plugins.json"),
+      "{ not json",
+    );
+    ran = [];
+
+    claude.apply(context, planFor(["vwf"]));
+
+    // Unreadable means "cannot tell", never "out of date" — guessing here
+    // would reinstall on every run against a file that is Claude's, not ours.
+    expect(ran.filter(c => c.includes("update"))).toHaveLength(0);
+  });
+
   it("installs each scope against its own settings file", () => {
     claude.apply(context, planFor(["markdown"], ["mise"]));
 

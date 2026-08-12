@@ -171,15 +171,60 @@ function run(
       const install = ["plugin", "install", selector, "--scope", scope];
       const uninstall = ["plugin", "uninstall", name, "--scope", scope];
       if (isInstalled(context, scope, selector)) {
-        // Already installed, so nothing to run — but the undo is still
-        // recorded. Each run overwrites the receipt, so skipping it here left
-        // a repeat install with a receipt naming only the payload, and an
-        // uninstall that deleted the payload while leaving the plugin enabled
-        // against a marketplace whose directory had just been removed.
+        // Enabled already, so `plugin install` would answer "already
+        // installed" and change nothing. That is not the same as being up to
+        // date: Claude caches plugin content per version under
+        // `plugins/cache/<marketplace>/<name>/<version>/` and keeps serving
+        // the cached one, so copying a newer payload over the marketplace
+        // directory leaves the old version live. Re-running the installer —
+        // which is this tool's documented upgrade path, there being no
+        // `--upgrade` — silently delivered nothing.
+        //
+        // `plugin update` is the only command that re-resolves the version.
+        // Run it only on an actual mismatch, so the common no-change re-run
+        // stays a no-op rather than churning the user's plugin cache.
+        const want = advertisedVersion(context, name);
+        const have = installedVersion(context, scope, selector);
+        if (want !== undefined && have !== undefined && want !== have) {
+          // `selector`, not `name`: `plugin update` takes the same
+          // `<name>@<marketplace>` form as `install`, NOT the bare name
+          // `uninstall` takes. The bare name fails with `Plugin "vwf" not
+          // found` — and because the payload copy runs first and the throw
+          // escapes before the receipt is written, that failure stranded the
+          // install with no way to undo it through this tool.
+          const update = ["plugin", "update", selector, "--scope", scope];
+          actions.push({
+            summary: `${BIN} ${update.join(" ")}  (${have} → ${want})`,
+          });
+          if (!dryRun) {
+            // Soft, deliberately — the same rule `setupGraphify` follows, and
+            // for the same reason: the payload copy has already succeeded, and
+            // a throw here escapes before the receipt is written, leaving the
+            // install on disk with nothing to uninstall from. A version that
+            // did not advance is a degraded run, not a broken one: the content
+            // is in place and the next run retries. Say so rather than
+            // reporting an upgrade that did not happen.
+            const result = claudeExec(context, update);
+            if (result.status !== 0) {
+              context.log(
+                `claude: \`${name}\` is installed at ${have} and this build `
+                  + `ships ${want}, but \`plugin update\` failed — everything `
+                  + `else is in place; re-run to retry`,
+              );
+            }
+          }
+        }
+        // The undo is still recorded. Each run overwrites the receipt, so
+        // skipping it here left a repeat install with a receipt naming only
+        // the payload, and an uninstall that deleted the payload while leaving
+        // the plugin enabled against a marketplace whose directory had just
+        // been removed.
         //
         // Recording it is safe because the plan **named** this plugin: the
         // caller asked this tool to manage it, which is a different question
-        // from whether this particular run is what put it there.
+        // from whether this particular run is what put it there. An update is
+        // deliberately *not* separately undoable — the undo for "this tool put
+        // this plugin here" is still `uninstall`, and there is no downgrade.
         if (!dryRun) {
           receipt.command(install, uninstall);
         }
@@ -361,6 +406,62 @@ function readMarketplaceName(context: AdapterContext): string {
     throw new Error(`missing ${path} — run \`mise run plugins:build\``);
   }
   return (JSON.parse(readFileSync(path, "utf8")) as { name: string; }).name;
+}
+
+/**
+ * The version this build's marketplace manifest advertises for `name`.
+ *
+ * Read from the manifest rather than `plugins.json`, which carries no versions
+ * — the manifest is generated from each `plugin.yaml` and is the only place
+ * the number exists on the install side.
+ */
+function advertisedVersion(
+  context: AdapterContext,
+  name: string,
+): string | undefined {
+  const path = join(context.sourceRoot, MANIFEST);
+  if (!existsSync(path)) {
+    return undefined;
+  }
+  const manifest = JSON.parse(readFileSync(path, "utf8")) as {
+    plugins?: readonly { name?: string; version?: string; }[];
+  };
+  return manifest.plugins?.find(entry => entry.name === name)?.version;
+}
+
+/**
+ * The version Claude currently has installed for `selector` at `scope`.
+ *
+ * `installed_plugins.json` is Claude's own bookkeeping — read, never written.
+ * One selector can hold several entries (the same plugin at user and project
+ * scope), so the scope has to be matched rather than taking the first.
+ */
+function installedVersion(
+  context: AdapterContext,
+  scope: Scope,
+  selector: string,
+): string | undefined {
+  const path = join(configDir(context), "plugins", "installed_plugins.json");
+  if (!existsSync(path)) {
+    return undefined;
+  }
+  let parsed: { plugins?: Record<string, readonly unknown[]>; };
+  try {
+    parsed = JSON.parse(readFileSync(path, "utf8")) as typeof parsed;
+  }
+  catch {
+    // Claude's file, not ours. Unreadable means "cannot tell", which the
+    // caller treats as "do not update" — never as "out of date".
+    return undefined;
+  }
+  const entries = parsed.plugins?.[selector] ?? [];
+  for (const entry of entries) {
+    const record = entry as { scope?: string; version?: string; };
+    if (record.scope === scope && typeof record.version === "string") {
+      return record.version;
+    }
+  }
+  return undefined;
 }
 
 function isInstalled(

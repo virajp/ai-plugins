@@ -99,7 +99,7 @@ Before adding or changing any write path, read
 
 | Flag                          | Notes                                                                                                                                            |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `--all`                       | the marketplace's **`defaultInstall`** list, at user scope — `vwf`, `devtools`, `andrej-karpathy-skills`                                         |
+| `--all`                       | the marketplace's **`defaultInstall`** list, at user scope — `vwf`, `devtools`                                                                   |
 | `--user` / `--project <name>` | repeatable; bare names validated against `plugins.json`                                                                                          |
 | `--platform <target>`         | repeatable; omitted, every tool detected on `PATH`. A selected target whose tool is absent is **skipped with a note**, not failed                |
 | `--statusline`                | **tri-state**: explicit asks, `--no-statusline` refuses, unset defers to `--all`. Explicit is also the **only** consent to replace a foreign bar |
@@ -132,6 +132,42 @@ re-running the install is the upgrade. The flag existed to replay each target's
 receipt, which did exactly what naming the plugins again did. `Receipt.plugins`
 is what remains of it: still written, read by nothing.
 
+**But copying the payload is not, by itself, an upgrade on Claude.** Claude
+caches plugin content per version under
+`plugins/cache/<marketplace>/<name>/<version>/` and keeps serving the cached
+copy, and `plugin install` answers "already installed" without re-resolving. So
+a newer payload sat on disk while the old version stayed live, and the
+documented upgrade path silently delivered nothing to anyone who already had the
+plugin enabled — found by the `target-verifier` agent doing a real
+seeded-previous-generation upgrade, not by any unit test. `claude.ts` now
+compares the manifest's advertised version against `installed_plugins.json`
+(Claude's own bookkeeping — read, never written) and runs `plugin update` on a
+mismatch only, so a no-change re-run stays a no-op. An unreadable or absent
+bookkeeping file means **"cannot tell"**, never "out of date". The update is
+deliberately not separately undoable: the undo for "this tool put this plugin
+here" is still `uninstall`, and there is no downgrade.
+
+**Oh-My-Pi has the same root cause and a different symptom.** `omp` caches the
+marketplace **catalog** it read when the pin was added, under
+`plugins/cache/marketplaces/`, and nothing re-reads it. There the payload does
+refresh, so behaviour upgrades — but `omp plugin list` kept reporting the old
+version, and a plugin **added** in a later release could not be installed at all
+(`Plugin "<name>" not found in marketplace`), with no remedy short of removing
+the marketplace by hand. `ohmypi.ts` now runs
+`omp plugin marketplace update <name>` on the already-registered-at-our-path
+branch. **Unconditional**, unlike Claude's version-gated update: the catalog is
+`omp`'s own cache with no version to compare against, so there is no cheap
+staleness test, and the refresh is idempotent. It records no undo — it restores
+no prior state and there is nothing to roll a catalog back to. The branch stays
+guarded on the pin being *ours*: a registration with no recorded URI is left
+entirely alone rather than refreshed on someone else's behalf.
+
+Cursor and OpenCode need neither — they copy or register a tree that *is* the
+content, with no cache in between.
+
+Both were found by the `target-verifier` agent against the real CLIs. Neither
+was reachable by a unit test, because both live in state the other tool keeps.
+
 **An invocation that installs nothing prints the help and exits 1.** That covers
 a bare run and one carrying only modifiers — `--platform opencode` is the one
 that reads like a request and is not.
@@ -160,5 +196,5 @@ instead.
 ## Documentation
 
 Behaviour changes here must reconcile `readme.md`, `CLAUDE.md` and
-`docs/statusline.md` in the same commit. Delegate that sweep to the
+`docs/plugins/statusline.md` in the same commit. Delegate that sweep to the
 `docs-reconciler` agent.

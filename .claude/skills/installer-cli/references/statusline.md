@@ -159,4 +159,4 @@ it may hold user edits.
 - `tools/statusline/statusline.json` (the bundled defaults)
 - `schemas/statusline.schema.json` (at the repo root, consumed only via its raw
   GitHub URL from `$schema`)
-- `docs/statusline.md` (the user-facing reference)
+- `docs/plugins/statusline.md` (the user-facing reference)

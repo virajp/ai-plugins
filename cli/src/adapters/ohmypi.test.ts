@@ -281,6 +281,40 @@ describe("ohmypi adapter", () => {
     expect(ran.some(c => c.includes("marketplace"))).toBe(false);
   });
 
+  // `omp` caches the marketplace catalog it read when the pin was added and
+  // never re-reads it, so an upgrade refreshed the payload while the catalog
+  // kept describing the previous release. `omp plugin list` then reported the
+  // old version, and a plugin ADDED in a later release could not be installed
+  // at all — `Plugin "<name>" not found in marketplace` — with no remedy short
+  // of removing the marketplace by hand. Found by the target-verifier agent
+  // against the real `omp`; no fake would have shown it.
+  it("refreshes the catalog when the marketplace is already registered", () => {
+    ohmypi.apply(context, planFor(["markdown"]));
+    ran = [];
+
+    ohmypi.apply(context, planFor(["markdown"]));
+
+    const flat = ran.map(c => c.join(" "));
+    expect(flat.some(c => c.includes("marketplace update virajp-plugins")))
+      .toBe(true);
+    // Re-adding is a hard error in omp, so the refresh must not become an add.
+    expect(flat.some(c => c.includes("marketplace add"))).toBe(false);
+  });
+
+  it("does not refresh a marketplace that is not ours to refresh", () => {
+    // No recorded URI: we cannot tell whose it is, so the run leaves it
+    // entirely alone rather than refreshing someone else's registration.
+    mkdirSync(join(home, ".omp"), { recursive: true });
+    writeFileSync(
+      registryPath(),
+      JSON.stringify({ marketplaces: [{ name: "virajp-plugins" }] }),
+    );
+
+    ohmypi.apply(context, planFor(["markdown"]));
+
+    expect(ran.some(c => c.includes("marketplace"))).toBe(false);
+  });
+
   it("runs nothing on a dry run, but describes every command", () => {
     const actions = ohmypi.plan(context, planFor(["markdown"]));
 
