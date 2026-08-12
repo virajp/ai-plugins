@@ -21,6 +21,10 @@ both, and neither installs anything extra.
 pnpx @askviraj/ai-plugins --user typescript
 ```
 
+Install it by name — `--all` covers the workflow only, not the languages. Use
+`--project typescript` instead to scope it to one repo; nothing pins it either
+way.
+
 It needs `mise` and `pnpm` on your `PATH` — the language server launches through
 both.
 

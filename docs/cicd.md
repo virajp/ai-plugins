@@ -19,6 +19,9 @@ delegates to it.
 pnpx @askviraj/ai-plugins --user cicd
 ```
 
+Install it by name — it is not in the `--all` set, since not every repo wants
+pipelines generated. `--project cicd` scopes it to one repo instead.
+
 It needs `mise` on your `PATH`, and pairs naturally with the
 [`devtools`](./devtools.md) plugin: the pipelines it writes assume mise provides
 the toolchain, so a repo with no mise config should run

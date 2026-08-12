@@ -54,8 +54,36 @@ On Claude Code, the CLI:
 - whenever the main bar is installed, wires the
   [context & rate-limit caps hook](#context--rate-limit-caps-vwf).
 
-If a target key already exists, the CLI prints the current value and asks before
-overwriting. Pass `--yes` (`-y`) to overwrite without prompting.
+### Consent before replacing a statusline you already have
+
+If a selected agent is already pointed at a bar **this installer did not
+write**, the run asks before overwriting it, naming what it found. The test is
+ownership, not existence: a bar already running our command is one of our own
+earlier runs, so a repeat install never asks about itself.
+
+- **`--statusline` is consent**, and the only flag that is. `--all` is not — it
+  asks for the toolkit, which is not the same as asking to replace your bar.
+- **With no terminal to ask in** — a setup script, CI, anything piping stdin —
+  the run **fails** rather than guessing. Silently overwriting is the thing this
+  gate exists to prevent, and silently skipping would let an unattended install
+  report success with the bar unconfigured.
+- **Declining is remembered.** Answering no writes `"autoConfigure": false` into
+  `~/.config/statusline.json`, and later runs stop asking. One flag covers all
+  three surfaces, so declining once is declining. `--statusline` clears it.
+- **The bar is installed either way.** Declining withholds only the host tool's
+  config — the script, the caps hook and the TUI plugin still land — so a
+  declined machine is one `--statusline` from a working statusline rather than
+  back at the start. Oh-My-Pi is the exception, having no files of its own: it
+  is nothing but `omp config` keys, so declining skips the surface entirely.
+
+Whatever you allow is captured in the receipt, so `--uninstall` puts the
+previous bar back byte for byte.
+
+Each surface is asked about separately, because a foreign bar in one says
+nothing about another. What counts as foreign differs by how the surface is
+configured: Claude and Oh-My-Pi are *overwritten* — a `statusLine` value or an
+`omp` preset that is not ours — while OpenCode is *appended* to, so the question
+there is whether `tui.json` is a file we authored.
 
 Everything above describes the **Claude Code** surface (it lives under
 `~/.claude`). The CLI drives four targets — `claude`, `cursor`, `ohmypi` and

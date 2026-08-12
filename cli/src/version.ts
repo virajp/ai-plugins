@@ -15,7 +15,7 @@
  * with no per-tool query and nothing to guess at.
  *
  * What that deliberately does not report is the version a target has *right
- * now*, for a user who installed and then let the package go stale. `--upgrade`
+ * now*, for a user who installed and then let the package go stale. Re-running
  * covers that case by re-running the install, which is idempotent.
  */
 import {

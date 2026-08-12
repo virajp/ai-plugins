@@ -31,12 +31,10 @@ import { planPlugins } from "./adapters/types.ts";
 import {
   execute,
   failed,
-  planFromReceipt,
   receiptPath,
   renderDiff,
   renderProgress,
   revert,
-  upgradeJobs,
 } from "./executor.ts";
 import {
   readReceipt,
@@ -76,8 +74,7 @@ function fakeAdapter(over: Partial<Adapter> = {}): Adapter {
     detect: () => true,
     configPaths: () => [],
     plan: () => [{ summary: "would write /x" }],
-    // Records the plan, as every real adapter does — that is what `--upgrade`
-    // replays.
+    // Records the plan, as every real adapter does.
     apply: (_context, plan) => ({
       receipt: new ReceiptBuilder().build(
         "2026-01-01T00:00:00Z",
@@ -93,70 +90,8 @@ function fakeAdapter(over: Partial<Adapter> = {}): Adapter {
 
 const options = (dryRun = false) => ({ context, dryRun, receiptDir });
 
-describe("planFromReceipt", () => {
-  it("splits the recorded plugins back by scope", () => {
-    const receipt = new ReceiptBuilder().build("2026-01-01T00:00:00Z", [
-      { name: "vwf", scope: "user" },
-      { name: "flutter", scope: "project" },
-    ]);
-
-    expect(planFromReceipt("opencode", receipt)).toEqual({
-      target: "opencode",
-      user: ["vwf"],
-      project: ["flutter"],
-    });
-  });
-
-  it("returns nothing for a receipt written before plans were recorded", () => {
-    // Byte entries alone cannot say which plugins to re-install.
-    const receipt = new ReceiptBuilder().build("2026-01-01T00:00:00Z");
-
-    expect(planFromReceipt("opencode", receipt)).toBeUndefined();
-  });
-});
-
-describe("upgradeJobs", () => {
-  it("replays what a target's receipt recorded", () => {
-    execute([[fakeAdapter(), planFor(["markdown"])]], options());
-
-    const { jobs, unrecorded } = upgradeJobs([fakeAdapter()], options());
-
-    expect(jobs[0]?.[1].user).toEqual(["markdown"]);
-    expect(unrecorded).toEqual([]);
-  });
-
-  it("skips a target with no receipt rather than installing into it", () => {
-    // `--upgrade` refreshes what is here; choosing what should be here is the
-    // install flags' job.
-    const { jobs, unrecorded } = upgradeJobs([fakeAdapter()], options());
-
-    expect(jobs).toEqual([]);
-    expect(unrecorded).toEqual([]);
-  });
-
-  it("names a target whose receipt predates plan recording", () => {
-    execute(
-      [[
-        fakeAdapter({
-          apply: () => ({
-            receipt: new ReceiptBuilder().build("2026-01-01T00:00:00Z"),
-            actions: [],
-          }),
-        }),
-        planFor(["markdown"]),
-      ]],
-      options(),
-    );
-
-    const { jobs, unrecorded } = upgradeJobs([fakeAdapter()], options());
-
-    expect(jobs).toEqual([]);
-    expect(unrecorded).toEqual(["opencode"]);
-  });
-});
-
 describe("execute", () => {
-  it("records the plan it installed, for --upgrade to replay", () => {
+  it("records what it installed, not just which bytes moved", () => {
     execute([[fakeAdapter(), planFor(["markdown"])]], options());
 
     expect(readReceipt(receiptPath(receiptDir, "opencode"))?.plugins)
@@ -290,15 +225,15 @@ describe("revert", () => {
     expect(called).toBe(true);
   });
 
-  it("consumes the receipt, so --upgrade cannot resurrect the install", () => {
+  it("consumes the receipt, so a second revert has nothing to undo", () => {
     execute([[fakeAdapter(), planFor(["markdown"])]], options());
 
     revert([fakeAdapter()], options());
 
     expect(existsSync(receiptPath(receiptDir, "opencode"))).toBe(false);
-    // The bite: a surviving receipt makes `--upgrade` re-install exactly what
-    // was just uninstalled.
-    expect(upgradeJobs([fakeAdapter()], options()).jobs).toEqual([]);
+    // The bite: a surviving receipt makes the next `--uninstall` try to revert
+    // an install that is already gone.
+    expect(revert([fakeAdapter()], options())[0]?.skipped).toBe("empty");
   });
 
   it("keeps the receipt when the revert failed", () => {

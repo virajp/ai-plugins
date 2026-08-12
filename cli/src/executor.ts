@@ -196,7 +196,7 @@ export function revert(
       adapter.revert(options.context, receipt);
       // Consume it. A receipt describes an install that exists; leaving it
       // behind after undoing one makes every later command believe in it —
-      // `--upgrade` would cheerfully re-install exactly what was just removed,
+      // A surviving receipt would have the next uninstall try to revert an
       // and `verify` would report the whole thing as missing files.
       rmSync(path, { force: true });
       outcomes.push({
@@ -246,66 +246,6 @@ function removeIfEmpty(path: string): void {
   }
 }
 
-/**
- * Rebuild a target's plan from what its receipt says it installed.
- *
- * This is what `--upgrade` replays. It works because **installing is already
- * upgrading**: every target either reads `<target>/` in place or copies it,
- * so re-running the recorded plan against a newer package is the upgrade. There
- * is no separate update command to drive and no per-tool version to query.
- *
- * `undefined` for a receipt written before plans were recorded, or one that
- * installed nothing — the caller reports that rather than silently doing
- * nothing.
- */
-export function planFromReceipt(
-  target: TargetId,
-  receipt: Receipt,
-): AdapterPlan | undefined {
-  if (receipt.plugins === undefined || receipt.plugins.length === 0) {
-    return undefined;
-  }
-  return {
-    target,
-    user: receipt.plugins.filter(p => p.scope === "user").map(p => p.name),
-    project: receipt
-      .plugins
-      .filter(p => p.scope === "project")
-      .map(p => p.name),
-  };
-}
-
-/**
- * Re-install what each target's receipt recorded.
- *
- * A target with no receipt is skipped rather than installed: `--upgrade`
- * refreshes what is here, and deciding what *should* be here is what the
- * install flags are for.
- */
-export function upgradeJobs(
-  adapters: readonly Adapter[],
-  options: ExecuteOptions,
-): { jobs: (readonly [Adapter, AdapterPlan])[]; unrecorded: TargetId[]; } {
-  const jobs: (readonly [Adapter, AdapterPlan])[] = [];
-  const unrecorded: TargetId[] = [];
-
-  for (const adapter of adapters) {
-    const receipt = readReceipt(receiptPath(options.receiptDir, adapter.id));
-    if (receipt === undefined) {
-      continue;
-    }
-    const plan = planFromReceipt(adapter.id, receipt);
-    if (plan === undefined) {
-      // An older receipt records the bytes but not the names, so there is
-      // nothing to replay — say so instead of reporting "nothing to do".
-      unrecorded.push(adapter.id);
-      continue;
-    }
-    jobs.push([adapter, plan]);
-  }
-  return { jobs, unrecorded };
-}
-
 /** Has the statusline been installed by this CLI? Drives the upgrade refresh. */
 export function statuslineInstalled(options: ExecuteOptions): boolean {
   return readReceipt(statuslineReceiptPath(options.receiptDir)) !== undefined;
@@ -322,17 +262,26 @@ export function statuslineReceiptPath(receiptDir: string): string {
   return join(receiptDir, "statusline.json");
 }
 
-/** Install the statusline, or describe the install under `--dry-run`. */
-export function executeStatusline(options: ExecuteOptions): TargetOutcome {
+/**
+ * Install the statusline, or describe the install under `--dry-run`.
+ *
+ * `configure` false still installs: the script and the caps hook land, and only
+ * the `settings.json` keys pointing Claude at them are withheld. That is what
+ * the consent gate declines — the overwrite, not the bar.
+ */
+export function executeStatusline(
+  options: ExecuteOptions,
+  configure = true,
+): TargetOutcome {
   options.progress?.step("installing statusline (claude)");
   try {
     if (options.dryRun) {
       return {
         target: "statusline",
-        actions: planStatusline(options.context),
+        actions: planStatusline(options.context, configure),
       };
     }
-    const result = installStatusline(options.context);
+    const result = installStatusline(options.context, configure);
     writeReceipt(statuslineReceiptPath(options.receiptDir), result.receipt);
     return { target: "statusline", actions: result.actions };
   }
@@ -487,9 +436,13 @@ export function opencodeStatuslineInstalled(options: ExecuteOptions): boolean {
  * `opencode` absent is a **skip, not a failure** — the same rule the target loop
  * and the Oh-My-Pi half follow. Writing a `tui.json` for a tool that is not on
  * the machine leaves config behind for something that will never read it.
+ *
+ * `configure` false copies the plugin in and leaves `tui.json` alone, so a
+ * declined surface still has the bar sitting there ready to be registered.
  */
 export function executeStatuslineOpencode(
   options: ExecuteOptions,
+  configure = true,
 ): TargetOutcome {
   options.progress?.step("installing statusline (opencode)");
   if (!hasBin("opencode")) {
@@ -503,10 +456,10 @@ export function executeStatuslineOpencode(
     if (options.dryRun) {
       return {
         target: "statusline:opencode",
-        actions: planStatuslineOpencode(options.context),
+        actions: planStatuslineOpencode(options.context, configure),
       };
     }
-    const result = installStatuslineOpencode(options.context);
+    const result = installStatuslineOpencode(options.context, configure);
     writeReceipt(
       opencodeStatuslineReceiptPath(options.receiptDir),
       result.receipt,

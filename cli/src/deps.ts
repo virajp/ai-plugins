@@ -34,9 +34,11 @@ import type { PluginIndex } from "./plan.ts";
 export const DEP_HINTS: Readonly<Record<string, string>> = {
   brew:
     "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
-  mise: "brew install mise",
-  claude: "mise use -g claude-code@latest",
+  mise: "brew install --formulae mise",
+  claude: "brew install --cask claude-code",
   opencode: "mise use -g opencode@latest",
+  cursor: "brew install --cask cursor",
+  ohmypi: "mise use -g oh-my-pi@latest",
   rtk: "brew install --formulae rtk",
   pnpm: "mise use -g pnpm@latest",
   node: "mise use -g node@latest",

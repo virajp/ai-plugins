@@ -110,8 +110,7 @@ record a CLI-driven installer has.
 `writeReceipt` merges with whatever is already at the path. Without it, a run
 that recorded less than its predecessor replaced the fuller record, and
 installing a second plugin discarded the first one's claims entirely — so the
-uninstall removed half the install and reported success, and `--upgrade`
-replayed half the plan.
+uninstall removed half the install and reported success.
 
 Two rules make the merge safe. **The older entry wins a collision**, because two
 runs claiming the same path differ only in what they captured as prior state and
@@ -130,8 +129,9 @@ plain `--uninstall` never reverted them at all. The tri-state `--statusline`
 defers to `--all` when unset, and there is no `--all` on the way out — so a user
 who installed with `--all` had to know to pass `--statusline` to remove a bar
 they never separately asked for. `revertsStatusline` gates on the receipt
-instead, the same question `--upgrade` already asks. `--no-statusline` still
-refuses, and a run naming one target never strips another's bar.
+instead — uninstall undoes what this tool did, and the receipt is the record of
+that. `--no-statusline` still refuses, and a run naming one target never strips
+another's bar.
 
 ## Directories nobody claimed
 

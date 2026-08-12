@@ -216,7 +216,7 @@ describe("ohmypi adapter", () => {
   it("forces every install, so a second run is not a hard error", () => {
     // `omp plugin install` errors on a plugin it already has ("Use force
     // option to reinstall"), so without --force the first run succeeded and
-    // every run after it failed — which is exactly what `--upgrade` does. It
+    // every run after it failed — which is exactly what a re-install does. It
     // is also the only refresh: omp COPIES the bundle into its cache, so
     // skipping an installed plugin would pin it to the original content.
     ohmypi.apply(context, planFor(["markdown"]));

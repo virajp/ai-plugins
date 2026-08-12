@@ -8,6 +8,11 @@
   "properties": {
     "$schema": { "type": "string" },
 
+    "autoConfigure": {
+      "type": "boolean",
+      "description": "Written by the installer, not read by the statusline script. `false` records that you declined to have an existing statusline replaced, and stops @askviraj/ai-plugins asking again on every run. Pass --statusline to consent and clear it. Absent means allowed."
+    },
+
     "projectName": {
       "type": "string",
       "description": "Project display name shown in the `project` segment (with the `symbols.project` glyph before it). When unset, the segment is omitted."

@@ -186,9 +186,15 @@ name: <plugin-name>
 description: <one line>
 ```
 
-Everything else defaults: `category` to `development`, `scope` to `user`,
-`source` to local, and `optIn`/`userOnly` to false. The schema is
-`schema/src/manifest.ts`, which is authoritative.
+Everything else defaults: `category` to `development` and `source` to local. The
+schema is `schema/src/manifest.ts`, which is authoritative.
+
+A manifest declares **no install-time eligibility at all** — no scope, no opt-in
+flag. It used to carry three such keys and none earned its place: `scope` and
+`optIn` did the same single thing in two spellings (exclude from `--all`), and
+`userOnly` was set by no plugin ever. What `--all` installs is now one
+`defaultInstall` list in `templates/marketplace.yaml`, and every plugin installs
+at user **or** project scope purely on request — see Installation (end-user).
 
 This one file replaces what used to be split between a `plugin.json` and a
 hand-written marketplace entry — two files that had to be kept in sync by hand,
@@ -584,6 +590,31 @@ The statusline is **not** a plugin — it ships inside `@askviraj/ai-plugins`, t
 registration or a copied tree, plus the statusline). Users run it via
 `pnpx @askviraj/ai-plugins …`, which is the only distribution channel.
 
+**`--all` is a list, not a rule.** It installs `defaultInstall` from
+`templates/marketplace.yaml` — `vwf`, `devtools`, `andrej-karpathy-skills`, the
+workflow plus exactly its hard dependencies — at user scope, plus the
+statusline. Every other plugin is installed by name at whichever scope the flag
+asks for; nothing is pinned. Changing the default set is an edit to that one
+list.
+
+**There is no `--upgrade`.** Plugin content ships *inside* the npm package (the
+marketplace source is an absolute path into `packageRoot()`; no adapter runs
+`marketplace update`), so re-running the install **is** the upgrade and the flag
+only ever replayed a receipt to do what naming the plugins again did. An
+invocation that installs nothing — bare, or carrying only modifiers like
+`--platform` — prints the help and exits 1.
+
+**A statusline that is not ours is never replaced silently.** The bar is
+installed whenever asked for, but *configuring* the host tool is gated on
+consent, since that is the step that displaces what the user had. `--statusline`
+is the only consent (`--all` is not); with no TTY the run **fails** rather than
+guessing; a refusal is remembered as `autoConfigure: false` in
+`~/.config/statusline.json` and cleared by `--statusline`. Ownership, not
+existence, decides what counts as foreign — otherwise every repeat run prompts
+about its own bar. Details, including why this reverses a documented decision
+and the OpenCode idempotency trap:
+`.claude/skills/installer-cli/references/statusline.md`.
+
 **"The statusline" is three installs of one idea**, because each target offers a
 different kind of hook and none of them offers ours: a config key on Claude,
 four `omp config` keys on Oh-My-Pi, a TUI plugin on OpenCode. **Cursor** exposes
@@ -719,10 +750,15 @@ Bash hook, and vwf's two mempalace auto-save hooks (`stop` + `preCompact`), with
 `opencode-plugin/mempalace-autosave.ts` standing in for the one target the shell
 hooks skip.
 
-Two rules that bite: hook scripts must be portable to macOS **BSD `sed`** (no
-`\s`, no `\b`), and **plugin hooks are never written to `settings.json`** — they
-are auto-discovered from the rendered `hooks/hooks.json`, so verify them with
-`/hooks`.
+Three rules that bite: hook scripts must be portable to macOS **BSD `sed`** (no
+`\s`, no `\b`); **plugin hooks are never written to `settings.json`** — they are
+auto-discovered from the rendered `hooks/hooks.json`, so verify them with
+`/hooks`; and **a script's verdict shape is decided by its event**, not by
+convention. `hookSpecificOutput.permissionDecision` is `PreToolUse`-only —
+`Stop` and `PreCompact` deny with the top-level `decision`/`reason`, and Claude
+rejects the whole verdict if a `hookSpecificOutput` arrives without a matching
+`hookEventName`. That shipped in the mempalace checkpoint hook, where a rejected
+verdict reads exactly like a hook that decided to stay quiet.
 
 > Details, including the neutral event vocabulary and why the mempalace hooks
 > are reimplemented rather than vendored:

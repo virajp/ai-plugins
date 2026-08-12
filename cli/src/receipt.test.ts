@@ -180,7 +180,7 @@ describe("receipts", () => {
         join(root, "datastore"),
         join(root, "identity"),
       ]);
-      // `--upgrade` replays this list, and datastore is still installed.
+      // The record must not narrow: datastore is still installed.
       expect(merged?.plugins).toEqual([
         { name: "datastore", scope: "user" },
         { name: "identity", scope: "user" },

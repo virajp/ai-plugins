@@ -221,7 +221,7 @@ function mergeSettings(
   // on an unchanged file (the no-op return below) meant a *second* install
   // produced an empty receipt, which then overwrote the complete one from the
   // first: the uninstall after it reported success and left the whole install
-  // in place. `--upgrade` reaches the same path, so upgrading alone was enough.
+  // in place, which a re-install reaches too — so re-installing alone was enough.
   //
   // `basis` is the file as it would be without our own entries, which is what
   // run 1 actually saw — a plugin key holding exactly the value we would write

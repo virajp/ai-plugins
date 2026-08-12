@@ -97,19 +97,38 @@ Before adding or changing any write path, read
 
 ## The flag surface
 
-| Flag                          | Notes                                                                                                                             |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--all`                       | every **user-scoped, non-opt-in** plugin, at user scope                                                                           |
-| `--user` / `--project <name>` | repeatable; bare names validated against `plugins.json`                                                                           |
-| `--platform <target>`         | repeatable; omitted, every tool detected on `PATH`. A selected target whose tool is absent is **skipped with a note**, not failed |
-| `--statusline`                | **tri-state**: explicit asks, `--no-statusline` refuses, unset defers to `--all`                                                  |
-| `--force`                     | acts on a target whose CLI is missing. Does **not** override the `requires:` gate                                                 |
-| `--version` / `--upgrade`     | installing is already upgrading; `--upgrade` replays each target's receipt                                                        |
-| `--uninstall` / `--dry-run`   | uninstall reverts from the receipt; dry run writes nothing, diff to stdout, progress to stderr                                    |
+| Flag                          | Notes                                                                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--all`                       | the marketplace's **`defaultInstall`** list, at user scope — `vwf`, `devtools`, `andrej-karpathy-skills`                                         |
+| `--user` / `--project <name>` | repeatable; bare names validated against `plugins.json`                                                                                          |
+| `--platform <target>`         | repeatable; omitted, every tool detected on `PATH`. A selected target whose tool is absent is **skipped with a note**, not failed                |
+| `--statusline`                | **tri-state**: explicit asks, `--no-statusline` refuses, unset defers to `--all`. Explicit is also the **only** consent to replace a foreign bar |
+| `--force`                     | acts on a target whose CLI is missing. Does **not** override the `requires:` gate                                                                |
+| `--version`                   | local versions against the manifest on `main`; exits 1 when it could not reach the network                                                       |
+| `--uninstall` / `--dry-run`   | uninstall reverts from the receipt; dry run writes nothing, diff to stdout, progress to stderr                                                   |
 
-Every derived set (`--all` membership, project-scoped, opt-in, user-only,
-dependencies, `requires`) comes from `plugin.yaml` via `plugins.json` — there is
-no second copy to disagree, and the old hardcoded constants are gone.
+**There is no `--upgrade`, and adding one back would be a mistake.** Plugin
+content ships *inside* the npm package — the marketplace source is an absolute
+path into `packageRoot()` and no adapter ever runs `marketplace update` — so
+re-running the install is the upgrade. The flag existed to replay each target's
+receipt, which did exactly what naming the plugins again did. `Receipt.plugins`
+is what remains of it: still written, read by nothing.
+
+**An invocation that installs nothing prints the help and exits 1.** That covers
+a bare run and one carrying only modifiers — `--platform opencode` is the one
+that reads like a request and is not.
+
+Every derived set (dependencies, `requires`, `local`) comes from `plugin.yaml`
+via `plugins.json`, and `--all` membership from `marketplace.yaml`'s
+`defaultInstall` through the same file — there is no second copy to disagree,
+and the old hardcoded constants are gone.
+
+**A plugin carries no install-time eligibility.** `scope`, `optIn` and
+`userOnly` were all removed: the first two excluded from `--all` in two
+spellings, the third pinned to user scope and was set by nothing. Scope is now
+whatever flag the caller passed, for every plugin, and `--all` is a list. If you
+find yourself wanting a per-plugin install flag again, add it to that list
+instead.
 
 ## References
 

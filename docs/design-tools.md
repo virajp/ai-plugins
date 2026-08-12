@@ -12,8 +12,9 @@ name vwf constructs a skill from.
 pnpx @askviraj/ai-plugins --user design-tools
 ```
 
-It is **not** a vwf dependency: the design tool is a product decision, so the
-adapter is chosen rather than inherited.
+It is **not** a vwf dependency and **not** in the `--all` set: the design tool
+is a product decision, so the adapter is chosen rather than inherited. Install
+it by name, at user or project scope.
 
 The plugin carries the `vwf-design-adapter` tag, which is what
 `mise run plugins:check` keys the whole design-adapter validation off — an

@@ -132,6 +132,45 @@ export function installStatuslineOhmypi(context: AdapterContext): ApplyResult {
   return run(context, false);
 }
 
+/**
+ * An Oh-My-Pi status line the user configured themselves.
+ *
+ * **The one surface with no install half.** Claude and OpenCode each place a
+ * file of ours and then point the tool at it, so a declined surface can still
+ * install; here there is nothing but `omp config` keys, so declining skips the
+ * surface entirely. That is a property of Oh-My-Pi, not a choice made here.
+ *
+ * Ownership again, not existence: a preset already reading `custom` with our
+ * exact segment lists is one of our own runs, and asking about it would make
+ * every repeat run prompt.
+ *
+ * `omp` absent throws inside `read`; the caller treats that as no conflict,
+ * because a machine without Oh-My-Pi is one the surface skips anyway.
+ */
+export function ohmypiStatuslineConflict(
+  context: AdapterContext,
+): string | undefined {
+  try {
+    const differing = KEYS.filter(([key, value]) =>
+      read(context, key) !== serialize(value)
+    );
+    if (differing.length === 0) {
+      return undefined;
+    }
+    const preset = read(context, "statusLine.preset");
+    // Unset on a machine that never configured one. `omp` reports its own
+    // default here, so an empty answer and the stock preset both mean "the
+    // user has expressed no preference".
+    if (preset.length === 0 || preset === "default") {
+      return undefined;
+    }
+    return `omp config → statusLine.preset = ${preset}`;
+  }
+  catch {
+    return undefined;
+  }
+}
+
 /** Undo an install from its receipt, through `omp` itself. */
 export function revertStatuslineOhmypi(
   context: AdapterContext,

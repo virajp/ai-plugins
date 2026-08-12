@@ -25,6 +25,7 @@ import type { TargetId } from "@ai-plugins/schema";
 import {
   defineCommand,
   runMain,
+  showUsage,
 } from "citty";
 import {
   existsSync,
@@ -71,7 +72,6 @@ import {
   revertStatuslineOhmypiInstall,
   revertStatuslineOpencodeInstall,
   statuslineInstalled,
-  upgradeJobs,
 } from "./executor.ts";
 import type { TargetOutcome } from "./executor.ts";
 import { setupGraphify } from "./graphify.ts";
@@ -82,10 +82,19 @@ import {
 } from "./plan.ts";
 import { createProgress } from "./progress.ts";
 import {
+  ask,
+  autoConfigureAllowed,
+  interactive,
+  resolveConsent,
+  setAutoConfigure,
+  SURFACE_LABEL,
+} from "./statusline-consent.ts";
+import type { Surface } from "./statusline-consent.ts";
+import { ohmypiStatuslineConflict } from "./statusline-ohmypi.ts";
+import { opencodeStatuslineConflict } from "./statusline-opencode.ts";
+import { claudeStatuslineConflict } from "./statusline.ts";
+import {
   buildVersionReport,
-  cmpVer,
-  fetchJson,
-  NPM_LATEST_URL,
   readCliVersion,
   renderVersionReport,
 } from "./version.ts";
@@ -135,7 +144,7 @@ export function wantsStatusline(
  * `--statusline` to remove something they never separately asked to install.
  *
  * The gate is the **receipt**: uninstall undoes what this tool did, and the
- * receipt is the record of that. `--upgrade` already asks the same way.
+ * receipt is the record of that.
  * `--no-statusline` still refuses outright, and `reachable` keeps a run that
  * names one target from stripping another's bar.
  */
@@ -149,6 +158,77 @@ export function revertsStatusline(
     return false;
   }
   return selected || installed();
+}
+
+/**
+ * Whether each selected surface may be **configured** — pointed at the bar.
+ *
+ * `undefined` is the refusal: a surface needed an answer and could not get one,
+ * so the caller stops the run. Anything else is per-surface, because the three
+ * are independent installs and a foreign bar in one says nothing about another.
+ *
+ * The remembered refusal is deliberately *not* per surface — one flag, so
+ * declining once is declining — but `--statusline` clears it, which is why the
+ * clear happens here rather than inside the loop: it is an answer about the
+ * user's intent for the run, not about whichever surface asked first.
+ *
+ * A dry run never asks and never writes. It reports what an answered run would
+ * do at its most complete, which is the same choice the missing-tools gate
+ * makes just above: describe the whole diff, refuse nothing.
+ */
+export async function resolveStatuslineConsent(
+  context: AdapterContext,
+  selected: StatuslineSelection,
+  explicit: boolean,
+  dryRun: boolean,
+): Promise<Record<Surface, boolean> | undefined> {
+  const granted = { claude: true, ohmypi: true, opencode: true };
+  if (dryRun) {
+    return granted;
+  }
+  if (explicit) {
+    setAutoConfigure(context, true);
+  }
+
+  const remembered = !autoConfigureAllowed(context);
+  const conflicts: Record<Surface, (c: AdapterContext) => string | undefined> =
+    {
+      claude: claudeStatuslineConflict,
+      ohmypi: ohmypiStatuslineConflict,
+      opencode: opencodeStatuslineConflict,
+    };
+
+  let declined = false;
+  for (const surface of ["claude", "ohmypi", "opencode"] as const) {
+    if (!selected[surface]) {
+      continue;
+    }
+    const conflict = conflicts[surface](context);
+    const verdict = resolveConsent({
+      conflict,
+      explicit,
+      remembered,
+      interactive: interactive(),
+    });
+    if (verdict === "fail") {
+      return undefined;
+    }
+    if (verdict === "configure") {
+      continue;
+    }
+    if (verdict === "skip" || !await ask(surface, conflict as string)) {
+      granted[surface] = false;
+      declined = true;
+      context.log(
+        `${SURFACE_LABEL[surface]}: kept your statusline; re-run with `
+          + "--statusline to replace it",
+      );
+    }
+  }
+  if (declined) {
+    setAutoConfigure(context, false);
+  }
+  return granted;
 }
 
 /** Which targets to act on: those named, else every tool actually present. */
@@ -283,7 +363,8 @@ const main = defineCommand({
   args: {
     all: {
       type: "boolean",
-      description: "Install every user-scoped plugin (excludes opt-in ones)",
+      description:
+        "Install the default set at user scope: vwf, devtools, karpathy",
       default: false,
     },
     user: {
@@ -324,11 +405,6 @@ const main = defineCommand({
       alias: "v",
       description:
         "Report this CLI's version and every plugin's, vs the latest",
-      default: false,
-    },
-    upgrade: {
-      type: "boolean",
-      description: "Re-install whatever each target's receipt recorded",
       default: false,
     },
   },
@@ -407,7 +483,7 @@ const main = defineCommand({
       // `--no-statusline` refuses — but an unset flag cannot mean "leave the
       // bar configured": on the way in it defers to `--all`, and there is no
       // `--all` on the way out, so a plain `--uninstall` silently left every
-      // statusline surface installed. `--upgrade` already gates on the receipt
+      // statusline surface installed. Gating on the receipt
       // this way; this is the same question asked at the other end.
       //
       // Still restricted to the selected targets: uninstalling Claude alone
@@ -452,44 +528,14 @@ const main = defineCommand({
       || (request.user?.length ?? 0) > 0
       || (request.project?.length ?? 0) > 0;
 
-    // `--upgrade` alone replays the receipts. Combined with an install request
-    // it adds nothing to the plugins — installing already reads the current
-    // render — so the install phase runs instead, and only the newer-CLI note
-    // below is kept.
-    if (args.upgrade === true && !named) {
-      const { jobs, unrecorded } = upgradeJobs(adapters, options);
-      for (const target of unrecorded) {
-        context.log(
-          `${target}: installed before this CLI recorded plans; `
-            + "re-run the install once to make it upgradable",
-        );
-      }
-      const outcomes = execute(jobs, options);
-      if (statuslineInstalled(options)) {
-        outcomes.push(executeStatusline(options));
-      }
-      if (ohmypiStatuslineInstalled(options)) {
-        outcomes.push(executeStatuslineOhmypi(options));
-      }
-      if (opencodeStatuslineInstalled(options)) {
-        outcomes.push(executeStatuslineOpencode(options));
-      }
-      if (outcomes.length === 0) {
-        context.log("nothing installed by this CLI yet — nothing to upgrade");
-      }
-      else {
-        if (options.dryRun) {
-          // The diff goes to stdout while the step sits on stderr; in a terminal
-          // they share a screen, so an uncleared step runs into the first line.
-          progress.clear();
-          process.stdout.write(`${renderDiff(outcomes)}\n`);
-        }
-        report(outcomes);
-      }
-      await noteNewerCli(context);
-      process.exit(failed(outcomes) ? 1 : 0);
-    }
-
+    // No install request at all. There is no separate install verb — naming
+    // something *is* the request — so this covers both a bare invocation and
+    // one carrying only modifiers, `--platform opencode` being the one that
+    // reads like a request and is not: it says where to install, never what.
+    //
+    // The help comes with it because a run that installs nothing is a question
+    // about the flags, and answering it with one line of correction assumes the
+    // reader already knows the other nine.
     if (
       !named
       // `--statusline` on its own is a complete request: it is not a plugin.
@@ -497,8 +543,9 @@ const main = defineCommand({
       && !statusline.ohmypi
       && !statusline.opencode
     ) {
+      await showUsage(main);
       process.stderr.write(
-        "nothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
+        "\nnothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
       );
       process.exit(1);
     }
@@ -529,15 +576,36 @@ const main = defineCommand({
       }
     }
 
+    // Consent before the installs, not between them: a run that is going to
+    // refuse should refuse having written nothing, and the prompt has to reach
+    // a terminal the progress spinner is not mid-line on.
+    progress.clear();
+    const consent = await resolveStatuslineConsent(
+      context,
+      statusline,
+      args.statusline === true,
+      options.dryRun,
+    );
+    if (consent === undefined) {
+      process.stderr.write(
+        "\nrefusing to replace a statusline that is not this installer's "
+          + "without an answer.\nPass --statusline to replace it, or "
+          + "--no-statusline to leave it alone.\n",
+      );
+      process.exit(1);
+    }
+
     const outcomes = execute(jobs, options);
     if (statusline.claude) {
-      outcomes.push(executeStatusline(options));
+      outcomes.push(executeStatusline(options, consent.claude));
     }
-    if (statusline.ohmypi) {
+    if (statusline.ohmypi && consent.ohmypi) {
+      // The one surface with nothing to install when it is declined: it is
+      // `omp config` keys and no files, so there is no half to leave behind.
       outcomes.push(executeStatuslineOhmypi(options));
     }
     if (statusline.opencode) {
-      outcomes.push(executeStatuslineOpencode(options));
+      outcomes.push(executeStatuslineOpencode(options, consent.opencode));
     }
 
     // After the install, and only for targets that actually took it: vwf's
@@ -561,35 +629,9 @@ const main = defineCommand({
       process.stdout.write(`${renderDiff(outcomes)}\n`);
     }
     report(outcomes);
-    if (args.upgrade === true) {
-      await noteNewerCli(context);
-    }
     process.exit(failed(outcomes) ? 1 : 0);
   },
 });
-
-/**
- * Mention a newer published CLI, if there is one.
- *
- * Best-effort and never fatal: the upgrade itself is local, so a machine that
- * cannot reach npm has still done everything it was asked to. `--version` is
- * where a failed check is worth an exit code.
- */
-async function noteNewerCli(context: AdapterContext): Promise<void> {
-  try {
-    const current = readCliVersion(context.sourceRoot);
-    const latest = await fetchJson<{ version: string; }>(NPM_LATEST_URL);
-    if (cmpVer(latest.version, current) > 0) {
-      context.log(
-        `\nA newer CLI is available: ${current} → ${latest.version}\n`
-          + "Re-run with: npx @askviraj/ai-plugins@latest --upgrade",
-      );
-    }
-  }
-  catch {
-    // No network is not an upgrade failure.
-  }
-}
 
 /**
  * The package root — what holds the rendered trees, the marketplace manifests

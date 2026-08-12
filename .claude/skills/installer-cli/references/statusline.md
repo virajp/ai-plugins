@@ -21,6 +21,53 @@ surface at all**, so a run targeting only it installs nothing — and only an
 the same rule the plugin targets follow. The OpenCode **uninstall** needs no
 binary, since everything it wrote is files this CLI owns.
 
+## The consent gate
+
+`cli/src/statusline-consent.ts`. **Installing the bar and configuring the host
+tool are separate**, and only the second is gated. The private `run` in
+`statusline.ts` and `statusline-opencode.ts` takes a `configure` flag and drops
+its last step when it is false, so a declined surface still lands the script,
+the caps hook and the TUI plugin. **Oh-My-Pi has no install half at all** — it
+is `omp config` keys and no files — so declining skips that surface outright.
+That is a property of the target, not a choice.
+
+This reinstates a prompt that was **deliberately removed**, and the reasoning
+that removed it is worth keeping straight. `statusline.ts` argued the old
+`bin/claude.mjs` prompted only because it could not put the previous bar back,
+and the receipt made that unnecessary. True of the *undo*; never true of the
+interval before it. **Reversibility is not consent.**
+
+Three rules, in `resolveConsent` — a pure function, so every branch is testable
+without a terminal:
+
+- **Ours is not foreign.** Compare what is on disk against what our own write
+  would produce, never `existsSync`. Same ownership rule as the receipt entries,
+  same reason: on run 2 what is sitting there is run 1's own output. Skip this
+  and every repeat run prompts about the bar it installed itself.
+- **`--statusline` is the only consent.** `--all` asks for the toolkit; that is
+  not the same as asking to replace a bar. Checked **before** the remembered
+  refusal, or the flag could never undo one.
+- **No TTY fails the run.** Not overwrite, not skip. Overwriting silently is the
+  bug; skipping silently makes an unattended install report success with the bar
+  unconfigured.
+
+A refusal is remembered as `"autoConfigure": false` in
+`~/.config/statusline.json` — **one flag for all three surfaces**, and the key
+is declared in `schemas/statusline.schema.json`, which sets
+`additionalProperties: false`, so an undeclared key would show as an error in
+the user's editor forever. `setAutoConfigure(ctx, true)` *deletes* the key
+rather than writing `true`: absent is the default, and a stray `true` says
+nothing.
+
+Foreign-detection differs by how each surface is configured, and the OpenCode
+one has a trap. Claude and Oh-My-Pi are **overwritten**, so the question is
+whether the current value is ours. OpenCode is **appended to**, so the question
+is whether `tui.json` is a file we authored — but its `ours` test is deep
+equality against the whole file, which goes false the moment anything else is in
+the array, *including after the user consented and we appended alongside them*.
+`opencodeStatuslineConflict` therefore returns nothing once **our entry** is
+present, whoever else is in there. Without that it asks on every run forever.
+
 ## Claude
 
 `tools/statusline/statusline` is the executable Node script (node shebang) and

@@ -5,8 +5,8 @@ opinionated Flutter standard covering GetX state management, `My`-prefixed
 widget wrappers, static repositories, ARB-based localization, and
 platform-channel native code. It declares three languages (`dart`, `kotlin`,
 `swift`) and bundles a language server for each. It is **self-contained**: no
-plugin dependencies at all. The plugin is **project-scoped** — install it from
-inside the Flutter project it should govern.
+plugin dependencies at all. It is not in the `--all` set — install it by name,
+usually from inside the Flutter project it should govern.
 
 It also ships the `dart-flutter` **stack template** and implements vwf's
 stack-adapter and UX-gate contracts, so `/vwf:architecture` can offer Flutter
@@ -20,7 +20,8 @@ Run this from the root of your Flutter project:
 pnpx @askviraj/ai-plugins --project flutter
 ```
 
-`--project flutter` installs at the plugin's own (project) scope.
+Scope is the flag's, not the plugin's: `--user flutter` installs it once for
+every repo instead, which is worth it if you build Flutter apps often.
 
 The installer gates on `mise`, `kotlin-lsp` and `sourcekit-lsp` being on your
 `PATH` — the plugin launches all three language servers, so a missing binary is

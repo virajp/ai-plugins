@@ -62,8 +62,8 @@ delegating read-heavy work buys, and the rest of the fit questions — is in
 ## Install
 
 ```sh
-# The whole toolkit: every user-scoped plugin + the statusline,
-# for every agent found on your PATH
+# The workflow and what it needs — vwf, devtools, andrej-karpathy-skills —
+# plus the statusline, for every agent found on your PATH
 pnpx @askviraj/ai-plugins --all
 
 # Or just vwf, which pulls in its dependencies and wires up graphify
@@ -75,9 +75,11 @@ Windows included. Restart your agent afterward so the commands, hooks and
 dependencies load. (The examples here use `pnpx`; if you don't use `pnpm`, swap
 in `npx`.)
 
-`--all` covers the user-scoped plugins. The project-scoped one (`flutter`) and
-the opt-in ones (the clouds and the capabilities) are named explicitly instead —
-see [the installer CLI](#the-installer-cli) for the full flag reference.
+`--all` is a fixed set of three — `vwf`, `devtools`, `andrej-karpathy-skills` —
+installed at user scope. Everything else is named explicitly, at whichever scope
+you ask for, because which language, cloud and capability plugins you want is a
+question about your product rather than about the toolkit. See
+[the installer CLI](#the-installer-cli) for the full flag reference.
 
 ## The plugins
 
@@ -110,7 +112,8 @@ npm-package and repo-level choices. `--user typescript`
 and `swift` router skills plus `kotlin`, `pubspec`, `analysis-options` and
 internationalization, with Dart, Kotlin and SourceKit (Swift) language servers
 bundled. It owns the `dart-flutter` stack template for a `frontend` project.
-Project-scoped, since a Flutter app is a repo, not a habit. `--project flutter`
+`--project flutter` from the app's own repo, or `--user flutter` if you build
+them often enough for it to be a habit.
 
 ### Clouds
 
@@ -256,14 +259,14 @@ for every one it finds.
 platform, Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
-# Everything: all user-scoped plugins + the statusline, for every detected platform
+# The default set + the statusline, for every detected platform
 pnpx @askviraj/ai-plugins --all
 
-# Just the user-scoped plugins (no statusline)
+# Just the default set (no statusline)
 pnpx @askviraj/ai-plugins --all --no-statusline
 
-# Named plugins, at user or project scope (flutter is project-scoped)
-pnpx @askviraj/ai-plugins --user vwf --project flutter
+# Named plugins, at whichever scope you ask for
+pnpx @askviraj/ai-plugins --user typescript --project flutter
 
 # OpenCode only
 pnpx @askviraj/ai-plugins --platform opencode --user typescript
@@ -271,11 +274,8 @@ pnpx @askviraj/ai-plugins --platform opencode --user typescript
 # Versions: CLI, statusline, and each plugin's installed-vs-latest (with scope)
 pnpx @askviraj/ai-plugins --version
 
-# Upgrade installed plugins + refresh the statusline
-pnpx @askviraj/ai-plugins --upgrade
-
-# Idempotent install + upgrade — safe to drop in a setup script
-pnpx @askviraj/ai-plugins --all --upgrade
+# Idempotent — installing is already upgrading, so this is safe in a setup script
+pnpx @askviraj/ai-plugins --all
 
 # Uninstall (mirrors the install flags)
 pnpx @askviraj/ai-plugins --uninstall --user vwf
@@ -284,15 +284,31 @@ pnpx @askviraj/ai-plugins --uninstall --all
 
 Notes:
 
-- `--all` acts on **user-scoped** plugins only. `flutter` is **project-scoped**
-  — install it explicitly with `--project flutter` from within the project that
-  needs it. The two cloud plugins (`cloudflare`, `gcp`) and all five capability
-  plugins (`datastore`, `identity`, `observability`, `orchestration`,
-  `object-storage`) are **opt-in** — also excluded from `--all`; install them by
-  name at whichever scope you want.
+- `--all` installs a **fixed set of three** at user scope — `vwf`, `devtools`
+  and `andrej-karpathy-skills`, which is the workflow plus exactly what it hard-
+  depends on. Every other plugin is installed **by name**: the languages
+  (`typescript`, `flutter`), the clouds (`cloudflare`, `gcp`), the five
+  capabilities (`datastore`, `identity`, `observability`, `orchestration`,
+  `object-storage`), plus `cicd` and `design-tools`. Nothing is pinned to a
+  scope — any plugin installs at user or project scope on request.
 - `--all` means the whole toolkit, so it **includes the statusline** (Claude
   Code, Oh-My-Pi and OpenCode) — pass `--no-statusline` for a plugins-only run.
   The same applies in reverse: `--uninstall --all` removes the statusline too.
+- **A statusline you already have is never replaced without your say-so.** If a
+  selected agent is pointed at a bar this installer did not write, the run asks
+  before overwriting it, and `--statusline` is the only flag that counts as
+  consent — `--all` asks for the toolkit, which is not the same as asking to
+  replace your bar. With no terminal to ask in (a setup script, CI) the run
+  **fails** rather than guessing in either direction. Decline once and the
+  refusal is remembered in `~/.config/statusline.json` as
+  `"autoConfigure": false`, so later runs stop asking; `--statusline` clears it.
+  The bar's own files are installed either way, so a declined machine is one
+  `--statusline` away from a working statusline rather than back at the start.
+- **There is no `--upgrade`.** Plugin content ships inside the npm package, so
+  re-running the install *is* the upgrade — there is nothing remote to fetch and
+  no per-tool version to bump. Run the same command again.
+- **An invocation that installs nothing prints the help and exits 1** — a bare
+  run, or one carrying only modifiers like `--platform`.
 - Scope is chosen by the flag: `--user <name>` installs at user scope,
   `--project <name>` at project scope (you can mix both in one run). The
   marketplace add is always user-scoped.
@@ -339,9 +355,9 @@ to install it yourself. Memory used to be skipped the same way, which is why
 mempalace's skills are now [vendored into `vwf`](./docs/mempalace.md) and ship
 on every target. The statusline **does** reach OpenCode, as a TUI plugin
 registered in `tui.json`; Cursor is the one target with no status surface to
-install into. `--uninstall` and `--upgrade` replay the receipt (uninstall never
-removes a dependency you didn't name); `--version` compares this build's
-versions against the manifest on `main`.
+install into. `--uninstall` replays the receipt (it never removes a dependency
+you didn't name); `--version` compares this build's versions against the
+manifest on `main`.
 
 ## Credits & acknowledgements
 

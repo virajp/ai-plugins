@@ -107,15 +107,21 @@ export interface Receipt {
   readonly installedAt: string;
   readonly entries: readonly Entry[];
   /**
-   * What was installed, as opposed to which bytes moved — the record `--upgrade`
-   * replays so it can refresh what is here without being told the names again.
+   * What was installed, as opposed to which bytes moved.
+   *
+   * Written by every adapter and read by nothing today. It was added for
+   * `--upgrade`, which replayed it to refresh an install without being told the
+   * names again; that flag is gone, because plugin content ships inside this
+   * npm package and re-installing was already the upgrade. The field stays
+   * because it is the only human-readable answer to "what did this run put
+   * here" — a receipt of bytes alone cannot say — and because dropping it would
+   * mean changing the receipt format to delete something inert.
    *
    * **Deliberately not a version bump.** `RECEIPT_VERSION` guards *revert*, and
    * `readReceipt` refuses a future version because reverting under rules that do
    * not match how a receipt was written is worse than declining. This field
    * changes nothing about revert, so bumping for it would strand receipts an
-   * older CLI could undo perfectly well. Absent on every pre-existing receipt,
-   * which `--upgrade` reports rather than treating as "nothing installed".
+   * older CLI could undo perfectly well.
    */
   readonly plugins?: readonly {
     readonly name: string;
@@ -244,8 +250,8 @@ export class ReceiptBuilder {
  * A receipt describes an install, not a run — and those came apart the moment
  * anyone installed twice. Each run used to overwrite the record wholesale, so
  * installing `identity` after `datastore` produced a receipt naming only
- * `identity`: the uninstall then removed half the install and reported success,
- * and `--upgrade` replayed half the plan. Every adapter had this, because every
+ * `identity`: the uninstall then removed half the install and reported success.
+ * Every adapter had this, because every
  * adapter got its own fresh `ReceiptBuilder` and none of them could see what an
  * earlier run had claimed.
  *
@@ -297,8 +303,8 @@ export function mergeReceipts(
     ...current.entries.filter(entry => !seen.has(identity(entry))),
   ];
 
-  // Union by name+scope, current last: `--upgrade` replays this list, and a
-  // plugin installed by an earlier run is still installed.
+  // Union by name+scope, current last: a plugin installed by an earlier run is
+  // still installed, so this run's list must not narrow the record.
   const plugins = [...previous.plugins ?? [], ...current.plugins ?? []];
   const unique = plugins.filter((plugin, index) =>
     plugins.findIndex(other =>

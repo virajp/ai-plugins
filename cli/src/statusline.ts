@@ -113,13 +113,52 @@ function isArrayEdit(path: readonly (string | number)[]): boolean {
 }
 
 /** What `install` would do, without doing it. Drives `--dry-run`. */
-export function planStatusline(context: AdapterContext): readonly Action[] {
-  return run(context, true).actions;
+export function planStatusline(
+  context: AdapterContext,
+  configure = true,
+): readonly Action[] {
+  return run(context, true, configure).actions;
 }
 
 /** Install the bar, the config defaults and the caps hook. */
-export function installStatusline(context: AdapterContext): ApplyResult {
-  return run(context, false);
+export function installStatusline(
+  context: AdapterContext,
+  configure = true,
+): ApplyResult {
+  return run(context, false, configure);
+}
+
+/**
+ * The statusline Claude is pointed at, when it is not ours.
+ *
+ * `undefined` means there is nothing to consent to: either no bar at all, or
+ * one already running our command. **Ownership, not existence** — the value is
+ * compared against what we would write, so a second run recognises the first
+ * run's output instead of asking about it.
+ *
+ * Only `statusLine` is inspected, not `subagentStatusLine`: the pair is set by
+ * one flag, and a user who has configured the main bar has expressed the
+ * preference this gate exists to respect.
+ */
+export function claudeStatuslineConflict(
+  context: AdapterContext,
+): string | undefined {
+  const file = settingsFile(context);
+  if (!existsSync(file)) {
+    return undefined;
+  }
+  const parsed = readJsonc<Record<string, unknown>>(readFileSync(file, "utf8"));
+  const current = getPath(parsed ?? {}, ["statusLine"]);
+  if (current === undefined) {
+    return undefined;
+  }
+  const command = getPath(parsed ?? {}, ["statusLine", "command"]);
+  if (command === COMMAND) {
+    return undefined;
+  }
+  return typeof command === "string"
+    ? `${file} → statusLine.command = ${command}`
+    : `${file} → statusLine`;
 }
 
 /**
@@ -162,10 +201,20 @@ export function revertStatusline(receipt: Receipt): void {
  * One code path for planning and applying, so `--dry-run` cannot describe
  * something other than what happens.
  */
-function run(context: AdapterContext, dryRun: boolean): ApplyResult {
+function run(
+  context: AdapterContext,
+  dryRun: boolean,
+  configure: boolean,
+): ApplyResult {
   const receipt = new ReceiptBuilder();
   // Sequenced before `build()`: it snapshots the entries, so evaluating both in
   // one object literal would capture an empty receipt.
+  //
+  // `configure` splits the two halves the consent gate distinguishes. The
+  // script, the caps hook and the user's own config are ours to place and
+  // displace nothing; `mergeSettings` is the one step that overwrites a bar the
+  // user may have chosen, so a declined surface stops short of exactly that and
+  // leaves a machine one `--statusline` from a working bar.
   const actions = [
     ...copyAsset(context, receipt, dryRun, "statusline", scriptFile(context)),
     ...copyAsset(
@@ -176,7 +225,7 @@ function run(context: AdapterContext, dryRun: boolean): ApplyResult {
       hookFile(context),
     ),
     ...seedUserConfig(context, dryRun),
-    ...mergeSettings(context, receipt, dryRun),
+    ...(configure ? mergeSettings(context, receipt, dryRun) : []),
   ];
   return { receipt: receipt.build(context.now), actions };
 }

@@ -100,15 +100,53 @@ const NEW_FILE_FORMAT: FormatOptions = {
 /** What `install` would do, without doing it. Drives `--dry-run`. */
 export function planStatuslineOpencode(
   context: AdapterContext,
+  configure = true,
 ): readonly Action[] {
-  return run(context, true).actions;
+  return run(context, true, configure).actions;
 }
 
 /** Copy the TUI plugin in and register it in `tui.json`. */
 export function installStatuslineOpencode(
   context: AdapterContext,
+  configure = true,
 ): ApplyResult {
-  return run(context, false);
+  return run(context, false, configure);
+}
+
+/**
+ * A `tui.json` this tool did not author, when our entry is not yet in it.
+ *
+ * Two conditions, and the second is what keeps the gate idempotent. The first
+ * is the choice made for this surface: unlike Claude and Oh-My-Pi we only
+ * *append* here, displacing nothing, so a file of the user's is asked about
+ * rather than assumed safe.
+ *
+ * But `ours` is deep equality against the whole file we would author, so it
+ * goes false the moment anything else is in there — including after the user
+ * has already said yes and we appended alongside their plugin. Gating on that
+ * alone would ask again on every single run. Once our entry is registered the
+ * question has been answered, whoever else is in the array.
+ */
+export function opencodeStatuslineConflict(
+  context: AdapterContext,
+): string | undefined {
+  const file = tuiConfigFile(context);
+  if (!existsSync(file)) {
+    return undefined;
+  }
+  const before = readFileSync(file, "utf8");
+  const parsed = readJsonc<Record<string, unknown>>(before);
+  if (parsed === undefined) {
+    // Malformed. `register` refuses it with a better message than a prompt
+    // could give, so let it get that far rather than asking about a file
+    // nothing can read.
+    return undefined;
+  }
+  const entries = getPath(parsed, [...PLUGIN_PATH]);
+  if (Array.isArray(entries) && entries.includes(ENTRY)) {
+    return undefined;
+  }
+  return `${file} → an OpenCode TUI config this installer did not write`;
 }
 
 /**
@@ -148,13 +186,21 @@ export function revertStatuslineOpencode(receipt: Receipt): void {
  * One code path for planning and applying, so `--dry-run` cannot describe
  * something other than what happens.
  */
-function run(context: AdapterContext, dryRun: boolean): ApplyResult {
+function run(
+  context: AdapterContext,
+  dryRun: boolean,
+  configure: boolean,
+): ApplyResult {
   const receipt = new ReceiptBuilder();
   // Sequenced before `build()`, which snapshots the entries — evaluating both
   // in one object literal would capture an empty receipt.
+  //
+  // `configure` is the consent gate's seam: the plugin file is ours to place
+  // and displaces nothing, while `register` edits a `tui.json` that may be the
+  // user's. A declined surface copies the plugin and stops there.
   const actions = [
     ...copyPlugin(context, receipt, dryRun),
-    ...register(context, receipt, dryRun),
+    ...(configure ? register(context, receipt, dryRun) : []),
   ];
   return { receipt: receipt.build(context.now), actions };
 }
