@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@ai-plugins/schema": "workspace:*",
-    "citty": "latest",
     "jsonc-parser": "latest",
     "smol-toml": "latest",
     "write-file-atomic": "latest"

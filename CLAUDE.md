@@ -13,7 +13,7 @@ A multi-agent plugin toolkit (`virajp-plugins`) containing LSP servers, MCP
 servers, and `vwf` — a full Product → Blueprint → Plan → Execute workflow plugin
 (with post-deploy verify + production-feedback intake).
 
-The repo also ships a **statusline**, installed via a small `citty` CLI
+The repo also ships a **statusline**, installed via a small dependency-free CLI
 (`@askviraj/ai-plugins`) rather than the marketplace — see The installer &
 statusline CLI.
 
@@ -586,9 +586,9 @@ recall keeps working while the findings loop-back quietly stops persisting.
 ## The installer & statusline CLI
 
 The statusline is **not** a plugin — it ships inside `@askviraj/ai-plugins`, the
-`citty` CLI that installs the toolkit across all four targets (marketplace
-registration or a copied tree, plus the statusline). Users run it via
-`pnpx @askviraj/ai-plugins …`, which is the only distribution channel.
+zero-dependency CLI that installs the toolkit across all four targets
+(marketplace registration or a copied tree, plus the statusline). Users run it
+via `pnpx @askviraj/ai-plugins …`, which is the only distribution channel.
 
 **`--all` is a list, not a rule.** It installs `defaultInstall` from
 `templates/marketplace.yaml` — `vwf`, `devtools`, `andrej-karpathy-skills`, the
@@ -629,7 +629,8 @@ what a user installs is what CI validated.
 
 | Path                     | Is                                                                |
 | ------------------------ | ----------------------------------------------------------------- |
-| `cli/src/index.ts`       | the citty router — parse, resolve, gate, execute, report, exit    |
+| `cli/src/args.ts`        | the flag surface on `util.parseArgs`, plus the usage renderer     |
+| `cli/src/index.ts`       | the router — resolve, gate, execute, report, exit                 |
 | `cli/src/adapters/`      | one per target                                                    |
 | `cli/src/receipt.ts`     | prior state, so uninstall restores rather than guesses            |
 | `cli/src/deps.ts`        | the external-tool gate, derived from each plugin's `requires:`    |

@@ -11,22 +11,11 @@
  * into one `AdapterPlan` per target, `executor.ts` runs them and renders the
  * result. So this stays a router: parse, resolve, execute, report, exit.
  *
- * Two citty details it has to work around, both confirmed against its docs:
- *
- * - citty documents no `multiple:` argument kind. A repeated `--user a --user b`
- *   arrives as an array, a single one as a string — so every list flag is
- *   normalised through `toList`.
- * - The tri-state `--statusline` needs a boolean with **no default**, so
- *   "absent" stays `undefined` and can defer to `--all`. Giving it
- *   `default: false` would make an unset flag indistinguishable from
- *   `--no-statusline`.
+ * Argument parsing lives in `args.ts`, on `node:util`'s `parseArgs`. It used to
+ * be citty, which cannot express a repeatable flag and silently kept only the
+ * last `--user` — see that file for the whole story.
  */
 import type { TargetId } from "@ai-plugins/schema";
-import {
-  defineCommand,
-  runMain,
-  showUsage,
-} from "citty";
 import {
   existsSync,
   readFileSync,
@@ -52,6 +41,11 @@ import type {
   AdapterContext,
   AdapterPlan,
 } from "./adapters/types.ts";
+import type { Args } from "./args.ts";
+import {
+  parse,
+  renderUsage,
+} from "./args.ts";
 import {
   missingTools,
   renderMissing,
@@ -107,19 +101,6 @@ export const ADAPTERS: readonly Adapter[] = [
   ohmypi,
   opencode,
 ];
-
-/**
- * Repeated flags arrive as an array, single ones as a string, absent ones as
- * `undefined`. One shape out, so callers never branch on citty's.
- */
-export function toList(value: unknown): string[] {
-  if (value === undefined || value === null || value === "") {
-    return [];
-  }
-  return (Array.isArray(value) ? value : [value]).map(String).filter(v =>
-    v.length > 0
-  );
-}
 
 /**
  * Resolve the tri-state statusline flag.
@@ -355,283 +336,226 @@ export function statuslineSelected(
   return selection;
 }
 
-const main = defineCommand({
-  meta: {
-    name: "ai-plugins",
-    description: "Install the virajp-plugins toolkit across AI coding agents",
-  },
-  args: {
-    all: {
-      type: "boolean",
-      description:
-        "Install the default set at user scope: vwf, devtools, karpathy",
-      default: false,
-    },
-    user: {
-      type: "string",
-      description: "Install a plugin at user scope (repeatable)",
-    },
-    project: {
-      type: "string",
-      description: "Install a plugin at project scope (repeatable)",
-    },
-    platform: {
-      type: "string",
-      description:
-        "Target an agent: claude, cursor, ohmypi, opencode (repeatable). Defaults to every one installed",
-    },
-    statusline: {
-      type: "boolean",
-      description: "Install the statusline",
-      negativeDescription: "Skip the statusline",
-    },
-    uninstall: {
-      type: "boolean",
-      description: "Undo a previous install, from its receipt",
-      default: false,
-    },
-    "dry-run": {
-      type: "boolean",
-      description: "Show the full diff without writing anything",
-      default: false,
-    },
-    force: {
-      type: "boolean",
-      description: "Act on a target whose tool is not on PATH",
-      default: false,
-    },
-    version: {
-      type: "boolean",
-      alias: "v",
-      description:
-        "Report this CLI's version and every plugin's, vs the latest",
-      default: false,
-    },
-  },
-  async run({ args }) {
-    const startedAt = Date.now();
-    // Collected rather than written as they happen: a note printed mid-run
-    // lands above the results, so you read caveats about an install before
-    // knowing whether it worked. `renderProgress` places them after the table.
-    const notes: string[] = [];
-    const context: AdapterContext = {
-      sourceRoot: packageRoot(),
-      home: homedir(),
-      cwd: process.cwd(),
-      now: new Date().toISOString(),
-      log: message => notes.push(message),
-      exec: execCommand,
-    };
-    const progress = createProgress(process.stderr);
-    const report = (outcomes: readonly TargetOutcome[]): void => {
-      // Always erase the live step first: it shares stderr with the report,
-      // and a half-written line would run into the header.
-      progress.clear();
-      process.stderr.write(
-        `${
-          renderProgress({
-            outcomes,
-            notes,
-            version: readCliVersion(context.sourceRoot),
-            elapsedMs: Date.now() - startedAt,
-          })
-        }\n`,
-      );
-    };
-
-    const options = {
-      context,
-      dryRun: args["dry-run"] === true,
-      receiptDir: receiptDir(),
-      force: args.force === true,
-      progress,
-    };
-
-    if (args.version === true) {
-      const report = await buildVersionReport(context.sourceRoot);
-      // Data to stdout; the reason the remote half is missing is not data.
-      process.stdout.write(`${renderVersionReport(report)}\n`);
-      // Non-zero without the network, as the documented contract has it: a
-      // report that could not compare against anything answered half the
-      // question, and a script checking for updates should notice.
-      process.exit(report.remoteError === undefined ? 0 : 1);
-    }
-
-    const adapters = selectAdapters(toList(args.platform), context);
-    if (adapters.length === 0) {
-      // Never hang waiting for input that is not coming.
-      process.stderr.write(
-        "no supported agent found on PATH; name one with --platform\n",
-      );
-      process.exit(1);
-    }
-
-    const statusline = statuslineSelected(
-      wantsStatusline(
-        args.statusline as boolean | undefined,
-        args.all === true,
-      ),
-      args.statusline === true,
-      adapters,
-      context.log,
-    );
-
-    if (args.uninstall === true) {
-      const outcomes = revert(adapters, options);
-      // An uninstall undoes what this tool installed, so the gate is the
-      // **receipt**, not `--all`. The tri-state still governs — an explicit
-      // `--no-statusline` refuses — but an unset flag cannot mean "leave the
-      // bar configured": on the way in it defers to `--all`, and there is no
-      // `--all` on the way out, so a plain `--uninstall` silently left every
-      // statusline surface installed. Gating on the receipt
-      // this way; this is the same question asked at the other end.
-      //
-      // Still restricted to the selected targets: uninstalling Claude alone
-      // must not strip the Oh-My-Pi bar.
-      const reaches = (id: TargetId) => adapters.some(a => a.id === id);
-      const refused = args.statusline === false;
-      const undo: [boolean, boolean, () => boolean, () => TargetOutcome][] = [
-        [
-          reaches("claude"),
-          statusline.claude,
-          () => statuslineInstalled(options),
-          () => revertStatuslineInstall(options),
-        ],
-        [
-          reaches("ohmypi"),
-          statusline.ohmypi,
-          () => ohmypiStatuslineInstalled(options),
-          () => revertStatuslineOhmypiInstall(options),
-        ],
-        [
-          reaches("opencode"),
-          statusline.opencode,
-          () => opencodeStatuslineInstalled(options),
-          () => revertStatuslineOpencodeInstall(options),
-        ],
-      ];
-      for (const [reachable, selected, installed, run] of undo) {
-        if (revertsStatusline(reachable, selected, refused, installed)) {
-          outcomes.push(run());
-        }
-      }
-      report(outcomes);
-      process.exit(failed(outcomes) ? 1 : 0);
-    }
-
-    const request: PlanRequest = {
-      all: args.all === true,
-      user: toList(args.user),
-      project: toList(args.project),
-    };
-    const named = request.all === true
-      || (request.user?.length ?? 0) > 0
-      || (request.project?.length ?? 0) > 0;
-
-    // No install request at all. There is no separate install verb — naming
-    // something *is* the request — so this covers both a bare invocation and
-    // one carrying only modifiers, `--platform opencode` being the one that
-    // reads like a request and is not: it says where to install, never what.
-    //
-    // The help comes with it because a run that installs nothing is a question
-    // about the flags, and answering it with one line of correction assumes the
-    // reader already knows the other nine.
-    if (
-      !named
-      // `--statusline` on its own is a complete request: it is not a plugin.
-      && !statusline.claude
-      && !statusline.ohmypi
-      && !statusline.opencode
-    ) {
-      await showUsage(main);
-      process.stderr.write(
-        "\nnothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
-      );
-      process.exit(1);
-    }
-
-    progress.step("resolving plugins");
-    const jobs = buildJobs(adapters, request, context.sourceRoot, context.log);
-
-    // Refuse before touching anything: a plugin whose tools are absent installs
-    // cleanly and fails later, somewhere with no visible link to the install.
-    //
-    // Not overridable by `--force`, which means something narrower — act on a
-    // target whose *own* CLI is missing. A plugin's runtime tools are a fact
-    // about the plugin, not about the target, and there is no useful state on
-    // the far side of installing vwf without graphify.
-    const wanted = [
-      ...new Set(jobs.flatMap(([, p]) => [...p.user, ...p.project])),
-    ];
-    const missing = missingTools(
-      requiredTools(readPluginIndex(context.sourceRoot), wanted),
-      hasBin,
-    );
-    if (missing.length > 0) {
-      process.stderr.write(`${renderMissing(missing)}\n`);
-      // A dry run reports it and carries on: it is showing what *would* happen,
-      // and the rest of the diff is still worth seeing.
-      if (!options.dryRun) {
-        process.exit(1);
-      }
-    }
-
-    // Consent before the installs, not between them: a run that is going to
-    // refuse should refuse having written nothing, and the prompt has to reach
-    // a terminal the progress spinner is not mid-line on.
+export async function run(args: Args): Promise<void> {
+  const startedAt = Date.now();
+  // Collected rather than written as they happen: a note printed mid-run
+  // lands above the results, so you read caveats about an install before
+  // knowing whether it worked. `renderProgress` places them after the table.
+  const notes: string[] = [];
+  const context: AdapterContext = {
+    sourceRoot: packageRoot(),
+    home: homedir(),
+    cwd: process.cwd(),
+    now: new Date().toISOString(),
+    log: message => notes.push(message),
+    exec: execCommand,
+  };
+  const progress = createProgress(process.stderr);
+  const report = (outcomes: readonly TargetOutcome[]): void => {
+    // Always erase the live step first: it shares stderr with the report,
+    // and a half-written line would run into the header.
     progress.clear();
-    const consent = await resolveStatuslineConsent(
-      context,
-      statusline,
-      args.statusline === true,
-      options.dryRun,
+    process.stderr.write(
+      `${
+        renderProgress({
+          outcomes,
+          notes,
+          version: readCliVersion(context.sourceRoot),
+          elapsedMs: Date.now() - startedAt,
+        })
+      }\n`,
     );
-    if (consent === undefined) {
-      process.stderr.write(
-        "\nrefusing to replace a statusline that is not this installer's "
-          + "without an answer.\nPass --statusline to replace it, or "
-          + "--no-statusline to leave it alone.\n",
-      );
-      process.exit(1);
-    }
+  };
 
-    const outcomes = execute(jobs, options);
-    if (statusline.claude) {
-      outcomes.push(executeStatusline(options, consent.claude));
-    }
-    if (statusline.ohmypi && consent.ohmypi) {
-      // The one surface with nothing to install when it is declined: it is
-      // `omp config` keys and no files, so there is no half to leave behind.
-      outcomes.push(executeStatuslineOhmypi(options));
-    }
-    if (statusline.opencode) {
-      outcomes.push(executeStatuslineOpencode(options, consent.opencode));
-    }
+  const options = {
+    context,
+    dryRun: args.dryRun,
+    receiptDir: receiptDir(),
+    force: args.force,
+    progress,
+  };
 
-    // After the install, and only for targets that actually took it: vwf's
-    // commands halt at their own entry gate without this.
-    if (!options.dryRun && wanted.includes("vwf")) {
-      // The slowest tail of a run, and previously the longest silence in it.
-      progress.step("wiring graphify");
-      setupGraphify(
-        context,
-        outcomes
-          .filter(o => o.error === undefined && o.skipped === undefined)
-          .map(o => o.target),
-      );
-    }
+  if (args.version) {
+    const report = await buildVersionReport(context.sourceRoot);
+    // Data to stdout; the reason the remote half is missing is not data.
+    process.stdout.write(`${renderVersionReport(report)}\n`);
+    // Non-zero without the network, as the documented contract has it: a
+    // report that could not compare against anything answered half the
+    // question, and a script checking for updates should notice.
+    process.exit(report.remoteError === undefined ? 0 : 1);
+  }
 
-    if (options.dryRun) {
-      // Data to stdout, so it can be piped or diffed.
-      // The diff goes to stdout while the step sits on stderr; in a terminal
-      // they share a screen, so an uncleared step runs into the first line.
-      progress.clear();
-      process.stdout.write(`${renderDiff(outcomes)}\n`);
+  const adapters = selectAdapters(args.platform, context);
+  if (adapters.length === 0) {
+    // Never hang waiting for input that is not coming.
+    process.stderr.write(
+      "no supported agent found on PATH; name one with --platform\n",
+    );
+    process.exit(1);
+  }
+
+  const statusline = statuslineSelected(
+    wantsStatusline(args.statusline, args.all),
+    args.statusline === true,
+    adapters,
+    context.log,
+  );
+
+  if (args.uninstall) {
+    const outcomes = revert(adapters, options);
+    // An uninstall undoes what this tool installed, so the gate is the
+    // **receipt**, not `--all`. The tri-state still governs — an explicit
+    // `--no-statusline` refuses — but an unset flag cannot mean "leave the
+    // bar configured": on the way in it defers to `--all`, and there is no
+    // `--all` on the way out, so a plain `--uninstall` silently left every
+    // statusline surface installed. Gating on the receipt
+    // this way; this is the same question asked at the other end.
+    //
+    // Still restricted to the selected targets: uninstalling Claude alone
+    // must not strip the Oh-My-Pi bar.
+    const reaches = (id: TargetId) => adapters.some(a => a.id === id);
+    const refused = args.statusline === false;
+    const undo: [boolean, boolean, () => boolean, () => TargetOutcome][] = [
+      [
+        reaches("claude"),
+        statusline.claude,
+        () => statuslineInstalled(options),
+        () => revertStatuslineInstall(options),
+      ],
+      [
+        reaches("ohmypi"),
+        statusline.ohmypi,
+        () => ohmypiStatuslineInstalled(options),
+        () => revertStatuslineOhmypiInstall(options),
+      ],
+      [
+        reaches("opencode"),
+        statusline.opencode,
+        () => opencodeStatuslineInstalled(options),
+        () => revertStatuslineOpencodeInstall(options),
+      ],
+    ];
+    for (const [reachable, selected, installed, run] of undo) {
+      if (revertsStatusline(reachable, selected, refused, installed)) {
+        outcomes.push(run());
+      }
     }
     report(outcomes);
     process.exit(failed(outcomes) ? 1 : 0);
-  },
-});
+  }
+
+  const request: PlanRequest = {
+    all: args.all,
+    user: args.user,
+    project: args.project,
+  };
+  const named = request.all === true
+    || (request.user?.length ?? 0) > 0
+    || (request.project?.length ?? 0) > 0;
+
+  // No install request at all. There is no separate install verb — naming
+  // something *is* the request — so this covers both a bare invocation and
+  // one carrying only modifiers, `--platform opencode` being the one that
+  // reads like a request and is not: it says where to install, never what.
+  //
+  // The help comes with it because a run that installs nothing is a question
+  // about the flags, and answering it with one line of correction assumes the
+  // reader already knows the other nine.
+  if (
+    !named
+    // `--statusline` on its own is a complete request: it is not a plugin.
+    && !statusline.claude
+    && !statusline.ohmypi
+    && !statusline.opencode
+  ) {
+    process.stderr.write(`${renderUsage()}`);
+    process.stderr.write(
+      "\nnothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
+    );
+    process.exit(1);
+  }
+
+  progress.step("resolving plugins");
+  const jobs = buildJobs(adapters, request, context.sourceRoot, context.log);
+
+  // Refuse before touching anything: a plugin whose tools are absent installs
+  // cleanly and fails later, somewhere with no visible link to the install.
+  //
+  // Not overridable by `--force`, which means something narrower — act on a
+  // target whose *own* CLI is missing. A plugin's runtime tools are a fact
+  // about the plugin, not about the target, and there is no useful state on
+  // the far side of installing vwf without graphify.
+  const wanted = [
+    ...new Set(jobs.flatMap(([, p]) => [...p.user, ...p.project])),
+  ];
+  const missing = missingTools(
+    requiredTools(readPluginIndex(context.sourceRoot), wanted),
+    hasBin,
+  );
+  if (missing.length > 0) {
+    process.stderr.write(`${renderMissing(missing)}\n`);
+    // A dry run reports it and carries on: it is showing what *would* happen,
+    // and the rest of the diff is still worth seeing.
+    if (!options.dryRun) {
+      process.exit(1);
+    }
+  }
+
+  // Consent before the installs, not between them: a run that is going to
+  // refuse should refuse having written nothing, and the prompt has to reach
+  // a terminal the progress spinner is not mid-line on.
+  progress.clear();
+  const consent = await resolveStatuslineConsent(
+    context,
+    statusline,
+    args.statusline === true,
+    options.dryRun,
+  );
+  if (consent === undefined) {
+    process.stderr.write(
+      "\nrefusing to replace a statusline that is not this installer's "
+        + "without an answer.\nPass --statusline to replace it, or "
+        + "--no-statusline to leave it alone.\n",
+    );
+    process.exit(1);
+  }
+
+  const outcomes = execute(jobs, options);
+  if (statusline.claude) {
+    outcomes.push(executeStatusline(options, consent.claude));
+  }
+  if (statusline.ohmypi && consent.ohmypi) {
+    // The one surface with nothing to install when it is declined: it is
+    // `omp config` keys and no files, so there is no half to leave behind.
+    outcomes.push(executeStatuslineOhmypi(options));
+  }
+  if (statusline.opencode) {
+    outcomes.push(executeStatuslineOpencode(options, consent.opencode));
+  }
+
+  // After the install, and only for targets that actually took it: vwf's
+  // commands halt at their own entry gate without this.
+  if (!options.dryRun && wanted.includes("vwf")) {
+    // The slowest tail of a run, and previously the longest silence in it.
+    progress.step("wiring graphify");
+    setupGraphify(
+      context,
+      outcomes
+        .filter(o => o.error === undefined && o.skipped === undefined)
+        .map(o => o.target),
+    );
+  }
+
+  if (options.dryRun) {
+    // Data to stdout, so it can be piped or diffed.
+    // The diff goes to stdout while the step sits on stderr; in a terminal
+    // they share a screen, so an uncleared step runs into the first line.
+    progress.clear();
+    process.stdout.write(`${renderDiff(outcomes)}\n`);
+  }
+  report(outcomes);
+  process.exit(failed(outcomes) ? 1 : 0);
+}
 
 /**
  * The package root — what holds the rendered trees, the marketplace manifests
@@ -746,6 +670,31 @@ function isEntrypoint(): boolean {
   }
 }
 
+/**
+ * Parse, dispatch, and turn a failure into a sentence.
+ *
+ * citty owned this: it caught, printed and exited. Doing it here is what keeps
+ * a bad flag from surfacing as a Node stack trace — `parseArgs` throws a real
+ * `Error` for an unknown option, and the message already names the flag, so it
+ * only needs the usage beside it.
+ */
+export async function main(argv: readonly string[]): Promise<void> {
+  let args: Args;
+  try {
+    args = parse(argv);
+  }
+  catch (error) {
+    process.stderr.write(`${renderUsage()}\n${(error as Error).message}\n`);
+    process.exit(1);
+  }
+  if (args.help) {
+    // Asked for, so it is the answer rather than a correction: stdout, exit 0.
+    process.stdout.write(`${renderUsage()}`);
+    process.exit(0);
+  }
+  await run(args);
+}
+
 if (isEntrypoint()) {
-  runMain(main);
+  void main(process.argv.slice(2));
 }

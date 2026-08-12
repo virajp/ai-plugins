@@ -106,6 +106,24 @@ Before adding or changing any write path, read
 | `--force`                     | acts on a target whose CLI is missing. Does **not** override the `requires:` gate                                                                |
 | `--version`                   | local versions against the manifest on `main`; exits 1 when it could not reach the network                                                       |
 | `--uninstall` / `--dry-run`   | uninstall reverts from the receipt; dry run writes nothing, diff to stdout, progress to stderr                                                   |
+| `-h, --help`                  | the usage text, on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                                     |
+
+**The parser is `node:util`'s `parseArgs`, in `args.ts`, and it must stay
+repeat-capable.** It was `citty` until `--user vwf --user devtools` was found to
+install only `devtools`: citty's `ArgType` is
+`boolean | string | enum | positional` with no array kind, so a repeated flag
+cannot be expressed in it and the last occurrence silently wins. Three flags
+here are documented as repeatable. `parseArgs` has `multiple: true`, works on
+the `engines.node` floor (verified on 18.20.8), and **removed** a runtime
+dependency rather than swapping one in — so any future parser has to support
+repeats natively. `@oclif/core` does, at 18 dependencies and 4.8 MB for a
+ten-flag, zero-subcommand CLI.
+
+Two things the platform does not do, both handled in `args.ts`: boolean negation
+(`--no-statusline` is its own flag, folded back into the tri-state by
+`statuslineFlag`) and usage rendering (`renderUsage`). `strict` is on, so an
+unknown flag is an error naming itself rather than the silent no-op citty gave —
+which is how a retired `--upgrade` now reports itself.
 
 **There is no `--upgrade`, and adding one back would be a mistake.** Plugin
 content ships *inside* the npm package — the marketplace source is an absolute

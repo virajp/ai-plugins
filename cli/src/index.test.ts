@@ -13,7 +13,6 @@ import {
   revertsStatusline,
   selectAdapters,
   statuslineSelected,
-  toList,
   wantsStatusline,
 } from "./index.ts";
 
@@ -44,17 +43,6 @@ function fake(id: string, detected: boolean): Adapter {
     revert: () => {},
   };
 }
-
-describe("toList", () => {
-  it("normalises citty's three shapes into one", () => {
-    // citty documents no `multiple:` kind: repeated flags come back as an
-    // array, a single one as a string, an absent one as undefined.
-    expect(toList(["a", "b"])).toEqual(["a", "b"]);
-    expect(toList("a")).toEqual(["a"]);
-    expect(toList(undefined)).toEqual([]);
-    expect(toList("")).toEqual([]);
-  });
-});
 
 describe("wantsStatusline", () => {
   it("defers to --all when the flag is absent", () => {

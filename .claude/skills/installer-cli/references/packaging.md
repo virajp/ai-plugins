@@ -10,8 +10,10 @@ point straight at the bundle.
 **tsup treats `dependencies` as external and inlines everything else.** So a
 runtime import that is only a `devDependency` gets **silently bundled**: it
 works, and it hides that package from `osv-scanner`, which reads the lockfile.
-Runtime deps are whatever the bundle leaves external — today `citty`,
-`jsonc-parser`, `smol-toml`, `write-file-atomic`.
+Runtime deps are whatever the bundle leaves external — today `jsonc-parser`,
+`smol-toml` and `write-file-atomic`. **Argument parsing is not among them**: it
+was `citty` until that turned out to be unable to express a repeatable flag, and
+`node:util`'s `parseArgs` replaced it rather than another package.
 
 **The package `type` stays `commonjs`.** The bundle is ESM by its `.mjs`
 extension, while the standalone `tools/statusline/` scripts — run outside this

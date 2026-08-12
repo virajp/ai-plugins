@@ -308,10 +308,17 @@ Notes:
   re-running the install *is* the upgrade — there is nothing remote to fetch and
   no per-tool version to bump. Run the same command again.
 - **An invocation that installs nothing prints the help and exits 1** — a bare
-  run, or one carrying only modifiers like `--platform`.
+  run, or one carrying only modifiers like `--platform`. `--help` prints the
+  same text on stdout and exits 0, and an unknown flag is an error naming
+  itself.
 - Scope is chosen by the flag: `--user <name>` installs at user scope,
   `--project <name>` at project scope (you can mix both in one run). The
   marketplace add is always user-scoped.
+- **`--user`, `--project` and `--platform` are repeatable and every occurrence
+  counts** — `--user vwf --user typescript` installs both. Until the parser was
+  replaced this silently kept only the **last** value, so an invocation like
+  that installed `typescript` alone; if you have a script written against the
+  documented syntax, it was quietly installing less than it named.
 - The installer **checks every required external tool** for what you're
   installing and prints the install command for anything missing — it never
   installs a dependency for you.
@@ -390,9 +397,9 @@ maintainers. 🙏
   `brew install --formulae rtk`).
 - **[graphify](https://github.com/safishamsi/graphify)** — the knowledge-graph
   tool `vwf` integrates with.
-- **[citty](https://github.com/unjs/citty)** — the argument parser this
-  installer CLI is built on, bundled for publication with
-  **[tsup](https://tsup.egoist.dev/)**.
+- **[tsup](https://tsup.egoist.dev/)** — bundles the installer CLI for
+  publication. Argument parsing is Node's own `util.parseArgs`; the CLI carries
+  no parser dependency.
 - **[Nerd Fonts](https://www.nerdfonts.com/)** — the glyphs that make the
   statusline render, and the **[Gruvbox](https://github.com/morhetz/gruvbox)**
   palette it ships by default.
