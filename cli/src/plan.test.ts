@@ -17,60 +17,30 @@ const repoRoot = join(import.meta.dirname, "..", "..");
 
 const index: PluginIndex = {
   marketplace: "test-marketplace",
+  defaultInstall: ["core"],
   plugins: [
     {
       name: "core",
-      scope: "user",
-      optIn: false,
-      userOnly: false,
       local: true,
       dependencies: ["dep"],
     },
     {
       name: "dep",
-      scope: "user",
-      optIn: false,
-      userOnly: false,
       local: true,
       dependencies: ["deep"],
     },
     {
       name: "deep",
-      scope: "user",
-      optIn: false,
-      userOnly: false,
-      local: true,
-      dependencies: [],
-    },
-    {
-      name: "pinned",
-      scope: "user",
-      optIn: false,
-      userOnly: true,
-      local: true,
-      dependencies: [],
-    },
-    {
-      name: "proj",
-      scope: "project",
-      optIn: false,
-      userOnly: false,
       local: true,
       dependencies: [],
     },
     {
       name: "extra",
-      scope: "user",
-      optIn: true,
-      userOnly: false,
       local: true,
       dependencies: [],
     },
     {
       name: "remote",
-      scope: "user",
-      optIn: true,
-      userOnly: false,
       local: false,
       dependencies: [],
     },
@@ -110,32 +80,25 @@ describe("resolvePlan", () => {
     expect(plan.user).toEqual([]);
   });
 
-  it("keeps a user-pinned plugin at user scope even when asked for a project", () => {
-    const logged: string[] = [];
-    const plan = resolvePlan(
-      index,
-      "opencode",
-      { project: ["pinned"] },
-      opts({ log: m => void logged.push(m) }),
-    );
-
-    expect(plan.user).toEqual(["pinned"]);
-    expect(plan.project).toEqual([]);
-    expect(logged.join("\n")).toMatch(/user scope/);
-  });
-
-  it("--all takes user-scoped plugins and excludes opt-in ones", () => {
+  it("--all installs the marketplace's defaultInstall set, at user scope", () => {
     const plan = resolvePlan(index, "opencode", { all: true }, opts());
 
-    // `proj` is project-scoped, `extra`/`remote` are opt-in.
-    expect(plan.user).toEqual(["core", "deep", "dep", "pinned"]);
+    // `core` alone is listed; `deep`/`dep` follow as its dependencies.
+    expect(plan.user).toEqual(["core", "deep", "dep"]);
     expect(plan.project).toEqual([]);
   });
 
-  it("installs an opt-in plugin when it is named explicitly", () => {
+  it("installs a plugin outside the default set when it is named", () => {
     const plan = resolvePlan(index, "opencode", { user: ["extra"] }, opts());
 
     expect(plan.user).toEqual(["extra"]);
+  });
+
+  it("installs any plugin at project scope on request, pinning nothing", () => {
+    const plan = resolvePlan(index, "opencode", { project: ["extra"] }, opts());
+
+    expect(plan.project).toEqual(["extra"]);
+    expect(plan.user).toEqual([]);
   });
 
   it("resolves a name requested at both scopes once, narrowest wins", () => {
@@ -201,6 +164,11 @@ describe("readPluginIndex", () => {
     // Declared in templates/vwf/plugin.yaml, and the reason the CLI no longer
     // needs its own copy of the dependency list.
     expect(vwf?.dependencies).toContain("devtools");
-    expect(real.plugins.find(p => p.name === "flutter")?.scope).toBe("project");
+    // The `--all` set, from templates/marketplace.yaml.
+    expect(real.defaultInstall).toEqual([
+      "vwf",
+      "devtools",
+      "andrej-karpathy-skills",
+    ]);
   });
 });

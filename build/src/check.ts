@@ -104,6 +104,18 @@ function checkTemplates(workspace: Workspace): Finding[] {
   const findings: Finding[] = [];
   const declared = new Set(workspace.plugins.map(p => p.manifest.name));
 
+  // What `--all` installs. The CLI validates these names too, but only at
+  // install time and only for whoever ran `--all` — a typo here would ship,
+  // and then fail as an unknown plugin on someone else's machine.
+  for (const name of workspace.marketplace.defaultInstall) {
+    if (!declared.has(name)) {
+      findings.push({
+        scope: "marketplace",
+        message: `defaultInstall "${name}" is not a plugin in this marketplace`,
+      });
+    }
+  }
+
   // Skills land in one flat namespace on OpenCode and Oh-My-Pi alike — they
   // are keyed by bare name with no plugin qualifier — so a collision between
   // two plugins silently drops one of them.

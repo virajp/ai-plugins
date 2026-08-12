@@ -37,7 +37,6 @@ author:
 strict: true
 source:
   kind: local
-scope: project
 requires:
   - mise
   - kotlin-lsp

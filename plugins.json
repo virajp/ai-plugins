@@ -1,20 +1,19 @@
 {
   "marketplace": "virajp-plugins",
+  "defaultInstall": [
+    "vwf",
+    "devtools",
+    "andrej-karpathy-skills"
+  ],
   "plugins": [
     {
       "name": "andrej-karpathy-skills",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
       "local": false,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "cicd",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": [
@@ -23,27 +22,18 @@
     },
     {
       "name": "cloudflare",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "datastore",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "design-tools",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": [
@@ -52,9 +42,6 @@
     },
     {
       "name": "devtools",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": [
@@ -63,9 +50,6 @@
     },
     {
       "name": "flutter",
-      "scope": "project",
-      "optIn": false,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": [
@@ -76,54 +60,36 @@
     },
     {
       "name": "gcp",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "identity",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "object-storage",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "observability",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "orchestration",
-      "scope": "user",
-      "optIn": true,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": []
     },
     {
       "name": "typescript",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
       "local": true,
       "dependencies": [],
       "requires": [
@@ -133,9 +99,6 @@
     },
     {
       "name": "vwf",
-      "scope": "user",
-      "optIn": false,
-      "userOnly": false,
       "local": true,
       "dependencies": [
         "andrej-karpathy-skills",

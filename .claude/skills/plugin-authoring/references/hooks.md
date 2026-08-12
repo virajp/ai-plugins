@@ -74,7 +74,7 @@ Bun. No transform, no new dependency. The `templates/` tsconfig project exists
 solely to type-check them (`include: */opencode-plugin/*.ts`); the rest of
 `templates/` is prose.
 
-## Two rules when editing a hook script
+## Three rules when editing a hook script
 
 - **Portable to macOS BSD `sed`.** BSD sed supports neither `\s` nor `\b` — use
   POSIX classes (`[[:space:]]`) and explicit boundaries. `typescript:test`
@@ -86,3 +86,24 @@ solely to type-check them (`include: */opencode-plugin/*.ts`); the rest of
   auto-discovered from the rendered `hooks/hooks.json` and loaded in memory at
   session start. Verify active hooks with `/hooks`, not by inspecting
   `settings.json`.
+- **The verdict shape follows the event.** Scripts speak Claude's payload shape
+  and each renderer translates, so the script must emit the spelling Claude's
+  *own* event accepts. There are two, and they are not interchangeable:
+
+  | Event                | Denial                                                                  |
+  | -------------------- | ----------------------------------------------------------------------- |
+  | `PreToolUse`         | `hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision}` |
+  | `Stop`, `PreCompact` | top-level `{"decision": "block", "reason": …}`                          |
+
+  A `hookSpecificOutput` without a matching `hookEventName` makes Claude reject
+  the **whole** verdict, and there is no variant of it that denies on `Stop`
+  (its one field is `additionalContext`, which lets the stop through) or any
+  variant at all on `PreCompact`. `mempalace-checkpoint.sh` shipped the
+  `PreToolUse` spelling on a stop hook and was silently rejected every time — a
+  rejected verdict is indistinguishable from a hook that chose to stay quiet,
+  which is what let it survive.
+
+  **Cursor's generated wrapper reads both** (`build/src/targets/cursor.ts`), so
+  a script switching spellings needs the wrapper checked in the same change or
+  the hook falls through to `allow` there. Oh-My-Pi's session wrapper only tests
+  whether stdout is non-empty, so it is unaffected either way.

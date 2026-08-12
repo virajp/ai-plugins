@@ -58,13 +58,25 @@ field() {
       -e 's/^"//' -e 's/"$//' -e 's/[[:space:]]*$//'
 }
 
-# The gate verdict. `reason` is JSON-escaped for the two characters that can
-# appear in it; the rest of the text is ASCII prose under our own control.
+# The gate verdict: top-level `decision`/`reason`, which is Claude's shape for
+# a stop hook and the only shape it accepts here.
+#
+# This used to also emit a `hookSpecificOutput` carrying `permissionDecision`
+# and `permissionDecisionReason`. Those belong to `PreToolUse`, which this hook
+# is not, and Claude rejected the whole verdict for the missing `hookEventName`
+# — so the checkpoint never fired. There is no `hookSpecificOutput` variant for
+# `Stop` that carries a denial (its one field is `additionalContext`, which
+# lets the stop through) and none at all for `PreCompact`, so the fix is to
+# drop the block rather than name the event in it.
+#
+# Cursor's wrapper reads this verdict too, and reads the top-level fields —
+# `build/src/targets/cursor.ts`. Keep the two in step.
+#
+# `reason` is JSON-escaped for the two characters that can appear in it; the
+# rest of the text is ASCII prose under our own control.
 speak() {
   escaped=$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
-  printf '{"decision":"block","reason":"%s",' "$escaped"
-  printf '"hookSpecificOutput":{"permissionDecision":"deny",'
-  printf '"permissionDecisionReason":"%s"}}\n' "$escaped"
+  printf '{"decision":"block","reason":"%s"}\n' "$escaped"
 }
 
 auto_save_enabled || exit 0

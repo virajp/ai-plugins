@@ -16,39 +16,28 @@ const repoRoot = new URL("../..", import.meta.url).pathname;
 
 const index: PluginIndex = {
   marketplace: "test",
+  defaultInstall: [],
   plugins: [
     {
       name: "a",
-      scope: "user",
-      optIn: false,
-      userOnly: false,
       local: true,
       dependencies: ["b"],
       requires: ["rtk"],
     },
     {
       name: "b",
-      scope: "user",
-      optIn: false,
-      userOnly: false,
       local: true,
       dependencies: [],
       requires: ["pnpm"],
     },
     {
       name: "plain",
-      scope: "user",
-      optIn: false,
-      userOnly: false,
       local: true,
       dependencies: [],
       requires: [],
     },
     {
       name: "legacy",
-      scope: "user",
-      optIn: false,
-      userOnly: false,
       local: true,
       dependencies: [],
     },
@@ -72,21 +61,16 @@ describe("requiredTools", () => {
   it("terminates on a dependency cycle", () => {
     const cyclic: PluginIndex = {
       marketplace: "test",
+      defaultInstall: [],
       plugins: [
         {
           name: "x",
-          scope: "user",
-          optIn: false,
-          userOnly: false,
           local: true,
           dependencies: ["y"],
           requires: ["mise"],
         },
         {
           name: "y",
-          scope: "user",
-          optIn: false,
-          userOnly: false,
           local: true,
           dependencies: ["x"],
           requires: ["uv"],

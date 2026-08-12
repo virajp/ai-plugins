@@ -98,10 +98,10 @@ export function renderAll(
 /**
  * The install-time view of the manifests: `plugins.json` at the repo root.
  *
- * The CLI resolves a plan — dependency expansion, scope defaults, which plugins
- * `--all` covers, the bare-name allowlist — entirely from `plugin.yaml`. But it
- * cannot read `templates/`: the published package ships the rendered trees, not
- * the authored source. So the build projects the plan-relevant fields here, the
+ * The CLI resolves a plan — dependency expansion, what `--all` covers, the
+ * bare-name allowlist — entirely from the authored manifests. But it cannot
+ * read `templates/`: the published package ships the rendered trees, not the
+ * authored source. So the build projects the plan-relevant fields here, the
  * same build→install contract `.ownership.json` already is.
  *
  * Deliberately narrow. Anything the renderers consume (skills, hooks, servers)
@@ -111,13 +111,13 @@ export function renderAll(
 function writePluginIndex(repoRoot: string, workspace: Workspace): void {
   const index = {
     marketplace: workspace.marketplace.name,
+    // What `--all` installs. A marketplace-level list, so a plugin carries no
+    // install-time eligibility of its own — see the schema's `defaultInstall`.
+    defaultInstall: [...workspace.marketplace.defaultInstall],
     plugins: workspace.plugins.map(plugin => {
       const m = plugin.manifest;
       return {
         name: m.name,
-        scope: m.scope,
-        optIn: m.optIn,
-        userOnly: m.userOnly,
         // A url-sourced plugin has no rendered bundle, so the copy-based
         // installer has nothing to install and must skip it.
         local: m.source.kind === "local",

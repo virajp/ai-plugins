@@ -9,9 +9,15 @@ name: <plugin-name>
 description: <one line>
 ```
 
-Everything else defaults: `category` to `development`, `scope` to `user`,
-`source` to local, `optIn` / `userOnly` to false. `schema/src/manifest.ts` is
-authoritative for the full shape.
+Everything else defaults: `category` to `development`, `source` to local.
+`schema/src/manifest.ts` is authoritative for the full shape.
+
+**A manifest declares no install-time eligibility.** There is no `scope`, no
+`optIn`, no `userOnly` — the three were removed together, since `scope` and
+`optIn` were two spellings of "exclude from `--all`" and `userOnly` was never
+set by any plugin. `--all` reads `defaultInstall` in
+`templates/marketplace.yaml`; scope is whatever flag the user passed. Adding a
+plugin to the default set is an edit to that one list, not to the plugin.
 
 This one file replaced what used to be split between a `plugin.json` and a
 hand-written marketplace entry — two files kept in sync by hand, and a whole

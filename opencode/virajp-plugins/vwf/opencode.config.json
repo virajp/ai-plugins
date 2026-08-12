@@ -1,7 +1,7 @@
 {
   "configSchema": "https://opencode.ai/config.json",
   "name": "vwf",
-  "version": "15.1.0",
+  "version": "15.1.1",
   "dependencies": [
     "andrej-karpathy-skills",
     "devtools"

@@ -22,9 +22,6 @@ import type {
 /** One plugin's install-relevant manifest fields, as the build projects them. */
 export interface PluginIndexEntry {
   readonly name: string;
-  readonly scope: Scope;
-  readonly optIn: boolean;
-  readonly userOnly: boolean;
   readonly local: boolean;
   readonly dependencies: readonly string[];
   /**
@@ -36,11 +33,21 @@ export interface PluginIndexEntry {
 
 export interface PluginIndex {
   readonly marketplace: string;
+  /**
+   * What `--all` installs, from the marketplace manifest.
+   *
+   * A plugin carries no install-time eligibility of its own. It used to carry
+   * three — `scope`, `optIn` and `userOnly` — of which `scope` and `optIn` did
+   * the same single thing (exclude from `--all`, in two spellings) and
+   * `userOnly` was set by no manifest at all. Every plugin is now installable
+   * at either scope on request; membership here is the only remaining fact.
+   */
+  readonly defaultInstall: readonly string[];
   readonly plugins: readonly PluginIndexEntry[];
 }
 
 export interface PlanRequest {
-  /** Every user-scoped plugin that is not opt-in. */
+  /** The marketplace's `defaultInstall` set, at user scope. */
   readonly all?: boolean;
   /** Plugin names requested at user scope. */
   readonly user?: readonly string[];
@@ -95,34 +102,25 @@ export function resolvePlan(
 
   const wanted = new Map<string, Scope>();
   const want = (name: string, scope: Scope) => {
-    const entry = byName.get(name);
-    if (entry === undefined) {
+    if (!byName.has(name)) {
       throw new Error(
         `unknown plugin \`${name}\` — expected one of: ${
           index.plugins.map(p => p.name).sort().join(", ")
         }`,
       );
     }
-    // A plugin pinned to user scope stays there even when asked for at project
-    // scope: installing it per-project would shadow the single shared copy.
-    const resolved = entry.userOnly ? "user" : scope;
-    if (resolved !== scope) {
-      log(`${name} is user-scoped; installing at user scope`);
-    }
     // A name requested at both scopes resolves once. Project wins, being the
     // narrower of the two.
     if (wanted.get(name) !== "project") {
-      wanted.set(name, resolved);
+      wanted.set(name, scope);
     }
   };
 
   if (request.all === true) {
-    // `--all` is the curated set: user-scoped, and opt-in plugins excluded so
-    // they are only ever installed by name.
-    for (const entry of index.plugins) {
-      if (entry.scope === "user" && !entry.optIn) {
-        want(entry.name, "user");
-      }
+    // The curated set, at user scope. Every other plugin is installed by name,
+    // at whichever scope was asked for.
+    for (const name of index.defaultInstall) {
+      want(name, "user");
     }
   }
   for (const name of request.user ?? []) {
@@ -159,10 +157,9 @@ export function resolvePlan(
 /**
  * Pull in each plugin's dependencies, transitively.
  *
- * A dependency inherits the scope of whatever pulled it in, except where it is
- * pinned to user scope. It never *narrows* an existing selection: a plugin
- * already wanted at user scope stays there rather than being duplicated into a
- * project install.
+ * A dependency inherits the scope of whatever pulled it in, and never *narrows*
+ * an existing selection: a plugin already wanted at user scope stays there
+ * rather than being duplicated into a project install.
  */
 function expand(
   wanted: Map<string, Scope>,
@@ -174,8 +171,7 @@ function expand(
     const name = queue.shift() as string;
     const scope = wanted.get(name) as Scope;
     for (const dep of byName.get(name)?.dependencies ?? []) {
-      const entry = byName.get(dep);
-      if (entry === undefined) {
+      if (!byName.has(dep)) {
         // `plugins:check` enforces that dependencies resolve, so this means the
         // index is stale rather than the manifest wrong.
         log(`${name} depends on unknown plugin ${dep}; skipping`);
@@ -184,7 +180,7 @@ function expand(
       if (wanted.has(dep)) {
         continue;
       }
-      wanted.set(dep, entry.userOnly ? "user" : scope);
+      wanted.set(dep, scope);
       queue.push(dep);
     }
   }

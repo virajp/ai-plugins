@@ -26,4 +26,3 @@ author:
 strict: true
 source:
   kind: local
-optIn: true

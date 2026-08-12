@@ -64,15 +64,6 @@ export const Manifest = z.object({
   /** Other plugins this one requires; all resolve within this marketplace. */
   dependencies: z.array(z.string()).default([]),
 
-  /**
-   * Install scope and eligibility, mirroring the installer's constants.
-   * `optIn` plugins are excluded from `--all`; `userOnly` ones are pinned to
-   * user scope even when a project install is requested.
-   */
-  scope: z.enum(["user", "project"]).default("user"),
-  optIn: z.boolean().default(false),
-  userOnly: z.boolean().default(false),
-
   /** External binaries this plugin needs at runtime, checked before install. */
   requires: z.array(z.string()).default([]),
 
@@ -122,6 +113,20 @@ export const Marketplace = z.object({
   description: z.string().optional(),
   owner: z.object({ name: z.string(), email: z.email().optional() }),
   forceRemoveDeletedPlugins: z.boolean().default(false),
+  /**
+   * What `--all` installs, at user scope. Every other plugin is installed by
+   * name, at whichever scope the flag asks for.
+   *
+   * A list rather than a per-manifest flag, deliberately — this is one fact
+   * about the marketplace, not fourteen facts about plugins, and it is the one
+   * question ("what do I get with no arguments?") that a per-plugin boolean
+   * makes you grep every manifest to answer. It is also the only install-time
+   * field left: a plugin no longer declares a scope or an eligibility, because
+   * neither ever meant anything except membership here. `plugins:check`
+   * asserts every name resolves, so the list cannot name a plugin that is not
+   * there, and nothing else consumes it.
+   */
+  defaultInstall: z.array(z.string()).default([]),
   /**
    * Clone URL of the repo publishing this marketplace.
    *

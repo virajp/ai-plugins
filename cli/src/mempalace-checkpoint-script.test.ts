@@ -78,11 +78,19 @@ describe("mempalace-checkpoint.sh", () => {
 
   it("asks for a save on the fifteenth", () => {
     const out = stops(15).at(-1) ?? "";
-    expect(JSON.parse(out)).toMatchObject({
-      decision: "block",
-      hookSpecificOutput: { permissionDecision: "deny" },
-    });
+    expect(JSON.parse(out)).toMatchObject({ decision: "block" });
     expect(out).toContain("MemPalace save checkpoint");
+  });
+
+  it("answers in the shape a stop hook may use, and only that", () => {
+    // `hookSpecificOutput` belongs to `PreToolUse`. Emitting one here — as this
+    // did — makes Claude reject the whole verdict for a missing
+    // `hookEventName`, and the checkpoint silently never fires.
+    const verdict = JSON.parse(stops(15).at(-1) ?? "{}") as Record<
+      string,
+      unknown
+    >;
+    expect(Object.keys(verdict).sort()).toEqual(["decision", "reason"]);
   });
 
   it("resets after saving, so it fires on a fixed interval", () => {

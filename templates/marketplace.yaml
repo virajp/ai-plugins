@@ -5,3 +5,7 @@ owner:
   name: Viraj Patel
 forceRemoveDeletedPlugins: true
 repository: https://github.com/virajp/ai-plugins.git
+defaultInstall:
+  - vwf
+  - devtools
+  - andrej-karpathy-skills

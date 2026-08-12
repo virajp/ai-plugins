@@ -20,6 +20,9 @@ elif [ "$(printf '%s' "$answer" \
   jq -n --arg m "$(printf '%s' "$answer" \
     | jq -r '.hookSpecificOutput.permissionDecisionReason // ""')" \
     '{permission: "deny", agent_message: $m}'
+elif [ "$(printf '%s' "$answer" | jq -r '.decision // ""')" = "block" ]; then
+  jq -n --arg m "$(printf '%s' "$answer" | jq -r '.reason // ""')" \
+    '{permission: "deny", agent_message: $m}'
 else
   printf '{"permission":"allow"}\n'
 fi

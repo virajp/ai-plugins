@@ -399,7 +399,14 @@ function hookCommand(hook: Hook): string {
  *
  * Two translations, both unavoidable: Cursor puts the shell command at
  * `.command` while the script reads `.tool_input.command`, and Cursor's answer
- * is a verdict where the script emits Claude's `hookSpecificOutput`.
+ * is a verdict where the script emits Claude's.
+ *
+ * Claude's own denial has **two** spellings and this reads both, because which
+ * one a script uses is decided by its event, not by its author: `PreToolUse`
+ * answers with `hookSpecificOutput.permissionDecision`, while `Stop` and
+ * `PreCompact` have no such variant and answer with the top-level
+ * `decision`/`reason`. Reading only the first is what made the mempalace
+ * checkpoint fall through to `allow` here.
  */
 function wrapperScript(hook: Hook): string {
   return `#!/usr/bin/env bash
@@ -423,6 +430,9 @@ elif [ "$(printf '%s' "$answer" \\
   | jq -r '.hookSpecificOutput.permissionDecision // "allow"')" = "deny" ]; then
   jq -n --arg m "$(printf '%s' "$answer" \\
     | jq -r '.hookSpecificOutput.permissionDecisionReason // ""')" \\
+    '{permission: "deny", agent_message: $m}'
+elif [ "$(printf '%s' "$answer" | jq -r '.decision // ""')" = "block" ]; then
+  jq -n --arg m "$(printf '%s' "$answer" | jq -r '.reason // ""')" \\
     '{permission: "deny", agent_message: $m}'
 else
   printf '{"permission":"allow"}\\n'
