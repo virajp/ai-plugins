@@ -182,8 +182,8 @@ all.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and the full plugin
-  list.
+- [../../readme.md](../../readme.md) — the marketplace overview and the full
+  plugin list.
 - [vwf plugin](./vwf.md) — the workflow that invokes the stack-adapter and
   UX-gate skills.
 - [devtools plugin](./devtools.md) — mise, the task library, and the repo-level

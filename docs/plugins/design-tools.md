@@ -133,6 +133,7 @@ requirement.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and full plugin list.
+- [../../readme.md](../../readme.md) — the marketplace overview and full plugin
+  list.
 - [vwf](./vwf.md) — the workflow this plugin adapts; its
   `assets/design-adapter.md` is the authoritative payload contract.

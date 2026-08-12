@@ -8,14 +8,15 @@ is data-driven from JSON, so you can restyle it per repo without touching code.
 The same flag brings the same information to [Oh-My-Pi](#oh-my-pi) and
 [OpenCode](#opencode), each through its own mechanism.
 
-- Script: [`tools/statusline/statusline`](../tools/statusline/statusline)
+- Script: [`tools/statusline/statusline`](../../tools/statusline/statusline)
 - Defaults:
-  [`tools/statusline/statusline.json`](../tools/statusline/statusline.json)
-- Schema: [`schemas/statusline.schema.json`](../schemas/statusline.schema.json)
+  [`tools/statusline/statusline.json`](../../tools/statusline/statusline.json)
+- Schema:
+  [`schemas/statusline.schema.json`](../../schemas/statusline.schema.json)
 - Caps hook:
-  [`tools/statusline/context-caps.js`](../tools/statusline/context-caps.js)
+  [`tools/statusline/context-caps.js`](../../tools/statusline/context-caps.js)
 - OpenCode TUI plugin:
-  [`tools/statusline/opencode-tui.tsx`](../tools/statusline/opencode-tui.tsx)
+  [`tools/statusline/opencode-tui.tsx`](../../tools/statusline/opencode-tui.tsx)
 
 > **Requires a [Nerd Font](https://www.nerdfonts.com/).** The separators and
 > most symbols are private-use glyphs; without a patched font they render as
@@ -119,9 +120,9 @@ the main bar. Errors go to stderr so they never corrupt the line.
 
 Installing the **main** status bar (`--statusline`, or `--all`) also wires a
 `PostToolUse` hook —
-[`tools/statusline/context-caps.js`](../tools/statusline/context-caps.js) — that
-pauses long autonomous `vwf` runs before they exhaust a budget. It is **bundled
-with `statusLine`** because it relies on that script as its sensor.
+[`tools/statusline/context-caps.js`](../../tools/statusline/context-caps.js) —
+that pauses long autonomous `vwf` runs before they exhaust a budget. It is
+**bundled with `statusLine`** because it relies on that script as its sensor.
 
 How it works: the main bar already receives `context_window` and `rate_limits`
 on its stdin payload — numbers a hook never sees. The script mirrors them, per
@@ -226,8 +227,8 @@ OpenCode has neither a config key to point at a script nor a status renderer to
 configure. What it has is an **extension point**: a TUI plugin can register a
 slot, and `app_bottom` is the bottom row. So `--statusline` on a run targeting
 `opencode` copies
-[`tools/statusline/opencode-tui.tsx`](../tools/statusline/opencode-tui.tsx) into
-the OpenCode config dir as `ai-plugins-statusline.tsx` and registers it:
+[`tools/statusline/opencode-tui.tsx`](../../tools/statusline/opencode-tui.tsx)
+into the OpenCode config dir as `ai-plugins-statusline.tsx` and registers it:
 
 ```jsonc
 // ~/.config/opencode/tui.json
@@ -442,7 +443,7 @@ echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","type":"review","stat
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and the installer CLI
-  this ships inside.
+- [../../readme.md](../../readme.md) — the marketplace overview and the
+  installer CLI this ships inside.
 - [vwf](./vwf.md) — the workflow the caps hook pauses, and the `/vwf:handoff` /
   `/vwf:recall next` pair it directs you to.

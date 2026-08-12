@@ -144,7 +144,8 @@ GCP, a project consuming it uses GCP's flavour even when its own cloud differs.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and full plugin list.
+- [../../readme.md](../../readme.md) — the marketplace overview and full plugin
+  list.
 - [vwf](./vwf.md) — the workflow this plugin adapts, and the stack-adapter
   contract it implements.
 - [cloudflare](./cloudflare.md) — the other cloud plugin, parked at Zero Trust

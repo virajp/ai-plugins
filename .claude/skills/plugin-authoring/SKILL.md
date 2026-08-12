@@ -76,7 +76,7 @@ Read the one matching the change; do not read all four.
 ## Documentation
 
 Any change to plugin behaviour must reconcile `readme.md`, `CLAUDE.md` and
-`docs/<plugin>.md` in the **same commit** — the repo's hard rule. Delegate the
-sweep to the `docs-reconciler` agent rather than reading those files inline;
-`CLAUDE.md` and `docs/vwf.md` are large enough that loading them costs the rest
-of the session.
+`docs/plugins/<plugin>.md` in the **same commit** — the repo's hard rule.
+Delegate the sweep to the `docs-reconciler` agent rather than reading those
+files inline; `CLAUDE.md` and `docs/plugins/vwf.md` are large enough that
+loading them costs the rest of the session.

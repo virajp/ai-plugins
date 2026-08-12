@@ -152,8 +152,8 @@ expressed in that system's syntax. Nothing else changes.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and the full plugin
-  list.
+- [../../readme.md](../../readme.md) — the marketplace overview and the full
+  plugin list.
 - [vwf plugin](./vwf.md) — the delivery-pipeline contract this plugin
   implements.
 - [devtools plugin](./devtools.md) — the toolchain the generated pipelines rely

@@ -112,7 +112,8 @@ the same seam the identity contract already requires.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and full plugin list.
+- [../../readme.md](../../readme.md) — the marketplace overview and full plugin
+  list.
 - [vwf](./vwf.md) — the workflow this plugin adapts, and the stack-adapter
   contract it implements.
 - [gcp](./gcp.md) — the cloud plugin with a full backing and deploy catalogue;

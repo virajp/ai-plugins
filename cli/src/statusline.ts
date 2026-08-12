@@ -58,9 +58,9 @@ import {
 } from "./receipt.ts";
 
 /**
- * Written verbatim, per `docs/statusline.md`. `${HOME}` is expanded by the
- * shell Claude Code runs the command through, not by us — which is what ties
- * both installed files to `$HOME` rather than to the config dir.
+ * Written verbatim, per `docs/plugins/statusline.md`. `${HOME}` is expanded by
+ * the shell Claude Code runs the command through, not by us — which is what
+ * ties both installed files to `$HOME` rather than to the config dir.
  */
 const COMMAND = "${HOME}/.claude/scripts/statusline";
 const HOOK_COMMAND = "node ${HOME}/.claude/hooks/context-caps.js";

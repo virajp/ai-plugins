@@ -165,8 +165,8 @@ cloud plugin.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and the full plugin
-  list.
+- [../../readme.md](../../readme.md) — the marketplace overview and the full
+  plugin list.
 - [vwf plugin](./vwf.md) — the workflow that asks for a stack menu, and the
   stack-adapter contract this plugin implements.
 - [gcp plugin](./gcp.md) — where the managed queue and scheduler flavours come

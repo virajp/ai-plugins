@@ -6,7 +6,7 @@ disciplined phases: **Product → Blueprint → Plan → Execute**, with post-de
 verification and a production-feedback intake closing the loop.
 
 This is the full manual. For the short pitch and the rest of the marketplace,
-see [../readme.md](../readme.md).
+see [../../readme.md](../../readme.md).
 
 ## Install
 
@@ -31,7 +31,7 @@ checks for each and prints the exact command for anything missing.
 | graphify        | **required** | knowledge graph the commands rely on            | `mise use -g pipx:graphifyy@latest`   |
 | node + pnpm     | **required** | launches vwf's Context7 MCP server (`pnpm dlx`) | `mise use -g node@latest pnpm@latest` |
 | Claude Code CLI | **required** | hosts the commands                              | `mise use -g claude-code@latest`      |
-| uv              | **required** | graphify's and mempalace's Python runtime       | `mise use -g uv@latest`               |
+| uv              | **required** | graphify's Python runtime                       | `mise use -g uv@latest`               |
 | rtk             | **required** | the token-saving `rtk hook claude` Bash hook    | `brew install --formulae rtk`         |
 
 Every row above is in `vwf`'s `requires:` list, which the installer treats as a
@@ -44,28 +44,34 @@ instead of blocking every Bash call.
 
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
-with `mempalace serve --host 127.0.0.1 --port 8765` (loopback needs no token).
-One daemon serves every agent instance at once, survives session restarts, and
-reconnects instead of dying with the session. If you separately install the
-upstream `mempalace` plugin, toggle **its** stdio server off in `/mcp` — two
-servers would contend for mempalace's single writer lease. See
-[mempalace](./mempalace.md).
+with
+`mempalace-mcp --transport http --host 127.0.0.1 --port 8765 --palace "$HOME/.local/share/mempalace"`
+(loopback needs no token), under a process supervisor. Not `mempalace serve`:
+`serve` forks the real server as a child and holds PID 1 itself, so under a
+supervisor the server never sees `SIGTERM`. One daemon serves every agent
+instance at once, survives session restarts, and reconnects instead of dying
+with the session. If you separately install the upstream `mempalace` plugin,
+toggle **its** stdio server off in `/mcp` — two servers would contend for
+mempalace's single writer lease. See [mempalace](./mempalace.md).
 
 Nothing else about memory needs installing. The two mempalace skills are
 **vendored into `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its
 auto-save hooks are reimplemented here, so memory ships on all four targets
 rather than only the three with a marketplace.
 
-`vwf` also depends on two plugins — `andrej-karpathy-skills` and `devtools` —
-both resolved from the same `virajp-plugins` marketplace. Claude Code
-**auto-installs and auto-enables** them when you enable `vwf` (requires Claude
-Code ≥ 2.1.143). `devtools` is a dependency rather than an optional extra
-because `/vwf:setup` orchestrates `/devtools:scaffold`, and a skill vwf cannot
-see fails silently.
+`vwf` also depends on one plugin — `devtools` — resolved from the same
+`virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
+when you enable `vwf` (requires Claude Code ≥ 2.1.143). `devtools` is a
+dependency rather than an optional extra because `/vwf:setup` orchestrates
+`/devtools:scaffold`, and a skill vwf cannot see fails silently.
 
 The Markdown/documentation skills and the Context7 docs server used to be two
 more dependencies. They are **part of `vwf` now**: `documentation-standards` and
-`/vwf:readme` are vwf skills, and Context7 is one of vwf's two MCP servers.
+`/vwf:readme` are vwf skills, and Context7 is one of vwf's two MCP servers. The
+Karpathy coding guidelines were a third, and are now a **vendored** skill —
+`karpathy-guidelines` — for the same reason mempalace's are: a url-sourced
+dependency has no rendered bundle, so three of the four targets installed `vwf`
+and silently went without it.
 
 **`cicd` is not among them.** vwf states the delivery-pipeline *contract*; the
 [`cicd`](./cicd.md) plugin implements it on whichever CI system a repo uses.
@@ -128,11 +134,12 @@ adopting it.
   Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
   [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
-  to both `mempalace` (an **HTTP daemon you run** — `mempalace serve`) and a
-  markdown tree under `docs/memory/`. Without the daemon nothing is lost, but
-  recall degrades from semantic search to grep, and says so. `decisions`,
-  `planning`, `gaps` and `problems` are committed; `handoff`, `doctor` and
-  `runs` are gitignored, being one developer's state rather than the team's.
+  to both `mempalace` (an **HTTP daemon you run** —
+  `mempalace-mcp --transport http`) and a markdown tree under `docs/memory/`.
+  Without the daemon nothing is lost, but recall degrades from semantic search
+  to grep, and says so. `decisions`, `planning`, `gaps` and `problems` are
+  committed; `handoff`, `doctor` and `runs` are gitignored, being one
+  developer's state rather than the team's.
 - **Leans on review engines.** `execute`'s code- and security-review stages run
   on the `/code-review` and `/security-review` engines, falling back to their
   own manual review dimensions when an engine is unavailable.
@@ -607,7 +614,7 @@ Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
 Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
 needs a recent Claude Code), the model can also invoke them itself when the
 conversation calls for one, and the same artifact installs into OpenCode via the
-[installer CLI](../readme.md#the-installer-cli).
+[installer CLI](../../readme.md#the-installer-cli).
 
 ### /vwf:setup
 
@@ -619,21 +626,25 @@ every source move to make, including a restructure proposal toward the chosen
 topology's layout when the repo doesn't match (declining records a deviation,
 not a fight). On a new/empty repo it applies the workspace structure as the
 default and elicits each project's stack from the
-[template menu](#stack-templates). It also writes each repo's `mempalace.yaml` —
-one wing for the product, with the rooms vwf's memory protocol uses seeded in
-the parent and every submodule. Nothing is written until you approve; it works
-in a worktree, restructures code only with per-batch consent, and never deletes.
-It orchestrates the rest (`/devtools:scaffold`, `product`, `architecture`, and
-`design-system` if you have a UI), merges a vwf section into your `CLAUDE.md`,
-writes the README, detects the repo's verification-harness capabilities (dev
-server, E2E, staging mode), and stamps the **vwf config** at `.config/vwf.yaml`
-— the blueprint format version, harness inventory, enforcement opt-outs, and
-per-project nuances (a coverage-target override, a non-conventional health path)
-— so a later run can detect drift and migrate the delta, and every command knows
-how vwf operates in this repo (pipeline knobs, verify environments, the
-mempalace wing). Every workflow command also runs a quick format check against
-that stamp and nudges you to re-run `/vwf:setup` when a repo falls behind — so a
-single user-level vwf upgrade reaches each repo on next use.
+[template menu](#stack-templates). It also writes the product's **one**
+`mempalace.yaml`, at the repo root — one wing, the seven rooms vwf's memory
+protocol uses, and a secret denylist behind `.gitignore` — mining the whole tree
+including submodules, and consolidating away any config it finds in `.config/`
+or a submodule root (mining reads the config only from the directory it is
+pointed at, so a stray one is silently inert rather than merely wrong). Nothing
+is written until you approve; it works in a worktree, restructures code only
+with per-batch consent, and never deletes. It orchestrates the rest
+(`/devtools:scaffold`, `product`, `architecture`, and `design-system` if you
+have a UI), merges a vwf section into your `CLAUDE.md`, writes the README,
+detects the repo's verification-harness capabilities (dev server, E2E, staging
+mode), and stamps the **vwf config** at `.config/vwf.yaml` — the blueprint
+format version, harness inventory, enforcement opt-outs, and per-project nuances
+(a coverage-target override, a non-conventional health path) — so a later run
+can detect drift and migrate the delta, and every command knows how vwf operates
+in this repo (pipeline knobs, verify environments, the mempalace wing). Every
+workflow command also runs a quick format check against that stamp and nudges
+you to re-run `/vwf:setup` when a repo falls behind — so a single user-level vwf
+upgrade reaches each repo on next use.
 
 ### /vwf:product
 
@@ -1070,7 +1081,7 @@ fixed in the same cycle (stale docs are more harmful than no docs). Archiving is
 offered once a merged run has no open gaps.
 
 The resource-cap pause is delivered by the
-**[statusline caps hook](../readme.md#statusline)** — a command can't measure
+**[statusline caps hook](../../readme.md#statusline)** — a command can't measure
 its own context window, so install the statusline (`--statusline`) before a run
 or that pause won't fire.
 
@@ -1284,6 +1295,7 @@ working, and persists durable outcomes after. Memory is keyed by your project
 | `planning`  | plan rationale and deferred options                                                  |
 | `gaps`      | blueprint/plan holes from execution + points parked as out-of-scope during Q&A       |
 | `runs`      | execute's per-plan run journal — what a resumed run reads and the final gate renders |
+| `doctor`    | `/vwf:doctor` findings per run, so a still-present one reports as *known*            |
 | `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                |
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
@@ -1387,8 +1399,9 @@ vwf ships two kinds of skills: the **workflow skills** above (invoked via
 `/vwf:<name>` — most are also reachable by the skills that delegate to them; a
 few, like `setup` and `verify`, are yours to time and nothing else can call) and
 the **doctrine skills** below. The doctrine skills back the workflow's quality —
-you don't invoke them directly; they auto-apply and inform how Claude writes and
-reviews:
+most you never invoke, since they auto-apply and inform how Claude writes and
+reviews (`karpathy-guidelines` is the exception, also reachable by hand as
+`/vwf:karpathy-guidelines`):
 
 - **`product-foundations`** — the twelve foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
@@ -1422,26 +1435,30 @@ reviews:
   hierarchy, links, front matter, CHANGELOGs, mermaid rules), auto-applying on
   every `**/*.md` edit. Absorbed from the retired `markdown` plugin; the full
   ruleset is [below](#documentation-standards).
+- **`karpathy-guidelines`** — the four behavioral pillars that cut the coding
+  mistakes LLMs most reliably make. Vendored verbatim from
+  [upstream](./karpathy-guidelines.md) rather than depended on, so it ships on
+  every target; provenance in `templates/vwf/vendor/andrej-karpathy-skills/`.
 
 One more absorbed skill is user-invoked rather than doctrine:
 [`/vwf:readme`](#vwfreadme), which writes a repo's README against the same
 standards.
 
-Two more come from outside: **`/vwf:mempalace`** (palace setup and mining) and
-**`/vwf:mempalace-recall`** (the search-before-answer protocol) are vendored
-from [MemPalace](https://github.com/MemPalace/mempalace) under MIT. They are
-here rather than in a plugin of their own because a url-sourced plugin has no
-rendered bundle for OpenCode to copy, so memory silently did not ship there at
-all — see [mempalace](./mempalace.md).
+The memory pair also comes from outside: **`/vwf:mempalace`** (palace setup and
+mining) and **`/vwf:mempalace-recall`** (the search-before-answer protocol) are
+vendored from [MemPalace](https://github.com/MemPalace/mempalace) under MIT.
+They are here rather than in a plugin of their own because a url-sourced plugin
+has no rendered bundle for OpenCode to copy, so memory silently did not ship
+there at all — see [mempalace](./mempalace.md).
 
-The minimal-code behaviors that a "karpathy guidelines" skill would cover are
-already enforced structurally across the workflow — elicitation (think before
-coding), the plan-as-a-diff and the coder's "nothing not in the plan" (surgical
-changes, YAGNI/the minimalism ladder), and TDD with a coverage gate (goal-driven
-execution). The external
-**[andrej-karpathy-skills](./andrej-karpathy-skills.md)** plugin covers the
-ad-hoc, off-pipeline case, and installs with `vwf` as one of its two
-dependencies.
+The behaviors `karpathy-guidelines` states are already reinforced structurally
+across the workflow — elicitation (think before coding), the plan-as-a-diff and
+the coder's "nothing not in the plan" (surgical changes, YAGNI/the minimalism
+ladder), and TDD with a coverage gate (goal-driven execution). The vendored
+**[karpathy-guidelines](./karpathy-guidelines.md)** skill states them explicitly
+and covers the ad-hoc, off-pipeline turn the pipeline does not gate. It ships
+inside `vwf` as `/vwf:karpathy-guidelines`, so there is nothing separate to
+install.
 
 ## Tips
 
@@ -1570,8 +1587,8 @@ queries that library's documentation when a question is about a specific library
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and the full plugin
-  list.
+- [../../readme.md](../../readme.md) — the marketplace overview and the full
+  plugin list.
 - [mempalace](./mempalace.md) — the memory layer behind `/vwf:handoff` and
   `/vwf:recall`: the daemon, the auto-save hooks, and what was vendored.
 - [design-tools](./design-tools.md) — the design adapter `/vwf:screens` and

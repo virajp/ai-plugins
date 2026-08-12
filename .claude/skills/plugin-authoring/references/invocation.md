@@ -62,7 +62,7 @@ checking a real install, having silently broken a whole class of skill.
 Claude and Cursor scope a skill to its plugin, so `plan` need only be unique
 inside its own bundle. **OpenCode and Oh-My-Pi discover every provider's skills
 into one namespace keyed by bare name** — where `plan`, `execute`, `verify` and
-`product` are generic enough to belong to nobody, and vwf's 25 skills are the
+`product` are generic enough to belong to nobody, and vwf's 26 skills are the
 largest single claim on it.
 
 So `plugin.yaml` carries **`prefixSkillNames`**, and vwf sets it: the two flat

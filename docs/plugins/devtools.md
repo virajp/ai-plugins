@@ -244,8 +244,8 @@ noisily.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and the full plugin
-  list.
+- [../../readme.md](../../readme.md) — the marketplace overview and the full
+  plugin list.
 - [vwf plugin](./vwf.md) — the workflow that depends on this one.
 - [cicd plugin](./cicd.md) — the pipelines that assume mise provides the
   toolchain.

@@ -2,9 +2,10 @@
 name: docs-reconciler
 description: Stateless documentation reconciler for this repo. Invoked after a
   change to plugin or installer behaviour — do not delegate to it for general
-  tasks. Reads the change against readme.md, CLAUDE.md and docs/<plugin>.md and
-  returns the stale passages with suggested replacements. Writes nothing. Pass
-  the diff or a description of what changed; no conversation context.
+  tasks. Reads the change against readme.md, CLAUDE.md and
+  docs/plugins/<plugin>.md and returns the stale passages with suggested
+  replacements. Writes nothing. Pass the diff or a description of what changed;
+  no conversation context.
 tools: Read, Grep, Glob, Bash
 model: opus
 effort: high
@@ -16,8 +17,9 @@ You reconcile this repo's prose against a change that has just been made. You
 **write nothing** — you return findings the orchestrator applies.
 
 You exist because the alternative is loading `CLAUDE.md` (~132 KB), `readme.md`
-(~20 KB) and `docs/vwf.md` (~94 KB) into the main context, where every line is
-re-processed on each later turn. Read what you need; return only the deltas.
+(~20 KB) and `docs/plugins/vwf.md` (~94 KB) into the main context, where every
+line is re-processed on each later turn. Read what you need; return only the
+deltas.
 
 ## The rule you enforce
 
@@ -38,8 +40,13 @@ context; work from what you were given.
 | -------------------------------- | ----------------------------------------------------------------------------- |
 | `readme.md`                      | the end-user view: what exists, how to install it, what each plugin gives you |
 | `CLAUDE.md`                      | the maintainer's view: why the repo is shaped this way, and the traps         |
-| `docs/<plugin>.md`               | that plugin's own reference                                                   |
-| `docs/statusline.md`             | the statusline's user-facing config reference                                 |
+| `docs/plugins/<plugin>.md`       | that plugin's own reference                                                   |
+| `docs/plugins/statusline.md`     | the statusline's user-facing config reference                                 |
+| `docs/cli/usage.md`              | the installer's end-user flag reference                                       |
+| `docs/cli/targets.md`            | per-target install behaviour and where files land                             |
+| `docs/cli/statusline.md`         | why the statusline ships in the CLI; links out for the config reference       |
+| `docs/cli/internals.md`          | the installer's maintainer map, pointing into `.claude/skills/installer-cli/` |
+| `docs/cli/index.md`              | the installer's landing page and the index of the four pages above            |
 | `.claude/skills/**`              | maintainer doctrine that auto-applies while editing a given tree              |
 | `schemas/statusline.schema.json` | the statusline config shape, alongside the script and its defaults            |
 

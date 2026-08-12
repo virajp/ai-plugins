@@ -138,8 +138,8 @@ reason this plugin exists.
 
 ## See also
 
-- [../readme.md](../readme.md) — the marketplace overview and the full plugin
-  list.
+- [../../readme.md](../../readme.md) — the marketplace overview and the full
+  plugin list.
 - [vwf plugin](./vwf.md) — the workflow that asks for a stack menu, and the
   stack-adapter contract whose silent-failure mode this plugin is written
   against.

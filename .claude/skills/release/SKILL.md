@@ -3,7 +3,6 @@ name: release
 description: Cut a release of @askviraj/ai-plugins — the i:release ritual, the
   GitHub Release note format, and the CI facts that make a failed publish
   legible. Run when the user asks to cut, tag, or publish a release.
-disable-model-invocation: true
 allowed-tools: Read Grep Glob Bash
 ---
 
@@ -99,5 +98,5 @@ release.
 ## Before cutting
 
 Confirm the working tree is clean and that the change being released has its
-docs reconciled — `readme.md`, `CLAUDE.md` and `docs/<plugin>.md` ship with the
-change, not after it.
+docs reconciled — `readme.md`, `CLAUDE.md` and `docs/plugins/<plugin>.md` ship
+with the change, not after it.

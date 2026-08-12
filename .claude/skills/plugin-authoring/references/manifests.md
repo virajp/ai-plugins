@@ -49,10 +49,14 @@ Optional blocks:
   hard-fail a bare `--all` for every user lacking it.
 - **`prefixSkillNames`** — see [invocation.md](invocation.md).
 
-Adding a dependency is **one edit**: the name in `dependencies:`. If the dep is
-external it also needs its own `templates/<name>/plugin.yaml` carrying
-`source: {kind: url, url: …}`, so it resolves within `virajp-plugins` without
-vendoring third-party code.
+Adding a dependency is **one edit**: the name in `dependencies:`. A `url` source
+would let an outside plugin resolve within `virajp-plugins` without vendoring —
+but it ships on **Claude alone**: OpenCode's copy adapter has no rendered bundle
+to take, Cursor's manifest is generated from local plugins only, and Oh-My-Pi
+parses the URL and then silently drops the entry. Each fails quietly, which is
+what let it survive twice. That cost lands under `vwf`, whose dependencies every
+`--all` pulls, so both outside deps it once had — mempalace and the Karpathy
+guidelines — are **vendored skills** now, and no plugin here is url-sourced.
 
 ## The generated marketplaces
 
