@@ -72,6 +72,17 @@ name given at both scopes resolves once, and project wins, being the narrower of
 the two. A name the marketplace does not know is an error listing the names it
 does.
 
+**The three combine, and `--all` is a starting set rather than a mode.** Naming
+plugins beside it adds to what it installs; it never replaces or suppresses
+them. So `--all --user typescript --project flutter` installs the default set
+plus `typescript` at user scope, and `flutter` at project scope, in one run.
+
+> **`--project` means the directory you run the command in**, not the plugin's
+> subject matter. It writes into `<cwd>/.claude/`, `<cwd>/.cursor/` and so on,
+> so `--project flutter` run from your home directory enables Flutter for your
+> home directory. `cd` to the repo you mean first. Nothing warns about this —
+> the install succeeds, just somewhere else.
+
 Dependencies come along. Claude Code expands them natively, so the CLI leaves
 that to it; on the other three the planner expands them itself, which is why an
 OpenCode install of `vwf` also installs `devtools`. A dependency inherits the

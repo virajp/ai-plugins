@@ -101,6 +101,43 @@ describe("resolvePlan", () => {
     expect(plan.user).toEqual([]);
   });
 
+  // Each flag is covered alone above; this covers them **together**, which is
+  // the combination a real install uses and the one nothing asserted. `--all`
+  // is a starting set rather than a mode: naming plugins beside it adds to it,
+  // at whichever scope was asked for, and never replaces or suppresses it.
+  it("composes --all with --user and --project in one run", () => {
+    const plan = resolvePlan(
+      index,
+      "opencode",
+      { all: true, user: ["extra"], project: ["remote"] },
+      opts(),
+    );
+
+    // `core` from the default set, `deep`/`dep` as its dependencies, `extra`
+    // named at user scope — and `remote` at project scope, untouched by any of
+    // it.
+    expect(plan.user).toEqual(["core", "deep", "dep", "extra"]);
+    expect(plan.project).toEqual(["remote"]);
+  });
+
+  it("lets --project override a scope the default set asked for", () => {
+    // The narrowest-wins rule has to survive `--all` too: a plugin in
+    // defaultInstall that is also named with --project belongs to the project,
+    // not to both.
+    const plan = resolvePlan(
+      index,
+      "opencode",
+      { all: true, project: ["core"] },
+      opts(),
+    );
+
+    // `core` moves to project scope, and its dependencies follow it there —
+    // a dependency inherits the scope of whatever pulled it in, which holds
+    // whether the request came from --all or by name.
+    expect(plan.project).toEqual(["core", "deep", "dep"]);
+    expect(plan.user).toEqual([]);
+  });
+
   it("resolves a name requested at both scopes once, narrowest wins", () => {
     const plan = resolvePlan(
       index,
