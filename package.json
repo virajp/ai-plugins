@@ -1,6 +1,6 @@
 {
   "name": "@askviraj/ai-plugins",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "CLI to install Viraj Patel's AI coding toolkit across Claude Code, Cursor, Oh-My-Pi and OpenCode, plus the powerline statusline",
   "keywords": [
     "claude",
