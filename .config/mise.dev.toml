@@ -22,12 +22,12 @@ gitleaks = { version = "latest" }
 grype    = { version = "latest" }
 
 # AI Tools
-claude-code = { version = "latest" }
-jq          = { version = "latest" }
-oh-my-pi    = { version = "latest" }
-opencode    = { version = "latest" }
-python      = { version = "latest" }
-uv          = { version = "latest" }
+# "npm:@anthropic-ai/claude-code" = { version = "latest" }
+jq       = { version = "latest" }
+oh-my-pi = { version = "latest" }
+opencode = { version = "latest" }
+python   = { version = "latest" }
+uv       = { version = "latest" }
 
 [shell_alias]
 be-setup  = "mise run --cd ../backend setup:all"
