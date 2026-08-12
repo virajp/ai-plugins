@@ -22,7 +22,6 @@ gitleaks = { version = "latest" }
 grype    = { version = "latest" }
 
 # AI Tools
-# "npm:@anthropic-ai/claude-code" = { version = "latest" }
 jq       = { version = "latest" }
 oh-my-pi = { version = "latest" }
 opencode = { version = "latest" }
