@@ -2,7 +2,9 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import {
   homedir,
@@ -19,6 +21,7 @@ import {
   expect,
   it,
 } from "vitest";
+import { opencode } from "./adapters/opencode.ts";
 import type {
   Adapter,
   AdapterContext,
@@ -413,5 +416,75 @@ describe("renderDiff", () => {
     expect(text.trim()).toBe(
       "# claude\n  claude plugin install vwf@virajp-plugins",
     );
+  });
+});
+
+/**
+ * The receipt merge only happens **on disk**, so nothing at adapter level can
+ * see it: `opencode.apply()` twice returns two independent receipts and never
+ * writes either. These drive the real adapter through `execute`, which is the
+ * only path that reads back what an earlier run claimed.
+ */
+describe("a user's config across repeat installs", () => {
+  const repoRoot = join(import.meta.dirname, "..", "..");
+  let home: string;
+
+  const run = () =>
+    execute(
+      [[opencode, { target: "opencode", user: ["datastore"], project: [] }]],
+      {
+        context: {
+          sourceRoot: repoRoot,
+          home,
+          cwd: home,
+          now: "2026-01-01T00:00:00Z",
+          log: () => {},
+          exec: () => ({ status: 0, stdout: "", stderr: "" }),
+        },
+        dryRun: false,
+        receiptDir,
+        // `opencode` need not be on PATH: this adapter shells out to nothing.
+        force: true,
+      },
+    );
+
+  beforeEach(() => {
+    home = mkdtempSync(join(tmpdir(), "ai-plugins-merge-"));
+    mkdirSync(join(home, ".config", "opencode"), { recursive: true });
+  });
+  afterEach(() => rmSync(home, { recursive: true, force: true }));
+
+  it("comes back byte-identical after installing twice", () => {
+    // Run 1 claims the shallowest new key (`skills`); run 2 claims
+    // `skills.paths`, because run 1 created the parent. Different claims, so
+    // the merge keeps both — and revert replays backwards, restoring our own
+    // value and then deleting the object above it. Overwriting the receipt
+    // instead left `"skills"` welded into a file the user owns.
+    const config = join(home, ".config", "opencode", "opencode.jsonc");
+    const original = `{
+  // The user's own comment.
+  "theme": "tokyonight"
+}
+`;
+    writeFileSync(config, original);
+
+    run();
+    run();
+    expect(readFileSync(config, "utf8")).toContain("virajp-plugins");
+
+    revert([opencode], {
+      context: {
+        sourceRoot: repoRoot,
+        home,
+        cwd: home,
+        now: "2026-01-01T00:00:00Z",
+        log: () => {},
+        exec: () => ({ status: 0, stdout: "", stderr: "" }),
+      },
+      dryRun: false,
+      receiptDir,
+    });
+
+    expect(readFileSync(config, "utf8")).toBe(original);
   });
 });

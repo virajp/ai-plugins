@@ -53,6 +53,11 @@ would produce — identical means an earlier run of ours wrote it, whatever
 one to copy: it reconstructs the file **without** our entries, so the claim is
 computed against what run 1 actually saw and every run records the same thing.
 
+`cli/src/statusline.ts` (the Claude bar) still keys its `configKey` records on
+`existed` and was never separately fixed. It is covered by the merge below
+rather than by its own ownership test — which holds, but means its claims are
+correct only in combination.
+
 **And one fix underneath all of them**: a receipt now **merges with whatever is
 already at its path**, in `writeReceipt`. A receipt describes an install, not a
 run — overwriting it wholesale is what let a second run record less than the

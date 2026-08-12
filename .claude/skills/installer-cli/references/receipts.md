@@ -71,14 +71,23 @@ a user's own settings come back byte-identically even after a repeat install.
 Parents emptied by the removal go too, so an undo cannot leave an orphaned
 `"plugins": {}` behind.
 
-**A residual remains for the OpenCode pair**, which still use the weaker
-whole-file test. When the user already had a config, a repeat run cannot tell
-which keys it introduced on the first: `opencode.jsonc` records the *current*
-value of such a key as its `previous` and restores our own value, while
-`tui.json` returns early and records nothing. Either way our entry stays. The
-file must survive — it is the user's — so the symptom is a stale entry rather
-than a stale file. Porting `withoutOwnEntries` closes both, and would finally
-give the long-dead `removeSkillsPath` export a caller.
+**The OpenCode pair still use the weaker whole-file test**, and for a while that
+left a residual: on a config the user already owned, a repeat run could not tell
+which keys it introduced on the first, so our entry stayed behind. **The receipt
+merge closed it**, by a route worth understanding rather than trusting.
+
+Run 1 records the *shallowest new* key — `["skills"]`, which did not exist. Run
+2 records `["skills","paths"]`, because run 1 created the parent. Those are
+different claims, not a collision, so the merge keeps **both**; revert replays
+backwards, restoring `skills.paths` to our own value and then deleting the
+`skills` object above it. The file comes back byte-identical. The same holds for
+`tui.json` and the statusline's `plugin` array.
+
+Both are verified by a test in `executor.test.ts` rather than an adapter suite,
+and that placement is the point: **the merge happens on disk**, so calling
+`apply()` twice never exercises it. Porting `withoutOwnEntries` would still be
+an improvement — it makes each run's claim self-sufficient instead of correct
+only in combination — but it is no longer fixing a live defect.
 
 ## Command entries have the same trap
 
