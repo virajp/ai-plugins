@@ -45,4 +45,4 @@ if [[ -n "$drift" ]]; then
   exit 1
 fi
 
-print_ok "generated output matches a fresh render"
+print_success "generated output matches a fresh render"

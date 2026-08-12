@@ -118,7 +118,12 @@ print_success() {
 # Print line separator
 line_sep() {
   local COL
-  COL=$(stty size 2>/dev/null | awk '{print $2}')
+  # `|| COL=` is load-bearing: callers run under `set -euo pipefail`, and with no
+  # TTY `stty` exits non-zero — pipefail hands that status to the assignment and
+  # `set -e` kills the task before the `${COL:-80}` fallback below is ever read.
+  # Redirecting stderr hides the message, not the status. This is every
+  # non-interactive run: CI, and any task invoked through a pipe.
+  COL=$(stty size 2>/dev/null | awk '{print $2}') || COL=
   # Build a string of spaces equal to width, then replace with '='
   local line
   printf -v line '%*s' "${COL:-80}" ''
