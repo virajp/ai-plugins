@@ -6,47 +6,10 @@
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
-if ! command -v claude &> /dev/null; then
-  echo "Claude CLI not found. Please run \`mise run setup:all\` to install it first."
-  exit 1
-fi
+print_header "Upgrading AI tools ..."
 
-function updatePlugin() {
-  local plugin_name="$1"
-  local plugin_marketplace="$2"
-  local scope="$3"
-  local full_plugin_name="$plugin_name@$plugin_marketplace"
+print_subheader "Adding marketplaces ..."
+pnpx @askviraj/ai-plugins --all --platform claude --project typescript --project cicd
 
-  local installed_scope
-  installed_scope=$(claude plugin list --json | jq -r --arg id "$full_plugin_name" '.[] | select(.id == $id) | .scope')
-  plugin_enabled=$(claude plugin list --json | jq -r --arg id "$full_plugin_name" '.[] | select(.id == $id) | .enabled')
-
-  if [[ -n "$installed_scope" ]]; then
-    print_header "Updating $full_plugin_name (scope: $installed_scope)..."
-    claude plugin update --scope "$installed_scope" "$full_plugin_name"
-  else
-    print_header "Installing $full_plugin_name (scope: $scope)..."
-    claude plugin install --scope "$scope" "$full_plugin_name"
-  fi
-  if [[ "$plugin_enabled" != "true" ]]; then
-    claude plugin enable --scope "$scope" "$full_plugin_name"
-  fi
-}
-
-print_header "Adding virajp/ai-plugins marketplace to Claude ..."
-claude plugin marketplace add virajp/ai-plugins || true
-
-print_header "Updating all marketplaces ..."
-claude plugin marketplace update || true
-
-print_header "Setting up AI plugins ..."
-updatePlugin context7 virajp-plugins user
-updatePlugin mempalace virajp-plugins user
-
-# Install graphify skill
-print_header "Installing Graphify skill for Claude..."
-graphify install --platform claude
-
-# Install graphify post-commit hook
-print_header "Installing Graphify post-commit hook..."
-graphify hook install
+print_subheader "Prune plugins ..."
+claude plugin autoremove --scope user --yes

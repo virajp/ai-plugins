@@ -1,7 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "effort": "high",
-  "enabledPlugins": {},
+  "respectGitignore": true,
   "model": "opus[1m]",
-  "respectGitignore": true
+  "enabledPlugins": {
+    "cicd@virajp-plugins": true,
+    "typescript@virajp-plugins": true
+  },
+  "effort": "high"
 }
