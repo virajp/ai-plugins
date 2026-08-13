@@ -3,7 +3,7 @@ type: vwf-flow-platform
 title: <Flow name> — <platform>
 description: <one-line — this platform's take on the journey>
 status: draft # draft | reviewed | stable
-platform: mobile # mobile | tablet | desktop | web | auto — MUST match the filename
+platform: mobile # mobile | tablet | desktop | site | webapp | auto — MUST match the filename
 implementation: none # none | partial | complete — written by the pipeline only
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---
@@ -12,8 +12,9 @@ implementation: none # none | partial | complete — written by the pipeline onl
 
 Flow contract: [<Flow name>](./index.md)
 
-<!-- ONE platform file per platform that implements this journey, named for the
-     platform (mobile.md | tablet.md | desktop.md | web.md | auto.md) and
+<!-- ONE platform file per SCREEN platform that implements this journey, named
+     for the platform (mobile.md | tablet.md | desktop.md | site.md |
+     webapp.md | auto.md) and
      sitting beside index.md in the flow folder. `auto` covers CarPlay and
      Android Auto together — their template differences are recorded as
      deviations here, never as separate files.

@@ -8,7 +8,7 @@ one config value; there is no second skill and no second plugin.
 
 Whichever system it targets, the generated pipeline installs **every** tool
 through [mise](https://mise.jdx.dev) — no per-language setup steps, no shell
-installs — and supports both **polyrepo** (a single project) and **monorepo**
+installs — and supports both **multi-repo** (a single project) and **monorepo**
 (many packages) layouts, detecting which one you have and asking how to handle
 it. It is a single user-invoked skill; nothing auto-applies, and nothing
 delegates to it.
@@ -69,7 +69,7 @@ exception:
 2. **Run through mise.** Steps invoke tooling via `mise run <task>` (when the
    repo has a mise task library) or `mise exec -- <cmd>` — never a binary the
    toolchain step did not put on `PATH`.
-3. **Both layouts.** It generates the structure matching a polyrepo or a
+3. **Both layouts.** It generates the structure matching a multi-repo or a
    monorepo (with a chosen fan-out strategy).
 4. **CI env.** It sets a pipeline-level `MISE_ENV: ci` when the repo defines a
    `mise.ci.toml` variant, matching this marketplace's
@@ -85,7 +85,7 @@ detect → ask → write → report** flow:
 2. **Detect.** It inspects the repo for layout (monorepo signals —
    `pnpm-workspace.yaml`, `package.json` `workspaces`, `melos.yaml`, `nx.json`,
    `turbo.json`, a Cargo `[workspace]`, `go.work`, or manifests in
-   sub-directories — else polyrepo), the mise config (and whether a
+   sub-directories — else multi-repo), the mise config (and whether a
    `mise.ci.toml` variant and a task library exist), the declared `[tools]`, and
    any existing pipeline files.
 3. **Ask** — one batched round, only what it can't infer: which pipeline (CI,
@@ -108,7 +108,7 @@ approach to generate. Each maps onto the CI system's own fan-out primitive:
 | **Static fan-out**          | Every package, every run.                                                                                                                                      |
 | **Root aggregator**         | One job running a root fan-out task (`turbo run` / `melos run` / `nx affected`).                                                                               |
 
-A polyrepo is the simple single-job case: checkout → install mise → the phase
+A multi-repo is the simple single-job case: checkout → install mise → the phase
 steps at the repo root.
 
 ### Release pipelines

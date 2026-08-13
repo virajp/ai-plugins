@@ -49,8 +49,8 @@ semantics). No template — this command authors no repo doc.
   `/blueprint` first." Stop.
 - No design system (neither file nor folder form) → "Screens reference the
   design system; run `/design-system` first." Stop.
-- The registry has **no UI-surface project** (no project whose `role` is `site`,
-  `fullstack` or `frontend`) → no flow can have a Screens surface; say so and
+- The registry has **no project declaring a screen platform** → no flow can have
+  a Screens surface; say so and
   stop.
 - `$ARGUMENTS` names a flow that does not exist **or** has no Screens section →
   say so, list the flows that *do* have Screens, and stop.
@@ -73,7 +73,7 @@ never become committable.
 
 ### 2. Resolve scope
 
-Read the registry and confirm a UI project exists. Enumerate the flow folders
+Read the registry and confirm a screen-platform project exists. Enumerate the flow folders
 under `docs/blueprint/flows/`. For each, read the `## Screens` section of
 `index.md`; parse the Screens table plus any recorded deviations beneath it (per
 the ui-ux-contract reference — the home rule means each screen appears under

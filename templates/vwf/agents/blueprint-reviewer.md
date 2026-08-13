@@ -50,10 +50,10 @@ orchestrator passes both. Verify the contract and every platform file:
       delete-account); a product flow sits in `110`–`890`. A standard slug at
       another number, or a product flow outside its band, is a gap unless the
       orchestrator passed a matching waiver.
-- [ ] **Platforms table** — a UI project's flow carries one row per
+- [ ] **Platforms table** — a screen-platform project's flow carries one row per
       `<platform>.md` on disk, each a resolving link, each platform declared by
       the registry project, each from the vocabulary (`mobile` / `tablet` /
-      `desktop` / `web` / `auto`). A file with no row, a row with no file, an
+      `desktop` / `site` / `webapp` / `auto`). A file with no row, a row with no file, an
       undeclared platform, or a Platforms section on a **non-UI** flow is a gap.
       `cli` is a platform with no screens: it never takes a `cli.md` file and
       never appears in a Platforms table, so a flow of a cli-only project is
@@ -146,7 +146,7 @@ orchestrator passes both. Verify the contract and every platform file:
       "the payment provider"). The only carve-outs are `environment.md` issuers
       and `conventions.md#integrations` — neither of which is a flow doc.
 - [ ] Section-to-project mappings match the registry (by project **name** and
-      `role` — the registry has no stack to match against).
+      `role`/`platforms` — the registry has no stack to match against).
 - [ ] **Density** — apply the bars in
       `<%= it.root %>/skills/<%= it.skillName("vwf:blueprint-authoring") %>/references/density.md`.
 - [ ] No speculative surface (minimalism rung 1): every step, screen, and job

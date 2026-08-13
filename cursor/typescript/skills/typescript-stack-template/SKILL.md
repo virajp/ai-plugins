@@ -18,17 +18,17 @@ an error, not a guess: name the slugs that do exist and stop.
 ## How to answer
 
 1. Read the template file. Its path depends on the axis:
-   - `project` → `%%AI_PLUGINS_ROOT%%/stacks/project/<role>/<slug>.md`
+   - `project` → `%%AI_PLUGINS_ROOT%%/stacks/project/<slug>.md` (flat since format 22)
    - `deploy` / `repo` → `%%AI_PLUGINS_ROOT%%/stacks/<axis>/<slug>.md`
 
-   The file's own frontmatter is authoritative for its axis and role.
+   The file's own frontmatter is authoritative for its axis and platforms.
 2. Return **only** the payload below, filled from it. No prose around it, no
    summary of what you read, no advice.
 
 ```yaml
 slug: <the requested slug>
 axis: project | deploy | repo
-role: <the file's own role: key> # project axis only
+platforms: <the file's own platforms: list> # project axis only
 languages: [ typescript ]
 optional_languages: []
 frameworks: [] # the file's frontmatter, verbatim

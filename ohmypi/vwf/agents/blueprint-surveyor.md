@@ -29,7 +29,7 @@ You receive **paths and name lists, not contents**:
 - the product doc's **slice priority** order;
 - the `docs/blueprint/registry.yaml` `projects:` block (for per-project surface
   expectations, each project's `doc_unit`, and — for the standard-flows check —
-  each UI project's `role` and capability tokens);
+  each project's `role`, `platforms` and capability tokens);
 - the current `.config/vwf.yaml` `blueprint.remaining` list, if any, and any
   `enforcement.rules` entries with a `standard-flows/` prefix (waivers).
 
@@ -67,8 +67,10 @@ condition; a unit may fail more than one (report the most blocking).
    with the count, e.g.
    `density/flows/app/110-subscribe — 355 lines (budget 120)`.
 8. **Missing mandatory standard flow** — per
-   `%%AI_PLUGINS_ROOT%%/assets/standard-flows.md`: for each UI project, every
-   slug the vocabulary marks mandatory for its `role` — including the
+   `%%AI_PLUGINS_ROOT%%/assets/standard-flows.md`: for each project declaring a
+   **screen platform**, every
+   slug the vocabulary marks mandatory for its platform kind (device vs
+   browser) — including the
    conditional ones, resolved from the registry's capability tokens (an Auth &
    identity capability requires `signin`, and with it `profile`,
    `delete-account`, `recover-account`) — that has no flow folder on the
@@ -84,7 +86,7 @@ condition; a unit may fail more than one (report the most blocking).
    with the number it should take.
 10. **Structural drift** — a flow folder with no `index.md`, a `device:` key on
     an `index.md`, a `<platform>.md` with no Platforms row (or the reverse), or
-    a platform outside the vocabulary (`mobile` / `tablet` / `desktop` / `web` /
+    a platform outside the screen vocabulary (`mobile` / `tablet` / `desktop` / `site` / `webapp` /
     `auto` / `cli`), or a `cli.md` file (a terminal surface has no screens, so
     `cli` never takes a platform file). These are format-15 holes; name the
     file.

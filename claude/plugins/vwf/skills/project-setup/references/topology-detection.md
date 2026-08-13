@@ -3,17 +3,37 @@
 Infer the project shape from repo signals **before** asking — then confirm by
 MCQ.
 
-**Which topology** (`repo` | `monorepo` | `polyrepo`):
+**Which topology** (`repo` | `monorepo` | `multi-repo`):
 
 - a **workspace declaration** — a manifest listing member globs, or a
   task-runner config spanning several projects → **monorepo**.
 - a **single root manifest** with no workspace globs → **repo** (or, inside a
-  parent, a polyrepo member).
-- a `.gitmodules` naming child repos (child dirs carrying their own `.git`) →
-  **polyrepo**: a parent repo holding the vwf docs, with each child classified
-  on its own signals. See
+  base repo, a multi-repo member).
+- a `.gitmodules` naming child repos, **or** a `.config/vwf.yaml` carrying a
+  `members:` list, **or** a `.config/vwf-membership.yaml` in this repo →
+  **multi-repo**. See
   [structure](references/workspace-structure.md)
   for the topology menu and how a choice is recorded.
+
+**Which linkage** — multi-repo only, recorded as `linkage:`:
+
+- `.gitmodules` naming the members → **`submodule`**.
+- a `members:` list whose paths escape the repo, with no `.gitmodules` →
+  **`siblings`**.
+- both → the submodules win, and the `members:` paths should already agree;
+  report a disagreement rather than picking.
+
+**Where the base repo is.** Resolve it per
+[membership](${CLAUDE_PLUGIN_ROOT}/assets/membership.md) before anything else — a run
+started inside a member must operate on the product, not on the one repo it
+happens to be standing in. The base repo carries `.config/vwf.yaml`; every
+member carries `.config/vwf-membership.yaml` and none carries the config.
+
+**Which members are present.** Detect on every run; never read it from config
+and never write it there. A member is present when its resolved `path` exists
+and is a git work tree. A twenty-repo product with three cloned is a normal
+state, not a degraded one — the absent-member sequence in
+[membership](${CLAUDE_PLUGIN_ROOT}/assets/membership.md) is what handles the rest.
 
 Manifests are language-specific and vwf holds no list of them. Recognise the
 manifest of any language a **stack plugin** in the config's `stacks:` roster
@@ -41,32 +61,60 @@ against a language none of them covers
 records the fact; the gate decides what it means. Onboarding completes once a
 plugin declaring that language is installed.
 
-**Project role** — seven tokens, never literal tech. Each project carries
-exactly one, in the registry's `role` field.
+## Role and platforms
 
-- **`packages`** — shared schema/contract or library package, proto, OpenAPI.
-- **`service`** — an HTTP/RPC server with no UI. Synonym: `api`.
-- **`worker`** — a background / queue / cron processor.
-- **`site`** — a web UI that calls someone else's API. **Its presence makes the
-  design system mandatory** — confirm it explicitly. Synonym: `web`.
-- **`fullstack`** — a web UI that also **publishes its own API**, as one
-  deployable. Requires `apis/<project>.openapi.yaml` and a health endpoint, and
-  makes the design system mandatory. SSR alone does not make a site fullstack.
-- **`frontend`** — a client-side app (mobile / tablet / desktop / auto). Also
-  makes the design system mandatory. Synonym: `app`.
-- **`iac`** — an infrastructure-as-code project. Registered, but exempt from
-  blueprint coverage, and **always its own repo** — never a directory inside
-  another project's (`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`). Synonym: `infra`.
+Since blueprint format 22 a project carries **one role** — the coarse domain
+grouping — and **one or more platforms** from that role's closed list. Platforms
+are what vwf branches on; the role is an index, never a gate.
 
-An **operator back-office** is not its own role: record it as `role: fullstack`
-plus the `operator-rbac` capability.
+| Role | Platforms |
+| --- | --- |
+| `backend` | `packages` `service` `worker` |
+| `frontend` | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli` |
+| `data` | `packages` `data-lake` `analytics` `ingestion` `ml-platform` |
+| `system` | `packages` `iac` `plugin` `misc` `cicd` |
 
-**Stacks** — read each manifest (`package.json` deps, `pubspec.yaml`,
-`build.gradle(.kts)`, `Package.swift`) and record the stack per project for the
-registry.
+`packages` is available under every role; the role names the primary consumer
+domain. A package consumed by both the API and the web app is a judgment call —
+**ask**, never guess.
+
+**One project may declare several platforms.** A single Flutter codebase
+shipping mobile, tablet, desktop and web is **one** project with four platforms,
+not four projects — flows are keyed on project name, so splitting it would
+triplicate every flow doc.
+
+What each platform obliges:
+
+- **Screen platforms** — `site`, `webapp`, `desktop`, `mobile`, `tablet`,
+  `auto`. Any of them makes the design system **mandatory** — confirm the
+  surface explicitly, never assume it — mandates the standard flows, and gives
+  each of the project's flow folders one `<platform>.md`. Every other platform
+  is screenless and takes `index.md` alone.
+- **`service`** — requires `apis/<project>.openapi.yaml` and a health endpoint.
+  A project with `platforms: [service, webapp]` is what `fullstack` used to
+  mean: one deployable publishing both an API contract and its own UI. SSR alone
+  does not make a `site` a `service`.
+- **`iac`** — registered, exempt from blueprint coverage, and **always its own
+  repo**, never a directory inside another project's
+  (`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`).
+- **Every `data` and `system` platform** — exempt from blueprint coverage. A doc
+  shape for them is a later effort; until it exists their absence from the
+  blueprint is by design, not a hole.
+
+An **operator back-office** is not its own platform: record it as
+`platforms: [service, webapp]` plus the `operator-rbac` capability.
+
+**`iac` placement.** For every project declaring the `iac` platform, resolve
+which repo's working tree its directory falls in. One sitting inside another
+project's repo violates the own-repo rule — record it and carry it into the
+migration plan as a restructure proposal.
+
+**Stacks** — read each manifest and record the stack per project for the
+config. The project-axis template a project pins must **cover** every platform
+it declares (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`).
 
 **Existing vwf state** — `docs/blueprint/` (current), `docs/specs/` (legacy,
 pre-rename), or none.
 
 Detection is a starting point, not the truth: present it and let the user
-correct it via MCQ. Never assume a UI surface — it gates the design system.
+correct it via MCQ. Never assume a screen platform — it gates the design system.

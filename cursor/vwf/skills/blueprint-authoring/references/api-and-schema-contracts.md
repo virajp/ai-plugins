@@ -45,8 +45,8 @@ single source of field truth (never a second field table in the markdown).
 ## The openapi.yaml bar
 
 `docs/blueprint/apis/<project>.openapi.yaml` is the **authoritative API
-contract** for one **API-publishing** project — `role` is `service` or
-`fullstack` (publishing its own API is what makes a web project `fullstack`
+contract** for one **API-publishing** project — one declaring the `service`
+platform (publishing its own API is what a `[service, webapp]` project does
 rather than a `site`). OpenAPI 3.1, one file per project, named by the registry
 project name. Flow steps reference operations by `operationId`.
 

@@ -17,8 +17,9 @@ error: name the slugs that do exist and stop.
 
 ## How to answer
 
-1. Read `%%AI_PLUGINS_ROOT%%/stacks/project/<role>/<slug>.md` — the template file,
-   whose own `role:` frontmatter key is authoritative for the role. Read that
+1. Read `%%AI_PLUGINS_ROOT%%/stacks/project/<slug>.md` — flat since format 22 — the template file,
+   whose own `platforms:` frontmatter key is authoritative for which platforms
+   it serves. Read that
    one file and nothing else; the deep Flutter doctrine lives in this plugin's
    `dart`, `pubspec`, `analysis-options` and `internationalization` skills and
    is loaded when it is needed, not here.
@@ -28,7 +29,7 @@ error: name the slugs that do exist and stop.
 ```yaml
 slug: <the requested slug>
 axis: project
-role: <the file's own role: key>
+platforms: <the file's own platforms: list>
 languages: [ <the file's languages:> ]
 optional_languages: [ <the file's optional_languages:> ]
 frameworks: [ <the file's frameworks:> ]

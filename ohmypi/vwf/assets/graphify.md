@@ -1,7 +1,7 @@
 # Code Intelligence (graphify)
 
 vwf uses the **graphify** CLI as its code-intelligence layer. When a repo
-carries a knowledge graph (`graphify-out/graph.json` at the workspace root),
+carries a knowledge graph (`graphify-out/graph.json` at the checkout root),
 every codebase-*understanding* question — what exists, where something lives,
 who calls what, what depends on what, does something like X already exist — goes
 to the graph **first**; raw file reading is reserved for verification and for
@@ -14,8 +14,14 @@ reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 > - **The CLI** is a hard requirement. Missing → `/skill:vwf-doctor` §8 reports it as
 >   **blocking**, and `/skill:vwf-setup` and `/skill:vwf-execute` halt on it the way
 >   `execute` already halts on a missing LSP.
-> - **A graph is per-repo**, and its absence *at the workspace root* is equally
+> - **A graph is per-checkout**, and its absence *at a checkout root* is equally
 >   blocking — `/skill:vwf-setup` is what resolves it, behind consent.
+>   In a `multi-repo` product that means **one graph per repo**, refreshed by
+>   that repo's own hook, and the gate covers **every locally-present** repo: the
+>   base and each member that is actually cloned here. An **absent** member is
+>   not a finding — it is the recorded blind spot from the membership contract
+>   (`%%AI_PLUGINS_ROOT%%/assets/membership.md`), and gating on a repo the user
+>   declined to clone would halt a run they already consented to narrow.
 >
 > **A worktree with no local `graphify-out/` is not an absence.** Resolving to
 > the main checkout's graph (see Worktrees) is the normal, expected path and is
@@ -31,7 +37,10 @@ reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 
 ## How to query
 
-Run from the directory that holds `graphify-out/` (the workspace root):
+Run from the directory that holds `graphify-out/` (the checkout root). In a
+`multi-repo` product, that is **the repo holding the code you are asking
+about** — every consumer here is already per-repo scoped, so a question about a
+member's code is asked of that member's graph, never the base's:
 
 ```bash
 graphify query "<natural-language question>"   # BFS — broad context

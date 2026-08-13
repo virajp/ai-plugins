@@ -14,7 +14,7 @@ This is the same shape as the design-adapter contract
 | ------------------------------------------------------------------- | ----------------------------------------------------------- |
 | The **four axes** (`project` / `backing` / `deploy` per project, `repo` per repo) | Which templates exist on each axis             |
 | The **template frontmatter contract** (`stack-vocabulary.md`)       | The templates themselves                                    |
-| The **role** vocabulary a project template declares                 | Which roles it offers a template for                        |
+| The **platform** vocabulary a project template declares             | Which platforms it offers a template for                    |
 | Harness **capability names** (`dev`, `e2e_local`, `screenshots`, …) | What *satisfies* each one — the tool, the task, the command |
 | The **UX gate's contract** (render changed screens, judge, report)  | How rendering and a11y assertion are actually done          |
 | `.config/vwf.yaml`'s `stack` block shape                            | The values that land in it                                  |
@@ -132,14 +132,36 @@ plugin: <name>
 templates:
   - slug: <kebab> # unique within the plugin
     axis: project | backing | deploy | repo
-    role: <registry role> # project axis only
+    platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this template serves
     name: <display name> # what the menu shows
     summary: <one line> # why you would pick it
 ```
 
 vwf renders the union of every configured plugin's menu, grouped by axis and
-(for the project axis) filtered to the role being decided. It never reads a
-template file.
+(for the project axis) filtered to the **platforms** being decided. It never
+reads a template file.
+
+**`platforms:` is a list, and that is the point.** Since blueprint format 22 a
+project declares one `role` and one or more platforms, and a single template
+routinely serves several of them: one Flutter template covers `mobile`,
+`tablet`, `desktop` and `webapp` from one codebase; one server template covers
+`service` and `webapp` — what the retired `fullstack` role meant. The previous
+contract keyed a template on a single `role`, stored in three places (the
+directory name, the frontmatter and this payload), and could not express either
+case.
+
+**The covering rule.** A project pins **one** project-axis template, and that
+template's `platforms:` must **cover** every platform the project declares in
+the registry. `/skill:vwf-architecture` offers only covering
+templates; `/skill:vwf-doctor` reports a pin that stopped covering as
+**blocking**, since `plan` and `execute` would otherwise size a surface against
+conventions written for something else. Nothing checked this before, because a
+single-role pin had nothing to check.
+
+**A template's own directory is not the source.** Templates sit flat under
+`stacks/project/` and declare their platforms in frontmatter; a plugin that
+still keys them on a `stacks/project/<role>/` directory is on the pre-22
+contract.
 
 ## The template payload
 

@@ -56,6 +56,6 @@ decision rather than a fault.
   knowledge, and never invent an entry to spare the user that halt.
 - **The project axis is not ours.** A datastore does not decide the language or
   framework a project is written in, so a `datastore` menu entry never carries a
-  `role`.
+  `platforms:` — that key is project-axis only.
 - Do not read the repo, the registry, or `.config/vwf.yaml`. This skill answers
   the same way in every product.

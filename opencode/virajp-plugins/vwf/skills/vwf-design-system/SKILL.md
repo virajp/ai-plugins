@@ -53,8 +53,9 @@ components-and-anti-patterns, terminal-ux, checklist).
 ### 1. Read the registry
 
 Read `docs/blueprint/registry.yaml`. **Halt if it does not exist:** "No registry
-found. Run `vwf-architecture` first." If the registry has **no** UI-surface
-project (no project whose `role` is `site`, `fullstack` or `frontend`), tell the
+found. Run `vwf-architecture` first." If the registry has **no** project
+declaring a **screen platform** (`site`, `webapp`, `desktop`, `mobile`,
+`tablet`, `auto`), tell the
 user a design system may not be needed and ask whether to (a) **add the UI
 project to the registry first** via `vwf-architecture` (then return here), or
 (b) proceed anyway.
@@ -81,14 +82,14 @@ vwf does not talk to any design tool. Per
 `%%AI_PLUGINS_ROOT%%/assets/design-adapter.md`, the tool is a **per-project**
 key — `projects.<name>.design` in `.config/vwf.yaml` — resolved inside the
 adapter, not here. **Name the project you are importing for**: read the `design`
-value of every UI project (`role` `site`, `fullstack` or `frontend`); when they
+value of every project declaring a screen platform; when they
 all agree, use that project and say which. When they disagree, ask which
 project's tool authors the product's one design system — that is a product
 decision, not something to pick silently. Then **verify the `design-tools`
 plugin is installed** (`claude plugin list`) before delegating. Three distinct
 halts — never collapsed into one, since each needs a different fix:
 
-- **No `design` on any UI project** → "No design tool configured. Set
+- **No `design` on any screen-platform project** → "No design tool configured. Set
   `projects.<name>.design` in `.config/vwf.yaml` to one of `claude-design`,
   `lovable`, `stitch`." A config still carrying a product-wide `design.tool` is
   `config_format` 12 drift — nudge `/vwf-setup` rather than reading it.

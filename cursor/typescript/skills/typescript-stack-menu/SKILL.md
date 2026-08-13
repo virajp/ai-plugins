@@ -23,45 +23,46 @@ plugin: typescript
 templates:
   - slug: typescript-effect
     axis: project
-    role: packages
+    platforms: [ packages ]
     name: TypeScript · Effect
     summary: The shared kernel — every domain schema and every third-party
       integration lives here as an Effect service, so downstream projects
       depend on an interface rather than a vendor SDK.
   - slug: typescript-effect-hono
     axis: project
-    role: service
+    platforms: [ service ]
     name: TypeScript · Hono · Effect
     summary: The public REST API — a Hono server with Effect services end to
       end, holding no admin routes, every schema decoded at the boundary.
   - slug: typescript-hono-refine
     axis: project
-    role: fullstack
+    platforms: [ service, webapp ]
     name: TypeScript · Hono + Effect · React + Refine
     summary: One deployable publishing both an API contract and its own UI —
       the operator back-office shape, and the sole holder of admin routes.
+      Covers two platforms at once, which is what `fullstack` used to mean.
   - slug: typescript-astro-react
     axis: project
-    role: site
+    platforms: [ site ]
     name: TypeScript · Astro (SSR) · React
     summary: The public website — Astro SSR with React islands, reaching a
       service through same-origin proxy endpoints rather than publishing an
       API of its own.
   - slug: typescript-effect-temporal
     axis: project
-    role: worker
+    platforms: [ worker ]
     name: TypeScript · Temporal · Effect
     summary: The durable background processor — Temporal workflows with Effect
       inside activities; the only project running long-lived work.
   - slug: typescript-effect-cli
     axis: project
-    role: frontend
+    platforms: [ cli ]
     name: TypeScript · Effect CLI
     summary: A shipped command-line tool on `@effect/cli` — a terminal surface
       with no screens, governed by the design system's Terminal UX section.
   - slug: typescript-pulumi
     axis: project
-    role: iac
+    platforms: [ iac ]
     name: TypeScript · Pulumi
     summary: Infrastructure as code in the same language as the rest of the
       workspace — one Pulumi stack per environment, unit-tested against a

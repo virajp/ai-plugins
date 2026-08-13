@@ -33,7 +33,7 @@ literally named `production`).
    tags**, shaped `<project>-<env>-v<semver>` where `env` is `stage` (deploys to
    `staging`) or `prod` (deploys to `production`) — `api-prod-v1.2.3`,
    `web-stage-v0.4.0`. The `<project>` segment names the registry project being
-   released, so one tag releases exactly one project; a **polyrepo uses the repo
+   released, so one tag releases exactly one project; a **multi-repo member uses the repo
    name**, keeping one shape across layouts. Trigger globs are `*-stage-v*` and
    `*-prod-v*`; the workflow re-validates the full shape rather than trusting
    the glob. A branch push never deploys anything; `development` is never

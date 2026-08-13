@@ -7,14 +7,14 @@ question. A pass that only edits an existing doc in place does not need it.
 ## The doc units
 
 - **Flow** — `docs/blueprint/flows/<project>/<NNN>-<flow>/`, one uniform depth
-  for UI and non-UI projects alike. The folder holds **`index.md`** — the
+  for screen-platform and screenless projects alike. The folder holds **`index.md`** — the
   platform-agnostic contract (purpose, trigger, steps, diagram, jobs,
   acceptance; **no screens**) — plus **one `<platform>.md` per implemented
   platform** (`mobile` | `tablet` | `desktop` | `web` | `auto`) carrying only
   that platform's Screens + Components. A non-UI flow is `index.md` alone — and
   so is a flow of a `cli` project, since a terminal surface has no screens.
   Flows are **grouped by their primary registry project** — the project that
-  owns the journey (the UI project of its Screens; for a UI-less flow, the
+  owns the journey (the screen-platform project of its Screens; for a screenless flow, the
   service/worker whose trigger starts it; ambiguous → ask, never guess). Since
   format 15 the platform lives in the **filename**, so there is no `device:` key
   and **one number line per project**. `<NNN>` is **designated** per
@@ -30,10 +30,13 @@ question. A pass that only edits an existing doc in place does not need it.
   authoritative data model). `entities/index.md` is the catalog plus the
   product-wide ER diagram.
 - **API contract** — `docs/blueprint/apis/<project>.openapi.yaml`, one per
-  **API-publishing** project (`role` is `service` or `fullstack` — a fullstack
-  publishes its own API, which is exactly what separates it from a `site`);
-  `apis/released/` holds the frozen production snapshots `/skill:vwf-verify` writes
-  for `service` projects.
+  **API-publishing** project — one declaring the `service` platform. A project
+  declaring `[service, webapp]` publishes its own API alongside its UI, which is
+  what the retired `fullstack` role meant; a project declaring only `site` or
+  `webapp` publishes none. `apis/released/` holds the frozen production
+  snapshots `/skill:vwf-verify` writes for projects whose **only**
+  API consumer is not their own UI — a `service` without a co-declared screen
+  platform.
 - The `docs/blueprint/` **root holds only the system docs** (product,
   architecture, conventions, design-system, environment). A root
   `integration.md` or a flat/root entity folder is pre-format-9 drift;

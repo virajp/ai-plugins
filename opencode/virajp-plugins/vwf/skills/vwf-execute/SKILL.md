@@ -29,13 +29,25 @@ never land or retire anything without the user.
 
 ## Halt Conditions
 
-Halt if no approved plan exists in `docs/plans/`: "No approved plan found. Run
+Halt if no approved plan exists: "No approved plan found. Run
 `vwf-plan` first." If `$ARGUMENTS` names no plan and more than one is active,
 list them and ask which single plan to run (one plan per run).
 
+**Finding the plan.** A plan lives in **the repo whose code it changes**, and
+`docs/plans/index.md` in the base repo lists every one with its target repo
+(`%%AI_PLUGINS_ROOT%%/assets/membership.md`). Read the index rather than walking the
+members — under `multi-repo` most of them are not on this machine, so a walk
+would report the product's plans as a function of what happens to be cloned.
+
+**Halt if the target repo is absent.** Offer the consent-gated clone first; on
+decline, **stop**. Unlike `plan` and `doctor`, there is no honest partial
+result — you cannot write code into a repo you do not have.
+
 **Prerequisite order (chained plans).** Read the plan's `requires:` frontmatter.
-For each required plan, read its `covers:` docs **from the current checkout**
-and halt unless every one reads `implementation: complete`:
+For each required plan, read its `covers:` docs **from the base repo** — the
+blueprint is where `implementation:` stamps live, so this resolves even when the
+upstream plan's own repo is not cloned here — and halt unless every one reads
+`implementation: complete`:
 
 > "Prerequisite plan `<file>` has not been executed and merged (`<doc>` is
 > `implementation: <state>`). Run `vwf-execute <file>` first."
@@ -57,7 +69,9 @@ the pause rules — never migrate autonomously.
 
 | Doc           | Path                                                      |
 | ------------- | --------------------------------------------------------- |
-| Plan          | `docs/plans/<plan>.md`                                    |
+| Plan          | `<target-repo>/docs/plans/<plan>.md`                      |
+| Plan index    | `docs/plans/index.md` (base repo)                         |
+| Membership    | `%%AI_PLUGINS_ROOT%%/assets/membership.md`              |
 | Registry      | `docs/blueprint/registry.yaml`                            |
 | Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`    |
 | Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
@@ -253,6 +267,22 @@ silently if mempalace is unavailable.
    passing the declared preferences (isolate without prompting; commit-only, no
    post-commit prompt; never merge/push). All subsequent work and commits happen
    here.
+
+   **In a `multi-repo` product, which repo the worktree is of follows the
+   linkage** — `vwf-git-workflow` resolves it, and the two
+   cases differ in a way worth knowing:
+
+   - **`linkage: submodule`** — unchanged from every previous release. The
+     worktree is of the **base** repo (the outermost superproject), and the
+     members are populated inside it, so one tree holds both the code and the
+     blueprint. Nothing here is cross-repo; the member's pointer commit is part
+     of landing the branch.
+   - **`linkage: siblings`** — the base repo's tree does **not** contain the
+     members, so the worktree is of the **target member**, and the blueprint
+     writes below (`implementation:` stamps, docs-sync edits) go to the base
+     checkout as a second working tree. Commit the two separately, **base repo
+     last**, so a half-finished run never leaves a doc claiming work that has
+     not landed.
 3. **Stack conventions.** Fetch the `conventions:` prose for every template this
    plan's projects pin, per *Resolving the conventions* in
    `%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md` — deduped by slug, **once
@@ -401,7 +431,9 @@ retire the completed plan. `/vwf-archive` is user-only — you cannot invoke it,
 so recommend it by name and stop there. While gaps remain open, don't recommend
 it — the plan doc is still the working record of what needs reconciling.
 
-**Chain forward.** Scan the active plans under `docs/plans/` for any whose
+**Chain forward.** Scan the active plans listed in the base repo's
+`docs/plans/index.md` — not a walk of the members, most of which are not cloned
+here — for any whose
 `requires:` frontmatter lists the plan just completed. If one is now unblocked
 (every prerequisite's `covers:` docs read `implementation: complete`), offer
 `vwf-execute <next-plan>` — chained plans land one focused run at a time.

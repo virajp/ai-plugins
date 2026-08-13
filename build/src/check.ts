@@ -390,19 +390,55 @@ function checkDesignAdapters(workspace: Workspace): Finding[] {
 /** The four axes a stack template may declare. */
 const AXES = new Set(["project", "backing", "deploy", "repo"]);
 
-/** Roles a `project`-axis template may declare, from the registry vocabulary. */
-const ROLES = new Set([
+/**
+ * Platforms a `project`-axis template may declare, from the registry
+ * vocabulary (blueprint format 22 — the union of the four roles' closed lists).
+ *
+ * A template declares a LIST, not one value: a single Flutter template serves
+ * mobile+tablet+desktop+webapp from one codebase, and a server template serves
+ * service+webapp — what the retired `fullstack` role meant. Keying on one role
+ * could express neither, which is why the directory-per-role layout went away
+ * with it.
+ */
+const PLATFORMS = new Set([
+  // backend
   "service",
   "worker",
-  "packages",
+  // frontend
   "site",
-  "fullstack",
-  "frontend",
+  "webapp",
+  "desktop",
+  "mobile",
+  "tablet",
+  "auto",
+  "cli",
+  // data
+  "data-lake",
+  "analytics",
+  "ingestion",
+  "ml-platform",
+  // system
   "iac",
+  "plugin",
+  "misc",
+  "cicd",
+  // available under every role
+  "packages",
 ]);
 
-/** Roles that put a UI in front of a user, and so need a `-ux-gate`. */
-const UI_ROLES = new Set(["site", "fullstack", "frontend"]);
+/**
+ * Screen platforms — the ones that put rendered UI in front of a user, and so
+ * need a `-ux-gate`. `cli` is deliberately absent: a terminal surface has no
+ * screens to render or scan.
+ */
+const SCREEN_PLATFORMS = new Set([
+  "site",
+  "webapp",
+  "desktop",
+  "mobile",
+  "tablet",
+  "auto",
+]);
 
 /**
  * The vwf stack-adapter contract.
@@ -453,10 +489,10 @@ function checkStackAdapters(workspace: Workspace): Finding[] {
       }
     }
 
-    const uiRoles = new Set<string>();
+    const screenPlatforms = new Set<string>();
     for (const template of templates) {
       const front = frontmatterOf(template.absolute);
-      const axis = front["axis"];
+      const axis = front.axis;
       if (axis === undefined) {
         findings.push({
           scope: `${name}:${template.path}`,
@@ -473,24 +509,35 @@ function checkStackAdapters(workspace: Workspace): Finding[] {
       }
 
       if (axis === "project") {
-        const role = front["role"];
-        if (role === undefined) {
+        const declared = front.platforms;
+        const platforms = declared ?? [];
+        if (declared === undefined) {
           findings.push({
             scope: `${name}:${template.path}`,
-            message: "project-axis template declares no `role:` — the axis "
-              + "says which menu it joins, the role says which projects it "
-              + "serves, and both are required",
+            message:
+              "project-axis template declares no `platforms:` — the axis "
+              + "says which menu it joins, the platform list says which "
+              + "projects it serves, and both are required",
           });
         }
-        else if (!ROLES.has(role)) {
+        else if (platforms.length === 0) {
           findings.push({
             scope: `${name}:${template.path}`,
-            message: `project-axis template declares role "${role}", which is `
-              + `not in the registry role vocabulary`,
+            message: "project-axis template declares an empty `platforms:` — a "
+              + "template serving no platform can never be offered",
           });
         }
-        else if (UI_ROLES.has(role)) {
-          uiRoles.add(role);
+        for (const platform of platforms) {
+          if (!PLATFORMS.has(platform)) {
+            findings.push({
+              scope: `${name}:${template.path}`,
+              message: `project-axis template declares platform "${platform}", `
+                + `which is not in the registry platform vocabulary`,
+            });
+          }
+          else if (SCREEN_PLATFORMS.has(platform)) {
+            screenPlatforms.add(platform);
+          }
         }
       }
     }
@@ -502,15 +549,18 @@ function checkStackAdapters(workspace: Workspace): Finding[] {
     // or the roster stops saying which plugins own a UI.
     const gate = `${name}-ux-gate`;
     const hasGate = plugin.skills.some(s => s.meta.name === gate);
-    if (uiRoles.size > 0 && !hasGate) {
+    if (screenPlatforms.size > 0 && !hasGate) {
       findings.push({
         scope: name,
-        message: `owns a UI stack (role ${[...uiRoles].sort().join(", ")}) but `
-          + `ships no "${gate}" skill — vwf would report rendered: n/a on `
+        message: `owns a UI stack (platform ${
+          [...screenPlatforms]
+            .sort()
+            .join(", ")
+        }) but ships no "${gate}" skill — vwf would report rendered: n/a on `
           + `every UI slice`,
       });
     }
-    if (uiRoles.size === 0 && hasGate) {
+    if (screenPlatforms.size === 0 && hasGate) {
       findings.push({
         scope: name,
         message: `ships "${gate}" but owns no UI stack — vwf never calls it`,
@@ -746,12 +796,20 @@ function checkVwfIsTechnologyFree(workspace: Workspace): Finding[] {
 }
 
 /** The `axis` and `role` a stack template declares, if it declares them. */
-function frontmatterOf(absolute: string): Record<string, string | undefined> {
+function frontmatterOf(
+  absolute: string,
+): { axis: string | undefined; platforms: string[] | undefined; } {
   const doc = fm.parse(readFileSync(absolute, "utf8"));
   if (doc === null) {
-    return {};
+    return { axis: undefined, platforms: undefined };
   }
-  return { axis: fm.scalar(doc, "axis"), role: fm.scalar(doc, "role") };
+  return {
+    axis: fm.scalar(doc, "axis"),
+    // A list, not a scalar: one project-axis template may serve several
+    // platforms (a Flutter template covers four), which is exactly what the
+    // retired single `role:` key could not express.
+    platforms: fm.sequence(doc, "platforms"),
+  };
 }
 
 // ---------------------------------------------------------------------------

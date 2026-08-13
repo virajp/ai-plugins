@@ -21,9 +21,11 @@ choice is vwf's.
 
 ## How to answer
 
-1. List `${CLAUDE_PLUGIN_ROOT}/stacks/project/*/*.md`. Each file is one template: its
-   **slug** is the filename without `.md`, its **role** is that file's `role:`
-   frontmatter key, and its `name` comes from the same frontmatter. Read no
+1. List `${CLAUDE_PLUGIN_ROOT}/stacks/project/*.md` — **flat**, with no role
+   directory, since format 22. Each file is one template: its
+   **slug** is the filename without `.md`, its **platforms** are that file's
+   `platforms:` frontmatter key (a **list** — one template may serve several,
+   and this plugin's does), and its `name` comes from the same frontmatter. Read no
    further into the file than the frontmatter and its opening paragraph — the
    body is `flutter-stack-template`'s to read, on demand.
 2. Return the payload below, filled from that listing.
@@ -33,7 +35,7 @@ plugin: flutter
 templates:
   - slug: <filename without .md>
     axis: project
-    role: <the file's own role: key>
+    platforms: <the file's own platforms: list>
     name: <display name>
     summary: <one line — why you would pick it>
 ```

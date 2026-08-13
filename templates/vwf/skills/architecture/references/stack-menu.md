@@ -43,7 +43,7 @@ collapse the recorded values back into a shared pin.
 ## Two more per-project keys, elicited alongside the axes
 
 - **`design`** — the design tool, for each **UI** project only (`site`,
-  `fullstack`, `frontend`). A tool token — `claude-design`, `lovable`, `stitch`
+  a **screen platform**). A tool token — `claude-design`, `lovable`, `stitch`
   — resolved inside the design adapter, never a plugin name
   (`<%= it.root %>/assets/design-adapter.md`). A product may design its
   website in one tool and its app in another; ask per project.

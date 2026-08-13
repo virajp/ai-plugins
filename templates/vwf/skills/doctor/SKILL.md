@@ -38,9 +38,10 @@ halt on a blocking finding they were never told about.
 | Stack templates   | from the installed stack plugins, never from vwf                |
 | Harness contract  | `<%= it.root %>/assets/harness.md`                      |
 | Memory protocol   | `<%= it.root %>/assets/memory.md`                       |
-| mempalace config  | `mempalace.yaml` (**one**, at the repo root)                   |
+| mempalace config  | `mempalace.yaml` (per mined tree — see the memory protocol)     |
 | Graphify protocol | `<%= it.root %>/assets/graphify.md`                     |
-| Knowledge graph   | `graphify-out/graph.json` (workspace root)                     |
+| Membership        | `<%= it.root %>/assets/membership.md`                   |
+| Knowledge graph   | `graphify-out/graph.json` (each checkout root)                 |
 | Format stamp      | `<%= it.root %>/assets/blueprint-format`                |
 
 ## Hard Rules
@@ -70,14 +71,34 @@ halt on a blocking finding they were never told about.
 
 ### 1. Load
 
-Read `.config/vwf.yaml` and `docs/blueprint/registry.yaml`. If the config is
-absent, stop and report exactly one thing: this repo is not onboarded — run
-`<%= it.cmd("vwf:setup") %>`.
+**Resolve the base repo first**, per
+`<%= it.root %>/assets/membership.md` — a run started inside a member must check
+the product, not the one repo it is standing in. Then read `.config/vwf.yaml`
+and `docs/blueprint/registry.yaml` from there. If no config is reachable by any
+step of that resolution, stop and report exactly one thing: this repo is not
+onboarded — run `<%= it.cmd("vwf:setup") %>`.
 
-Note each project's `role` (registry) and `stack` block (config). A project the
-registry declares with **no `stack` block** is a finding in itself
+**Membership, both directions** (multi-repo only). Compare `members:` against
+what each member repo's `.config/vwf-membership.yaml` claims, and report as
+**blocking**: a member whose file names a different `product` or `host`, a
+member listed with no file, a repo carrying a file the base does not list, and a
+`multi-repo` topology with no `members:` at all. Each of these leaves exactly
+one of the two entry paths silently wrong — a command run from the base works
+while the same command run inside the member reports an un-onboarded repo, or
+the reverse — which is the whole failure the two-file contract exists to
+prevent. A **missing `url:`** on a member is blocking too: the absent-member
+clone offer has nothing to clone from without it, and that only surfaces on the
+day someone needs the repo.
+
+**Presence is not a finding.** Detect which members are cloned here and say so
+plainly in the report, but never as drift: a twenty-repo product with three
+cloned is the normal state, and every per-repo check below simply scopes to the
+present ones.
+
+Note each project's `role` + `platforms` (registry) and `stack` block (config).
+A project the registry declares with **no `stack` block** is a finding in itself
 (`config_format` 10 drift — the block is mandatory since 11); report it, nudge
-`<%= it.cmd("vwf:setup") %>`, and check what you can from its role's templates meanwhile.
+`<%= it.cmd("vwf:setup") %>`, and check what you can from its platforms' templates meanwhile.
 
 **Recall.** Per `<%= it.root %>/assets/memory.md`, recall room `doctor`
 for this repo's prior findings. Anything still present that a previous run
@@ -102,14 +123,16 @@ optional, and no reference restates a rule that lives above.
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the four stack axes, the `iac` own-repo rule, `mise`, `repo.stack`. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
-| **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, the workspace-root graph, the refresh hook, staleness. **Blocking findings live here** |
+| **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness. **Blocking findings live here** |
 
 ### 9. Report & persist
 
 One table, findings first, grouped by kind — **blocking** (something *mandatory*
 is absent or misplaced, or the stack is one no installed plugin defines: mise,
-the graphify CLI, a workspace-root graph, an `iac` project inside another repo,
-an **unknown** language, a `custom` template pin, a misplaced / duplicated /
+the graphify CLI, a graph missing from a locally-present checkout, an `iac`
+project inside another repo, an **unknown** language, a `custom` template pin, a
+project whose template does not cover every platform it declares, a broken
+membership link (§1), a misplaced / duplicated /
 missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 **drift** (config and repo disagree), **missing** (something declared has no
 install), **unavailable** (nothing shipped here to install), **unknown**

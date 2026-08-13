@@ -22,9 +22,15 @@ Screens rows gaining their frame Codes, in-car journeys elicited into their own
 subset flows — per format-versioning), the **`12 → 14`** delta (those device
 subgroups flattened back out, the device moving into the flow's `device:`
 frontmatter key — a mechanical `git mv` + link rewrite + config entry rewrite),
-or the **`19 → 20`** delta (`role: infra` renamed to `role: iac` in every
+the **`19 → 20`** delta (`role: infra` renamed to `role: iac` in every
 `registry.yaml`, plus the own-repo rule for `iac` projects — the restructure
-proposal §4 carries). Fold in any old or partial structure.
+proposal §4 carries), or the **`21 → 22`** delta (the seven-token `role`
+vocabulary collapsing to four roles plus a per-project `platforms:` list,
+`polyrepo` becoming `multi-repo` + `linkage:`, `members:` and the per-member
+`.config/vwf-membership.yaml`, the `web` platform splitting into `site` and
+`webapp` with its platform files renamed, and the project-axis stack pin losing
+its `<role>/` segment — run it with the config's `14 → 15`). Fold in any old or
+partial structure.
 
 ## What counts as drift in the current layout
 

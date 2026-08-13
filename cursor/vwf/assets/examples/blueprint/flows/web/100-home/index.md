@@ -10,9 +10,9 @@ tags: [ commerce, navigation ]
 
 # Flow: Home
 
-<!-- Conformance example (blueprint-format 15). The ANCHOR flow: every UI
+<!-- Conformance example (blueprint-format 22). The ANCHOR flow: every screen-platform
      project carries `100-home`, so its screens are always coded 100a, 100b, …
-     Platform-agnostic contract only — screens live in web.md. -->
+     Platform-agnostic contract only — screens live in webapp.md. -->
 
 ## Purpose
 
@@ -27,7 +27,7 @@ Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
 
 | Platform | File            | Notes                           |
 | -------- | --------------- | ------------------------------- |
-| web      | [web](./web.md) | The shop's only shopper surface |
+| webapp   | [webapp](./webapp.md) | The shop's only shopper surface |
 
 ## Trigger & Actors
 

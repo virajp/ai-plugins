@@ -30,7 +30,7 @@ You receive:
 - **Elicited prose** — system overview, project interconnects,
   hosting/deployment details confirmed by the user.
 - **Per-project registry rows** — name, role, path, capabilities, depends_on,
-  doc_unit, and (UI projects) platforms for every project. There is no `stack`
+  doc_unit, and platforms for every project. There is no `stack`
   row; it is not a registry field.
 - **Cross-cutting decisions** — one-line selections for system-wide concerns
   (auth, errors, observability, config, testing, integrations, data-retention,
@@ -61,10 +61,10 @@ You receive:
    the `## Registry` pointer to `./registry.yaml`. Budget ~100 lines: this doc
    explains shape to a person.
 2. **System-shape diagram** — the mermaid `flowchart` in System Overview: one
-   node per registry project (labelled `name (role)`), edges from `depends_on`
+   node per registry project (labelled `name (platforms)`), edges from `depends_on`
    and the elicited interconnects. Regenerate it whenever the registry changes —
    a stale diagram is a sync violation like any prose/registry mismatch.
-3. **Registry** (`registry.yaml`) — `vwf_registry: 1`, the `projects:` list (one
+3. **Registry** (`registry.yaml`) — `vwf_registry: 2`, the `projects:` list (one
    entry per project) and the `cross_cutting:` block. It describes the system as
    it is; enforcement opt-outs and stacks live in `.config/vwf.yaml`, which the
    orchestrator maintains. Never write a `deviations:` or `stack:` key.
@@ -91,46 +91,65 @@ confirm — and never a stack, which is not yours to record at all.
 There is exactly one `docs/blueprint/registry.yaml` and one
 `docs/blueprint/architecture.md` per workspace. Write or edit those two only.
 
-## Project Roles
+## Project Roles & Platforms
 
-A project carries exactly one **`role`**. Seven tokens:
+A project carries exactly one **`role`** — the coarse domain grouping — and
+**one or more `platforms`** from that role's closed list. Format 22 replaced the
+seven-token role vocabulary with four roles plus platforms; every token that
+used to be a role lives on as a platform.
 
-| Role        | What it is                                               | Default `doc_unit` | Hosted on |
-| ----------- | -------------------------------------------------------- | ------------------ | --------- |
-| `service`   | API backend, no UI                                       | `entity`           | cloud     |
-| `worker`    | Background-task processor                                | `entity`           | cloud     |
-| `packages`  | Shared libraries used by others                          | `module`           | n/a (lib) |
-| `site`      | Web UI that calls someone else's API                     | `page`             | cloud     |
-| `fullstack` | Web UI **and** its own API, one deployable               | `page`             | cloud     |
-| `frontend`  | Client-side app (mobile / tablet / desktop / auto / cli) | `entity`           | device    |
-| `iac`       | Infrastructure-as-code                                   | `module`           | n/a       |
+| Role       | What it is                     | Platforms                                                                  |
+| ---------- | ------------------------------ | -------------------------------------------------------------------------- |
+| `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker`                                              |
+| `frontend` | User-facing surfaces           | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli`        |
+| `data`     | Data and ML systems            | `packages` `data-lake` `analytics` `ingestion` `ml-platform`               |
+| `system`   | Infrastructure and tooling     | `packages` `iac` `plugin` `misc` `cicd`                                    |
 
-`service`, `worker`, `packages`, `site`, `fullstack` and `iac` are
-cloud-hosted or cloud-targeting; `frontend` runs on the client and ships through
-whatever distribution channel the project uses.
+`doc_unit` defaults follow the **platforms**, not the role: `site`/`webapp` →
+`page`; `packages`, `iac`, `plugin` → `module`; everything else → `entity`. A
+project whose platforms disagree takes the first match in that order.
 
-**`site` vs `fullstack` — the line is owning an API contract.** A `fullstack`
-project publishes its own API surface, so it **requires**
-`apis/<project>.openapi.yaml` and a health endpoint. A `site` is UI-only and
-calls another project's service. Server-side rendering does **not** make a site
-fullstack: SSR is not a published API.
+**A project may declare several platforms, and usually should.** One Flutter
+codebase shipping phone, tablet, desktop and web is **one** project with
+`platforms: [mobile, tablet, desktop, webapp]` — never four. Flows are keyed on
+project name, so splitting it would triplicate every flow doc. Only split when
+the codebases are genuinely separate.
 
-**There is no `console` role.** An operator back-office is `role: fullstack`
-plus the `operator-rbac` capability — one deployable serving both an operator
-API and its UI. The capability, not a role name, is what marks the admin
-surface, and it remains the **sole** holder of admin routes.
+**Owning an API contract is the `service` platform.** A project declaring
+`service` **requires** `apis/<project>.openapi.yaml` and a health endpoint. A
+project declaring `[service, webapp]` publishes its own API alongside its own UI
+as one deployable — what the retired `fullstack` role meant. A project declaring
+only `site` or `webapp` publishes none and calls another project's service.
+Server-side rendering does **not** make a browser surface a `service`: SSR is
+not a published API.
+
+**`site` vs `webapp`** — `site` is a browser-delivered **content** surface
+(marketing, docs, landing); `webapp` is the browser-delivered **application**. A
+product with both declares both.
+
+**There is no `console` role and no `fullstack` role.** An operator back-office
+is `platforms: [service, webapp]` plus the `operator-rbac` capability — one
+deployable serving both an operator API and its UI. The capability, not a role
+name, is what marks the admin surface, and it remains the **sole** holder of
+admin routes.
 
 **`iac` is registered but exempt from blueprint coverage** — it carries no
-flows, screens or API contracts, and the coverage stamp ignores it. Record it so
-`plan`, `doctor` and `execute` can see it. Its `path` is whatever the
-orchestrator elicited and passes you: an `iac` project lives in **its own repo**
+flows, screens or API contracts, and the coverage stamp ignores it. The same
+exemption covers **every `data` and `system` platform**: a doc shape for them is
+a later effort, and until it exists their absence from the blueprint is by
+design, not a hole. Record them all so
+`plan`, `doctor` and `execute` can see them. An `iac` project's `path` is
+whatever the
+orchestrator elicited and passes you: it lives in **its own repo**
 (`%%AI_PLUGINS_ROOT%%/assets/topologies/`), so its path routinely points outside
 the product tree. Write what you are given — never rewrite it to a directory
 under the product root, and never invent one.
 
-**Synonyms** are recognized and normalized, never stored: `api` → `service`,
-`web` → `site`, `app` → `frontend`, `library` → `packages`. Write the canonical
-token.
+**Synonyms** are recognized and normalized, never stored. Roles: `web`, `app`,
+`ui` → `frontend`; `api`, `server` → `backend`; `infra`, `ops` → `system`.
+Platforms: `library` → `packages`; `web` → `site` **or** `webapp` (ask which —
+the split is the whole point of format 22, so never pick silently). Write the
+canonical token.
 
 ## Capability Vocabulary
 

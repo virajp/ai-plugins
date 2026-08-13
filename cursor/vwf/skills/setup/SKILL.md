@@ -33,7 +33,8 @@ throughout.
 | Stack templates   | from the installed stack plugins, never from vwf                |
 | Stack vocabulary  | `%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`             |
 | Memory protocol   | `%%AI_PLUGINS_ROOT%%/assets/memory.md`                       |
-| mempalace config  | `mempalace.yaml` (**one**, at the repo root)                   |
+| mempalace config  | `mempalace.yaml` (per mined tree — see the memory protocol)     |
+| Membership        | `%%AI_PLUGINS_ROOT%%/assets/membership.md`                   |
 | Harness contract  | `%%AI_PLUGINS_ROOT%%/assets/harness.md`                      |
 
 Doctrine: the **project-setup** skill — a router. Read each reference at the
@@ -49,7 +50,7 @@ This skill's own references follow the same rule:
 | ---------------------------------------------------------- | ------------------------------------------------------------------ |
 | [format-reconcile](references/format-reconcile.md)         | §3 — computing the delta and judging layout drift                  |
 | [environment-bootstrap](references/environment-bootstrap.md) | §6 — the registry declares integrations or a secrets-manager config |
-| [memory-tree](references/memory-tree.md)                   | §9 — writing `docs/memory/` and the product's one `mempalace.yaml` |
+| [memory-tree](references/memory-tree.md)                   | §9 — writing `docs/memory/` and the product's `mempalace.yaml` config(s) |
 
 ## Hard Rules
 
@@ -94,18 +95,28 @@ already carries `graphify-out/graph.json`, query it for the system shape first �
 the projects present, their stacks, and who depends on whom — then confirm what
 it reports against the manifests below; fall back silently when no graph exists.
 
+**Resolve the base repo first**, per
+`%%AI_PLUGINS_ROOT%%/assets/membership.md`. A `setup` run started inside a member
+repo of an already-onboarded product must operate on the product, not re-onboard
+the one repo it is standing in — and that is exactly what a user adding a new
+repo will do.
+
 Per the project-setup skill (topology-detection), read repo signals — the root
 manifests and lockfiles the installed stack plugins recognise, `.gitmodules`,
-dir layout — plus any
-existing `docs/blueprint/` or legacy `docs/specs/`. Infer: monorepo vs polyrepo
-vs **workspace** (a parent repo with submodule children — classify each child on
-its own signals), the project **roles** present (`service`, `worker`,
-`packages`, `site`, `frontend`, `iac` — a list per project, order
-significant), and the stack per project.
+any `members:` list, any `.config/vwf-membership.yaml`, dir layout — plus any
+existing `docs/blueprint/` or legacy `docs/specs/`. Infer: **topology**
+(`repo` / `monorepo` / `multi-repo`) and, for multi-repo, **linkage**
+(`submodule` / `siblings`) plus the member list; the **role** and **platforms**
+of each project (four roles, each with a closed platform list — a project
+carries one role and one or more platforms); and the stack per project.
 
-**`iac` placement.** For every project detected as `iac`, resolve which repo's
-working tree its directory falls in. One sitting inside another project's repo
-violates the own-repo rule (`%%AI_PLUGINS_ROOT%%/assets/topologies/`) — record
+**Which members are present is detected, never asked and never recorded.** A
+multi-repo product where most members are not on this machine is normal. Note
+what is here, and scope every code-reading step below to it.
+
+**`iac` placement.** For every project declaring the `iac` platform, resolve
+which repo's working tree its directory falls in. One sitting inside another
+project's repo violates the own-repo rule (`%%AI_PLUGINS_ROOT%%/assets/topologies/`) — record
 it here and carry it into the step-4 plan as a restructure proposal (§4).
 
 **Harness detection.** Detect the repo's verification-harness capabilities per
@@ -121,7 +132,7 @@ steps when a cycle first needs them.
 Present what you detected and confirm or correct it with the user via **MCQ**,
 following `%%AI_PLUGINS_ROOT%%/assets/elicitation.md` — one question at a
 time, options + "Other". Pin down anything detection could not: missing project
-types, stacks, and **whether a UI surface exists** (it makes the design system
+types, stacks, and **whether any project declares a screen platform** (it makes the design system
 mandatory). Never assume UI — confirm it.
 
 **New/empty repo.** When detection finds no manifests and no source, apply the
@@ -130,10 +141,34 @@ present the three templates and let the user pick, exactly as with stacks. There
 is no default and nothing to object to, so no `enforcement` entry: record
 `topology` and `topology_reason`.
 
+**Multi-repo: confirm the linkage, then the members.** Two questions, in order,
+never one:
+
+1. **Linkage** — `submodule` (recommend it, and say why: a member can find its
+   product structurally, and the pointer commits record which versions were ever
+   consistent together) or `siblings`. **Recommend, never enforce.** A product
+   whose repos already exist independently, or one shared with another product,
+   is a legitimate `siblings` answer and not a shape to be argued out of.
+   Record `linkage`.
+2. **The members** — for each: its `name`, `path` relative to the base repo, its
+   git `url`, and which registry projects live in it. Under `submodule` linkage
+   every one of these is already in `.gitmodules`; **read them, present them,
+   confirm** — do not re-ask what the repo already states. Under `siblings` the
+   `url` is the one fact nothing else records, and it is the one the
+   absent-member clone offer depends on, so never leave it blank.
+
+**Adding a repo to an existing product is this same step, incrementally.** A
+re-run that finds a `members:` list plus one repo not in it — or a user who says
+they are adding one — confirms the new member's four facts, appends the entry,
+writes its `.config/vwf-membership.yaml`, and registers its projects. Nothing
+else re-runs: the delta is one member, and steps 6–10 act on that delta alone.
+
 **Stacks are elicited, never stated.** For each project, present the templates
-the installed stack plugins offer for that role as a menu, plus their repo-level
-menus. The menu is the **whole** vocabulary — there is no **other (describe)**
-option and no `template: custom` (retired in `config_format` 14), so a role
+the installed stack plugins offer for that project's **platforms** as a menu,
+plus their repo-level menus. A template declares the platforms it serves, and
+the pick must **cover** every platform the project declares. The menu is the
+**whole** vocabulary — there is no **other (describe)**
+option and no `template: custom` (retired in `config_format` 14), so a platform
 nothing fits is a halt naming the two ways forward, never a free-text pin. vwf
 ships no stack template of its own, no default, and nothing to object to, so
 there is no `enforcement` entry for a stack. `/architecture` owns this elicitation
@@ -157,10 +192,12 @@ here, together with only the project-setup skill's `format-versioning` deltas
 between the repo's stamp and the shipped format. Fold in any old or partial
 structure.
 
-`19 → 20` ships with the config's **`12 → 13`** migration (per the vwf-config
-asset): the backing, deploy, design and CI axes move down to per-project keys.
-Run the two together — a repo on one but not the other is a state neither
-migration expects.
+`21 → 22` ships with the config's **`14 → 15`** migration (per the vwf-config
+asset): the registry's roles collapse to four with a platform list beside them,
+`polyrepo` becomes `multi-repo` + `linkage`, `members:` and the per-member
+`.config/vwf-membership.yaml` appear, and the project-axis pin drops its
+`<role>/` segment. Run the two together — a repo on one but not the other is a
+state neither migration expects.
 
 Any YAML artifact a migration writes must parse — validate them in step 10.
 
@@ -226,7 +263,7 @@ yielding an empty plan (the idempotence Hard Rule):
 - Run `/architecture` only if the registry is **missing** or the delta
   requires a registry change (a new/changed project, capability, or
   cross-cutting decision).
-- Run `/design-system` only if the topology has a **UI surface**
+- Run `/design-system` only if some project declares a **screen platform**
   (`ui: true`) **and** `docs/blueprint/design-system.md` is missing or stale. It
   **imports** the product's design system from its design tool (pick or build one on
   claude.ai/design first); with no surface connected it halts with connect
@@ -249,8 +286,14 @@ Merge the vwf section (from the project-claude template) into the repo's
 Write `.config/vwf.yaml` per the vwf-config asset — the thing a future `setup`
 run diffs against, and how every vwf command operates in this repo:
 
-- the stamp keys — `config_format`, `blueprint_format`, `topology`, `ui`,
-  `integrations`;
+- the stamp keys — `config_format`, `blueprint_format`, `topology`,
+  `topology_reason`, `ui`, `integrations`; and for **multi-repo**, `linkage`
+  plus the **`members:`** list — each entry's `name`, `path`, `url` and
+  `projects`. The `url` is not optional: it is what the absent-member clone
+  offer clones from, and its absence surfaces only on the day someone needs a
+  repo they do not have. Write **no** presence/cloned key — which members are on
+  this machine is detected every run
+  (`%%AI_PLUGINS_ROOT%%/assets/membership.md`);
 - **`product.name` and `memory.wing`** — derive from the repo/registry name and
   **confirm with the user** (one MCQ);
 - the **`harness:` block** from step-1 detection (per capability:
@@ -268,8 +311,9 @@ run diffs against, and how every vwf command operates in this repo:
   every project the registry declares. Since config-format 13 that block carries
   **all three technology axes per project**: `template`, `backing_template` (a
   list — `[]` when the project talks to no backing service) and
-  `deploy_template` (`n/a` for a `frontend` on a screen platform and for an
-  `iac` project). An absent block is not "the default"; it is what leaves
+  `deploy_template` (`n/a` for a project shipping through a store rather than to
+  a deploy target — `mobile`, `tablet`, `desktop`, `auto` — and for an `iac`
+  platform). An absent block is not "the default"; it is what leaves
   `/doctor` with nothing to check;
 - the per-project **`design`** (UI projects only — the design tool token the
   adapter resolves) and **`cicd`** (the CI system) keys, likewise per project
@@ -279,12 +323,27 @@ run diffs against, and how every vwf command operates in this repo:
 - leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
   them.
 
-**Write the memory tree and the mempalace config.** `docs/memory/` with its
-seven room directories (three of them gitignored), and **exactly one**
-`mempalace.yaml` at the **repo root** naming the confirmed `memory.wing` —
-mining the whole product tree, submodules included. Any config found elsewhere
-(`.config/`, a submodule root) is consolidated into it and removed: mining reads
-the config only from the directory it is pointed at, so a stray one is silently
+**Write the membership files.** For a **multi-repo** product, write
+`.config/vwf-membership.yaml` into **every member** — naming the product and the
+relative path back to the base repo — and into none of them under `repo` or
+`monorepo`. Under `submodule` linkage this duplicates what the superproject walk
+already provides; write it anyway, so a later switch to `siblings` is a config
+edit rather than a second migration, and so every skill has one resolution
+algorithm instead of two. An **absent** member cannot receive its file: record it
+and write it on the run that first sees the repo. The contract is
+`%%AI_PLUGINS_ROOT%%/assets/membership.md`.
+
+**Write the memory tree and the mempalace config(s).** `docs/memory/` with its
+seven room directories (three of them gitignored), and a `mempalace.yaml` naming
+the confirmed `memory.wing` in each mined tree — **one** at the base repo for
+`repo`, `monorepo`, and multi-repo under `submodule` linkage (where members are
+inside that tree and get none); **one per repo** under `siblings` linkage, base
+and every locally-present member, all naming the same wing, because a sibling
+member sits outside the base's tree and would otherwise never be mined at all.
+Any config found somewhere that is not a mined tree's root
+(`.config/`, a nested directory) is consolidated into that tree's root config and
+removed: mining reads the config only from the directory it is pointed at, so a
+stray one is silently
 inert rather than wrong-looking. The consolidation steps, the seeded rooms, the
 secret excludes and the routing traps are in
 [the memory tree](references/memory-tree.md); read it at this step. Three rules

@@ -56,7 +56,7 @@ below is tool-agnostic and applies whichever one it is.
 2. **Run through mise.** Steps invoke tooling via `mise run <task>` (when the
    repo has a mise task library) or `mise exec -- <cmd>` — never a binary the
    toolchain step did not put on `PATH`.
-3. **Support both layouts.** Detect monorepo vs polyrepo and generate the
+3. **Support both layouts.** Detect monorepo vs multi-repo and generate the
    matching structure; ask which monorepo strategy to use (§4).
 4. **CI env.** Set a pipeline-level `MISE_ENV: ci` when the repo defines a
    `mise.ci.toml` variant (the project convention — loads CI-only tools/env).
@@ -72,7 +72,7 @@ Inspect the target repo before writing — do not assume:
   `package.json` `workspaces`, `melos.yaml`, `lerna.json`, `nx.json`,
   `turbo.json`, a Cargo `[workspace]`, `go.work`, or multiple package manifests
   (`package.json` / `pubspec.yaml` / `pyproject.toml` / `Cargo.toml`) in
-  sub-directories. None of those → polyrepo. **List the packages you find.**
+  sub-directories. None of those → multi-repo. **List the packages you find.**
 - **mise config.** `mise.toml` / `.config/mise.toml`, and whether a
   `mise.ci.toml` variant exists (→ set `MISE_ENV: ci`). Whether a **task
   library** exists (`.config/mise/tasks/**` or `[tasks.*]`) and which tasks are

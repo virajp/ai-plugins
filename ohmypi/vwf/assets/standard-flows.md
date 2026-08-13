@@ -32,13 +32,13 @@ so a number is never reused within a project. Three digits, four bands:
 | Band               | Range       | Contents                                                                                       |
 | ------------------ | ----------- | ---------------------------------------------------------------------------------------------- |
 | **Entry**          | `010`–`090` | `010` splash · `020` signin · `030` recover-account · `040` onboarding · `050`–`090` free      |
-| **Anchor**         | `100`       | **`home`** — the center of the app; every UI project, always                                   |
+| **Anchor**         | `100`       | **`home`** — the center of the app; every screen-platform project, always                      |
 | **Product**        | `110`–`890` | The product's own journeys, gap-numbered by 10 (`110`, `120`, …)                               |
 | **Account/system** | `900`–`990` | `910` profile · `920` settings · `930` notifications · `940` delete-account · `950`–`990` free |
 
 Notes:
 
-- **`100` is the anchor.** Every UI project has `100-home`; its screens are
+- **`100` is the anchor.** Every project with a screen platform has `100-home`; its screens are
   therefore always coded `100a`, `100b`, …
 - **Onboarding runs after sign-in** by default (`040`) — first-run setup once
   the user is known. A product that onboards pre-auth (value-prop screens before
@@ -53,23 +53,32 @@ Notes:
 
 ## The slug vocabulary
 
-| Slug              | `frontend` (app) | `site` (web)  | `fullstack` (web) | Mandate                                                     |
-| ----------------- | ---------------- | ------------- | ----------------- | ----------------------------------------------------------- |
-| `splash`          | **mandatory**    | optional      | optional          | —                                                           |
-| `signin`          | conditional      | conditional   | conditional       | required when the project has an Auth & identity capability |
-| `recover-account` | conditional      | conditional   | conditional       | required with `signin`                                      |
-| `onboarding`      | optional         | optional      | optional          | —                                                           |
-| `home`            | **mandatory**    | **mandatory** | **mandatory**     | every UI project                                            |
-| `profile`         | conditional      | conditional   | conditional       | required with `signin`                                      |
-| `settings`        | optional         | optional      | optional          | —                                                           |
-| `notifications`   | optional         | optional      | optional          | —                                                           |
-| `delete-account`  | conditional      | conditional   | conditional       | required with `signin`                                      |
+**The mandates key on platform, never on role.** A project is in scope here when
+it declares at least one **screen platform**; which column applies is decided by
+*which* screen platforms it declares.
+
+| Slug              | device platforms<br>`mobile` `tablet` `desktop` `auto` | browser platforms<br>`site` `webapp` | Mandate                                                     |
+| ----------------- | ---------------- | ------------- | ----------------------------------------------------------- |
+| `splash`          | **mandatory**    | optional      | —                                                           |
+| `signin`          | conditional      | conditional   | required when the project has an Auth & identity capability |
+| `recover-account` | conditional      | conditional   | required with `signin`                                      |
+| `onboarding`      | optional         | optional      | —                                                           |
+| `home`            | **mandatory**    | **mandatory** | every project declaring a screen platform                   |
+| `profile`         | conditional      | conditional   | required with `signin`                                      |
+| `settings`        | optional         | optional      | —                                                           |
+| `notifications`   | optional         | optional      | —                                                           |
+| `delete-account`  | conditional      | conditional   | required with `signin`                                      |
+
+A project declaring **both** kinds — a Flutter codebase shipping `mobile` and
+`webapp`, say — takes the **device** column: it has a splash frame to gate on at
+least one of its surfaces, and the flow is mandatory even when only some
+platform files carry it.
 
 - **mandatory** — required for coverage; absence is a hole (waivable, above).
 - **conditional (auth)** — `signin` is required when the project carries an
   **Auth & identity** capability in the registry (`third-party-auth`,
   `custom-claims-rbac`, or `operator-rbac`). The registry is the signal: an
-  auth-capable UI project with no `signin` flow is a coverage hole. The inverse
+  auth-capable screen-platform project with no `signin` flow is a coverage hole. The inverse
   is registry drift — a `signin` flow in a project with no auth capability means
   the registry is missing the capability; reconcile via `/skill:vwf-architecture`,
   never by deleting the flow.
@@ -81,40 +90,57 @@ Notes:
   one of these, it takes the standard slug and number; the sweep never proposes
   them unprompted.
 
-`site` and `fullstack` carry the same profile — both are browser-delivered, so
-neither has a splash frame to gate. They stay separate columns because the roles
-diverge elsewhere (a `fullstack` owns an API contract, a `site` does not), and
-because an **operator back-office** is a `fullstack`: it needs `home` like any
-other UI project, `operator-rbac` notwithstanding.
+`site` and `webapp` share one column because both are browser-delivered, so
+neither has a splash frame to gate. They are separate **platforms** because they
+are separate surfaces with separate screens — a marketing site and the product's
+application are not the same design problem — but they oblige the same flows. An
+**operator back-office** is `platforms: [service, webapp]`: it needs `home` like
+any other screen surface, `operator-rbac` notwithstanding.
 
-Non-UI projects (`service`, `worker`, `packages`) carry no standard flows and no
-platform files. Neither does a project whose **only** platform is `cli`: every
-standard slug is a screen journey (`splash` before the first frame, `home` as
-the center of the app), which a terminal tool does not have. Its flows are its
-commands, named by the product; the surveyor skips the mandate check for it the
-way it skips `iac`.
+**Screenless platforms carry no standard flows and no platform files** —
+`service`, `worker`, `packages`, every `data` and `system` platform, and `cli`.
+The `cli` case is the one worth stating: every standard slug is a screen journey
+(`splash` before the first frame, `home` as the center of the app), which a
+terminal tool does not have. A cli-only project's flows are its commands, named
+by the product; the surveyor skips the mandate check for it the way it skips
+`iac`. A project mixing `cli` with a screen platform is in scope through the
+screen platform, and its `cli` surface simply contributes no platform file.
 
 ## The platform vocabulary
 
-Exactly six names. Five are **screen platforms**, used everywhere a screen
-surface is — flow platform files, the `docs/prompts/screens/` briefs, canvas
-page suffixes, `design.projects` pins, and the `docs/scratchpad/` render tree:
+Every platform token vwf knows lives in the registry's closed per-role lists
+(`%%AI_PLUGINS_ROOT%%/assets/templates/registry.yaml`). Of them, exactly **six are
+screen platforms**, used everywhere a screen surface is — flow platform files,
+the `docs/prompts/screens/` briefs, canvas page suffixes, `design.projects`
+pins, and the `docs/scratchpad/` render tree:
 
-| Platform  | What it is                                      | Typical project type |
-| --------- | ----------------------------------------------- | -------------------- |
-| `mobile`  | Phone app or phone-sized layout                 | `frontend`           |
-| `tablet`  | Tablet layout (master-detail, multi-column)     | `frontend`           |
-| `desktop` | Natively installed desktop application          | `frontend`           |
-| `web`     | Browser-delivered app                           | `site` / `fullstack` |
-| `auto`    | In-car head unit — **CarPlay and Android Auto** | `frontend`           |
+| Platform  | What it is                                      | Kind    |
+| --------- | ----------------------------------------------- | ------- |
+| `mobile`  | Phone app or phone-sized layout                 | device  |
+| `tablet`  | Tablet layout (master-detail, multi-column)     | device  |
+| `desktop` | Natively installed desktop application          | device  |
+| `auto`    | In-car head unit — **CarPlay and Android Auto** | device  |
+| `site`    | Browser-delivered content surface               | browser |
+| `webapp`  | Browser-delivered application                   | browser |
 
-The sixth is **`cli`** — a shipped command-line or TUI tool (`frontend`), not a
-repo's internal dev scripts. It is a platform like the others in the registry
-and in `.config/vwf.yaml`, and nowhere else: a terminal surface has **no
+Format 22 split the old single `web` token into `site` and `webapp` and made
+both platforms rather than roles. They are two surfaces, not two implementations
+of one: a marketing site and the product's application have different screens,
+different navigation and often different design projects, and a product with
+both used to have no way to say so.
+
+**`cli` is a platform but not a screen platform** — a shipped command-line or
+TUI tool, not a repo's internal dev scripts. It appears in the registry and in
+`.config/vwf.yaml` and nowhere else: a terminal surface has **no
 screens**, so `cli` never admits a `cli.md` platform file and never reaches
 `/skill:vwf-screens`, `/skill:vwf-mockups`, the canvas, or the scratchpad. A flow of a
 cli-only project is `index.md` alone, like a service flow. What `cli` does
 require is the design system's **Terminal UX** section.
+
+Every **other** platform — `service`, `worker`, `packages`, and every `data` and
+`system` token — is screenless in exactly the same way, and for the same reason:
+a flow of theirs is `index.md` alone. What was one exemption for `cli` is now
+the general rule, with the six above as the exception.
 
 The vocabulary names **form factors, not vendors** — `mobile` already hides
 iOS/Android and `desktop` hides Windows/macOS/Linux, so `auto` hides CarPlay and
@@ -124,7 +150,8 @@ now-playing and the driver-distraction rules) are recorded as deviations inside
 
 A project's implemented platforms are declared in the registry
 (`projects[].platforms`) and **only** there — since format 19 the key is gone
-from `.config/vwf.yaml`. A flow's `Platforms` table must be a subset of them.
+from `.config/vwf.yaml`. A flow's `Platforms` table must be a subset of them,
+and only its **screen** platforms produce files.
 **In-car journeys are not separate flows** (they were, before format 15): `auto`
 is a platform file of the same flow, so the auto take on `100-home` is
 `100-home/auto.md` — same number, same steps, its own screens.

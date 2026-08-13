@@ -64,7 +64,7 @@ decision rather than a fault.
   knowledge, and never invent an entry to spare the user that halt.
 - **The project and repo axes are not ours to answer here.** Packaging does not
   decide the language, framework or package manager a project uses, so a
-  `devtools` menu entry never carries a `role`. The repo-level tooling this
+  `devtools` menu entry never carries `platforms:` (a project-axis key). The repo-level tooling this
   plugin documents — mise, dprint, ESLint, gitleaks, grype, pre-commit — reaches
   a repo through its skills, not through a `repo`-axis template.
 - Do not read the repo, the registry, or `.config/vwf.yaml`. This skill answers

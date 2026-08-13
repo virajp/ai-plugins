@@ -55,6 +55,7 @@ tell the caller nothing about which of those it was looking at.
   unions the answers; naming `gcp`'s buckets here would double-count them and
   make this plugin the wrong owner of a decision it does not hold.
 - **The project axis is not ours.** Object storage does not decide the language
-  or framework a project is written in, so this plugin never returns a `role`.
+  or framework a project is written in, so this plugin never returns `platforms:`
+  — that key is project-axis only.
 - Do not read the repo, the registry, or `.config/vwf.yaml`. This skill answers
   the same way in every product.

@@ -9,7 +9,7 @@ tags: [ identity, commerce ]
 
 # Entity: Customer
 
-<!-- Conformance example (blueprint-format 14). See order/index.md for the bundle
+<!-- Conformance example (blueprint-format 22). See order/index.md for the bundle
      note. Customer has no Screens — screens live on the flows that use it. -->
 
 ## Purpose

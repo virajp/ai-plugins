@@ -171,10 +171,11 @@ adopting it.
   included). You model the codebase with `/vwf:architecture` first; it won't
   operate on an ad-hoc folder.
 - **Structure and stacks are both menus.** `vwf` ships three topology templates
-  (`repo` / `monorepo` / `polyrepo`) and `/vwf:architecture` presents stack
+  (`repo` / `monorepo` / `multi-repo`) and `/vwf:architecture` presents stack
   templates per axis — you pick, and the choice plus its reason is recorded so
-  it is never re-litigated. The one structural requirement left: a **polyrepo is
-  rooted at a submodule parent**, because vwf needs one place for the blueprint.
+  it is never re-litigated. A multi-repo product picks a **linkage** too:
+  `submodule` (recommended) or `siblings`, so a product whose repos are ordinary
+  clones needs no restructuring to be onboarded.
 - **Solo / small-team focus.** It is highly opinionated — one workflow, one set
   of conventions. Great for a solo dev or small team; not a configurable
   framework for a large org.
@@ -319,7 +320,7 @@ docs/
 │   │       └── schema.yaml
 │   └── apis/                    # authoritative API contracts (OpenAPI 3.1)
 │       ├── <project>.openapi.yaml  # one per API-publishing project
-│       │                           # (role service or fullstack)
+│       │                           # (a project declaring `service`)
 │       └── released/            # frozen production snapshots — the release
 │                                # record backward compatibility is enforced against
 ├── plans/                       # per-cycle plans (the diff to apply)
@@ -363,22 +364,32 @@ Structure is a **menu**, like stacks. `vwf` ships three topology templates and
 `/vwf:setup` presents the one it detects for confirmation; the choice and its
 reason land in `.config/vwf.yaml` and are never re-litigated.
 
-| Topology   | What it is                                                    | `docs/blueprint/` lives |
-| ---------- | ------------------------------------------------------------- | ----------------------- |
-| `repo`     | One codebase, deployed as a whole                             | the repo root           |
-| `monorepo` | One VCS repo, several independently-buildable projects        | the repo root           |
-| `polyrepo` | A group of repos, wired as submodules under a **parent** repo | the parent repo         |
+| Topology     | What it is                                             | `docs/blueprint/` lives |
+| ------------ | ------------------------------------------------------ | ----------------------- |
+| `repo`       | One codebase, deployed as a whole                      | the repo root           |
+| `monorepo`   | One VCS repo, several independently-buildable projects | the repo root           |
+| `multi-repo` | A group of repos coordinated by a **base** repo        | the base repo           |
 
 The deciding question isn't project count — it's whether the product's code can
 share **one dependency graph and one release cadence**. Yes → `monorepo`. No →
-`polyrepo`. A Flutter app beside a TypeScript backend is the classic no: store
+`multi-repo`. A Flutter app beside a TypeScript backend is the classic no: store
 review can't sync with continuous deploy, and Dart can't share a dependency
 graph with TypeScript.
 
+A multi-repo product has a **base repo** holding the blueprint, the config and
+the plan index — and no product code — plus one or more **members** holding the
+code. How the members are wired is the `linkage:` choice:
+
+**`linkage: submodule`** (recommended) — the members are git submodules, so one
+`clone --recurse-submodules` reproduces the product at a known-good set of
+commits, and the pointer commits record which member versions were ever
+consistent together:
+
 ```text
-my-product/           # polyrepo parent — vwf lives here
+my-product/           # base repo — vwf lives here
 ├── .gitmodules
 ├── docs/blueprint/   # the vwf bundle (one per product)
+├── docs/plans/index.md
 ├── backend/          # submodule — a monorepo
 │   ├── projects/     # api · worker · web · ops
 │   └── packages/
@@ -386,12 +397,35 @@ my-product/           # polyrepo parent — vwf lives here
 └── app/              # submodule — a single repo (Flutter)
 ```
 
-**The one structural requirement:** a polyrepo is rooted at a submodule parent,
-because vwf needs a single place for the blueprint and a group of unlinked repos
-has none. Onboarding an existing polyrepo therefore means creating that parent —
-real work, and worth knowing before you start. If every project shares one
-toolchain, `monorepo` gives the same structure with none of the submodule
-overhead.
+**`linkage: siblings`** — the members are ordinary repos cloned next to the
+base. Nothing wires them in git, so vwf does it: the base's `members:` list
+names each one (with the git URL to clone it from), and each member carries
+`.config/vwf-membership.yaml` pointing back. That back-link is load-bearing —
+without it, running `/vwf:plan` from inside a member would find no config and
+report a perfectly onboarded repo as un-onboarded.
+
+```text
+~/Projects/acme/
+├── acme-product/     # base repo — docs only
+│   ├── docs/blueprint/
+│   └── .config/vwf.yaml     # members: [...]
+├── acme-api/         # plain repo
+│   └── .config/vwf-membership.yaml
+└── acme-app/
+    └── .config/vwf-membership.yaml
+```
+
+**Not every member has to be on your machine.** A twenty-repo product doesn't
+fit on one laptop, and vwf detects what's present on every run rather than
+recording it — presence is per-developer state, not a property of the product.
+When a command needs a repo you don't have, it offers to clone it; decline and
+it proceeds with that project excluded and **says which projects it couldn't
+inspect**. `/vwf:execute` is the exception and stops, since it can't write code
+into a repo you don't have.
+
+**Where plans live:** a plan lives in the repo whose code it changes, and the
+base repo keeps a thin `docs/plans/index.md`. In a `repo` or `monorepo` product
+that's the one checkout, so the rule costs nothing.
 
 Existing repos whose layout differs from their topology's suggested grouping get
 a **consent-gated restructure proposal** from `/vwf:setup`: in-repo layout moves
@@ -433,16 +467,22 @@ per repo; it describes the checkout, not a project.
 
 Project-axis templates:
 
-| Role        | Template ships today         | Stack                                          |
-| ----------- | ---------------------------- | ---------------------------------------------- |
-| `packages`  | `typescript-effect`          | TypeScript · Effect-TS                         |
-| `service`   | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                  |
-| `worker`    | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS              |
-| `site`      | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
-| `fullstack` | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
-| `frontend`  | `dart-flutter`               | Dart · Flutter — from the `flutter` plugin     |
-| `frontend`  | `typescript-effect-cli`      | TypeScript · @effect/cli — platform `cli`      |
-| `iac`       | `typescript-pulumi`          | TypeScript · Pulumi — always its own repo      |
+| Platforms served                     | Template ships today         | Stack                                          |
+| ------------------------------------ | ---------------------------- | ---------------------------------------------- |
+| `packages`                           | `typescript-effect`          | TypeScript · Effect-TS                         |
+| `service`                            | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                  |
+| `worker`                             | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS              |
+| `site`                               | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
+| `service` + `webapp`                 | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
+| `mobile` `tablet` `desktop` `webapp` | `dart-flutter`               | Dart · Flutter — from the `flutter` plugin     |
+| `cli`                                | `typescript-effect-cli`      | TypeScript · @effect/cli                       |
+| `iac`                                | `typescript-pulumi`          | TypeScript · Pulumi — always its own repo      |
+
+A template declares **which platforms it serves**, and the list is what the menu
+filters on. One template routinely covers several: Flutter builds four surfaces
+from one codebase, and the Hono + Refine template serves an API and its own UI —
+what the retired `fullstack` role meant. **Your pin must cover every platform
+your project declares**, which `/vwf:doctor` checks.
 
 **Templates ship in the plugin that owns the technology, not in vwf.** Every
 `typescript-*` row above, plus the `npm-package` deploy target and both `repo`
@@ -459,18 +499,19 @@ framework — and a backing template is now one capability rather than a vendor
 bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each from its own
 capability plugin, is a completely vendor-free path through vwf.
 
-An operator back-office is `role: fullstack` plus the `operator-rbac`
-capability, and picks the `fullstack` template. A `frontend` project on a screen
-platform has no deploy axis — it ships through a store. A `cli` frontend does
-have one: it ships through a package registry, so it pins `npm-package`.
+An operator back-office is `platforms: [service, webapp]` plus the
+`operator-rbac` capability, and picks the `typescript-hono-refine` template. A
+project shipping through a store rather than to a deploy target (`mobile`,
+`tablet`, `desktop`, `auto`) has no deploy axis. A `cli` project does have one:
+it ships through a package registry, so it pins `npm-package`.
 
-**`iac` is the one role vwf constrains structurally.** A project with
-`role: iac` must live in **its own repo** — independent, or a submodule of the
-product parent — under every topology, monorepo included. Blast radius,
-credentials, lifecycle and cadence all differ in kind from application code, and
-one repo cannot separate them. `/vwf:doctor` raises a violation as a
-**blocking** finding and `/vwf:setup` offers a consent-gated restructure;
-nothing else about repo shape is enforced.
+**`iac` is the one platform vwf constrains structurally.** A project declaring
+`iac` must live in **its own repo** — independent, or a member of the product's
+base repo — under every topology, monorepo included. Blast radius, credentials,
+lifecycle and cadence all differ in kind from application code, and one repo
+cannot separate them. `/vwf:doctor` raises a violation as a **blocking** finding
+and `/vwf:setup` offers a consent-gated restructure; nothing else about repo
+shape is enforced.
 
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
@@ -546,21 +587,21 @@ developer's machine, any branch, never deployed), `staging` (testers only, built
 from `develop` only), `production` (customers, built from `main` only) — with
 `dev`/`test`/`prod`-style synonyms treated as drift, and deploys that are
 **tag-triggered only** (`<project>-stage-v<x.y.z>` → staging,
-`<project>-prod-v<x.y.z>` → production, one project per tag; a polyrepo uses the
-repo name) with **branch validation** in the workflow (a prod tag on a feature
-branch can never deploy) and **no deploy step before the tagged project's and
-its dependents' tests pass in the same run**. A staging deploy is never a
-release — production releases are recorded only by `/vwf:verify`. The
+`<project>-prod-v<x.y.z>` → production, one project per tag; a multi-repo member
+uses the repo name) with **branch validation** in the workflow (a prod tag on a
+feature branch can never deploy) and **no deploy step before the tagged
+project's and its dependents' tests pass in the same run**. A staging deploy is
+never a release — production releases are recorded only by `/vwf:verify`. The
 [`cicd`](./cicd.md) plugin — independent, not a vwf dependency — generates
 release pipelines conforming to this contract on whichever CI system the repo
 uses: everything common (tag parsing, branch validation, the test gate) written
 once, and the deploy factored no further than the repo's own variation demands.
 
 The **operator back-office** deserves a note. Since format 19 it is not its own
-role: it is `role: fullstack` plus the `operator-rbac` capability — a single app
-serving both the operator API and an embedded UI, and the **sole holder of admin
-capabilities** (the public `service` exposes no admin routes). The capability,
-not a type name, is what marks it.
+role: it is `platforms: [service, webapp]` plus the `operator-rbac` capability —
+a single app serving both the operator API and an embedded UI, and the **sole
+holder of admin capabilities** (the public `service` exposes no admin routes).
+The capability, not a type name, is what marks it.
 
 The full stack docs ship inside each **stack plugin** under its own `stacks/`
 tree — never in vwf — and drive what `/vwf:setup` and `/vwf:architecture`
@@ -620,12 +661,12 @@ conversation calls for one, and the same artifact installs into OpenCode via the
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
 it after upgrading vwf to migrate to the latest format. It detects your topology
-(repo, monorepo, or polyrepo; project roles; stacks) and confirms it with you
-via MCQ, then produces a **dry-run migration plan** — every doc to scaffold and
-every source move to make, including a restructure proposal toward the chosen
-topology's layout when the repo doesn't match (declining records a deviation,
-not a fight). On a new/empty repo it applies the workspace structure as the
-default and elicits each project's stack from the
+(repo, monorepo, or multi-repo + linkage; project roles and platforms; stacks)
+and confirms it with you via MCQ, then produces a **dry-run migration plan** —
+every doc to scaffold and every source move to make, including a restructure
+proposal toward the chosen topology's layout when the repo doesn't match
+(declining records a deviation, not a fight). On a new/empty repo it applies the
+workspace structure as the default and elicits each project's stack from the
 [template menu](#stack-templates). It also writes the product's **one**
 `mempalace.yaml`, at the repo root — one wing, the seven rooms vwf's memory
 protocol uses, and a secret denylist behind `.gitignore` — mining the whole tree
@@ -685,10 +726,10 @@ blueprint deliberately doesn't.
 ### /vwf:design-system
 
 A second foundation, **mandatory once the registry has a UI project** (some
-project's `role` is `site`, `fullstack` or `frontend`) — and **import-only**:
-Claude Design owns design-system authoring. You pick or build the design system
-on claude.ai/design (its stock systems are strong, and visual language is judged
-on a canvas, not as hex values in chat); the command imports it:
+project declares a **screen platform**) — and **import-only**: Claude Design
+owns design-system authoring. You pick or build the design system on
+claude.ai/design (its stock systems are strong, and visual language is judged on
+a canvas, not as hex values in chat); the command imports it:
 
 ```text
 /vwf:design-system                  # resolve: pin → pick from your design systems
@@ -732,17 +773,18 @@ what remains, and the next run picks it up.
 **Standard flows.** UI projects carry a canonical flow vocabulary with exact
 slugs — `splash`, `signin`, `home`, `onboarding`, `settings`, `notifications`,
 `profile`, `delete-account`, `recover-account` — with per-role mandates: a
-mobile app (`frontend`) must have `splash` and `home`; a `site` or `fullstack`
-must have `home` (`splash` optional). A project whose only platform is `cli` is
-exempt — the standard slugs are screen journeys a terminal tool does not have. A
-project whose registry entry carries an **Auth & identity capability** must
-additionally have `signin` — and with it `profile`, `delete-account`, and
-`recover-account` (an account you can sign into can be viewed, recovered, and
-deleted). A missing mandatory standard flow is a coverage hole like any other —
-waivable per flow under `enforcement.rules` in `.config/vwf.yaml`, with a
-reason, never re-asked. The slugs are exact: a `login` or `account` flow whose
-journey matches is proposed for a consent-gated rename (links, catalogs, and
-canvas join keys move together), never renamed silently.
+project on a device platform (`mobile`/`tablet`/`desktop`/`auto`) must have
+`splash` and `home`; one on a browser platform (`site`/`webapp`) must have
+`home` (`splash` optional). A project whose only platform is `cli` is exempt —
+the standard slugs are screen journeys a terminal tool does not have. A project
+whose registry entry carries an **Auth & identity capability** must additionally
+have `signin` — and with it `profile`, `delete-account`, and `recover-account`
+(an account you can sign into can be viewed, recovered, and deleted). A missing
+mandatory standard flow is a coverage hole like any other — waivable per flow
+under `enforcement.rules` in `.config/vwf.yaml`, with a reason, never re-asked.
+The slugs are exact: a `login` or `account` flow whose journey matches is
+proposed for a consent-gated rename (links, catalogs, and canvas join keys move
+together), never renamed silently.
 
 Flows live **grouped by the registry project that owns the journey**, and a flow
 folder holds two kinds of file: **`index.md`** — the platform-agnostic contract
@@ -1113,9 +1155,9 @@ A clean run against the **production** environment (the env named `production`,
 or whatever `production_env` in `.config/vwf.yaml` names) offers to record a
 **release**: each deployed `service` project's living OpenAPI contract is frozen
 into `docs/blueprint/apis/released/<project>@<version>.openapi.yaml` — the
-release record. A `fullstack` project owns a contract too but is never frozen:
-its API serves its own UI, shipped in the same deployable, so there is no
-independent consumer to protect. From the first snapshot on, backward
+release record. A `[service, webapp]` project owns a contract too but is never
+frozen: its API serves its own UI, shipped in the same deployable, so there is
+no independent consumer to protect. From the first snapshot on, backward
 compatibility is enforced everywhere: the blueprint's coherence review
 hard-gates a breaking contract change without a major-version bump, and
 execute's code review treats a code change that would break the released
@@ -1218,20 +1260,20 @@ otherwise it creates `README.md`.
 The generated README always carries these sections, in order (the tasks section
 is omitted when the repo has no task runner):
 
-| Section           | What it documents                                                         |
-| ----------------- | ------------------------------------------------------------------------- |
-| Title             | The project name as the H1                                                |
-| Short description | One or two sentences on what the project is                               |
-| List of projects  | Every package (a table for a monorepo; one entry for a polyrepo)          |
-| Architecture      | A `mermaid` diagram of how the projects/services fit together, plus notes |
-| Infrastructure    | Every cloud tool/service the repo uses                                    |
-| Local Development | A step-by-step setup guide to run the repo locally                        |
-| Projects          | One detailed section per project (monorepo) or a single one (polyrepo)    |
-| Important tasks   | The task-runner commands a developer runs day to day                      |
+| Section           | What it documents                                                               |
+| ----------------- | ------------------------------------------------------------------------------- |
+| Title             | The project name as the H1                                                      |
+| Short description | One or two sentences on what the project is                                     |
+| List of projects  | Every package (a table for a monorepo; one entry for a multi-repo member)       |
+| Architecture      | A `mermaid` diagram of how the projects/services fit together, plus notes       |
+| Infrastructure    | Every cloud tool/service the repo uses                                          |
+| Local Development | A step-by-step setup guide to run the repo locally                              |
+| Projects          | One detailed section per project (monorepo) or a single one (multi-repo member) |
+| Important tasks   | The task-runner commands a developer runs day to day                            |
 
 It follows a **detect → ask → write → report** flow: it scans for the layout
-(monorepo vs polyrepo), the projects, the architecture, the cloud tooling (IaC,
-containers, CI/CD, deploy configs, cloud SDKs), and the task runner — mise
+(monorepo vs multi-repo), the projects, the architecture, the cloud tooling
+(IaC, containers, CI/CD, deploy configs, cloud SDKs), and the task runner — mise
 (`mise.toml`), `package.json` `scripts`, a `Makefile`, or a `justfile`,
 preferring mise when more than one is present; asks only what it can't infer (a
 missing tagline, which cloud services are actually in use); then writes the
@@ -1262,7 +1304,7 @@ protocol**:
 - **One decision per round** — multiple-choice with an "Other" escape hatch;
   each answer shapes the next question.
 - **Every question says what it's about** — the registry project it concerns
-  (and its `role`: `service`, `frontend`, `fullstack`, …), the platform when the
+  (and its `platforms`: `service`, `mobile`, `webapp`, …), the platform when the
   decision is platform-specific (`app`·`mobile` vs `app`·`auto`), or "the whole
   product" when it really is product-wide. A sweep crosses several projects in
   one sitting and you're looking at a conversation, not at the file being

@@ -1,5 +1,5 @@
 name: object-storage
-version: 0.1.0
+version: 0.1.1
 description: "Object-storage capability plugin for vwf — **contract only, and
   deliberately so**. It owns the neutral vocabulary and requirements (buckets,
   object lifecycle, signed access, retention, the never-proxy-bytes rule) and

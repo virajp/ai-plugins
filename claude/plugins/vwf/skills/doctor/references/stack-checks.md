@@ -65,16 +65,18 @@ user's feet, or a stack plugin that was never installed. A **`custom` pin is
 `13` drift and blocking**: the value was retired in `config_format` 14, and it
 names a stack with no `conventions` for `plan` and `execute` to read and no
 `harness` block to check against — remedy `/vwf:setup`, which
-walks the axis back through the menu. A `frontend` project's
-`deploy_template: n/a` is correct, not missing — unless its platform is `cli`,
+walks the axis back through the menu. A project whose
+platforms ship through a store rather than to a deploy target (`mobile`,
+`tablet`, `desktop`, `auto`) is correct with `deploy_template: n/a`, not
+missing — unless its platform is `cli`,
 which ships to a package registry and should pin `deploy/npm-package`; an `iac`
-project's `n/a` is likewise correct, since it *is* the deploy path.
+platform's `n/a` is likewise correct, since it *is* the deploy path.
 
 **A project missing a required axis is a finding.** Every registry project needs
 a `template` and a `deploy_template` (`n/a` counts — it is an answer);
 `backing_template` may be `[]` but must be present, since an absent key and an
-empty list mean different things (nobody decided, versus decided: none). A **UI**
-project (`role` `site`, `fullstack` or `frontend`) additionally needs `design`,
+empty list mean different things (nobody decided, versus decided: none). A
+project declaring a **screen platform** additionally needs `design`,
 without which the design adapter halts at import time; every project needs
 `cicd`, without which `/cicd:workflow` has to ask on every run. Report each as
 drift naming the project and the axis, and nudge `/vwf:architecture` — never
@@ -83,16 +85,26 @@ exactly the product-wide assumption format 13 removed. A config still carrying a
 product-wide `backing:`, `deploy:` or `design.tool` key is `12` drift: report it
 and nudge `/vwf:setup`.
 
-**An `iac` project must be its own repo.** For each registry project with
-`role: iac`, resolve its `path` and check which repo's working tree it falls in
-(`git -C <path> rev-parse --show-toplevel`). If that resolves to another
-project's repo — the monorepo it sits inside, or the polyrepo parent itself
-rather than a submodule — it is a **blocking** finding: `setup` and `execute`
-both halt on it. The rule and its rationale are in
+**An `iac` project must be its own repo.** For each registry project declaring
+the `iac` platform, resolve its `path` and check which repo's working tree it
+falls in (`git -C <path> rev-parse --show-toplevel`). If that resolves to
+another project's repo — the monorepo it sits inside, or the multi-repo **base**
+itself rather than a member — it is a **blocking** finding: `setup` and
+`execute` both halt on it. The rule and its rationale are in
 `${CLAUDE_PLUGIN_ROOT}/assets/topologies/`. The remedy is
 `/vwf:setup`, which offers the consent-gated restructure; doctor reports and
 stops there, as with every other structural change. An `iac` project that is
-already an independent repo or a submodule passes silently.
+already its own repo — an independent one, a submodule, or a sibling member —
+passes silently.
+
+**A project's template must cover its platforms.** Since format 22 a
+project-axis template declares the platforms it serves in its own frontmatter,
+and a project declares its own in the registry. Every platform the project
+declares must appear in its pinned template's list; one that does not is
+**blocking**, since `plan` and `execute` would size that surface against
+conventions written for something else. The common case is a project that was
+`fullstack` before the migration and is now `[service, webapp]` — check the pin
+rather than assuming the migration got it right.
 
 **mise is mandatory** — it is both vwf's task runner (every worktree init,
 pre-commit and merge goes through it) and the toolchain manager the §3 checks

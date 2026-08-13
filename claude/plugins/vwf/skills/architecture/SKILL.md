@@ -120,52 +120,66 @@ a time, gathering for each:
 | Field          | How to elicit                                                                        |
 | -------------- | ------------------------------------------------------------------------------------ |
 | `name`         | Free text (short identifier)                                                         |
-| `role`         | MCQ: `service` / `worker` / `packages` / `site` / `fullstack` / `frontend` / `iac`   |
+| `role`         | MCQ: `backend` / `frontend` / `data` / `system`                                      |
 | `path`         | Free text (repo-relative directory)                                                  |
 | `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other        |
 | `depends_on`   | Multi-select from named projects + None                                              |
-| `doc_unit`     | MCQ: `entity` / `page` / `module` (default by role)                                  |
-| `platforms`    | Multi-select (UI roles) — see Platforms below                                        |
+| `doc_unit`     | MCQ: `entity` / `page` / `module` (default by platforms)                             |
+| `platforms`    | Multi-select from the role's closed list — **every** project, see Platforms below    |
 
 Since format 16 the registry has **no `stack` field**: the concrete technology
 is realization, recorded in `.config/vwf.yaml` (see the stack menu below). The
 registry describes what the system *is*; config records what it is *built with*.
 
-Offer the role defaults for `doc_unit`: `service` → `entity`, `worker` →
-`entity`, `packages` → `module`, `site` → `page`, `fullstack` → `page`,
-`frontend` → `entity`, `iac` → `module`.
+Offer the **platform** defaults for `doc_unit` — it follows the platforms, not
+the role: `site`/`webapp` → `page`; `packages`, `iac`, `plugin` → `module`;
+everything else → `entity`. A project whose platforms disagree takes the first
+match in that order.
 
-**`site` vs `fullstack`.** Ask which one it is by the API question, not by how
-the user describes the code: a project that **publishes its own API** is
-`fullstack` and therefore requires `apis/<project>.openapi.yaml` and a health
-endpoint; a UI that calls another project's service is `site`. SSR does not make
-a site fullstack — server rendering is not a published API.
+**Publishing an API is the `service` platform.** Ask by the API question, not by
+how the user describes the code: a project that **publishes its own API**
+declares `service` and therefore requires `apis/<project>.openapi.yaml` and a
+health endpoint. A project serving its own UI from the same deployable declares
+`[service, webapp]` — what the retired `fullstack` role meant. A UI that calls
+another project's service declares only `site` or `webapp`. SSR does not make a
+browser surface a `service` — server rendering is not a published API.
 
-**No `console`.** An operator back-office is `role: fullstack` plus the
+**`site` vs `webapp`.** `site` is a browser-delivered **content** surface
+(marketing, docs, landing); `webapp` is the browser-delivered **application**.
+Ask which; a product with both declares both.
+
+**No `console`, no `fullstack`.** An operator back-office is
+`platforms: [service, webapp]` plus the
 `operator-rbac` capability. When a user describes an admin panel, offer exactly
-that rather than inventing a role. **Synonyms** normalize on the way in: `api` →
-`service`, `web` → `site`, `app` → `frontend`, `library` → `packages`, `infra` →
-`iac`.
+that rather than inventing a role. **Synonyms** normalize on the way in — roles:
+`web`/`app`/`ui` → `frontend`, `api`/`server` → `backend`, `infra`/`ops` →
+`system`; platforms: `library` → `packages`, and a bare `web` is **ambiguous
+between `site` and `webapp`** — ask, never pick.
 
 **`iac`** is registered but exempt from blueprint coverage — it has no flows,
-screens or API contracts. Record it, then skip it in every coverage question.
+screens or API contracts. So is **every `data` and `system` platform**. Record
+them, then skip them in every coverage question.
 
 **An `iac` project must be its own repo** — independent, or a submodule of the
 product parent. The rule and its rationale live in
 `${CLAUDE_PLUGIN_ROOT}/assets/topologies/`; it holds under all three topologies,
 including a monorepo that otherwise keeps every project in one tree. So when a
-user declares a project with role `iac`, **elicit its repo** — ask where it
+user declares a project with the `iac` platform, **elicit its repo** — ask where it
 lives and record that path — rather than defaulting it under the product root
 like every other project. If the answer places it inside another repo, say so
 plainly and record what they chose: `/vwf:doctor` will raise it as blocking and
 `/vwf:setup` will offer the restructure. Never restructure from here.
 
-**Platforms.** A UI project (`site`, `fullstack`, `frontend`) records its
-implemented surfaces under `platforms:` in **`registry.yaml`** — the single
-source since format 19; the key no longer appears in `.config/vwf.yaml`. The
-per-role menu, the in-car (`auto`) rule, and the CLI/TUI question are in
-[platforms & terminal surfaces](references/platforms.md) — read it when the
-project being walked is a UI one. A non-UI project takes no `platforms:` key.
+**Platforms.** **Every** project records its implemented surfaces under
+`platforms:` in **`registry.yaml`** — the single
+source since format 19; the key no longer appears in `.config/vwf.yaml`. Since
+format 22 this is not a UI-only field: a project carries one `role` and one or
+more platforms from that role's closed list, and the platforms are what every
+downstream mandate keys on. The
+per-role menu, the screen-platform subset, the in-car (`auto`) rule, and the
+CLI/TUI question are in
+[platforms & terminal surfaces](references/platforms.md) — read it at this
+step, for every project.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.** It
 is composed from **four independent axes** (project / backing / deploy per
@@ -231,7 +245,7 @@ for explicit approval before proceeding to Step 5.
 Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 
 - All elicited prose answers (system overview, interconnects, hosting).
-- All per-project registry rows (name, role, path, capabilities, depends_on,
+- All per-project registry rows (name, role, platforms, path, capabilities, depends_on,
   doc_unit, platforms) — **no stack**; it is not a registry field.
 - All cross-cutting decisions.
 - **Update mode only:** the **paths** `docs/blueprint/architecture.md` and
@@ -247,7 +261,7 @@ not pass either file back through this session.
 **Write the stack yourself**, not through the writer: set the structured
 `projects.<name>.stack` block in `.config/vwf.yaml` for **every** project — all
 three axes, `template`, `backing_template` and `deploy_template` — plus the
-per-project `design` (UI projects) and `cicd` keys and the repo-level
+per-project `design` (screen-platform projects) and `cicd` keys and the repo-level
 `repo.stack`. The writer never touches config, and never sees a stack — that
 separation is what keeps the blueprint vendor-free.
 

@@ -1,8 +1,8 @@
 name: cicd
-version: 1.0.0
+version: 1.1.0
 description: Generate a repo's delivery pipeline for whichever CI system it uses
   — one /cicd:workflow skill that resolves the tool from config and reads that
-  tool's reference. Tools always install through mise; polyrepo and monorepo
+  tool's reference. Tools always install through mise; multi-repo and monorepo
   layouts are both supported.
 category: development
 tags:
@@ -13,7 +13,7 @@ tags:
   - mise
   - workflow
   - monorepo
-  - polyrepo
+  - multi-repo
   - skills
 author:
   name: Viraj Patel

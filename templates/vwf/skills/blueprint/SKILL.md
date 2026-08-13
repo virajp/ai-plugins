@@ -99,7 +99,7 @@ reach the API surface.
 | ---------------------------------------------------- | -------------------------------------------------------------------------- |
 | [flow-placement](references/flow-placement.md)       | placing/naming a new flow or entity; the surveyor returned synonyms (§1)    |
 | [density-pass](references/density-pass.md)           | the worklist entry is `density/<unit>` (§2)                                |
-| [platforms](references/platforms.md)                 | the flow touches a UI project, or a project's `doc_unit` is non-obvious (§2) |
+| [platforms](references/platforms.md)                 | the flow touches a screen platform, or a project's `doc_unit` is non-obvious (§2) |
 | [screen-review](references/screen-review.md)         | the pass authored or changed a `## Screens` section (§6a)                  |
 | [rename-and-delete](references/rename-and-delete.md) | the pass renames or removes a flow or entity (§7)                          |
 | [coherence-review](references/coherence-review.md)   | the worklist is empty and the coherence review is next (§8)                |
@@ -160,7 +160,7 @@ Whole-product coverage holds when, all at once:
 - every flow with a Screens section has passed its **visual review** (§6a) — a
   recorded skip (`screens/<project>/<NNN>-<flow>/<platform>` in `remaining:`) is
   an open hole;
-- every UI project carries its **mandatory standard flows** per
+- every project declaring a screen platform carries its **mandatory standard flows** per
   `<%= it.root %>/assets/standard-flows.md` (conditional slugs resolved
   from the registry's auth capabilities; waivers in `enforcement.rules`
   honored);
@@ -199,27 +199,29 @@ loop** — the reviewer's density bars are what confirm the pass landed. There i
 to handle each part of the condenser's return.
 
 From the flow's nature and the registry, determine which sections apply. Map
-**by project `role`, never by literal technology**:
+**by project `platforms`, never by literal technology** — since format 22 the
+`role` is a coarse grouping and the platform list is what obliges anything:
 
-| Flow section    | Resolves to (registry `role`)                               |
-| --------------- | ----------------------------------------------------------- |
-| Steps (API ops) | service/API project(s) — via `apis/<project>`               |
-| Background Jobs | worker project(s)                                           |
-| Screens         | UI project(s) (`role` is `site`, `fullstack` or `frontend`) |
-| Entity schemas  | the schema/contract package                                 |
+| Flow section    | Resolves to (registry `platforms`)                                    |
+| --------------- | --------------------------------------------------------------------- |
+| Steps (API ops) | project(s) declaring `service` — via `apis/<project>`                 |
+| Background Jobs | project(s) declaring `worker`                                         |
+| Screens         | project(s) declaring a **screen platform** (`site`, `webapp`, `desktop`, `mobile`, `tablet`, `auto`) |
+| Entity schemas  | the project declaring `packages` for schemas/contracts                |
 
-If no project carries the relevant role, **omit** that section for this flow.
+If no project declares the relevant platform, **omit** that section for this
+flow.
 
-**Platforms and doc units.** A UI flow's platform set is **elicited per flow**,
-bounded by the registry project's declared `platforms:` — and steps, acceptance
-and jobs stay in `index.md`, **never forked per platform**. An inapplicable
-surface is `N/A — <reason>`, never silently omitted. Read
+**Platforms and doc units.** A flow's platform set is **elicited per flow**,
+bounded by the registry project's declared **screen** platforms — and steps,
+acceptance and jobs stay in `index.md`, **never forked per platform**. An
+inapplicable surface is `N/A — <reason>`, never silently omitted. Read
 [platforms & doc units](references/platforms.md) for the platform-extension
 rules, the in-car (`auto`) specifics, and the `doc_unit` mapping — when the flow
-touches a UI project, or when a project's `doc_unit` is not the obvious one.
+touches a screen platform, or when a project's `doc_unit` is not the obvious one.
 
 **Design-system gate.** If the flow has a **Screens** section (some registry
-project's `role` is `site`, `fullstack` or `frontend`),
+project declares a screen platform),
 `docs/blueprint/design-system.md` must exist. **Halt if it does not:** "This
 flow has UI but no design system. Run `<%= it.cmd("vwf:design-system") %>` first." Screens
 reference the design system; they never re-decide visual language.
@@ -450,9 +452,9 @@ durable decisions and their rationale, plus any drift flagged, to mempalace
 
 ### 6a. Render & review the screens (gates the pass — flows with Screens)
 
-When this pass authored or materially changed a flow's `## Screens` section (UI
-projects whose `role` is `site`, `fullstack` or `frontend` — a `cli` platform
-has no screens), the pass approval (§7) **gates on a visual review** of those
+When this pass authored or materially changed a flow's `## Screens` section
+(projects declaring a screen platform — `cli` and every other screenless
+platform has none), the pass approval (§7) **gates on a visual review** of those
 screens. Screens are contracts with happy *and* sad paths; the user must see
 them before approving the flow.
 

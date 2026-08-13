@@ -7,10 +7,11 @@ and, on re-run, migrates the gap.
 `%%AI_PLUGINS_ROOT%%/assets/vwf-config.md` for the full schema):
 
 ```yaml
-config_format: 14
-blueprint_format: 21
-topology: monorepo # repo | monorepo | polyrepo
-ui: true # design-system required
+config_format: 15
+blueprint_format: 22
+topology: monorepo # repo | monorepo | multi-repo
+linkage: submodule # multi-repo only: submodule | siblings
+ui: true # design-system required (some project declares a screen platform)
 integrations: true # environment.md required (external integration / secret exists)
 # plus: product, projects (nuances), harness, enforcement, pipeline,
 # environments, memory, docs_sync — per the vwf-config asset
@@ -29,10 +30,17 @@ self-check the repo stamp against it via
 this is what reaches each repo, since vwf is installed once at user level and an
 upgrade does not re-run per repo.
 
-**Current format = 21.** (13 and 17 are deliberately **skipped** — no
+**Current format = 22.** (13 and 17 are deliberately **skipped** — no
 *blueprint* format ever carried either; a repo whose `blueprint_format` reads 13
 is impossible and would be treated as 12, one stamped 17 as 16. `config_format`
 13 is a different number line and is real — see the vwf-config asset.) Format
+22 = format 21 **plus** the **role/platform split and flexible multi-repo** (the
+`21 → 22` delta below): the seven-token `role` vocabulary collapses to four
+roles — `backend`, `frontend`, `data`, `system` — each project gaining a
+`platforms:` list that every mandate now keys on; and `polyrepo` becomes
+`multi-repo` with a `linkage:` of `submodule` or **`siblings`**, so a product
+whose repos are not submodules can be onboarded without restructuring. It ships
+with `config_format` **15**. Format
 21 = format 20 **plus** the **one mempalace config per product** (the
 `20 → 21` delta below): a workspace carries exactly one `mempalace.yaml`, at the
 repo root, mining the whole product tree with the submodule excludes gone and a
@@ -741,6 +749,81 @@ the current format and apply the delta:
   product, still `memory.wing`), and every `enforcement.rules` waiver. This
   format moves one config file and rewrites its contents; the blueprint itself
   is untouched.
+
+- **`21 → 22`** → **the role/platform split, and multi-repo without
+  submodules**. The largest delta since 19. Steps 1–3 are mechanical; step 2 is
+  the one that needs the user, and only for one case.
+
+  1. **Rename the topology.** `polyrepo` → `multi-repo`, and add
+     **`linkage: submodule`** — the shape it always had. `repo` and `monorepo`
+     are untouched and take no `linkage`. Then write `members:` into
+     `.config/vwf.yaml`, one entry per member: `name` and `path` from
+     `.gitmodules`, `url` from its submodule URL, and `projects` from which
+     registry projects sit under that path. **Nothing is elicited** — every fact
+     already exists, in two files no reader previously compared. Write
+     `.config/vwf-membership.yaml` into each member naming the product and the
+     relative path back. Under submodule linkage that file is belt-and-braces
+     (the superproject walk already worked); writing it now is what lets a
+     product switch to `siblings` later without a second migration.
+
+  2. **Remap every project's `role`, adding `platforms`.** Mechanical except the
+     last row:
+
+     | Old `role` | New `role` | New `platforms` |
+     | --- | --- | --- |
+     | `service` | `backend` | `[ service ]` |
+     | `worker` | `backend` | `[ worker ]` |
+     | `site` | `frontend` | `[ site ]` |
+     | `fullstack` | `backend` | `[ service, webapp ]` |
+     | `frontend` (screen platforms) | `frontend` | its existing `platforms:`, with `web` → `webapp` |
+     | `frontend` + `platforms: [cli]` | `frontend` | `[ cli ]` |
+     | `iac` | `system` | `[ iac ]` |
+     | `packages` | **ask** | `[ packages ]` |
+
+     **`packages` is the one that needs input.** `packages` is now available
+     under *every* role, and the role names the package's primary consumer
+     domain — which is a judgment call, not a lookup. Present each `packages`
+     project with what depends on it and ask. Never default it: a wrong answer
+     here is invisible, since nothing about a package's behaviour changes.
+
+     The old **`web` platform token splits into `site` and `webapp`**. A project
+     carrying `platforms: [ web ]` is almost always the application, so propose
+     `webapp` — but say that `site` exists and means a content surface, and
+     confirm. Rename each `web.md` platform file to match
+     (`webapp.md` or `site.md`) with `git mv`, update its `platform:`
+     frontmatter, and fix the `Platforms` table rows and links in the flow's
+     `index.md` and the catalog's Platforms column.
+
+  3. **Re-point every project-axis stack pin.**
+     `projects.<name>.stack.template` drops its `<role>/` segment:
+     `project/<role>/<slug>` → `project/<slug>`. The slug is unchanged and
+     unique, so this is a string edit — but afterwards **check the pin still
+     covers**: a template now declares the platforms it serves, and a project's
+     pin must cover every platform it declares. A former `fullstack` project is
+     the case that breaks, since its platforms became `[ service, webapp ]`.
+     Report any pin that does not cover; do not guess a replacement.
+
+  4. Recompute **`ui:`** — it is now true when some project declares a **screen
+     platform** (`site`/`webapp`/`desktop`/`mobile`/`tablet`/`auto`) rather than
+     when some project carries a UI *role*. Recompute rather than copying: a
+     `cli`-only project could previously be miscounted.
+
+  5. Bump the stamp to `22`, **and `config_format` to `15` in the same run** —
+     see the `14 → 15` entry in the vwf-config asset. The two ship together; a
+     repo on one but not the other is a state neither migration expects.
+
+  **What does not change:** flow paths stay `flows/<project>/<NNN>-<flow>/`
+  (keyed on project *name*, never role), the flow numbering and the standard-flow
+  mandates (they key on platform now, but the *same* projects are in scope),
+  screen codes, entity docs, the coverage stamp, and every `enforcement.rules`
+  waiver — rule ids are unchanged.
+
+  **What this delta does not do:** it does not move any existing plan. Plans now
+  live in the repo whose code they change, and the base repo keeps
+  `docs/plans/index.md`; for a `repo` or `monorepo` product that is already true,
+  and for a multi-repo one, relocating live plans is offered as its own
+  consent-gated batch rather than done here — a plan mid-execution is not
+  something a format migration should move under the run's feet.
 
 - **future bumps** → add an `N → N+1` entry here describing exactly what to add
   or change, so a re-run is a mechanical, reviewable migration.

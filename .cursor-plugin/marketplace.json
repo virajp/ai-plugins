@@ -7,14 +7,14 @@
   "plugins": [
     {
       "category": "development",
-      "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; polyrepo and monorepo layouts are both supported.",
+      "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; multi-repo and monorepo layouts are both supported.",
       "name": "cicd",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/cicd"
       },
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "category": "development",
@@ -25,7 +25,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/cloudflare"
       },
-      "version": "0.1.1"
+      "version": "0.1.2"
     },
     {
       "category": "development",
@@ -36,7 +36,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/datastore"
       },
-      "version": "0.1.1"
+      "version": "0.1.2"
     },
     {
       "category": "development",
@@ -58,7 +58,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/devtools"
       },
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "category": "development",
@@ -69,7 +69,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/flutter"
       },
-      "version": "0.8.1"
+      "version": "0.9.0"
     },
     {
       "category": "development",
@@ -80,7 +80,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/gcp"
       },
-      "version": "0.1.1"
+      "version": "0.1.2"
     },
     {
       "category": "development",
@@ -91,7 +91,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/identity"
       },
-      "version": "0.1.1"
+      "version": "0.1.2"
     },
     {
       "category": "development",
@@ -102,7 +102,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/object-storage"
       },
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "category": "development",
@@ -113,7 +113,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/observability"
       },
-      "version": "0.1.1"
+      "version": "0.1.2"
     },
     {
       "category": "development",
@@ -124,7 +124,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/orchestration"
       },
-      "version": "0.1.1"
+      "version": "0.1.2"
     },
     {
       "category": "development",
@@ -135,7 +135,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/typescript"
       },
-      "version": "2.0.1"
+      "version": "3.0.0"
     },
     {
       "category": "development",
@@ -146,7 +146,7 @@
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "cursor/vwf"
       },
-      "version": "16.0.0"
+      "version": "17.0.0"
     }
   ]
 }

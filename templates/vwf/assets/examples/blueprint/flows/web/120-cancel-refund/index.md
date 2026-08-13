@@ -10,7 +10,7 @@ tags: [ commerce, refunds ]
 
 # Flow: Order cancellation & refund
 
-<!-- Conformance example (blueprint-format 15). A worked, format-valid flow doc
+<!-- Conformance example (blueprint-format 22). A worked, format-valid flow doc
      with an operator actor, a background job, and a compensation branch. -->
 
 ## Purpose
@@ -25,7 +25,7 @@ Serves: [Trusted refunds](../../../product.md#goal-trusted-refunds)
 
 | Platform | File            | Notes                                   |
 | -------- | --------------- | --------------------------------------- |
-| web      | [web](./web.md) | Customer-facing cancellation and status |
+| webapp   | [webapp](./webapp.md) | Customer-facing cancellation and status |
 
 ## Trigger & Actors
 

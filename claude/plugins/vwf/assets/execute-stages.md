@@ -27,8 +27,8 @@ so one boot of the local stack serves both. Each is conditional — skipped
 
 - `acceptance` — only when the plan's "Acceptance criteria (from blueprint)"
   section carries criteria (skip on `none — no flow touched`).
-- `ux` — only when the slice changes screens in a UI project (`role` is `site`,
-  `fullstack` or `frontend`). Every UI surface gets a real visual gate and a
+- `ux` — only when the slice changes screens on a **screen platform** (`site`,
+  `webapp`, `desktop`, `mobile`, `tablet`, `auto`). Every screen surface gets a real visual gate and a
   real accessibility gate, delivered by the stack plugin's `-ux-gate` — never a
   code-only read.
 
@@ -87,7 +87,7 @@ Per-stage dispatch contract:
 - **ux** — dispatch `execute-ux-reviewer` (pass the changed screens from the
   plan's screen steps, the `design-system.md` path, the owning flow docs'
   Screens section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`),
-  the UI project's registry entry, the wing, and the **slice** and **round
+  the project's registry entry (role and platforms), the wing, and the **slice** and **round
   number**). For a **web** slice it renders the changed screens via the repo's
   stack plugin's `-ux-gate`, which renders each changed screen and runs its
   ecosystem's accessibility scan; violations come back at WCAG A/AA severity

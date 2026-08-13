@@ -28,8 +28,8 @@ fixed name and consumes the payload
 (`%%AI_PLUGINS_ROOT%%/assets/design-adapter.md`); which tool answers is the
 adapter's business, resolved per project:
 
-1. **Resolve the scope.** Every registry UI project (`role` `site`, `fullstack`
-   or `frontend`) that has a canvas pin under `design.projects.<project>` — plus
+1. **Resolve the scope.** Every registry project declaring a **screen platform**
+   that has a canvas pin under `design.projects.<project>` — plus
    the product's design system when `design.design_system_id` is set. Legacy
    flat pins (`design.projects.*` uuids, `design.project_id`,
    `mockups.project_id`) count as pins and are `config_format` drift to mention

@@ -59,7 +59,7 @@ the contract of record; the canvas is where screens get good.
   every flow page's happy path in NNN execution order, so the complete happy
   flow for a platform is walkable from its index alone.
 
-**One design project per platform.** Every registry UI project pins a separate
+**One design project per platform.** Every registry project with a screen platform pins a separate
 design project per platform (`design.projects.<registry-project>.<platform>`;
 two platforms never share one), because the conventions differ per platform:
 each carries its own conventions doc. How those pins are resolved on the tool

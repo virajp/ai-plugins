@@ -18,6 +18,12 @@ disable-model-invocation: false
   worktree
 - Worktrees are always created for the **outermost superproject**, never a
   submodule (Step 1 resolves this)
+- **A sibling member is its own outermost superproject.** Under a `multi-repo`
+  product with `linkage: siblings`, the members are ordinary repos — the
+  superproject walk correctly ends at the member, and that is where the worktree
+  belongs. The base repo is a **separate** checkout the caller writes to
+  directly; it is never reached by walking up from a member
+  (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`)
 - **Initialize** every new worktree with its mise init task (Step 2d), and
   **end** every worktree with full coverage — land the branch (plus any
   submodule work and pointer updates), then remove it (Step 4)

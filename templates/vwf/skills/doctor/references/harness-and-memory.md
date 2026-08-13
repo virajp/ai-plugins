@@ -26,19 +26,27 @@ every later recall come back empty. Nothing else in vwf catches that; this
 section is where it gets caught. Per `<%= it.root %>/assets/memory.md`,
 check:
 
-- **Exactly one `mempalace.yaml`, at the repo root.** Walk the whole product
-  tree — the root, `.config/`, every submodule root — and count. Three
-  **blocking** outcomes:
-  - **More than one** anywhere in the tree. Two configs mean two answers to
-    which rooms exist, and only the root one is ever read.
-  - **One, but not at the repo root.** Mining reads the config only from the
+- **One `mempalace.yaml` per mined tree, at its root.** How many trees there
+  are follows the topology, per the memory asset's table: one for `repo` and
+  `monorepo`; one at the base for `multi-repo` under `linkage: submodule`
+  (members get none); and **one per repo — base and every member — under
+  `linkage: siblings`**, because a sibling member sits outside the base's tree
+  and a single config would silently mine the base alone.
+
+  Walk each expected tree — its root, its `.config/`, and every submodule root
+  under it — and count. Three **blocking** outcomes:
+  - **More than one in a single tree.** Two configs mean two answers to which
+    rooms exist, and only the root one is ever read.
+  - **One, but not at a tree root.** Mining reads the config only from the
     directory it is pointed at — there is no parent search, no `.config/`
     convention, and no flag to name one — so a config elsewhere is **silently
     inert**: the mine runs, falls back to auto-detected defaults, and files
     everything into `general`. Say that in the finding text; a config that looks
     tidy in `.config/` is indistinguishable from one that works.
-  - **None at all.** Nothing is mined; the palace holds only what vwf wrote into
-    it by hand.
+  - **None at all** in a tree that should have one. Nothing there is mined; the
+    palace holds only what vwf wrote into it by hand. Under `siblings`, check
+    this per **locally-present** member only — an absent member is a recorded
+    blind spot, not a missing config.
 - **The secret excludes are configured** — `exclude_patterns` carries the
   denylist from the memory asset's *Secrets* section. **Blocking**: the failure
   is a credential indexed into a store agents read back into context, deleting
@@ -47,9 +55,13 @@ check:
   file contents for credentials; that belongs to a dedicated secret scanner, and
   the `devtools` plugin already ships that doctrine.
 - **The wing matches `memory.wing`** in `.config/vwf.yaml` (or `product.name`
-  when the key is absent). A file naming a different wing is the highest-value
-  drift finding here: writes and recalls silently address different palaces, and
-  nothing else would ever surface it.
+  when the key is absent) — in **every** config, when there is more than one. A
+  file naming a different wing is the highest-value drift finding here: writes
+  and recalls silently address different palaces, and nothing else would ever
+  surface it. Under `siblings` this is the one thing that can go wrong which no
+  single-config product could have: a member config naming the member's own repo
+  name rather than the product's wing. Report it as **blocking**, not drift —
+  everything mined from that repo lands where nothing will look for it.
 - **All seven protocol rooms present** — `decisions`, `problems`, `planning`,
   `gaps`, `runs`, `doctor`, `handoff`. Report a missing one as drift; report a
   room whose name is a **near-miss** of a protocol room (`decision`, `run`,

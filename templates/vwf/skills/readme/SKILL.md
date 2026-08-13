@@ -4,7 +4,7 @@ description: Create or update the repository's README — scan the codebase and
   document it
   with a title, short description, a project list, an architecture mermaid
   diagram with notes, an infrastructure (cloud tools) section, a local
-  development setup guide, per-project sections (monorepo or polyrepo), and
+  development setup guide, per-project sections (monorepo or multi-repo), and
   the important task-runner commands. Follows the documentation-standards
   skill.
 argumentHint: "[target-dir]"
@@ -30,14 +30,14 @@ The README must contain these, top to bottom:
 1. **Title** — the project name as the `#` H1.
 2. **Short description** — one or two sentences on what the project is and does.
 3. **List of projects** — every project/package in the repo (a table for a
-   monorepo; a single entry for a polyrepo).
+   monorepo; a single entry for a multi-repo member).
 4. **Architecture** — a `mermaid` diagram of how the projects/services fit
    together, plus the important notes a reader needs (boundaries, data flow, key
    decisions).
 5. **Infrastructure** — every cloud tool/service the repo uses.
 6. **Local Development** — a step-by-step guide to run the repo locally.
 7. **Projects** — one detailed section per project (monorepo) or a single
-   project section (polyrepo).
+   project section (multi-repo member).
 8. **Important tasks** — the commands a developer runs day to day, from the
    repo's task runner (omit if the repo has none).
 
@@ -51,7 +51,7 @@ Gather the facts before writing:
 - **Title & description.** Repo/package name (`package.json` `name`,
   `pubspec.yaml`, `Cargo.toml`, `pyproject.toml`, the git remote, or the
   directory name) and any existing description/tagline.
-- **Layout & projects.** Monorepo vs polyrepo — `pnpm-workspace.yaml`,
+- **Layout & projects.** Monorepo vs multi-repo — `pnpm-workspace.yaml`,
   `package.json` `workspaces`, `melos.yaml`, `nx.json`, `turbo.json`, a Cargo
   `[workspace]`, `go.work`, or multiple package manifests in sub-directories.
   Record each project's path, name, language/stack, and purpose.
@@ -109,5 +109,5 @@ Write/update the README with the eight sections above, per the
 ## 4. Report
 
 State whether you **created or updated** the README, the layout detected
-(monorepo / polyrepo) and the projects listed, and anything you had to ask about
+(monorepo / multi-repo) and the projects listed, and anything you had to ask about
 or could not determine (e.g. a cloud service you flagged but couldn't confirm).

@@ -59,6 +59,6 @@ decision rather than a fault.
   knowledge, and never invent an entry to spare the user that halt.
 - **The project axis is not ours.** An identity provider does not decide the
   language or framework a project is written in, so an `identity` menu entry
-  never carries a `role`.
+  never carries `platforms:` — that key is project-axis only.
 - Do not read the repo, the registry, or `.config/vwf.yaml`. This skill answers
   the same way in every product.

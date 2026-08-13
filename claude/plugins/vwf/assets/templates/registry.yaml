@@ -9,29 +9,70 @@
 # What is NOT here:
 #   - `stack` — the concrete technology per project lives in `.config/vwf.yaml`
 #     under `projects.<name>.stack`, selected from the template menu for the
-#     project's role (assets/stacks/). Keeping it out is what makes the
-#     blueprint structurally incapable of naming a vendor: no authoring or
-#     reviewing surface reads it.
+#     project's PLATFORMS (assets/stack-adapter.md). Keeping it out is what
+#     makes the blueprint structurally incapable of naming a vendor: no
+#     authoring or reviewing surface reads it.
+#   - `members` — which repo a project lives in is a topology fact and lives in
+#     `.config/vwf.yaml` under `members:`. Here, `path` names the location and
+#     the config resolves the repo.
 #   - enforcement opt-outs — vwf operating config, `.config/vwf.yaml`.
 #   - prose, rationale, or hosting narrative — architecture.md.
 
-vwf_registry: 1 # registry schema version
+vwf_registry: 2 # registry schema version — 2 since blueprint format 22
 
 projects:
   - name: <project-name>
-    # Exactly ONE role per project. `site` is a UI that calls someone else's
-    # API; `fullstack` publishes its own API and therefore REQUIRES
-    # apis/<name>.openapi.yaml plus a health endpoint. SSR does not make a site
-    # fullstack. An operator back-office is `fullstack` plus the
-    # `operator-rbac` capability (there is no `console` role since format 19).
-    role: <service|worker|packages|site|fullstack|frontend|iac>
+    # Exactly ONE role per project — the coarse domain grouping. Format 22
+    # replaced the seven-token role vocabulary with four roles plus a platform
+    # list; the retired role tokens (`service`, `worker`, `packages`, `site`,
+    # `fullstack`, `frontend`, `iac`) all live on as PLATFORMS.
+    role: <backend|frontend|data|system>
+    # One or more platforms, from the CLOSED list for this project's role.
+    # Platforms are what vwf branches on — every mandate below keys on them,
+    # never on the role.
+    #
+    #   backend   packages service worker
+    #   frontend  packages site webapp desktop mobile tablet auto cli
+    #   data      packages data-lake analytics ingestion ml-platform
+    #   system    packages iac plugin misc cicd
+    #
+    # `packages` is available under EVERY role; the role names the primary
+    # consumer domain. A single codebase shipping several surfaces declares
+    # them all — a Flutter project is one project with four platforms, not
+    # four projects.
+    platforms: [ <platform>, <...> ]
     path: <repo-or-directory>
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
     depends_on: [ <project-name>, <...> ] # or []
-    doc_unit: <entity|page|module> # defaults by role
-    # UI roles only. `cli` is the terminal surface: no screens, so it takes no
-    # <platform>.md file (see assets/standard-flows.md).
-    platforms: [ <mobile|tablet|desktop|web|auto|cli>, <...> ]
+    doc_unit: <entity|page|module> # defaults by platform set
+
+# What each platform obliges — vwf reads THIS, never the role:
+#
+#   SCREEN PLATFORMS — site, webapp, desktop, mobile, tablet, auto
+#     Any of them present makes design-system.md mandatory, mandates the
+#     standard flows (assets/standard-flows.md), and gives each of this
+#     project's flow folders one <platform>.md carrying that platform's
+#     Screens. Every OTHER platform is screenless: its flows are index.md
+#     alone, and it never reaches the canvas, mockups, or the scratchpad.
+#
+#   service
+#     Requires apis/<project>.openapi.yaml and a health endpoint. A project
+#     with platforms [service, webapp] is what `fullstack` used to mean — one
+#     deployable publishing both an API contract and its own UI.
+#
+#   iac
+#     Registered, exempt from blueprint coverage, and ALWAYS its own repo —
+#     never a directory inside another project's (assets/topologies/). The one
+#     structural rule vwf enforces rather than offers.
+#
+#   every `data` and `system` platform
+#     Exempt from blueprint coverage. Registered, stack-checked, plannable and
+#     executable, but requiring no flows or entities. A doc shape for these is
+#     a later effort; until it exists, absence of coverage is by design and not
+#     a hole the surveyor reports.
+#
+# An operator back-office is not its own platform: it is `[service, webapp]`
+# plus the `operator-rbac` capability.
 
 # System-wide concerns → the anchors blueprint expands in conventions.md.
 # One token per concern; include only the concerns the system actually has.

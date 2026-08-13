@@ -15,16 +15,24 @@ two remain **degradations**. Check:
   not a typo). This is *missing*, not *unavailable* — there is a command to
   suggest. Its Python/uv toolchain is a prerequisite of that remedy, not a
   separate finding.
-- **A graph at the workspace root** (`graphify-out/graph.json`). Resolve it the
+- **A graph at each checkout root** (`graphify-out/graph.json`). Resolve it the
   way the asset does: current checkout first, then the **main checkout** via
   `git rev-parse --git-common-dir`. Absent in **both** → **blocking**, remedy
   `<%= it.cmd("vwf:setup") %>` (the only command that builds one, behind consent). A worktree
   that resolves to the main checkout's graph is **not** a finding — that is the
   normal path, and reporting it would halt every `execute` run, since worktrees
   never carry a graph of their own.
-- **The post-commit refresh hook** (`graphify hook install`). Without it the
-  graph freezes at whatever commit last rebuilt it and silently decays into
-  wrong answers — worse than no graph, because nothing signals staleness.
+
+  In a **`multi-repo`** product, run this check once per **locally-present**
+  repo — the base and each cloned member — since a graph is per checkout and
+  every consumer asks its question of the repo holding the code. An **absent**
+  member is **not** a finding: it is the blind spot the membership contract
+  already recorded (`<%= it.root %>/assets/membership.md`), and blocking on a
+  repo the user declined to clone would halt a run they consented to narrow.
+- **The post-commit refresh hook** (`graphify hook install`), in each
+  locally-present repo. Without it the graph freezes at whatever commit last
+  rebuilt it and silently decays into wrong answers — worse than no graph,
+  because nothing signals staleness.
 - **Staleness.** Compare `graph.json`'s mtime to the last commit date of the
   checkout that holds it. Behind → report how far, with `graphify update` as the
   remedy for the user to run.

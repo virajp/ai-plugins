@@ -54,6 +54,6 @@ templates:
   that halt.
 - **The project axis is not ours.** GCP hosts code; it does not decide the
   language or framework a project is written in. A `gcp` menu entry never
-  carries a `role`.
+  carries `platforms:` — that key is project-axis only.
 - Do not read the repo, the registry, or `.config/vwf.yaml`. This skill answers
   the same way in every product.

@@ -44,7 +44,7 @@ decisions into a single round.
 
 **A question that does not say what it is about gets answered for something
 else.** In a workspace with more than one project, "what should happen on error
-here?" has a different right answer for a `service` than for a `frontend` — and
+here?" has a different right answer for a `service` platform than for a `mobile` one — and
 the user cannot see which doc you are writing. Never make them infer it.
 
 State the scope in **both** places `AskUserQuestion` gives you:
@@ -55,7 +55,7 @@ State the scope in **both** places `AskUserQuestion` gives you:
   (`app·mobile`, `app·auto`). Reserve the topic for the question text; the chip
   is for *where*.
 - **the question text** — the full scope, up front, because the header
-  truncates. Name the registry project **and its `role`** the first time it
+  truncates. Name the registry project **and its `platforms`** the first time it
   appears in a pass, then the project alone: "In `api` (a `service`), when a
   refund request times out …".
 

@@ -10,7 +10,7 @@ tags: [ sales, commerce ]
 
 # Entity: Order
 
-<!-- Conformance example (blueprint-format 14). A worked, format-valid entity doc:
+<!-- Conformance example (blueprint-format 22). A worked, format-valid entity doc:
      a supporting data contract whose behavior lives in the flows that use it and
      whose data model is the sibling schema.yaml. Mandatory frontmatter;
      Relationships/References as resolving links. -->

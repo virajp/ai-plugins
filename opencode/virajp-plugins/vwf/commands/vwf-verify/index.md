@@ -41,8 +41,10 @@ a pre-format-4 repo has nothing to verify flows against; tell the user to run
 ### 1. Resolve the target
 
 Read the registry (`docs/blueprint/registry.yaml`) for the deployed projects
-(any project whose `role` is `service`, `worker`, `site`, `fullstack` or
-`iac`) and the Acceptance blocks of every flow under
+(any project declaring `service`, `worker`, `site` or `webapp` — the deployed
+surfaces; device screen platforms ship through a store and `iac`, `data` and
+`system` platforms are not deployed environments vwf checks) and the Acceptance
+blocks of every flow under
 `docs/blueprint/flows/*/*/index.md`. Resolve each project's base URL for the
 named environment from the **`environments:` block in `.config/vwf.yaml`** first
 (per the vwf-config asset); fall back to the repo's own configuration (deploy

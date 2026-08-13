@@ -14,7 +14,7 @@ tags: [ config, secrets ]
 > live only in the secrets manager / deployment env and are injected at runtime.
 > The injection mechanism (the decision) is [config](./conventions.md#config).
 
-<!-- Conformance example (blueprint-format 14). A worked, format-valid catalog:
+<!-- Conformance example (blueprint-format 22). A worked, format-valid catalog:
      mandatory frontmatter, rows grouped by consuming project, every row
      classified, the config mechanism linked (not restated), and no values.
      Project names resolve against ./registry.yaml, which this bundle carries;

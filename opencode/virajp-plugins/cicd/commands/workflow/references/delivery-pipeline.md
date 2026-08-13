@@ -20,7 +20,7 @@ What the contract requires the generated pipeline to express, on any CI system:
 - **Tag-triggered only**, on `<project>-<env>-v<semver>` — `api-prod-v1.2.3`,
   `web-stage-v0.4.0`. `env` is `stage` (→ `staging`, from `develop`) or `prod`
   (→ `production`, from `main`); `<project>` names the registry project
-  released, so one tag releases exactly one project. A **polyrepo uses the repo
+  released, so one tag releases exactly one project. A **multi-repo uses the repo
   name** (`myservice-prod-v1.2.3`) so the shape never varies by layout. Parse
   **right-to-left** — project names contain hyphens.
 - **Branch validation.** The tagged commit must be reachable from the branch its
@@ -36,7 +36,7 @@ What the contract requires the generated pipeline to express, on any CI system:
   Differences in *build or deploy commands* are not a reason: those live in the
   mise task, which already varies per project.
 - **Release task naming.** `mise run <project>:release:<environment>` in a
-  monorepo, `mise run release:<environment>` in a polyrepo — the environment is
+  monorepo, `mise run release:<environment>` in a multi-repo — the environment is
   the **canonical** name (`staging` / `production`), never the tag's short form.
   Tests are `<project>:test` / `test` the same way. Confirm these tasks exist
   (`mise tasks`); if the workspace's package identifiers differ from the mise

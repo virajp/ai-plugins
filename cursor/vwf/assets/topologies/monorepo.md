@@ -18,12 +18,12 @@ my-product/
 ├── docs/blueprint/   # the vwf bundle
 ├── .config/          # mise config, vwf.yaml
 ├── projects/         # deployable projects
-│   ├── api/          # role: service
-│   ├── worker/       # role: worker
-│   ├── web/          # role: site
-│   └── ops/          # role: fullstack + operator-rbac
+│   ├── api/          # platforms: [service]
+│   ├── worker/       # platforms: [worker]
+│   ├── web/          # platforms: [site]
+│   └── ops/          # platforms: [service, webapp] + operator-rbac
 └── packages/
-    └── common/       # role: packages
+    └── common/       # platforms: [packages]
 ```
 
 Deployables under `projects/`, shared libraries under `packages/`. The grouping
@@ -32,19 +32,19 @@ already groups its projects differently records what it has.
 
 `docs/blueprint/` lives at the repo root.
 
-## What makes this a monorepo rather than a polyrepo
+## What makes this a monorepo rather than multi-repo
 
 **One dependency graph and one release cadence.** Every project resolves
 dependencies together, and an atomic commit can change several at once. When
 that stops being true — a project on a different toolchain, or one whose release
-cycle cannot sync with the others — the product wants the **polyrepo** shape
+cycle cannot sync with the others — the product wants the **multi-repo** shape
 instead.
 
 ## The one exception: an `iac` project is its own repo
 
-**A project with `role: iac` never lives in the monorepo.** It is an independent
-repo, or a submodule of a product parent — which turns a monorepo product into a
-two-member polyrepo the moment it acquires one. This is the single structural
+**A project with `platforms: [iac]` never lives in the monorepo.** It is an independent
+repo, or a member of a product base repo — which turns a monorepo product into a
+two-member multi-repo product the moment it acquires one. This is the single structural
 rule vwf **enforces**: `/doctor` raises a violation as a **blocking** finding,
 and `/setup` offers a consent-gated restructure. Everything else on this page
 is a menu.

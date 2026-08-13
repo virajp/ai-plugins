@@ -41,8 +41,10 @@ it. When a planning decision is genuinely open, elicit it following the
 | Entity (slice) | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                           |
 | API contract   | `docs/blueprint/apis/<project>.openapi.yaml`                                        |
 | Released APIs  | `docs/blueprint/apis/released/`                                                     |
-| Plan           | `docs/plans/<date>-<time>-<slice>.md`                                               |
+| Plan           | `<target-repo>/docs/plans/<date>-<time>-<slice>.md` — **the repo whose code it changes** |
+| Plan index     | `docs/plans/index.md` (base repo) — one row per plan: plan, target repo, status      |
 | Plan template  | `%%AI_PLUGINS_ROOT%%/assets/templates/plan.md`                                    |
+| Membership     | `%%AI_PLUGINS_ROOT%%/assets/membership.md`                                        |
 
 ## References
 
@@ -112,9 +114,22 @@ slice, is the **chain**.
   **abort**. A chain of length 1 (no unbuilt dependencies) proceeds without
   ceremony.
 
+**Member gate.** Before the stack gate, resolve which repo each chain project
+lives in, per `%%AI_PLUGINS_ROOT%%/assets/membership.md`. For every repo not on this
+machine, say what it is needed for and **offer a consent-gated clone**. On
+accept, clone and continue. **On decline, continue with that project excluded
+and record the blind spot** — name every uninspected project in the §8 approval
+presentation *and* in the plan doc's Risks section, so a reader knows the delta
+was computed without seeing them. A plan written against incomplete knowledge is
+useful; one that looks complete is not.
+
 **Stack gate.** Once the chain is approved, run `/doctor` scoped to every
-registry project the chain's elements map to, and **halt on any `blocking`
-finding** — report it with its remedy and stop. A stack no installed plugin
+registry project the chain's elements map to **that is present on this machine**,
+and **halt on any `blocking`
+finding** — report it with its remedy and stop. An absent, declined project is
+skipped rather than blocking: it is already recorded as a blind spot, and
+halting on a repo the user chose not to clone would override the consent they
+just gave. A stack no installed plugin
 defines (an **unknown** language, a `custom` template pin) is the finding this
 gate exists for: a plan's steps are sized against the selected templates'
 conventions, and when there is no template there are no conventions — the plan
@@ -272,6 +287,24 @@ Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, following
 [Writing the plan doc](references/plan-doc.md) — the OKF frontmatter (`covers:`
 and `requires:` in particular), the chain position, TDD-ordered steps, and the
 verbatim acceptance-criteria transcription.
+
+**Into the repo whose code this plan changes.** In a `repo` or `monorepo`
+topology that is the one checkout and the rule costs nothing. In `multi-repo` it
+is the member holding the chain element's project — resolve it from `members:`
+per `%%AI_PLUGINS_ROOT%%/assets/membership.md`. A chain spanning two members already
+produces one plan per element, so each simply lands in its own repo; a plan is
+never split across repos.
+
+Then **append a row to `docs/plans/index.md` in the base repo** — the plan's
+filename, its target repo, and its status. That index is the only place the
+product's plans are visible as a set, and it is what
+`/archive` and `/execute` read to find a
+plan without walking every member.
+
+**The dependency gate does not move.** `execute` halts until every `requires:`
+plan's `covers:` docs read `implementation: complete`, and those stamps live in
+the blueprint — in the base repo. So the chain resolves from the base alone even
+when the upstream plans sit in members that are not cloned here.
 
 ### 8. Approval gate (per chain element)
 

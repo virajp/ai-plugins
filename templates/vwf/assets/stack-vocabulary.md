@@ -73,16 +73,18 @@ a provider by name.
 
 **Every template declares `axis:`**, whichever axis it is on — that key is what
 says which menu it joins, and `plugins:check` enforces it. A project-axis
-template carries `role:` *alongside* `axis:`, never instead of it: the role is
-real data, but it is not the axis.
+template carries `platforms:` *alongside* `axis:`, never instead of it: the
+platform list is real data, but it is not the axis.
 
 Every **project** template a stack plugin ships, at
-`<plugin>/stacks/project/<role>/<slug>.md`, opens with:
+`<plugin>/stacks/project/<slug>.md` — **flat, no role directory** since format
+22, because one template routinely serves several platforms and a directory name
+cannot say so — opens with:
 
 ```yaml
 ---
 axis: project # which of the four menus this template joins
-role: <registry role> # service | worker | packages | site | fullstack | frontend | iac
+platforms: [ <platform>, <...> ] # which registry platforms this template serves; see assets/templates/registry.yaml for the closed per-role lists
 name: <display name> # what the menu shows
 languages: [<token>] # open; the plugin owning the language defines its facts
 optional_languages: [] # admitted by the template, not required — e.g. a mobile template's platform languages

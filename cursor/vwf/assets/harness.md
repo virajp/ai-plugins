@@ -11,13 +11,13 @@ re-verified cheaply when a cycle needs it.
 
 | Capability    | Required when                                   | Canonical convention                                          |
 | ------------- | ----------------------------------------------- | ------------------------------------------------------------- |
-| `dev`         | a UI project exists (`site` or `frontend` role) | a `dev` task/script that boots the project locally            |
+| `dev`         | any project declares a **screen platform**      | a `dev` task/script that boots the project locally            |
 | `e2e_local`   | any flow carries acceptance criteria            | a `test:e2e` task/script running E2E against the local stack  |
 | `local_stack` | `e2e_local` needs backing services              | the backing services, behind a **deterministic ready signal** |
 | `e2e_staging` | flows have criteria **and** a deploy target     | a `test:e2e:staging` task/script targeting a deployed env     |
-| `health`      | a cloud project (`service`/`fullstack` role)    | a `GET /health` (or documented readiness) endpoint            |
-| `screenshots` | a **web** UI project (`site`/`fullstack` role)  | a repeatable way to render a screen and scan it               |
-| `goldens`     | a **native** `frontend` project                 | a repeatable visual check + the platform's a11y assertions    |
+| `health`      | any project declares the `service` platform     | a `GET /health` (or documented readiness) endpoint            |
+| `screenshots` | a **browser** screen platform (`site`/`webapp`) | a repeatable way to render a screen and scan it               |
+| `goldens`     | a **device** screen platform (`desktop`/`mobile`/`tablet`/`auto`) | a repeatable visual check + the platform's a11y assertions |
 
 Reference implementations live in the **stack plugins**, not here. A repo may
 satisfy a capability under a **non-canonical name**; detection records what it

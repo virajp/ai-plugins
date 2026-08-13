@@ -1,5 +1,5 @@
 name: identity
-version: 0.1.1
+version: 0.1.2
 description: "Identity capability plugin for vwf — the neutral contract every
   identity provider must satisfy (token verification at the edge of every
   authenticated route, what a token claim may and may not carry, session and

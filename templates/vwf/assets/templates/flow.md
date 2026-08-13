@@ -14,8 +14,11 @@ implementation: none # none | partial | complete — written by the pipeline onl
      is, who triggers it, what it does, and how it is verified. It holds NO
      screens. Each platform that implements the journey adds its own
      <platform>.md beside this file (mobile.md | tablet.md | desktop.md |
-     web.md | auto.md — from the flow-platform template) carrying only that
-     platform's Screens + Components. A NON-UI flow is index.md alone.
+     site.md | webapp.md | auto.md — from the flow-platform template) carrying
+     only that platform's Screens + Components. Only the six SCREEN platforms
+     get a file; every other platform a project declares (service, worker,
+     packages, cli, and every data/system token) is screenless, so a flow of
+     theirs is index.md alone.
      There is no `device:` frontmatter key (format 15): the platform lives in
      the FILENAME, and `auto` covers CarPlay and Android Auto alike.
 
@@ -58,7 +61,7 @@ Serves: [<goal name>](../../../product.md#goal-<slug>)
      (e.g. [mobile](./mobile.md)). Which platforms implement a flow is a
      PRODUCT DECISION, elicited — a project declaring `auto` need not carry an
      auto file for every flow (signing in while driving makes no sense). The
-     rows must be a subset of the registry project's declared `platforms:`.
+     rows must be a subset of the registry project's declared SCREEN platforms.
      Notes carry the one-line "how this platform's take differs" (e.g.
      "glanceable subset; no text entry"). Omit this section for a NON-UI flow. -->
 

@@ -1,7 +1,9 @@
 # The vwf Config — `.config/vwf.yaml`
 
-**How vwf operates in this product.** One file per product (the parent repo in
-polyrepo topology; submodules never get their own), written by `/setup` and
+**How vwf operates in this product.** One file per product — in the **base
+repo** under `multi-repo` topology; members never get their own, they carry
+`.config/vwf-membership.yaml` instead (`%%AI_PLUGINS_ROOT%%/assets/membership.md`).
+Written by `/setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
 of the system description**: what the product *is* (projects, roles, paths,
 capabilities, platforms) lives in `docs/blueprint/registry.yaml`; this file
@@ -21,13 +23,16 @@ repo) and the canvas state under `design:` remain outside that scope. Since
 installed stack plugin ships and every language token is one such a plugin
 declares, `template: custom` is retired, and anything outside that is a blocking
 `/doctor` finding rather than a value recorded and then ignored. Since
-**blueprint-format 6** this file replaces the old stamp at
-`docs/blueprint/.vwf.yml`.
+**format 15** a multi-repo product no longer has to be a submodule parent: the
+`members:` list names each repo, where to clone it from, and which registry
+projects live in it, and `linkage:` records whether they are wired as submodules
+or are plain siblings. Since **blueprint-format 6** this file replaces the old
+stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 14)
+## Schema (config_format 15)
 
 ```yaml
-config_format: 14 # this file's own schema version — setup migrates it
+config_format: 15 # this file's own schema version — setup migrates it
 blueprint_format: 21 # the docs/blueprint format stamp
 
 product:
@@ -37,13 +42,21 @@ blueprint: # coverage stamp — written by /blueprint after every sweep
   coverage: complete # complete | partial — /plan halts unless complete
   remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), density/<unit> (over its line budget — cleared by the sweep's condenser pass, or when the condenser reports every remaining line load-bearing), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
-topology: polyrepo # repo | monorepo | polyrepo — a MENU since format 19 (assets/topologies/), not enforced
+topology: multi-repo # repo | monorepo | multi-repo — a MENU since format 19 (assets/topologies/), not enforced. `polyrepo` was renamed in config_format 15, which also stopped requiring submodules
 topology_reason: <one
   line> # why this shape; recorded so it is never re-litigated
-ui: true # a UI project exists → design-system required
+linkage: siblings # MULTI-REPO ONLY: submodule (recommended) | siblings. How the members are wired, NOT how many are cloned — see `members:` below
+ui: true # a SCREEN platform exists on some project → design-system required
 integrations: true # external integration/secret exists → environment.md required
 
-repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in polyrepo topology the parent and each member carry their own
+members: # MULTI-REPO ONLY (format 15). One entry per member repo; the BASE repo declares them and each member back-links in .config/vwf-membership.yaml. Absent under `repo`/`monorepo`, where the product is one checkout
+  - name: <member-name>
+    path: <../relative-path> # resolved from the BASE repo root. Under `submodule` linkage this is the submodule path; under `siblings` it usually escapes the repo
+    url: <git-remote> # REQUIRED — the absent-member clone offer has nothing to clone from without it. Derivable from .gitmodules under submodule linkage, but recorded uniformly so member resolution has ONE shape
+    projects: [ <project-name>, <...> ] # which registry projects live in this repo. The registry names WHAT exists; this names WHERE
+# There is NO `present:`/`cloned:` key, and there never will be. Which members are on this machine is per-developer state that changes daily — it is DETECTED every run (assets/membership.md). A committed key would be one laptop asserted as the product's shape
+
+repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in multi-repo topology the base and each member carry their own
   stack:
     template: repo/<slug> # a repo-axis template an INSTALLED stack plugin ships. No `custom` — that value was retired in format 14; nothing on the menu means a halt, not a free-text pin
     package_manager: <tool> # only where the language has one; the repo template names the permitted values
@@ -52,11 +65,11 @@ repo: # REPO-level tooling, the counterpart to a project's stack. One block per 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /doctor cannot check what was never recorded
-      template: project/<role>/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin. NOT a default: /architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a role nothing fits halts rather than recording free text
+      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin. NOT a default: /architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+webapp), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
       backing_template: [
         <slug>,
-      ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` or `frontend` project usually does not)
-      deploy_template: <slug> # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). A `frontend` project on a SCREEN platform sets this to `n/a`: it ships through a store, not a deploy target. A `cli` frontend sets `deploy/npm-package` — a package registry IS its target. An `iac` project sets `n/a`: it IS the deploy path
+      ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not)
+      deploy_template: <slug> # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). Keyed on PLATFORM since format 15: a project whose platforms are all SCREEN platforms other than `site`/`webapp` — `mobile`, `tablet`, `desktop`, `auto` — sets `n/a`, since it ships through a store rather than to a deploy target. A `cli` platform sets `deploy/npm-package` — a package registry IS its target. An `iac` platform sets `n/a`: it IS the deploy path
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing managers
       languages: [
         <token>,
@@ -66,7 +79,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
       note: <one
         line> # optional — why this stack, when the reason is not obvious from the template name
     # NO `platforms:` key — a project's implemented surfaces are a system-shape fact and live in docs/blueprint/registry.yaml, the single source (format 19). Config carries realization: the stack and the design pins
-    design: <tool-token> # the DESIGN TOOL for this project's surfaces — claude-design | lovable | stitch | … Per project since format 13 (was one product-wide `design.tool`): a product may design its website in one tool and its app in another. A TOOL token the design adapter recognises, NOT a plugin name — vwf never constructs a skill name from it (assets/design-adapter.md). Required for a UI project, absent for every other role
+    design: <tool-token> # the DESIGN TOOL for this project's surfaces — claude-design | lovable | stitch | … Per project since format 13 (was one product-wide `design.tool`): a product may design its website in one tool and its app in another. A TOOL token the design adapter recognises, NOT a plugin name — vwf never constructs a skill name from it (assets/design-adapter.md). Required for a project declaring any SCREEN platform, absent for every other project
     cicd: <tool> # the CI SYSTEM that builds and releases this project — github-actions | gitlab-ci | … Per project since format 13, so a product whose projects ship through different pipelines can say so. Read ONLY by the `cicd` plugin, which resolves it to one of its per-tool references; vwf owns the delivery-pipeline CONTRACT (assets/delivery-pipeline.md) and never the mechanism. In a monorepo every project repeats the same value — accepted, since the key's scope follows the other three rather than inventing a fourth scoping rule
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
@@ -118,6 +131,7 @@ setup_progress: [] # transient — /setup resume state, removed on completion
 | Section              | Written by                                                                                                                                | Read by                                                                                                         |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                    |
+| `linkage` / `members` | `setup` (elicited; each member's facts detected)                                                                                         | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`%%AI_PLUGINS_ROOT%%/assets/membership.md`) |
 | `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                                                 |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the `cicd` plugin (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
@@ -365,6 +379,53 @@ earlier than 65/90/80), never loosen.
   Readers treat a `custom` pin, or a token no installed plugin declares, as `13`
   drift **and** as a blocking `/doctor` finding — the drift says the repo is
   behind, the blocking finding says vwf will not build against it meanwhile.
+
+- **`14 → 15` migration** (performed by `/setup`, alongside the blueprint
+  `21 → 22` delta): **a multi-repo product stops having to be a submodule
+  parent**, and the project-axis pin stops being keyed on a role that no longer
+  exists. Five changes:
+
+  1. **`topology`** — `polyrepo` becomes **`multi-repo`**, and the shape it used
+     to imply moves into the new **`linkage:`** key: a repo migrating from
+     `polyrepo` takes `linkage: submodule`, always. This is a rename plus an
+     explicit statement of what was previously the only option; nothing about
+     the repo changes. `repo` and `monorepo` are untouched and take no
+     `linkage`.
+  2. **`members:` is new.** For a `multi-repo` product, write one entry per
+     member: `name` and `path` from `.gitmodules`, `url` from its submodule URL,
+     and `projects` from which registry projects sit under that path. Nothing is
+     elicited — every fact already exists, in two places that until now no
+     reader compared. For `repo`/`monorepo`, the key is absent.
+  3. **`.config/vwf-membership.yaml` is written into every member**, naming the
+     product and the relative path back to the base repo
+     (`%%AI_PLUGINS_ROOT%%/assets/membership.md`). Under submodule linkage this is
+     **belt-and-braces** — the superproject walk already worked — but writing it
+     uniformly is what lets a product later switch to `linkage: siblings`
+     without a second migration, and what gives every skill one resolution
+     algorithm instead of two.
+  4. **`projects.<name>.stack.template`** loses its `<role>/` path segment:
+     `project/<role>/<slug>` → `project/<slug>`. Mechanical — the slug is
+     unchanged and unique. Re-resolve each pin against the installed plugin's
+     menu afterwards and confirm the template's declared `platforms:` **cover**
+     the project's registry platforms; a pin that no longer covers is a real
+     finding (usually a `fullstack` project whose platforms became
+     `[service, webapp]`), not noise.
+  5. **`ui:`** keeps its name and its meaning inverts its trigger: it is now
+     true when some project declares a **screen platform**
+     (`site`/`webapp`/`desktop`/`mobile`/`tablet`/`auto`), rather than when some
+     project carries a UI *role*. For every repo that already had a UI the value
+     is unchanged; recompute it rather than copying it, since a `cli`-only
+     project could previously be miscounted.
+
+  **The registry's role/platform remap is the blueprint `21 → 22` delta**, not
+  this one — see the project-setup skill's `format-versioning` reference. Run
+  them together: this file's `template` pin and `ui:` key both depend on the new
+  platform vocabulary, so a repo on one but not the other is a state neither
+  migration expects.
+
+  Bump `config_format` to `15` and `blueprint_format` to `22` together. Readers
+  treat a `polyrepo` topology, a `project/<role>/<slug>` pin, or a `multi-repo`
+  product with no `members:` as `14` drift.
 
 - **`10 → 11` migration** (performed by `/setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

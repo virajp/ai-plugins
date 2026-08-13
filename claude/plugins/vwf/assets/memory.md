@@ -103,11 +103,16 @@ run record. Both still exist locally, and both still survive a mempalace outage
 
 ## Repo config — `mempalace.yaml`
 
-**One product, one wing, one config file — at the repo root.** A workspace gets
-**exactly one** `mempalace.yaml`, at the product's parent repo root, and it
-mines the whole product tree. Submodules get **none**, and there is no copy in
-`.config/`. `/vwf:setup` writes that one file; `/vwf:doctor` reports a second
-one, or one sitting anywhere else, as **blocking**.
+**One product, one wing — and one config file per mined tree, at its root.**
+`/vwf:setup` writes them; `/vwf:doctor` reports
+a config sitting anywhere other than a repo root, or one naming a different
+wing, as **blocking**. How many there are follows the topology:
+
+| Topology | Configs |
+| --- | --- |
+| `repo`, `monorepo` | **exactly one**, at the repo root |
+| `multi-repo`, `linkage: submodule` | **exactly one**, at the base repo root; members get **none** |
+| `multi-repo`, `linkage: siblings` | **one per repo** — base and every member — all naming the **same wing** |
 
 **The path is not a preference.** `mempalace mine` looks for `mempalace.yaml` in
 the directory it is pointed at and nowhere else — no parent search, no
@@ -117,15 +122,23 @@ no config and is using auto-detected defaults, and files everything into
 `general`. Nothing errors, so the only symptom is recall coming back empty
 months later.
 
-**One wing per product.** The file names the `memory.wing` resolved above.
-Submodules are not their own wings: recall would otherwise have to guess which
-of three wings holds an answer, and vwf's own rooms are product-wide by nature —
-a decision about the API contract is not a `backend` fact.
+**That mechanism is the whole reason siblings need one config each.** A sibling
+member sits *outside* the base repo's tree, so a single config at the base would
+mine the base alone — the blueprint and the `docs/memory/` mirror, and none of
+the product's code. Silently, in exactly the way above. Submodule members are
+*inside* that tree, which is why they still need none.
 
-**Submodules are mined by the parent, not excluded from it.** The walk descends
-into every submodule directory, and each directory's own `.gitignore` joins the
-active matchers as it goes (they apply in ancestor order), so a submodule's
-ignores are honoured without a config of its own. A submodule path in
+**One wing per product, regardless.** Every config names the same
+`memory.wing` resolved above. Repos are not their own wings: recall would
+otherwise have to guess which of several wings holds an answer, and vwf's own
+rooms are product-wide by nature — a decision about the API contract is not a
+`backend` fact. A member config naming a different wing is the failure this rule
+exists to prevent, and `/vwf:doctor` blocks on it.
+
+**Submodules are mined by the base repo, not excluded from it.** The walk
+descends into every submodule directory, and each directory's own `.gitignore`
+joins the active matchers as it goes (they apply in ancestor order), so a
+submodule's ignores are honoured without a config of its own. A submodule path in
 `exclude_patterns` is now a bug: it drops that project's files from the palace
 entirely.
 

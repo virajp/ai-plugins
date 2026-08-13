@@ -1,5 +1,5 @@
 name: observability
-version: 0.1.1
+version: 0.1.2
 description: "Observability capability plugin for vwf — the neutral contract
   every telemetry backend must satisfy (the product emits **OTLP** and never a
   vendor SDK, one correlated trace/metric/log story, cardinality as a design

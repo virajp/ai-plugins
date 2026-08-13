@@ -9,8 +9,8 @@ tags: [ commerce, checkout ]
 
 # Flow: Place order
 
-<!-- Conformance example (blueprint-format 15). The PLATFORM-AGNOSTIC contract:
-     no screens — they live in web.md beside this file. The goal-traceability
+<!-- Conformance example (blueprint-format 22). The PLATFORM-AGNOSTIC contract:
+     no screens — they live in webapp.md beside this file. The goal-traceability
      spine runs product goal → this flow → entity/API/screen. Code-independent:
      names entities, the `api` service, and operationIds only. -->
 
@@ -26,7 +26,7 @@ Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
 
 | Platform | File            | Notes                         |
 | -------- | --------------- | ----------------------------- |
-| web      | [web](./web.md) | The only surface for checkout |
+| webapp   | [webapp](./webapp.md) | The only surface for checkout |
 
 ## Trigger & Actors
 

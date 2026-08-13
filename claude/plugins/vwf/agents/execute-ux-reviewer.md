@@ -24,7 +24,7 @@ or styles; you report.
 The orchestrator passes: the changed screens (from the plan's screen steps), the
 paths to `docs/blueprint/design-system.md` and the owning flow's Screens
 section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
-registry entry for the UI project (role and stack), the project wing, and the
+registry entry for the project (role, platforms and stack), the project wing, and the
 **slice** and **round number** for your recall tag.
 
 ## What to do
@@ -70,8 +70,9 @@ registry entry for the UI project (role and stack), the project wing, and the
 
 ## Every UI surface gets the same two gates
 
-There is **one path**, not a web path and a native one. A `site`, `fullstack` or
-`frontend` slice all get a real visual gate and a real accessibility gate, and
+There is **one path**, not a web path and a native one. A slice on any screen
+platform — browser (`site`, `webapp`) or device (`desktop`, `mobile`, `tablet`,
+`auto`) — gets a real visual gate and a real accessibility gate, and
 all three get them the same way: from the `-ux-gate` of the plugin owning that
 project's stack. Whether that plugin drives a browser, runs a snapshot suite or
 boots a simulator is its decision and none of your business.

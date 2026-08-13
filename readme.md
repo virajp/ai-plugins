@@ -107,7 +107,7 @@ covering TypeScript and JavaScript. A `typescript` router skill plus an `effect`
 one for Effect-TS, and opinionated standards for `package.json`, pnpm, tsconfig
 and the lint/format gate. It bundles the TypeScript language server, the
 npm→pnpm/bun normalizing hook, and every TypeScript stack template vwf can offer
-— service, fullstack, site, worker, CLI, IaC and shared packages, plus the
+— service, service+webapp, site, worker, CLI, IaC and shared packages, plus the
 npm-package and repo-level choices. `--user typescript`
 
 **[flutter](./docs/plugins/flutter.md)** — Flutter and Dart done to one
@@ -187,10 +187,11 @@ Deliberately not a vwf dependency: an adapter is chosen, not inherited.
 
 **[cicd](./docs/plugins/cicd.md)** — one `/cicd:workflow` skill that resolves
 the repo's CI system from config and generates its delivery pipeline: every tool
-installed through mise, both polyrepo and monorepo layouts, conforming to vwf's
-tag-triggered, branch-validated, tested-before-release contract. GitHub Actions
-is the one implementation today; adding a CI system is a single reference file.
-Independent — vwf states the contract, this implements it. `--user cicd`
+installed through mise, both multi-repo and monorepo layouts, conforming to
+vwf's tag-triggered, branch-validated, tested-before-release contract. GitHub
+Actions is the one implementation today; adding a CI system is a single
+reference file. Independent — vwf states the contract, this implements it.
+`--user cicd`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding

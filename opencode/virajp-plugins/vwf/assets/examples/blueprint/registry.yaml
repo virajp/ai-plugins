@@ -1,4 +1,4 @@
-# Conformance example (blueprint-format 19) — the machine-readable registry.
+# Conformance example (blueprint-format 22) — the machine-readable registry.
 #
 # Every downstream command parses THIS file; architecture.md is the prose view
 # and is omitted from this bundle for brevity. Note what is absent: there is no
@@ -8,31 +8,45 @@
 # framework, or vendor, and why doing so would be a reviewer failure rather
 # than a matter of taste.
 
-vwf_registry: 1
+vwf_registry: 2
 
-# Each project carries exactly ONE `role`. `web` is a `site` (UI only, calls
-# the api project); a project publishing its own API alongside a UI would be
-# `fullstack`, which is also what an operator back-office is — `fullstack` plus
-# the `operator-rbac` capability (format 19 dissolved the old `console` type).
+# Each project carries exactly ONE `role` — the coarse domain grouping — plus
+# one or more `platforms` from that role's closed list. Format 22 replaced the
+# seven-token role vocabulary with four roles; every retired role token
+# (`service`, `worker`, `packages`, `site`, `fullstack`, `frontend`, `iac`)
+# lives on as a platform.
+#
+# `web` here declares `webapp` — the browser-delivered application, calling the
+# api project. A project publishing its own API alongside its own UI declares
+# `[service, webapp]`, which is what `fullstack` used to mean and what an
+# operator back-office is (that plus the `operator-rbac` capability).
+#
+# The platforms are what everything downstream keys on: `webapp` is a SCREEN
+# platform, so `web` gets the design-system mandate, the standard flows, and one
+# <platform>.md per flow. `service` and `worker` are screenless, so api and
+# worker flows are index.md alone — and `service` is what requires
+# apis/api.openapi.yaml and a health endpoint.
 
 projects:
   - name: web
-    role: site
+    role: frontend
+    platforms: [ webapp ]
     path: apps/web
     capabilities: [ ssr, seo ]
     depends_on: [ api ]
     doc_unit: page
-    platforms: [ web ]
 
   - name: api
-    role: service
+    role: backend
+    platforms: [ service ]
     path: services/api
     capabilities: [ relational-datastore, payments-subscriptions, audit-log ]
     depends_on: []
     doc_unit: entity
 
   - name: worker
-    role: worker
+    role: backend
+    platforms: [ worker ]
     path: services/worker
     capabilities: [ scheduled-jobs, message-queue, email ]
     depends_on: [ api ]

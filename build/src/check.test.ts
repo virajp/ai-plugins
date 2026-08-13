@@ -1,3 +1,5 @@
+import { frontmatter } from "@ai-plugins/schema";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   beforeAll,
@@ -217,12 +219,29 @@ describe("the stack-adapter contract", () => {
   });
 
   it("pairs a UI stack with a ux-gate, in both directions", () => {
-    const UI = new Set(["site", "fullstack", "frontend"]);
+    // Screen platforms — read from each template's own `platforms:`, never from
+    // its path. Format 22 flattened `stacks/project/<role>/` away precisely
+    // because one template serves several platforms, so a path-shaped test
+    // would now pass by finding nothing.
+    const SCREEN = new Set([
+      "site",
+      "webapp",
+      "desktop",
+      "mobile",
+      "tablet",
+      "auto",
+    ]);
     for (const plugin of workspace.plugins) {
-      const ownsUi = plugin.files.some(f =>
-        f.path.startsWith("stacks/project/")
-        && [...UI].some(role => f.path.includes(`/project/${role}/`))
-      );
+      const ownsUi = plugin.files.some(f => {
+        if (!f.path.startsWith("stacks/project/")) {
+          return false;
+        }
+        const doc = frontmatter.parse(readFileSync(f.absolute, "utf8"));
+        const platforms = doc === null
+          ? undefined
+          : frontmatter.sequence(doc, "platforms");
+        return (platforms ?? []).some(p => SCREEN.has(p));
+      });
       const hasGate = plugin.skills.some(s =>
         s.meta.name === `${plugin.manifest.name}-ux-gate`
       );
