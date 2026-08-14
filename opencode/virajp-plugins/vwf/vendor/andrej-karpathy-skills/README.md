@@ -4,7 +4,7 @@ vwf ships the Karpathy coding guidelines directly rather than depending on the
 upstream plugin. Before this, `andrej-karpathy-skills` was a url-sourced entry
 in `marketplace.yaml` and a vwf dependency — and a url-sourced plugin has no
 rendered bundle, so **only Claude's marketplace could resolve it**. Cursor's
-target excludes it (`build/src/targets/cursor.test.ts`) and the OpenCode
+target excludes it (`renderer/src/targets/cursor.test.ts`) and the OpenCode
 installer skips it (`cli/src/plan.ts`, the `localOnly` branch), which left
 OpenCode users installing `vwf` and getting none of the guidelines it assumes
 are on.

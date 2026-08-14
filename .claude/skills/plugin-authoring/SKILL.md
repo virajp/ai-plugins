@@ -16,7 +16,7 @@ paths:
 `opencode/`, `plugins.json`, `.claude-plugin/marketplace.json` and
 `.cursor-plugin/marketplace.json` are machine-written output — never edit them
 by hand, and never diagnose a bug by reading one as if it were source. Read the
-template and the renderer (`build/src/`) instead.
+template and the renderer (`renderer/src/`) instead.
 
 ## The one rule
 

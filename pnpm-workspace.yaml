@@ -3,7 +3,7 @@
 # committed `dist/` tree, so they never run the renderer).
 packages:
   - schema
-  - build
+  - renderer
   - cli
 
 # Install scripts are blocked by default. esbuild is the one exception: it is

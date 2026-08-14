@@ -6,7 +6,7 @@ How `templates/` becomes four trees, and what may and may not vary between them.
 
 ```text
 templates/<plugin>/        authored source — plugin.yaml + skills/ + agents/
-  ↓  build/src/            TypeScript, no build step (node strips the types)
+  ↓  renderer/src/            TypeScript, no build step (node strips the types)
 claude/plugins/**          committed, one tree per target
 {opencode,cursor,ohmypi}/**
 plugins.json               the target-agnostic index the installer CLI reads
@@ -14,7 +14,7 @@ plugins.json               the target-agnostic index the installer CLI reads
 .cursor-plugin/marketplace.json    likewise
 ```
 
-A **Target** (`build/src/targets/`) is build-time and pure: templates → the
+A **Target** (`renderer/src/targets/`) is build-time and pure: templates → the
 render tree. An **Adapter** (`cli/src/adapters/`) is install-time and effectful:
 that tree → the user's machine. Keep them apart — format-preserving config
 mutation belongs in the adapter, never in a target.
@@ -33,7 +33,7 @@ per-target conditionals:
 A link into a skill's own `references/` is plain relative (`references/x.md`)
 and needs no helper — it is correct on every target.
 
-Both helpers route through `flatSkillName` in `build/src/target.ts`, which is
+Both helpers route through `flatSkillName` in `renderer/src/target.ts`, which is
 the single point where the three things that must agree — the directory, the
 frontmatter `name:`, and every cross-reference — are kept in sync.
 

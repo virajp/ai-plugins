@@ -20,7 +20,7 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-node --experimental-strip-types build/src/cli.ts render "$@"
+node --experimental-strip-types renderer/src/cli.ts render "$@"
 
 # The rendered Oh-My-Pi bundles are the only part of the output carrying a
 # package.json, and `code:format` checks every package.json in the repo against

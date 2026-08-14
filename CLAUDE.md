@@ -24,7 +24,7 @@ agent**. Claude Code is one target of four, not the source shape:
 
 ```text
 templates/<plugin>/        authored source — plugin.yaml + skills/ + agents/
-  ↓  build/ (TypeScript, no build step of its own — node strips the types)
+  ↓  renderer/ (TypeScript, no build step of its own — node strips the types)
 claude/plugins/**          committed, one tree per target, at the repo root
 {opencode,cursor,ohmypi}/**
 plugins.json                       the target-agnostic plugin index the CLI reads
@@ -57,7 +57,7 @@ CI can assert they match a fresh render.
 
 ### Targets and adapters
 
-Two halves, deliberately kept apart. A **Target** (`build/src/targets/`) is
+Two halves, deliberately kept apart. A **Target** (`renderer/src/targets/`) is
 build-time and pure: templates → the committed render tree. An **Adapter**
 (`cli/src/adapters/`) is install-time and effectful: that tree → the user's
 machine. That split is what keeps format-preserving config mutation out of the
@@ -129,8 +129,8 @@ allows one Trusted Publisher and validates the entry-point filename):
   hook lives in the **language** plugin, not in `vwf`: a JS/TS rewrite has no
   business in a language-agnostic workflow plugin.
 - **`vitest run`** — schema, renderer and checker suites.
-- **`tsc --noEmit`** per TypeScript project — `schema/`, `build/`, `cli/`, and
-  **`templates/`**. That last one exists solely so the `opencode-plugin/`
+- **`tsc --noEmit`** per TypeScript project — `schema/`, `renderer/`, `cli/`,
+  and **`templates/`**. That last one exists solely so the `opencode-plugin/`
   modules are type-checked: they ship as authored TypeScript with nothing
   transforming them on the way out, so without a project covering them they
   would carry the extension and none of the guarantee. Its `include` is

@@ -72,7 +72,7 @@ turning it on renames every skill the plugin ships. No other plugin sets it.
 
 The prefix is applied by the **renderer**, never authored. Three things must
 agree — the directory, the frontmatter `name:`, and every cross-reference — and
-`flatSkillName` in `build/src/target.ts` is the single point they all pass
+`flatSkillName` in `renderer/src/target.ts` is the single point they all pass
 through.
 
 **Bare prose naming a prefixed skill is a `plugins:check` failure.** It reads

@@ -29,7 +29,7 @@ import writeFileAtomic from "write-file-atomic";
 import { ReceiptBuilder } from "../receipt.ts";
 import type { Action } from "./types.ts";
 
-/** Mirrors `ROOT_TOKEN` / `siblingRootToken` in `build/src/target.ts`. */
+/** Mirrors `ROOT_TOKEN` / `siblingRootToken` in `renderer/src/target.ts`. */
 const ROOT_TOKEN = "%%AI_PLUGINS_ROOT%%";
 const SIBLING_TOKEN = /%%AI_PLUGINS_ROOT:([a-z0-9-]+)%%/g;
 

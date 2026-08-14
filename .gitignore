@@ -31,7 +31,7 @@ node_modules/
 
 # TypeScript build artifacts.
 schema/dist/
-build/dist/
+renderer/dist/
 cli/dist/
 *.tsbuildinfo
 

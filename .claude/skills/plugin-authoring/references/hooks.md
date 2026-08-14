@@ -103,7 +103,7 @@ solely to type-check them (`include: */opencode-plugin/*.ts`); the rest of
   rejected verdict is indistinguishable from a hook that chose to stay quiet,
   which is what let it survive.
 
-  **Cursor's generated wrapper reads both** (`build/src/targets/cursor.ts`), so
-  a script switching spellings needs the wrapper checked in the same change or
-  the hook falls through to `allow` there. Oh-My-Pi's session wrapper only tests
-  whether stdout is non-empty, so it is unaffected either way.
+  **Cursor's generated wrapper reads both** (`renderer/src/targets/cursor.ts`),
+  so a script switching spellings needs the wrapper checked in the same change
+  or the hook falls through to `allow` there. Oh-My-Pi's session wrapper only
+  tests whether stdout is non-empty, so it is unaffected either way.

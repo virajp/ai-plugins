@@ -34,14 +34,14 @@ repos:
         entry: mise x -- mise run plugins:build
         language: system
         pass_filenames: false
-        files: ^(templates/|build/|schema/)
+        files: ^(templates/|renderer/|schema/)
         stages: [ pre-commit ]
       - id: plugins-check
         name: plugin tree static validation
         entry: mise x -- mise run plugins:check
         language: system
         pass_filenames: false
-        files: ^(templates/|build/|schema/|claude/|cursor/|ohmypi/|opencode/)
+        files: ^(templates/|renderer/|schema/|claude/|cursor/|ohmypi/|opencode/)
         stages: [ pre-commit ]
       # The committed render must be exactly what templates/ renders to. Catches
       # the case the two hooks above cannot: output edited by hand, or a render
@@ -51,7 +51,7 @@ repos:
         entry: mise x -- mise run plugins:render-clean
         language: system
         pass_filenames: false
-        files: ^(templates/|build/|schema/|claude/|cursor/|ohmypi/|opencode/)
+        files: ^(templates/|renderer/|schema/|claude/|cursor/|ohmypi/|opencode/)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks

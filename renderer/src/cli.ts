@@ -57,7 +57,7 @@ switch (command) {
     break;
   }
   default: {
-    console.error(`usage: ai-plugins-build <render|check>`);
+    console.error(`usage: ai-plugins-renderer <render|check>`);
     process.exit(1);
   }
 }

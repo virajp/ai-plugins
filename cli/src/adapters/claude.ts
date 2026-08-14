@@ -79,7 +79,7 @@ import { planPlugins } from "./types.ts";
 
 const BIN = "claude";
 
-/** Generated into the repo root, not `claude/` — see `build/src/targets/claude.ts`. */
+/** Generated into the repo root, not `claude/` — see `renderer/src/targets/claude.ts`. */
 const MANIFEST_DIR = ".claude-plugin";
 const MANIFEST = join(MANIFEST_DIR, "marketplace.json");
 

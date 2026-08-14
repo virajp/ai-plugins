@@ -56,7 +56,7 @@ const BIN = "omp";
 /** Where the build writes this target's tree, relative to `sourceRoot`. */
 const TREE = "ohmypi";
 
-/** Mirrors the marketplace output path in `build/src/targets/ohmypi.ts`. */
+/** Mirrors the marketplace output path in `renderer/src/targets/ohmypi.ts`. */
 const MANIFEST = join(".omp-plugin", "marketplace.json");
 
 export const ohmypi: Adapter = {

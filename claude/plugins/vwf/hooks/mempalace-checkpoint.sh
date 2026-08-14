@@ -5,7 +5,7 @@
 # `transcript_path`, a Claude Code JSONL transcript, to count human messages —
 # which is why it works on exactly one target. Counting *stops* in a state file
 # instead needs nothing from the payload but a session id, so one script serves
-# every target the wrappers in `build/src/targets/` can reach.
+# every target the wrappers in `renderer/src/targets/` can reach.
 #
 # Contract (Claude's, which every wrapper translates from):
 #   stdin  — JSON with `session_id`, and on a stop `stop_hook_active`
@@ -70,7 +70,7 @@ field() {
 # drop the block rather than name the event in it.
 #
 # Cursor's wrapper reads this verdict too, and reads the top-level fields —
-# `build/src/targets/cursor.ts`. Keep the two in step.
+# `renderer/src/targets/cursor.ts`. Keep the two in step.
 #
 # `reason` is JSON-escaped for the two characters that can appear in it; the
 # rest of the text is ASCII prose under our own control.

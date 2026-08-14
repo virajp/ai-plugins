@@ -1,0 +1,124 @@
+# mempalace mining config for this repo.
+#
+# Per templates/vwf/assets/memory.md: one product, one wing, one config file at
+# the repo root. `mempalace mine` looks for mempalace.yaml in the directory it is
+# pointed at and nowhere else — no parent search, no `.config/` convention, no
+# --config flag. A copy anywhere else is silently inert: the mine still runs,
+# reports auto-detected defaults, and files everything into `general`.
+#
+# Routing walks a file's path parts outermost-first and returns on the first room
+# whose name or keywords match, so every top-level directory is claimed below on
+# purpose — that is what stops `templates/vwf/skills/doctor/` landing in the
+# protocol `doctor` room. `docs` is deliberately left unclaimed so that
+# docs/memory/<room>/ reaches its own room, docs/cli/ reaches `installer`, and
+# docs/plugins/ reaches `plugins`.
+
+wing: ai-plugins
+
+exclude_patterns:
+  # Secrets — the backstop behind .gitignore, which mining already honours by
+  # default. This layer catches the one case .gitignore cannot: a credential
+  # that was committed anyway, and is therefore not ignored.
+  - .env*
+  - "*.pem"
+  - "*.key"
+  - "*.p12"
+  - "*credentials*"
+  - "*secret*"
+
+  # Rendered output. These four trees are machine-written by `plugins:build` and
+  # never edited by hand; they are committed only so a render is diffable in
+  # review. Mining them would put four near-identical copies of every skill and
+  # agent in the index, which degrades semantic recall rather than adding to it.
+  # Anchored with a leading slash so templates/vwf/opencode-plugin/ and the like
+  # are untouched.
+  - /claude/
+  - /cursor/
+  - /ohmypi/
+  - /opencode/
+
+  # Generated manifests and the generated plugin index — same reason.
+  - /.claude-plugin/
+  - /.cursor-plugin/
+  - /plugins.json
+
+  # Superseded vwf commands, agents and templates from prior models. Kept in git
+  # as history; excluded here because a recall cannot tell retired doctrine from
+  # current doctrine once both are ranked by meaning alone.
+  - /archived/
+
+  # Dependency and build output. node_modules/, dist/ and bin/ are already
+  # gitignored (and node_modules/ and dist/ are in mempalace's own SKIP_DIRS);
+  # listed for the case where the tree is mined without git.
+  - node_modules/
+  - dist/
+  - /bin/
+
+rooms:
+  # ---------------------------------------------------------------------------
+  # The seven protocol rooms vwf writes to. All seven are seeded even where this
+  # repo has no directory for them yet: without the seed, the first agent write
+  # creates the room implicitly with no keywords, so a later mine routes nothing
+  # to it and the room only ever holds what vwf put there by hand.
+  # ---------------------------------------------------------------------------
+  - name: decisions
+    description: Design and architecture decisions with their rationale, from
+      docs/memory/decisions/
+    keywords: [ decisions, rationale ]
+  - name: problems
+    description: Review and security findings and how they were resolved, from
+      docs/memory/problems/
+    keywords: [ problems, findings ]
+  - name: planning
+    description: Plan rationale and deferred options, from docs/memory/planning/
+    keywords: [ planning, plans ]
+  - name: gaps
+    description: Blueprint and plan holes surfaced during execution, plus scope
+      parked during elicitation
+    keywords: [ gaps ]
+  - name: runs
+    description: Execute run journals — dependency order and per-step progress
+      for resuming a paused run
+    keywords: [ runs ]
+  - name: doctor
+    description: /vwf:doctor findings per run, so a later run reports a known
+      one as known
+    keywords: [ doctor ]
+  - name: handoff
+    description: Session handoffs, including the reserved next handoff
+    keywords: [ handoff, handoffs, session ]
+
+  # ---------------------------------------------------------------------------
+  # Path-derived rooms — what this repo actually holds.
+  # ---------------------------------------------------------------------------
+  - name: plugins
+    description: Authored plugin sources under templates/ and their user docs
+      under docs/plugins/
+    keywords: [ templates, plugins, plugin ]
+  - name: renderer
+    description: The build-time half — renderer/src/targets/ turning
+      templates/ into the committed render trees
+    keywords: [ renderer ]
+  - name: installer
+    description: The install-time half — the @askviraj/ai-plugins CLI and
+      statusline in cli/, tools/, and docs/cli/
+    keywords: [ cli, tools, statusline ]
+  - name: schemas
+    description: The neutral contract — zod schemas, the capability matrix,
+      and the JSON schemas
+    keywords: [ schema, schemas ]
+  - name: configuration
+    description: Repo machinery under .config/ — mise envs, linter, formatter,
+      and pre-commit config
+    keywords: [ config, mise ]
+  - name: cicd
+    description: GitHub Actions workflows — plugin validation, npm release,
+      and the monthly dep update
+    keywords: [ github, workflows ]
+  - name: repo-doctrine
+    description: This repo's own Claude Code skills and agents under .claude/,
+      plus CLAUDE.md
+    keywords: [ claude ]
+  - name: general
+    description: Files that don't fit other rooms
+    keywords: []

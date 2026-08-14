@@ -26,4 +26,4 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-exec node --experimental-strip-types build/src/cli.ts check "$@"
+exec node --experimental-strip-types renderer/src/cli.ts check "$@"

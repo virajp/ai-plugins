@@ -9,10 +9,10 @@
  * outright — "extra test helpers cannot exist alongside plugin exports".
  *
  * Loaded by path rather than by specifier: `templates/` is outside this
- * package's `rootDir`, so a static import fails `tsc -p build` even though
+ * package's `rootDir`, so a static import fails `tsc -p renderer` even though
  * vitest resolves it. The module is type-checked in its own right by
  * `templates/tsconfig.json`. And it is tested from here at all because
- * `vitest.config.mts` collects only `{schema,build,cli}/src/**\/*.test.ts` — a
+ * `vitest.config.mts` collects only `{schema,renderer,cli}/src/**\/*.test.ts` — a
  * test file beside the module would be silently never run.
  */
 import { join } from "node:path";

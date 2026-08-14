@@ -45,22 +45,6 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0
 
-  build:
-    dependencies:
-      '@ai-plugins/schema':
-        specifier: workspace:*
-        version: link:../schema
-      eta:
-        specifier: latest
-        version: 4.6.0
-      yaml:
-        specifier: latest
-        version: 2.9.0
-    devDependencies:
-      typescript:
-        specifier: latest
-        version: 7.0.2
-
   cli:
     dependencies:
       '@ai-plugins/schema':
@@ -75,6 +59,22 @@ importers:
       write-file-atomic:
         specifier: latest
         version: 8.0.0
+    devDependencies:
+      typescript:
+        specifier: latest
+        version: 7.0.2
+
+  renderer:
+    dependencies:
+      '@ai-plugins/schema':
+        specifier: workspace:*
+        version: link:../schema
+      eta:
+        specifier: latest
+        version: 4.6.0
+      yaml:
+        specifier: latest
+        version: 2.9.0
     devDependencies:
       typescript:
         specifier: latest

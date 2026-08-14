@@ -2,7 +2,7 @@
 
 An **Adapter** (`cli/src/adapters/`) is install-time and effectful: a rendered
 tree → the user's machine. Its build-time counterpart, a **Target**
-(`build/src/targets/`), is pure. Keeping them apart is what keeps
+(`renderer/src/targets/`), is pure. Keeping them apart is what keeps
 format-preserving config mutation out of the renderer, and what let the OpenCode
 installer shrink from a 1189-line renderer to a copier.
 

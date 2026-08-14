@@ -10,7 +10,7 @@
  * executes it. Same reasoning as `typescript:test` for the npm-normalize hook.
  *
  * It lives here because `vitest.config.mts` collects only
- * `{schema,build,cli}/src/**\/*.test.ts` — beside the script it would never run.
+ * `{schema,renderer,cli}/src/**\/*.test.ts` — beside the script it would never run.
  */
 import { execFileSync } from "node:child_process";
 import {

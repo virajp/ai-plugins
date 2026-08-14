@@ -86,10 +86,10 @@ Before adding or changing any write path, read
   nothing, and installs `datastore`, the plugin with no `requires:`, so the run
   reaches the adapter instead of stopping at the dependency gate.
 - **`vitest.config.mts` restricts collection to
-  `{schema,build,cli}/src/**/*.test.ts`.** A test file anywhere else is silently
-  never run rather than failing — which is why the statusline *script* tests
-  live at `cli/src/statusline-script.test.ts` even though what they exercise is
-  `tools/statusline/`.
+  `{schema,renderer,cli}/src/**/*.test.ts`.** A test file anywhere else is
+  silently never run rather than failing — which is why the statusline *script*
+  tests live at `cli/src/statusline-script.test.ts` even though what they
+  exercise is `tools/statusline/`.
 - Never stub `claude` or `omp` to exercise an adapter end to end: that tests
   this tool against our own fiction of their CLIs. Their command sequences are
   covered by the adapter suites with fakes; for a real run use the

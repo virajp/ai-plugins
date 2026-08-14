@@ -1,7 +1,7 @@
 /**
  * The install-time half of the two abstractions.
  *
- * A **Target** (`build/src/targets/`) is build-time and pure: templates → the
+ * A **Target** (`renderer/src/targets/`) is build-time and pure: templates → the
  * committed render trees. An **Adapter** is install-time and effectful: the
  * rendered tree → the user's machine. Keeping them apart is what stops
  * format-preserving config mutation leaking into the renderer, where it has no

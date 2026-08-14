@@ -64,10 +64,10 @@ rather than under `adapters/`.
 
 This is the architectural spine, and the two halves are deliberately kept apart.
 
-| Half                              | When         | Nature    | Does                                  |
-| --------------------------------- | ------------ | --------- | ------------------------------------- |
-| **Target** (`build/src/targets/`) | build-time   | pure      | templates → the committed render tree |
-| **Adapter** (`cli/src/adapters/`) | install-time | effectful | that tree → the user's machine        |
+| Half                                 | When         | Nature    | Does                                  |
+| ------------------------------------ | ------------ | --------- | ------------------------------------- |
+| **Target** (`renderer/src/targets/`) | build-time   | pure      | templates → the committed render tree |
+| **Adapter** (`cli/src/adapters/`)    | install-time | effectful | that tree → the user's machine        |
 
 Two things follow from the split. Format-preserving config mutation — splicing a
 key into someone else's `settings.json` without reflowing their file — stays out
@@ -142,7 +142,7 @@ re-running the install *is* the upgrade.
 | `cli/src/**/*.test.ts`   | vitest; `i:test` smoke-tests the **built** bundle, not the source          |
 
 Two placement rules that look arbitrary and are not. `vitest.config.mts`
-collects only `{schema,build,cli}/src/**/*.test.ts`, so a test file anywhere
+collects only `{schema,renderer,cli}/src/**/*.test.ts`, so a test file anywhere
 else is silently never run — which is why the tests for the statusline *script*
 and for the mempalace checkpoint *shell script* live under `cli/src/` even
 though what they exercise is `tools/` and `templates/`. And `config/toml.ts` has
