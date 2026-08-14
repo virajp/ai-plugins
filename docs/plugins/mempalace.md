@@ -101,9 +101,15 @@ curl http://127.0.0.1:8765/healthz   # -> ok
 Why not stdio: an stdio server is a **child process of the agent**, so when it
 dies the connection stays dead for the rest of the session. Over HTTP it
 reconnects, survives session restarts, and one daemon serves **every** agent
-instance at once — every target, all repos, all worktrees, in parallel
-(mempalace serializes concurrent writes). Its logs are also yours to read, which
-is what makes a flaky memory layer diagnosable.
+instance at once — every target, all repos, all worktrees, in parallel. Its logs
+are also yours to read, which is what makes a flaky memory layer diagnosable.
+
+The other half of the reason is that the palace keeps local JSON state beside
+the store — `hallways.json` and the tunnel file — which is rewritten whole with
+no lock. One daemon serializes those writes in-process; N stdio processes race
+and last-writer-wins silently drops entity edges. That holds on **every**
+backend, including ones like Qdrant that coordinate concurrent clients
+themselves and so never take mempalace's writer lease.
 
 `mempalace-mcp`, not `mempalace serve`: `serve` forks the real server as a child
 and holds PID 1 itself, so under a supervisor the server never sees `SIGTERM`.
@@ -249,11 +255,15 @@ breaks the prune.
 ### If you also install the upstream plugin, turn its stdio server off
 
 Nothing here installs it any more, but the upstream `mempalace` plugin bundles
-`{"command": "mempalace-mcp"}`, and mempalace holds a **single writer lease** —
-its docs are explicit that two server processes must not point at the same
-backend. Toggle it off in `/mcp`; Claude Code records that in `~/.claude.json`
-under `disabledMcpServers` (which covers plugin servers). The toggle is per
-project. Confirm with `/mcp` that exactly **one** mempalace server is connected.
+`{"command": "mempalace-mcp"}`, and its docs are explicit that two server
+processes must not point at the same backend. On Chroma that is a **single
+writer lease**; on Qdrant the lease is never taken (the backend coordinates its
+own clients), but a second server is still wrong — the palace's local JSON state
+beside the store, `hallways.json` and the tunnel file, is rewritten whole with
+no lock, so two writers silently drop each other's entity edges. Toggle it off
+in `/mcp`; Claude Code records that in `~/.claude.json` under
+`disabledMcpServers` (which covers plugin servers). The toggle is per project.
+Confirm with `/mcp` that exactly **one** mempalace server is connected.
 
 ## How vwf uses it
 

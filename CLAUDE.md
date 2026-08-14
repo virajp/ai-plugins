@@ -575,17 +575,27 @@ environment, so a stale value there outlives every restart of the daemon itself.
 Why: an stdio server is a child of the client, so when it dies the connection
 stays dead for the rest of the session. Over HTTP it reconnects, it survives
 session restarts, one daemon serves **every** Claude Code instance (all repos,
-all worktrees, in parallel — mempalace serializes concurrent writes), and its
-logs are yours to read.
+all worktrees, in parallel), and its logs are yours to read.
+
+**Single-writer is no longer part of that argument, which is exactly what makes
+stdio look switchable again.** On Chroma a second writer corrupted the store; on
+Qdrant `palace.py`'s `_MULTI_PROCESS_WRITER_BACKENDS` opts the backend out, so
+`backend_requires_single_writer()` is false and the lease is never taken.
+Concurrent processes are safe *at the store* — and stdio is still wrong, because
+**`hallways.json` is a lockless read-modify-write**: `_save_hallways` replaces
+the whole file atomically but takes no lock, so one daemon serializes those
+writes in-process while N processes race and last-writer-wins silently drops
+entity edges. It is local JSON beside the palace, which Qdrant never sees;
+tunnels are the same shape. stdio would also spawn one server per session, each
+holding its own ~140 MB embedder.
 
 **If the upstream mempalace plugin is separately installed, its own stdio server
-must be turned off**, or two processes contend for mempalace's single writer
-lease (its docs: *"don't point two server processes at the same backend
-collection"*). Nothing here installs it any more, so this only bites a user who
-adds it themselves. Toggle it off in `/mcp` — Claude Code records that in
-`~/.claude.json` under `disabledMcpServers`, which covers plugin servers. The
-toggle is recorded **per project**. Confirm with `/mcp` that exactly one
-mempalace server is connected.
+must be turned off** — for that same hallway race, and because its docs say so
+(*"don't point two server processes at the same backend collection"*). Nothing
+here installs it any more, so this only bites a user who adds it themselves.
+Toggle it off in `/mcp` — Claude Code records that in `~/.claude.json` under
+`disabledMcpServers`, which covers plugin servers. The toggle is recorded **per
+project**. Confirm with `/mcp` that exactly one mempalace server is connected.
 
 **Tool names are scoped to whichever plugin declares the server**, so the
 execute subagents' `tools:` lists carry **both** —

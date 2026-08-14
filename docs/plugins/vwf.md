@@ -51,8 +51,8 @@ with
 supervisor the server never sees `SIGTERM`. One daemon serves every agent
 instance at once, survives session restarts, and reconnects instead of dying
 with the session. If you separately install the upstream `mempalace` plugin,
-toggle **its** stdio server off in `/mcp` — two servers would contend for
-mempalace's single writer lease. See [mempalace](./mempalace.md).
+toggle **its** stdio server off in `/mcp` — two servers writing one palace lose
+each other's local graph state. See [mempalace](./mempalace.md).
 
 Nothing else about memory needs installing. The two mempalace skills are
 **vendored into `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its
