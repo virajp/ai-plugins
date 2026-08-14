@@ -1597,7 +1597,7 @@ Declared as `transport: http` against `http://127.0.0.1:8765/mcp` — a daemon y
 run yourself rather than a stdio subprocess the agent owns. The two skills that
 drive it are vendored into `vwf` under MIT, which is what lets memory ship on
 every target rather than only where a marketplace reaches. Setup, why HTTP, the
-writer-lease trap and the provenance record are in
+second-server trap and the provenance record are in
 [Prerequisites](#prerequisites) above and [mempalace](./mempalace.md) in full.
 
 ### Context7 — current library docs
