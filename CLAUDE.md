@@ -591,14 +591,20 @@ mempalace-mcp --transport http --host 127.0.0.1 --port 8765
 Not `mempalace serve`: `serve` forks the real server as a child and holds PID 1
 itself, so under a supervisor the server never sees `SIGTERM`. The daemon needs
 no flags: it is configured through `~/.mempalace/config.json` (palace path,
-`backend: qdrant`, the qdrant URL), overridden by `MEMPALACE_*` environment
-variables — env takes precedence. The config file is what a supervised daemon
-reliably reads: a daemon inherits its *supervisor's* environment, so a variable
-fixed after the supervisor started is not the one the daemon sees, but the file
-is read fresh either way. `MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN=1` is what
-lets the loopback daemon run tokenless. The full setup — the mise-managed
-install, the qdrant container, the config file and the env set — is the
-`mempalace` skill's Prerequisites, which is authoritative for it.
+`backend: qdrant`, the qdrant URL) plus `MEMPALACE_*` environment variables —
+and the precedence **differs by setting**, which is the fact to reach for when
+debugging. The backend choice runs `--backend` flag → config.json →
+`MEMPALACE_BACKEND` → chroma default (**file beats env**); the qdrant connection
+settings run `MEMPALACE_QDRANT_*` → config.json → defaults
+(`http://localhost:6333`, 10 s) (**env beats file**). So the file is what a
+supervised daemon reliably reads for the backend — but a stale
+`MEMPALACE_QDRANT_URL` in the *supervisor's* inherited environment still
+outranks a correct file, and fixing it means restarting the supervisor, not the
+daemon. Keep file and env stating the same values so the flip never bites.
+`MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN=1` is what lets the loopback daemon
+run tokenless. The full setup — the mise-managed install, the qdrant container,
+the config file and the env set — is the `mempalace` skill's Prerequisites,
+which is authoritative for it.
 
 Why: an stdio server is a child of the client, so when it dies the connection
 stays dead for the rest of the session. Over HTTP it reconnects, it survives

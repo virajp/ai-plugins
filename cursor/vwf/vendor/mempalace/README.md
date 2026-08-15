@@ -61,8 +61,10 @@ vwf assumes: the mise-managed install (`"pipx:mempalace" = { version =
 **qdrant as the backend** rather than the chroma default, because chroma does
 not support concurrent access — run as a loopback-bound container, with the
 image and port pinned in the skill's fenced run command; configuration
-through `~/.mempalace/config.json` overridden by `MEMPALACE_*` environment
-variables (env takes precedence), palace at `~/.local/share/mempalace`; and
+through `~/.mempalace/config.json` plus `MEMPALACE_*` environment variables,
+including the per-setting precedence flip (the file wins the backend choice,
+env wins the qdrant connection settings), palace at
+`~/.local/share/mempalace`; and
 `mempalace-mcp` as a supervised HTTP daemon that needs no flags, since the
 config file is what a supervised daemon reliably reads whatever environment it
 inherited. Re-apply this on any resync.

@@ -43,10 +43,24 @@ container.
 
 ### Configuration
 
-`mempalace` picks its configuration up from `~/.mempalace/config.json` or
-environment variables — **env vars take precedence**. The palace lives at
-`~/.local/share/mempalace`. A sample `~/.mempalace/config.json` (`palace_path`
-is one canonical absolute spelling — the path string is the palace's identity):
+`mempalace` picks its configuration up from `~/.mempalace/config.json` and
+`MEMPALACE_*` environment variables, and the precedence **differs by setting**
+— know it exactly when debugging:
+
+- **Choosing the backend:** `--backend` flag → config.json `"backend"` →
+  `MEMPALACE_BACKEND` → default `chroma`. The **file beats env** here, and the
+  unconfigured default is chroma.
+- **Qdrant connection settings** (`qdrant_url`, `qdrant_api_key`,
+  `qdrant_namespace`, `qdrant_timeout`): `MEMPALACE_QDRANT_*` env vars →
+  config.json → defaults (`http://localhost:6333`, 10 s timeout). **Env beats
+  the file** here — so a stale variable in a supervisor's inherited
+  environment can point the daemon at the wrong qdrant even when config.json
+  is right.
+
+Keep the file and the env vars stating the same values, as below, so the flip
+never bites. The palace lives at `~/.local/share/mempalace`. A sample
+`~/.mempalace/config.json` (`palace_path` is one canonical absolute spelling —
+the path string is the palace's identity):
 
 ```json
 {
@@ -84,7 +98,10 @@ mempalace-mcp --transport http --host 127.0.0.1 --port 8765
 With the configuration above it needs no flags — the daemon reads
 `~/.mempalace/config.json` regardless of the environment it inherited, which is
 what matters under a supervisor (a supervised daemon sees the *supervisor's*
-environment, not your shell's). `MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN` is
+environment, not your shell's). Mind the per-setting precedence above: the file
+wins the backend choice, but inherited `MEMPALACE_QDRANT_*` vars outrank the
+file for connection settings — after changing one, restart the supervisor, not
+just the daemon. `MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN` is
 what lets the loopback daemon run without a token. Keep it under a process
 supervisor (pitchfork, launchd, systemd) rather than starting it by hand: a
 client reconnects to an HTTP daemon, but nothing restarts one for you.

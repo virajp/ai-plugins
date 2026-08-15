@@ -98,8 +98,9 @@ curl http://127.0.0.1:8765/healthz   # -> ok
 ```
 
 No palace or backend flags: the daemon is configured through
-`~/.mempalace/config.json` and `MEMPALACE_*` environment variables — env takes
-precedence. See the supervisor-env section below for why the file matters.
+`~/.mempalace/config.json` and `MEMPALACE_*` environment variables — with a
+per-setting precedence flip documented in the backend section below. See the
+supervisor-env section for why the file matters.
 
 Why not stdio: an stdio server is a **child process of the agent**, so when it
 dies the connection stays dead for the rest of the session. Over HTTP it
@@ -167,9 +168,23 @@ In practice the whole `MEMPALACE_*` set — these two plus
 `MEMPALACE_PALACE_PATH`, `MEMPALACE_MAX_BACKUPS` and
 `MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN` (what lets the loopback daemon run
 tokenless) — lives in the global mise config's `[env]`, or the shell's startup
-script; `~/.mempalace/config.json` carries the same facts as the file-based
-fallback, and env wins when both are present. The vendored `mempalace` skill's
-Prerequisites is the authoritative statement of this setup.
+script, with `~/.mempalace/config.json` carrying the same facts. The vendored
+`mempalace` skill's Prerequisites is the authoritative statement of this setup.
+
+**Which source wins differs by setting — the fact to reach for when debugging:**
+
+- **Choosing the backend:** `--backend` flag → config.json `"backend"` →
+  `MEMPALACE_BACKEND` → default `chroma`. The **file beats env**, so an env var
+  cannot override a `"backend"` key the file already carries — and with neither
+  present, the silent default is chroma.
+- **Qdrant connection settings** (`qdrant_url`, `qdrant_api_key`,
+  `qdrant_namespace`, `qdrant_timeout`): `MEMPALACE_QDRANT_*` env → config.json
+  → defaults (`http://localhost:6333`, 10 s timeout). **Env beats the file** —
+  the reverse of the backend choice.
+
+Keeping the file and the env stating identical values is what makes the flip
+unobservable; the moment they disagree, which side wins depends on which setting
+you are looking at.
 
 Setting the URL **without** the backend key **silently selects ChromaDB.** The
 backend key is what chooses the backend; its default is `chroma`, and the unused
@@ -206,10 +221,10 @@ path, from one place, to everything that opens the palace.
 
 A supervised daemon inherits its **supervisor's** environment, captured when the
 supervisor started. So fixing a variable in your shell config and restarting the
-*daemon* changes nothing — you must restart the **supervisor**. The resolution
-is `~/.mempalace/config.json`: the daemon reads the file fresh on start whatever
-environment it inherited, so the palace path, the backend and the qdrant URL
-live there —
+*daemon* changes nothing — you must restart the **supervisor**. The partial
+resolution is `~/.mempalace/config.json`: the daemon reads the file fresh on
+start whatever environment it inherited, so the palace path, the backend and the
+qdrant URL live there —
 
 ```json
 {
@@ -220,10 +235,13 @@ live there —
 }
 ```
 
-— with `MEMPALACE_*` environment variables overriding it when present. A
-flagless run line plus the config file beats baking flags into the supervisor's
-run string: the file is one canonical spelling, editable without touching the
-supervisor.
+— but *partial* because of the precedence flip above: the file settles the
+backend choice outright, while a stale `MEMPALACE_QDRANT_*` variable in the
+supervisor's captured environment still **outranks** the file for connection
+settings. A daemon talking to the wrong qdrant despite a correct config.json is
+this trap — restart the supervisor. A flagless run line plus the config file
+still beats baking flags into the supervisor's run string: the file is one
+canonical spelling, editable without touching the supervisor.
 
 Underneath this sits a plain shell fact worth stating outright: **`~` is
 expanded only for unquoted text typed in a command, never for text arriving from
