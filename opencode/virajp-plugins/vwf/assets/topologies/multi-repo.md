@@ -121,7 +121,9 @@ A project with `platforms: [iac]` is **always its own repo** — here that means
 its own member, never a directory inside another member and never a directory in
 the base. This is the one structural rule vwf enforces rather than offers:
 `vwf-doctor` raises a violation as **blocking**, and
-`/vwf-setup` offers a consent-gated restructure. The reasoning —
+`/vwf-setup` writes up the extraction as a recommendation — one
+you may decline under `enforcement:`, which leaves the finding standing as a
+warning reported every run instead of a halt. The reasoning —
 blast radius, credentials, lifecycle, cadence — is in [monorepo](monorepo.md),
 where the rule is most surprising.
 
@@ -162,9 +164,11 @@ graph and one release cadence**.
 ## Adding and removing members
 
 Adding a member is a `members:` entry, a `.config/vwf-membership.yaml` in it, and
-its registry projects — plus `git submodule add` under submodule linkage.
-`/vwf-setup` does this incrementally: it re-runs against the
-delta rather than re-onboarding the product.
+its registry projects — plus `git submodule add` under submodule linkage. Run
+`/vwf-setup` from **inside the new repo**: finding no config
+there, Step 0 resolves `onboard`, and base-repo resolution
+(`%%AI_PLUGINS_ROOT%%/assets/membership.md`) reaches the product from it. Its
+registry projects are `vwf-architecture`'s to record.
 
 Removing one **archives** its flows and entities under `docs/blueprint/archived/`
 — vwf never deletes blueprint docs — deregisters its projects, drops its

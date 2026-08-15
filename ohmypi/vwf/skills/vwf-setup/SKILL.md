@@ -1,428 +1,162 @@
 ---
 name: vwf-setup
-description: Onboard a repo into vwf's format and keep it current — detect or
-  ask (MCQ) the
-  project topology, migrate to the docs/blueprint structure with consent,
-  orchestrate the foundations (mise, product, architecture, design-system),
-  and author CLAUDE.md + README. Re-runnable; detects format drift and
-  migrates when the vwf format evolves.
+description: Bring a repo into vwf's format and keep it there. Step 0 resolves
+  one of three entry paths — onboard (a blank repo bootstraps, a repo with code
+  is detected and confirmed), migrate (reconcile a tree written against an older
+  format), or current (say so and exit) — then runs the shared spine that
+  validates, stamps .config/vwf.yaml, checks the repo, commits, and prints the
+  chain forward.
 disableModelInvocation: true
 ---
 
 # setup — Onboard & Keep a Repo in vwf Format
 
-Bring any repo — new or existing — into vwf's structure, and re-run any time the
-vwf format evolves to migrate the gap. `setup` is the Phase-0 bootstrapper:
-`setup → product → architecture → design-system → blueprint → plan → execute`.
+Bring any repo — new, existing, or written against an older vwf format — into
+the shape the rest of the workflow reads. `setup` is the Phase-0 bootstrapper of
+`setup → product → architecture → design-system → blueprint → plan → execute`,
+and the only vwf command that onboards.
 
-You own the user conversation. Every change is **consent-gated and
-worktree-safe** — present a dry-run plan and wait for approval before writing;
-never delete; never overwrite without consent. Apply the **project-setup** skill
-throughout.
+**The mode is resolved once, in Step 0, and never re-derived.** Everything after
+it branches on the named mode. There is no progress key and no resume state:
+re-running **is** the resume mechanism — a conforming repo resolves to
+`current`, and a half-finished onboard re-detects and produces a smaller plan.
 
-## Doc Paths
+You own the user conversation, per `%%AI_PLUGINS_ROOT%%/assets/elicitation.md` — one
+decision per round, MCQ where an option set exists. Every write is
+consent-gated; never delete, never overwrite without consent.
 
-| Doc               | Path                                                           |
-| ----------------- | -------------------------------------------------------------- |
-| Registry          | `docs/blueprint/registry.yaml`                                 |
-| Environment       | `docs/blueprint/environment.md`                                |
-| Env. template     | `%%AI_PLUGINS_ROOT%%/assets/templates/environment.md`        |
-| vwf config        | `.config/vwf.yaml` (legacy stamp: `docs/blueprint/.vwf.yml`)   |
-| Config schema     | `%%AI_PLUGINS_ROOT%%/assets/vwf-config.md`                   |
-| CLAUDE.md section | `%%AI_PLUGINS_ROOT%%/assets/templates/project-claude.md`     |
-| Stack templates   | from the installed stack plugins, never from vwf                |
-| Stack vocabulary  | `%%AI_PLUGINS_ROOT%%/assets/stack-vocabulary.md`             |
-| Memory protocol   | `%%AI_PLUGINS_ROOT%%/assets/memory.md`                       |
-| mempalace config  | `mempalace.yaml` (per mined tree — see the memory protocol)     |
-| Membership        | `%%AI_PLUGINS_ROOT%%/assets/membership.md`                   |
-| Harness contract  | `%%AI_PLUGINS_ROOT%%/assets/harness.md`                      |
+## References
 
-Doctrine: the **project-setup** skill — a router. Read each reference at the
-step that needs it, not upfront: `topology-detection` + `structure` at §1,
-`migration-and-consent` at §4, `claude-md` at §8. Read **`format-versioning`**
-(~430 lines of per-version deltas) **only when §3 finds actual drift**, and only
-the deltas between the repo's stamp and the shipped format — an already-current
-repo never needs it.
+Read the one the step needs, not all of them.
 
-This skill's own references follow the same rule:
-
-| Reference                                                  | Read it when                                                       |
-| ---------------------------------------------------------- | ------------------------------------------------------------------ |
-| [format-reconcile](references/format-reconcile.md)         | §3 — computing the delta and judging layout drift                  |
-| [environment-bootstrap](references/environment-bootstrap.md) | §6 — the registry declares integrations or a secrets-manager config |
-| [memory-tree](references/memory-tree.md)                   | §9 — writing `docs/memory/` and the product's `mempalace.yaml` config(s) |
+| Reference                                                      | Read it when                                                       |
+| -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [onboard pipeline](references/onboard-pipeline.md)             | mode `onboard` — both sub-paths                                    |
+| [migrate pipeline](references/migrate-pipeline.md)             | mode `migrate`, and an old tree found under `onboard`              |
+| [topology detection](references/topology-detection.md)         | detecting or confirming topology, roles, platforms, stacks         |
+| [structure](references/workspace-structure.md)                 | presenting the topology menu, or writing a layout recommendation   |
+| [migration & consent](references/migration-and-consent.md)     | the dry-run discipline every write in either pipeline goes through |
+| [format lineage](references/format-lineage.md)                 | a retired spelling has to resolve to what it became                |
+| [environment bootstrap](references/environment-bootstrap.md)   | the registry declares integrations or a secrets-manager `config`   |
+| [memory tree](references/memory-tree.md)                       | writing `docs/memory/` and the product's `mempalace.yaml`          |
+| [CLAUDE.md section](references/claude-md.md)                   | merging the vwf section into the repo's `CLAUDE.md`                |
 
 ## Hard Rules
 
-- **Consent + dry-run.** Present the full migration plan (every create / move /
-  update) and get approval before any write. Code restructuring is approved
-  **per batch**.
+- **Consent + dry-run.** Present the full plan — every create, move and update —
+  and get approval before any write.
 - **Worktree-safe; all git via /skill:vwf-git-workflow.** Operate in an isolated
-  worktree; never delete; never overwrite without consent. Keep the worktree
-  local.
-- **Don't duplicate tools.** Use `devtools:scaffold` for mise config and
-  `/skill:vwf-readme` for the README — orchestrate, don't reimplement.
-- **Idempotent.** A re-run detects what already conforms and migrates only the
-  delta; a conforming repo yields an empty plan.
-- **Resumable.** After each completed step, append its id to a transient
-  `setup_progress:` list in `.config/vwf.yaml`; a re-run reads it and resumes
-  from the first incomplete step. Keep it a plain list, not a journal. **Remove
-  the key on successful completion** (step 11).
+  worktree and keep it local; never push. If the working tree is dirty, ask
+  whether to commit, stash, or proceed before creating it.
+- **Never move source.** setup writes and moves documentation only. Layout
+  drift is a written recommendation — see Recommendations, never moves.
+- **Don't duplicate tools.** `/skill:scaffold` for mise config. **Never
+  write a README by hand** — `/skill:vwf-readme` owns it, and setup only names
+  it in the chain.
+- **Idempotent.** A migrate run reconciles only what drifted; a conforming tree
+  yields an empty plan, and Step 0 routes it to `current` before that.
 
-**What a batch is.** Code restructuring is approved and applied **one batch at a
-time**. A batch is **one project's moves, or one logical rename group** — small
-enough to review in a single screen. Never bundle unrelated projects or renames
-into one approval.
+## Step 0 — Resolve the mode
 
----
+Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
+against the shipped integers (`%%AI_PLUGINS_ROOT%%/assets/blueprint-format`, and the
+current `config_format` named in `%%AI_PLUGINS_ROOT%%/assets/vwf-config.md`).
 
-## Pipeline
+| `.config/vwf.yaml`                                       | Mode      |
+| -------------------------------------------------------- | --------- |
+| absent, and no legacy `docs/blueprint/.vwf.yml`          | `onboard` |
+| parseable, either stamp behind — or only the legacy file | `migrate` |
+| parseable, both stamps current                           | `current` |
+| present but **unparseable**                              | halt      |
 
-### 1. Detect topology
+**Unparseable halts.** Report the parse error verbatim with the line it names,
+and give the two remedies — fix the file, or delete it and re-run to onboard
+from scratch. Never onboard over it: a config that will not parse still records
+decisions nothing else does, and overwriting it discards them silently.
 
-**Resume check.** Read `.config/vwf.yaml` (fall back to the legacy
-`docs/blueprint/.vwf.yml`). If it carries a transient `setup_progress:` list
-from an interrupted run, offer to resume from the first step **not** in that
-list rather than restarting; re-confirm anything the user wants revisited.
+**`onboard` forks once more — on evidence, not on a second mode.** A **blank**
+repo has no package or language manifest, no source directories, and no
+`docs/blueprint/` tree. A README, LICENSE, `.gitignore`, `.gitattributes`, and
+tooling-only configs (mise, formatter, linter, pre-commit — at the root or under
+`.config/`) are **not** code: a repo holding only those is blank. Anything else
+takes the code sub-path. Both are in the onboard pipeline.
 
-**Recall.** Per `%%AI_PLUGINS_ROOT%%/assets/memory.md`, recall room
-`decisions` (prior topology / UI / stack confirmations and their rationale)
-before detecting — build on them, don't re-ask resolved questions. Skip silently
-if mempalace is unavailable.
+**An old `docs/blueprint/` tree found under `onboard`** is handed to the migrate
+pipeline once detection is confirmed. The two are one reconciliation at
+different elicitation depths — onboard elicits every decision, migrate carries
+most forward and maps the renames.
 
-**Graph-first.** Per `%%AI_PLUGINS_ROOT%%/assets/graphify.md`, when the repo
-already carries `graphify-out/graph.json`, query it for the system shape first —
-the projects present, their stacks, and who depends on whom — then confirm what
-it reports against the manifests below; fall back silently when no graph exists.
+**`current` reports and exits.** Name both stamps, say the repo is current, and
+print the chain below. Nothing re-walks the repo: that is
+`/skill:vwf-doctor`'s job, and saying so is the whole report.
 
-**Resolve the base repo first**, per
-`%%AI_PLUGINS_ROOT%%/assets/membership.md`. A `setup` run started inside a member
-repo of an already-onboarded product must operate on the product, not re-onboard
-the one repo it is standing in — and that is exactly what a user adding a new
-repo will do.
+## The shared spine
 
-Per the project-setup skill (topology-detection), read repo signals — the root
-manifests and lockfiles the installed stack plugins recognise, `.gitmodules`,
-any `members:` list, any `.config/vwf-membership.yaml`, dir layout — plus any
-existing `docs/blueprint/` or legacy `docs/specs/`. Infer: **topology**
-(`repo` / `monorepo` / `multi-repo`) and, for multi-repo, **linkage**
-(`submodule` / `siblings`) plus the member list; the **role** and **platforms**
-of each project (four roles, each with a closed platform list — a project
-carries one role and one or more platforms); and the stack per project.
+Run the mode's pipeline. It returns the facts the config is written from and the
+recommendations the report carries. Then, in this order — the ordering is the
+point, since a stamp written before validation describes a tree nothing checked:
 
-**Which members are present is detected, never asked and never recorded.** A
-multi-repo product where most members are not on this machine is normal. Note
-what is here, and scope every code-reading step below to it.
+1. **Validate the bundle.** Every `docs/blueprint/` doc opens with valid OKF
+   frontmatter and every relationship link resolves (the blueprint-authoring
+   `frontmatter-and-links` reference); every YAML artifact parses; the required
+   foundations are present for what the registry declares; `environment.md`
+   carries no secret values. A bundle that fails here never reaches a stamp.
+2. **Write `.config/vwf.yaml`.** `%%AI_PLUGINS_ROOT%%/assets/vwf-config.md` is
+   authoritative for every key — write the two stamps plus exactly what the
+   pipeline elicited, and nothing it did not. For a multi-repo product also
+   write each member's `.config/vwf-membership.yaml`, per
+   `%%AI_PLUGINS_ROOT%%/assets/membership.md`; which members are on this machine is
+   detected every run and never recorded.
+3. **Run /skill:vwf-doctor** over the repo — it checks the config just written
+   against what the repo actually is. setup **records** what it reports and does
+   not gate on most of it: a missing LSP plugin or an unbuilt harness capability
+   is a normal state for a freshly onboarded repo.
 
-**`iac` placement.** For every project declaring the `iac` platform, resolve
-which repo's working tree its directory falls in. One sitting inside another
-project's repo violates the own-repo rule (`%%AI_PLUGINS_ROOT%%/assets/topologies/`) — record
-it here and carry it into the step-4 plan as a restructure proposal (§4).
+   **Halt on a `blocking` finding, and revert the stamp** — delete
+   `.config/vwf.yaml` if this run created it, else `git checkout --` it — so no
+   stamped-but-unrunnable artifact survives the halt. Report the finding with
+   its remedy. A language no installed stack plugin declares is the blocking
+   kind an otherwise-onboarded repo reaches: say plainly that the menu is closed
+   to what the installed plugins define
+   (`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`), and never invent a template to
+   get past it.
 
-**Harness detection.** Detect the repo's verification-harness capabilities per
-`%%AI_PLUGINS_ROOT%%/assets/harness.md` (dev task, local E2E + stack, staging
-E2E, health endpoints, screenshot capability) — recorded in the stamp at step 9.
-For a **new/empty repo**, the harness is scaffolded as part of the enforced
-structure (fold it into the step-4 migration plan); for an existing repo,
-missing capabilities are only **recorded** — `/skill:vwf-plan` injects their bootstrap
-steps when a cycle first needs them.
+   **Two exceptions.** A **declined graph build** is a settled choice, not an
+   unmet mandate — note it as a degradation and finish. A **declined `iac`
+   extraction** recorded under `enforcement:` is the same: the finding stays, as
+   a warning reported every run, and neither setup nor
+   `/skill:vwf-execute` halts on it.
+4. **Approval gate & commit.** Summarize everything created and updated, plus
+   the recommendations, and wait for approval. On approval commit via
+   `/skill:vwf-git-workflow` with a `chore(vwf):` or `docs:` message.
+5. **The graph offer.** Per `%%AI_PLUGINS_ROOT%%/assets/graphify.md`, `setup` is the
+   **only** vwf command that builds graphs. After the commit, if
+   `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
+   consent-gated; it is a long build — to build it against the **main
+   checkout's** root, never the worktree, and to install the refresh hook. A
+   decline is honored without re-asking.
+6. **Chain forward.** Print the ordered chain and stop:
+   `/skill:vwf-product` → `/skill:vwf-architecture` →
+   `/skill:vwf-design-system` (once a project declares a screen
+   platform) → `/skill:vwf-blueprint`, with
+   `/skill:vwf-readme` optional at any point. Offer to start
+   `/skill:vwf-product` now. **setup runs none of them** — each
+   resolves its own mode and reports what it did, which a gate here can only
+   guess at on their behalf.
 
-### 2. Confirm & fill (MCQ)
+## Recommendations, never moves
 
-Present what you detected and confirm or correct it with the user via **MCQ**,
-following `%%AI_PLUGINS_ROOT%%/assets/elicitation.md` — one question at a
-time, options + "Other". Pin down anything detection could not: missing project
-types, stacks, and **whether any project declares a screen platform** (it makes the design system
-mandatory). Never assume UI — confirm it.
+setup moves no source file. A repo whose layout differs from its topology
+template's grouping, and an `iac` project sitting inside another project's repo,
+both end the run as **written recommendations** in the report — each naming the
+target layout (`references/workspace-structure.md`) and why it is worth the
+work. Recording a decline under `enforcement:` stops the proposal recurring, not
+the finding: `/skill:vwf-doctor` keeps reporting it as a warning,
+which is the honest state of a repo that chose its own shape.
 
-**New/empty repo.** When detection finds no manifests and no source, apply the
-**topology menu** per the project-setup skill (structure) as one confirmation —
-present the three templates and let the user pick, exactly as with stacks. There
-is no default and nothing to object to, so no `enforcement` entry: record
-`topology` and `topology_reason`.
-
-**Multi-repo: confirm the linkage, then the members.** Two questions, in order,
-never one:
-
-1. **Linkage** — `submodule` (recommend it, and say why: a member can find its
-   product structurally, and the pointer commits record which versions were ever
-   consistent together) or `siblings`. **Recommend, never enforce.** A product
-   whose repos already exist independently, or one shared with another product,
-   is a legitimate `siblings` answer and not a shape to be argued out of.
-   Record `linkage`.
-2. **The members** — for each: its `name`, `path` relative to the base repo, its
-   git `url`, and which registry projects live in it. Under `submodule` linkage
-   every one of these is already in `.gitmodules`; **read them, present them,
-   confirm** — do not re-ask what the repo already states. Under `siblings` the
-   `url` is the one fact nothing else records, and it is the one the
-   absent-member clone offer depends on, so never leave it blank.
-
-**Adding a repo to an existing product is this same step, incrementally.** A
-re-run that finds a `members:` list plus one repo not in it — or a user who says
-they are adding one — confirms the new member's four facts, appends the entry,
-writes its `.config/vwf-membership.yaml`, and registers its projects. Nothing
-else re-runs: the delta is one member, and steps 6–10 act on that delta alone.
-
-**Stacks are elicited, never stated.** For each project, present the templates
-the installed stack plugins offer for that project's **platforms** as a menu,
-plus their repo-level menus. A template declares the platforms it serves, and
-the pick must **cover** every platform the project declares. The menu is the
-**whole** vocabulary — there is no **other (describe)**
-option and no `template: custom` (retired in `config_format` 14), so a platform
-nothing fits is a halt naming the two ways forward, never a free-text pin. vwf
-ships no stack template of its own, no default, and nothing to object to, so
-there is no `enforcement` entry for a stack. `/skill:vwf-architecture` owns this elicitation
-— hand off to it at step 7 rather than duplicating it here; what this step needs
-is only enough detection to populate the menu's starting point.
-
-**Existing non-conforming repo.** When an existing repo does not match the
-selected topology template's suggested layout, fold a consent-gated restructure
-proposal into the step-4 migration plan (batched; moves that are risky or cross
-repo boundaries — e.g. a submodule split — become written recommendations
-instead, per migration-and-consent). A decline is recorded as a structure
-deviation in the registry and not re-proposed on later runs.
-
-### 3. Reconcile format & legacy
-
-Read `.config/vwf.yaml` (or the legacy `docs/blueprint/.vwf.yml`) if present and
-compute the **migration delta** between the repo's current format and the format
-this vwf ships. The deltas to compute, and what counts as drift in the current
-layout, are in [format reconcile](references/format-reconcile.md) — read it
-here, together with only the project-setup skill's `format-versioning` deltas
-between the repo's stamp and the shipped format. Fold in any old or partial
-structure.
-
-`21 → 22` ships with the config's **`14 → 15`** migration (per the vwf-config
-asset): the registry's roles collapse to four with a platform list beside them,
-`polyrepo` becomes `multi-repo` + `linkage`, `members:` and the per-member
-`.config/vwf-membership.yaml` appear, and the project-axis pin drops its
-`<role>/` segment. Run the two together — a repo on one but not the other is a
-state neither migration expects.
-
-Any YAML artifact a migration writes must parse — validate them in step 10.
-
-### 4. Build the migration plan (dry-run)
-
-Enumerate every action: `docs/blueprint` scaffolding, code-restructuring moves
-to match the registry topology (grouped into **batches**, see the Hard Rules),
-tooling (mise), CLAUDE.md merge, README. **Write the plan to a scratch artifact
-`docs/blueprint/.vwf-migration-plan.md`** (deleted on completion, step 11) and
-present it **section by section** — do not keep it chat-only. **Wait for
-approval.**
-
-**An `iac` project inside another repo** enters the plan as its own batch: a
-proposal to extract that directory into its own repo and add it back as a
-submodule of the product parent. Present it as a dry run like every other batch
-— the moves, the resulting `.gitmodules` entry, and the registry `path` that
-changes — and **never apply it uninvited**; a repo split rewrites history
-boundaries and is the least reversible thing setup can do, so it is never
-bundled with anything else. A decline is recorded and not re-proposed on later
-runs; `/skill:vwf-doctor` keeps reporting it as blocking, which is the honest state.
-The rule and its rationale live in `%%AI_PLUGINS_ROOT%%/assets/topologies/`.
-
-**Dirty-tree guard.** Before creating the worktree, run `git status`. If the
-working tree is dirty, **stop and ask** whether to commit, stash, or proceed —
-never migrate over uncommitted changes silently. Once clean (or the user
-consents), set up an isolated worktree via `/skill:vwf-git-workflow`.
-
-### 5. Tooling
-
-If mise config is missing or incomplete, invoke **devtools:scaffold**. Note any
-other runtimes the detected stacks need — do not install them. If
-`devtools:scaffold` fails, report the error, offer to continue without it (leaving
-mise config for the user), and record the skip in `setup_progress`.
-
-### 6. Migrate (consent-gated)
-
-Scaffold the `docs/blueprint` tree (architecture, conventions, design-system,
-environment skeletons from templates, plus `flows/index.md`,
-`entities/index.md`, and the empty `apis/` + `apis/released/` dirs) plus
-`docs/plans/` and `docs/plans/archived/`. Restructure source per the approved
-plan, **one batch at a time with approval** — move with `git mv` (preserve
-history), never delete.
-
-**On batch rejection.** If the user rejects a batch, **stop** — apply no further
-batches. Report which batches were applied and which remain pending, leave the
-worktree intact for the user to inspect, and record the stop (applied/pending)
-in `setup_progress`.
-
-**Bootstrap the environment catalog.** When the registry declares integrations
-or a secrets-manager `config` (the `2 → 3` trigger), scaffold
-`docs/blueprint/environment.md` and populate it from the repo's existing usage
-per [environment bootstrap](references/environment-bootstrap.md) — read it when
-that trigger holds. Record variable names only; **never copy a value**.
-
-### 7. Orchestrate foundations
-
-Gate each foundation on the **step-3 delta** — a conforming repo runs neither,
-yielding an empty plan (the idempotence Hard Rule):
-
-- Run `/skill:vwf-product` only if `docs/blueprint/product.md` is **missing** (the
-  `4 → 5` delta) or the migration surfaced a product-level change. It comes
-  **first** — the goals it pins anchor everything downstream.
-- Run `/skill:vwf-architecture` only if the registry is **missing** or the delta
-  requires a registry change (a new/changed project, capability, or
-  cross-cutting decision).
-- Run `/skill:vwf-design-system` only if some project declares a **screen platform**
-  (`ui: true`) **and** `docs/blueprint/design-system.md` is missing or stale. It
-  **imports** the product's design system from its design tool (pick or build one on
-  claude.ai/design first); with no surface connected it halts with connect
-  instructions — tell the user, and record the skip in `setup_progress` so a
-  later run resumes it.
-
-These are interactive — hand off, then resume. If a foundation command fails,
-report the error, offer to continue without it (leaving that foundation for a
-later run), and record the skip in `setup_progress`.
-
-### 8. Author CLAUDE.md & README
-
-Merge the vwf section (from the project-claude template) into the repo's
-`CLAUDE.md`, **preserving existing content**. Generate or update the README via
-**`/skill:vwf-readme`**; if it fails, report the error, offer to continue without it
-(leaving the README for the user), and record the skip in `setup_progress`.
-
-### 9. Write the vwf config
-
-Write `.config/vwf.yaml` per the vwf-config asset — the thing a future `setup`
-run diffs against, and how every vwf command operates in this repo:
-
-- the stamp keys — `config_format`, `blueprint_format`, `topology`,
-  `topology_reason`, `ui`, `integrations`; and for **multi-repo**, `linkage`
-  plus the **`members:`** list — each entry's `name`, `path`, `url` and
-  `projects`. The `url` is not optional: it is what the absent-member clone
-  offer clones from, and its absence surfaces only on the day someone needs a
-  repo they do not have. Write **no** presence/cloned key — which members are on
-  this machine is detected every run
-  (`%%AI_PLUGINS_ROOT%%/assets/membership.md`);
-- **`product.name` and `memory.wing`** — derive from the repo/registry name and
-  **confirm with the user** (one MCQ);
-- the **`harness:` block** from step-1 detection (per capability:
-  `true`/`false`/`n/a`, plus any non-canonical task-name overrides found);
-- any **`enforcement:`** entries recorded during this run (structure/stack
-  declines, rule waivers);
-- **per-project nuances** the run surfaced — a `coverage_target` override, a
-  non-conventional `harness.health` path, a `package_manager` override —
-  elicited when ambiguous, never assumed. A project's **`platforms:` is not one
-  of them**: it is a system-shape fact and lives only in
-  `docs/blueprint/registry.yaml`, written by `/skill:vwf-architecture` (format 19
-  removed the duplicate key from this file);
-- the **`stack` block for every project** and the repo-level **`repo.stack`**,
-  as `/skill:vwf-architecture` elicited them at step 7 — write them out in full, for
-  every project the registry declares. Since config-format 13 that block carries
-  **all three technology axes per project**: `template`, `backing_template` (a
-  list — `[]` when the project talks to no backing service) and
-  `deploy_template` (`n/a` for a project shipping through a store rather than to
-  a deploy target — `mobile`, `tablet`, `desktop`, `auto` — and for an `iac`
-  platform). An absent block is not "the default"; it is what leaves
-  `/skill:vwf-doctor` with nothing to check;
-- the per-project **`design`** (UI projects only — the design tool token the
-  adapter resolves) and **`cicd`** (the CI system) keys, likewise per project
-  since config-format 13. Never write a product-wide `backing:`, `deploy:` or
-  `design.tool` key: those are `12` drift, and step 3's `12 → 13` migration is
-  what removes them from a repo that has them;
-- leave `pipeline` / `environments` / `docs_sync` absent unless the user pinned
-  them.
-
-**Write the membership files.** For a **multi-repo** product, write
-`.config/vwf-membership.yaml` into **every member** — naming the product and the
-relative path back to the base repo — and into none of them under `repo` or
-`monorepo`. Under `submodule` linkage this duplicates what the superproject walk
-already provides; write it anyway, so a later switch to `siblings` is a config
-edit rather than a second migration, and so every skill has one resolution
-algorithm instead of two. An **absent** member cannot receive its file: record it
-and write it on the run that first sees the repo. The contract is
-`%%AI_PLUGINS_ROOT%%/assets/membership.md`.
-
-**Write the memory tree and the mempalace config(s).** `docs/memory/` with its
-seven room directories (three of them gitignored), and a `mempalace.yaml` naming
-the confirmed `memory.wing` in each mined tree — **one** at the base repo for
-`repo`, `monorepo`, and multi-repo under `submodule` linkage (where members are
-inside that tree and get none); **one per repo** under `siblings` linkage, base
-and every locally-present member, all naming the same wing, because a sibling
-member sits outside the base's tree and would otherwise never be mined at all.
-Any config found somewhere that is not a mined tree's root
-(`.config/`, a nested directory) is consolidated into that tree's root config and
-removed: mining reads the config only from the directory it is pointed at, so a
-stray one is silently
-inert rather than wrong-looking. The consolidation steps, the seeded rooms, the
-secret excludes and the routing traps are in
-[the memory tree](references/memory-tree.md); read it at this step. Three rules
-hold regardless: present the merged file and every deletion as part of the
-step-4 dry-run and confirm the wing (one MCQ) before writing; an existing
-`mempalace.yaml` is **merged, never overwritten**; and a room name carrying two
-conflicting descriptions is a question, not a silent merge.
-
-On the `5 → 6` migration, `git mv` the legacy stamp to the new path first (move,
-never delete), then restructure — per format-versioning. Also migrate any
-`config_format` drift per the vwf-config asset's migration notes (e.g. `1 → 2`
-renames `pipeline.autopilot_caps` → `pipeline.execute_caps`).
-
-**Persist.** Per `%%AI_PLUGINS_ROOT%%/assets/memory.md`, store the durable
-onboarding decisions and their rationale (confirmed topology, UI surface,
-stacks, cross-cutting selections) to mempalace (room `decisions`) — skip what
-the docs capture verbatim. Skip silently if mempalace is unavailable.
-
-### 10. Validate
-
-Confirm the registry parses and the required foundations exist for the detected
-topology (`product.md` present unconditionally; design-system present if UI;
-`environment.md` present if the registry declares integrations or a
-secrets-manager `config`). Confirm the migration produced a well-formed **OKF
-bundle**: every `docs/blueprint/` doc opens with valid frontmatter (mandatory
-`type` from the vocabulary, `title`, `description`, `status`) and every
-relationship/reference link resolves to an existing doc/anchor — per the
-project-setup skill (format-versioning) and the blueprint-authoring
-frontmatter-and-links reference. Confirm every YAML artifact the migration wrote
-(`entities/*/schema.yaml`, `apis/*.openapi.yaml`) parses. Confirm
-`environment.md` carries **no secret values**.
-
-Then run **`/skill:vwf-doctor`** over the whole repo — it checks the config just
-written against what the repo actually is (LSP servers and toolchains per
-declared language, frameworks/dependencies against each manifest, repo tooling,
-harness task names, health paths). Setup **records** most of what it reports and
-does not gate on it: a missing LSP plugin or an unbuilt harness capability is a
-normal state for a freshly onboarded repo. Fold anything it finds into the
-step-11 summary. Report anything still open.
-
-**Halt on a `blocking` finding.** Mandated tooling — mise, the graphify CLI — is
-what the whole pipeline runs on, and by this step everything setup can fix has
-already been attempted. A remaining blocking finding means the repo cannot run
-vwf: report it with its remedy and stop, rather than stamping a config that
-describes a repo nothing can execute against.
-
-**A stack no installed plugin defines halts here too** — an **unknown** language,
-or a surviving `custom` template pin. This is the one blocking kind setup can
-reach on a repo that is otherwise perfectly onboarded, so say plainly what it
-means: vwf's stack menu is closed to what the installed plugins define, and the
-remedy is to install the stack plugin covering that language, or to write one
-(`%%AI_PLUGINS_ROOT%%/assets/stack-adapter.md`). Everything migrated up to
-this point stays in the worktree with `setup_progress` recorded, exactly as for
-any other halt, so a re-run resumes here and completes once the plugin is
-installed. Never offer to drop the language token or invent a template to get
-past it — that stamps a config describing a repo vwf cannot build.
-
-**One exception: a declined graph build.** The graph step offers and the user
-may refuse; a recorded decline is a settled choice, not an unmet mandate. Note
-it as a degradation and finish normally — halting there would override consent
-the user already gave.
-
-### 11. Approval gate & commit
-
-Summarize everything created / moved / updated and wait for approval. On
-approval, **finalize resumability state**: remove the transient
-`setup_progress:` key from `.config/vwf.yaml` and delete the scratch
-`docs/blueprint/.vwf-migration-plan.md`. Then commit via `/skill:vwf-git-workflow`
-with a `chore(vwf):` or `docs:` message. Keep the worktree local; do not push.
-
-**Knowledge graph.** Per `%%AI_PLUGINS_ROOT%%/assets/graphify.md`, `setup` is
-the **only** vwf command that builds graphs. After the commit, if
-`graphify-out/graph.json` is missing and the `graphify` CLI is on `PATH`, offer
-— consent-gated; it is a long, LLM-driven build — to build it (invoke the
-`graphify` skill on the repo root of the **main checkout**, never the worktree)
-and install the post-commit refresh hook (`graphify hook install`). A decline is
-honored without re-asking this run; every other vwf surface falls back to direct
-reads when no graph exists, so absence never blocks anything.
-
-**Chain forward.** With the foundations in place, offer to continue straight
-into `/skill:vwf-blueprint` (the full-product sweep — the next step of the pipeline);
-the user can decline and blueprint later.
+**Persist the decisions.** Per `%%AI_PLUGINS_ROOT%%/assets/memory.md`, store the
+durable onboarding decisions and their rationale — topology, linkage, roles and
+platforms, screen surfaces, stack pins — to room `decisions`, skipping what the
+docs capture verbatim, and **recall** that room before Step 0 so a re-run builds
+on what was settled. Skip mempalace silently when it is unavailable; the
+`docs/memory/` mirror is always written.

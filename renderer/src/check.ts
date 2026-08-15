@@ -65,6 +65,8 @@ export interface TargetCoverage {
 
 /** A bare kebab-case code span — how prose names the agents it dispatches. */
 const TOKEN_RE = /`([a-z0-9]+(?:-[a-z0-9]+)+)`/g;
+/** The reference inside an `it.cmd()` — `plugin:skill`, or a bare skill name. */
+const CMD_RE = /it\.cmd\(\s*["']([^"']+)["']\s*\)/g;
 /** A relative markdown link to a doc, minus any anchor. */
 const LINK_RE = /\]\((\.{1,2}\/[^)\s#]+\.(?:md|ya?ml))(?:#[^)\s]*)?\)/g;
 /** Either root spelling a rendered file may carry, plus the path behind it. */
@@ -121,6 +123,15 @@ function checkTemplates(workspace: Workspace): Finding[] {
   // two plugins silently drops one of them.
   const skillOwners = new Map<string, string[]>();
 
+  // Every skill in the marketplace, by plugin: what an `it.cmd()` reference has
+  // to land in. Cross-plugin by construction — vwf names `devtools:scaffold`.
+  const skillsByPlugin = new Map<string, ReadonlySet<string>>(
+    workspace.plugins.map(p => [
+      p.manifest.name,
+      new Set(p.skills.map(s => s.meta.name)),
+    ]),
+  );
+
   for (const plugin of workspace.plugins) {
     const name = plugin.manifest.name;
     const at = (message: string) => findings.push({ scope: name, message });
@@ -147,6 +158,7 @@ function checkTemplates(workspace: Workspace): Finding[] {
     findings.push(...checkHookScripts(plugin));
     findings.push(...checkAgentReferences(plugin));
     findings.push(...checkSkillSelfReferences(plugin));
+    findings.push(...checkCmdTargets(name, textOf(plugin), skillsByPlugin));
     findings.push(...checkFrontmatterYaml(plugin));
     findings.push(...checkExampleLinks(plugin));
   }
@@ -234,6 +246,58 @@ function checkSkillSelfReferences(plugin: PluginSource): Finding[] {
             + `${name}") %>\`, which spells it per target.`,
         });
       }
+    }
+  }
+  return findings;
+}
+
+/**
+ * Every `it.cmd()` reference must name a skill that exists.
+ *
+ * The mirror of `checkSkillSelfReferences`: that one catches a delegation
+ * written in the wrong *spelling*, this one catches the right spelling naming
+ * the wrong *skill*. `it.cmd()` renders per target, so a reference to a
+ * renamed, moved or deleted skill still renders perfectly — into an invocation
+ * that resolves to nothing on every target at once. The model reads it, finds
+ * no such skill, and carries on, which is indistinguishable from a model that
+ * chose not to delegate.
+ *
+ * A reference with no `plugin:` qualifier names the plugin it is written in.
+ * Pure, and takes its inventory rather than a workspace, so the failure shapes
+ * are testable without a fixture tree.
+ */
+export function checkCmdTargets(
+  owner: string,
+  texts: readonly string[],
+  skills: ReadonlyMap<string, ReadonlySet<string>>,
+): Finding[] {
+  const refs = new Set<string>();
+  for (const text of texts) {
+    for (const ref of captures(text, CMD_RE)) {
+      refs.add(ref);
+    }
+  }
+
+  const findings: Finding[] = [];
+  for (const ref of [...refs].sort()) {
+    const colon = ref.indexOf(":");
+    const plugin = colon === -1 ? owner : ref.slice(0, colon);
+    const skill = colon === -1 ? ref : ref.slice(colon + 1);
+    const declared = skills.get(plugin);
+
+    if (declared === undefined) {
+      findings.push({
+        scope: owner,
+        message: `unresolved it.cmd target "${ref}" — no plugin "${plugin}" in `
+          + `this marketplace`,
+      });
+    }
+    else if (!declared.has(skill)) {
+      findings.push({
+        scope: owner,
+        message: `unresolved it.cmd target "${ref}" — plugin "${plugin}" `
+          + `declares no skill "${skill}"`,
+      });
     }
   }
   return findings;
@@ -928,6 +992,19 @@ function proseOf(plugin: PluginSource): string[] {
     }
   }
   return texts;
+}
+
+/**
+ * Prose *and* frontmatter — everything a plugin authors as text.
+ *
+ * `proseOf` carries bodies only, and a skill or agent `description:` is exactly
+ * where several of them state who invokes them, in `it.cmd()` form. Scanning
+ * bodies alone would leave that half of the references unchecked.
+ */
+function textOf(plugin: PluginSource): string[] {
+  const front = [...plugin.skills, ...plugin.agents]
+    .map(s => frontmatterBlock(readText(join(plugin.root, s.path))) ?? "");
+  return [...proseOf(plugin), ...front];
 }
 
 const cache = new Map<string, string>();

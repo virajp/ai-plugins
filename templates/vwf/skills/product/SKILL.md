@@ -49,8 +49,8 @@ Read `docs/blueprint/product.md`.
 
 **Format check.** Run the preflight in
 `<%= it.root %>/assets/format-check.md`; on drift, **nudge** `<%= it.cmd("vwf:setup") %>`
-and **always proceed — never halt** (like `architecture`, this command is a
-prerequisite of setup's own migration).
+and **always proceed — never halt** (like `architecture`, this command runs
+after setup rather than inside it — setup prints the chain and runs none of it).
 
 ## Step 3 — Elicit (create) / Reconcile (update)
 

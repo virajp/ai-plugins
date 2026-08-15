@@ -53,9 +53,9 @@ up formatted differently.
 
 If the repo generates files from templates, **exclude the template sources**. A
 formatter re-wraps prose to a line width measured on the template text, but the
-expression `/x` is far wider than what it renders to — so the
-output ends up mis-wrapped even though the source looks right. This is not
-hypothetical; it is why this repo's own `dprint.json` excludes
+expression `/dprint` is far wider than what it renders
+to — so the output ends up mis-wrapped even though the source looks right. This
+is not hypothetical; it is why this repo's own `dprint.json` excludes
 `templates/**/*.md`.
 
 The same reasoning applies to any file whose committed form is derived rather

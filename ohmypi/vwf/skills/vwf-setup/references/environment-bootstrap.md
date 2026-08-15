@@ -1,8 +1,8 @@
-# Bootstrapping the Environment Catalog (§6)
+# Bootstrapping the Environment Catalog
 
-Read this at §6 **only** when the registry declares integrations or a
-secrets-manager `config` — the `2 → 3` trigger. A repo with neither never grows
-an `environment.md`, and this step does not run.
+Read this **only** when the registry declares integrations or a
+secrets-manager `config`. A repo with neither never grows an `environment.md`,
+and this step does not run.
 
 Scaffold `docs/blueprint/environment.md` from the environment template and
 **populate it from the repo's existing usage** — scan config schemas,

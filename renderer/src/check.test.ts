@@ -9,6 +9,7 @@ import {
 } from "vitest";
 import {
   check,
+  checkCmdTargets,
   prescribes,
   resolves,
 } from "./check.ts";
@@ -148,6 +149,65 @@ describe("prescription vs enumeration", () => {
     // against a letter is not a match at all.
     const body = `claude-design ${"x ".repeat(200)} lovable`;
     expect(prescribes(body, "claude-design")).toBe(true);
+  });
+});
+
+describe("it.cmd targets", () => {
+  // Renaming a skill leaves every `it.cmd()` naming it rendering perfectly into
+  // an invocation that resolves to nothing — on all four targets at once, and
+  // with no error anywhere. Only a static check sees it.
+  const skills = new Map<string, ReadonlySet<string>>([
+    ["vwf", new Set(["plan", "setup"])],
+    ["devtools", new Set(["scaffold"])],
+  ]);
+
+  it("accepts a reference to a skill another plugin declares", () => {
+    // The cross-plugin case is the common one: vwf orchestrates devtools.
+    expect(
+      checkCmdTargets(
+        "vwf",
+        ["run <%= it.cmd(\"devtools:scaffold\") %> first"],
+        skills,
+      ),
+    )
+      .toEqual([]);
+  });
+
+  it("flags a plugin that is in no manifest", () => {
+    const findings = checkCmdTargets(
+      "vwf",
+      ["<%= it.cmd(\"markdown:readme\") %>"],
+      skills,
+    );
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toMatch(/no plugin "markdown"/);
+  });
+
+  it("flags a skill the named plugin does not declare", () => {
+    const findings = checkCmdTargets(
+      "vwf",
+      ["<%= it.cmd(\"vwf:blueprint\") %>"],
+      skills,
+    );
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toMatch(/declares no skill "blueprint"/);
+  });
+
+  it("reads an unqualified reference as the plugin it is written in", () => {
+    expect(checkCmdTargets("vwf", ["<%= it.cmd(\"plan\") %>"], skills)).toEqual(
+      [],
+    );
+    expect(checkCmdTargets("devtools", ["<%= it.cmd(\"plan\") %>"], skills))
+      .toHaveLength(1);
+  });
+
+  it("reports a broken target once, however often it is written", () => {
+    // vwf names `setup` 109 times. One rename should not print 109 findings.
+    const texts = [
+      "<%= it.cmd(\"vwf:gone\") %>",
+      "<%= it.cmd(\"vwf:gone\") %>",
+    ];
+    expect(checkCmdTargets("vwf", texts, skills)).toHaveLength(1);
   });
 });
 

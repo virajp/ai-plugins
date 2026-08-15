@@ -4,7 +4,7 @@ Read this before running §3. It covers the three per-project stack checks:
 languages (LSP + toolchain), frameworks and dependencies against each manifest,
 and the repo/axis tooling. **Blocking** findings live in §3 (a language no
 installed plugin claims) and §5 (a `custom` template pin, a missing `mise`, an
-`iac` project inside another repo).
+`iac` project inside another repo the user has not declined to extract).
 
 ## 3. Languages — LSP and toolchain
 
@@ -91,11 +91,19 @@ falls in (`git -C <path> rev-parse --show-toplevel`). If that resolves to
 another project's repo — the monorepo it sits inside, or the multi-repo **base**
 itself rather than a member — it is a **blocking** finding: `setup` and
 `execute` both halt on it. The rule and its rationale are in
-`%%AI_PLUGINS_ROOT%%/assets/topologies/`. The remedy is
-`/vwf-setup`, which offers the consent-gated restructure; doctor reports and
+`%%AI_PLUGINS_ROOT%%/assets/topologies/`. The remedy is the extraction
+`/vwf-setup` writes up as a recommendation; doctor reports and
 stops there, as with every other structural change. An `iac` project that is
 already its own repo — an independent one, a submodule, or a sibling member —
 passes silently.
+
+**Unless the extraction is a recorded decline.** A decline written under
+`enforcement:` downgrades this finding to a **degradation**: still reported,
+every run, but no longer blocking, so neither `setup` nor `execute` halts on it.
+The decline settles the *proposal*, never the *fact* — a product that chose to
+keep its `iac` project where it is should keep being told what it costs, and
+silencing the finding would leave the most privileged repo in the product
+looking clean. Treat it exactly as a declined graph build.
 
 **A project's template must cover its platforms.** Since format 22 a
 project-axis template declares the platforms it serves in its own frontmatter,

@@ -2,7 +2,9 @@
 name: vwf-architecture
 description: Create or update docs/blueprint/registry.yaml — the
   machine-readable Project Registry every command parses — and
-  docs/blueprint/architecture.md, its prose system-shape view.
+  docs/blueprint/architecture.md, its prose system-shape view. Derives the
+  whole registry proposal from docs/blueprint/product.md where one exists,
+  evidence quoted and corrected by MCQ; the interview is the fallback.
 ---
 
 You are a **Senior Systems Architect**. You think in project boundaries, data
@@ -35,6 +37,7 @@ they describe every project.
 
 | Reference                              | Read it when                                                              |
 | -------------------------------------- | ------------------------------------------------------------------------- |
+| [derive from product](references/derive-from-product.md) | the registry is absent and `docs/blueprint/product.md` exists (Step 2) |
 | [platforms](references/platforms.md)   | the project being walked is a UI one, or the CLI/TUI question comes up (3b) |
 | [stack-menu](references/stack-menu.md) | eliciting any stack axis, or the `design` / `cicd` keys (3b)              |
 
@@ -55,17 +58,29 @@ Read `docs/blueprint/registry.yaml`.
   genuine deltas — a new project, a changed stack, a new capability or
   cross-cutting decision. Do not re-elicit everything.
 - **Absent but `architecture.md` exists with an embedded Project Registry** →
-  the repo is pre-format-16. Nudge `/skill:vwf-setup` to run the `15 → 16` migration
-  (which extracts the registry), then proceed in update mode against the
-  extracted file.
-- **Absent → create mode.** Run the full elicitation below.
+  the repo is pre-format-16. Nudge `/skill:vwf-setup` to reconcile the tree to the
+  current format (which extracts the registry), then proceed in update mode
+  against the extracted file.
+- **Absent, with `docs/blueprint/product.md` present → derivation mode.** The
+  product contract already answers most of the registry, so do not open a cold
+  interview. Read [derive from product](references/derive-from-product.md) and
+  follow it: it proposes the whole registry — projects, roles, platforms,
+  topology and repo placement, stack pins through the existing menu — each
+  value carrying the line of `product.md` it came from, and the user corrects
+  it by MCQ. Whatever the product contract underdetermines falls back to the
+  elicitation below, and the write path is create mode exactly as before.
+- **Absent, with no `product.md` → recommend `/skill:vwf-product` first.** The
+  outcome contract is required before `/skill:vwf-blueprint` either way, and writing it
+  first turns this command's interview into a review of something already
+  decided. Say so; offer the full elicitation below as the fallback for a user
+  who wants the registry now.
 
 **Format check.** Run the preflight in
 `%%AI_PLUGINS_ROOT%%/assets/format-check.md`; if the repo's blueprint format
 is behind what vwf ships, **nudge** `/skill:vwf-setup` and **always proceed — never
-halt.** Architecture is a prerequisite of `/skill:vwf-setup`'s own migration, so it
-must not depend on it (this is the only foundation command that never blocks on
-the preflight).
+halt.** `/skill:vwf-setup` prints the chain forward and runs none of it, so this
+command has to stay runnable while the tree is still behind (it is the only
+foundation command that never blocks on the preflight).
 
 ---
 
@@ -163,8 +178,10 @@ including a monorepo that otherwise keeps every project in one tree. So when a
 user declares a project with the `iac` platform, **elicit its repo** — ask where it
 lives and record that path — rather than defaulting it under the product root
 like every other project. If the answer places it inside another repo, say so
-plainly and record what they chose: `/skill:vwf-doctor` will raise it as blocking and
-`/skill:vwf-setup` will offer the restructure. Never restructure from here.
+plainly and record what they chose: `/skill:vwf-doctor` raises it as blocking — a
+decline recorded under `enforcement:` drops it to a warning reported every run —
+and `/skill:vwf-setup` writes the extraction up as a recommendation, never a move.
+Never restructure from here.
 
 **Platforms.** **Every** project records its implemented surfaces under
 `platforms:` in **`registry.yaml`** — the single

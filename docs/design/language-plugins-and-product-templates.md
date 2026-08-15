@@ -38,11 +38,14 @@ no new vocabulary.
 `data`, `system` — each with a closed platform list. vwf reads the platform,
 never the role.
 
-**`setup` is eleven steps and already idempotent.** Step 1 resumes from
-`setup_progress`; steps 5 to 7 gate on the step-3 delta, so a conforming repo
-runs neither. Step 7 orchestrates `product` then `architecture` then
-`design-system`, in that order, because the goals `product` pins anchor
-everything downstream. Step 10 runs `doctor` and halts on a blocking finding.
+**`setup` resolves one of three entry paths and is idempotent by construction.**
+Step 0 reads `.config/vwf.yaml` and picks `onboard`, `migrate` or `current`;
+there is no progress key, because re-running re-resolves the mode from disk and
+a conforming repo lands on `current`. The shared spine after the pipeline
+validates the bundle, writes the config, runs `doctor` (halting and reverting
+the stamp on a blocking finding), commits, and then **prints** the chain
+`product` → `architecture` → `design-system` → `blueprint` without running any
+of it.
 
 **`architecture` writes docs only.** It owns `registry.yaml` and the stack pins
 in `.config/vwf.yaml`, but the `architecture-writer` agent has no `Bash` tool
@@ -148,11 +151,13 @@ flowchart LR
 No project set, no stack. The user then runs `product`, and only after that does
 the template pick decide projects and stacks. Goals come before structure.
 
-**Brown-field** — today's eleven steps, unchanged.
+**Brown-field** — today's `onboard` code sub-path, unchanged.
 
-The shared steps — resume check, config write, doctor, approval gate — must stay
-genuinely shared. Two divergent paths in one skill is the maintenance risk here,
-and duplicated steps are how it goes wrong.
+The shared spine — bundle validation, config write, doctor, approval gate — must
+stay genuinely shared. Two divergent paths in one skill is the maintenance risk
+here, and duplicated steps are how it goes wrong. vwf 18 already forks `onboard`
+on blank-vs-code evidence, so this split is a re-cut of that fork rather than a
+new one.
 
 ### Where the template pick lives
 
@@ -166,8 +171,10 @@ Three consequences:
   records a stack" contract survives intact.
 - **Repo creation is git work.** Every skill delegates git to `git-workflow`,
   which does not do `git init` or submodule-add today. It needs extending.
-- **Brown-field `setup` calls `architecture` at step 7.** The scaffold step
-  needs a guard, or onboarding an existing repo will scaffold over it.
+- **Nothing calls `architecture` for you.** Since vwf 18 setup prints the chain
+  and runs none of it, so the template pick is reached only when the user runs
+  `architecture` — and the scaffold step still needs a guard, or running it in
+  an existing repo will scaffold over it.
 
 ### Capability-shaped product templates
 

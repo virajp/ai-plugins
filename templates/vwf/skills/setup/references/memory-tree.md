@@ -1,6 +1,6 @@
-# The Memory Tree & `mempalace.yaml` (§9)
+# The Memory Tree & `mempalace.yaml`
 
-Read this at §9, when writing the repo's memory layout. It sits beside
+Read this when writing the repo's memory layout. It sits beside
 `<%= it.root %>/assets/memory.md`, which owns the protocol itself.
 
 ## Write the memory tree
@@ -59,10 +59,10 @@ Getting there is a **consolidation**, per tree, in five steps:
    `planning`, `gaps`, `runs`, `doctor`, `handoff`), then path-derived rooms
    from the product's actual top-level directories.
 
-Then **present the merge as part of the step-4 dry-run** — the new file in full
-and every stray file to be deleted — under this skill's existing consent
-discipline (`project-setup`'s `migration-and-consent` reference); do not invent
-a second gate. Confirm the wing **once** for the product, in the same pass (one
+Then **present the merge as part of the pipeline's dry-run plan, per
+[migration & consent](migration-and-consent.md)** — the new file in full and
+every stray file to be deleted — under that existing consent discipline; do not
+invent a second gate. Confirm the wing **once** for the product, in the same pass (one
 MCQ) — not once per repo; one wing per product is the rule, and asking per repo
 invites the exact divergence `<%= it.cmd("vwf:doctor") %>` blocks on. **On
 approval**, write each tree's `<tree-root>/mempalace.yaml` and `git rm` the

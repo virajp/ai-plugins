@@ -14,14 +14,18 @@ Steps:
    `docs/blueprint/.vwf.yml` — finding the stamp only there is itself
    pre-format-6 drift.
 3. Compare:
-   - **Config present and equal to the shipped value** → silent; proceed.
+   - **Config present and equal to the shipped value** → silent; proceed. This
+     holds even when the blueprint tree is thin or absent: a stamped config with
+     no `registry.yaml` yet is a repo **early in the chain**, not a repo that
+     drifted, and setup has nothing left to do for it. Never nudge there — the
+     command's own foundation gate names the doc it actually needs.
    - **Stamp behind, only at the legacy location, OR missing while a
      `docs/blueprint/` (or legacy `docs/specs/`) tree exists** → tell the user,
      then offer `/setup`:
      > "This repo is on blueprint format `<N>`; vwf now ships `<M>`. Run
-     > `/setup` to migrate to the latest format."
-   - **No blueprint tree at all** → not a drift case; the command's own
-     bootstrap halt handles it.
+     > `/setup` to reconcile the tree to the current format."
+   - **No config and no blueprint tree at all** → not a drift case; the
+     command's own bootstrap halt handles it.
 4. **Halt only if blocking.** Proceed with the requested operation when its
    required docs are present; hard-halt only when the operation needs an
    artifact the old format lacks (e.g. a `design-system.md` or section the new

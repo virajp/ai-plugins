@@ -33,7 +33,7 @@ stamp at `docs/blueprint/.vwf.yml`.
 
 ```yaml
 config_format: 15 # this file's own schema version — setup migrates it
-blueprint_format: 21 # the docs/blueprint format stamp
+blueprint_format: 22 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -122,8 +122,6 @@ memory:
 
 docs_sync:
   include: [] # extra human docs in the docs-sync scope (README/CLAUDE.md are always in)
-
-setup_progress: [] # transient — /skill:vwf-setup resume state, removed on completion
 ```
 
 ## Semantics — who reads/writes what
@@ -169,6 +167,16 @@ earlier than 65/90/80), never loosen.
   means **no sweep has stamped this repo** — `/skill:vwf-plan` halts until
   `/skill:vwf-blueprint` runs (self-healing on repos configured before config_format
   2).
+- **A stamped config with no registry is a legal state**, not drift. `setup`
+  writes this file at the end of its own run; `registry.yaml` arrives later,
+  from `/skill:vwf-architecture`. Between the two the product is
+  simply **early**: `/skill:vwf-doctor` says so as information (*next
+  `/skill:vwf-product`, then `/skill:vwf-architecture`*) and
+  the format check stays silent, since nothing is behind. **No key records
+  this** — the state is exactly the absence of the registry, and a key asserting
+  it would be a second place to disagree with the filesystem. `config_format`
+  therefore stays **15**: recognising a state that was always reachable adds
+  nothing to this schema.
 - `config_format` versions this file's own schema; bump it (with a migration
   note here) when a key's shape changes.
 - **`1 → 2` migration** (performed by `/skill:vwf-setup`): rename
@@ -207,9 +215,9 @@ earlier than 65/90/80), never loosen.
   pin — its presence is `5` drift. Two platforms must never share a uuid; a
   shared uuid found during migration is surfaced for re-pinning, never silently
   kept.
-- **`6 → 7` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
-  `12 → 14` delta): every flow identifier stored in this file **drops its
-  `<device>` segment**, since format 14 moved the device out of the flow path
+- **`6 → 7` migration** (performed by `/skill:vwf-setup`): every flow
+  identifier stored in this file **drops its `<device>` segment**, since the
+  device moved out of the flow path
   and into the flow doc's `device:` frontmatter key. Concretely
   `design.flows_pushed` entries go `<project>/<device>/<NNN>-<flow>` →
   `<project>/<NNN>-<flow>`, and `blueprint.remaining` `flows/…` and `screens/…`
@@ -224,9 +232,9 @@ earlier than 65/90/80), never loosen.
   unchanged. Readers honor a legacy `flows_pushed` key as the same list — its
   presence is `7` drift. The `design.projects` pins stay: they serve
   `/skill:vwf-screens` and `/skill:vwf-feedback canvas`, no longer mockups.
-- **`8 → 9` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
-  `14 → 15` delta): every flow identifier stored in this file **gains a
-  `<platform>` leaf**, since format 15 moved screens into per-platform files.
+- **`8 → 9` migration** (performed by `/skill:vwf-setup`): every flow
+  identifier stored in this file **gains a `<platform>` leaf**, since screens
+  moved into per-platform files.
   `design.flows_rendered` entries go `<project>/<NNN>-<flow>` →
   `<project>/<NNN>-<flow>/<platform>` (one entry per platform file the flow
   has), and `blueprint.remaining` `screens/…` entries do the same. The
@@ -237,8 +245,8 @@ earlier than 65/90/80), never loosen.
   becomes `web`. Flow numbers are renumbered by the blueprint migration; the
   entries here are rewritten to match. Readers honor a legacy entry without a
   platform leaf by matching the flow prefix — its presence is `8` drift.
-- **`9 → 10` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
-  `15 → 16` delta): the **stack moves here from the registry**. For each project
+- **`9 → 10` migration** (performed by `/skill:vwf-setup`): the **stack
+  moves here from the registry**. For each project
   in the old `architecture.md` Project Registry, compare its `stack:` to the
   reference stack for its `type` (since format 11 the templates live at
   `assets/stacks/<type>/<slug>.md`; a repo migrating from 9 runs straight on
@@ -301,8 +309,8 @@ earlier than 65/90/80), never loosen.
   migrations ship in one release and a repo on one but not the other is a state
   neither migration expects.
 
-- **`12 → 13` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
-  `19 → 20` delta): **every technology axis becomes per project.** A product can
+- **`12 → 13` migration** (performed by `/skill:vwf-setup`): **every
+  technology axis becomes per project.** A product can
   legitimately mix providers — the site on one cloud, the API on another, the
   app designed in one tool and the website in another — and format 12 could not
   express any of it. Four keys move down into `projects.<name>`, and each move
@@ -380,8 +388,8 @@ earlier than 65/90/80), never loosen.
   drift **and** as a blocking `/skill:vwf-doctor` finding — the drift says the repo is
   behind, the blocking finding says vwf will not build against it meanwhile.
 
-- **`14 → 15` migration** (performed by `/skill:vwf-setup`, alongside the blueprint
-  `21 → 22` delta): **a multi-repo product stops having to be a submodule
+- **`14 → 15` migration** (performed by `/skill:vwf-setup`): **a
+  multi-repo product stops having to be a submodule
   parent**, and the project-axis pin stops being keyed on a role that no longer
   exists. Five changes:
 
@@ -417,8 +425,9 @@ earlier than 65/90/80), never loosen.
      is unchanged; recompute it rather than copying it, since a `cli`-only
      project could previously be miscounted.
 
-  **The registry's role/platform remap is the blueprint `21 → 22` delta**, not
-  this one — see the project-setup skill's `format-versioning` reference. Run
+  **The registry's role/platform remap is a blueprint-side change**, not this
+  one — the retired role spellings resolve through the setup skill's
+  `format-lineage` reference. Run
   them together: this file's `template` pin and `ui:` key both depend on the new
   platform vocabulary, so a repo on one but not the other is a state neither
   migration expects.

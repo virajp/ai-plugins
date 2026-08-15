@@ -36,7 +36,9 @@ own infrastructure as code therefore has **two** repos — the product, and the
 IaC one beside it — which makes it a small multi-repo product, not a single
 repo. This is
 the one structural rule vwf enforces rather than offers: `/doctor` raises a
-violation as **blocking**, and `/setup` offers a consent-gated restructure.
+violation as **blocking**, and `/setup` writes up the extraction as a
+recommendation. Decline it on the record under `enforcement:` and the finding
+stays, as a warning reported every run rather than a halt.
 The reasoning — blast radius, credentials, lifecycle, cadence — is in
 [monorepo](monorepo.md), and holds identically here; a smaller product does not
 make an accidental teardown of the live environment smaller.
@@ -51,6 +53,6 @@ make an accidental teardown of the live environment smaller.
 ## When to grow out of it
 
 The moment a second independently-buildable project appears, this becomes a
-**monorepo** — one repo, several projects. Re-run `/setup` to record the
-change; nothing in `docs/blueprint/` moves, since flows are keyed on project
-*name* and the first project keeps its name.
+**monorepo** — one repo, several projects. Run `/architecture` to record the
+new project; nothing in `docs/blueprint/` moves, since flows are keyed on
+project *name* and the first project keeps its name.

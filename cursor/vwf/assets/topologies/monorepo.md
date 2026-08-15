@@ -46,8 +46,12 @@ instead.
 repo, or a member of a product base repo — which turns a monorepo product into a
 two-member multi-repo product the moment it acquires one. This is the single structural
 rule vwf **enforces**: `/doctor` raises a violation as a **blocking** finding,
-and `/setup` offers a consent-gated restructure. Everything else on this page
-is a menu.
+and `/setup` writes up the extraction as a recommendation. Everything else on
+this page is a menu.
+
+Declining it under `enforcement:` is honoured, and honoured honestly: the
+finding drops to a warning `/doctor` reports every run, so nothing halts and
+nothing is hidden either.
 
 The rest of the topology model is deliberately unenforced — a repo shape is a
 tradeoff with no universally right answer, so vwf presents the three and records

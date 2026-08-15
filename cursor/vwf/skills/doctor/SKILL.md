@@ -72,7 +72,17 @@ halt on a blocking finding they were never told about.
 the product, not the one repo it is standing in. Then read `.config/vwf.yaml`
 and `docs/blueprint/registry.yaml` from there. If no config is reachable by any
 step of that resolution, stop and report exactly one thing: this repo is not
-onboarded — run `/setup`.
+onboarded — `/setup` will onboard it.
+
+**A config with no registry is early, not drifted.** A repo whose
+`.config/vwf.yaml` is stamped while `docs/blueprint/registry.yaml` is still
+absent is partway along the chain: `/setup` writes the
+config, and the registry arrives later from
+`/architecture`. Report it as **information** — *early: next
+`/product`, then `/architecture`* —
+never as a finding, and never as a setup nudge, since setup has nothing left to
+do here. §§3–5 have no projects to scope to and are skipped, saying so; §§6–8
+run in full, as they always do.
 
 **Membership, both directions** (multi-repo only). Compare `members:` against
 what each member repo's `.config/vwf-membership.yaml` claims, and report as
@@ -106,8 +116,9 @@ silently if mempalace is unavailable; §7 then reports the outage itself.
 
 Compare `config_format` and `blueprint_format` in the config to what this vwf
 ships (`assets/blueprint-format`, and the schema version in the vwf-config
-asset). Drift → report the delta and nudge `/setup`; it is never doctor's
-job to migrate.
+asset). Drift → report the delta and name the remedy in terms of what setup
+does: the stamp is behind, and `/setup` will reconcile the
+tree to the current format. It is never doctor's job to migrate.
 
 ### 3–8. The checks
 
@@ -126,7 +137,8 @@ optional, and no reference restates a rule that lives above.
 One table, findings first, grouped by kind — **blocking** (something *mandatory*
 is absent or misplaced, or the stack is one no installed plugin defines: mise,
 the graphify CLI, a graph missing from a locally-present checkout, an `iac`
-project inside another repo, an **unknown** language, a `custom` template pin, a
+project inside another repo whose extraction the user has **not** declined on
+the record, an **unknown** language, a `custom` template pin, a
 project whose template does not cover every platform it declares, a broken
 membership link (§1), a misplaced / duplicated /
 missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
@@ -135,7 +147,10 @@ install), **unavailable** (nothing shipped here to install), **unknown**
 (no installed plugin declares it — always blocking, listed separately so the
 remedy reads as *install or write the plugin*, never *install this one*),
 **degraded** (something optional is absent and a
-fallback is carrying the work). Mark anything the §1 recall already carried as
+fallback is carrying the work — **or** a mandate the user declined on the
+record: a declined graph build, and an `iac` extraction declined under
+`enforcement:`, each reported every run and never escalating back to blocking).
+Mark anything the §1 recall already carried as
 **known**, so a repeat run reads as a diff rather than a re-accusation. State
 the count of checks that passed rather than listing them.
 
@@ -153,7 +168,8 @@ finding per the memory asset's AAAK style, plus what was fixed if the user
 accepted a remedy. That is what lets the next run say **known**. Skip silently
 if mempalace is unavailable.
 
-**Callers.** `/setup` step 10 runs this over the whole repo and records what
+**Callers.** `/setup`'s shared spine runs this over the whole
+repo, right after it writes the config, and records what
 it finds. `/plan` runs it scoped to its dependency chain's projects, once
 the chain is approved and before its survey. `/execute` runs it scoped to
 the plan's projects. **All three halt on any `blocking` finding** — the mandated

@@ -224,7 +224,7 @@ typing them (you only approve at their gates):
 
 ```mermaid
 flowchart TD
-    S["/vwf:setup — once per repo<br/>(re-run to migrate; first run chains the foundations below)"]:::user
+    S["/vwf:setup — once per repo<br/>(re-run to reconcile the format; prints the chain below, runs none of it)"]:::user
     S --> P["/vwf:product — every product change<br/>(define it first, then add / update / retire features & goals)"]:::user
     P e1@-. "system shape changed" .-> A["/vwf:architecture"]:::user
     P e2@-. "visual language changed (UI)" .-> DS["/vwf:design-system"]:::user
@@ -257,34 +257,34 @@ flowchart TD
     classDef chained fill:#6e7781,stroke:#57606a,color:#ffffff,stroke-dasharray:4 3
 ```
 
-(`setup`'s first run chains `product` → `architecture` → `design-system` for you
-and ends by offering `blueprint` — blue marks who prompts them from then on.
+(`setup` **prints** the chain `product` → `architecture` → `design-system` →
+`blueprint` and offers to start the first one; it runs none of them, because
+each resolves its own mode and reports what it did. Blue marks who prompts them.
 Fully internal machinery never appears in the flow: `/vwf:git-workflow` is
 invoked by the other commands for every git action, the five execute subagents
 and the reviewer subagents run inside their commands, and `handoff`/`recall` are
 session utilities you reach for only when a session runs long.)
 
-`/vwf:setup` runs once per repo (re-run only to migrate formats); its first run
-chains `product`, `architecture`, and `design-system` for you. From then on,
-**`/vwf:product` is the front door for every product change** — adding,
-updating, or retiring features and goals — with `architecture` following when
-the system's shape changes and `design-system` when the visual language does.
-Any foundation change ends in a `/vwf:blueprint` sweep, which loops flow by flow
-(deriving the entities, schemas, and API operations each flow stands on) until
-the **whole product** is covered again — including a whole-product coherence
-review — and re-stamps that coverage (`plan` refuses to run without it), then
-offers to plan the top slice. Building is **one command per cycle**:
-`/vwf:plan <slice>` resolves the slice's unbuilt dependencies into a **chain of
-small plans** (each behind its own gate, executed in order — never one plan
-swallowing its dependencies), the last gate offers *Approve & execute*,
-`execute` runs each plan unattended in a dedicated worktree up to one final gate
-where you review the run and approve the merge — stamping the covered blueprint
-docs' `implementation:` state as it lands — and `archive` is offered once no
-gaps remain. After you deploy, `verify` checks the environment (and, on a clean
-production pass, offers to freeze the released API contracts) and `feedback`
-routes what production says back into the product. When execution exposes a hole
-in the blueprint or plan, `vwf` captures it and loops back to fix the source —
-never silently working around it.
+`/vwf:setup` runs once per repo (re-run to reconcile the format), and hands you
+the chain rather than walking it. From there on, **`/vwf:product` is the front
+door for every product change** — adding, updating, or retiring features and
+goals — with `architecture` following when the system's shape changes and
+`design-system` when the visual language does. Any foundation change ends in a
+`/vwf:blueprint` sweep, which loops flow by flow (deriving the entities,
+schemas, and API operations each flow stands on) until the **whole product** is
+covered again — including a whole-product coherence review — and re-stamps that
+coverage (`plan` refuses to run without it), then offers to plan the top slice.
+Building is **one command per cycle**: `/vwf:plan <slice>` resolves the slice's
+unbuilt dependencies into a **chain of small plans** (each behind its own gate,
+executed in order — never one plan swallowing its dependencies), the last gate
+offers *Approve & execute*, `execute` runs each plan unattended in a dedicated
+worktree up to one final gate where you review the run and approve the merge —
+stamping the covered blueprint docs' `implementation:` state as it lands — and
+`archive` is offered once no gaps remain. After you deploy, `verify` checks the
+environment (and, on a clean production pass, offers to freeze the released API
+contracts) and `feedback` routes what production says back into the product.
+When execution exposes a hole in the blueprint or plan, `vwf` captures it and
+loops back to fix the source — never silently working around it.
 
 ## The documents it maintains
 
@@ -428,9 +428,11 @@ base repo keeps a thin `docs/plans/index.md`. In a `repo` or `monorepo` product
 that's the one checkout, so the rule costs nothing.
 
 Existing repos whose layout differs from their topology's suggested grouping get
-a **consent-gated restructure proposal** from `/vwf:setup`: in-repo layout moves
-as reviewable batches; anything crossing a repo boundary (like a submodule
-split) only ever as a written recommendation. Adding or removing a repo later is
+a **written recommendation** from `/vwf:setup` — never a move. setup writes and
+moves documentation only; every source-layout change, in-repo or across a repo
+boundary, is named in the report with its target layout and left to you.
+Recording a decline under `enforcement:` stops the proposal recurring, not the
+finding: `/vwf:doctor` keeps reporting it. Adding or removing a repo later is
 incremental, and removing one **archives** its blueprint docs rather than
 deleting them.
 
@@ -510,8 +512,10 @@ it ships through a package registry, so it pins `npm-package`.
 base repo — under every topology, monorepo included. Blast radius, credentials,
 lifecycle and cadence all differ in kind from application code, and one repo
 cannot separate them. `/vwf:doctor` raises a violation as a **blocking** finding
-and `/vwf:setup` offers a consent-gated restructure; nothing else about repo
-shape is enforced.
+and `/vwf:setup` writes the extraction up as a recommendation — it moves
+nothing. Recording the decline under `enforcement:` drops the finding to a
+warning reported every run, and neither `setup` nor `execute` halts on it after
+that. Nothing else about repo shape is enforced.
 
 Each template is a markdown file: YAML frontmatter carrying the four axes
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
@@ -635,10 +639,11 @@ are declared `invocation: user` (which Claude spells
 decide when a migration, a post-deploy check, a re-render, a plan retirement or
 a session resume happens. The rest stay model-invocable because the workflow
 **delegates to them by name** — `recall` resumes a paused run *through*
-`blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`, and
-`setup` orchestrates `product`/`architecture`/`design-system`/`doctor`. Marking
-one of those user-only would silently break the chain: the flag blocks
-programmatic invocation, not just auto-triggering.
+`blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`,
+`setup` runs `doctor` inside its own spine, and `feedback` and `plan` route work
+into `product`/`architecture`/`design-system`/`blueprint`. Marking one of those
+user-only would silently break the chain: the flag blocks programmatic
+invocation, not just auto-triggering.
 
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
@@ -660,32 +665,73 @@ conversation calls for one, and the same artifact installs into OpenCode via the
 ### /vwf:setup
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
-it after upgrading vwf to migrate to the latest format. It detects your topology
-(repo, monorepo, or multi-repo + linkage; project roles and platforms; stacks)
-and confirms it with you via MCQ, then produces a **dry-run migration plan** —
-every doc to scaffold and every source move to make, including a restructure
-proposal toward the chosen topology's layout when the repo doesn't match
-(declining records a deviation, not a fight). On a new/empty repo it applies the
-workspace structure as the default and elicits each project's stack from the
-[template menu](#stack-templates). It also writes the product's **one**
-`mempalace.yaml`, at the repo root — one wing, the seven rooms vwf's memory
-protocol uses, and a secret denylist behind `.gitignore` — mining the whole tree
-including submodules, and consolidating away any config it finds in `.config/`
-or a submodule root (mining reads the config only from the directory it is
-pointed at, so a stray one is silently inert rather than merely wrong). Nothing
-is written until you approve; it works in a worktree, restructures code only
-with per-batch consent, and never deletes. It orchestrates the rest
-(`/devtools:scaffold`, `product`, `architecture`, and `design-system` if you
-have a UI), merges a vwf section into your `CLAUDE.md`, writes the README,
-detects the repo's verification-harness capabilities (dev server, E2E, staging
-mode), and stamps the **vwf config** at `.config/vwf.yaml` — the blueprint
-format version, harness inventory, enforcement opt-outs, and per-project nuances
-(a coverage-target override, a non-conventional health path) — so a later run
-can detect drift and migrate the delta, and every command knows how vwf operates
-in this repo (pipeline knobs, verify environments, the mempalace wing). Every
-workflow command also runs a quick format check against that stamp and nudges
-you to re-run `/vwf:setup` when a repo falls behind — so a single user-level vwf
-upgrade reaches each repo on next use.
+it after upgrading vwf to bring the tree back to the current format.
+
+**Step 0 resolves one of three entry paths**, once, from what is on disk, and
+nothing after it re-derives the mode:
+
+| `.config/vwf.yaml`                                       | Mode                                                                   |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| absent, and no legacy `docs/blueprint/.vwf.yml`          | `onboard` — forking on evidence between a blank repo and one with code |
+| parseable, either stamp behind — or only the legacy file | `migrate`                                                              |
+| parseable, both stamps current                           | `current` — report the stamps, print the chain, exit                   |
+| present but **unparseable**                              | halt, with the parse error and two remedies                            |
+
+An unparseable config is never onboarded over: it still records decisions
+nothing else does, so overwriting it would discard them silently. There is **no
+progress key and no resume state** — re-running *is* the resume mechanism, since
+a conforming repo resolves to `current` and a half-finished onboard re-detects
+and produces a smaller plan.
+
+**`migrate` is state-based, not a ladder.** It reconciles the tree against the
+current format's own sources — the doc templates, the conformance bundle, the
+authoring bars, the config doctrine — rather than replaying per-version steps,
+resolving retired spellings through a **lineage table** and confirming by MCQ
+any old spelling that fans out to more than one current one. The stamps are
+drift detectors; nothing selects a migration by them, so there is no support
+window.
+
+Whichever path runs, it detects your topology (repo, monorepo, or multi-repo +
+linkage; project roles and platforms; stacks) and confirms it with you via MCQ,
+then produces a **dry-run plan** of every doc to scaffold or reconcile. On a
+new/empty repo it applies the workspace structure as the default and elicits
+each project's stack from the [template menu](#stack-templates). It also writes
+the product's **one** `mempalace.yaml`, at the repo root — one wing, the seven
+rooms vwf's memory protocol uses, and a secret denylist behind `.gitignore` —
+mining the whole tree including submodules, and consolidating away any config it
+finds in `.config/` or a submodule root (mining reads the config only from the
+directory it is pointed at, so a stray one is silently inert rather than merely
+wrong). Nothing is written until you approve; it works in a worktree, never
+deletes, and **never moves a source file** — a layout that differs from its
+topology's grouping, and an `iac` project sitting in another project's repo,
+both end the run as written recommendations rather than as moves. It scaffolds
+tooling through `/devtools:scaffold`, merges a vwf section into your
+`CLAUDE.md`, bootstraps `environment.md` from the repo's existing env-var and
+secret usage (names only), detects the repo's verification-harness capabilities
+(dev server, E2E, staging mode), and stamps the **vwf config** at
+`.config/vwf.yaml` — the blueprint and config format versions, harness
+inventory, enforcement opt-outs, and per-project nuances (a coverage-target
+override, a non-conventional health path) — so a later run detects drift, and
+every command knows how vwf operates in this repo (pipeline knobs, verify
+environments, the mempalace wing).
+
+**The ordering of the shared spine is the point:** validate the bundle, *then*
+write the config, *then* run `/vwf:doctor` against it — a stamp written before
+validation describes a tree nothing checked. A **blocking** doctor finding halts
+the run *and reverts the stamp*, so no stamped-but-unrunnable artifact survives;
+a declined graph build and a recorded `iac` decline are the two exceptions,
+noted as degradations rather than halts. Past the approval gate and commit,
+setup offers the graph build (it is the only command that builds one) and then
+**prints the chain** — `product` → `architecture` → `design-system` →
+`blueprint`, with `readme` optional — offering to start the first. It runs none
+of them.
+
+Every workflow command also runs a quick format check against that stamp and
+nudges you to re-run `/vwf:setup` when a repo falls behind — so a single
+user-level vwf upgrade reaches each repo on next use. A stamped config with no
+registry yet is a **legal early state**, not drift: doctor reports it as "early
+— next `/vwf:product`, then `/vwf:architecture`" and the format check stays
+silent.
 
 ### /vwf:product
 
@@ -719,6 +765,17 @@ command depends on — and `docs/blueprint/architecture.md`, its prose view with
 system-shape mermaid diagram kept in sync with it. Re-run it any time the
 topology changes; it asks only about genuine deltas, never re-eliciting what's
 confirmed.
+
+**With no registry yet but a `product.md` in place, it derives rather than
+interviews.** The structural questions — which surfaces exist, which projects
+carry them, each project's role, the topology and repo placement — are read out
+of the contract you already wrote and approved, each proposal carrying the
+sentence from `product.md` it rests on, and corrected by MCQ one decision per
+round. Anything the product contract underdetermines falls back to the same
+interview as before, and a screen platform is never assumed — it makes the
+design system mandatory, so each one is confirmed explicitly. With no
+`product.md` either, it recommends `/vwf:product` first and offers the interview
+as the fallback.
 
 This is the one doc that *does* name technologies and infrastructure — the
 blueprint deliberately doesn't.
@@ -1280,8 +1337,9 @@ missing tagline, which cloud services are actually in use); then writes the
 README and reports what it created or updated. When updating, it refreshes those
 sections and leaves any others (License, Contributing, badges) untouched.
 
-`/vwf:setup` orchestrates it, which is why it stays model-invocable as well as
-slash-invocable.
+The docs-sync rule routes a badly drifted README through it rather than patching
+sentence by sentence, which is why it stays model-invocable as well as
+slash-invocable. `/vwf:setup` only names it in the chain it prints.
 
 ### /vwf:git-workflow
 
@@ -1382,8 +1440,8 @@ recorded decline is a settled choice, not an unmet mandate.
 
 A first slice, end to end. Assume a backend service whose first flow is
 `place-order` (with an `order` entity under it). (On a fresh repo, `/vwf:setup`
-runs steps 1–2 for you and offers step 3 — they're shown standalone here, as
-you'd run them for later updates.)
+prints these steps as the chain and offers to start step 1 — it runs none of
+them.)
 
 ```text
 # 1. Pin the outcome contract (once per workspace, re-run to pivot)
@@ -1466,10 +1524,6 @@ reviews (`karpathy-guidelines` is the exception, also reachable by hand as
   tokens, typography, spacing, motion, accessibility, component behaviors,
   anti-patterns, and Terminal UX for products that ship a CLI) behind
   `/vwf:design-system`.
-- **`project-setup`** — the onboarding/migration doctrine behind `/vwf:setup`:
-  topology detection, the topology menu (and how a choice is recorded), the
-  stack-template axes, harness-capability detection, consent-gated dry-run
-  migration, and the blueprint format-version + drift map.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
   plan touches an API surface.

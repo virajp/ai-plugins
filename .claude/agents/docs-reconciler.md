@@ -66,10 +66,10 @@ exists to prevent.
   tables, flag tables, target matrices, capability rows).
 
 Not findings: prose you would have written differently, formatting, or anything
-git already records. This repo deliberately keeps history out of its docs — the
-per-format migration history lives in the `format-versioning` reference and
-nowhere else, and re-narrating it is the exact drift the density doctrine warns
-about.
+git already records. This repo deliberately keeps history out of its docs — vwf
+migrates by reconciling a tree against the current format rather than by
+replaying per-version deltas, so no narrative of past formats belongs anywhere
+but git; re-narrating it is the exact drift the density doctrine warns about.
 
 ## Two traps
 
