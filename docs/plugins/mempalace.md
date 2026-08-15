@@ -93,10 +93,13 @@ indirectly.
 in `templates/vwf/plugin.yaml`. You run the server yourself:
 
 ```sh
-mempalace-mcp --transport http --host 127.0.0.1 --port 8765 \
-  --palace "$HOME/.local/share/mempalace" --backend qdrant
+mempalace-mcp --transport http --host 127.0.0.1 --port 8765
 curl http://127.0.0.1:8765/healthz   # -> ok
 ```
+
+No palace or backend flags: the daemon is configured through
+`~/.mempalace/config.json` and `MEMPALACE_*` environment variables — env takes
+precedence. See the supervisor-env section below for why the file matters.
 
 Why not stdio: an stdio server is a **child process of the agent**, so when it
 dies the connection stays dead for the rest of the session. Over HTTP it
@@ -160,6 +163,14 @@ MEMPALACE_BACKEND=qdrant
 MEMPALACE_QDRANT_URL=http://127.0.0.1:6333
 ```
 
+In practice the whole `MEMPALACE_*` set — these two plus
+`MEMPALACE_PALACE_PATH`, `MEMPALACE_MAX_BACKUPS` and
+`MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN` (what lets the loopback daemon run
+tokenless) — lives in the global mise config's `[env]`, or the shell's startup
+script; `~/.mempalace/config.json` carries the same facts as the file-based
+fallback, and env wins when both are present. The vendored `mempalace` skill's
+Prerequisites is the authoritative statement of this setup.
+
 Setting the URL **without** the backend key **silently selects ChromaDB.** The
 backend key is what chooses the backend; its default is `chroma`, and the unused
 URL is not an error. This is the highest-cost trap in the area: it wrote 11,437
@@ -195,13 +206,24 @@ path, from one place, to everything that opens the palace.
 
 A supervised daemon inherits its **supervisor's** environment, captured when the
 supervisor started. So fixing a variable in your shell config and restarting the
-*daemon* changes nothing — you must restart the **supervisor**. Better still,
-make the run line independent of the environment:
+*daemon* changes nothing — you must restart the **supervisor**. The resolution
+is `~/.mempalace/config.json`: the daemon reads the file fresh on start whatever
+environment it inherited, so the palace path, the backend and the qdrant URL
+live there —
 
-```toml
-run = "mempalace-mcp --transport http --host 127.0.0.1 --port 8765 \
-  --palace $HOME/.local/share/mempalace --backend qdrant"
+```json
+{
+  "palace_path": "/Users/you/.local/share/mempalace",
+  "collection_name": "mempalace_drawers",
+  "backend": "qdrant",
+  "qdrant_url": "http://127.0.0.1:6333"
+}
 ```
+
+— with `MEMPALACE_*` environment variables overriding it when present. A
+flagless run line plus the config file beats baking flags into the supervisor's
+run string: the file is one canonical spelling, editable without touching the
+supervisor.
 
 Underneath this sits a plain shell fact worth stating outright: **`~` is
 expanded only for unquoted text typed in a command, never for text arriving from

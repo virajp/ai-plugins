@@ -52,14 +52,25 @@ Also not taken: upstream's `.claude-plugin/hooks/hooks.json`. It references
 
 ## Local edits
 
-One addition, in `mempalace`: the **Prerequisites** section gains a second
-install path beside upstream's `uv tool install` — the managed-tool install
-(`mise use -g "pipx:mempalace@latest"`) plus running `mempalace-mcp` as a
-supervised HTTP daemon, and the rule that the palace path is passed as a flag
-rather than through the environment. Upstream documents only the stdio shape,
-which is not the shape vwf uses: vwf declares the server over HTTP in its
-`plugin.yaml`, so a reader following upstream's prose ends up with a
-subprocess vwf never connects to. Re-apply this on any resync.
+The **setup instructions** in `mempalace` are replaced, not amended. Upstream's
+Prerequisites documents `uv tool install` / `pip install` and the stdio shape;
+neither is the shape vwf uses, so a reader following upstream's prose ends up
+with a subprocess vwf never connects to. The replacement documents the setup
+vwf assumes: the mise-managed install (`"pipx:mempalace" = { version =
+"latest" }` in `[tools]`, preferably the development-environment config);
+**qdrant as the backend** rather than the chroma default, because chroma does
+not support concurrent access — run as a loopback-bound container, with the
+image and port pinned in the skill's fenced run command; configuration
+through `~/.mempalace/config.json` overridden by `MEMPALACE_*` environment
+variables (env takes precedence), palace at `~/.local/share/mempalace`; and
+`mempalace-mcp` as a supervised HTTP daemon that needs no flags, since the
+config file is what a supervised daemon reliably reads whatever environment it
+inherited. Re-apply this on any resync.
+
+Two pointers, in `mempalace-recall`: upstream's `/mempalace-init` command is
+not shipped by vwf (only the two skills were taken), so both mentions of it —
+the Step 0 setup pointer and the server-down unhappy path — now point at the
+`mempalace` skill's setup instead. Re-apply on any resync.
 
 One word, in `mempalace-recall`: the adjective describing time-ordered
 knowledge graphs was replaced with "time-aware". That adjective is spelled

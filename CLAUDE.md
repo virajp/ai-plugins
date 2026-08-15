@@ -571,7 +571,7 @@ every target.
 
 What was taken is **two skills and nothing else** — not the Python package, not
 the server implementation, not `integrations/`. Provenance, the version taken,
-the MIT licence, the one local edit and the resync policy live in
+the MIT licence, the local edits and the resync policy live in
 `templates/vwf/vendor/mempalace/`, which ships in every rendered bundle. It is a
 one-time fork, deliberately re-synced: nothing watches upstream, so the
 **Version taken** row is the only thing that makes drift detectable, and it is
@@ -585,14 +585,20 @@ against `http://127.0.0.1:8765/mcp` — so the memory layer is a **long-lived
 process you run yourself**, not a stdio subprocess Claude Code owns:
 
 ```sh
-mempalace-mcp --transport http --host 127.0.0.1 --port 8765 \
-  --palace "$HOME/.local/share/mempalace"   # loopback needs no token
+mempalace-mcp --transport http --host 127.0.0.1 --port 8765
 ```
 
 Not `mempalace serve`: `serve` forks the real server as a child and holds PID 1
-itself, so under a supervisor the server never sees `SIGTERM`. Pass the palace
-as a **flag**, not through the environment — a daemon inherits its supervisor's
-environment, so a stale value there outlives every restart of the daemon itself.
+itself, so under a supervisor the server never sees `SIGTERM`. The daemon needs
+no flags: it is configured through `~/.mempalace/config.json` (palace path,
+`backend: qdrant`, the qdrant URL), overridden by `MEMPALACE_*` environment
+variables — env takes precedence. The config file is what a supervised daemon
+reliably reads: a daemon inherits its *supervisor's* environment, so a variable
+fixed after the supervisor started is not the one the daemon sees, but the file
+is read fresh either way. `MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN=1` is what
+lets the loopback daemon run tokenless. The full setup — the mise-managed
+install, the qdrant container, the config file and the env set — is the
+`mempalace` skill's Prerequisites, which is authoritative for it.
 
 Why: an stdio server is a child of the client, so when it dies the connection
 stays dead for the rest of the session. Over HTTP it reconnects, it survives
