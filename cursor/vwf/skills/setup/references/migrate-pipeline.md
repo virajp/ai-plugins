@@ -21,7 +21,10 @@ Four sources define it, and none of them is a history:
 
 1. **Diff the tree against those four.** Every file that is missing, misplaced,
    misnamed, or carrying a section the current format does not have is one
-   entry. Judge the tree as it stands; do not ask how it got there.
+   entry. Judge the tree as it stands; do not ask how it got there. The root
+   `.graphifyignore` is part of the current shape too — absent, or missing the
+   vwf-standard excludes (`%%AI_PLUGINS_ROOT%%/assets/graphify.md`), is one entry
+   like any other.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

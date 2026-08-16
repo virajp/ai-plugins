@@ -4,7 +4,7 @@ description: Check that the repo actually matches what .config/vwf.yaml declares
   — per-language
   LSP servers and toolchains, each project's frameworks and dependencies against
   its manifest, the harness task names, health endpoints, the mempalace wing and
-  room set, the graphify CLI/graph/hook, and format-stamp drift.
+  room set, the graphify CLI/graph/hook/ignore file, and format-stamp drift.
   Reports; never writes without consent. Run it after setup, before execute, or
   any time the repo and the config might have drifted apart.
 argumentHint: "[project ...]"
@@ -134,7 +134,7 @@ optional, and no reference restates a rule that lives above.
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the four stack axes, the `iac` own-repo rule, `mise`, `repo.stack`. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
-| **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness. **Blocking findings live here** |
+| **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
 ### 9. Report & persist
 

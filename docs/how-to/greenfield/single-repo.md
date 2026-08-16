@@ -51,7 +51,8 @@ A repo with no manifest, no source directories and no `docs/blueprint/` is
 because nothing is there to interrogate and those decisions belong to the two
 commands that will have the product contract to derive them from. What it does
 instead is make the repo ready for that conversation — tooling, the empty doc
-trees, the memory tree, a vwf section in `CLAUDE.md` — and stop there.
+trees, the memory tree, a `.graphifyignore` carrying the standard excludes, a
+vwf section in `CLAUDE.md` — and stop there.
 
 It asks exactly two questions, both proposed from the directory name. Relay
 answers `relay` to both — the product name, and the memory wing.

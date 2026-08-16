@@ -50,6 +50,42 @@ graphify path "<ConceptA>" "<ConceptB>"        # shortest connection between two
 graphify explain "<Node>"                      # plain-language explanation of one node
 ```
 
+## What the graph indexes — `.graphifyignore`
+
+graphify honors `.gitignore` automatically, so nothing git already excludes —
+`docs/scratchpad/`, build output, `graphify-out/` itself — ever needs
+restating. `.graphifyignore` at the checkout root (same syntax, merged on top,
+evaluated last) exists for the **committed** trees that are not code
+intelligence, which without it are indexed as if they were:
+
+```text
+# vwf-standard excludes — committed, but not code intelligence
+docs/memory/
+docs/plans/archived/
+docs/prompts/
+archived/
+```
+
+- `docs/memory/` — recall belongs to the memory layer
+  (`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`); a graph copy freezes at the last commit
+  and answers memory questions stale.
+- `docs/plans/archived/` and `archived/` — superseded by definition; indexing
+  them surfaces retired decisions beside current ones with nothing marking
+  which is which.
+- `docs/prompts/` — design briefs regenerated from the flow docs; indexing both
+  makes every screens question answer twice.
+
+The blueprint tree, the code, and **active** plans stay in — the graph exists
+to answer questions about exactly those.
+
+`/vwf:setup` writes the file: the standard set plus whatever
+repo-specific committed noise detection turns up (vendored third-party trees,
+committed generated output, large fixtures), consent-gated like every other
+write, one file per locally-present repo in a `multi-repo` product.
+`/vwf:doctor` §8 reports a missing one as a **degradation**,
+never blocking — the graph still answers, just noisily — and the fix reaches
+the graph only at its next rebuild.
+
 ## The graph orients; the file verifies
 
 Graph answers are **navigation, not evidence**. Any decision, plan step, or

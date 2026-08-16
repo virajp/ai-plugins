@@ -710,14 +710,16 @@ deletes, and **never moves a source file** — a layout that differs from its
 topology's grouping, and an `iac` project sitting in another project's repo,
 both end the run as written recommendations rather than as moves. It scaffolds
 tooling through `/devtools:scaffold`, merges a vwf section into your
-`CLAUDE.md`, bootstraps `environment.md` from the repo's existing env-var and
-secret usage (names only), detects the repo's verification-harness capabilities
-(dev server, E2E, staging mode), and stamps the **vwf config** at
-`.config/vwf.yaml` — the blueprint and config format versions, harness
-inventory, enforcement opt-outs, and per-project nuances (a coverage-target
-override, a non-conventional health path) — so a later run detects drift, and
-every command knows how vwf operates in this repo (pipeline knobs, verify
-environments, the mempalace wing).
+`CLAUDE.md`, writes a `.graphifyignore` at the repo root (the vwf-standard
+excludes, plus any committed-but-not-code trees it detects — see
+[Code intelligence](#code-intelligence)), bootstraps `environment.md` from the
+repo's existing env-var and secret usage (names only), detects the repo's
+verification-harness capabilities (dev server, E2E, staging mode), and stamps
+the **vwf config** at `.config/vwf.yaml` — the blueprint and config format
+versions, harness inventory, enforcement opt-outs, and per-project nuances (a
+coverage-target override, a non-conventional health path) — so a later run
+detects drift, and every command knows how vwf operates in this repo (pipeline
+knobs, verify environments, the mempalace wing).
 
 **The ordering of the shared spine is the point:** validate the bundle, *then*
 write the config, *then* run `/vwf:doctor` against it — a stamp written before
@@ -1439,6 +1441,23 @@ Past the gate it still degrades rather than crashes — an unreachable graph fal
 back to direct reads. `/vwf:setup` is the one command that builds a graph
 (consent-gated, at the end of onboarding) and installs the refresh hook; a
 recorded decline is a settled choice, not an unmet mandate.
+
+**What the graph indexes is narrowed by `.graphifyignore`.** graphify already
+honours `.gitignore`, so nothing git excludes — `docs/scratchpad/`, build
+output, `graphify-out/` itself — ever needs restating. The ignore file, at each
+checkout root and in the same syntax, is for the **committed** trees that are
+not code intelligence: `docs/memory/` (recall belongs to the memory layer, and a
+graph copy answers memory questions frozen at the last commit),
+`docs/plans/archived/` and `archived/` (superseded by definition — indexed, they
+surface retired decisions beside current ones), and `docs/prompts/` (design
+briefs regenerated from the flow docs, so indexing both answers every screens
+question twice). The blueprint tree, the code and **active** plans stay in.
+`/vwf:setup` writes the file — the standard set plus whatever repo-specific
+committed noise it detects (vendored trees, committed generated output, large
+fixtures), consent-gated like every other write, one per locally-present repo in
+a multi-repo product — and `/vwf:doctor` reports a missing one as a
+**degradation**, never blocking: the graph still answers, just noisily, and the
+fix reaches it only at the next rebuild.
 
 ## A worked walkthrough
 

@@ -30,11 +30,14 @@ In order:
 3. **The memory tree.** `docs/memory/` with its seven rooms and the three
    gitignored ones, plus the product's `mempalace.yaml`, per
    [the memory tree](memory-tree.md).
-4. **CLAUDE.md.** Merge the vwf section from
+4. **The graph ignore file.** Write `.graphifyignore` at the repo root with the
+   vwf-standard excludes, per `%%AI_PLUGINS_ROOT%%/assets/graphify.md`. A blank repo
+   has no repo-specific noise to detect, so the standard set is the whole file.
+5. **CLAUDE.md.** Merge the vwf section from
    `%%AI_PLUGINS_ROOT%%/assets/templates/project-claude.md` into the repo's
    `CLAUDE.md`, preserving everything already there, per
    [the CLAUDE.md section](claude-md.md).
-5. **The two questions.** `product.name` and `memory.wing`, each one MCQ,
+6. **The two questions.** `product.name` and `memory.wing`, each one MCQ,
    proposed from the repo directory name. These are the **only** questions this
    path asks.
 
@@ -118,6 +121,12 @@ four facts and acts on that delta alone.
   `%%AI_PLUGINS_ROOT%%/assets/templates/`, `flows/index.md`, `entities/index.md`, the
   empty `apis/` and `apis/released/` directories, `docs/plans/` and
   `docs/plans/archived/`.
+- **The graph ignore file**, per `%%AI_PLUGINS_ROOT%%/assets/graphify.md`: the
+  vwf-standard excludes plus every committed-but-not-code tree detection turned
+  up — vendored third-party code, committed generated output, large fixtures.
+  Repo-specific additions are proposed with their evidence and confirmed;
+  git-ignored trees are never restated. One file per locally-present repo in a
+  `multi-repo` product.
 - **Harness detection** per `%%AI_PLUGINS_ROOT%%/assets/harness.md` — which
   verification capabilities the repo can already run, and any non-canonical task
   names. Missing capabilities are **recorded, never built**;

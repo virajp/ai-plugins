@@ -70,8 +70,10 @@ What Bookable's run proposes, and what the team answers:
 Then the writes, and every one of them is shown first as a dry-run plan covering
 each file created, moved and updated. Nothing lands until you approve. For
 Bookable that plan holds the `docs/blueprint/` and `docs/plans/` trees, the
-memory tree and the product's `mempalace.yaml`, a vwf section merged into the
-existing `CLAUDE.md` (merged, not overwritten), and the mise config through
+memory tree and the product's `mempalace.yaml`, the root `.graphifyignore` — the
+vwf-standard excludes plus whatever committed-but-not-code trees two years of
+history left behind, each proposed with its evidence — a vwf section merged into
+the existing `CLAUDE.md` (merged, not overwritten), and the mise config through
 `/devtools:scaffold`.
 
 Two brownfield-only items appear in that plan. **Harness detection** records

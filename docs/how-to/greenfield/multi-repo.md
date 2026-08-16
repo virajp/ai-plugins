@@ -138,7 +138,9 @@ lives, and why both directions matter:
 What is deliberately **not** recorded is which members are cloned on this
 machine. That is per-developer state that changes daily, so it is detected on
 every run — a twenty-repo product with three cloned is a normal configuration,
-not a degraded one.
+not a degraded one. Each member that *is* cloned gets its own `.graphifyignore`
+from that run, since the file is per checkout like the graph it narrows — see
+[Code intelligence](../../plugins/vwf.md#code-intelligence).
 
 Stallfront can now run a vwf command from any of its four checkouts and have it
 resolve the same product.

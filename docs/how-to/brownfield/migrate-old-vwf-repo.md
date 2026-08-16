@@ -56,7 +56,9 @@ retired spelling of the grouped and numbered ones; its single-file entity docs
 are the retired spelling of a folder holding the prose beside the data model;
 the `Serves:` line on each of those entities is the retired spelling of
 `Used by:`. Each resolves through vwf's lineage table and lands in the plan as a
-move, never as a question.
+move, never as a question. The root `.graphifyignore` is part of the current
+shape too: Jotter has none, so the standard excludes land in the plan as one
+entry like any other.
 
 ### 3. Confirm the spellings that fan out
 

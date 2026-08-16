@@ -136,7 +136,11 @@ point, since a stamp written before validation describes a tree nothing checked:
    `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
    consent-gated; it is a long build — to build it against the **main
    checkout's** root, never the worktree, and to install the refresh hook. A
-   decline is honored without re-asking.
+   decline is honored without re-asking. Before building, confirm the
+   `.graphifyignore` the pipeline wrote is present at the root the build runs
+   from — a commit still local to the worktree has not put it there, and a
+   graph built without it indexes everything the file exists to exclude until
+   the next rebuild.
 6. **Chain forward.** Print the ordered chain and stop:
    `/vwf:product` → `/vwf:architecture` →
    `/vwf:design-system` (once a project declares a screen
