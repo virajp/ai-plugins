@@ -1301,10 +1301,12 @@ off" handoff:
 `next` differs from a named handoff in three ways. It is written to **both**
 surfaces every time — the mempalace drawer *and* `docs/memory/handoff/next.md`
 (gitignored: a handoff is your session state, not the team's) — so either one
-alone can resume the work. It is a **singleton**, overwritten in place, so there
-is never a stale pile to choose from. And `recall` **runs its next prompt
-without asking**, leaving the handoff in place until the next `/vwf:handoff`
-replaces it.
+alone can resume the work. The disk copy always lands at the **main checkout**
+root, never a linked worktree: a gitignored file written in a worktree dies with
+it, and the main checkout is the one root every later session resolves. It is a
+**singleton**, overwritten in place, so there is never a stale pile to choose
+from. And `recall` **runs its next prompt without asking**, leaving the handoff
+in place until the next `/vwf:handoff` replaces it.
 
 The one thing it won't do is invent work: if the session had no continuable next
 action, `handoff` says so instead of padding the prompt, and `recall` reports

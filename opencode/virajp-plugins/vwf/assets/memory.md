@@ -73,7 +73,8 @@ run record. Both still exist locally, and both still survive a mempalace outage
 > **`vwf-handoff` and `/vwf-recall` never skip.** The handoff *is* the
 > deliverable, not a side memory. The reserved **`next`** handoff writes
 > `docs/memory/handoff/next.md` unconditionally, alongside the drawer, so both
-> surfaces always carry it. (Before format 19 this file lived at
+> surfaces always carry it — and always at the **main checkout** root, since a
+> gitignored file written inside a worktree dies with it. (Before format 19 this file lived at
 > `docs/handoffs/next.md` and was committed; it now sits in the ignored half,
 > because a handoff is personal.)
 

@@ -29,9 +29,9 @@ continue the work in **this fresh session**.
 `next` is the reserved "resume where I left off" handoff `/handoff` writes
 by default. Recalling it differs from a named recall in two ways:
 
-- **It lives on both surfaces** — the mempalace drawer and the committed
-  `docs/memory/handoff/next.md`. Read whichever resolves; if both do and they
-  disagree, the **more recent `Date`** wins.
+- **It lives on both surfaces** — the mempalace drawer and
+  `docs/memory/handoff/next.md` at the **main checkout**. Read whichever
+  resolves; if both do and they disagree, the **more recent `Date`** wins.
 - **Its continuation runs without a gate** — step 4 executes the Next prompt
   instead of asking. That is the whole point of `next`: one command resumes the
   work. It is **left in place** afterwards; the following `/handoff` (or
@@ -73,12 +73,15 @@ With a `<name>`, retrieve it:
    optionally with `source_file="handoff/<name>.md"`, is an equivalent path.)
 
 **If mempalace is unavailable or has no match**, read
-`docs/memory/handoff/<name>.md` from disk (the `/handoff` fallback). If
-neither yields anything, say so and stop — don't guess the prior state.
+`docs/memory/handoff/<name>.md` from disk (the `/handoff` fallback) —
+under the **main checkout** root, the parent directory of
+`git rev-parse --git-common-dir`, which is where `/handoff` writes it
+whatever worktree it ran from. If neither yields anything, say so and stop —
+don't guess the prior state.
 
 For **`next`**, the disk copy is a first-class surface, not a fallback: read
-`docs/memory/handoff/next.md` even when the drawer resolved, and take the copy
-with the more recent `Date` if they differ.
+the main checkout's `docs/memory/handoff/next.md` even when the drawer
+resolved, and take the copy with the more recent `Date` if they differ.
 
 ### Format check
 

@@ -4,8 +4,9 @@ description: Capture the current session as a handoff document and file it to
   mempalace
   (wing=<project>, room=handoff, drawer=<name>) so work can resume in a fresh
   session. With no argument — or `next` — it writes the reserved `next`
-  handoff, to mempalace and to docs/memory/handoff/next.md, which /recall
-  resumes automatically. Use when the context window grows beyond ~60%.
+  handoff, to mempalace and to the main checkout's
+  docs/memory/handoff/next.md, which /recall resumes
+  automatically. Use when the context window grows beyond ~60%.
 ---
 
 # handoff — Capture Work for a Fresh Session
@@ -36,7 +37,7 @@ this repo, and the default when no name is given. It differs from a named
 handoff in exactly three ways:
 
 - **Written to both surfaces, always.** mempalace *and*
-  `docs/memory/handoff/next.md`, committed to the repo — not
+  `docs/memory/handoff/next.md` at the **main checkout** — not
   disk-only-on-failure like a named handoff's fallback. Either surface alone is
   enough to resume.
 - **A singleton, overwritten in place.** Each run replaces the file and
@@ -150,23 +151,29 @@ file the new one anyway (it supersedes) — recall picks the most recent.
 
 **If mempalace tools are unavailable** (the server is down — do **not** silently
 skip, the document is the whole point): write the handoff to
-`docs/memory/handoff/<name>.md` instead, tell the user it went to disk because
-mempalace was unreachable, and that `/recall` will read the disk copy.
+`docs/memory/handoff/<name>.md` instead — under the **main checkout** root,
+resolved as in step 6a — tell the user it went to disk because mempalace was
+unreachable, and that `/recall` will read the disk copy.
 
-### 6a. Write the repo copy (`next` only)
+### 6a. Write the disk copy (`next` only)
 
 For the reserved `next`, the disk copy is not a fallback — write it **in
-addition** to the drawer, and commit it so it travels with the branch:
+addition** to the drawer, and always to the **main checkout**, never a linked
+worktree:
 
-1. Write the same document verbatim to `docs/memory/handoff/next.md`,
-   overwriting any previous one in place (never a second file, never a dated
-   variant).
-2. Stage and commit it — `docs: record the next handoff`. The step-2 checkpoint
-   already ran, so this is a small follow-up commit; respect pre-commit hooks
-   exactly as step 2 does (on failure, fix and make a **new** commit).
+1. Resolve the main checkout root — the parent directory of
+   `git rev-parse --git-common-dir` — from wherever the session stands. The
+   file is gitignored (a handoff is personal, per
+   `%%AI_PLUGINS_ROOT%%/assets/memory.md`), so a copy written inside a worktree
+   would die with it and be invisible to a recall run anywhere else; the main
+   checkout is the one root every session resolves.
+2. Write the same document verbatim to `docs/memory/handoff/next.md` under that
+   root, overwriting any previous one in place (never a second file, never a
+   dated variant). **Do not commit it** — the `.gitignore` entry
+   `/setup` maintains keeps it out of every diff.
 
 If mempalace was unreachable, step 6's fallback and this step converge on the
-same file — write it once, commit it, and report the drawer as skipped.
+same file — write it once and report the drawer as skipped.
 
 ### 7. Report
 
