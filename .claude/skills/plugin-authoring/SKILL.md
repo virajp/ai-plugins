@@ -64,14 +64,15 @@ Each is silent — the render succeeds and the mistake surfaces somewhere else.
 
 ## References
 
-Read the one matching the change; do not read all four.
+Read the one matching the change; do not read all five.
 
-| Reference                                 | Covers                                                                     |
-| ----------------------------------------- | -------------------------------------------------------------------------- |
-| [rendering.md](references/rendering.md)   | the pipeline, the Eta helpers, what `plugins:check` asserts, frontmatter   |
-| [invocation.md](references/invocation.md) | `model` / `user` / `both`, the per-target spellings, the flat namespace    |
-| [manifests.md](references/manifests.md)   | `plugin.yaml` fields, the generated marketplaces, the three manifest traps |
-| [hooks.md](references/hooks.md)           | neutral events, per-target mechanisms, script portability                  |
+| Reference                                             | Covers                                                                       |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [rendering.md](references/rendering.md)               | the pipeline, the Eta helpers, what `plugins:check` asserts, frontmatter     |
+| [invocation.md](references/invocation.md)             | `model` / `user` / `both`, the per-target spellings, the flat namespace      |
+| [language-plugins.md](references/language-plugins.md) | the language-plugin contract — boundary, mandatory core, posture, collisions |
+| [manifests.md](references/manifests.md)               | `plugin.yaml` fields, the generated marketplaces, the three manifest traps   |
+| [hooks.md](references/hooks.md)                       | neutral events, per-target mechanisms, script portability                    |
 
 ## Documentation
 
