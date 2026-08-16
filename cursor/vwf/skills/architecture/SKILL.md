@@ -342,10 +342,10 @@ Skip silently if mempalace is unavailable.
 ## Step 7 — Docs sync & commit
 
 **Docs sync (update mode).** When this run changed the system's shape — a
-project added/removed, a stack or deviation recorded, hosting changed — apply
-`%%AI_PLUGINS_ROOT%%/assets/docs-sync.md`: reconcile the repo README's (and
-CLAUDE.md's) claims about the system with the updated registry before
-committing. Report what was synced, or `docs: nothing contradicted`.
+project added/removed, a stack or deviation recorded, hosting changed —
+delegate to /docs-sync scoped to this run's changes, so the
+README's (and CLAUDE.md's) claims about the system are reconciled before
+committing. Relay its report: what was synced, or `docs: nothing contradicted`.
 
 **If this command was invoked as a sub-step of `/blueprint` or
 `/execute` (registry reconciliation):** return control to the parent run.

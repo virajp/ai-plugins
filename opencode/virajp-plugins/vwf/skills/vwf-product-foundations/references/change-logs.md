@@ -37,5 +37,6 @@ notes. Cross-cutting token: `changelog: keepachangelog-fastlane`.
 
 - `conventions.md#changelog` records the contract (file, format, generation
   path, who drafts/finalizes). No per-entity surface — the hook is execute's
-  docs-sync (see `assets/docs-sync.md`) and the release process. Realization
+  docs-sync step (the vwf-docs-sync skill) and the release
+  process. Realization
   notes live in the `frontend` reference-stack doc.

@@ -221,11 +221,12 @@ shape: one record per node **execution**.
    landed — e2e task, dev server, health endpoint, staging mode), update the
    `harness:` block in `.config/vwf.yaml` to match, per
    `<%= it.root %>/assets/harness.md`.
-4. **Docs.** Per `<%= it.root %>/assets/docs-sync.md`, reconcile the
-   repo's human docs (README, CLAUDE.md, any doc the change contradicts) with
-   what actually landed — surgical edits in the same worktree/commit flow, and
-   report what was synced (or `docs: nothing contradicted`). Stale docs are more
-   harmful than no docs; this step is never skipped silently.
+4. **Docs.** Delegate to <%= it.cmd("vwf:docs-sync") %> with this run's change
+   set — it reconciles the repo's human docs (README, CLAUDE.md, any doc the
+   change contradicts) with what actually landed, editing in this worktree so
+   the sync rides the run's own commit flow — and relay its report line (what
+   was synced, or `docs: nothing contradicted`). Stale docs are more harmful
+   than no docs; this step is never skipped silently.
 5. **Implementation stamp.** For each blueprint doc in the plan's `covers:`
    frontmatter, set its `implementation:` key to what the run actually landed —
    the single carve-out from the never-silently-edit rule (state stamp only,

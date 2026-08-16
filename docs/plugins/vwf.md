@@ -265,9 +265,11 @@ flowchart TD
 `blueprint` and offers to start the first one; it runs none of them, because
 each resolves its own mode and reports what it did. Blue marks who prompts them.
 Fully internal machinery never appears in the flow: `/vwf:git-workflow` is
-invoked by the other commands for every git action, the five execute subagents
-and the reviewer subagents run inside their commands, and `handoff`/`recall` are
-session utilities you reach for only when a session runs long.)
+invoked by the other commands for every git action, `/vwf:docs-sync` closes
+every run that changes reality (and is yours to run after ad-hoc work), the five
+execute subagents and the reviewer subagents run inside their commands, and
+`handoff`/`recall` are session utilities you reach for only when a session runs
+long.)
 
 `/vwf:setup` runs once per repo (re-run to reconcile the format), and hands you
 the chain rather than walking it. From there on, **`/vwf:product` is the front
@@ -617,25 +619,26 @@ record.
 
 ## Commands
 
-| Command                 | What it does                                                                                                     |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `/vwf:setup`            | Onboard/migrate a repo into vwf's format (re-runnable)                                                           |
-| `/vwf:product`          | The Phase −1 outcome contract — problem, users, goals, slice priority                                            |
-| `/vwf:architecture`     | Bootstrap or update the system shape + Project Registry                                                          |
-| `/vwf:design-system`    | Import the product's Claude Design design system into the contract (mandatory once UI exists)                    |
-| `/vwf:blueprint [flow]` | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                     |
-| `/vwf:mockups [flow]`   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                         |
-| `/vwf:screens <mode>`   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint               |
-| `/vwf:plan [slice]`     | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                |
-| `/vwf:execute [plan]`   | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                       |
-| `/vwf:archive [plan]`   | Retire a completed plan into `docs/plans/archived/`                                                              |
-| `/vwf:doctor [project]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, graphify, stamps    |
-| `/vwf:verify [env]`     | Post-deploy: health-check + re-run acceptance criteria against the environment                                   |
-| `/vwf:feedback [input]` | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat) |
-| `/vwf:handoff [name]`   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                          |
-| `/vwf:recall [name]`    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                      |
-| `/vwf:readme`           | Scan a repo and write or update its README against eight required sections                                       |
-| `/vwf:git-workflow`     | Internal — worktree isolation, commits, merges                                                                   |
+| Command                  | What it does                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `/vwf:setup`             | Onboard/migrate a repo into vwf's format (re-runnable)                                                           |
+| `/vwf:product`           | The Phase −1 outcome contract — problem, users, goals, slice priority                                            |
+| `/vwf:architecture`      | Bootstrap or update the system shape + Project Registry                                                          |
+| `/vwf:design-system`     | Import the product's Claude Design design system into the contract (mandatory once UI exists)                    |
+| `/vwf:blueprint [flow]`  | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                     |
+| `/vwf:mockups [flow]`    | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                         |
+| `/vwf:screens <mode>`    | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint               |
+| `/vwf:plan [slice]`      | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                |
+| `/vwf:execute [plan]`    | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                       |
+| `/vwf:archive [plan]`    | Retire a completed plan into `docs/plans/archived/`                                                              |
+| `/vwf:doctor [project]`  | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, graphify, stamps    |
+| `/vwf:verify [env]`      | Post-deploy: health-check + re-run acceptance criteria against the environment                                   |
+| `/vwf:feedback [input]`  | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat) |
+| `/vwf:handoff [name]`    | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                          |
+| `/vwf:recall [name]`     | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                      |
+| `/vwf:readme`            | Scan a repo and write or update its README against eight required sections                                       |
+| `/vwf:docs-sync [range]` | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog             |
+| `/vwf:git-workflow`      | Internal — worktree isolation, commits, merges                                                                   |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
 are declared `invocation: user` (which Claude spells
@@ -1180,10 +1183,12 @@ record instead of an absence. If memory was down for part of the run it tells
 you the report is **reconstructed** — you should know whether you're approving a
 record or a recollection. Whatever you decide about the merge, it then offers to
 close each gap at the source — fix the blueprint (`/vwf:blueprint`, which
-re-stamps coverage) or re-derive the plan (`/vwf:plan`) — and reconciles **the
-repo's human docs**: any README/CLAUDE.md claim the landed change falsified is
-fixed in the same cycle (stale docs are more harmful than no docs). Archiving is
-offered once a merged run has no open gaps.
+re-stamps coverage) or re-derive the plan (`/vwf:plan`) — and hands the run's
+change set to [`/vwf:docs-sync`](#vwfdocs-sync), which reconciles **the repo's
+human docs**: any README/CLAUDE.md claim the landed change falsified is fixed in
+the same cycle, in this run's worktree, with its report relayed at the gate
+(stale docs are more harmful than no docs). Archiving is offered once a merged
+run has no open gaps.
 
 The resource-cap pause is delivered by the
 **[statusline caps hook](../../readme.md#statusline)** — a command can't measure
@@ -1345,9 +1350,42 @@ missing tagline, which cloud services are actually in use); then writes the
 README and reports what it created or updated. When updating, it refreshes those
 sections and leaves any others (License, Contributing, badges) untouched.
 
-The docs-sync rule routes a badly drifted README through it rather than patching
-sentence by sentence, which is why it stays model-invocable as well as
-slash-invocable. `/vwf:setup` only names it in the chain it prints.
+[`/vwf:docs-sync`](#vwfdocs-sync) routes a badly drifted README through it
+rather than patching sentence by sentence, which is why it stays model-invocable
+as well as slash-invocable. `/vwf:setup` only names it in the chain it prints.
+
+### /vwf:docs-sync
+
+Reconcile the repo's **human-facing** docs with a change that has landed — every
+README, `CLAUDE.md`, the guides under `docs/`, and the app's changelog — editing
+only what the change falsified.
+
+```text
+/vwf:docs-sync                 # this branch's delta vs its merge-base
+/vwf:docs-sync abc1234..HEAD   # an explicit commit range
+```
+
+Every reality-changing command ends here: `execute`'s reconcile step, and
+`architecture`/`product` in update mode, pass it their own change set and relay
+its report. `blueprint` and `plan` are exempt — they document intent, not
+reality, so nothing has landed for them to contradict. Run it yourself after
+work the pipeline never saw; that ad-hoc turn is what nothing covered before.
+
+It delegates the scan to a stateless `docs-sync-surveyor` subagent, which reads
+the diff graph-first and returns the contradicted passages as `file:line`
+findings rather than file contents, so the orchestrator never loads every doc to
+compare them. Edits are **surgical** — every changed line traces to the change,
+no style rewrites, nothing documented that didn't move. A README the surveyor
+reports as broadly drifted is regenerated through [`/vwf:readme`](#vwfreadme)
+instead of patched sentence by sentence, and when the change-logs foundation is
+accepted a user-facing draft entry is appended to the app's `CHANGELOG.md`
+`[Unreleased]` section.
+
+An **empty scope** ends the run, as does one touching only `docs/blueprint/` or
+`docs/plans/`. Either way it says so: the run ends with which docs were synced,
+or the explicit `docs: nothing contradicted` — never a silent skip. Called by a
+run, the edits land in that run's worktree and commit flow; standalone, it
+commits `docs:` through `/vwf:git-workflow`.
 
 ### /vwf:git-workflow
 

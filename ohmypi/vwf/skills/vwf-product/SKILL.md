@@ -116,10 +116,10 @@ captures verbatim. Skip silently if mempalace is unavailable.
 ## Step 8 — Docs sync & commit
 
 **Docs sync (update mode).** When this run changed the product's framing — the
-problem, a goal added/retired, a re-ranked priority — apply
-`%%AI_PLUGINS_ROOT%%/assets/docs-sync.md`: reconcile the repo README's
-what-this-is claims with the updated product doc before committing. Report what
-was synced, or `docs: nothing contradicted`.
+problem, a goal added/retired, a re-ranked priority — delegate to
+/skill:vwf-docs-sync scoped to this run's changes, so the README's
+what-this-is claims are reconciled with the updated product doc before
+committing. Relay its report: what was synced, or `docs: nothing contradicted`.
 
 Commit via `/skill:vwf-git-workflow` with a `blueprint(product):` message, e.g.:
 

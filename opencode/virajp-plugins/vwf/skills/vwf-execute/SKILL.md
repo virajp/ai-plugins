@@ -368,8 +368,9 @@ record rather than from recollection.
    `%%AI_PLUGINS_ROOT%%/assets/execute-stages.md` — the registry block for any
    topology change, `environment.md` for any new secret/env var, the
    `.config/vwf.yaml` `harness:` block for any capability the run added, the
-   repo's human docs (README/CLAUDE.md) per docs-sync (report what was synced,
-   or `docs: nothing contradicted`), and the **`implementation:` stamp** on each
+   repo's human docs (README/CLAUDE.md) via vwf-docs-sync
+   (relay its report — what was synced, or `docs: nothing contradicted`), and
+   the **`implementation:` stamp** on each
    blueprint doc in the plan's `covers:` list (the single sanctioned blueprint
    edit — state only, per the stage rules) — committed in the worktree like
    every other step.

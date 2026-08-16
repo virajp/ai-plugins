@@ -90,7 +90,7 @@ ones match the product you are building.
 
 ### The workflow
 
-**[vwf](./docs/plugins/vwf.md)** — the flagship. Fifteen `/vwf:` commands
+**[vwf](./docs/plugins/vwf.md)** — the flagship. Sixteen `/vwf:` commands
 covering the whole arc: onboard a repo, pin the outcome contract, model the
 system, sweep a whole-product blueprint to complete coverage, plan one slice as
 a reviewable diff, execute it unattended behind one merge gate, verify the

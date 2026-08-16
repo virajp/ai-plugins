@@ -140,7 +140,7 @@ docs_sync:
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
 | `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) — the tool itself is `projects.<name>.design` |
-| `docs_sync`          | the user (hand-edited)                                                                                                                    | the docs-sync step                                                                                              |
+| `docs_sync`          | the user (hand-edited)                                                                                                                    | the /skill:vwf-docs-sync skill                                                                        |
 
 ## The hard floor (never configurable)
 
