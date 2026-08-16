@@ -20,7 +20,9 @@ reviewed product through four disciplined phases.
 You drive it with slash commands. Claude does the work — asking one question at
 a time while authoring, running unattended while executing — and never merges
 until you approve. The whole manual, command by command, is
-**[docs/plugins/vwf.md](./docs/plugins/vwf.md)**.
+**[docs/plugins/vwf.md](./docs/plugins/vwf.md)**. Journey-shaped guides —
+starting fresh, adopting vwf in a codebase that already works, and running a
+live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 
 Around it the marketplace ships **twelve more plugins** — languages, clouds,
 capabilities, tooling and design. That is the point of the split: vwf owns the

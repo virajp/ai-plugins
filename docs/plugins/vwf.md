@@ -8,6 +8,10 @@ verification and a production-feedback intake closing the loop.
 This is the full manual. For the short pitch and the rest of the marketplace,
 see [../../readme.md](../../readme.md).
 
+This page is the reference, command by command. If you would rather follow one
+product's whole walk through the workflow, the journey-shaped guides are in
+[docs/how-to](../how-to/index.md), organized by the situation you are in.
+
 ## Install
 
 ```sh
