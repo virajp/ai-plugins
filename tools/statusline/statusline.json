@@ -12,6 +12,7 @@
       "context",
       "rl5h",
       "rl7d",
+      "spend",
       "cost"
     ],
     [
@@ -113,10 +114,19 @@
     "session": {
       "bg": "orange"
     },
+    "spend": {
+      "bg": "orange",
+      "bold": true,
+      "fg": "white"
+    },
     "worktree": {
       "bg": "yellow",
       "fg": "grey"
     }
+  },
+  "spend": {
+    "refreshMinutes": 15,
+    "show": "auto"
   },
   "subagent": {
     "descBudgetFraction": 0.45,
@@ -180,6 +190,7 @@
     "repo": "",
     "reset": "↻",
     "session": "",
+    "spend": "",
     "tokens": "",
     "win5h": "",
     "win7d": "",

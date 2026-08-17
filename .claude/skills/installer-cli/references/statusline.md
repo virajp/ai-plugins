@@ -82,6 +82,21 @@ the other surfaces exposes the equivalent — OpenCode surfaces no ambient
 rate-limit state at all, which is also why its bar carries no 5-hour / 7-day
 segments.
 
+**The `spend` segment is Claude-only too, and is the one segment whose data is
+not on the stdin payload.** The payload carries no spend fields, so the script
+reads the OAuth usage endpoint Claude Code's own `/usage` uses — token from
+Claude Code's stored credentials — through a machine-global cache
+(`~/.cache/ai-plugins/spend.json`, `$AI_PLUGINS_SPEND_CACHE` override) refreshed
+by a detached `--refresh-spend` child on a file-based timer
+(`spend.refreshMinutes`, default 15). A render never fetches: the endpoint
+throttles on accumulated usage and a tripped account stays 429 for 30+ minutes,
+so the child is single-flight behind a lock file and records exponential backoff
+on 429. Under `show: "auto"` it renders only for team/enterprise plans (the
+`subscriptionType` tag stored beside the token), which is what lets it sit in
+the default layout. The script tests zero `refreshMinutes` in their seeded
+config — the keychain is not `$HOME`-scoped, so a spawned refresh would escape
+the fake home.
+
 ## Oh-My-Pi
 
 Sets `statusLine.preset` to `custom` plus `leftSegments` / `rightSegments` /

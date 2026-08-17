@@ -114,7 +114,9 @@ The blocks it writes:
 
 The script reads the Claude Code payload on stdin and detects the surface: a
 payload with a `tasks` array renders the subagent panel, anything else renders
-the main bar. Errors go to stderr so they never corrupt the line.
+the main bar. Errors go to stderr so they never corrupt the line. The one
+invocation that reads no payload is `--refresh-spend`, the background child
+described under [Monthly spend budget](#monthly-spend-budget-spend).
 
 ## Context & rate-limit caps (vwf)
 
@@ -182,6 +184,7 @@ Claude bar:
 | `cost`                | `cost`        |                                        |
 | `duration`            | `time_spent`  | active agent time, not wall clock      |
 | `rl5h` + `rl7d`       | `usage`       | parity, on Anthropic only — see below  |
+| `spend`               | **omitted**   | Claude-only; no equivalent segment     |
 
 `usage` gives the **same** reading, and a little more: it renders `5h <pct>%`
 and `7d <pct>%` from the Anthropic OAuth usage response, plus a reset countdown
@@ -266,8 +269,11 @@ its styling and none of ours:
 | `project`, `worktree` | `state.path()`                          | worktree basename + the subpath inside it |
 | `branch`              | `state.vcs().branch`                    | branch only — no dirty or ahead counts    |
 | `rl5h` + `rl7d`       | **omitted**                             | no ambient rate-limit state — see below   |
+| `spend`               | **omitted**                             | Claude-only — no equivalent state         |
 
-Two of those rows are gaps rather than translations, and both are deliberate:
+Three of those rows are gaps rather than translations, and all three are
+deliberate. `spend` reads Claude Code's own stored credentials, which OpenCode
+has no equivalent of; the other two:
 
 - **The rate-limit windows are omitted, not approximated.** OpenCode exposes no
   ambient rate-limit state at all — it parses provider headers on error paths
@@ -343,12 +349,14 @@ it everywhere.
 | `symbols`         | map<key,glyph>  | Glyph per data type (see below).                                                                               |
 | `typeSymbols`     | map<type,glyph> | Subagent `type` → glyph; `_default` is the fallback.                                                           |
 | `segments`        | map<id,style>   | Default styling (`bg`/`fg`/`bold`) per main-bar segment.                                                       |
+| `spend`           | object          | The monthly-budget segment: `refreshMinutes`, `show` (see below).                                              |
 | `lines`           | array of rows   | The layout (see below).                                                                                        |
 | `subagent`        | object          | The subagent panel config (see below).                                                                         |
 
 `symbols` keys consumed by the script: `model`, `context`, `win5h`, `win7d`,
-`reset`, `session`, `cost`, `duration`, `project`, `worktree`, `folder`,
-`branch`, `ahead`, `dirtyAdd`, `dirtyDel`, `dirtyMix`, `agent`, `tokens`.
+`reset`, `session`, `cost`, `spend`, `duration`, `project`, `worktree`,
+`folder`, `branch`, `ahead`, `dirtyAdd`, `dirtyDel`, `dirtyMix`, `agent`,
+`tokens`.
 
 The `branch` segment appends markers after the branch name: `ahead` (default
 `↑`) when the branch is ahead of its upstream — i.e. there are local commits not
@@ -363,17 +371,66 @@ either a **segment id string** or an **object** `{ name, bg?, fg?, bold? }` that
 overrides that segment's styling inline. Both resolve their default styling from
 the `segments` map. A row that resolves to no visible segments is dropped.
 
-Available segment ids: `model`, `context`, `rl5h`, `rl7d`, `session`, `cost`,
-`duration`, `project`, `worktree`, `branch`. Several render conditionally and
-disappear when their data is absent (e.g. `session` with no session name,
-`project` with no `projectName`, `worktree`/`branch` outside a repo).
+Available segment ids: `model`, `context`, `rl5h`, `rl7d`, `spend`, `session`,
+`cost`, `duration`, `project`, `worktree`, `branch`. Several render
+conditionally and disappear when their data is absent (e.g. `session` with no
+session name, `project` with no `projectName`, `worktree`/`branch` outside a
+repo).
 
 ```json
 "lines": [
-  ["model", "context", "rl5h", "rl7d", "session", "cost"],
+  ["model", "context", "rl5h", "rl7d", "spend", "session", "cost"],
   ["project", "worktree", "branch"]
 ]
 ```
+
+### Monthly spend budget (`spend`)
+
+The `spend` segment shows the account's monthly budget — the gauge from
+claude.ai → Settings → Usage — as `$75.93/$150 (51%)`. It exists for the seats
+whose limit is a **monthly spend cap** rather than the 5-hour/7-day windows:
+team and enterprise plans, for whom `rl5h`/`rl7d` have nothing to render.
+
+It is in the default layout but renders **only on team/enterprise plans** (read
+from the plan tag in Claude Code's stored credentials), so everyone else sees no
+change. One caveat for a machine installed before the segment existed: the
+installer never rewrites a config key you already have, and `lines` is one you
+do — so an existing seeded config keeps its old layout, and adopting the segment
+there means adding `"spend"` to a row yourself. Two knobs, under the top-level
+`spend` key:
+
+| Key              | Default  | Purpose                                                                                                                               |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `refreshMinutes` | `15`     | Minimum minutes between fetches — the file-based timer. `0` disables the background refresh (the segment renders whatever is cached). |
+| `show`           | `"auto"` | `"auto"` renders only for team/enterprise seats; `"always"` renders whenever budget data exists — e.g. a Pro/Max extra-usage cap.     |
+
+Where the number comes from, and why it is cached: Claude Code's statusline
+payload carries **no** spend fields — only the Pro/Max rate-limit windows — so
+the script asks the same OAuth usage endpoint Claude Code's own `/usage` command
+uses, authenticating with the OAuth token Claude Code already stores
+(`~/.claude/.credentials.json` where that file exists, else the macOS keychain,
+whose first read may prompt once). That endpoint throttles on **accumulated**
+usage — an account that trips it stays rate-limited for half an hour or more —
+and the bar can re-render every few seconds, so a render **never fetches**:
+
+- Results land in one **machine-global cache**
+  (`~/.cache/ai-plugins/spend.json`, override with `$AI_PLUGINS_SPEND_CACHE`),
+  shared by every session and worktree — one fetch per interval per machine,
+  however many bars are running.
+- When the cache is older than `refreshMinutes`, the render spawns a
+  **detached** refresh and draws the cached value now; a lock file keeps the
+  refresh single-flight across concurrent sessions. On a plan `auto` draws
+  nothing for, that timer stretches to once a day, so a Pro/Max machine checks
+  daily rather than every quarter-hour.
+- A 429 records an exponential backoff (doubling from the interval, capped at
+  six hours) and the bar keeps showing the last good value. A missing token or a
+  network failure just leaves the cache as it was.
+
+The endpoint is the one Claude Code itself uses but is **not publicly
+documented**, so the segment degrades to invisible if its shape changes. It is
+Claude-bar only: neither the Oh-My-Pi nor the OpenCode surface carries it.
+Dropping `spend` from `lines` switches the whole mechanism off — the cache is
+read, and a refresh spawned, only when the layout names the segment.
 
 ### Subagent panel
 
@@ -439,6 +496,9 @@ echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"cost":{"to
 
 # subagent panel
 echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","type":"review","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node tools/statusline/statusline
+
+# spend refresh — one-shot fetch into a cache file of your choosing, renders nothing
+AI_PLUGINS_SPEND_CACHE=/tmp/spend.json node tools/statusline/statusline --refresh-spend && cat /tmp/spend.json
 ```
 
 ## See also

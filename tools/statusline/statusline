@@ -36,6 +36,8 @@
  *   echo '{"model":{"display_name":"Opus 4.8"},"effort":{"level":"high"},"session_name":"users-and-groups","workspace":{"current_dir":"/Users/virajpatel/Projects/github.com/95octane/workspace/.worktrees/users-and-groups/backend"},"cost":{"total_cost_usd":46.51,"total_duration_ms":33540000},"context_window":{"used_percentage":26,"context_window_size":1000000,"total_input_tokens":259000},"rate_limits":{"five_hour":{"used_percentage":7,"resets_at":1774200000},"seven_day":{"used_percentage":1.0,"resets_at":1774600000}}}' | node statusline
  * Subagent test:
  *   echo '{"columns":120,"tasks":[{"id":"t1","name":"reviewer","status":"running","description":"Auditing auth flow","tokenCount":18234,"startTime":1774200000000}]}' | node statusline
+ * Spend refresh (one-shot fetch into the cache; renders nothing):
+ *   AI_PLUGINS_SPEND_CACHE=/tmp/spend.json node statusline --refresh-spend
  */
 
 const fs = require("fs");
@@ -60,6 +62,7 @@ let SYM = {};          // data-type glyphs
 let TYPE_SYM = {};     // subagent type -> glyph
 let GAUGE = {};        // { width, filled, empty }
 let SUB = {};          // subagent panel config
+let SPEND = {};        // spend segment config
 let SEP, SEP_THIN, CAP, THIN_FG, DEFAULT_FG, WORKTREE_RE;
 
 const isObj = (v) => v != null && typeof v === "object" && !Array.isArray(v);
@@ -101,6 +104,7 @@ function applyConfig(cfg) {
   TYPE_SYM = CFG.typeSymbols || {};
   GAUGE = CFG.gauge || {};
   SUB = CFG.subagent || {};
+  SPEND = CFG.spend || {};
   const pl = CFG.powerline || {};
   SEP = pl.sep ?? "";
   SEP_THIN = pl.sepThin ?? "";
@@ -318,6 +322,178 @@ function gitAheadMark(cwd) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Spend segment — the account's monthly budget (claude.ai → Settings → Usage),
+// read from the same OAuth usage endpoint Claude Code's own /usage uses. The
+// bar can render every few seconds and that endpoint throttles on accumulated
+// usage (a tripped account stays 429 for 30+ minutes), so a render NEVER
+// fetches: it reads a machine-global cache file and, when the cache is older
+// than spend.refreshMinutes (0 disables), spawns one detached --refresh-spend
+// child. A lock file keeps the refresh single-flight across concurrent
+// sessions; on 429 the child records an exponential backoff and the bar keeps
+// rendering the last good value. Under the default show: "auto" the segment
+// draws only for team/enterprise seats — the plans whose budget is a monthly
+// spend limit — so it sits in the default layout without adding noise for
+// Pro/Max users, whose accounts are re-checked only daily.
+// ─────────────────────────────────────────────────────────────────────────────
+const SPEND_URL = "https://api.anthropic.com/api/oauth/usage";
+const SPEND_TTL_MIN = 15;
+const SPEND_LOCK_STALE_MS = 2 * 60 * 1000;
+const SPEND_BACKOFF_CAP_MS = 6 * 60 * 60 * 1000;
+const SPEND_IRRELEVANT_TTL_MS = 24 * 60 * 60 * 1000;
+
+function spendCachePath() {
+  const p = process.env.AI_PLUGINS_SPEND_CACHE;
+  if (p) return p.replace(/^~(?=\/|$)/, os.homedir());
+  return path.join(os.homedir(), ".cache", "ai-plugins", "spend.json");
+}
+
+const spendPlanRelevant = (plan) => plan === "team" || plan === "enterprise";
+
+// Render-side read: return the cache (or null) and kick off the detached
+// refresh when it has gone stale — never blocking, never fetching inline.
+function spendData() {
+  const ttlMin = SPEND.refreshMinutes ?? SPEND_TTL_MIN;
+  const cache = readJson(spendCachePath());
+  if (ttlMin > 0) {
+    const auto = (SPEND.show ?? "auto") === "auto";
+    const irrelevant = auto && cache && cache.plan && !spendPlanRelevant(cache.plan);
+    const ttlMs = irrelevant ? SPEND_IRRELEVANT_TTL_MS : ttlMin * 60000;
+    const now = Date.now();
+    if ((!cache || !cache.ts || now - cache.ts > ttlMs) && now > ((cache && cache.backoffUntil) || 0)) {
+      try {
+        const { spawn } = require("child_process");
+        spawn(process.execPath, [__filename, "--refresh-spend"], { detached: true, stdio: "ignore" }).unref();
+      } catch (_) { /* refresh is best-effort */ }
+    }
+  }
+  return cache && cache.data ? cache : null;
+}
+
+// 7593 minor units at exponent 2 -> "$75.93"; whole dollars drop the ".00".
+function money(minor, exp) {
+  return "$" + (minor / 10 ** (exp ?? 2)).toFixed(2).replace(/\.00$/, "");
+}
+
+// ── The --refresh-spend child ────────────────────────────────────────────────
+
+// Claude Code's own stored OAuth credentials: the credentials file where one
+// exists, the keychain on macOS. Read-only; subscriptionType rides along so
+// show: "auto" can decide relevance without a second source.
+function oauthCredentials() {
+  const parse = (raw) => {
+    const o = JSON.parse(raw).claudeAiOauth;
+    return o && o.accessToken ? { token: o.accessToken, plan: o.subscriptionType || null } : null;
+  };
+  try {
+    const c = parse(fs.readFileSync(path.join(os.homedir(), ".claude", ".credentials.json"), "utf8"));
+    if (c) return c;
+  } catch (_) { /* fall through */ }
+  if (process.platform === "darwin") {
+    try {
+      const { execFileSync } = require("child_process");
+      const out = execFileSync(
+        "security", ["find-generic-password", "-s", "Claude Code-credentials", "-w"],
+        { encoding: "utf8", timeout: 5000, stdio: ["ignore", "pipe", "ignore"] },
+      );
+      return parse(out);
+    } catch (_) { /* no keychain item */ }
+  }
+  return null;
+}
+
+function fetchJson(url, headers) {
+  return new Promise((resolve, reject) => {
+    const req = require("https").get(url, { headers, timeout: 10000 }, (res) => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (c) => (body += c));
+      res.on("end", () => {
+        let json = null;
+        try { json = JSON.parse(body); } catch (_) { /* non-JSON error body */ }
+        resolve({ status: res.statusCode, json });
+      });
+    });
+    req.on("timeout", () => req.destroy(Error("timeout")));
+    req.on("error", reject);
+  });
+}
+
+// The `spend` block is the claude.ai monthly spend limit; `extra_usage` is the
+// Pro/Max usage-credit budget and stands in when no spend block is present.
+function extractSpend(body) {
+  const s = body && body.spend;
+  if (s && s.limit && s.limit.amount_minor != null) {
+    return {
+      usedMinor: (s.used && s.used.amount_minor) || 0,
+      limitMinor: s.limit.amount_minor,
+      exponent: s.limit.exponent ?? 2,
+      percent: s.percent,
+      enabled: s.enabled !== false,
+    };
+  }
+  const x = body && body.extra_usage;
+  if (x && x.monthly_limit != null) {
+    return {
+      usedMinor: x.used_credits || 0,
+      limitMinor: x.monthly_limit,
+      exponent: x.decimal_places ?? 2,
+      percent: x.utilization,
+      enabled: x.is_enabled !== false,
+    };
+  }
+  return null;
+}
+
+async function refreshSpend() {
+  applyConfig(loadConfig(null));
+  const file = spendCachePath();
+  const lock = `${file}.lock`;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  // Single-flight across every session's bar: first child in wins; a lock left
+  // by a dead process is taken over once it goes stale.
+  try {
+    fs.writeFileSync(lock, String(process.pid), { flag: "wx" });
+  } catch (_) {
+    try {
+      if (Date.now() - fs.statSync(lock).mtimeMs < SPEND_LOCK_STALE_MS) return;
+      fs.writeFileSync(lock, String(process.pid));
+    } catch (_) { return; }
+  }
+  try {
+    const prior = readJson(file) || {};
+    if (prior.ts && Date.now() - prior.ts < 60000) return; // a sibling just ran
+    const ttlMs = (SPEND.refreshMinutes ?? SPEND_TTL_MIN) * 60000;
+    const creds = oauthCredentials();
+    let next;
+    if (!creds) {
+      next = { ...prior, ts: Date.now(), failures: (prior.failures || 0) + 1 };
+    } else {
+      try {
+        const res = await fetchJson(SPEND_URL, {
+          "Authorization": `Bearer ${creds.token}`,
+          "Content-Type": "application/json",
+        });
+        if (res.status === 200 && res.json) {
+          next = { ts: Date.now(), plan: creds.plan, failures: 0, backoffUntil: 0, data: extractSpend(res.json) };
+        } else {
+          next = { ...prior, ts: Date.now(), plan: creds.plan, failures: (prior.failures || 0) + 1 };
+          if (res.status === 429) {
+            next.backoffUntil = Date.now() + Math.min(ttlMs * 2 ** next.failures, SPEND_BACKOFF_CAP_MS);
+          }
+        }
+      } catch (_) {
+        next = { ...prior, ts: Date.now(), plan: creds.plan, failures: (prior.failures || 0) + 1 };
+      }
+    }
+    const tmp = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(next));
+    fs.renameSync(tmp, file);
+  } finally {
+    try { fs.unlinkSync(lock); } catch (_) { /* already gone */ }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Segment registry — each builder takes the resolved context `c` and returns the
 // segment TEXT (a string), or null to omit (when its data is absent). All styling
 // (bg/fg/bold) is resolved separately from the `segments` config + inline entry
@@ -334,6 +510,14 @@ const SEGMENTS = {
     : `${SYM.win7d} ${c.weekPct.toFixed(1)}%${c.reset7d ? ` ${SYM.reset} ${c.reset7d}` : ""}`,
   session: (c) => c.sessionName ? `${SYM.session} ${c.sessionName}` : null,
   cost: (c) => `${SYM.cost} ${c.cost.toFixed(2)}`,
+  spend: (c) => {
+    const s = c.spend;
+    if (!s || !s.data || s.data.enabled === false || !s.data.limitMinor) return null;
+    if ((SPEND.show ?? "auto") === "auto" && !spendPlanRelevant(s.plan)) return null;
+    const d = s.data;
+    const pct = d.percent ?? (d.usedMinor / d.limitMinor) * 100;
+    return `${SYM.spend} ${money(d.usedMinor, d.exponent)}/${money(d.limitMinor, d.exponent)} (${Math.round(pct)}%)`;
+  },
   duration: (c) => c.dur == null ? null : `${SYM.duration} ${humanDuration(c.dur)}`,
   project: (c) => c.projectName ? `${c.projectSym} ${c.projectName}` : null,
   worktree: (c) => c.wt ? `${SYM.worktree} ${SYM.folder} ${c.wt}` : null,
@@ -416,10 +600,17 @@ function renderMain(d) {
     sevenDayResetsAt: weekly.resets_at ?? null,
   });
 
+  // The spend cache is only read — and its refresh only triggered — when the
+  // layout actually names the segment, so a user without it pays nothing.
+  const wantsSpend = (Array.isArray(CFG.lines) ? CFG.lines : []).some((line) =>
+    Array.isArray(line)
+    && line.some((e) => (typeof e === "string" ? e : e && (e.name || e.id)) === "spend"));
+
   const c = {
     model: modelName(d.model) || "Claude",
     effort: effortLevel(d.effort),
     cost: d.cost?.total_cost_usd ?? 0,
+    spend: wantsSpend ? spendData() : null,
     dur: d.cost?.total_duration_ms,
     ctxPct, ctxUsed, ctxSize,
     sessPct: rl.five_hour?.used_percentage,
@@ -545,19 +736,24 @@ function renderSubagents(d) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// stdin plumbing — route by payload shape.
+// Entry — the --refresh-spend child fetches and exits; everything else is a
+// render, routed by payload shape from stdin.
 // ─────────────────────────────────────────────────────────────────────────────
-let buf = "";
-process.stdin.setEncoding("utf8");
-process.stdin.on("data", (c) => (buf += c));
-process.stdin.on("end", () => {
-  try {
-    let d = {};
-    try { d = JSON.parse(buf); } catch (_) { /* keep defaults */ }
-    const output = Array.isArray(d.tasks) ? renderSubagents(d) : renderMain(d);
-    process.stdout.write(output);
-  } catch (e) {
-    process.stderr.write(`statusline error: ${e && e.stack ? e.stack : e}\n`);
-    process.stdout.write("⚡ Claude"); // never leave the line blank
-  }
-});
+if (process.argv.includes("--refresh-spend")) {
+  refreshSpend().catch(() => { /* cache untouched; the next stale render retries */ });
+} else {
+  let buf = "";
+  process.stdin.setEncoding("utf8");
+  process.stdin.on("data", (c) => (buf += c));
+  process.stdin.on("end", () => {
+    try {
+      let d = {};
+      try { d = JSON.parse(buf); } catch (_) { /* keep defaults */ }
+      const output = Array.isArray(d.tasks) ? renderSubagents(d) : renderMain(d);
+      process.stdout.write(output);
+    } catch (e) {
+      process.stderr.write(`statusline error: ${e && e.stack ? e.stack : e}\n`);
+      process.stdout.write("⚡ Claude"); // never leave the line blank
+    }
+  });
+}

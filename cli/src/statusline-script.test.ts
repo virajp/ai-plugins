@@ -12,7 +12,6 @@
  */
 import { spawnSync } from "node:child_process";
 import {
-  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -45,9 +44,17 @@ beforeAll(() => {
   // box and renders an empty bar on a clean CI runner.
   fakeHome = join(tmp, "home");
   mkdirSync(join(fakeHome, ".config"), { recursive: true });
-  copyFileSync(
-    join(assets, "statusline.json"),
+  // Seeded with the bundled defaults, except spend.refreshMinutes is zeroed:
+  // the defaults put `spend` in the layout, and a stale cache would spawn a
+  // detached refresh child that reads the REAL keychain and hits the network —
+  // the keychain is not scoped by $HOME, so the fake home alone can't fence it.
+  const config = JSON.parse(
+    readFileSync(join(assets, "statusline.json"), "utf8"),
+  ) as { spend: { refreshMinutes: number; }; };
+  config.spend.refreshMinutes = 0;
+  writeFileSync(
     join(fakeHome, ".config", "statusline.json"),
+    JSON.stringify(config),
   );
 });
 afterAll(() => {
@@ -121,6 +128,83 @@ describe("statusline script", () => {
     expect(usage["ctxPct"]).toBe(26);
     expect(usage["fiveHourPct"]).toBe(7);
     expect(usage["sevenDayPct"]).toBe(1.0);
+  });
+
+  it("renders the spend segment from a fresh cache on an enterprise plan", () => {
+    const cache = join(tmp, "spend-enterprise.json");
+    writeFileSync(
+      cache,
+      JSON.stringify({
+        ts: Date.now(),
+        plan: "enterprise",
+        data: {
+          usedMinor: 7593,
+          limitMinor: 15000,
+          exponent: 2,
+          percent: 51,
+          enabled: true,
+        },
+      }),
+    );
+
+    const result = runStatusline({ model: { display_name: "Fable" } }, {
+      AI_PLUGINS_SPEND_CACHE: cache,
+    });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("$75.93/$150 (51%)");
+  });
+
+  it("hides the spend segment for non-enterprise plans unless show is always", () => {
+    const cache = join(tmp, "spend-max.json");
+    writeFileSync(
+      cache,
+      JSON.stringify({
+        ts: Date.now(),
+        plan: "max",
+        data: {
+          usedMinor: 0,
+          limitMinor: 100,
+          exponent: 2,
+          percent: 0,
+          enabled: true,
+        },
+      }),
+    );
+
+    const auto = runStatusline({ model: { display_name: "Fable" } }, {
+      AI_PLUGINS_SPEND_CACHE: cache,
+    });
+    expect(auto.status, auto.stderr).toBe(0);
+    expect(auto.stdout).not.toContain("$0/$1");
+
+    // A repo-layer override flips it on: show "always" renders whatever plan
+    // the cache carries. The .git/HEAD is what lets the script resolve the
+    // repo root and pick up <root>/.config/statusline.json.
+    const repo = join(tmp, "repo-spend");
+    mkdirSync(join(repo, ".git"), { recursive: true });
+    writeFileSync(join(repo, ".git", "HEAD"), "ref: refs/heads/main\n");
+    mkdirSync(join(repo, ".config"), { recursive: true });
+    writeFileSync(
+      join(repo, ".config", "statusline.json"),
+      JSON.stringify({ spend: { show: "always", refreshMinutes: 0 } }),
+    );
+
+    const always = runStatusline({
+      model: { display_name: "Fable" },
+      workspace: { current_dir: repo },
+    }, { AI_PLUGINS_SPEND_CACHE: cache });
+    expect(always.status, always.stderr).toBe(0);
+    expect(always.stdout).toContain("$0/$1 (0%)");
+  });
+
+  it("omits the spend segment when there is no cache", () => {
+    const result = runStatusline({ model: { display_name: "Fable" } }, {
+      AI_PLUGINS_SPEND_CACHE: join(tmp, "spend-absent.json"),
+    });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).not.toContain("$");
   });
 
   it("renders the subagent panel from a tasks payload", () => {
