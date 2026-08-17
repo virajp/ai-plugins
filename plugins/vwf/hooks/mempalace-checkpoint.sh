@@ -2,12 +2,12 @@
 # MemPalace save checkpoint — every Nth agent stop, tell the model to persist.
 #
 # Written for this toolkit rather than vendored. Upstream's hook parses
-# `transcript_path`, a Claude Code JSONL transcript, to count human messages —
-# which is why it works on exactly one target. Counting *stops* in a state file
-# instead needs nothing from the payload but a session id, so one script serves
-# every target the wrappers in `renderer/src/targets/` can reach.
+# `transcript_path`, a Claude Code JSONL transcript, to count human messages.
+# Counting *stops* in a state file instead needs nothing from the payload but a
+# session id, which is simpler and is what the tests cover
+# (cli/src/mempalace-checkpoint-script.test.ts).
 #
-# Contract (Claude's, which every wrapper translates from):
+# Contract:
 #   stdin  — JSON with `session_id`, and on a stop `stop_hook_active`
 #   stdout — nothing to say nothing; otherwise a `gate` verdict carrying the
 #            instruction, which each target renders as a block plus reason
@@ -69,8 +69,6 @@ field() {
 # lets the stop through) and none at all for `PreCompact`, so the fix is to
 # drop the block rather than name the event in it.
 #
-# Cursor's wrapper reads this verdict too, and reads the top-level fields —
-# `renderer/src/targets/cursor.ts`. Keep the two in step.
 #
 # `reason` is JSON-escaped for the two characters that can appear in it; the
 # rest of the text is ASCII prose under our own control.

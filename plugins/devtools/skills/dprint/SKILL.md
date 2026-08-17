@@ -57,14 +57,17 @@ up formatted differently.
 ## The exclusion nobody expects: templated markdown
 
 If the repo generates files from templates, **exclude the template sources**. A
-formatter re-wraps prose to a line width measured on the template text, but the
-expression `/devtools:dprint` is far wider than what it renders
-to — so the output ends up mis-wrapped even though the source looks right. This
-is not hypothetical; it is why this repo's own `dprint.json` excludes
-`templates/**/*.md`.
+formatter re-wraps prose to a line width measured on the template text, but a
+template expression is far wider than what it renders to — so the output ends up
+mis-wrapped even though the source looks right.
 
-The same reasoning applies to any file whose committed form is derived rather
-than authored.
+The same reasoning applies to any file whose committed form is derived rather than
+authored: exclude it, and let whatever generates it decide its shape.
+
+Note the trap on the way back out. An exclusion added for a reason that later
+expires does not announce itself — the entry keeps working and nobody re-reads the
+comment. When you retire a template layer, revisit its exclusions deliberately and
+either drop them or write down the new reason they stand on.
 
 ## Running it
 
