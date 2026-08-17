@@ -84,8 +84,8 @@ const SYM = {
   model: "\u{26a1}",
   /** nf-fa-database. */
   context: "\u{f1c0}",
-  /** nf-fa-dollar. */
-  cost: "\u{f155}",
+  /** Stopwatch. */
+  cost: "\u{23f1}",
   /** nf-fa-clock_o. */
   duration: "\u{f017}",
   /** nf-fa-comment. */
@@ -243,7 +243,7 @@ function context(api: Api, id: string | undefined): string | undefined {
 function cost(api: Api, id: string | undefined): string | undefined {
   const total = session(api, id)?.cost;
   return typeof total === "number"
-    ? `${SYM.cost} ${total.toFixed(2)}`
+    ? `${SYM.cost} $${total.toFixed(2)}`
     : undefined;
 }
 

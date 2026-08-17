@@ -105,7 +105,7 @@ describe("agents", () => {
 
   it("reports how much agent tool restriction each target can carry", () => {
     // Documents the known degradation rather than asserting parity: on Cursor
-    // the six Bash-holding agents lose their allowlist entirely, and only the
+    // the seven Bash-holding agents lose their allowlist entirely, and only the
     // pure-read ones keep a meaningful restriction.
     const parsed = agents.map(p => agentFrom(read(p)));
     const readOnly = parsed.filter(isReadOnly);
@@ -118,6 +118,6 @@ describe("agents", () => {
       "design-system-reviewer",
       "product-reviewer",
     ]);
-    expect(parsed.length - readOnly.length).toBe(11);
+    expect(parsed.length - readOnly.length).toBe(12);
   });
 });
