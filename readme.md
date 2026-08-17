@@ -242,14 +242,11 @@ hook** — it pauses long `/vwf:execute` runs at budget thresholds (context over
 because its sensor is that bar; neither of the other two surfaces the numbers it
 reads.
 
-The Claude bar also carries two **spend** segments, refreshed in the background
-into a machine-wide cache so a render never waits on a request. `spend` is the
-budget from claude.ai → Settings → Usage, e.g. `$75.93/$150 (51%)` — in the
-default layout but drawn only for team and enterprise seats, whose limit is a
-monthly spend cap rather than the 5-hour and 7-day windows. `monthly` is this
-machine's current-vs-last-month usage value, e.g. `$1987 (⏮ $1853)`, computed
-locally from the session transcripts (priced via LiteLLM's table) and drawn for
-**every** plan.
+The Claude bar also carries a **monthly spend** segment — the budget from
+claude.ai → Settings → Usage, e.g. `$75.93/$150 (51%)`. It sits in the default
+layout but draws only for team and enterprise seats, whose limit is a monthly
+spend cap rather than the 5-hour and 7-day windows; the figure is refreshed in
+the background into a machine-wide cache, so a render never waits on a request.
 
 See **[docs/plugins/statusline.md](./docs/plugins/statusline.md)** for setup and
 the full configuration reference.

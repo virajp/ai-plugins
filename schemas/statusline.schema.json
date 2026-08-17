@@ -83,14 +83,14 @@
 
     "symbols": {
       "type": "object",
-      "description": "Glyph per data type. Keys consumed by the script: model, context, win5h, win7d, reset, session, cost, spend, monthly, monthlyPrev, duration, project, worktree, folder, branch, ahead, dirtyAdd, dirtyDel, dirtyMix, agent, tokens.",
+      "description": "Glyph per data type. Keys consumed by the script: model, context, win5h, win7d, reset, session, cost, spend, duration, project, worktree, folder, branch, ahead, dirtyAdd, dirtyDel, dirtyMix, agent, tokens.",
       "additionalProperties": { "type": "string" }
     },
 
     "spend": {
       "type": "object",
       "additionalProperties": false,
-      "description": "The `spend` and `monthly` segments — the account's monthly budget (claude.ai → Settings → Usage) and the local month-vs-last-month spend estimate, refreshed by one detached background child into a machine-global cache (~/.cache/ai-plugins/spend.json; override with $AI_PLUGINS_SPEND_CACHE). A render never fetches.",
+      "description": "The `spend` segment — the account's monthly budget (claude.ai → Settings → Usage), fetched by a detached background refresh into a machine-global cache (~/.cache/ai-plugins/spend.json; override with $AI_PLUGINS_SPEND_CACHE). A render never fetches.",
       "properties": {
         "refreshMinutes": {
           "type": "number",
@@ -113,7 +113,7 @@
 
     "segments": {
       "type": "object",
-      "description": "Default styling per main-bar segment id (model, context, rl5h, rl7d, session, cost, spend, monthly, duration, project, worktree, branch). Overridden inline by an object entry in `lines`.",
+      "description": "Default styling per main-bar segment id (model, context, rl5h, rl7d, session, cost, spend, duration, project, worktree, branch). Overridden inline by an object entry in `lines`.",
       "additionalProperties": { "$ref": "#/$defs/style" }
     },
 

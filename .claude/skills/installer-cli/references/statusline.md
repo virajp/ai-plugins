@@ -82,27 +82,22 @@ the other surfaces exposes the equivalent — OpenCode surfaces no ambient
 rate-limit state at all, which is also why its bar carries no 5-hour / 7-day
 segments.
 
-**The `spend` and `monthly` segments are Claude-only too, and are the segments
-whose data is not on the stdin payload.** The payload carries no spend fields,
-so the script reads the OAuth usage endpoint Claude Code's own `/usage` uses —
-token from Claude Code's stored credentials — through a machine-global cache
-(`~/.cache/ai-plugins/spend.json`, `$AI_PLUGINS_SPEND_CACHE` override) refreshed
-by a detached `--refresh-spend` child on a file-based timer
-(`spend.refreshMinutes`, default 15). A render never fetches: the endpoint
-throttles on accumulated usage and a tripped account stays 429 for 30+ minutes,
-so the child is single-flight behind a lock file and records exponential backoff
-on 429. Under `show: "auto"` `spend` renders only for team/enterprise plans (the
-`subscriptionType` tag stored beside the token), which is what lets it sit in
-the default layout. `monthly` (current vs previous month, every plan) rides the
-same child: an incremental transcript walk under `~/.claude/projects/` priced by
-LiteLLM's table (daily fetch, `$AI_PLUGINS_SPEND_URL`-style override only for
-the usage endpoint, embedded snapshot fallback). Because `monthly` wants the
-regular cadence on every plan, the endpoint's daily-idle and 429-backoff gates
-live **inside the child**, not on the spawn. The script tests zero
-`refreshMinutes` in their seeded config — the keychain is not `$HOME`-scoped, so
-a spawned refresh would escape the fake home — and the child test fences the
-network with a credentials file, an unreachable `$AI_PLUGINS_SPEND_URL`, and
-pre-seeded fresh pricing.
+**The `spend` segment is Claude-only too, and is the one segment whose data is
+not on the stdin payload.** The payload carries no spend fields, so the script
+reads the OAuth usage endpoint Claude Code's own `/usage` uses — token from
+Claude Code's stored credentials — through a machine-global cache
+(`~/.cache/ai-plugins/spend.json`, `$AI_PLUGINS_SPEND_CACHE` override; the
+endpoint itself takes an `$AI_PLUGINS_SPEND_URL` override) refreshed by a
+detached `--refresh-spend` child on a file-based timer (`spend.refreshMinutes`,
+default 15). A render never fetches: the endpoint throttles on accumulated usage
+and a tripped account stays 429 for 30+ minutes, so the child is single-flight
+behind a lock file and records exponential backoff on 429. Under `show: "auto"`
+it renders only for team/enterprise plans (the `subscriptionType` tag stored
+beside the token), which is what lets it sit in the default layout. The script
+tests zero `refreshMinutes` in their seeded config — the keychain is not
+`$HOME`-scoped, so a spawned refresh would escape the fake home. A `monthly`
+transcript-ledger segment existed briefly (v4.3.2) and was removed on request —
+codeburn's menubar app owns that job.
 
 ## Oh-My-Pi
 

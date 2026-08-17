@@ -184,7 +184,7 @@ Claude bar:
 | `cost`                | `cost`        |                                        |
 | `duration`            | `time_spent`  | active agent time, not wall clock      |
 | `rl5h` + `rl7d`       | `usage`       | parity, on Anthropic only — see below  |
-| `spend` + `monthly`   | **omitted**   | Claude-only; no equivalent segments    |
+| `spend`               | **omitted**   | Claude-only; no equivalent segment     |
 
 `usage` gives the **same** reading, and a little more: it renders `5h <pct>%`
 and `7d <pct>%` from the Anthropic OAuth usage response, plus a reset countdown
@@ -269,11 +269,11 @@ its styling and none of ours:
 | `project`, `worktree` | `state.path()`                          | worktree basename + the subpath inside it |
 | `branch`              | `state.vcs().branch`                    | branch only — no dirty or ahead counts    |
 | `rl5h` + `rl7d`       | **omitted**                             | no ambient rate-limit state — see below   |
-| `spend` + `monthly`   | **omitted**                             | Claude-only — no equivalent state         |
+| `spend`               | **omitted**                             | Claude-only — no equivalent state         |
 
-The last three rows are gaps rather than translations, and all are deliberate.
-`spend` reads Claude Code's own stored credentials and `monthly` its local
-transcripts, neither of which OpenCode has an equivalent of; the other two:
+Three of those rows are gaps rather than translations, and all three are
+deliberate. `spend` reads Claude Code's own stored credentials, which OpenCode
+has no equivalent of; the other two:
 
 - **The rate-limit windows are omitted, not approximated.** OpenCode exposes no
   ambient rate-limit state at all — it parses provider headers on error paths
@@ -349,14 +349,14 @@ it everywhere.
 | `symbols`         | map<key,glyph>  | Glyph per data type (see below).                                                                               |
 | `typeSymbols`     | map<type,glyph> | Subagent `type` → glyph; `_default` is the fallback.                                                           |
 | `segments`        | map<id,style>   | Default styling (`bg`/`fg`/`bold`) per main-bar segment.                                                       |
-| `spend`           | object          | The `spend` + `monthly` segments: `refreshMinutes`, `show` (see below).                                        |
+| `spend`           | object          | The monthly-budget segment: `refreshMinutes`, `show` (see below).                                              |
 | `lines`           | array of rows   | The layout (see below).                                                                                        |
 | `subagent`        | object          | The subagent panel config (see below).                                                                         |
 
 `symbols` keys consumed by the script: `model`, `context`, `win5h`, `win7d`,
-`reset`, `session`, `cost`, `spend`, `monthly`, `duration`, `project`,
-`worktree`, `folder`, `branch`, `ahead`, `dirtyAdd`, `dirtyDel`, `dirtyMix`,
-`agent`, `tokens`.
+`reset`, `session`, `cost`, `spend`, `duration`, `project`, `worktree`,
+`folder`, `branch`, `ahead`, `dirtyAdd`, `dirtyDel`, `dirtyMix`, `agent`,
+`tokens`.
 
 The `branch` segment appends markers after the branch name: `ahead` (default
 `↑`) when the branch is ahead of its upstream — i.e. there are local commits not
@@ -371,15 +371,15 @@ either a **segment id string** or an **object** `{ name, bg?, fg?, bold? }` that
 overrides that segment's styling inline. Both resolve their default styling from
 the `segments` map. A row that resolves to no visible segments is dropped.
 
-Available segment ids: `model`, `context`, `rl5h`, `rl7d`, `spend`, `monthly`,
-`session`, `cost`, `duration`, `project`, `worktree`, `branch`. Several render
+Available segment ids: `model`, `context`, `rl5h`, `rl7d`, `spend`, `session`,
+`cost`, `duration`, `project`, `worktree`, `branch`. Several render
 conditionally and disappear when their data is absent (e.g. `session` with no
 session name, `project` with no `projectName`, `worktree`/`branch` outside a
 repo).
 
 ```json
 "lines": [
-  ["model", "context", "rl5h", "rl7d", "spend", "monthly", "cost"],
+  ["model", "context", "rl5h", "rl7d", "spend", "cost"],
   ["project", "worktree", "branch"]
 ]
 ```
@@ -431,45 +431,6 @@ documented**, so the segment degrades to invisible if its shape changes. It is
 Claude-bar only: neither the Oh-My-Pi nor the OpenCode surface carries it.
 Dropping `spend` from `lines` switches the whole mechanism off — the cache is
 read, and a refresh spawned, only when the layout names the segment.
-
-### This month vs last month (`monthly`)
-
-The `monthly` segment shows this machine's Claude Code spend for the current
-month against the previous one — `$1987 (⏮ $1853)` — and unlike `spend` it
-renders **for every plan**: the figure is computed locally, so no seat type is
-needed to have it.
-
-No API exposes this history, so the number is the [codeburn]/[ccusage] kind of
-estimate: the refresh child walks the session transcripts under
-`~/.claude/projects/` — recursively, so the subagent transcripts nested under
-each session are counted too — prices each message's token counts, and keeps
-per-month totals in the same cache. Pricing comes from [LiteLLM]'s public table,
-fetched on its own daily timer with an embedded snapshot as the offline fallback
-— no hand-maintained price list to drift; one-hour cache writes are priced at
-their 2× input rate rather than the table's five-minute rate. The walk is
-incremental (only transcripts whose size or mtime changed are reparsed), and a
-transcript Claude Code later cleans up keeps its recorded totals, so history
-accumulates from the day the bar starts running even as the files age out.
-
-What the number is — and is not:
-
-- It is the **list-price value** of this machine's usage, the same figure the
-  claude.ai usage chart draws. On a subscription plan you did not pay it; on a
-  spend-limited seat it should track the real charge closely.
-- It is **this machine only**, and it reaches back only as far as the local
-  transcripts do on first run (Claude Code cleans them up after ~30 days), so
-  the first "prev" month may be partial — a tracker that has been recording live
-  (codeburn, say) will show more history than the first backfill can.
-- Fast-mode messages are priced at the standard rate — the pricing table carries
-  no fast entries — so heavy fast-mode use is undercounted.
-
-It shares the `spend` machinery: the same `refreshMinutes` timer, cache file,
-lock, and detached child. Dropping `monthly` from `lines` stops the transcript
-walk; dropping both stops everything.
-
-[codeburn]: https://github.com/getagentseal/codeburn
-[ccusage]: https://github.com/ryoppippi/ccusage
-[LiteLLM]: https://github.com/BerriAI/litellm
 
 ### Subagent panel
 

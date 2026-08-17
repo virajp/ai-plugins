@@ -341,35 +341,6 @@ const SPEND_LOCK_STALE_MS = 2 * 60 * 1000;
 const SPEND_BACKOFF_CAP_MS = 6 * 60 * 60 * 1000;
 const SPEND_IRRELEVANT_TTL_MS = 24 * 60 * 60 * 1000;
 
-// The monthly segment prices local transcripts with LiteLLM's public pricing
-// table (the codeburn/ccusage approach), fetched on a daily timer with this
-// snapshot as the offline fallback. Per model: [input, output, cache-write,
-// cache-read] USD per token.
-const PRICING_URL = "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
-const PRICING_TTL_MS = 24 * 60 * 60 * 1000;
-const FALLBACK_PRICES = {
-  "claude-3-haiku-20240307": [2.5e-7, 1.25e-6, 3e-7, 3e-8],
-  "claude-3-opus-20240229": [1.5e-5, 7.5e-5, 1.875e-5, 1.5e-6],
-  "claude-3-7-sonnet-20250219": [3e-6, 1.5e-5, 3.75e-6, 3e-7],
-  "claude-4-opus-20250514": [1.5e-5, 7.5e-5, 1.875e-5, 1.5e-6],
-  "claude-4-sonnet-20250514": [3e-6, 1.5e-5, 3.75e-6, 3e-7],
-  "claude-opus-4-20250514": [1.5e-5, 7.5e-5, 1.875e-5, 1.5e-6],
-  "claude-sonnet-4-20250514": [3e-6, 1.5e-5, 3.75e-6, 3e-7],
-  "claude-opus-4-1": [1.5e-5, 7.5e-5, 1.875e-5, 1.5e-6],
-  "claude-opus-4-5": [5e-6, 2.5e-5, 6.25e-6, 5e-7],
-  "claude-opus-4-6": [5e-6, 2.5e-5, 6.25e-6, 5e-7],
-  "claude-opus-4-7": [5e-6, 2.5e-5, 6.25e-6, 5e-7],
-  "claude-opus-4-8": [5e-6, 2.5e-5, 6.25e-6, 5e-7],
-  "claude-opus-5": [5e-6, 2.5e-5, 6.25e-6, 5e-7],
-  "claude-sonnet-4-5": [3e-6, 1.5e-5, 3.75e-6, 3e-7],
-  "claude-sonnet-4-6": [3e-6, 1.5e-5, 3.75e-6, 3e-7],
-  "claude-sonnet-5": [2e-6, 1e-5, 2.5e-6, 2e-7],
-  "claude-haiku-4-5": [1e-6, 5e-6, 1.25e-6, 1e-7],
-  "claude-fable-5": [1e-5, 5e-5, 1.25e-5, 1e-6],
-  "claude-mythos-5": [1e-5, 5e-5, 1.25e-5, 1e-6],
-  "claude-mythos-preview": [1e-5, 5e-5, 1.25e-5, 1e-6],
-};
-
 function spendCachePath() {
   const p = process.env.AI_PLUGINS_SPEND_CACHE;
   if (p) return p.replace(/^~(?=\/|$)/, os.homedir());
@@ -380,36 +351,27 @@ const spendPlanRelevant = (plan) => plan === "team" || plan === "enterprise";
 
 // Render-side read: return the cache (or null) and kick off the detached
 // refresh when it has gone stale — never blocking, never fetching inline.
-// The monthly ledger wants the regular cadence on every plan, so its presence
-// in the layout suppresses both the irrelevant-plan stretch and the 429
-// backoff gate here — the child skips the endpoint on its own in those cases.
-function spendData(wantsMonthly) {
+function spendData() {
   const ttlMin = SPEND.refreshMinutes ?? SPEND_TTL_MIN;
   const cache = readJson(spendCachePath());
   if (ttlMin > 0) {
     const auto = (SPEND.show ?? "auto") === "auto";
-    const irrelevant = !wantsMonthly && auto && cache && cache.plan && !spendPlanRelevant(cache.plan);
+    const irrelevant = auto && cache && cache.plan && !spendPlanRelevant(cache.plan);
     const ttlMs = irrelevant ? SPEND_IRRELEVANT_TTL_MS : ttlMin * 60000;
     const now = Date.now();
-    const backedOff = !wantsMonthly && now < ((cache && cache.backoffUntil) || 0);
-    if ((!cache || !cache.ts || now - cache.ts > ttlMs) && !backedOff) {
+    if ((!cache || !cache.ts || now - cache.ts > ttlMs) && now > ((cache && cache.backoffUntil) || 0)) {
       try {
         const { spawn } = require("child_process");
         spawn(process.execPath, [__filename, "--refresh-spend"], { detached: true, stdio: "ignore" }).unref();
       } catch (_) { /* refresh is best-effort */ }
     }
   }
-  return cache && (cache.data || cache.monthly) ? cache : null;
+  return cache && cache.data ? cache : null;
 }
 
 // 7593 minor units at exponent 2 -> "$75.93"; whole dollars drop the ".00".
 function money(minor, exp) {
   return "$" + (minor / 10 ** (exp ?? 2)).toFixed(2).replace(/\.00$/, "");
-}
-
-// A USD float -> "$84.12", "$109" (whole dollars from 100 up, cents below).
-function usd(v) {
-  return "$" + (v >= 100 ? String(Math.round(v)) : v.toFixed(2).replace(/\.00$/, ""));
 }
 
 // ── The --refresh-spend child ────────────────────────────────────────────────
@@ -482,124 +444,6 @@ function extractSpend(body) {
   return null;
 }
 
-// LiteLLM's pricing table, slimmed to the Anthropic claude entries and cached
-// for a day. Any failure keeps what we had, or the embedded snapshot (ts 0, so
-// the fetch is retried next cycle).
-async function refreshPricing(prior) {
-  if (prior && prior.ts && Date.now() - prior.ts < PRICING_TTL_MS) return prior;
-  try {
-    const res = await fetchJson(PRICING_URL, {}, 30000);
-    if (res.status === 200 && res.json) {
-      const models = {};
-      for (const [name, v] of Object.entries(res.json)) {
-        if (name.startsWith("claude") && v && v.litellm_provider === "anthropic") {
-          models[name] = [
-            v.input_cost_per_token || 0,
-            v.output_cost_per_token || 0,
-            v.cache_creation_input_token_cost || 0,
-            v.cache_read_input_token_cost || 0,
-          ];
-        }
-      }
-      if (Object.keys(models).length) return { ts: Date.now(), models };
-    }
-  } catch (_) { /* fall through to what we had */ }
-  return prior && prior.models ? prior : { ts: 0, models: FALLBACK_PRICES };
-}
-
-// [input, output, cache-write, cache-read] for a model, tolerating a date
-// suffix the pricing table may or may not carry.
-function priceFor(model, models) {
-  const bare = model.replace(/-\d{8}$/, "");
-  return models[model] || models[bare] || FALLBACK_PRICES[model] || FALLBACK_PRICES[bare] || null;
-}
-
-// One transcript's cost per "YYYY-MM" (UTC). Assistant messages are logged
-// once per content block sharing message.id, so the dedup is required, not
-// defensive. Fast-mode messages price at the standard rate — LiteLLM carries
-// no fast entries — so the figure is an estimate there.
-function fileMonths(file, models) {
-  const months = {};
-  let text;
-  try { text = fs.readFileSync(file, "utf8"); } catch (_) { return months; }
-  const seen = new Set();
-  for (const line of text.split("\n")) {
-    if (!line || line.indexOf('"assistant"') === -1) continue;
-    let e;
-    try { e = JSON.parse(line); } catch (_) { continue; }
-    if (e.type !== "assistant" || !e.message || !e.message.usage || !e.timestamp) continue;
-    const id = e.message.id || e.requestId;
-    if (id) {
-      if (seen.has(id)) continue;
-      seen.add(id);
-    }
-    const price = priceFor(e.message.model || "", models);
-    if (!price) continue;
-    const u = e.message.usage;
-    // 1-hour cache writes bill at 2x input, not the 5-minute rate the pricing
-    // table carries; the usage breakdown says which is which. Whatever the
-    // breakdown does not cover prices at the 5-minute rate.
-    const cwTotal = u.cache_creation_input_tokens || 0;
-    const cc = u.cache_creation || {};
-    const cw1h = Math.min(cc.ephemeral_1h_input_tokens || 0, cwTotal);
-    const cwCost = cw1h * price[0] * 2 + (cwTotal - cw1h) * price[2];
-    const cost = (u.input_tokens || 0) * price[0] + (u.output_tokens || 0) * price[1]
-      + cwCost + (u.cache_read_input_tokens || 0) * price[3];
-    const ym = String(e.timestamp).slice(0, 7);
-    months[ym] = (months[ym] || 0) + cost;
-  }
-  return months;
-}
-
-// Every transcript under root, as relative paths. Recursive because subagent
-// transcripts nest under <project>/<session>/subagents/ — a flat walk missed
-// 40% of the spend. A manual walk rather than readdir's `recursive`, which
-// needs node 18.17 and the engines floor is 18.
-function listTranscripts(root) {
-  const out = [];
-  const walk = (dir, rel, depth) => {
-    if (depth > 5) return;
-    let entries;
-    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
-    for (const e of entries) {
-      const r = rel ? `${rel}/${e.name}` : e.name;
-      if (e.isDirectory()) walk(path.join(dir, e.name), r, depth + 1);
-      else if (e.name.endsWith(".jsonl")) out.push(r);
-    }
-  };
-  walk(root, "", 0);
-  return out;
-}
-
-// The monthly ledger: walk ~/.claude/projects, reparse only transcripts whose
-// size or mtime changed, and fold each file's delta into the running per-month
-// totals. A transcript Claude Code has cleaned up keeps its recorded totals —
-// the aggregate is never rebuilt from the files, only adjusted by deltas.
-function updateMonthly(prior, models) {
-  const dir = path.join(os.homedir(), ".claude", "projects");
-  let keys;
-  try { keys = listTranscripts(dir); } catch (_) { return prior || null; }
-  const state = {
-    ts: Date.now(),
-    months: { ...(prior && prior.months) },
-    files: { ...(prior && prior.files) },
-  };
-  for (const key of keys) {
-    const full = path.join(dir, key);
-    let st;
-    try { st = fs.statSync(full); } catch (_) { continue; }
-    const rec = state.files[key];
-    if (rec && rec.size === st.size && rec.mtimeMs === st.mtimeMs) continue;
-    const months = fileMonths(full, models);
-    const before = (rec && rec.months) || {};
-    for (const ym of new Set([...Object.keys(months), ...Object.keys(before)])) {
-      const delta = (months[ym] || 0) - (before[ym] || 0);
-      if (delta) state.months[ym] = (state.months[ym] || 0) + delta;
-    }
-    state.files[key] = { size: st.size, mtimeMs: st.mtimeMs, months };
-  }
-  return state;
-}
 
 async function refreshSpend() {
   applyConfig(loadConfig(null));
@@ -621,19 +465,9 @@ async function refreshSpend() {
     if (prior.ts && Date.now() - prior.ts < 60000) return; // a sibling just ran
     const ttlMs = (SPEND.refreshMinutes ?? SPEND_TTL_MIN) * 60000;
     const creds = oauthCredentials();
-
-    // The endpoint keeps its own cadence: daily on a plan `auto` draws nothing
-    // for, and never inside a 429 backoff — the ledger below still runs, which
-    // is why these gates live here and not on the child spawn.
-    const auto = (SPEND.show ?? "auto") === "auto";
-    const endpointIdle = auto && prior.plan && !spendPlanRelevant(prior.plan)
-      && prior.endpointTs && Date.now() - prior.endpointTs < SPEND_IRRELEVANT_TTL_MS;
-    const backedOff = Date.now() < (prior.backoffUntil || 0);
-
     let next;
-    if (!creds || endpointIdle || backedOff) {
-      next = { ...prior, ts: Date.now() };
-      if (!creds && !endpointIdle && !backedOff) next.failures = (prior.failures || 0) + 1;
+    if (!creds) {
+      next = { ts: Date.now(), plan: prior.plan, failures: (prior.failures || 0) + 1, data: prior.data };
     } else {
       try {
         const res = await fetchJson(SPEND_URL, {
@@ -643,27 +477,15 @@ async function refreshSpend() {
         if (res.status === 200 && res.json) {
           next = { ts: Date.now(), plan: creds.plan, failures: 0, backoffUntil: 0, data: extractSpend(res.json) };
         } else {
-          next = { ...prior, ts: Date.now(), plan: creds.plan, failures: (prior.failures || 0) + 1 };
+          next = { ts: Date.now(), plan: creds.plan, failures: (prior.failures || 0) + 1, data: prior.data };
           if (res.status === 429) {
             next.backoffUntil = Date.now() + Math.min(ttlMs * 2 ** next.failures, SPEND_BACKOFF_CAP_MS);
           }
         }
       } catch (_) {
-        next = { ...prior, ts: Date.now(), plan: creds.plan, failures: (prior.failures || 0) + 1 };
+        next = { ts: Date.now(), plan: creds.plan, failures: (prior.failures || 0) + 1, data: prior.data };
       }
-      next.endpointTs = Date.now();
     }
-
-    // The monthly ledger and its pricing ride the same timer, lock and cache;
-    // a failure here must never cost us the endpoint result above.
-    try {
-      next.pricing = await refreshPricing(prior.pricing);
-      next.monthly = updateMonthly(prior.monthly, next.pricing.models);
-    } catch (_) {
-      next.pricing = prior.pricing;
-      next.monthly = prior.monthly;
-    }
-
     const tmp = `${file}.${process.pid}.tmp`;
     fs.writeFileSync(tmp, JSON.stringify(next));
     fs.renameSync(tmp, file);
@@ -696,17 +518,6 @@ const SEGMENTS = {
     const d = s.data;
     const pct = d.percent ?? (d.usedMinor / d.limitMinor) * 100;
     return `${SYM.spend} ${money(d.usedMinor, d.exponent)}/${money(d.limitMinor, d.exponent)} (${Math.round(pct)}%)`;
-  },
-  monthly: (c) => {
-    const m = c.spend && c.spend.monthly;
-    if (!m || !m.months) return null;
-    const now = new Date();
-    const cur = now.toISOString().slice(0, 7);
-    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
-      .toISOString().slice(0, 7);
-    let t = `${SYM.monthly} ${usd(m.months[cur] || 0)}`;
-    if (m.months[prev] != null) t += ` (${SYM.monthlyPrev || "⏮"} ${usd(m.months[prev])})`;
-    return t;
   },
   duration: (c) => c.dur == null ? null : `${SYM.duration} ${humanDuration(c.dur)}`,
   project: (c) => c.projectName ? `${c.projectSym} ${c.projectName}` : null,
@@ -791,20 +602,16 @@ function renderMain(d) {
   });
 
   // The spend cache is only read — and its refresh only triggered — when the
-  // layout actually names a segment fed by it, so a user without either pays
-  // nothing.
-  const wantedIds = new Set(
-    (Array.isArray(CFG.lines) ? CFG.lines : []).flatMap((line) =>
-      Array.isArray(line) ? line.map((e) => typeof e === "string" ? e : e && (e.name || e.id)) : []
-    ),
-  );
-  const wantsMonthly = wantedIds.has("monthly");
+  // layout actually names the segment, so a user without it pays nothing.
+  const wantsSpend = (Array.isArray(CFG.lines) ? CFG.lines : []).some((line) =>
+    Array.isArray(line)
+    && line.some((e) => (typeof e === "string" ? e : e && (e.name || e.id)) === "spend"));
 
   const c = {
     model: modelName(d.model) || "Claude",
     effort: effortLevel(d.effort),
     cost: d.cost?.total_cost_usd ?? 0,
-    spend: wantedIds.has("spend") || wantsMonthly ? spendData(wantsMonthly) : null,
+    spend: wantsSpend ? spendData() : null,
     dur: d.cost?.total_duration_ms,
     ctxPct, ctxUsed, ctxSize,
     sessPct: rl.five_hour?.used_percentage,
