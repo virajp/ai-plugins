@@ -39,10 +39,24 @@ re-read `cli/src/args.ts`.
 
 1. **Never write to the real `HOME`, `~/.config`, `~/.local/share`, or the
    user's `claude` state.** Every command runs under a `mktemp -d` home with
-   `HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME` and `XDG_STATE_HOME` all pointed
-   inside it. If you cannot isolate a step, report that you skipped it — do not
-   run it anyway. The maintainer's own machine has this toolkit installed for
-   real; dirtying it is the one unrecoverable outcome here.
+   `HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME` **and
+   `CLAUDE_CONFIG_DIR`** all pointed inside it. If you cannot isolate a step,
+   report that you skipped it — do not run it anyway. The maintainer's own
+   machine has this toolkit installed for real; dirtying it is the one
+   unrecoverable outcome here.
+
+   **`CLAUDE_CONFIG_DIR` is not sufficient on its own, and this has already gone
+   wrong once.** Project scope follows the **working directory**, not the config
+   dir — so `claude plugin uninstall <name>` run from a repo will rewrite *that
+   repo's* `.claude/settings.json` no matter where you have pointed `HOME`. A
+   run started from this checkout emptied its own `enabledPlugins` that way.
+
+   So: **`cd` into a throwaway directory** (`mktemp -d`, or a `git init` inside
+   the hermetic home) before any `claude plugin` command, and pass the repo to
+   `marketplace add` as an absolute path rather than relying on `.`. Verify
+   afterwards with `git -C <repo> status --porcelain` that the checkout is
+   untouched, and say so in your report — an isolation claim you did not check
+   is not an isolation claim.
 2. **Verify the built bundle, not the source**, for the CLI half. Run
    `mise run i:build` first and drive `node bin/ai-plugins.mjs`. In the repo
    everything resolves through the workspace, so a packaging fault only appears

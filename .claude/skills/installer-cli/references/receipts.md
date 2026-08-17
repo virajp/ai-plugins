@@ -63,6 +63,20 @@ already changed. Merging in the one place every writer passes through is
 deliberate — this bug class recurred across every adapter precisely because each
 site decided for itself.
 
+## Project scope follows the working directory
+
+Not the config dir, and not `$HOME`. `claude plugin install --scope project`
+writes `<cwd>/.claude/settings.json`, so that is where `enumerate` has to look
+and where the removal has to run — which is why the project-scope items carry an
+explicit `cwd` and the user-scope ones do not.
+
+**The corollary bites during testing.** A `claude plugin uninstall` run from
+inside a repo rewrites *that repo's* settings even with `HOME`, every `XDG_*`
+var and `CLAUDE_CONFIG_DIR` redirected into a temp dir. Verifying this toolkit
+from this checkout emptied the checkout's own `enabledPlugins` exactly once,
+that way. Any hermetic run must therefore `cd` somewhere throwaway first, and
+check `git status --porcelain` afterwards rather than assuming.
+
 ## Uninstall asks the receipt, not the flags
 
 The statusline had a second defect that hid the first: a plain `--uninstall`
