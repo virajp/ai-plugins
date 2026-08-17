@@ -15,7 +15,6 @@
  * be citty, which cannot express a repeatable flag and silently kept only the
  * last `--user` — see that file for the whole story.
  */
-import type { TargetId } from "@ai-plugins/schema";
 import {
   existsSync,
   readFileSync,
@@ -87,6 +86,7 @@ import type { Surface } from "./statusline-consent.ts";
 import { ohmypiStatuslineConflict } from "./statusline-ohmypi.ts";
 import { opencodeStatuslineConflict } from "./statusline-opencode.ts";
 import { claudeStatuslineConflict } from "./statusline.ts";
+import type { TargetId } from "./targets.ts";
 import {
   buildVersionReport,
   readCliVersion,

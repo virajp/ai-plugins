@@ -11,7 +11,6 @@
  * target's outcome is collected and reported, and the caller exits non-zero if
  * any failed.
  */
-import type { TargetId } from "@ai-plugins/schema";
 import {
   readdirSync,
   rmdirSync,
@@ -52,6 +51,7 @@ import {
   planStatusline,
   revertStatusline,
 } from "./statusline.ts";
+import type { TargetId } from "./targets.ts";
 
 /**
  * What an outcome can be about. Neither statusline is a target — neither is a

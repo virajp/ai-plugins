@@ -1,6 +1,6 @@
 # mempalace mining config for this repo.
 #
-# Per templates/vwf/assets/memory.md: one product, one wing, one config file at
+# Per plugins/vwf/assets/memory.md: one product, one wing, one config file at
 # the repo root. `mempalace mine` looks for mempalace.yaml in the directory it is
 # pointed at and nowhere else — no parent search, no `.config/` convention, no
 # --config flag. A copy anywhere else is silently inert: the mine still runs,
@@ -8,7 +8,7 @@
 #
 # Routing walks a file's path parts outermost-first and returns on the first room
 # whose name or keywords match, so every top-level directory is claimed below on
-# purpose — that is what stops `templates/vwf/skills/doctor/` landing in the
+# purpose — that is what stops `plugins/vwf/skills/doctor/` landing in the
 # protocol `doctor` room. `docs` is deliberately left unclaimed so that
 # docs/memory/<room>/ reaches its own room, docs/cli/ reaches `installer`, and
 # docs/plugins/ reaches `plugins`.
@@ -26,21 +26,9 @@ exclude_patterns:
   - "*credentials*"
   - "*secret*"
 
-  # Rendered output. These four trees are machine-written by `plugins:build` and
-  # never edited by hand; they are committed only so a render is diffable in
-  # review. Mining them would put four near-identical copies of every skill and
-  # agent in the index, which degrades semantic recall rather than adding to it.
-  # Anchored with a leading slash so templates/vwf/opencode-plugin/ and the like
-  # are untouched.
-  - /claude/
-  - /cursor/
-  - /ohmypi/
-  - /opencode/
-
-  # Generated manifests and the generated plugin index — same reason.
+  # The generated marketplace manifest. `plugins/` itself is authored and is
+  # mined — there is one tree now, so nothing is a near-duplicate of anything.
   - /.claude-plugin/
-  - /.cursor-plugin/
-  - /plugins.json
 
   # Superseded vwf commands, agents and templates from prior models. Kept in git
   # as history; excluded here because a recall cannot tell retired doctrine from
@@ -92,20 +80,16 @@ rooms:
   # Path-derived rooms — what this repo actually holds.
   # ---------------------------------------------------------------------------
   - name: plugins
-    description: Authored plugin sources under templates/ and their user docs
+    description: Authored plugin sources under plugins/ and their user docs
       under docs/plugins/
-    keywords: [ templates, plugins, plugin ]
-  - name: renderer
-    description: The build-time half — renderer/src/targets/ turning
-      templates/ into the committed render trees
-    keywords: [ renderer ]
+    keywords: [ plugins, plugin ]
   - name: installer
     description: The install-time half — the @askviraj/ai-plugins CLI and
       statusline in cli/, tools/, and docs/cli/
     keywords: [ cli, tools, statusline ]
   - name: schemas
-    description: The neutral contract — zod schemas, the capability matrix,
-      and the JSON schemas
+    description: The JSON schemas under schemas/ — the statusline config
+      contract
     keywords: [ schema, schemas ]
   - name: configuration
     description: Repo machinery under .config/ — mise envs, linter, formatter,

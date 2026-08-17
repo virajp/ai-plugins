@@ -32,13 +32,8 @@
   "files": [
     "bin",
     "tools",
-    "claude",
-    "cursor",
-    "ohmypi",
-    "opencode",
-    "plugins.json",
-    ".claude-plugin",
-    ".cursor-plugin"
+    "plugins",
+    ".claude-plugin"
   ],
   "dependencies": {
     "jsonc-parser": "^3.3.1",

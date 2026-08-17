@@ -1,14 +1,8 @@
 # Committed but machine-written or superseded — not code intelligence.
 # .gitignore already covers bin/, dist/, docs/scratchpad/, graphify-out/.
 
-# rendered output — templates/ is the source; indexing these answers 5x
-claude/
-cursor/
-ohmypi/
-opencode/
-plugins.json
+# generated from the per-plugin manifests; the manifests themselves are indexed
 .claude-plugin/
-.cursor-plugin/
 
 # superseded artifacts and the memory mirror (mempalace owns recall)
 archived/

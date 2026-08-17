@@ -1,16 +1,14 @@
 /**
  * The MemPalace checkpoint hook script, run for real through `/bin/sh`.
  *
- * This is the path three of the four targets take — Claude runs it directly,
- * Cursor and Oh-My-Pi through generated wrappers — so it carries most of the
- * behaviour. Only OpenCode uses the TypeScript module instead.
+ * Claude runs this script directly, so it carries the whole auto-save behaviour.
  *
  * Run rather than read: the script is POSIX sh with BSD-portable tooling, and
  * the portability guarantee is only worth anything if the system shell is what
  * executes it. Same reasoning as `typescript:test` for the npm-normalize hook.
  *
  * It lives here because `vitest.config.mts` collects only
- * `{schema,renderer,cli}/src/**\/*.test.ts` — beside the script it would never run.
+ * `cli/src/**\/*.test.ts` — beside the script it would never run.
  */
 import { execFileSync } from "node:child_process";
 import {
@@ -31,7 +29,7 @@ const script = join(
   import.meta.dirname,
   "..",
   "..",
-  "templates",
+  "plugins",
   "vwf",
   "hooks",
   "mempalace-checkpoint.sh",

@@ -8,7 +8,6 @@
  * matched the manifests. Deriving them makes that whole class of drift
  * unrepresentable rather than merely checked.
  */
-import type { TargetId } from "@ai-plugins/schema";
 import {
   existsSync,
   readFileSync,
@@ -18,6 +17,7 @@ import type {
   AdapterPlan,
   Scope,
 } from "./adapters/types.ts";
+import type { TargetId } from "./targets.ts";
 
 /** One plugin's install-relevant manifest fields, as the build projects them. */
 export interface PluginIndexEntry {

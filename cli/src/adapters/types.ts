@@ -8,8 +8,8 @@
  * business, and what let the OpenCode installer shrink from a 1189-line
  * renderer to a copier.
  */
-import type { TargetId } from "@ai-plugins/schema";
 import type { Receipt } from "../receipt.ts";
+import type { TargetId } from "../targets.ts";
 
 /** Where an install lands. Not every adapter supports both. */
 export type Scope = "user" | "project";

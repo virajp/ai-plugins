@@ -1,10 +1,6 @@
 graphify-out/graph.json merge=graphify
 
-# Rendered output. Committed so users install inspectable, CI-verified
-# artifacts, but marked generated so it collapses in review — every byte in
-# these trees is a pure function of templates/.
-claude/** linguist-generated=true
-cursor/** linguist-generated=true
-ohmypi/** linguist-generated=true
-opencode/** linguist-generated=true
-plugins.json linguist-generated=true
+# The one generated artifact left: the marketplace manifest is a pure function
+# of the per-plugin .claude-plugin/plugin.json files, so it collapses in review.
+# Everything under plugins/ is authored by hand and is not marked.
+.claude-plugin/marketplace.json linguist-generated=true
