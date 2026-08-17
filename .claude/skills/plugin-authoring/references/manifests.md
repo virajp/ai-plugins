@@ -1,108 +1,92 @@
-# Manifests & marketplaces
+# Manifests & the marketplace
 
-## `plugin.yaml` — the neutral manifest
+## `plugin.json` — the manifest
 
-One file per plugin under `templates/<name>/`. Minimal form:
+One file per plugin at `plugins/<name>/.claude-plugin/plugin.json`, in Claude
+Code's native format. Minimal form:
 
-```yaml
-name: <plugin-name>
-description: <one line>
+```json
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "<plugin-name>",
+  "version": "0.1.0",
+  "description": "<one line>"
+}
 ```
 
-Everything else defaults: `category` to `development`, `source` to local.
-`schema/src/manifest.ts` is authoritative for the full shape.
+`$schema` is not decoration — it is what gives an editor the field list, and the
+schema is the authority for the shape. Keep the key order the existing manifests
+use: `$schema`, `name`, `version`, `description`, `author`, `repository`,
+`keywords`, `dependencies`, `mcpServers`, `lspServers`.
 
 **A manifest declares no install-time eligibility.** There is no `scope`, no
-`optIn`, no `userOnly` — the three were removed together, since `scope` and
-`optIn` were two spellings of "exclude from `--all`" and `userOnly` was never
-set by any plugin. `--all` reads `defaultInstall` in
-`templates/marketplace.yaml`; scope is whatever flag the user passed. Adding a
-plugin to the default set is an edit to that one list, not to the plugin.
-
-This one file replaced what used to be split between a `plugin.json` and a
-hand-written marketplace entry — two files kept in sync by hand, and a whole
-class of drift the checker existed to catch. The marketplace manifests are now
-**generated**, so a plugin cannot be unregistered, orphaned, or disagree with
-its own entry.
+`optIn`, no `userOnly`, and no `requires`. Scope is whichever `--scope` the user
+passes to `claude plugin install`; there is no default set to be in or out of,
+because there is no `--all` any more. `requires` was a hard install gate the
+retired CLI enforced — a missing binary now surfaces as a `/vwf:doctor`
+**blocking** finding, which is the trade the Claude-first plan accepted on the
+grounds that doctor already halts `setup` and `execute` on it.
 
 Optional blocks:
 
-- **`lspServers`** — keyed by language id; each needs `command`, `args`,
-  `extensions`, optionally `startupTimeout` and per-target `idAliases` (OpenCode
-  keys LSP config by its own built-in ids, so `typescript-lsp` must be written
-  as `typescript` there). Cursor has no LSP surface at all; the build reports it
-  as a gap.
-- **`mcpServers`** — a discriminated union on `transport` (`stdio` | `http`).
-  `templates/vwf/plugin.yaml` declares one of each.
-- **`dependencies`** — plain plugin names. `plugins:check` enforces that each
-  resolves. A dependency may name another marketplace, but cross-marketplace
-  deps are blocked at install time unless the **root** `marketplace.json`
-  allowlists it via `allowCrossMarketplaceDependenciesOn` (not transitive — only
-  the installing marketplace's allowlist applies). Nothing uses one today, so
-  that key is absent.
-- **`requires`** — external binaries. This is a **hard install gate**, not a
-  bibliography: the CLI takes the union over the dependency-expanded set and it
-  is explicitly **not** overridable by `--force`. The test is "does this plugin
-  shell out to it", never "does it document it". `devtools` documents `doppler`,
-  `dprint`, `eslint`, `gitleaks`, `grype` and `pre-commit` and requires only
-  `mise`, because those are executed by the user's own repo — adding one would
-  hard-fail a bare `--all` for every user lacking it.
-- **`prefixSkillNames`** — see [invocation.md](invocation.md).
+- **`lspServers`** — keyed by language id; each needs `command`, `args` and
+  `extensions`, optionally `startupTimeout`. The per-target `idAliases` key is
+  gone with the other targets.
+- **`mcpServers`** — `vwf` declares one of each transport: mempalace over HTTP
+  and context7 over stdio. The HTTP one is deliberate and load-bearing; see
+  `CLAUDE.md`'s memory-layer section for why an stdio mempalace is wrong.
+- **`dependencies`** — objects of `{marketplace, name}`. `plugins:check`
+  enforces that each resolves. A dependency may name another marketplace, but
+  cross-marketplace deps are blocked at install time unless the **root**
+  `marketplace.json` allowlists it via `allowCrossMarketplaceDependenciesOn`
+  (not transitive — only the installing marketplace's allowlist applies).
+  Nothing uses one today, so that key is absent.
+- **`keywords`** — what the retired neutral manifest called `tags`. The
+  generator projects it back to `tags` in the marketplace entry, which is the
+  spelling that schema uses. `flutter` and `typescript` also carry their
+  languages here, since the old `languages:` key had exactly one consumer and no
+  rendered output.
 
-Adding a dependency is **one edit**: the name in `dependencies:`. A `url` source
-would let an outside plugin resolve within `virajp-plugins` without vendoring —
-but it ships on **Claude alone**: OpenCode's copy adapter has no rendered bundle
-to take, Cursor's manifest is generated from local plugins only, and Oh-My-Pi
-parses the URL and then silently drops the entry. Each fails quietly, which is
-what let it survive twice. That cost lands under `vwf`, whose dependencies every
-`--all` pulls, so both outside deps it once had — mempalace and the Karpathy
-guidelines — are **vendored skills** now, and no plugin here is url-sourced.
+Adding a dependency is **one edit**: the entry in `dependencies`. Nothing here
+is url-sourced, and nothing should be — the two outside dependencies vwf once
+had, mempalace and the Karpathy guidelines, are **vendored skills** now, with
+provenance under `plugins/vwf/vendor/`. That vendoring was forced by the flat
+targets and outlived them, but it still buys something: the provenance ships
+with the code.
 
-## The generated marketplaces
+## The generated marketplace
 
-Three of the four targets have a native marketplace; `plugins:build` generates
-one each. **OpenCode has none** — it has no plugin concept, which is why its
-installer copies a rendered tree while the other three register a marketplace
-and let the tool do the installing.
+`.claude-plugin/marketplace.json` at the **repo root**, generated by
+`scripts/src/marketplace.ts` from the 13 plugin manifests. Root, not under
+`plugins/`, because every `source` inside it is resolved relative to the
+marketplace root — which is where Claude looks when this repo is added.
 
-| Target   | Manifest                          | Plugin source                  |
-| -------- | --------------------------------- | ------------------------------ |
-| Claude   | `.claude-plugin/marketplace.json` | `./claude/plugins/<name>`      |
-| Cursor   | `.cursor-plugin/marketplace.json` | `git-subdir` → `cursor/<name>` |
-| Oh-My-Pi | `ohmypi/.omp-plugin/…json`        | `./<name>`                     |
+What the generator supplies that no manifest holds, because it died with
+`templates/marketplace.yaml`:
 
-Two of them live at the **repo root**, because that is where the tool looks when
-the marketplace is added from this repo, and their sources are root-relative.
-Cursor's must be there for a second reason: Cursor accepts
-`.claude-plugin/marketplace.json` as a fallback and checks `.cursor-plugin/`
-**first** — without ours at the root it would read Claude's and resolve every
-plugin to a Claude-rendered bundle.
+- **The header** — `name: virajp-plugins`, `displayName`, `description`,
+  `owner`, `forceRemoveDeletedPlugins: true`.
+- **Per-entry constants** — `category: "development"`, `strict: true`, and
+  `source: "./plugins/<name>"`. All 13 plugins were uniform on the first two and
+  neither has a plugin-manifest field to live in.
 
-### Three traps, each verified against the real tool, each silent when wrong
+Never edit it by hand: `plugins:marketplace --check` will fail, in pre-commit
+and in CI.
 
-- **Sources resolve against the marketplace root**, not the repo root.
-  Oh-My-Pi's were once spelled from the repo root and resolved to
-  `ohmypi/ohmypi/<name>`, failing every install. `plugins:check` cannot catch
-  this: the path exists, just not where the tool looks.
-- **Cursor's sources are git-only** — a bare string, or an object tagged
-  `github` / `url` / `git-subdir`. There is no local-path variant, so a Cursor
-  install clones this repo and reads whatever ref it resolves rather than the
-  `cursor/` tree beside it. It is the one target where the committed-render
-  guarantee does not reach, and the only one needing `marketplace.yaml`'s
-  `repository` field.
+### Two traps that survive
+
+- **Sources resolve against the marketplace root**, not the repo root. This bit
+  hard on Oh-My-Pi once, where paths spelled from the repo root resolved to
+  `ohmypi/ohmypi/<name>` and failed every install. `plugins:check` cannot catch
+  the class: the path exists, just not where the tool looks.
 - **Every entry must state its own `version`.** Omitting it does not leave the
-  version unset — `omp` falls back, and the fallback resolves by accident: the
-  entry's `version`, then `.claude-plugin/plugin.json`, `plugin.json` and
-  `package.json` under the bundle, then a git `sha`, then the literal `"0.0.0"`.
-  This render emits none of those except a `package.json`, and only for a plugin
-  with wired hooks — so `typescript` and `vwf` reported correctly while every
-  other plugin listed as `0.0.0`. Nothing fails; the version is simply wrong
-  wherever a hook happens to be absent.
-
-Never edit a generated manifest by hand — `plugins:render-clean` will fail.
+  version unset — the tool falls back through a chain that resolves by accident,
+  and the result is a plugin listed as `0.0.0` with nothing failing. The
+  generator always emits it, from the manifest.
 
 ## Versions
 
 Plugin and skill version numbers are **not** cross-checked; they are independent
 by design, since a plugin may hold skills versioned on their own cadence. A
-plugin's `version` is what end-user installs pin to — bump it to ship changes.
+plugin's `version` is what an install pins to and what `claude plugin update`
+compares — bump it to ship changes, or the marketplace advertises the old one.

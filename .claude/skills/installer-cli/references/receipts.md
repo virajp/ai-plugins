@@ -1,147 +1,89 @@
 # Receipts
 
-An install returns a **receipt** recording prior state, so uninstall *restores*
-rather than guesses. `cli/src/receipt.ts` is authoritative; this is the
-reasoning behind it.
+A receipt records what an install touched **and what was there before it**, so
+`revert` restores rather than guesses. The invariant it exists to make testable:
+**install then remove leaves the tree and every touched config byte-identical.**
 
-## Entry kinds differ by who else writes there
+The old installer inferred what it must have written and deleted the keys it
+knew it set. That is safe only while the inference stays true, and it silently
+is not whenever a user edits a value the installer later removes wholesale.
 
-That is the whole distinction, and it decides which kind is correct:
+## The five kinds
 
-| Kind        | Removal behaviour              | Because                                                          |
-| ----------- | ------------------------------ | ---------------------------------------------------------------- |
-| `file`      | restores prior contents        | the path is **shared** with the user or tool                     |
-| `configKey` | restores the prior value       | same — the file is not ours                                      |
-| `dir`       | removes **only when empty**    | same                                                             |
-| `tree`      | removes **recursively**        | only ever pointed at a directory nothing but this tool writes to |
-| `command`   | runs the recorded undo command | the tool owns bookkeeping we must not edit                       |
+**Every kind is still read; only three are still written.**
 
-`tree` also keeps a bulk payload out of the entry list. Claude's marketplace is
-527 files; recording them one by one would be 527 lines of run report for one
-logical action, with an uninstall that still had to trust the list was complete.
-**OpenCode records its bundles the same way** — one `tree` per plugin rather
-than per file, which took its receipt from 413 entries to 32 and its run report
-from 281 changes to 37. The granularity stays *per plugin* because a partial
-install must not remove a bundle it was not asked about, and the shared flat
-dirs stay per file for the reason in the table. `copyTree` takes a
-`record: "files" | "tree"` for exactly that split.
+| Kind        | On revert                         | Written today | Safe because                                                      |
+| ----------- | --------------------------------- | ------------- | ----------------------------------------------------------------- |
+| `file`      | restores `previous`, else deletes | yes           | `previous` absent means we created it                             |
+| `dir`       | removes **only if empty**         | yes           | the user shares it — `~/.claude/scripts`                          |
+| `configKey` | restores the key, else deletes it | yes           | `previous` absent is the signal to delete, not to write a default |
+| `tree`      | removes **recursively**           | **no**        | only ever pointed at a directory nothing but this tool wrote to   |
+| `command`   | runs the recorded undo command    | **no**        | the tool owns bookkeeping we must not edit                        |
 
-## The three unconditional kinds
+`tree` and `command` were the four plugin adapters' — a copied render tree, a
+`claude plugin install` paired with its uninstall. Those adapters are gone, and
+`ReceiptBuilder` accordingly has **no** `tree`, `command` or `ownedDir` method:
+a builder method with no caller is dead weight.
 
-`createdFile`, `tree` and `ownedDir` are recorded **unconditionally**, and every
-one of them exists because the same bug shipped:
+But `revert` still handles them, deliberately. `uninstall.ts` reads the receipts
+an older multi-target install left behind, which is the whole reason a machine
+carrying an OpenCode bundle or an Oh-My-Pi bar can be **cleaned rather than
+orphaned**. Dropping the kinds from `revert` would turn those receipts into
+files nothing can undo. When the legacy window closes, they go together —
+`uninstall.ts` names the set.
 
-> Their guarded counterparts skip a path that is already there. So run 2's
-> receipt omits what run 1 created, and since every run overwrites the receipt,
-> the uninstall after it leaves that path behind.
+## The unconditional rule
 
-`ownedDir` is the third and newest: `dir` skipped the already-existing bundle
-root, so `virajp-plugins/` survived as an empty directory. It differs from
-`tree` in what it *removes*, not in what it *claims* — removal stays conditional
-on emptiness, which is what makes claiming it unconditionally safe.
+`file` (when it creates), `dir` and the retired `tree`/`ownedDir` are recorded
+**unconditionally** — recording is not gated on what is currently at the path.
+Removal stays conditional; the *claim* does not.
 
-**A single install passes either way.** Only a repeat run exposes it, which is
-why `i:test` installs twice before uninstalling. Any new write path gets the
-same treatment: ask whether the guarded form would skip an existing path, and if
-so, record it anyway.
+This is the same invariant as the SKILL.md's, seen from the receipt side. Every
+guarded form asks the wrong question, because on run 2 what is sitting at the
+path is run 1's own output. The claim must be computed against what run 1 saw,
+and the only way to do that is to ask **who owns the path**, never **what is at
+it**.
 
-### The same trap on a shared file
+The strongest form of the ownership test reconstructs the file *without* our
+entries and compares — so it answers "would our merge produce exactly this?"
+rather than "does something exist here?". Copy that shape.
 
-A file the user may also own cannot simply be claimed unconditionally, so the
-fix there is the ownership *test* rather than a new kind. Both OpenCode config
-writers — the adapter's `mergeConfig` on `opencode.jsonc`, and the statusline's
-`register` on `tui.json` — decide between `createdFile` and a key-by-key
-`configKey` restore by comparing the file on disk against the one their own
-merge would produce from empty: identical means an earlier run of ours wrote it,
-whatever `existsSync` says.
+`cli/src/statusline.ts` still keys its `configKey` records on `existed`, and is
+covered by the receipt merge below rather than by its own test. That holds, but
+it means its claims are correct only in combination — a known soft spot.
 
-Keying that on existence alone left both files behind after install → install →
-uninstall, each still registering something the same uninstall had just deleted
-— the bundle directory in one case, the copied TUI plugin in the other. They
-failed differently, which is why finding one did not find the other:
-`opencode.jsonc` *downgraded* its claim to a key restore of our own value, while
-`tui.json` hit its already-registered early return and recorded nothing at all.
+## Receipts merge
 
-**Cursor's `withoutOwnEntries` is the strongest form of the test, and the one to
-copy.** Rather than asking *is this whole file ours*, it reconstructs the file
-**without** our entries — a plugin key holding exactly the value we would write
-is ours, whichever run wrote it — and computes the claim against that. The
-result is what run 1 actually saw, so every run records what run 1 recorded, and
-a user's own settings come back byte-identically even after a repeat install.
-Parents emptied by the removal go too, so an undo cannot leave an orphaned
-`"plugins": {}` behind.
+`writeReceipt` **merges with whatever is already at the path**. A receipt
+describes an install, not a run: overwriting it wholesale is what let a second
+run record less than the first.
 
-**The OpenCode pair still use the weaker whole-file test**, and for a while that
-left a residual: on a config the user already owned, a repeat run could not tell
-which keys it introduced on the first, so our entry stayed behind. **The receipt
-merge closed it**, by a route worth understanding rather than trusting.
-
-Run 1 records the *shallowest new* key — `["skills"]`, which did not exist. Run
-2 records `["skills","paths"]`, because run 1 created the parent. Those are
-different claims, not a collision, so the merge keeps **both**; revert replays
-backwards, restoring `skills.paths` to our own value and then deleting the
-`skills` object above it. The file comes back byte-identical. The same holds for
-`tui.json` and the statusline's `plugin` array.
-
-Both are verified by a test in `executor.test.ts` rather than an adapter suite,
-and that placement is the point: **the merge happens on disk**, so calling
-`apply()` twice never exercises it. Porting `withoutOwnEntries` would still be
-an improvement — it makes each run's claim self-sufficient instead of correct
-only in combination — but it is no longer fixing a live defect.
-
-## Command entries have the same trap
-
-A CLI-driven claim fails the same way and needs the same rule. Oh-My-Pi's
-`marketplace add` undo was recorded only when *this run* did the adding, so a
-repeat install dropped it and the uninstall after it left `virajp-plugins`
-registered at the path it had just deleted — after which installing any *other*
-plugin from it fails with "Plugin source directory does not exist". The fix is
-the ownership question again: the pin names our own managed directory, which
-nobody else would have registered, so the undo is recorded whether or not this
-run put it there. A pin pointing anywhere else is still left strictly alone.
-
-**`statusline-ohmypi` is the one case the file test cannot reach**, since
-`config.yml` is `omp`'s own YAML and this CLI ships no YAML parser. It is fixed
-by the merge below instead — the previous receipt *is* the durable ownership
-record a CLI-driven installer has.
-
-## A receipt describes an install, not a run
-
-`writeReceipt` merges with whatever is already at the path. Without it, a run
-that recorded less than its predecessor replaced the fuller record, and
-installing a second plugin discarded the first one's claims entirely — so the
-uninstall removed half the install and reported success.
-
-Two rules make the merge safe. **The older entry wins a collision**, because two
-runs claiming the same path differ only in what they captured as prior state and
-run 2 read a machine run 1 had already changed. **Order is preserved
-oldest-first**, so revert — which replays backwards — undoes the most recent
-claims before the ones underneath them.
-
-It lives in `writeReceipt` rather than at the four call sites on purpose: this
-bug class recurred across every adapter precisely because each site decided for
-itself.
+The **older** entry wins a collision, since run 2 read a machine run 1 had
+already changed. Merging in the one place every writer passes through is
+deliberate — this bug class recurred across every adapter precisely because each
+site decided for itself.
 
 ## Uninstall asks the receipt, not the flags
 
-The statusline surfaces had a second, separate defect that hid the first: a
-plain `--uninstall` never reverted them at all. The tri-state `--statusline`
-defers to `--all` when unset, and there is no `--all` on the way out — so a user
-who installed with `--all` had to know to pass `--statusline` to remove a bar
-they never separately asked for. `revertsStatusline` gates on the receipt
-instead — uninstall undoes what this tool did, and the receipt is the record of
-that. `--no-statusline` still refuses, and a run naming one target never strips
-another's bar.
+The statusline had a second defect that hid the first: a plain `--uninstall`
+never reverted it at all, because the tri-state `--statusline` deferred to
+`--all` when unset and there was no `--all` on the way out. A user who installed
+with `--all` had to know to pass `--statusline` to remove a bar they never
+separately asked for.
+
+The rule that fixed it survives the interactive rewrite and is now structural:
+**uninstall undoes what this tool did, and the receipt is the record of that.**
+`enumerate` finds the statusline *by its receipt*, which is why a bar this tool
+did not install is never listed. `--no-statusline` still refuses.
 
 ## Directories nobody claimed
 
-The other thing four real-install verifications all found: **empty directories
+Four real-install verifications all found the same thing: **empty directories
 this tool created survived every uninstall**, because only the leaf was ever
-recorded. `receipt.tree(<data>/virajp/ai-plugins/<target>)` says nothing about
-the two parents `cpSync` made on the way down, so `virajp/` and `ai-plugins/`
-were left behind. Both are now `ownedDir`, recorded **outermost first** — revert
-replays backwards, so the payload comes out before its containers are asked
-whether they are empty.
+recorded. A `tree` entry says nothing about the parents `cpSync` made on the way
+down. The fix was to record containers **outermost first** — revert replays
+backwards, so the payload comes out before its containers are asked whether they
+are empty.
 
 The receipt directory is the one case an entry cannot cover, since no receipt
 can record the directory holding itself. `revert` removes it after the last
@@ -149,37 +91,32 @@ receipt is consumed, and removes its parent **only when that parent is our own
 `ai-plugins/`** — walking up blindly would target whatever happens to hold the
 receipt dir, which under a test is `/tmp`.
 
-What is deliberately *not* claimed: another tool's config directory.
-`<config>/opencode/` survives an uninstall empty, and that is the right trade —
-removing a directory OpenCode owns is a worse failure than leaving an empty one.
-The rule is the same ownership question as everywhere else in this file; it just
-answers "no" here.
+What is deliberately *not* claimed: another tool's config directory. An empty
+`<config>/opencode/` surviving an uninstall is the right trade — removing a
+directory OpenCode owns is a worse failure than leaving an empty one. Same
+ownership question as everywhere else in this file; it just answers "no" here.
 
-## When a `command` entry gets an undo
+## When a legacy `command` entry has an undo
 
-An undo is recorded when the command **changed something**, *or when the
-resulting state is provably this tool's*. The test is **ownership, not
-activity**.
+Read-only knowledge now, but it explains what you will meet in an old receipt.
 
-Gating on activity alone broke the moment a receipt mixed activity-gated entries
-with unconditional ones: a no-op re-install recorded the payload and nothing
-else, and the uninstall that followed deleted the payload while leaving the
+An undo was recorded when the command **changed something**, *or when the
+resulting state was provably this tool's* — ownership, not activity. Gating on
+activity alone broke the moment a receipt mixed activity-gated entries with
+unconditional ones: a no-op re-install recorded the payload and nothing else,
+and the uninstall that followed deleted the payload while leaving the
 registration pointing at it.
 
-A pin outside this tool's own directories is still **never re-pointed and never
-gets an undo**, so uninstall cannot remove a marketplace the user registered
-themselves.
-
-For CLI-driven targets an entry pairs the command run with the command that
-undoes it. Deleting their files directly instead would leave the tool's own
-records claiming an install that is gone.
+A pin outside this tool's own directories was **never re-pointed and never got
+an undo**, so uninstall cannot remove a marketplace the user registered
+themselves. `enumerate` keeps that rule for the live path.
 
 ## Versioning
 
 `RECEIPT_VERSION` is **3** (2 added `command`, 3 added `tree`). `readReceipt`
-refuses only a **future** version, so older receipts still revert, while an
-older CLI refuses a `tree` it would otherwise skip. The failure worth preventing
-is a half-revert reported as a clean uninstall.
+refuses only a **future** version, so older receipts still revert — which is
+exactly what the legacy reader depends on.
 
-Bump it only when an older CLI would *mis-handle* a new entry — adding a field
-an old CLI ignores harmlessly is deliberately not a bump.
+Bump it only when an older CLI would *mis-handle* a new entry; adding a field an
+old CLI ignores harmlessly is deliberately not a bump. The failure worth
+preventing is a half-revert reported as a clean uninstall.

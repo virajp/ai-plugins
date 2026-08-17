@@ -27,10 +27,14 @@ live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 Around it the marketplace ships **twelve more plugins** — languages, clouds,
 capabilities, tooling and design. That is the point of the split: vwf owns the
 workflow and names no technology at all, so every concrete choice lives in a
-plugin you install only if your product uses it. All of them, plus a
-[statusline](#statusline), go on through one CLI,
-[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins),
-across four agents — Claude Code, Cursor, Oh-My-Pi and OpenCode.
+plugin you install only if your product uses it. They install through Claude
+Code's own plugin commands, straight from this repo; the
+[statusline](#statusline) is separate, and ships through one small CLI,
+[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins).
+
+These are **Claude Code plugins**, authored natively. Other agents are served by
+[a prompt, not a bespoke build](#other-tools) — see that section for what you do
+and do not get.
 
 ## Caveats
 
@@ -51,8 +55,10 @@ blocker rather than a preference. Know this before you install.
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
 - **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `pnpm`
-  and `rtk`. The installer treats this as a hard gate: it refuses the install
-  and prints the exact command for anything missing.
+  and `rtk`. Nothing checks this at install time; `/vwf:doctor` reports a
+  missing one as a **blocking** finding, and both `/vwf:setup` and
+  `/vwf:execute` halt on it. So the first thing to run after installing is
+  `/vwf:doctor`.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -63,25 +69,87 @@ delegating read-heavy work buys, and the rest of the fit questions — is in
 
 ## Install
 
-```sh
-# The workflow and what it needs — vwf, devtools —
-# plus the statusline, for every agent found on your PATH
-pnpx @askviraj/ai-plugins --all
+Two commands, both Claude Code's own. There is no installer to download and
+nothing to keep up to date but the marketplace itself.
 
-# Or just vwf, which pulls in its dependencies and wires up graphify
-pnpx @askviraj/ai-plugins --user vwf
+```sh
+# Register this repo as a plugin marketplace, once
+claude plugin marketplace add virajp/ai-plugins
+
+# Install the workflow. `devtools`, its one dependency, comes with it
+claude plugin install vwf@virajp-plugins
 ```
 
-npm is the only distribution channel, so this needs Node — on every platform,
-Windows included. Restart your agent afterward so the commands, hooks and
-dependencies load. (The examples here use `pnpx`; if you don't use `pnpm`, swap
-in `npx`.)
+Restart your agent afterward so the skills, hooks and MCP servers load, then run
+`/vwf:doctor` — it is what tells you whether the five required binaries are
+actually on your `PATH`.
 
-`--all` is a fixed set of two — `vwf` and `devtools` — installed at user scope.
-Everything else is named explicitly, at whichever scope you ask for, because
-which language, cloud and capability plugins you want is a question about your
-product rather than about the toolkit. See
-[the installer CLI](#the-installer-cli) for the full flag reference.
+Scope is yours to choose: add `--scope project` to either command to keep the
+marketplace or the plugin to one repo instead of your user profile. Everything
+beyond `vwf` is installed by name, because which language, cloud and capability
+plugins you want is a question about your product rather than about the toolkit:
+
+```sh
+claude plugin install typescript@virajp-plugins gcp@virajp-plugins
+```
+
+Upgrading is `claude plugin marketplace update` followed by
+`claude plugin update <name>` — the marketplace is served from this repo's
+`main`, which every push validates in CI.
+
+The [statusline](#statusline) is the one piece that is *not* a plugin, because
+no plugin mechanism can install a status bar. It comes from npm; see that
+section.
+
+## Other tools
+
+These are Claude Code plugins. Other agents — Cursor, OpenCode, Codex — have no
+common plugin format to render into, so instead of a bespoke build per tool, the
+route is to **ask your agent to do the adaptation**, pointing it at this repo.
+That works today, and it is how most non-Claude use of this toolkit already
+happens.
+
+Paste one of these, adjusting the plugin name:
+
+**One plugin, adapted for whatever you are running:**
+
+> Install the `vwf` plugin from
+> `https://github.com/virajp/ai-plugins/tree/main/plugins/vwf` into this
+> project, adapted to the conventions of the agent you are running in. Read its
+> `.claude-plugin/plugin.json` first — it declares the MCP servers, LSP servers
+> and dependencies the plugin expects. Skills live in `skills/<name>/SKILL.md`
+> with YAML frontmatter; hooks are declared in `hooks/hooks.json` with their
+> scripts beside them. Port each of those to this tool's equivalent mechanism,
+> and tell me plainly what has no equivalent rather than dropping it silently.
+
+**The whole marketplace, to pick from:**
+
+> Read
+> `https://github.com/virajp/ai-plugins/blob/main/.claude-plugin/marketplace.json`
+> and list the plugins with their descriptions, so I can choose which to install
+> here. Then install the ones I name, following the per-plugin instructions
+> above.
+
+### What this does not promise
+
+- **Nothing verifies the result.** There is no test for what Cursor or Codex
+  produces from that prompt. It is your agent's best effort, and the honest
+  expectation is that skills port well, hooks and MCP wiring port unevenly, and
+  subagents port worst.
+- **Hook and MCP wiring vary most.** vwf's hooks include a command *rewrite*
+  (`rtk`) — a tool that can only allow or deny a command cannot express it, and
+  the usual adaptation is a refuse-with-correction. MCP transport support
+  differs per tool; vwf's memory server is HTTP, which is the more portable of
+  the two it declares.
+- **Model-invocation restrictions may be approximated.** Some skills are marked
+  so the model cannot invoke them itself and you own the timing
+  (`disable-model-invocation: true`). If your tool has no equivalent, that
+  restriction is lost — the skill still works, but it may fire when you did not
+  ask.
+- **Per-plugin dependencies are yours to follow.** `vwf` depends on `devtools`;
+  nothing outside Claude Code will resolve that for you.
+- **The statusline is Claude-only.** The OpenCode and Oh-My-Pi status surfaces
+  were discontinued; see [Statusline](#statusline).
 
 ## The plugins
 
