@@ -19,7 +19,7 @@ import {
   expect,
   it,
 } from "vitest";
-import type { AdapterContext } from "./adapters/types.ts";
+import type { Context } from "./context.ts";
 import {
   installStatusline,
   planStatusline,
@@ -38,7 +38,7 @@ const repoRoot = join(import.meta.dirname, "..", "..");
 let home: string;
 let configDir: string;
 let logged: string[];
-let context: AdapterContext;
+let context: Context;
 
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "ai-plugins-sl-home-"));
@@ -50,7 +50,7 @@ beforeEach(() => {
     home,
     cwd: home,
     now: "2026-01-01T00:00:00Z",
-    log: message => {
+    log: (message: string) => {
       logged.push(message);
     },
     exec: () => {

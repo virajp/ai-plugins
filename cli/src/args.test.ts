@@ -9,66 +9,11 @@ import {
   statuslineFlag,
 } from "./args.ts";
 
-describe("repeatable flags", () => {
-  it("collects every occurrence, not the last one", () => {
-    // The bug this file exists for. citty's `ArgType` has no array kind, so
-    // `--user vwf --user devtools` silently resolved to `devtools` alone and
-    // installed one plugin where three were asked for.
-    const args = parse([
-      "--user",
-      "vwf",
-      "--user",
-      "devtools",
-      "--user",
-      "typescript",
-    ]);
-
-    expect(args.user).toEqual(["vwf", "devtools", "typescript"]);
-  });
-
-  it("gives a single occurrence an array too, so callers never branch", () => {
-    expect(parse(["--user", "vwf"]).user).toEqual(["vwf"]);
-  });
-
-  it("accepts the --flag=value spelling", () => {
-    expect(parse(["--user=vwf", "--user=devtools"]).user)
-      .toEqual(["vwf", "devtools"]);
-  });
-
-  it("repeats --project and --platform the same way", () => {
-    const args = parse([
-      "--project",
-      "flutter",
-      "--project",
-      "typescript",
-      "--platform",
-      "claude",
-      "--platform",
-      "opencode",
-    ]);
-
-    expect(args.project).toEqual(["flutter", "typescript"]);
-    expect(args.platform).toEqual(["claude", "opencode"]);
-  });
-
-  it("defaults each to an empty list rather than undefined", () => {
-    const args = parse([]);
-
-    expect(args.user).toEqual([]);
-    expect(args.project).toEqual([]);
-    expect(args.platform).toEqual([]);
-  });
-
-  it("keeps --user and --project apart", () => {
-    const args = parse(["--user", "vwf", "--project", "flutter"]);
-
-    expect(args.user).toEqual(["vwf"]);
-    expect(args.project).toEqual(["flutter"]);
-  });
-});
-
 describe("statuslineFlag", () => {
-  it("stays undefined when neither is passed, so it can defer to --all", () => {
+  it("stays undefined when neither is passed", () => {
+    // It used to defer to `--all` here. With `--all` retired, unset means the
+    // run said nothing about the bar — which on an install run is a request for
+    // the help text rather than an install.
     expect(statuslineFlag(undefined, undefined)).toBeUndefined();
   });
 
@@ -99,7 +44,6 @@ describe("parse", () => {
   it("settles every boolean, so no consumer sees undefined", () => {
     const args = parse([]);
 
-    expect(args.all).toBe(false);
     expect(args.uninstall).toBe(false);
     expect(args.dryRun).toBe(false);
     expect(args.force).toBe(false);
@@ -121,9 +65,18 @@ describe("parse", () => {
     expect(() => parse(["--upgrade"])).toThrow(/--upgrade/);
   });
 
+  it("names each flag retired with the plugin installs", () => {
+    // The whole point of `strict`. Five flags went at once, and a user with one
+    // of them in a script deserves to be told rather than to watch a run do
+    // something other than what they asked.
+    for (const flag of ["--all", "--user", "--project", "--platform"]) {
+      expect(() => parse([flag, "vwf"]), flag).toThrow(new RegExp(flag));
+    }
+  });
+
   it("rejects a stray positional", () => {
-    // Plugin names are values of `--user`/`--project`; a bare one is a mistake
-    // worth naming rather than dropping.
+    // There is nothing left to name on the command line: a bare word is a
+    // mistake worth reporting rather than dropping.
     expect(() => parse(["vwf"])).toThrow();
   });
 });
@@ -134,10 +87,6 @@ describe("renderUsage", () => {
 
     for (
       const flag of [
-        "--all",
-        "--user",
-        "--project",
-        "--platform",
         "--statusline",
         "--no-statusline",
         "--uninstall",
@@ -151,10 +100,20 @@ describe("renderUsage", () => {
     }
   });
 
-  it("marks the three repeatable flags as repeatable", () => {
+  it("documents no flag the parser would reject", () => {
+    // The table is the source for both parsing and help, so this is really an
+    // assertion that nothing was left in the prose after being removed from
+    // `OPTIONS`.
+    for (const flag of ["--all", "--user", "--project", "--platform"]) {
+      expect(renderUsage().includes(`  ${flag}`), flag).toBe(false);
+    }
+  });
+
+  it("says how plugins are installed, since this CLI no longer does", () => {
     const usage = renderUsage();
 
-    expect(usage.match(/\(repeatable\)/g)).toHaveLength(3);
+    expect(usage).toContain("claude plugin marketplace add virajp/ai-plugins");
+    expect(usage).toContain("claude plugin install vwf@virajp-plugins");
   });
 
   it("wraps to a readable width", () => {

@@ -20,7 +20,7 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import writeFileAtomic from "write-file-atomic";
-import type { Scope } from "./adapters/types.ts";
+import type { Scope } from "./context.ts";
 
 /**
  * 2 added the `command` entry; 3 added `tree`. A v1 or v2 receipt still reverts
@@ -34,6 +34,22 @@ import type { Scope } from "./adapters/types.ts";
  */
 export const RECEIPT_VERSION = 3;
 
+/**
+ * **Every kind is still read; only three are still written.**
+ *
+ * The statusline is the one thing this CLI installs, and it writes `file`, `dir`
+ * and `configKey` alone. `tree` and `command` were the plugin adapters' — a
+ * copied render tree, a `claude plugin install` paired with its uninstall — and
+ * those adapters are gone. The kinds stay because `revert` still meets them:
+ * `uninstall.ts` reads the receipts an older multi-target install left behind,
+ * which is the whole reason a machine carrying an OpenCode bundle or an Oh-My-Pi
+ * bar can be cleaned rather than orphaned. Dropping them from `revert` would
+ * turn those receipts into files nothing can undo.
+ *
+ * `ReceiptBuilder` therefore has no `tree`, `command` or `ownedDir` method: a
+ * builder method with no caller is dead weight, and a legacy receipt is JSON on
+ * disk rather than something this version constructs.
+ */
 export type Entry =
   /** A file we wrote. `previous` is absent when we created it. */
   | {
@@ -109,19 +125,13 @@ export interface Receipt {
   /**
    * What was installed, as opposed to which bytes moved.
    *
-   * Written by every adapter and read by nothing today. It was added for
-   * `--upgrade`, which replayed it to refresh an install without being told the
-   * names again; that flag is gone, because plugin content ships inside this
-   * npm package and re-installing was already the upgrade. The field stays
-   * because it is the only human-readable answer to "what did this run put
-   * here" — a receipt of bytes alone cannot say — and because dropping it would
-   * mean changing the receipt format to delete something inert.
-   *
-   * **Deliberately not a version bump.** `RECEIPT_VERSION` guards *revert*, and
-   * `readReceipt` refuses a future version because reverting under rules that do
-   * not match how a receipt was written is worse than declining. This field
-   * changes nothing about revert, so bumping for it would strand receipts an
-   * older CLI could undo perfectly well.
+   * Written by every plugin adapter, and for two versions read by nothing: it
+   * was added for `--upgrade`, which replayed it rather than being told the names
+   * again, and that flag was retired once re-running the install *was* the
+   * upgrade. Nothing writes it now — no adapter is left to — but it finally has
+   * a **reader**: `uninstall.ts` uses it to describe a legacy receipt in the
+   * list it asks the user to confirm, so a row can say *which* plugins an old
+   * multi-target install put there instead of only naming a file.
    */
   readonly plugins?: readonly {
     readonly name: string;
@@ -129,7 +139,7 @@ export interface Receipt {
   }[];
 }
 
-/** Accumulates entries during an apply. One per adapter run. */
+/** Accumulates entries during an install. One per run. */
 export class ReceiptBuilder {
   private readonly entries: Entry[] = [];
 
@@ -178,43 +188,6 @@ export class ReceiptBuilder {
     return this;
   }
 
-  /**
-   * Record a directory this tool owns, **removed only when empty**.
-   *
-   * The third member of the `createdFile` / `tree` family, and it exists for the
-   * same second-install trap: `dir` skips a path that is already there, so a
-   * root created by run 1 was invisible to run 2's receipt and survived the
-   * uninstall that followed as an empty directory.
-   *
-   * Distinct from `tree` in what it *removes*, not in what it claims. A bundle
-   * root holds one directory per plugin, and a run naming only some of them
-   * must not delete the others — so removal stays conditional on emptiness,
-   * which makes recording it unconditionally safe.
-   */
-  ownedDir(path: string): this {
-    this.entries.push({ kind: "dir", path });
-    return this;
-  }
-
-  /**
-   * Record a directory this tool owns outright, to be removed recursively.
-   *
-   * Recorded unconditionally, unlike `dir`. A tree already on disk holding our
-   * bytes is ours whichever run put it there — the same reasoning as
-   * `createdFile`, and for the same reason: capturing it as pre-existing would
-   * make an uninstall *after a second install* leave the payload behind.
-   */
-  tree(path: string): this {
-    this.entries.push({ kind: "tree", path });
-    return this;
-  }
-
-  /** Record a command we ran, together with the command that undoes it. */
-  command(ran: readonly string[], undo: readonly string[]): this {
-    this.entries.push({ kind: "command", ran: [...ran], undo: [...undo] });
-    return this;
-  }
-
   /** Record a config key, capturing whether it existed and its prior value. */
   configKey(
     file: string,
@@ -255,10 +228,12 @@ export class ReceiptBuilder {
  * adapter got its own fresh `ReceiptBuilder` and none of them could see what an
  * earlier run had claimed.
  *
- * Merging here rather than at each call site is deliberate. Four writers reach
- * this function — the adapters and the three statusline surfaces — and the
- * receipt-completeness bug recurred all week precisely because each site
- * decided for itself. There is now one place to get it right.
+ * Merging here rather than at each call site is deliberate, and stays that way
+ * now that one writer is left. Four reached this function — the adapters and the
+ * three statusline surfaces — and the receipt-completeness bug recurred across
+ * all of them precisely because each site decided for itself; the statusline
+ * still needs it, since install → install → uninstall is the sequence that
+ * exposed it and the bar is installed repeatedly by design.
  *
  * **The older entry wins a collision.** Two runs claiming the same path differ
  * only in what they captured as prior state, and the earlier capture is the

@@ -5,14 +5,14 @@ import {
   it,
 } from "vitest";
 import type {
-  AdapterContext,
+  Context,
   ExecResult,
-} from "./adapters/types.ts";
+} from "./context.ts";
 import { setupGraphify } from "./graphify.ts";
 
 let ran: string[][];
 let logged: string[];
-let context: AdapterContext;
+let context: Context;
 /** Overridden per test to make one command fail. */
 let respond: (command: string, args: readonly string[]) => ExecResult;
 
@@ -25,7 +25,7 @@ beforeEach(() => {
     home: "/home",
     cwd: "/cwd",
     now: "2026-01-01T00:00:00Z",
-    log: message => {
+    log: (message: string) => {
       logged.push(message);
     },
     exec: (command, args) => {
@@ -39,32 +39,22 @@ const present = () => true;
 const absent = () => false;
 
 describe("setupGraphify", () => {
-  it("installs for each supported target, then the hook", () => {
-    setupGraphify(context, ["claude", "opencode"], present);
+  it("installs for claude, then the hook", () => {
+    // No target list any more: `--platform opencode` went with the OpenCode
+    // support, and plugin installs are Claude's own business, so there is
+    // nothing left for this to be conditional on.
+    setupGraphify(context, present);
 
     expect(ran).toContainEqual(["graphify", "install", "--platform", "claude"]);
-    expect(ran).toContainEqual([
-      "graphify",
-      "install",
-      "--platform",
-      "opencode",
-    ]);
     expect(ran).toContainEqual(["graphify", "hook", "install"]);
   });
 
-  it("does nothing for targets graphify does not support", () => {
-    // Cursor and Oh-My-Pi are not graphify platforms.
-    setupGraphify(context, ["cursor", "ohmypi"], present);
-
-    expect(ran).toEqual([]);
-  });
-
   it("soft-skips when graphify is not on PATH, and says so", () => {
-    setupGraphify(context, ["claude"], absent);
+    setupGraphify(context, absent);
 
     expect(ran).toEqual([]);
-    // The dependency gate normally refuses first, so reaching here means it was
-    // bypassed — failing the run would undo an install that already succeeded.
+    // The `requires:` gate used to refuse first; with it gone, an absent
+    // graphify is the ordinary case on a machine that only wants the statusline.
     expect(logged.join("\n")).toMatch(/blocking/);
   });
 
@@ -74,20 +64,21 @@ describe("setupGraphify", () => {
         ? { status: 128, stdout: "", stderr: "not a git repository" }
         : { status: 0, stdout: "", stderr: "" };
 
-    setupGraphify(context, ["claude"], present);
+    setupGraphify(context, present);
 
     expect(ran).toContainEqual(["graphify", "install", "--platform", "claude"]);
     expect(ran).not.toContainEqual(["graphify", "hook", "install"]);
     expect(logged.join("\n")).toMatch(/post-commit hook/);
   });
 
-  it("reports a failed install without throwing", () => {
+  it("reports a failed install without throwing, and still tries the hook", () => {
     respond = (command, args) =>
       command === "graphify" && args[0] === "install"
         ? { status: 1, stdout: "", stderr: "boom" }
         : { status: 0, stdout: "", stderr: "" };
 
-    expect(() => setupGraphify(context, ["claude"], present)).not.toThrow();
+    expect(() => setupGraphify(context, present)).not.toThrow();
     expect(logged.join("\n")).toContain("boom");
+    expect(ran).toContainEqual(["graphify", "hook", "install"]);
   });
 });

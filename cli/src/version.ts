@@ -1,28 +1,38 @@
 /**
- * Version reporting — what is here, and what is available.
+ * Version reporting — what is here, what is on disk, and what is available.
  *
- * `bin/installer.mjs` answered this by asking Claude Code:
- * `claude plugin list --json`, cross-referenced against the marketplace manifest
- * on `main`. That worked while Claude was the only target it could install
- * plugins into. With four targets it does not: three of them keep their own
- * bookkeeping in their own shapes, and only some of those CLIs are even
- * installable on a given machine.
+ * The shape of this question changed twice. `bin/installer.mjs` asked Claude
+ * Code (`claude plugin list --json`); the four-target CLI could not, so it
+ * compared the marketplace manifest *inside the package* against the one on
+ * `main`, on the premise that a plugin's version in this build is what an
+ * install would give you.
  *
- * So the question is asked differently. **A plugin's version in this build is
- * what an install would give you**, because every target either reads
- * `<target>/` in place or copies it — so comparing the manifest here
- * against the manifest on `main` answers "am I current?" for all five at once,
- * with no per-tool query and nothing to guess at.
+ * **That premise is gone.** Plugin content no longer ships in the npm package at
+ * all — the marketplace is served from GitHub and `claude plugin install` does
+ * the installing — so there is no local manifest to compare against, and the
+ * plugin block reports what `main` offers rather than a local-versus-remote
+ * diff. Asking Claude what it currently has would be a better answer again, and
+ * is deliberately not done here: it is a second bookkeeping format to parse for
+ * a report, and `claude plugin list` answers it natively.
  *
- * What that deliberately does not report is the version a target has *right
- * now*, for a user who installed and then let the package go stale. Re-running
- * covers that case by re-running the install, which is idempotent.
+ * **The statusline is the opposite case, and the one that was actually wrong.**
+ * This block used to print the running package's version beside it, annotated
+ * "bundled with the CLI" — which under `pnpx` is whatever was just downloaded,
+ * so the version *installed on disk* was never shown and a stale bar was
+ * invisible. The script now self-reports (`statusline --version`), so this runs
+ * the installed copy and prints installed against bundled.
  */
+import { spawnSync } from "node:child_process";
 import {
   existsSync,
   readFileSync,
 } from "node:fs";
 import { join } from "node:path";
+import {
+  fetchGithubJson,
+  fetchJson,
+} from "./github.ts";
+import { statuslineScriptFile } from "./statusline.ts";
 
 /** The published package, and the manifest on `main`. */
 export const NPM_LATEST_URL =
@@ -102,22 +112,37 @@ export function cmpPre(a: string, b: string): number {
 
 export interface PluginVersion {
   readonly name: string;
-  /** What this build ships. Absent when the manifest entry carries no version. */
-  readonly local?: string;
-  /** What `main` lists. Absent when the remote could not be read, or omits it. */
-  readonly remote?: string;
+  /** What `main` lists. Absent when the entry carries no version. */
+  readonly version?: string;
 }
+
+/**
+ * What the statusline copy on disk reports.
+ *
+ * Three states rather than an optional string, because "no bar installed" and
+ * "a bar too old to answer" are different facts and the second is the one that
+ * needs explaining: every install before the `--version` flag existed lands
+ * here, and reading it as absent would tell the user to install something they
+ * already have.
+ */
+export type InstalledStatusline =
+  | { readonly state: "absent"; }
+  | { readonly state: "unknown"; }
+  | { readonly state: "known"; readonly version: string; };
 
 export interface VersionReport {
   readonly cli: string;
   /** Absent when npm could not be reached. */
   readonly cliLatest?: string;
+  /** What this package ships, which `i:test` asserts the script agrees with. */
+  readonly statuslineBundled: string;
+  readonly statuslineInstalled: InstalledStatusline;
   readonly plugins: readonly PluginVersion[];
   /** Why the remote half is missing, when it is. */
   readonly remoteError?: string;
 }
 
-/** The published package's version — the CLI's own, and the statusline's. */
+/** The published package's version — the CLI's own. */
 export function readCliVersion(sourceRoot: string): string {
   const path = join(sourceRoot, "package.json");
   if (!existsSync(path)) {
@@ -131,71 +156,109 @@ interface Manifest {
   readonly plugins?: readonly { name: string; version?: string; }[];
 }
 
-/** Plugin → version, from a marketplace manifest. */
-export function manifestVersions(
-  manifest: Manifest,
-): Map<string, string | undefined> {
-  return new Map((manifest.plugins ?? []).map(p => [p.name, p.version]));
+/** Every plugin the manifest lists, in its own order. */
+export function manifestVersions(manifest: Manifest): PluginVersion[] {
+  return (manifest.plugins ?? []).map(p => ({
+    name: p.name,
+    ...(p.version === undefined ? {} : { version: p.version }),
+  }));
 }
 
-export function localVersions(
-  sourceRoot: string,
-): Map<string, string | undefined> {
-  const path = join(sourceRoot, ".claude-plugin", "marketplace.json");
-  if (!existsSync(path)) {
-    throw new Error(`missing ${path} — run \`mise run plugins:build\``);
+/**
+ * Run one script and return its stdout, or `undefined` if it could not run.
+ *
+ * **Invoked through `process.execPath` rather than as an executable**, which the
+ * script itself does for its own `--refresh-spend` child. It is a `#!/usr/bin/env
+ * node` file installed at 0755, so executing it directly works — until a copy
+ * loses its bit, or the machine is Windows, where the shebang means nothing.
+ *
+ * **`input: ""` is load-bearing.** A statusline old enough to lack `--version`
+ * ignores the flag and waits on stdin for a render payload; inheriting this
+ * process's stdin would hang `--version` forever on the one case the flag exists
+ * to detect. Closing it immediately makes that script render a bar and exit,
+ * which the caller recognises as "not a version".
+ */
+export type RunScript = (script: string) => string | undefined;
+
+/** A semver-ish line and nothing else — what the `--version` flag prints. */
+const VERSION_LINE = /^v?\d+\.\d+\.\d+[\w.+-]*$/;
+
+/**
+ * Ask the installed script what it is.
+ *
+ * Anything other than a bare version means the flag was not understood: an old
+ * script answers a `--version` it does not know about by rendering a powerline
+ * bar, so the check is on the *shape of the answer*, never on the exit code
+ * (which is 0 in both cases).
+ */
+export function readInstalledStatusline(
+  home: string,
+  run: RunScript = runScript,
+): InstalledStatusline {
+  const script = statuslineScriptFile(home);
+  if (!existsSync(script)) {
+    return { state: "absent" };
   }
-  return manifestVersions(JSON.parse(readFileSync(path, "utf8")) as Manifest);
+  const output = run(script)?.trim() ?? "";
+  return VERSION_LINE.test(output)
+    ? { state: "known", version: output.replace(/^v/, "") }
+    : { state: "unknown" };
 }
 
-export async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`${url} → HTTP ${response.status}`);
-  }
-  return await response.json() as T;
+const runScript: RunScript = script => {
+  const result = spawnSync(process.execPath, [script, "--version"], {
+    encoding: "utf8",
+    input: "",
+    timeout: 5000,
+  });
+  return result.error !== undefined ? undefined : result.stdout;
+};
+
+export interface VersionInputs {
+  readonly sourceRoot: string;
+  readonly home: string;
+  /** The npm registry — **not** GitHub, so no credential is attached. */
+  readonly fetchNpm?: <T>(url: string) => Promise<T>;
+  /** GitHub — `$GITHUB_API_TOKEN` when the environment offers one. */
+  readonly fetchGithub?: <T>(url: string) => Promise<T>;
+  readonly runStatusline?: RunScript;
 }
 
 /**
  * Gather the report.
  *
  * The remote half is best-effort: a machine with no network still gets a useful
- * answer about what it has. The caller decides whether that is an error.
+ * answer about what it has installed. The caller decides whether that is an
+ * error.
  */
 export async function buildVersionReport(
-  sourceRoot: string,
-  fetcher: <T>(url: string) => Promise<T> = fetchJson,
+  inputs: VersionInputs,
 ): Promise<VersionReport> {
-  const cli = readCliVersion(sourceRoot);
-  const local = localVersions(sourceRoot);
+  const cli = readCliVersion(inputs.sourceRoot);
+  const local = {
+    cli,
+    statuslineBundled: cli,
+    statuslineInstalled: readInstalledStatusline(
+      inputs.home,
+      inputs.runStatusline,
+    ),
+  };
 
+  const npm = inputs.fetchNpm ?? fetchJson;
+  const github = inputs.fetchGithub ?? fetchGithubJson;
   try {
-    const [npm, manifest] = await Promise.all([
-      fetcher<{ version: string; }>(NPM_LATEST_URL),
-      fetcher<Manifest>(REMOTE_MARKETPLACE_URL),
+    const [latest, manifest] = await Promise.all([
+      npm<{ version: string; }>(NPM_LATEST_URL),
+      github<Manifest>(REMOTE_MARKETPLACE_URL),
     ]);
-    const remote = manifestVersions(manifest);
     return {
-      cli,
-      cliLatest: npm.version,
-      plugins: [...local].map(([name, version]) => ({
-        name,
-        ...(version === undefined ? {} : { local: version }),
-        ...(remote.get(name) === undefined
-          ? {}
-          : { remote: remote.get(name) as string }),
-      })),
+      ...local,
+      cliLatest: latest.version,
+      plugins: manifestVersions(manifest),
     };
   }
   catch (error) {
-    return {
-      cli,
-      plugins: [...local].map(([name, version]) => ({
-        name,
-        ...(version === undefined ? {} : { local: version }),
-      })),
-      remoteError: (error as Error).message,
-    };
+    return { ...local, plugins: [], remoteError: (error as Error).message };
   }
 }
 
@@ -209,6 +272,30 @@ export function updateNote(current: string, latest?: string): string {
     : "  (latest)";
 }
 
+/**
+ * The statusline's line.
+ *
+ * The version that matters is the one on disk: a `pnpx` run reports whatever it
+ * just downloaded, which is why "bundled" is only ever context for the installed
+ * number rather than the answer itself.
+ */
+export function describeStatusline(report: VersionReport): string {
+  const bundled = report.statuslineBundled;
+  switch (report.statuslineInstalled.state) {
+    case "absent":
+      return `not installed  (${bundled} here — run --statusline)`;
+    case "unknown":
+      return `unknown (predates self-reporting)  →  ${bundled} here `
+        + "(re-run --statusline)";
+    case "known": {
+      const installed = report.statuslineInstalled.version;
+      return cmpVer(bundled, installed) > 0
+        ? `${installed}  →  ${bundled} here  (re-run --statusline)`
+        : `${installed}  (latest)`;
+    }
+  }
+}
+
 /** The whole report as text. Pure, so what it prints is what the tests read. */
 export function renderVersionReport(report: VersionReport): string {
   const width = Math.max(
@@ -219,42 +306,26 @@ export function renderVersionReport(report: VersionReport): string {
     `@askviraj/ai-plugins  ${report.cli}${
       updateNote(report.cli, report.cliLatest)
     }`,
-    `  ${"statusline".padEnd(width)}  ${report.cli}  (bundled with the CLI)`,
-    "",
-    "Plugins (virajp-plugins):",
+    `  ${"statusline".padEnd(width)}  ${describeStatusline(report)}`,
   ];
-
-  // Only meaningful once the remote actually answered: without it, every plugin
-  // is missing a counterpart for the same uninteresting reason.
-  const compared = report.remoteError === undefined;
-
-  for (const plugin of report.plugins) {
-    lines.push(`  ${plugin.name.padEnd(width)}  ${describe(plugin, compared)}`);
-  }
 
   if (report.remoteError !== undefined) {
     lines.push(
       "",
-      `Could not check for updates: ${report.remoteError}`,
+      `Could not list the plugins on main: ${report.remoteError}`,
     );
+    return lines.join("\n");
   }
-  return lines.join("\n");
-}
 
-/**
- * One plugin's version line.
- *
- * The case worth spelling out is a plugin this build has and `main` does not —
- * one added since the last release. Left bare it renders as a version with no
- * annotation beside neighbours that all carry one, which reads as a failure
- * rather than as the newest thing here.
- */
-function describe(plugin: PluginVersion, compared: boolean): string {
-  if (plugin.local === undefined) {
-    return "unversioned";
-  }
-  if (plugin.remote !== undefined) {
-    return `${plugin.local}${updateNote(plugin.local, plugin.remote)}`;
-  }
-  return compared ? `${plugin.local}  (not on main yet)` : plugin.local;
+  lines.push(
+    "",
+    "Plugins available on main (virajp-plugins):",
+    ...report.plugins.map(plugin =>
+      `  ${plugin.name.padEnd(width)}  ${plugin.version ?? "unversioned"}`
+    ),
+    "",
+    "Installed with `claude plugin install <name>@virajp-plugins`; what you "
+      + "have is `claude plugin list`.",
+  );
+  return lines.join("\n");
 }

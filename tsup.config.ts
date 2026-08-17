@@ -2,14 +2,16 @@
  * Bundling the installer for publication.
  *
  * `cli/` is the TypeScript source; `bin/` is the built output, and `bin/` is
- * what npm ships. Two things make that split necessary rather than cosmetic:
+ * what npm ships. The split is necessary rather than cosmetic: **shipping
+ * `cli/src/*.ts` directly would need Node ≥ 22.18** (type stripping on by
+ * default), and bundling keeps `engines.node` where it is, so the CLI still runs
+ * wherever it used to.
  *
- * - **`@ai-plugins/schema` is a private workspace package.** It would not
- *   resolve from an installed tarball. Every import of it is `import type`, so
- *   the bundle erases it entirely — but only because something erases it.
- * - **Shipping `cli/src/*.ts` directly would need Node ≥ 22.18** (type stripping
- *   on by default). Bundling keeps `engines.node` where it is, so the CLI still
- *   runs wherever it used to.
+ * It used to carry a second reason — `@ai-plugins/schema` was a private
+ * workspace package that would not resolve from an installed tarball, and the
+ * bundle erased it because every import of it was `import type`. That package
+ * went with the renderer, and `cli/` now imports nothing outside itself and its
+ * three runtime dependencies.
  *
  * Runtime dependencies stay external: tsup treats `dependencies` as external by
  * default, and npm installs them beside the bundle. Anything the CLI imports at

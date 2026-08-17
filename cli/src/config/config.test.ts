@@ -10,12 +10,6 @@ import {
   removeFromJsonArray,
   setJsonPath,
 } from "./json.ts";
-import {
-  deleteTomlTable,
-  readToml,
-  setTomlTable,
-} from "./toml.ts";
-
 /**
  * These files belong to the user, not to us. Every assertion here is really the
  * same one: an edit must disturb what it names and nothing else — comments,
@@ -100,54 +94,5 @@ describe("jsonc", () => {
 
   it("treats a malformed document as absent rather than throwing", () => {
     expect(readJsonc("{ this is not json")).toBeUndefined();
-  });
-});
-
-describe("toml", () => {
-  const source = `# Agent config, hand-maintained.
-model = "gpt-5.2"
-
-[tui]
-# A comment inside a foreign table.
-theme = "dark"
-`;
-
-  it("appends a table without disturbing comments or foreign tables", () => {
-    const out = setTomlTable(source, "mcp_servers.context7", {
-      command: "pnpm",
-      args: ["dlx", "@upstash/context7-mcp"],
-    });
-
-    expect(out).toContain("# Agent config, hand-maintained.");
-    expect(out).toContain("# A comment inside a foreign table.");
-    expect(out).toContain("theme = \"dark\"");
-
-    const parsed = readToml<any>(out);
-    expect(parsed.model).toBe("gpt-5.2");
-    expect(parsed.tui.theme).toBe("dark");
-    expect(parsed.mcp_servers.context7.command).toBe("pnpm");
-  });
-
-  it("replaces a table in place rather than duplicating it", () => {
-    const once = setTomlTable(source, "mcp_servers.x", { command: "a" });
-    const twice = setTomlTable(once, "mcp_servers.x", { command: "b" });
-
-    expect(twice.match(/\[mcp_servers\.x\]/g)).toHaveLength(1);
-    expect(readToml<any>(twice).mcp_servers.x.command).toBe("b");
-    // The foreign table after it survives the replacement.
-    expect(readToml<any>(twice).tui.theme).toBe("dark");
-  });
-
-  it("removes a table and leaves the rest byte-identical", () => {
-    const added = setTomlTable(source, "mcp_servers.x", { command: "a" });
-    expect(deleteTomlTable(added, "mcp_servers.x")).toBe(source);
-  });
-
-  it("replaces a table that sits before another one", () => {
-    const text = `[a]\nx = 1\n\n[b]\ny = 2\n`;
-    const out = setTomlTable(text, "a", { x: 9 });
-    const parsed = readToml<any>(out);
-    expect(parsed.a.x).toBe(9);
-    expect(parsed.b.y).toBe(2);
   });
 });

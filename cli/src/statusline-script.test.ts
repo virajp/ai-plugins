@@ -81,6 +81,41 @@ function runCapsHook(sessionId: string, usage: unknown, cwd?: string) {
   });
 }
 
+describe("statusline --version", () => {
+  it("prints a bare version and nothing else", () => {
+    // The CLI recognises the answer by its shape: a script old enough to lack
+    // the flag ignores it and renders a bar, which is what "unknown (predates
+    // self-reporting)" reports. Anything printed beside the number here would
+    // make a current install look like an ancient one.
+    const result = spawnSync(process.execPath, [SCRIPT, "--version"], {
+      input: "",
+      encoding: "utf8",
+      env: { ...process.env, HOME: fakeHome },
+    });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it("reports the same version as package.json", () => {
+    // The constant in the script is a hand-synced second copy of that number —
+    // `i:release` rewrites both at bump time, because the script is a committed
+    // static asset and stamping it at build time would split committed from
+    // published. This assertion is the only thing that makes the copy safe.
+    // `i:test` asserts it against the BUILT bundle too; this catches it first.
+    const result = spawnSync(process.execPath, [SCRIPT, "--version"], {
+      input: "",
+      encoding: "utf8",
+      env: { ...process.env, HOME: fakeHome },
+    });
+    const { version } = JSON.parse(
+      readFileSync(join(repoRoot, "package.json"), "utf8"),
+    ) as { version: string; };
+
+    expect(result.stdout.trim()).toBe(version);
+  });
+});
+
 describe("statusline script", () => {
   it("renders the main bar and mirrors usage for the caps hook", () => {
     const usageDir = join(tmp, "usage");

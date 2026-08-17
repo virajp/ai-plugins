@@ -18,7 +18,7 @@ import {
   expect,
   it,
 } from "vitest";
-import type { AdapterContext } from "./adapters/types.ts";
+import type { Context } from "./context.ts";
 import {
   autoConfigureAllowed,
   resolveConsent,
@@ -33,7 +33,7 @@ const repoRoot = join(import.meta.dirname, "..", "..");
 
 let home: string;
 let configDir: string;
-let context: AdapterContext;
+let context: Context;
 
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "ai-plugins-consent-home-"));
@@ -189,7 +189,7 @@ describe("claudeStatuslineConflict", () => {
   });
 });
 
-describe("declining a surface", () => {
+describe("declining the bar", () => {
   it("installs the bar but leaves the settings alone", () => {
     writeSettings({
       statusLine: { type: "command", command: "~/bin/my-own-bar" },

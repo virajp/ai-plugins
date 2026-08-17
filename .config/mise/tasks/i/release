@@ -33,8 +33,10 @@ fi
 VERSION="$(node -p "require('./package.json').version")"
 TAG="v${VERSION}"
 
-# 4. Commit the bump and create an annotated tag.
-git add package.json
+# 4. Commit the bump and create an annotated tag. Both files: `i:version` stamps
+#    the same number into the statusline script, which self-reports it, and
+#    committing only package.json would ship a bar claiming the previous version.
+git add package.json tools/statusline/statusline
 git commit -m "ops: release ${TAG}"
 git tag -a "${TAG}" -m "${TAG}"
 
