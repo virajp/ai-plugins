@@ -1,7 +1,4 @@
 {
   "$schema": "https://raw.githubusercontent.com/virajp/ai-plugins/main/schemas/statusline.schema.json",
-  "projectName": "@askviraj/ai-plugins",
-  "spend": {
-    "show": "always"
-  }
+  "projectName": "@askviraj/ai-plugins"
 }
