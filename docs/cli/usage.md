@@ -82,9 +82,12 @@ So after installing, run:
 /vwf:doctor
 ```
 
-Doctor reports a missing `mise`, `graphify`, `uv`, `pnpm` or `rtk` as a
-**blocking** finding, and both `/vwf:setup` and `/vwf:execute` halt on one. The
-failure is not silent — it just arrives at first use rather than at install.
+Doctor blocks on a missing **`mise`** or **`graphify`**, and both `/vwf:setup`
+and `/vwf:execute` halt on either. It is not a complete substitute for the
+retired gate: a missing language server is an ordinary finding, and `pnpm` and
+`rtk` are not checked — `rtk`'s hook is guarded so its absence only degrades,
+while a missing `pnpm` surfaces as the context7 MCP server failing to start.
+Install all five.
 
 ## The statusline
 

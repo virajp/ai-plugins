@@ -55,10 +55,13 @@ blocker rather than a preference. Know this before you install.
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
 - **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `pnpm`
-  and `rtk`. Nothing checks this at install time; `/vwf:doctor` reports a
-  missing one as a **blocking** finding, and both `/vwf:setup` and
-  `/vwf:execute` halt on it. So the first thing to run after installing is
-  `/vwf:doctor`.
+  and `rtk`. **Nothing checks this at install time**, and `/vwf:doctor` does not
+  cover all five: it blocks on a missing `mise` or `graphify` (and `/vwf:setup`
+  and `/vwf:execute` halt on either), reports a missing language server as an
+  ordinary finding, and says nothing about `pnpm` or `rtk` — `rtk`'s hook is
+  guarded so its absence only degrades, and `uv` matters as graphify's runtime
+  rather than on its own. Run `/vwf:doctor` first regardless, but install all
+  five rather than relying on it to tell you.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -81,8 +84,9 @@ claude plugin install vwf@virajp-plugins
 ```
 
 Restart your agent afterward so the skills, hooks and MCP servers load, then run
-`/vwf:doctor` — it is what tells you whether the five required binaries are
-actually on your `PATH`.
+`/vwf:doctor`. It is the closest thing to a preflight now that nothing is gated
+at install time — though see the [caveat](#caveats) on what it does and does not
+check.
 
 Scope is yours to choose: add `--scope project` to either command to keep the
 marketplace or the plugin to one repo instead of your user profile. Everything

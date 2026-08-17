@@ -71,9 +71,13 @@ against `main`.
 
 Run **`/vwf:doctor`**. Nothing is gated at install time any more — the CLI used
 to refuse an install when a required binary was missing, and that gate retired
-with the plugin installer. Doctor is what reports a missing `mise`, `graphify`,
-`uv`, `pnpm` or `rtk`, as a **blocking** finding, and both `/vwf:setup` and
-`/vwf:execute` halt on one.
+with the plugin installer.
+
+Doctor is the nearest replacement but not an equivalent one: it **blocks** on a
+missing `mise` or `graphify`, and `/vwf:setup` and `/vwf:execute` halt on
+either, while `pnpm` and `rtk` are not checked. See
+[usage.md](./usage.md#nothing-is-gated-at-install-time) for the full picture.
+Install all five binaries and do not lean on doctor to catch them.
 
 ## Other agents
 

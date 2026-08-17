@@ -493,16 +493,23 @@ legitimately appears in two different keys with two different meanings: the
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded
 set and refused the install — explicitly not overridable by `--force`. That gate
-retired with the CLI's plugin installer. The five binaries vwf shells out to
-(`mise`, `graphify`, `uv`, `pnpm`, `rtk`) are now caught by `/vwf:doctor`, which
-reports a missing one as **blocking**, and `setup` and `execute` both halt on
-it.
+retired with the CLI's plugin installer.
 
-What is lost is the fix-it hint at the moment of install; what is gained is that
-`claude plugin install vwf` cannot fail for a reason the user did not ask about.
-The trade was taken on the grounds that doctor already blocked on it, so the
-failure was never silent — only later. **Tell users to run `/vwf:doctor`
-first**; `readme.md`'s caveat now says exactly that.
+**Doctor does not fully replace it, and the gap is worth stating precisely.** Of
+the five binaries vwf shells out to, `/vwf:doctor` blocks on **`mise` and
+`graphify`** only. A missing language server is an ordinary finding; `uv` is
+named as a prerequisite of graphify's remedy rather than checked on its own;
+`rtk`'s hook is guarded, so its absence degrades to a warning by design; and
+**`pnpm` is not checked at all** — a missing one surfaces as the context7 MCP
+server failing to start.
+
+So the trade is slightly worse than "doctor already blocked on it": two of five
+block, one warns, two are silent. It was still worth taking —
+`claude plugin
+install vwf` cannot now fail for a reason the user did not ask
+about — but `readme.md`'s caveat states the gap rather than implying doctor
+covers it, and that is the honest version. **If a `pnpm` check is ever added to
+doctor, this paragraph is what should shrink.**
 
 `markdown` and `context7` used to be on that list and are gone as plugins: vwf
 **absorbed** them. Their two skills (`documentation-standards`, `readme`) are

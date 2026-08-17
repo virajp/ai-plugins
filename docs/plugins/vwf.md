@@ -142,10 +142,11 @@ adopting it.
 
 **Dependencies**
 
-- **Hard external prerequisites.** `mise`, `graphify`, `uv`, `pnpm` and `rtk`
-  must be on your `PATH` — the installer refuses the install without them, and
-  `/vwf:setup` and `/vwf:execute` halt without mise or graphify at run time.
-  Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
+- **External prerequisites, checked at run time rather than install time.**
+  `mise`, `graphify`, `uv`, `pnpm` and `rtk` must be on your `PATH`. Nothing
+  refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on a
+  missing `mise` or `graphify`, and the other three fail later in their own
+  ways. Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
   [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
   to both `mempalace` (an **HTTP daemon you run** —
