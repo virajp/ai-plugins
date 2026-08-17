@@ -247,7 +247,7 @@ into a machine-wide cache so a render never waits on a request. `spend` is the
 budget from claude.ai → Settings → Usage, e.g. `$75.93/$150 (51%)` — in the
 default layout but drawn only for team and enterprise seats, whose limit is a
 monthly spend cap rather than the 5-hour and 7-day windows. `monthly` is this
-machine's current-vs-last-month usage value, e.g. `$1987 (prev $1853)`, computed
+machine's current-vs-last-month usage value, e.g. `$1987 (⏮ $1853)`, computed
 locally from the session transcripts (priced via LiteLLM's table) and drawn for
 **every** plan.
 

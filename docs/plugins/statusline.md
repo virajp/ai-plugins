@@ -435,19 +435,21 @@ read, and a refresh spawned, only when the layout names the segment.
 ### This month vs last month (`monthly`)
 
 The `monthly` segment shows this machine's Claude Code spend for the current
-month against the previous one — `$1987 (prev $1853)` — and unlike `spend` it
+month against the previous one — `$1987 (⏮ $1853)` — and unlike `spend` it
 renders **for every plan**: the figure is computed locally, so no seat type is
 needed to have it.
 
 No API exposes this history, so the number is the [codeburn]/[ccusage] kind of
 estimate: the refresh child walks the session transcripts under
-`~/.claude/projects/`, prices each message's token counts, and keeps per-month
-totals in the same cache. Pricing comes from [LiteLLM]'s public table, fetched
-on its own daily timer with an embedded snapshot as the offline fallback — no
-hand-maintained price list to drift. The walk is incremental (only transcripts
-whose size or mtime changed are reparsed), and a transcript Claude Code later
-cleans up keeps its recorded totals, so history accumulates from the day the bar
-starts running even as the files age out.
+`~/.claude/projects/` — recursively, so the subagent transcripts nested under
+each session are counted too — prices each message's token counts, and keeps
+per-month totals in the same cache. Pricing comes from [LiteLLM]'s public table,
+fetched on its own daily timer with an embedded snapshot as the offline fallback
+— no hand-maintained price list to drift; one-hour cache writes are priced at
+their 2× input rate rather than the table's five-minute rate. The walk is
+incremental (only transcripts whose size or mtime changed are reparsed), and a
+transcript Claude Code later cleans up keeps its recorded totals, so history
+accumulates from the day the bar starts running even as the files age out.
 
 What the number is — and is not:
 
@@ -456,7 +458,8 @@ What the number is — and is not:
   spend-limited seat it should track the real charge closely.
 - It is **this machine only**, and it reaches back only as far as the local
   transcripts do on first run (Claude Code cleans them up after ~30 days), so
-  the first "prev" month may be partial.
+  the first "prev" month may be partial — a tracker that has been recording live
+  (codeburn, say) will show more history than the first backfill can.
 - Fast-mode messages are priced at the standard rate — the pricing table carries
   no fast entries — so heavy fast-mode use is undercounted.
 

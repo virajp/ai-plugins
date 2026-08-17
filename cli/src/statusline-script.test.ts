@@ -225,7 +225,7 @@ describe("statusline script", () => {
     });
 
     expect(result.status, result.stderr).toBe(0);
-    expect(result.stdout).toContain("$12.34 (prev $109)");
+    expect(result.stdout).toContain("$12.34 (⏮ $109)");
   });
 
   it("computes the monthly ledger from transcripts in the refresh child", () => {
@@ -269,6 +269,29 @@ describe("statusline script", () => {
       ]
         .join("\n"),
     );
+    // A nested subagent transcript — the walk must recurse — whose 1M cache
+    // write is all 1-hour: priced at 2x input ($4.00), not the 5m rate.
+    const subDir = join(proj, "sess-1", "subagents");
+    mkdirSync(subDir, { recursive: true });
+    writeFileSync(
+      join(subDir, "agent-x.jsonl"),
+      JSON.stringify({
+        type: "assistant",
+        timestamp: curTs,
+        requestId: "req-c",
+        message: {
+          id: "msg-c",
+          model: "claude-sonnet-5",
+          usage: {
+            cache_creation_input_tokens: 1000000,
+            cache_creation: {
+              ephemeral_5m_input_tokens: 0,
+              ephemeral_1h_input_tokens: 1000000,
+            },
+          },
+        },
+      }) + "\n",
+    );
 
     const cache = join(tmp, "monthly-child.json");
     writeFileSync(
@@ -305,9 +328,12 @@ describe("statusline script", () => {
     };
     expect(out.plan).toBe("max");
     expect(out.failures).toBe(1); // the endpoint was unreachable, and that must not block the ledger
-    expect(out.monthly.months[curTs.slice(0, 7)]).toBeCloseTo(2.0, 5);
+    expect(out.monthly.months[curTs.slice(0, 7)]).toBeCloseTo(6.0, 5);
     expect(out.monthly.months[prevTs.slice(0, 7)]).toBeCloseTo(1.0, 5);
-    expect(Object.keys(out.monthly.files)).toEqual(["some-repo/s1.jsonl"]);
+    expect(Object.keys(out.monthly.files).sort()).toEqual([
+      "some-repo/s1.jsonl",
+      "some-repo/sess-1/subagents/agent-x.jsonl",
+    ]);
 
     // A second run with unchanged files must not double-count. The child's
     // 60-second sibling guard would skip it entirely, so age the cache first.
@@ -319,16 +345,19 @@ describe("statusline script", () => {
     const out2 = JSON.parse(readFileSync(cache, "utf8")) as {
       monthly: { months: Record<string, number>; };
     };
-    expect(out2.monthly.months[curTs.slice(0, 7)]).toBeCloseTo(2.0, 5);
+    expect(out2.monthly.months[curTs.slice(0, 7)]).toBeCloseTo(6.0, 5);
   });
 
-  it("omits the spend segment when there is no cache", () => {
+  it("omits the spend and monthly segments when there is no cache", () => {
     const result = runStatusline({ model: { display_name: "Fable" } }, {
       AI_PLUGINS_SPEND_CACHE: join(tmp, "spend-absent.json"),
     });
 
     expect(result.status, result.stderr).toBe(0);
-    expect(result.stdout).not.toContain("$");
+    // `/$` only ever appears in spend's used/limit pair, `⏮` only in monthly —
+    // a bare `$` is no longer distinctive now that cost renders one.
+    expect(result.stdout).not.toContain("/$");
+    expect(result.stdout).not.toContain("⏮");
   });
 
   it("renders the subagent panel from a tasks payload", () => {
