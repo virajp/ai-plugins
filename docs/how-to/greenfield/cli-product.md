@@ -26,7 +26,7 @@ clockon's install list is genuinely shorter than the spine's, not merely
 different:
 
 ```sh
-pnpx @askviraj/ai-plugins --all --user typescript
+claude plugin install vwf@virajp-plugins typescript@virajp-plugins
 ```
 
 `typescript` supplies both axes clockon pins — `typescript-effect-cli` on the
@@ -34,8 +34,8 @@ project axis and `npm-package` on the deploy axis. There is no backing plugin
 because clockon talks to no backing service; it writes to a per-user file on the
 machine it runs on. And there is no `design-tools`, which is the first
 consequence of `cli` and is unpacked at
-[`/vwf:design-system`](#4-vwfdesign-system) below. Scopes, the external-binary
-gate and the memory daemon are unchanged:
+[`/vwf:design-system`](#4-vwfdesign-system) below. Scopes, the post-install
+`/vwf:doctor` run and the memory daemon are unchanged:
 [the spine's install step](./single-repo.md#install-the-plugins).
 
 ### 2. /vwf:setup and /vwf:product

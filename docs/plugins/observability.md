@@ -17,11 +17,19 @@ name.
 
 ## Install
 
+Once, if you have not already:
+
 ```sh
-pnpx @askviraj/ai-plugins --user observability
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-The plugin is opt-in, so it is excluded from `--all` and installed by name.
+```sh
+claude plugin install observability@virajp-plugins
+```
+
+Add `--scope project` to scope it to one repo instead of every repo on your
+machine. There is no default install set — every plugin here, `observability`
+included, is installed by name.
 
 ## The contract
 
@@ -141,10 +149,10 @@ in the product's `stacks:`.
 | `observability-stack-menu`     | The template above as a vwf menu payload — slug, axis, name, one-line summary — plus a `note` on every answer saying a managed backend comes from the cloud plugin and terminates the same OTLP |
 | `observability-stack-template` | One template as a vwf template payload: axis fields, the capability tokens it realizes, per-capability harness mechanisms, and the conventions `plan` and `execute` read                        |
 
-Both are `invocation: both`, and that is load-bearing rather than stylistic: a
-`user` skill is removed from the model's context entirely and **cannot be
-invoked by vwf**. The failure is silent — vwf does not get an error, it gets an
-empty menu.
+Both stay model-invocable, and that is load-bearing rather than stylistic: a
+skill marked `disable-model-invocation: true` is removed from the model's
+context entirely and **cannot be invoked by vwf**. The failure is silent — vwf
+does not get an error, it gets an empty menu.
 
 An unknown slug is an **error**, not a guess: the template skill names the slugs
 that do exist and adds that a managed backend comes from the cloud plugin.

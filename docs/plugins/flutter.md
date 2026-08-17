@@ -5,8 +5,8 @@ opinionated Flutter standard covering GetX state management, `My`-prefixed
 widget wrappers, static repositories, ARB-based localization, and
 platform-channel native code. It declares three languages (`dart`, `kotlin`,
 `swift`) and bundles a language server for each. It is **self-contained**: no
-plugin dependencies at all. It is not in the `--all` set — install it by name,
-usually from inside the Flutter project it should govern.
+plugin dependencies at all. There is no default install set to be excluded from
+— install it by name, usually from inside the Flutter project it should govern.
 
 It also ships the `dart-flutter` **stack template** and implements vwf's
 stack-adapter and UX-gate contracts, so `/vwf:architecture` can offer Flutter
@@ -14,19 +14,27 @@ for a `frontend` project without vwf itself knowing what Flutter is.
 
 ## Install
 
-Run this from the root of your Flutter project:
+Once, if you have not already:
 
-```bash
-pnpx @askviraj/ai-plugins --project flutter
+```sh
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-Scope is the flag's, not the plugin's: `--user flutter` installs it once for
-every repo instead, which is worth it if you build Flutter apps often.
+Run this from the root of your Flutter project, to scope it to that repo:
 
-The installer gates on `mise`, `kotlin-lsp` and `sourcekit-lsp` being on your
-`PATH` — the plugin launches all three language servers, so a missing binary is
-a failed install rather than a quietly degraded one. `sourcekit-lsp` ships with
-Xcode or a Swift toolchain; install `kotlin-lsp` yourself.
+```sh
+claude plugin install flutter@virajp-plugins --scope project
+```
+
+Drop `--scope project` to install it once for every repo instead, which is worth
+it if you build Flutter apps often.
+
+There is no install-time gate on `mise`, `kotlin-lsp` or `sourcekit-lsp` any
+more. The plugin launches all three language servers, so a missing binary is
+still a real problem — it now surfaces as a `/vwf:doctor` **blocking** finding
+rather than a failed install, so run `/vwf:doctor` after installing.
+`sourcekit-lsp` ships with Xcode or a Swift toolchain; install `kotlin-lsp`
+yourself.
 
 ## Skills
 
@@ -111,9 +119,10 @@ demand. `kotlin-lsp` and `sourcekit-lsp` run **system-installed** binaries under
 mise's environment, which is why both appear in the plugin's `requires:` and are
 checked before install.
 
-OpenCode keys its LSP config by its own built-in ids, so the three are aliased
-there as `dart`, `kotlin-ls` and `sourcekit-lsp`. Cursor has no LSP surface at
-all.
+This is Claude Code's own `lspServers` manifest entry — there is no rendered
+variant for another agent any more. Running these servers under Cursor, OpenCode
+or Codex means porting the manifest yourself, per the
+[Other tools](../../readme.md#other-tools) guidance.
 
 ## See also
 

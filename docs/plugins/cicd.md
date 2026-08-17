@@ -15,16 +15,28 @@ delegates to it.
 
 ## Install
 
-```bash
-pnpx @askviraj/ai-plugins --user cicd
+Once, if you have not already:
+
+```sh
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-Install it by name — it is not in the `--all` set, since not every repo wants
-pipelines generated. `--project cicd` scopes it to one repo instead.
+```sh
+claude plugin install cicd@virajp-plugins
+```
 
-It needs `mise` on your `PATH`, and pairs naturally with the
-[`devtools`](./devtools.md) plugin: the pipelines it writes assume mise provides
-the toolchain, so a repo with no mise config should run
+Add `--scope project` to either command to scope to one repo instead of every
+repo on your machine.
+
+There is no default install set any more, so every plugin here — this one
+included — is installed by name; nothing pins it to `--all` or excludes it from
+one. Install it when a repo actually wants pipelines generated.
+
+It needs `mise` on your `PATH` — a missing binary is no longer an install-time
+failure, it surfaces as a `/vwf:doctor` blocking finding, so run `/vwf:doctor`
+after installing. It pairs naturally with the [`devtools`](./devtools.md)
+plugin: the pipelines it writes assume mise provides the toolchain, so a repo
+with no mise config should run
 [`/devtools:scaffold`](./devtools.md#devtoolsscaffold) first.
 
 **It is not a [`vwf`](./vwf.md) dependency**, deliberately. vwf owns the

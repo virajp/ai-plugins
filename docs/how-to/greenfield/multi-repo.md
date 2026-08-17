@@ -24,10 +24,10 @@ Mechanics — flags, halt conditions, config keys, file formats — live in the
 ### 1. Install the plugins
 
 Identical to the spine, including the extra stack plugins Stallfront names
-alongside `--all`: [install the plugins](./single-repo.md#install-the-plugins).
+alongside `vwf`: [install the plugins](./single-repo.md#install-the-plugins).
 One thing matters more here than it does in a single-repo product — install at
-**user** scope. You will be running vwf commands from four different checkouts,
-and a project-scoped install reaches exactly one of them.
+**user** scope, which is the default. You will be running vwf commands from four
+different checkouts, and `--scope project` would reach exactly one of them.
 
 ### 2. /vwf:setup, in the base repo
 

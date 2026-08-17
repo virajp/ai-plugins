@@ -12,7 +12,7 @@
 #   stdout — nothing to say nothing; otherwise a `gate` verdict carrying the
 #            instruction, which each target renders as a block plus reason
 #
-# Invoked two ways, by `hooks.yaml`:
+# Invoked two ways, by `hooks.json`:
 #   (no argument)  the stop hook — counts, and speaks every SAVE_INTERVAL
 #   --compact      the pre-compact hook — always speaks, and resets the count
 #

@@ -90,12 +90,16 @@ repos:
       - id: linter
         name: Linter
         entry: mise x -- pnpm dlx @askviraj/linter --fix
-        # The vwf blueprint templates and example bundle are ignored in
-        # .config/linter.yaml (OKF frontmatter reads as a second H1). pre-commit
-        # passes staged paths explicitly, and the linter warns on each one it is
-        # configured to ignore — enough warnings to fail the run. Keep them out of
-        # the argument list entirely.
-        exclude: ^plugins/vwf/assets/(templates|examples)/
+        # pre-commit passes staged paths explicitly, and the linter warns on every
+        # path it has no configuration for — enough warnings to fail the run. So
+        # anything it cannot lint must be kept out of the argument list, not merely
+        # ignored in .config/linter.yaml.
+        #
+        # Two kinds: the vwf blueprint templates and example bundle (ignored in
+        # linter.yaml, because OKF frontmatter reads as a second H1), and the hook
+        # scripts, which are shell — `typescript:test` is what actually tests those,
+        # through the system sed.
+        exclude: ^plugins/vwf/assets/(templates|examples)/|\.sh$
         language: system
         stages: [ pre-commit ]
 

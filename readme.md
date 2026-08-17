@@ -154,7 +154,8 @@ Paste one of these, adjusting the plugin name:
 ## The plugins
 
 Thirteen plugins, each with its own guide. Install the workflow, then whichever
-ones match the product you are building.
+ones match the product you are building. The name in code at the end of each
+entry is what you pass to `claude plugin install`.
 
 ### The workflow
 
@@ -168,7 +169,7 @@ knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](./docs/plugins/karpathy-guidelines.md), and the
 Markdown and Context7 docs surfaces it absorbed. It names **no** technology — no
 language, no framework, no cloud — which is what lets the rest of this list
-exist. `--user vwf`
+exist. `vwf@virajp-plugins`
 
 ### Languages
 
@@ -178,14 +179,14 @@ one for Effect-TS, and opinionated standards for `package.json`, pnpm, tsconfig
 and the lint/format gate. It bundles the TypeScript language server, the
 npm→pnpm/bun normalizing hook, and every TypeScript stack template vwf can offer
 — service, service+webapp, site, worker, CLI, IaC and shared packages, plus the
-npm-package and repo-level choices. `--user typescript`
+npm-package and repo-level choices. `typescript@virajp-plugins`
 
 **[flutter](./docs/plugins/flutter.md)** — Flutter and Dart done to one
 standard: `dart` and `swift` router skills plus `kotlin`, `pubspec`,
 `analysis-options` and internationalization, with Dart, Kotlin and SourceKit
 (Swift) language servers bundled. It owns the `dart-flutter` stack template for
 a `frontend` project. `--project flutter` from the app's own repo, or
-`--user flutter` if you build them often enough for it to be a habit.
+`flutter@virajp-plugins` if you build them often enough for it to be a habit.
 
 ### Clouds
 
@@ -193,13 +194,13 @@ a `frontend` project. `--project flutter` from the app's own repo, or
 reference cannot give you: which service to pick, when it stops being the
 answer, how each one bills, which have local emulators, and what least-privilege
 IAM looks like. It supplies Firebase and Cloud SQL as backing choices and Cloud
-Run and GKE as deploy targets. Opt-in. `--user gcp`
+Run and GKE as deploy targets. Opt-in. `gcp@virajp-plugins`
 
 **[cloudflare](./docs/plugins/cloudflare.md)** — **deliberately parked at Zero
 Trust Access**: a private plane in front of a project that must not be publicly
 reachable, whichever cloud hosts it. Workers, Pages, R2, D1, KV and the rest are
 not offered here and arrive under their own plan; the menu says so out loud
-rather than coming back quietly short. Opt-in. `--user cloudflare`
+rather than coming back quietly short. Opt-in. `cloudflare@virajp-plugins`
 
 ### Capabilities
 
@@ -211,30 +212,30 @@ capability states the requirement; the provider states the mechanism.
 **[datastore](./docs/plugins/datastore.md)** — the datastore contract: write
 versioning, atomic multi-record writes, server-authoritative time, the
 services-layer access rule, and a deterministic local stack. Ships **Postgres**.
-Opt-in. `--user datastore`
+Opt-in. `datastore@virajp-plugins`
 
 **[identity](./docs/plugins/identity.md)** — the identity contract: verification
 per route, the *claims carry status, never roles* rule, revocation, and the
-operator plane. Ships any **OIDC** issuer. Opt-in. `--user identity`
+operator plane. Ships any **OIDC** issuer. Opt-in. `identity@virajp-plugins`
 
 **[observability](./docs/plugins/observability.md)** — the telemetry contract:
 **your product emits OTLP and never a vendor SDK**, signals correlate,
 cardinality is a design decision, retention is chosen. Ships the self-hosted
 **OpenTelemetry → Grafana OTel-LGTM** sink; a managed backend is a destination,
-not an import. Opt-in. `--user observability`
+not an import. Opt-in. `observability@virajp-plugins`
 
 **[orchestration](./docs/plugins/orchestration.md)** — the contract for work
 that happens later: at-least-once delivery and the idempotency it forces,
 bounded retry, the poison path, work-in-flight visibility, and when a queue
 beats a bus beats a scheduler beats a workflow engine. Ships **Temporal**.
-Opt-in. `--user orchestration`
+Opt-in. `orchestration@virajp-plugins`
 
 **[object-storage](./docs/plugins/object-storage.md)** — **contract-only by
 design**: buckets, lifecycle as a bucket policy, signed access, prefix-scoped
 credentials, the never-proxy-bytes rule, egress cost. Every object store is some
 cloud's, so the flavour comes from `gcp` or `cloudflare` — and this plugin says
 that explicitly rather than returning an empty menu, which would be
-indistinguishable from a broken adapter. Opt-in. `--user object-storage`
+indistinguishable from a broken adapter. Opt-in. `object-storage@virajp-plugins`
 
 ### Tooling, design and delivery
 
@@ -244,7 +245,7 @@ file-based task library) with a `/devtools:scaffold` skill, Doppler for
 **development** secrets, Docker/OCI and the provider-neutral `container-generic`
 deploy target, and the repo gates the stack templates name — dprint, ESLint,
 gitleaks, grype, pre-commit. A `vwf` dependency, because `/vwf:setup`
-orchestrates its scaffold skill. `--user devtools`
+orchestrates its scaffold skill. `devtools@virajp-plugins`
 
 **[design-tools](./docs/plugins/design-tools.md)** — the design adapter vwf
 imports screens, design systems and design review conversations through. Three
@@ -253,7 +254,7 @@ skills resolve the design tool **per project** — `claude-design`, `lovable` or
 Only some tools have a review conversation at all; the ones that do not say so
 plainly rather than returning empty. Ships the Claude Design MCP server.
 Deliberately not a vwf dependency: an adapter is chosen, not inherited.
-`--user design-tools`
+`design-tools@virajp-plugins`
 
 **[cicd](./docs/plugins/cicd.md)** — one `/cicd:workflow` skill that resolves
 the repo's CI system from config and generates its delivery pipeline: every tool
@@ -261,7 +262,7 @@ installed through mise, both multi-repo and monorepo layouts, conforming to
 vwf's tag-triggered, branch-validated, tested-before-release contract. GitHub
 Actions is the one implementation today; adding a CI system is a single
 reference file. Independent — vwf states the contract, this implements it.
-`--user cicd`
+`cicd@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
@@ -270,7 +271,8 @@ guidelines — is now a
 installs with it.
 
 ```sh
-pnpx @askviraj/ai-plugins --user vwf --user typescript --project flutter
+claude plugin install vwf@virajp-plugins typescript@virajp-plugins
+claude plugin install --scope project flutter@virajp-plugins
 ```
 
 ## Statusline
@@ -282,17 +284,10 @@ installs through the same CLI — not the plugin marketplace — copying the scr
 to `~/.claude/scripts/` and writing the chosen key(s) into
 `~/.claude/settings.json`. Requires a [Nerd Font](https://www.nerdfonts.com/).
 
-The same flag reaches two more agents through their own mechanisms, and in both
-cases the goal is **information parity, not visual parity** — the separators and
-palette stay theirs. On **Oh-My-Pi** it configures Oh-My-Pi's own status line
-(`omp config set statusLine.*`): model and thinking level, path, git, context,
-usage, cost, time spent, session. On **OpenCode** it installs a **TUI plugin**
-that draws one line into the bottom slot — model, context, cost, duration,
-session, project and branch — registered in `tui.json` and shipped as authored
-`.tsx`, since OpenCode's loader is Bun and nothing needs transpiling. It carries
-no rate-limit windows: OpenCode exposes no ambient rate-limit state, and a
-made-up number would be worse than a missing one. **Cursor** is the one target
-with no status surface at all.
+**Claude Code is the only surface.** An OpenCode TUI bar and an Oh-My-Pi
+configuration existed and were discontinued in the Claude-first release; if you
+have either, `pnpx @askviraj/ai-plugins --uninstall` reads the old receipt and
+removes it cleanly. Cursor exposes no status surface at all, and never did.
 
 ![The statusline: model and effort, context used, rate-limit windows, session cost, repo and branch](./docs/plugins/how-it-looks.png)
 
@@ -301,14 +296,17 @@ with no status surface at all.
 pnpx @askviraj/ai-plugins --statusline
 ```
 
-It also comes along with `--all`, which installs the whole toolkit; pass
-`--no-statusline` there to skip it.
+Installing it also wires a **context & rate-limit caps hook** — it pauses long
+`/vwf:execute` runs at budget thresholds (context over 65%, 5-hour over 90%,
+7-day over 80%) by triggering a handoff. Its sensor *is* that bar, which is why
+the two travel together.
 
-Installing the **Claude** statusline also wires a **context & rate-limit caps
-hook** — it pauses long `/vwf:execute` runs at budget thresholds (context over
-65%, 5-hour over 90%, 7-day over 80%) by triggering a handoff. It is Claude-only
-because its sensor is that bar; neither of the other two surfaces the numbers it
-reads.
+The script reports its own version, so `--version` tells you what is actually
+installed rather than what the package you just ran happens to contain:
+
+```sh
+pnpx @askviraj/ai-plugins --version
+```
 
 The Claude bar also carries a **monthly spend** segment — the budget from
 claude.ai → Settings → Usage, e.g. `$75.93/$150 (51%)`. It sits in the default
@@ -321,141 +319,75 @@ the full configuration reference.
 
 ## The installer CLI
 
-[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins)
-installs the toolkit across **four agents** — Claude Code, Cursor, Oh-My-Pi and
-OpenCode. Three of them have a native plugin marketplace, so the CLI registers
-`virajp-plugins` and lets the tool own the installing. For Claude Code and
-Oh-My-Pi that means driving their own CLI; **Cursor has no CLI**, so its adapter
-writes the marketplace reference into Cursor's settings itself. OpenCode has no
-plugin concept at all, so its bundle is copied into place.
-
-`--platform` picks the target (repeatable: `claude`, `cursor`, `ohmypi`,
-`opencode`); omitted, the CLI **detects** which tools are on `PATH` and installs
-for every one it finds.
+[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins) is
+a small CLI with three jobs: install the **statusline**, wire up **graphify**,
+and **remove** what this toolkit put on your machine. It installs **no plugins**
+— those come from Claude's own commands, shown under [Install](#install) above.
 
 **[docs/cli/](./docs/cli/)** is the full reference —
 [usage](./docs/cli/usage.md) for the flag surface,
-[targets](./docs/cli/targets.md) for what each agent gets and where it lands,
+[targets](./docs/cli/targets.md) for what lands where,
 [statusline](./docs/cli/statusline.md) for why the bar ships here rather than as
 a plugin, and [internals](./docs/cli/internals.md) for the maintainer's map.
 
-### Installing it
+### Using it
 
-**npm is the only distribution channel**, so the CLI needs Node — on every
-platform, Windows included. There is no standalone binary and no Homebrew tap.
+**npm is the only distribution channel**, so it needs Node — on every platform,
+Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
-# The default set + the statusline, for every detected platform
-pnpx @askviraj/ai-plugins --all
+# Install the statusline, and wire graphify
+pnpx @askviraj/ai-plugins --statusline
 
-# Just the default set (no statusline)
-pnpx @askviraj/ai-plugins --all --no-statusline
+# See exactly what a run would write, without writing it
+pnpx @askviraj/ai-plugins --statusline --dry-run
 
-# Named plugins, at whichever scope you ask for
-pnpx @askviraj/ai-plugins --user typescript --project flutter
-
-# OpenCode only
-pnpx @askviraj/ai-plugins --platform opencode --user typescript
-
-# Versions: CLI, statusline, and each plugin's installed-vs-latest (with scope)
+# Versions: this CLI, the statusline on disk, and each plugin against main
 pnpx @askviraj/ai-plugins --version
 
-# Idempotent — installing is already upgrading, so this is safe in a setup script
-pnpx @askviraj/ai-plugins --all
-
-# Uninstall (mirrors the install flags)
-pnpx @askviraj/ai-plugins --uninstall --user vwf
-pnpx @askviraj/ai-plugins --uninstall --all
+# List everything the toolkit installed, and remove what you do not deselect
+pnpx @askviraj/ai-plugins --uninstall
 ```
 
 Notes:
 
-- `--all` installs a **fixed set of two** at user scope — `vwf` and `devtools`,
-  which is the workflow plus exactly what it hard-depends on. Every other plugin
-  is installed **by name**: the languages (`typescript`, `flutter`), the clouds
-  (`cloudflare`, `gcp`), the five capabilities (`datastore`, `identity`,
-  `observability`, `orchestration`, `object-storage`), plus `cicd` and
-  `design-tools`. Nothing is pinned to a scope — any plugin installs at user or
-  project scope on request.
-- `--all` means the whole toolkit, so it **includes the statusline** (Claude
-  Code, Oh-My-Pi and OpenCode) — pass `--no-statusline` for a plugins-only run.
-  The same applies in reverse: `--uninstall --all` removes the statusline too.
-- **A statusline you already have is never replaced without your say-so.** If a
-  selected agent is pointed at a bar this installer did not write, the run asks
-  before overwriting it, and `--statusline` is the only flag that counts as
-  consent — `--all` asks for the toolkit, which is not the same as asking to
-  replace your bar. With no terminal to ask in (a setup script, CI) the run
-  **fails** rather than guessing in either direction. Decline once and the
-  refusal is remembered in `~/.config/statusline.json` as
-  `"autoConfigure": false`, so later runs stop asking; `--statusline` clears it.
-  The bar's own files are installed either way, so a declined machine is one
-  `--statusline` away from a working statusline rather than back at the start.
-- **There is no `--upgrade`.** Plugin content ships inside the npm package, so
-  re-running the install *is* the upgrade — there is nothing remote to fetch.
-  Run the same command again. Two targets keep their own caches and are nudged
-  for you: Claude gets a `plugin update` when its recorded version differs, and
-  Oh-My-Pi a `marketplace update` so its catalog stops describing the release
-  you first installed. Restart Claude afterward.
-- **An invocation that installs nothing prints the help and exits 1** — a bare
-  run, or one carrying only modifiers like `--platform`. `--help` prints the
-  same text on stdout and exits 0, and an unknown flag is an error naming
-  itself.
-- Scope is chosen by the flag: `--user <name>` installs at user scope,
-  `--project <name>` at project scope (you can mix both in one run). The
-  marketplace add is always user-scoped.
-- **`--user`, `--project` and `--platform` are repeatable and every occurrence
-  counts** — `--user vwf --user typescript` installs both. Until the parser was
-  replaced this silently kept only the **last** value, so an invocation like
-  that installed `typescript` alone; if you have a script written against the
-  documented syntax, it was quietly installing less than it named.
-- The installer **checks every required external tool** for what you're
-  installing and prints the install command for anything missing — it never
-  installs a dependency for you.
-
-### What an OpenCode install does
-
-OpenCode has no plugin or marketplace concept — skills, commands, agents and
-plugins each live in a well-known directory, and everything else is config. The
-**build** already emits exactly that shape into this repo's `opencode/` tree, so
-installing is a copy plus a config merge rather than a render on your machine.
-Per selected plugin the CLI:
-
-- copies its bundle into `~/.config/opencode/virajp-plugins/<plugin>/`
-  (`--project` targets the repo-local `.opencode/` instead) — `skills/` for the
-  auto-applying doctrine, `commands/` for the user-invoked workflow skills
-  (**outside** OpenCode's skill discovery, so the model never auto-invokes them,
-  exactly like Claude's user-only skills), and `assets/`. Every
-  `${CLAUDE_PLUGIN_ROOT}` reference was already rewritten at build time;
-- copies the plugin's files in the **global** flat directories — `agent/`
-  (subagents *are* ported), `command/` (the `/vwf-setup`-style wrappers, since
-  OpenCode has no user-invoked skills) and `plugin/` (each hook rendered as a JS
-  plugin: `vwf-rtk.js` and `typescript-npm-normalize.js`). A per-target
-  ownership map says which plugin owns each file, so uninstall removes exactly
-  what was written;
-- merges that plugin's `mcp` and `lsp` entries into your OpenCode config and
-  appends the bundle directory to `skills.paths`. An existing `opencode.jsonc`
-  is preferred (it wins OpenCode's config merge), then an existing
-  `opencode.json`; a new file is created as `opencode.jsonc`. Every write
-  records the key's **prior state**, so uninstall restores a value you had
-  rather than deleting a key it merely wrote over;
-- expands plugin **dependencies**, which Claude Code does natively and OpenCode
-  cannot — so installing `vwf` also installs `devtools`;
-- wires **graphify** when `vwf` is installed
-  (`graphify install --platform
-  opencode` plus the git post-commit hook, both
-  idempotent, both soft-skipping).
-
-**Nothing is skipped any more.** A url-sourced plugin has no rendered bundle for
-the copy adapter to copy, so OpenCode used to install `vwf` and silently go
-without whatever was re-listed rather than authored here — first memory, then
-the Karpathy guidelines. Both are now vendored into `vwf`
-([memory](./docs/plugins/mempalace.md),
-[guidelines](./docs/plugins/karpathy-guidelines.md)) and ship on every target,
-and no plugin in this marketplace is url-sourced today. The statusline **does**
-reach OpenCode, as a TUI plugin registered in `tui.json`; Cursor is the one
-target with no status surface to install into. `--uninstall` replays the receipt
-(it never removes a dependency you didn't name); `--version` compares this
-build's versions against the manifest on `main`.
+- **A statusline you already have is never replaced without your say-so.** If
+  Claude is pointed at a bar this installer did not write, the run asks before
+  overwriting it, and `--statusline` is the flag that counts as consent. With no
+  terminal to ask in (a setup script, CI) the run **fails** rather than guessing
+  in either direction. Decline once and the refusal is remembered in
+  `~/.config/statusline.json` as `"autoConfigure": false`, so later runs stop
+  asking; `--statusline` clears it. The bar's own files are installed either
+  way, so a declined machine is one `--statusline` away from a working
+  statusline rather than back at the start.
+- **`--uninstall` is interactive.** It lists every piece of the toolkit it can
+  see — the marketplace registration, your plugin installs at either scope, the
+  statusline, graphify's hook and graph — with everything **selected**, so you
+  deselect what should stay. Each piece is removed through whatever owns it:
+  `claude plugin uninstall` for plugins, and for the statusline a **restore from
+  the receipt**, so the bar you had before comes back rather than nothing. With
+  no terminal it fails rather than guessing, unless there is nothing to remove.
+  `--dry-run` is the scriptable way to just look.
+- **It also cleans up the discontinued surfaces.** If an older, multi-target
+  version of this CLI installed the OpenCode plugin tree or the OpenCode and
+  Oh-My-Pi statuslines, `--uninstall` reads those old receipts and offers them
+  for removal too. That is kept for a release or two so nothing is orphaned.
+- **`--version` reports what is actually installed.** The statusline script
+  carries its own version and is asked for it directly, because under `pnpx` the
+  running package is whatever was just downloaded and says nothing about your
+  machine. An install predating that flag reports
+  `unknown (predates self-reporting)` rather than being guessed at.
+- **There is no `--upgrade`.** Re-running is the upgrade for the statusline;
+  plugins upgrade through `claude plugin marketplace update virajp-plugins` and
+  `claude plugin update <name>`.
+- **An invocation that installs nothing prints the help and exits 1.** `--help`
+  prints the same text on stdout and exits 0, and an unknown flag is an error
+  naming itself — which is how the retired `--all`, `--user`, `--project`,
+  `--platform` and `--upgrade` now answer.
+- **Behind shared egress**, set `$GITHUB_API_TOKEN` to a read-only (public-repo)
+  token. GitHub's anonymous rate limit is per source IP, so a corporate NAT or a
+  CI runner pool exhausts it between users. Nothing suggests it until you
+  actually hit a limit, and the npm registry call never sends it.
 
 ## Credits & acknowledgements
 

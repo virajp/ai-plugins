@@ -16,13 +16,21 @@ It realizes the `object-file-storage` capability token. Blueprint prose calls it
 
 ## Install
 
+Once, if you have not already:
+
 ```sh
-pnpx @askviraj/ai-plugins --user object-storage
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-The plugin is opt-in, so it is excluded from `--all` and installed by name. It
-is worth installing even though it ships no template: the contract is what the
-chosen store must satisfy, and it is what a flow is written against.
+```sh
+claude plugin install object-storage@virajp-plugins
+```
+
+Add `--scope project` to scope it to one repo instead of every repo on your
+machine. There is no default install set — every plugin here, `object-storage`
+included, is installed by name. It is worth installing even though it ships no
+template: the contract is what the chosen store must satisfy, and it is what a
+flow is written against.
 
 ## The contract
 
@@ -124,11 +132,12 @@ in the product's `stacks:`.
 | `object-storage-stack-menu`     | An empty template list **with the note that explains it** — the deliberate no-provider answer, returned identically every time |
 | `object-storage-stack-template` | An error naming the cloud plugins that do have a store, for any slug — because this plugin has none                            |
 
-Both are `invocation: both`, and here that is more load-bearing than anywhere
-else in the set: a `user` skill is removed from the model's context entirely and
-**cannot be invoked by vwf**, so it returns nothing at all. The failure this
-plugin exists to avoid *is* silence, and a `user` skill is silent — an
-unexplained empty menu would be indistinguishable from the explained one.
+Both stay model-invocable, and here that is more load-bearing than anywhere else
+in the set: a skill marked `disable-model-invocation: true` is removed from the
+model's context entirely and **cannot be invoked by vwf**, so it returns nothing
+at all. The failure this plugin exists to avoid *is* silence, and such a skill
+is silent — an unexplained empty menu would be indistinguishable from the
+explained one.
 
 If a caller asks what the capability requires rather than which store to use,
 that is a legitimate question with a real answer, and the template skill answers

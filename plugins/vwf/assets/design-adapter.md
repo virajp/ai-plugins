@@ -62,13 +62,14 @@ read: it is drift `/vwf:setup`'s `12 → 13` migration copies down onto each UI
 project. An adapter that silently honored it would make the migration optional,
 and the config would keep two answers to one question.
 
-### Every adapter skill MUST be `invocation: both`
+### Every adapter skill MUST be model-invocable
 
-This is the single most important rule in this contract, and getting it wrong
-fails **silently**. On every target, an invocation of `user` removes the skill
-from the model's context entirely and blocks programmatic invocation — so a
-delegated call to such a skill does not error. vwf simply cannot see it, and the
-import quietly does nothing.
+That is `disable-model-invocation: false` in the skill's frontmatter. This is the
+single most important rule in this contract, and getting it wrong fails
+**silently**: `disable-model-invocation: true` removes the skill from the model's
+context entirely and blocks programmatic invocation — so a delegated call to such
+a skill does not error. vwf simply cannot see it, and the import quietly does
+nothing.
 
 An adapter whose skills are user-only is indistinguishable, at runtime, from an
 adapter that returned an empty payload. `plugins:check` enforces this statically

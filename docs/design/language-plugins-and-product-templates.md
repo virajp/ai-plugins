@@ -2,6 +2,13 @@
 
 Draft for review. Nothing here is built yet.
 
+> **Path/terminology pass applied 2026-08-17**, after the Claude-first cutover:
+> paths point at `plugins/`, and frontmatter uses Claude's native spellings.
+> Nothing about the *design* was re-decided. Note also that this draft overlaps
+> the [stackgen plan](../plans/2026-08-17-stackgen.md), which proposes
+> generating language skills rather than authoring a plugin per language — read
+> that first, and treat this as the narrower alternative it competes with.
+
 Two asks that turned out to share a spine: a skill that authors a **language
 plugin**, and a setup flow where the user **picks a template and starts**
 instead of answering a long interview. They meet at the stack template — the
@@ -58,16 +65,18 @@ and, by its own contract, never sees or records a stack.
 One project-level skill, `.claude/skills/language-plugin/`, doing two jobs:
 
 - **Scaffolder** — slash-invocable. Interviews for the language's facts and
-  writes `templates/<lang>/`.
-- **Doctrine** — `invocation: model`, `paths: templates/**`. Read automatically
-  while editing a language plugin.
+  writes `plugins/<lang>/`.
+- **Doctrine** — `user-invocable: false`, `paths: plugins/**`. Read
+  automatically while editing a language plugin.
 
 Per-property depth lives in `references/`, following `plugin-authoring` and
 `installer-cli`.
 
 ### The properties
 
-Enforced by `plugins:check` against any plugin with a non-empty `languages:`.
+Enforced by `plugins:check` against any plugin whose project templates declare
+`languages:` in their frontmatter. (The manifest key of the same name is gone —
+nothing read it, and it folded into `keywords`.)
 
 | Group         | Properties                                                                          |
 | ------------- | ----------------------------------------------------------------------------------- |
@@ -82,9 +91,8 @@ Eighteen waivable, one not.
 
 Three deliberate exclusions:
 
-- **DAP.** No target supports it — not Claude Code, Cursor, OpenCode or
-  Oh-My-Pi. Dropped entirely rather than shipped as config nothing reads.
-  Revisit when a target ships support.
+- **DAP.** Claude Code does not support it. Dropped entirely rather than shipped
+  as config nothing reads. Revisit if that changes.
 - **Tracing.** The `observability` plugin already mandates that the product
   emits OTLP and never a vendor SDK. Restating that in every language plugin
   would eventually contradict it. Profiling stays; tracing points at
@@ -94,8 +102,9 @@ Three deliberate exclusions:
 
 ### Waivers
 
-A `waivers:` map in `plugin.yaml`, property slug to a required reason string,
-mirroring vwf's `enforcement.rules`. Build-time only; rendered to no target.
+A `waivers:` map in the plugin manifest, property slug to a required reason
+string, mirroring vwf's `enforcement.rules`. Build-time only; rendered to no
+target.
 
 `plugins:check` fails on an unaddressed property and passes on a waived one.
 **Waivers print in the per-target coverage report** — a silent waiver is

@@ -22,12 +22,20 @@ Two rules hold across every file in the plugin:
 
 ## Install
 
+Once, if you have not already:
+
 ```sh
-pnpx @askviraj/ai-plugins --user gcp
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-`gcp` is **opt-in** — it is excluded from `--all` and installed by name, because
-most products are not on GCP and a cloud you do not use is noise in the menu.
+```sh
+claude plugin install gcp@virajp-plugins
+```
+
+Add `--scope project` to scope it to one repo instead of every repo on your
+machine. There is no default install set — every plugin here, `gcp` included, is
+installed by name — so install it because your product actually runs on GCP; a
+cloud you do not use is noise in the menu either way.
 
 Then list it in the product's adapter roster so vwf knows to ask it:
 
@@ -42,7 +50,7 @@ installed plugins — see the `stack` block in [vwf's config doctrine](./vwf.md)
 
 ## Skills
 
-Five skills, all `invocation: both`. The two adapter skills are reached by vwf
+Five skills, all model-invocable. The two adapter skills are reached by vwf
 through delegation, at the exact names the stack-adapter contract fixes; the
 three judgment skills are also yours to invoke directly when you are choosing a
 service, reviewing a design, or diagnosing a bill.
@@ -55,9 +63,10 @@ service, reviewing a design, or diagnosing a bill.
 | `gcp-iam`            | Least-privilege identity: one service account per workload, never a JSON key, the roles that are quietly over-broad, and why Firebase security rules are not IAM.                                       |
 | `gcp-local-stack`    | Which services have a first-class emulator, which have none, and what the four fidelity gaps are that survive a green local run.                                                                        |
 
-The two adapter skills must stay `invocation: both` — a `user` skill is removed
-from the model's context entirely and cannot be delegated to, so vwf would get
-an **empty menu** rather than an error. `mise run plugins:check` enforces it.
+The two adapter skills must stay model-invocable — a skill marked
+`disable-model-invocation: true` is removed from the model's context entirely
+and cannot be delegated to, so vwf would get an **empty menu** rather than an
+error. `mise run plugins:check` enforces it.
 
 `gcp` ships **no `-ux-gate` skill**, and vwf never calls one on it. Rendering
 screens belongs to the plugin owning a project's *project*-axis stack, not to

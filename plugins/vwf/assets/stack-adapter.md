@@ -59,7 +59,7 @@ An ordered list of plugin names. Every name must be an installed plugin —
 `stacks: [ gcp ]` means the `gcp` plugin must be installed. Order is the menu
 order; it carries no precedence, because the axes do not overlap. A **dependent**
 plugin does not need its dependency listed: a plugin declaring another in its own
-`plugin.yaml` is installed with it. List what the product chose, not the closure.
+manifest is installed with it. List what the product chose, not the closure.
 
 **What each project picked** is per project, and lives in the project's own
 `stack` block (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`):
@@ -102,19 +102,20 @@ name from the configured value — nothing is looked up or guessed.
 
 **Why the name repeats the plugin.** OpenCode installs skills into one flat
 namespace, so two plugins declaring `stack-menu` would overwrite each other;
-`plugins:check` enforces cross-plugin skill-name uniqueness for exactly that
-reason. Claude Code namespaces by plugin and would have been fine, but the
-contract has to hold on both surfaces.
+Claude Code namespaces a skill by its plugin, so a bare name need only be unique
+inside its own bundle. The `<plugin>-` prefix on every adapter skill name is
+therefore readability rather than a correctness requirement — keep it, because a
+menu skill called `stack-menu` tells a reader nothing about whose menu it is.
 
-### Every adapter skill MUST be `invocation: both`
+### Every adapter skill MUST be model-invocable
 
-The single most important rule here, and getting it wrong fails **silently**.
-`invocation: user` removes the skill from the model's context entirely and
-blocks programmatic invocation — so a delegated call does not error. vwf simply
-cannot see the skill, and the menu comes back empty. A stack plugin whose skills
-are user-only is indistinguishable, at runtime, from one with no templates.
-Each target spells this key its own way; `invocation:` is the neutral form every
-template is authored in, and `plugins:check` enforces it.
+That is `disable-model-invocation: false` in the skill's frontmatter. The single
+most important rule here, and getting it wrong fails **silently**:
+`disable-model-invocation: true` removes the skill from the model's context
+entirely and blocks programmatic invocation — so a delegated call does not error.
+vwf simply cannot see the skill, and the menu comes back empty. A stack plugin
+whose skills are user-only is indistinguishable, at runtime, from one with no
+templates. `plugins:check` enforces it.
 
 ### vwf preflights, because the failure mode is silence
 
@@ -244,11 +245,12 @@ calls it — a project with no UI surface has no screens.
 
 ## Writing a stack plugin
 
-1. `<name>/plugin.yaml` — the neutral manifest: `name`, plus `dependencies` for
-   any plugin whose language it builds on.
+1. `<name>/.claude-plugin/plugin.json` — the manifest: `name`, `version`,
+   `description`, plus `dependencies` for any plugin whose language it builds on.
 2. `skills/<name>-stack-menu/SKILL.md` and
-   `skills/<name>-stack-template/SKILL.md`, both **`invocation: both`**. A
-   `user` skill cannot be invoked by vwf and the failure is silent.
+   `skills/<name>-stack-template/SKILL.md`, both
+   **`disable-model-invocation: false`**. A user-only skill cannot be invoked by
+   vwf and the failure is silent.
 3. `skills/<name>-ux-gate/SKILL.md` only if the plugin owns a UI stack.
 4. `stacks/<axis>/<slug>.md` — the templates themselves, in the plugin's own
    tree. Their shape is the plugin's business; only the payload is contracted.

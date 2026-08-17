@@ -1,16 +1,17 @@
 # Decide which plugins your product needs
 
-`--all` installs the workflow and tells you nothing about your technology: vwf
-names no language, no framework and no cloud, so every concrete option you are
-ever offered comes from a plugin you installed by name. This guide is that
-decision — eleven plugins you choose, plus the workflow and its one hard
-dependency, which arrive together — and which subset a given product wants
-**before** it reaches `/vwf:architecture`, since the menu that command presents
-is exactly what the plugins you installed **and listed in the product's
+Installing `vwf` gets you the workflow and tells you nothing about your
+technology: vwf names no language, no framework and no cloud, so every concrete
+option you are ever offered comes from a plugin you installed by name. This
+guide is that decision — eleven plugins you choose, plus the workflow and its
+one hard dependency, which arrive together — and which subset a given product
+wants **before** it reaches `/vwf:architecture`, since the menu that command
+presents is exactly what the plugins you installed **and listed in the product's
 `stacks:` roster** declare. At the end you have a plugin list you can hand to
 the installer, with a reason for each name on it.
 
-Flags and scopes are [the installer CLI](../../cli/usage.md); what each plugin
+The commands and scopes are
+[the installer CLI](../../cli/usage.md#installing-plugins); what each plugin
 actually ships is its own page, beside [the vwf manual](../../plugins/vwf.md).
 This page only decides which of those pages you need to read.
 
@@ -102,7 +103,7 @@ list falls out of the same three questions: what language, what it stores, and
 whether it has screens. `devtools` is on every line and omitted from the table,
 since vwf brings it.
 
-| Product                                          | Shape                                                                   | Installed beyond `--all`                  |
+| Product                                          | Shape                                                                   | Installed beyond `vwf`                    |
 | ------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------- |
 | [Relay](../greenfield/single-repo.md)            | One TS repo: API + web app, Postgres                                    | `typescript`, `datastore`, `design-tools` |
 | [Centwise](../greenfield/ui-with-design-tool.md) | One Flutter app, designed on a canvas                                   | `flutter`, `design-tools`                 |
