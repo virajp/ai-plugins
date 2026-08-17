@@ -8,32 +8,49 @@ across sessions. It ships 33 MCP tools and guided setup, and it is what backs
 **It is not a plugin in this marketplace.** It was one — a `url`-sourced
 re-listing of the upstream repo, and a `vwf` dependency — until its memory layer
 was folded into `vwf` itself. Two skills are now vendored under
-`templates/vwf/skills/`, the auto-save hooks are reimplemented in `vwf`, and the
+`plugins/vwf/skills/`, the auto-save hooks are reimplemented in `vwf`, and the
 MCP server is declared by `vwf`. There is nothing to install by name.
 
 It is still maintained externally at
 [MemPalace/mempalace](https://github.com/MemPalace/mempalace), under MIT.
 Provenance, the version taken, the local edits and the resync policy are
-recorded in `templates/vwf/vendor/mempalace/`, which ships in every rendered
-bundle.
+recorded in `plugins/vwf/vendor/mempalace/`, which ships with the plugin.
 
-## Why it was vendored
+## Why it is vendored
 
-A url-sourced plugin has no rendered bundle in this repo, and the OpenCode
-adapter can only copy a rendered bundle — so `cli/src/plan.ts` skipped it (the
-`localOnly` branch). The result was that **OpenCode users got no memory layer at
-all**, silently: the plugin was listed, the install reported a skip note, and
-the thing `vwf` leans on hardest was simply absent. The three marketplace
-targets were fine, which is what made it easy to miss.
+**The argument that first forced this is historical, and worth naming as such so
+nobody re-litigates the decision against it.** This repo used to render one
+plugin tree per agent, and a url-sourced plugin had no rendered tree to render —
+so the OpenCode adapter, which could only copy one, skipped it. OpenCode users
+got no memory layer at all, silently: the plugin was listed, the install printed
+a skip note, and the thing `vwf` leans on hardest was simply absent. There is no
+OpenCode adapter now, and no rendered trees; that failure mode is gone with
+them.
 
-Vendoring is what makes memory ship on every target. It is a deliberate one-time
-fork, not a mirror and not a submodule — nothing automated watches upstream, so
-the **Version taken** row in `templates/vwf/vendor/mempalace/README.md` is the
-only thing that makes drift detectable.
+What keeps the vendoring is a set of properties a re-listing never had:
+
+- **The provenance travels with the code.** The version taken, the licence
+  position, the local edits and the resync policy sit in
+  `plugins/vwf/vendor/mempalace/`, inside the plugin a user installs — so the
+  question "which upstream is this, and what was changed" is answerable from the
+  install rather than from this repo's history.
+- **Nothing has to be reachable at install time for memory to work.** The skills
+  are files in the plugin. A dependency resolved from a URL is one more thing
+  that can be moved, renamed or rate-limited between the day this ships and the
+  day someone installs it.
+- **A url source pins every reader to whatever ref it happened to resolve.** Two
+  machines installing `vwf` a month apart could get different memory skills,
+  with nothing in either install saying which. A vendored copy is one version,
+  visible in review and diffable in a pull request.
+
+It is a deliberate one-time fork, not a mirror and not a submodule — nothing
+automated watches upstream, so the **Version taken** row in
+`plugins/vwf/vendor/mempalace/README.md` is the only thing that makes drift
+detectable, and it is the one edit a resync must not skip.
 
 ## Skills
 
-Two, both from upstream, now shipped as `vwf` skills on every target:
+Two, both from upstream, now shipped as `vwf` skills:
 
 | Skill                   | What it does                                                                                  |
 | ----------------------- | --------------------------------------------------------------------------------------------- |
@@ -43,54 +60,66 @@ Two, both from upstream, now shipped as `vwf` skills on every target:
 Deliberately **not** taken: the Python package, the MCP server implementation,
 and the `integrations/` tree. `vwf` declares the server itself; the daemon is
 installed out-of-band by whatever tool manager the machine uses, and `vwf`
-neither installs nor supervises it. `uv` **is** one of `vwf`'s `requires:`, but
-for **graphify's** Python runtime — `templates/vwf/plugin.yaml` says so in the
-comment beside the entry. It is not there for mempalace, whichever installer you
-reach for.
+neither installs nor supervises it.
+
+**Nothing checks for the daemon at install time**, and nothing ever will: the
+install-time binary gate is retired, so `vwf` installs on a machine with no
+mempalace on it and says nothing. That is the right shape — memory is
+best-effort, and a missing daemon degrades rather than breaks. What does report
+it is `/vwf:doctor`, which checks the memory **files** even when the server is
+unreachable. The one Python-toolchain prerequisite `vwf` genuinely leans on
+belongs to **graphify**, not to mempalace, and doctor §8 treats a missing
+`graphify` CLI as a **blocking** finding with
+`mise use -g pipx:graphifyy@latest` as the remedy.
 
 ## Auto-save
 
 Upstream ships an auto-save hook; `vwf` **reimplements** it rather than
-vendoring it, because the upstream one works on exactly one target. It counts
-human messages by parsing `transcript_path` — a Claude Code JSONL transcript —
-and breaks its own save loop with `stop_hook_active`. Neither exists on Cursor,
-Oh-My-Pi or OpenCode, so wrapping that script for them yields a hook that runs,
-finds no transcript, and does nothing: green in a coverage report, dead in
-practice.
+vendoring it. The reason used to be reach — upstream counts human messages by
+parsing `transcript_path`, a Claude Code JSONL transcript, and no other agent
+had one — and that argument is spent now that Claude Code is the only agent
+here.
 
-What `vwf` ships instead:
+The conclusion outlives it, on three narrower grounds. Counting *stops* in a
+state file needs nothing from the payload but a session id, where parsing a
+transcript needs the transcript to exist, to be readable, and to keep its
+current shape across Claude Code releases; it is **simpler**, in the sense that
+there is less of it to be wrong; and it is what the tests actually cover
+(`cli/src/mempalace-checkpoint-script.test.ts` drives the script directly).
+Wrapping upstream's would mean owning a JSONL format nobody here controls in
+order to answer a question a counter already answers.
 
-- **`hooks/mempalace-checkpoint.sh`** — POSIX sh, on the neutral `stop` event.
-  It counts *stops* in a state file under
-  `$XDG_STATE_HOME/ai-plugins/mempalace`, which needs nothing from the payload
-  but a session id, and every target supplies one. Every 15th stop
-  (`MEMPALACE_SAVE_INTERVAL` overrides) it asks the model to write a diary entry
-  and persist it through the mempalace MCP tools. A payload carrying
+The two shell hooks, declared in `plugins/vwf/hooks/hooks.json`, are all there
+is:
+
+- **`hooks/mempalace-checkpoint.sh`** — POSIX sh, on the `Stop` event. It counts
+  stops in a state file under `$XDG_STATE_HOME/ai-plugins/mempalace`. Every 15th
+  stop (`MEMPALACE_SAVE_INTERVAL` overrides) it asks the model to write a diary
+  entry and persist it through the mempalace MCP tools. A payload carrying
   `stop_hook_active: true` resets the counter and passes, so a save cycle cannot
   re-trigger itself.
-- **`hooks/mempalace-precompact.sh`** — the `preCompact` half: always speaks,
+- **`hooks/mempalace-precompact.sh`** — the `PreCompact` half: always speaks,
   and resets the count. It is a one-line `exec` wrapper passing `--compact`
-  rather than an argument in `hooks.yaml`, because the neutral hook schema names
-  a script and passes it nothing.
-- **`opencode-plugin/mempalace-autosave.ts`** — OpenCode only, which is why both
-  shell hooks carry `skipTargets: [ opencode ]`. OpenCode has no stop to block;
-  its equivalent surface is a bus event plus a server API you inject a message
-  into. This counts real user messages via that API on `session.idle` and
-  re-saves after `session.compacted`.
+  rather than an argument in the hook declaration. That began as a constraint of
+  the retired neutral hook schema, which named a script and passed it nothing;
+  with hooks authored directly as `hooks.json` an argument is expressible, so
+  this is now merely how it is — collapsing the two entries into one would be a
+  fine simplification, and the tests cover the behaviour either way.
 
 Both honour mempalace's own opt-out, so a user who turned auto-save off upstream
 stays off here: `MEMPALACE_HOOKS_AUTO_SAVE=false|0|no`, or
-`{"hooks": {"auto_save": false}}` in `~/.mempalace/config.json`.
+`{"hooks": {"auto_save": false}}` in `~/.mempalace/config.json`. The config is
+read with a substring test rather than a JSON parse — `jq` is not a dependency
+of this toolkit — and a malformed config reads as *enabled*, which is the safe
+direction: it saves too often rather than silently never.
 
-Two OpenCode limits are documented rather than papered over: `session.compacted`
-fires *after* compaction, so it persists only what the model still holds; and
-there is no usable session-exit event, so the interval saves cover it
-indirectly.
+Both are POSIX sh with BSD-portable tooling only, because they run on macOS,
+where `sed` has no `\s`/`\b` and `grep -P` does not exist.
 
 ## Running the server (HTTP daemon)
 
 `vwf` declares mempalace over **HTTP**, not stdio — see its `mcpServers` block
-in `templates/vwf/plugin.yaml`. You run the server yourself:
+in `plugins/vwf/.claude-plugin/plugin.json`. You run the server yourself:
 
 ```sh
 mempalace-mcp --transport http --host 127.0.0.1 --port 8765
@@ -104,9 +133,9 @@ supervisor-env section for why the file matters.
 
 Why not stdio: an stdio server is a **child process of the agent**, so when it
 dies the connection stays dead for the rest of the session. Over HTTP it
-reconnects, survives session restarts, and one daemon serves **every** agent
-instance at once — every target, all repos, all worktrees, in parallel. Its logs
-are also yours to read, which is what makes a flaky memory layer diagnosable.
+reconnects, survives session restarts, and one daemon serves **every** Claude
+Code instance at once — all repos, all worktrees, in parallel. Its logs are also
+yours to read, which is what makes a flaky memory layer diagnosable.
 
 The other half of the reason is that the palace keeps local JSON state beside
 the store — `hallways.json` and the tunnel file — which is rewritten whole with
@@ -336,7 +365,7 @@ whole tree including submodules — mining reads the config only from the
 directory it is pointed at, so a second copy or a misplaced one is silently
 inert rather than merely wrong, and `/vwf:doctor` reports either as
 **blocking**. Its `exclude_patterns` carries a secret denylist as a backstop
-behind `.gitignore`; the protocol is `templates/vwf/assets/memory.md`.
+behind `.gitignore`; the protocol is `plugins/vwf/assets/memory.md`.
 
 Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
 step and proceeds. The one exception is `/vwf:handoff` and `/vwf:recall` — the
@@ -354,6 +383,6 @@ fallback path.
 - [vwf](./vwf.md) — how the Product → Blueprint → Plan → Execute workflow uses
   memory, and the `assets/memory.md` protocol that is authoritative for it.
 - [karpathy-guidelines](./karpathy-guidelines.md) — the other vendored skill,
-  folded into `vwf` for the same reason.
+  folded into `vwf` on the same reasoning.
 - [MemPalace upstream](https://github.com/MemPalace/mempalace) — full feature
   and tool documentation.

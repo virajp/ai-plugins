@@ -180,7 +180,7 @@ export async function run(args: Args): Promise<void> {
   }
 
   if (args.uninstall) {
-    await uninstall(options);
+    await uninstall(options, report);
     return;
   }
 
@@ -258,7 +258,12 @@ export async function run(args: Args): Promise<void> {
  * failing it for want of a terminal would make `--uninstall` unusable in a
  * script that is checking whether anything is left.
  */
-async function uninstall(options: RunOptions): Promise<void> {
+async function uninstall(
+  options: RunOptions,
+  // The same reporter the install run uses, so an uninstall report carries the
+  // version that produced it and is worth pasting into an issue.
+  report: (outcomes: readonly Outcome[]) => void,
+): Promise<void> {
   const { progress } = options;
   progress?.step("looking for what is installed");
   const items = enumerate(options);
@@ -315,7 +320,7 @@ async function uninstall(options: RunOptions): Promise<void> {
   }
 
   const outcomes = removeItems(selected, options);
-  process.stderr.write(`${renderProgress(outcomes)}\n`);
+  report(outcomes);
   process.exit(failed(outcomes) ? 1 : 0);
 }
 

@@ -5,8 +5,8 @@ A powerline-style
 installed by the `@askviraj/ai-plugins` CLI. One script drives **two surfaces**
 — the main two-line status bar and the subagent panel — and everything it draws
 is data-driven from JSON, so you can restyle it per repo without touching code.
-The same flag brings the same information to [Oh-My-Pi](#oh-my-pi) and
-[OpenCode](#opencode), each through its own mechanism.
+Claude Code is the only agent it draws in; the two other bars this page used to
+document are [discontinued](#discontinued-surfaces).
 
 - Script: [`tools/statusline/statusline`](../../tools/statusline/statusline)
 - Defaults:
@@ -15,8 +15,6 @@ The same flag brings the same information to [Oh-My-Pi](#oh-my-pi) and
   [`schemas/statusline.schema.json`](../../schemas/statusline.schema.json)
 - Caps hook:
   [`tools/statusline/context-caps.js`](../../tools/statusline/context-caps.js)
-- OpenCode TUI plugin:
-  [`tools/statusline/opencode-tui.tsx`](../../tools/statusline/opencode-tui.tsx)
 
 > **Requires a [Nerd Font](https://www.nerdfonts.com/).** The separators and
 > most symbols are private-use glyphs; without a patched font they render as
@@ -36,64 +34,71 @@ pnpx @askviraj/ai-plugins --statusline
 ```
 
 **npm is the only channel.** There is deliberately no standalone binary, no
-Homebrew tap and no Scoop bucket: a binary here could never be self-contained,
-because the marketplace targets re-read a real rendered directory on every later
-session, so the payload has to sit on disk beside the executable rather than
-inside it. Windows runs the same `pnpx` command everyone else does.
+Homebrew tap and no Scoop bucket: what the package carries is a handful of files
+that have to end up on disk — the script, the caps hook and the seeded config —
+and `pnpx` already puts them there without a global install to keep current.
+Windows runs the same `pnpx` command everyone else does.
 
-`--all` installs the whole toolkit and so brings the statusline with it; pass
-`--no-statusline` alongside it for a plugins-only run.
+**`--statusline` is now the only way to ask for an install.** The flag that used
+to bring the bar along with a plugin install — `--all` — is retired along with
+the plugin installs themselves, which Claude Code does natively now. Parsing is
+strict, so `--all`, `--user`, `--project`, `--platform` and `--upgrade` all fail
+naming themselves rather than being quietly ignored. `--no-statusline` remains,
+and a run that asks for nothing at all prints the help and exits 1.
 
-On Claude Code, the CLI:
+The one other flag that changes what happens here is `--force`. Writing a
+`statusLine` key into `~/.claude/settings.json` for a Claude Code that is not on
+the machine leaves config behind for something that will never read it, so a run
+that cannot find `claude` on `PATH` stops and says so; `--force` is the
+override, for a machine where Claude Code is installed somewhere off `PATH`.
+
+The CLI then:
 
 - copies the statusline script into `~/.claude/scripts/` (made executable),
 - seeds `~/.config/statusline.json` with the bundled defaults — or, if it
   already exists, deep-merges any missing settings into it (your edits are
   preserved),
-- writes the requested key(s) into `~/.claude/settings.json`, leaving any other
+- writes both bar keys into `~/.claude/settings.json`, leaving any other
   settings untouched, and
-- whenever the main bar is installed, wires the
-  [context & rate-limit caps hook](#context--rate-limit-caps-vwf).
+- wires the [context & rate-limit caps hook](#context--rate-limit-caps-vwf).
+
+The settings file follows `CLAUDE_CONFIG_DIR` where you have set one, because
+that is where Claude Code reads it back from. The script and the hook do not:
+the values written *into* settings name `${HOME}` literally and are expanded by
+Claude Code at run time, so those two files land under `$HOME` wherever the
+config itself lives.
 
 ### Consent before replacing a statusline you already have
 
-If a selected agent is already pointed at a bar **this installer did not
-write**, the run asks before overwriting it, naming what it found. The test is
-ownership, not existence: a bar already running our command is one of our own
-earlier runs, so a repeat install never asks about itself.
+If Claude Code is already pointed at a bar **this installer did not write**, the
+run asks before overwriting it, naming what it found. The test is ownership, not
+existence: a bar already running our command is one of our own earlier runs, so
+a repeat install never asks about itself.
 
-- **`--statusline` is consent**, and the only flag that is. `--all` is not — it
-  asks for the toolkit, which is not the same as asking to replace your bar.
+- **`--statusline` is consent**, and the only thing that is. It used to share
+  the job with `--all`, which asked for the whole toolkit — and a toolkit that
+  happens to include a status bar is not the same as choosing to replace the one
+  you have. With `--all` gone, **every install run is explicit and this gate
+  grants every time**; the branches that ask are kept rather than deleted,
+  because the day anything other than the flag can trigger an install, deleting
+  them would be the silent overwrite they exist to prevent.
 - **With no terminal to ask in** — a setup script, CI, anything piping stdin —
   the run **fails** rather than guessing. Silently overwriting is the thing this
   gate exists to prevent, and silently skipping would let an unattended install
   report success with the bar unconfigured.
 - **Declining is remembered.** Answering no writes `"autoConfigure": false` into
-  `~/.config/statusline.json`, and later runs stop asking. One flag covers all
-  three surfaces, so declining once is declining. `--statusline` clears it.
-- **The bar is installed either way.** Declining withholds only the host tool's
-  config — the script, the caps hook and the TUI plugin still land — so a
-  declined machine is one `--statusline` from a working statusline rather than
-  back at the start. Oh-My-Pi is the exception, having no files of its own: it
-  is nothing but `omp config` keys, so declining skips the surface entirely.
+  `~/.config/statusline.json`, and later runs stop asking. The key is
+  deliberately not per surface — it was one answer across the three bars this
+  CLI used to install, so declining once was declining — and a machine still
+  carrying one from then has it **cleared by the next `--statusline`**. That is
+  the live path through this gate now: an old refusal being lifted.
+- **The bar is installed either way.** Declining withholds only the
+  `settings.json` keys pointing Claude at it — the script and the caps hook
+  still land — so a declined machine is one `--statusline` from a working
+  statusline rather than back at the start.
 
 Whatever you allow is captured in the receipt, so `--uninstall` puts the
 previous bar back byte for byte.
-
-Each surface is asked about separately, because a foreign bar in one says
-nothing about another. What counts as foreign differs by how the surface is
-configured: Claude and Oh-My-Pi are *overwritten* — a `statusLine` value or an
-`omp` preset that is not ours — while OpenCode is *appended* to, so the question
-there is whether `tui.json` is a file we authored.
-
-Everything above describes the **Claude Code** surface (it lives under
-`~/.claude`). The CLI drives four targets — `claude`, `cursor`, `ohmypi` and
-`opencode` — and `--statusline` installs whichever surfaces the selected targets
-have: the script bar for Claude Code, [Oh-My-Pi's own status line](#oh-my-pi)
-for `ohmypi`, a [TUI plugin](#opencode) for `opencode`. **Cursor** is the one
-target exposing none, so on a run reaching only it (`--platform cursor`)
-`--statusline` is skipped with a note. The note is printed only when you asked
-for it **explicitly**, so a bare `--all` on a Cursor-only machine stays quiet.
 
 The blocks it writes:
 
@@ -114,14 +119,41 @@ The blocks it writes:
 
 The script reads the Claude Code payload on stdin and detects the surface: a
 payload with a `tasks` array renders the subagent panel, anything else renders
-the main bar. Errors go to stderr so they never corrupt the line. The one
-invocation that reads no payload is `--refresh-spend`, the background child
-described under [Monthly spend budget](#monthly-spend-budget-spend).
+the main bar. Errors go to stderr so they never corrupt the line. Two
+invocations read no payload: `--refresh-spend`, the background child described
+under [Monthly spend budget](#monthly-spend-budget-spend), and `--version`.
+
+### Checking which version you have
+
+```sh
+pnpx @askviraj/ai-plugins --version
+```
+
+Three things are reported: this CLI's own version against the latest on npm, the
+**statusline on disk** against the one this run carries, and the plugins
+`virajp-plugins` currently offers on `main`. It exits non-zero when the network
+could not be reached, since a report that compared against nothing answered half
+the question.
+
+The statusline line is the one worth explaining, because it used to be wrong.
+The script now **reports its own version** — `statusline --version` prints a
+constant stamped into it by `i:version` at bump time, which `i:test` asserts
+equals `package.json` — and the CLI runs the *installed* copy to ask. Before
+that it printed the running package's version beside the bar, annotated "bundled
+with the CLI"; under `pnpx` that is whatever was just downloaded, so the number
+actually sitting in `~/.claude/scripts/` was never shown and a stale bar was
+invisible. "Bundled" is now only ever context for the installed number rather
+than the answer itself.
+
+An install predating the flag reads as `unknown (predates self-reporting)`, and
+the report tells you to re-run `--statusline`. That state is detected from the
+*shape* of the answer, never the exit code: an old script does not recognise
+`--version`, so it does what it always does with a payload-less run and renders
+a bar, exiting 0 either way.
 
 ## Context & rate-limit caps (vwf)
 
-Installing the **main** status bar (`--statusline`, or `--all`) also wires a
-`PostToolUse` hook —
+Installing the status bar (`--statusline`) also wires a `PostToolUse` hook —
 [`tools/statusline/context-caps.js`](../../tools/statusline/context-caps.js) —
 that pauses long autonomous `vwf` runs before they exhaust a budget. It is
 **bundled with `statusLine`** because it relies on that script as its sensor.
@@ -149,157 +181,53 @@ shipped defaults.
 A hook can't clear context or invoke slash commands, so resuming is one
 keystroke from you. The hook is **inert** until the main bar runs (no usage file
 is written otherwise) and its directives reference `vwf` commands, so it's only
-useful with the `vwf` plugin installed. `--uninstall --statusline` removes the
-hook, its env var, and the script.
+useful with the `vwf` plugin installed. Removing the statusline in `--uninstall`
+takes the hook, its env var and the script with it.
 
-## Oh-My-Pi
+## Discontinued surfaces
 
-Oh-My-Pi exposes no scriptable status surface — there is no key to point at a
-script of ours. It ships a segment renderer instead, so `--statusline` on a run
-targeting `ohmypi` configures **that**, through four `omp config set` calls:
+**If you have an Oh-My-Pi or an OpenCode status bar from this toolkit, it is no
+longer maintained and no later install will put it back.** Both were
+discontinued in the Claude-first release, and since this page is where you would
+come looking, here is what happened to them.
 
-```sh
-omp config set statusLine.preset custom
-omp config set statusLine.leftSegments '["model","path","git"]'
-omp config set statusLine.rightSegments '["context_pct","usage","cost","time_spent"]'
-omp config set statusLine.segmentOptions '{"model":{"showThinkingLevel":true},"path":{"abbreviate":true,"maxLength":40,"stripWorkPrefix":true},"git":{"showBranch":true,"showStaged":true,"showUnstaged":true,"showUntracked":true}}'
-```
+"The statusline" was three installs of one idea, because none of those agents
+offers the hook Claude Code does. Only Claude Code can be pointed at a script,
+so only Claude Code ever ran the script this page documents. **Oh-My-Pi** has no
+scriptable status surface at all — it ships a segment renderer, so the install
+was four `omp config set` calls selecting its own segments to approximate ours.
+**OpenCode** has neither a key nor a renderer, so the install copied a TUI
+plugin (`ai-plugins-statusline.tsx`) into `~/.config/opencode/` and registered
+it in `tui.json`; that plugin redrew the bar from OpenCode's own session state,
+in OpenCode's own styling. Each was information parity at best, never visual
+parity, and neither could carry the [caps hook](#context--rate-limit-caps-vwf) —
+its sensor is the Claude bar, which mirrors `context_window` and `rate_limits`
+to a usage file after every render, and nothing equivalent existed on either
+side. **Cursor** exposes no status surface whatever, and never did; there is
+nothing discontinued there because there was never anything to install.
 
-`preset: custom` is what makes the other three take effect; the named presets
-ignore the segment lists entirely. Everything lands in Oh-My-Pi's global
-`config.yml` (under `$HOME/.omp/agent`, or wherever `PI_CODING_AGENT_DIR`
-points), written by `omp` itself — this CLI never opens it.
+**`--uninstall` still cleans them up.** Every receipt in the receipt directory
+other than the statusline's is the record of an install by a multi-target
+version of this CLI, and reading them back is the one piece of multi-target code
+deliberately kept: without it a machine carrying those bars is orphaned rather
+than cleaned, because nothing else knows those paths. So an uninstall lists them
+under **Older multi-target installs**, and removing them does what the install's
+own undo always did — each `omp config` key back to the value it held before
+(and Oh-My-Pi's own caveat still applies: `omp config reset` writes the default
+back as explicit YAML rather than removing the key, so one that was absent from
+a `config.yml` you already had returns as its explicit default), the copied TUI
+plugin deleted and its `tui.json` entry taken back out, deleting that file
+outright if this CLI created it and otherwise restoring it key by key so a
+plugin you registered yourself survives. A tool that is no longer on `PATH` is
+skipped with a note rather than failing the run.
 
-**Information parity, not visual parity.** The powerline styling is deliberately
-dropped: the separators and palette are Oh-My-Pi's, and reproducing ours would
-mean fighting a renderer we do not own. What is mirrored is the *content* of the
-Claude bar:
-
-| Claude bar            | Oh-My-Pi      | Note                                   |
-| --------------------- | ------------- | -------------------------------------- |
-| `model` (+ `effort`)  | `model`       | `showThinkingLevel` carries the effort |
-| `project`, `worktree` | `path`        | abbreviated, work prefix stripped      |
-| `branch`              | `git`         | built in there; we shell out to git    |
-| `context`             | `context_pct` | already carries the total              |
-| `cost`                | `cost`        |                                        |
-| `duration`            | `time_spent`  | active agent time, not wall clock      |
-| `rl5h` + `rl7d`       | `usage`       | parity, on Anthropic only — see below  |
-| `spend`               | **omitted**   | Claude-only; no equivalent segment     |
-
-`usage` gives the **same** reading, and a little more: it renders `5h <pct>%`
-and `7d <pct>%` from the Anthropic OAuth usage response, plus a reset countdown
-and tier label the Claude bar does not show.
-
-The caveat is that it is **per-provider**. The segment hides itself unless the
-active provider reported a five-hour or seven-day window, so on a non-Anthropic
-model the bar simply has no rate-limit reading to give — an absent input rather
-than a missing feature.
-
-**Two segments are deliberately not carried, and both are width decisions.** The
-bar is one line and Oh-My-Pi pads every segment, so a segment costs space
-whether or not it says anything new:
-
-- **`context_total` is redundant, not missing.** `context_pct` renders the
-  window alongside the percentage (`7.1%/1M`), and `context_total` renders that
-  same window and nothing else — so the pair drew `1M` twice.
-- **`session_name` is dropped for width.** It is the one segment whose length is
-  unbounded: a session title runs to a full sentence and crowded the numeric
-  segments off the line. The Claude and OpenCode bars keep theirs; this is the
-  one place the three diverge on content rather than styling.
-
-The **caps hook is not installed here**, for the same reason: its sensor is the
-Claude bar, which mirrors `context_window` and `rate_limits` to a usage file
-after every render. Nothing equivalent exists on this side.
-
-`--uninstall --statusline` puts each key back to the value it had before the
-install — read with `omp config get` first, and recorded only for keys that
-actually changed, so a setting you chose yourself is never overwritten by an
-uninstall that changed nothing. One caveat, and it is Oh-My-Pi's:
-`omp config reset` does not *remove* a key, it writes the default back as
-explicit YAML. So a key that was absent from a `config.yml` you already had
-comes back as its explicit default — semantically identical, a couple of lines
-longer. A `config.yml` that did not exist at all is deleted outright, which is
-the ordinary case.
-
-If `omp` is not on `PATH`, this is skipped with a note rather than failing — the
-same rule the plugin targets follow.
-
-## OpenCode
-
-OpenCode has neither a config key to point at a script nor a status renderer to
-configure. What it has is an **extension point**: a TUI plugin can register a
-slot, and `app_bottom` is the bottom row. So `--statusline` on a run targeting
-`opencode` copies
-[`tools/statusline/opencode-tui.tsx`](../../tools/statusline/opencode-tui.tsx)
-into the OpenCode config dir as `ai-plugins-statusline.tsx` and registers it:
-
-```jsonc
-// ~/.config/opencode/tui.json
-{
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["./ai-plugins-statusline.tsx"],
-}
-```
-
-Three things about that are worth knowing, none of which the published docs get
-right:
-
-- **`tui.json` is a different file from `opencode.json`.** OpenCode routes
-  plugins by kind — a `server` plugin goes in `opencode.json`, everything else
-  in `tui.json`. An entry in the wrong one is accepted and never loaded.
-- **TUI plugins are not auto-discovered.** The `{plugin,plugins}/*.{ts,js}` glob
-  that picks up server plugins (vwf's mempalace auto-save among them) does not
-  reach them. The `tui.json` entry *is* the registration.
-- **There is no build step.** The plugin ships as authored `.tsx`. OpenCode's
-  loader is Bun: it honours the `@jsxImportSource` pragma and resolves both
-  `@opentui/solid` and `@opencode-ai/plugin/tui` itself, so nothing is
-  transpiled, bundled, or installed alongside it.
-
-**Information parity, not visual parity** — the same trade as Oh-My-Pi, for the
-same reason. OpenCode owns the frame and the palette, so the line is drawn with
-its styling and none of ours:
-
-| Claude bar            | OpenCode                                | Note                                      |
-| --------------------- | --------------------------------------- | ----------------------------------------- |
-| `model` (+ `effort`)  | `session.get(id).model`                 | `variant` is the nearest thing to effort  |
-| `context`             | last assistant `tokens` ÷ model `limit` | summed here; a single number there        |
-| `cost`                | `session.get(id).cost`                  |                                           |
-| `duration`            | `session.get(id).time`                  | **wall clock**, not Claude's active time  |
-| `session`             | `session.get(id).title`                 |                                           |
-| `project`, `worktree` | `state.path()`                          | worktree basename + the subpath inside it |
-| `branch`              | `state.vcs().branch`                    | branch only — no dirty or ahead counts    |
-| `rl5h` + `rl7d`       | **omitted**                             | no ambient rate-limit state — see below   |
-| `spend`               | **omitted**                             | Claude-only — no equivalent state         |
-
-Three of those rows are gaps rather than translations, and all three are
-deliberate. `spend` reads Claude Code's own stored credentials, which OpenCode
-has no equivalent of; the other two:
-
-- **The rate-limit windows are omitted, not approximated.** OpenCode exposes no
-  ambient rate-limit state at all — it parses provider headers on error paths
-  and nowhere else. Oh-My-Pi at least has a `usage` segment to record as a known
-  gap; here there is nothing to point at, and a made-up number would be worse
-  than a missing one.
-- **The branch carries no dirty or ahead marks.** `state.vcs()` returns the
-  branch and the default branch, and that is all. The Claude bar gets the rest
-  by shelling out to git, which this must not do: the slot renders on every
-  frame, and a `git` process per frame is not a status line.
-
-The **caps hook is not installed here** either, for the Oh-My-Pi reason: its
-sensor is the Claude bar, which mirrors `context_window` and `rate_limits` to a
-usage file after every render.
-
-`--uninstall --statusline` removes the copied plugin and takes the entry back
-out of `tui.json` — deleting the file outright if this CLI created it, and
-otherwise restoring it key by key so a TUI plugin you registered yourself
-survives. If `opencode` is not on `PATH`, the install is skipped with a note
-rather than failing.
+That reader is **kept for a release or two and then removed**, once no supported
+version can have written one of those receipts. Until then it costs nothing and
+it is the only migration path off the discontinued bars.
 
 ## Configuration
 
-Everything from here down describes the **Claude Code** script. Oh-My-Pi's
-status line is configured through `omp config`, and OpenCode's is a TUI plugin
-with no configuration of its own — neither reads these files.
+Everything from here down describes the script Claude Code runs.
 
 Configuration is layered. Two files are deep-merged at render time, in
 increasing precedence (a higher layer overrides the same key in a lower one):
@@ -427,8 +355,7 @@ and the bar can re-render every few seconds, so a render **never fetches**:
   network failure just leaves the cache as it was.
 
 The endpoint is the one Claude Code itself uses but is **not publicly
-documented**, so the segment degrades to invisible if its shape changes. It is
-Claude-bar only: neither the Oh-My-Pi nor the OpenCode surface carries it.
+documented**, so the segment degrades to invisible if its shape changes.
 Dropping `spend` from `lines` switches the whole mechanism off — the cache is
 read, and a refresh spawned, only when the layout names the segment.
 
