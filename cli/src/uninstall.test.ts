@@ -27,12 +27,14 @@ import type { Receipt } from "./receipt.ts";
 import { RECEIPT_VERSION } from "./receipt.ts";
 import type { Item } from "./uninstall.ts";
 import {
+  defaultSelected,
   enumerate,
   installedPlugins,
   parseSelection,
   removeItem,
   removeItems,
   renderItems,
+  resolveSelection,
 } from "./uninstall.ts";
 
 /**
@@ -298,20 +300,28 @@ describe("enumerate", () => {
 });
 
 describe("parseSelection", () => {
-  it("reads an empty answer as remove everything", () => {
-    // The list is presented with everything selected, so Enter is the answer to
-    // the question actually asked.
-    expect(parseSelection("", 3)).toEqual({ kind: "keep", keep: new Set() });
+  it("reads an empty answer as accept what is shown", () => {
+    // The list is presented with its defaults already applied, so Enter is the
+    // answer to the question actually asked.
+    expect(parseSelection("", 3)).toEqual({
+      kind: "toggle",
+      toggle: new Set(),
+    });
   });
 
-  it("reads numbers as what STAYS", () => {
+  it("reads numbers as rows to TOGGLE", () => {
     expect(parseSelection("1, 3", 3))
-      .toEqual({ kind: "keep", keep: new Set([1, 3]) });
+      .toEqual({ kind: "toggle", toggle: new Set([1, 3]) });
   });
 
   it("accepts spaces as well as commas", () => {
     expect(parseSelection("2 3", 3))
-      .toEqual({ kind: "keep", keep: new Set([2, 3]) });
+      .toEqual({ kind: "toggle", toggle: new Set([2, 3]) });
+  });
+
+  it("refuses an out-of-range row", () => {
+    expect(parseSelection("4", 3))
+      .toEqual({ kind: "invalid", tokens: ["4"] });
   });
 
   it("takes q as a cancel", () => {
@@ -684,5 +694,57 @@ describe("removeItems", () => {
 
     expect(existsSync(kept)).toBe(true);
     expect(existsSync(receiptDir)).toBe(true);
+  });
+});
+
+describe("the tracked default", () => {
+  // A row whose removal edits a git-tracked file starts OFF. Accepting the
+  // defaults inside a repo must not dirty the working tree — that is not a
+  // cleanup, it is an uncommitted change the user did not ask for.
+  const items: Item[] = [
+    {
+      id: "i1",
+      level: "user" as const,
+      label: "item 1",
+      removal: { kind: "statusline" as const },
+    },
+    {
+      id: "i2",
+      level: "user" as const,
+      label: "item 2",
+      removal: { kind: "statusline" as const },
+      tracked: true as const,
+    },
+    {
+      id: "i3",
+      level: "user" as const,
+      label: "item 3",
+      removal: { kind: "statusline" as const },
+    },
+  ];
+
+  it("selects machine state and skips tracked files", () => {
+    expect(items.map(defaultSelected)).toEqual([true, false, true]);
+  });
+
+  it("renders the tracked row unchecked", () => {
+    const lines = renderItems(items).split("\n");
+    expect(lines.filter(l => l.includes("[x]"))).toHaveLength(2);
+    expect(lines.filter(l => l.includes("[ ]"))).toHaveLength(1);
+  });
+
+  it("removes only the defaults when the answer is empty", () => {
+    expect(resolveSelection(items, new Set()).map(i => i.id))
+      .toEqual(["i1", "i3"]);
+  });
+
+  it("lets the user toggle a tracked row ON by naming it", () => {
+    expect(resolveSelection(items, new Set([2])).map(i => i.id))
+      .toEqual(["i1", "i2", "i3"]);
+  });
+
+  it("lets the user toggle a selected row OFF by naming it", () => {
+    expect(resolveSelection(items, new Set([1])).map(i => i.id))
+      .toEqual(["i3"]);
   });
 });

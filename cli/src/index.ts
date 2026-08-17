@@ -67,6 +67,7 @@ import {
   enumerate,
   removeItems,
   renderItems,
+  resolveSelection,
 } from "./uninstall.ts";
 import {
   buildVersionReport,
@@ -286,7 +287,9 @@ async function uninstall(
   if (options.dryRun) {
     // Every removal described, nothing asked and nothing written — which is what
     // makes `--uninstall --dry-run` the safe way to see this in a script.
-    const outcomes = removeItems(items, options);
+    // The same defaults the interactive path would start from, so `--dry-run`
+    // describes the run you would get by pressing Enter — not a wider one.
+    const outcomes = removeItems(resolveSelection(items, new Set()), options);
     process.stdout.write(`${renderDiff(outcomes)}\n`);
     process.exit(0);
   }
@@ -313,9 +316,9 @@ async function uninstall(
     process.exit(1);
   }
 
-  const selected = items.filter((_, index) => !selection.keep.has(index + 1));
+  const selected = resolveSelection(items, selection.toggle);
   if (selected.length === 0) {
-    process.stderr.write("kept everything — nothing removed.\n");
+    process.stderr.write("nothing selected — nothing removed.\n");
     process.exit(0);
   }
 

@@ -42,11 +42,17 @@ export const MANIFEST_PATH = ".claude-plugin/marketplace.json";
  * `repository` is absent on purpose: `marketplace.yaml` carried one and the
  * renderer never emitted it, so adding it here would change the committed
  * manifest rather than reproduce it.
+ *
+ * **`displayName` is absent, and that is a correction rather than an omission.**
+ * The renderer emitted it for years and `claude plugin validate` reports it as an
+ * unknown field Claude *ignores at load time* — so it named the marketplace to
+ * nobody, and `--strict` (the mode Claude's own help recommends for CI) failed on
+ * it. `name` is what users see. Do not restore it without checking `validate`
+ * first; that is what `plugins:check` now does.
  */
 const HEADER = {
   $schema: "https://json.schemastore.org/claude-code-marketplace.json",
   description: "Opinionated Plugins for Claude Code & Antigravity",
-  displayName: "Viraj Patel's Plugins",
   forceRemoveDeletedPlugins: true,
   metadata: {},
   name: "virajp-plugins",

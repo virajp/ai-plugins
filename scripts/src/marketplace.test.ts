@@ -34,12 +34,19 @@ describe("the generated marketplace manifest", () => {
 
   it("carries the header constants that used to live in marketplace.yaml", () => {
     expect(parsed["name"]).toBe("virajp-plugins");
-    expect(parsed["displayName"]).toBe("Viraj Patel's Plugins");
     expect(parsed["forceRemoveDeletedPlugins"]).toBe(true);
     // Empty, but present: Claude Code reads the key and the committed file has
     // always carried it, so dropping it would be a diff with no author.
     expect(parsed["metadata"]).toEqual({});
     expect(parsed["owner"]).toEqual({ name: "Viraj Patel" });
+  });
+
+  it("emits no displayName, which Claude ignores at load time", () => {
+    // The renderer emitted it for years. `claude plugin validate` reports it as an
+    // unknown field it ignores, and `--strict` — the mode its own help recommends
+    // for CI — fails on it. So it named the marketplace to nobody. `name` is what
+    // users see. This assertion is what stops it coming back.
+    expect(parsed["displayName"]).toBeUndefined();
   });
 
   it("has no top-level repository", () => {

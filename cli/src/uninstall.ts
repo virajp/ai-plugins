@@ -16,9 +16,11 @@
  *   with no closures in it. Removal is a separate switch. That split is what
  *   makes the list testable against a fixture directory rather than only by
  *   performing it.
- * - **Everything starts selected**, so the interaction is deselection: the user
- *   asked to uninstall, and making them re-name each piece would turn a cleanup
- *   into a quiz. Numbers entered are what **stays**.
+ * - **Machine state starts selected; git-tracked files do not.** The user asked
+ *   to uninstall, so making them re-name each piece would turn a cleanup into a
+ *   quiz — but a row whose removal edits a file the current checkout *tracks*
+ *   would dirty their working tree, which is not a cleanup. Those start off. See
+ *   `Item.tracked`. The numbers **toggle**.
  * - **Removal goes through the owner.** A plugin leaves by
  *   `claude plugin uninstall`, never by editing `enabledPlugins` — Claude keeps
  *   bookkeeping beside that key and hand-editing it strands the two apart. The
@@ -139,6 +141,23 @@ export interface Item {
   /** What removing it means, when that is not obvious from the label. */
   readonly note?: string;
   readonly removal: Removal;
+  /**
+   * Removing this edits a file **git tracks in the current checkout**, so it
+   * starts *unselected* and has to be asked for by number.
+   *
+   * Everything else here is one machine's state, where all-selected is the right
+   * default — the user asked to uninstall, and making them re-name each piece
+   * would turn a cleanup into a quiz. Tracked files are categorically different:
+   * `.graphifyignore` is committed, and the project-scope plugin rows are read
+   * out of a committed `.claude/settings.json`, so accepting the defaults inside a
+   * repo would silently dirty someone's working tree. That is not a cleanup, it is
+   * an uncommitted change they did not ask for and may not notice.
+   *
+   * Found by a real-install verification run, which is also the only way it
+   * could have been: the enumeration is correct, the removals are correct, and
+   * only the *default* was wrong.
+   */
+  readonly tracked?: true;
 }
 
 /**
@@ -261,6 +280,10 @@ function repoItems(context: Context): Item[] {
         args: ["plugin", "uninstall", name, "--scope", "project"],
         cwd: context.cwd,
       },
+      // Read out of `<cwd>/.claude/settings.json`, which a repo usually commits.
+      ...(tracks(context, projectSettingsFile(context))
+        ? { tracked: true as const, note: "edits a git-tracked settings.json" }
+        : {}),
     });
   }
 
@@ -295,6 +318,7 @@ function repoItems(context: Context): Item[] {
       // the toolkit's footprint, and the selection is the consent.
       note: "written by /vwf:setup; may hold your own edits",
       removal: { kind: "delete", path: ignore, recursive: false },
+      ...(tracks(context, ignore) ? { tracked: true as const } : {}),
     });
   }
   return items;
@@ -355,22 +379,23 @@ function describePlugins(receipt: Receipt): string | undefined {
 
 export type Selection =
   | { readonly kind: "cancel"; }
-  | { readonly kind: "keep"; readonly keep: ReadonlySet<number>; }
+  | { readonly kind: "toggle"; readonly toggle: ReadonlySet<number>; }
   /** Something in the answer was not a valid row number. */
   | { readonly kind: "invalid"; readonly tokens: readonly string[]; };
 
 /**
- * Read an answer as a set of rows to **keep**.
+ * Read an answer as the set of rows to **toggle**.
  *
  * An unparseable or out-of-range token is `invalid` rather than ignored, and the
- * caller refuses the run on it. Dropping a token the user meant as "keep this"
- * would delete the one thing they were protecting, which is the worst available
- * failure for a destructive command; asking again costs a second of their time.
+ * caller refuses the run on it. Silently dropping a token would act on a list the
+ * user did not see — in either direction now that rows have two possible defaults,
+ * which is the worst available failure for a destructive command. Asking again
+ * costs a second of their time.
  */
 export function parseSelection(answer: string, count: number): Selection {
   const text = answer.trim();
   if (text.length === 0) {
-    return { kind: "keep", keep: new Set() };
+    return { kind: "toggle", toggle: new Set() };
   }
   if (/^(q|quit|cancel)$/i.test(text)) {
     return { kind: "cancel" };
@@ -388,7 +413,22 @@ export function parseSelection(answer: string, count: number): Selection {
   }
   return bad.length > 0
     ? { kind: "invalid", tokens: bad }
-    : { kind: "keep", keep };
+    : { kind: "toggle", toggle: keep };
+}
+
+/** Apply a toggle answer to the defaults, giving the rows to remove. */
+export function resolveSelection(
+  items: readonly Item[],
+  toggle: ReadonlySet<number>,
+): Item[] {
+  return items.filter((item, index) =>
+    toggle.has(index + 1) ? !defaultSelected(item) : defaultSelected(item)
+  );
+}
+
+/** Is this row selected before the user says anything? */
+export function defaultSelected(item: Item): boolean {
+  return item.tracked !== true;
 }
 
 /** The list, grouped by level and numbered from one across the whole list. */
@@ -402,15 +442,24 @@ export function renderItems(items: readonly Item[]): string {
     }
     const number = String(index + 1).padStart(2);
     lines.push(
-      `  ${number}  [x] ${item.label}`,
+      `  ${number}  [${defaultSelected(item) ? "x" : " "}] ${item.label}`,
       ...(item.note === undefined ? [] : [`          ${item.note}`]),
     );
   });
   return lines.join("\n");
 }
 
-export const PROMPT = "\nEverything above is selected. Enter the numbers to "
-  + "KEEP, Enter to remove\nall of it, or q to cancel: ";
+/**
+ * The numbers **toggle**, rather than meaning "keep".
+ *
+ * It meant "keep" while every row started selected, which was simpler to explain.
+ * Once tracked files start unselected there are two directions to move a row in,
+ * and one prompt that toggles is honest about both — where "enter what to keep"
+ * would leave a user no way to ask for the one row that is off.
+ */
+export const PROMPT =
+  "\nEnter the numbers to TOGGLE, Enter to accept as shown, "
+  + "or q to cancel: ";
 
 /** Ask, on stderr — stdout is the data channel the dry-run diff goes to. */
 export async function askSelection(count: number): Promise<Selection> {
@@ -658,6 +707,23 @@ export function installedPlugins(
     .filter(key => key.endsWith(suffix))
     .map(key => key.slice(0, -suffix.length))
     .sort();
+}
+
+/**
+ * Does git track this path in the checkout the run is inside?
+ *
+ * `--error-unmatch` is the cheap exact question — it exits non-zero for an
+ * untracked or absent path and needs no diffing. Outside a repo, or when git is
+ * missing, the answer is **false**: an unknown answer must not make a row default
+ * to unselected, or a machine without git would quietly stop offering to clean
+ * itself.
+ */
+function tracks(context: Context, path: string): boolean {
+  return context
+    .exec("git", ["ls-files", "--error-unmatch", path], {
+      cwd: context.cwd,
+    })
+    .status === 0;
 }
 
 /** The repo this run is inside, or `undefined` when it is not inside one. */

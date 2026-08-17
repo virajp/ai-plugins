@@ -32,4 +32,29 @@ if ! node scripts/src/check.ts 2>&1; then
   exit 1
 fi
 
+# Then Claude's own validator, which knows things no checker here can: which
+# fields it actually reads. `--strict` is the mode its help recommends for CI, and
+# it turns "unknown field, ignored at load time" from a warning into a failure —
+# which is how a `displayName` that named the marketplace to nobody survived in
+# the generated manifest for years.
+#
+# SKIPPED rather than failed when `claude` is absent, because CI installs the
+# toolchain from mise and this must not become the reason a container without the
+# agent CLI cannot validate a plugin tree. A skip is announced; a silent pass
+# would be worse than not running it.
+if command -v claude >/dev/null 2>&1; then
+  print_header "Validating manifests with claude plugin validate --strict ..."
+  failed=0
+  for manifest in .claude-plugin/marketplace.json plugins/*/; do
+    if ! out=$(claude plugin validate --strict "$manifest" 2>&1); then
+      print_error "$manifest"
+      printf '%s\n' "$out" | sed 's/^/    /'
+      failed=1
+    fi
+  done
+  [[ "$failed" -eq 0 ]] || exit 1
+else
+  print_warn "claude not on PATH — skipping \`plugin validate --strict\`"
+fi
+
 print_success "plugins/ is valid"

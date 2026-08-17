@@ -128,9 +128,12 @@ can see from where it runs:
   are discontinued; this is how they get removed cleanly rather than orphaned.
   It is kept for a release or two and then dropped.
 
-Everything starts **selected**, so you deselect what should stay — you asked to
-uninstall, and making you re-name each piece would turn a cleanup into a quiz.
-The numbers you enter are what **stays**.
+Machine state starts **selected**; anything whose removal would edit a
+**git-tracked** file in the current checkout starts **unselected**, shown `[ ]`.
+You asked to uninstall, so re-naming each piece would turn a cleanup into a quiz
+— but dirtying your working tree is not a cleanup, so `.graphifyignore` and
+project-scope plugin rows read out of a committed `settings.json` have to be
+asked for. The numbers you enter **toggle** a row, either way.
 
 Each piece is removed through whatever owns it: `claude plugin uninstall` and
 `claude plugin marketplace remove` for plugins, and for the statusline a

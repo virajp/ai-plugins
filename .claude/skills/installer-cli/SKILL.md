@@ -70,12 +70,20 @@ Before adding or changing any write path, read
 
 ## `--uninstall` is interactive
 
-Enumerate → present all-selected → remove through each piece's owner. Three
-rules:
+Enumerate → present with defaults applied → remove through each piece's owner.
+Four rules:
 
 - **Enumeration is a pure read** returning plain data with no closures in it, so
   the list is testable against a fixture directory rather than only by
   performing it. Removal is a separate switch.
+- **Machine state starts selected; git-tracked files do not.** The user asked to
+  uninstall, so re-naming each piece would turn a cleanup into a quiz — but a
+  row whose removal edits a file the checkout *tracks* would dirty their working
+  tree, which is not a cleanup. Those start off (`Item.tracked`), and the
+  numbers **toggle** rather than meaning "keep", since with two possible
+  defaults there are two directions to move a row in. Found by a real install,
+  not by a test: the enumeration and the removals were both right, and only the
+  default was wrong.
 - **Removal goes through the owner.** `claude plugin uninstall`, never an edit
   to `enabledPlugins` — Claude keeps bookkeeping beside that key and
   hand-editing strands the two apart. The statusline leaves by **restoring its
