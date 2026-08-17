@@ -41,7 +41,11 @@ Every language plugin ships all of:
    `paths:` scoped to the language's extensions, loading on-demand references.
    The minimum reference set is **coding standards, testing, and
    build/packaging**; everything beyond (flutter's feature catalog) is
-   discretionary.
+   discretionary. One router may cover several of the plugin's tokens when their
+   doctrine is shared (the `typescript` router covers `javascript` too) — but
+   every claimed token must be covered by *some* router's `paths:`, and a
+   framework skill scopes to only the languages the framework actually supports
+   (`effect` is TS-only by Effect's own requirements).
 4. **The bundled LSP server(s)**, where one exists — declared in `lspServers:`,
    launched through `mise x`, with an `extensions:` map covering the plugin's
    language tokens.
@@ -71,6 +75,32 @@ Every language plugin ships all of:
   cannot supply to the LSP command (`pnpm` for the TS server, `kotlin-lsp` /
   `sourcekit-lsp` for flutter). **Never the toolchain itself** — node, go, cargo
   are mise-managed per repo, and `requires:` is a machine-global hard gate.
+
+## Feature horizon
+
+Every feature must map onto a primitive a plugin can ship — skills, subagents,
+hooks, LSP servers, MCP servers, stack templates. Three tiers, so a new plugin
+knows what is in scope versus aspirational:
+
+- **In contract now** — everything above: LSP config, the router + standards
+  references, config doctrine, framework skills, stack templates, the
+  conditional ux-gate, normalization hooks, token facts.
+- **Cheap prose, add when the ecosystem warrants** — a **debugging reference**
+  in the router (driving the language's CLI debugger: `node --inspect`, `dlv`,
+  `lldb`); **codemod/migration skills** (user-invocable, for mechanical upgrades
+  like CJS→ESM or a framework major); a **docs-pinning reference** mapping the
+  plugin's blessed libraries to Context7 IDs so lookups skip resolution; a
+  **language-specialized review agent** vwf's code reviewer could delegate to.
+- **Needs real server development, not config** — a **debugger (DAP)**: no
+  target exposes a debug-adapter primitive, so interactive
+  breakpoint/step/inspect tooling means an MCP server wrapping a DAP adapter;
+  likewise **structured test/coverage tooling** beyond what Bash + the harness
+  task names already give. Neither is required by this contract; a plugin
+  offering one does it as an `mcpServers:` entry.
+
+Deliberately out of scope, whatever the tier: formatter/linter/scanner binaries
+and repo gates (devtools'), toolchain installation (mise's), development secrets
+(doppler's), CI mechanics (`cicd`'s).
 
 ## Deferred checks
 

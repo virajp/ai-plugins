@@ -1,14 +1,17 @@
 # typescript plugin
 
-The `typescript` plugin is the **language plugin for TypeScript** — one plugin
-per language, and it declares two: `typescript` and `javascript`. It packs
-opinionated standards for pnpm projects, all Effect-TS doctrine, the
-TypeScript/JavaScript language server, every TypeScript **stack template** vwf
-can offer, and the `npm`→pnpm/bun normalizing hook. Six skills encode how to
-name, type, structure, lint, build, and test code; three more are invoked by vwf
-rather than by you; the language server gives in-editor diagnostics, hovers, and
-navigation. Each skill is single-package-first, with clearly marked monorepo
-guidance, and both router skills auto-apply to every TypeScript file you edit.
+The `typescript` plugin is the **language plugin for the Node/TS ecosystem** —
+one plugin per toolchain, and this one declares two languages: `typescript` and
+`javascript`. It packs opinionated standards for pnpm projects, all Effect-TS
+doctrine, the TypeScript/JavaScript language server, every TypeScript **stack
+template** vwf can offer, and the `npm`→pnpm/bun normalizing hook. Six skills
+encode how to name, type, structure, lint, build, and test code; three more are
+invoked by vwf rather than by you; the language server gives in-editor
+diagnostics, hovers, and navigation. Each skill is single-package-first, with
+clearly marked monorepo guidance. The `typescript` router auto-applies to every
+TypeScript **and JavaScript** file you edit (a JS file gets the same baseline
+minus the type-level rules); `effect` auto-applies to TypeScript only, since
+Effect requires TypeScript with `strict` enabled.
 
 Effect-TS used to live in a separate `effect` plugin. It does not any more: a
 framework is not a plugin boundary, so it folded back in as a sibling skill.
@@ -36,14 +39,14 @@ file, no action needed. `typescript` and `effect` are **routers**: a lean
 references read on demand, so editing a file never pulls the whole corpus into
 context.
 
-| Skill          | Standardizes                                                                                                                                                                                                                                 | Activation                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `typescript`   | The TypeScript entry point. Always-on baseline (naming, import ordering, strict type safety, named functions, parameter conventions) plus routed references: Vitest testing and the build pipeline.                                          | Auto-applies on `**/*.ts`, `.tsx`, `.mts`, `.cts`                             |
-| `effect`       | The Effect-TS entry point — a router that loads the reference matching your task. Layers on the `typescript` skill's coding standards; it never replaces them.                                                                               | Auto-applies on `**/*.ts`, `.tsx`, `.mts`, `.cts`                             |
-| `lint-format`  | The house lint/format gate: `@askviraj/linter` (bundled ESLint) for correctness and `dprint` for layout — both must pass before commit — plus how to run each, how to scope rule overrides, and common failure remedies.                     | Auto-applies on `**/dprint.json`, eslint config, and `**/.config/linter.yaml` |
-| `package-json` | package.json, single-package-first with a monorepo section: consent-gated new dependencies (never added without asking), pnpm-only, `"latest"` versions, ESM, the exports map, `workspace:*` links, standard build/check/clean/test scripts. | Auto-applies on `**/package.json`                                             |
-| `pnpm`         | Workspace config: supply-chain safety (`minimumReleaseAge`, `trustPolicy`), build allowlists, overrides, peer-dependency rules, `.npmrc` — plus a monorepo reference for `packages` globs, catalogs and `requiredScripts`.                   | Auto-applies on `**/pnpm-workspace.yaml` and `**/.npmrc`                      |
-| `tsconfig`     | Config layout, single-package-first with a monorepo section: a strict shared `tsconfig.base.json`, per-project `tsconfig.json` with the `@/` path alias, a `tsconfig.build.json` emit variant, project references.                           | Auto-applies on `**/tsconfig.json` and `**/tsconfig.*.json`                   |
+| Skill          | Standardizes                                                                                                                                                                                                                                    | Activation                                                                       |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `typescript`   | The TypeScript entry point. Always-on baseline (naming, import ordering, strict type safety, named functions, parameter conventions) plus routed references: Vitest testing and the build pipeline. JS files get the baseline minus type rules. | Auto-applies on `**/*.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` |
+| `effect`       | The Effect-TS entry point — a router that loads the reference matching your task. Layers on the `typescript` skill's coding standards; it never replaces them.                                                                                  | Auto-applies on `**/*.ts`, `.tsx`, `.mts`, `.cts`                                |
+| `lint-format`  | The house lint/format gate: `@askviraj/linter` (bundled ESLint) for correctness and `dprint` for layout — both must pass before commit — plus how to run each, how to scope rule overrides, and common failure remedies.                        | Auto-applies on `**/dprint.json`, eslint config, and `**/.config/linter.yaml`    |
+| `package-json` | package.json, single-package-first with a monorepo section: consent-gated new dependencies (never added without asking), pnpm-only, `"latest"` versions, ESM, the exports map, `workspace:*` links, standard build/check/clean/test scripts.    | Auto-applies on `**/package.json`                                                |
+| `pnpm`         | Workspace config: supply-chain safety (`minimumReleaseAge`, `trustPolicy`), build allowlists, overrides, peer-dependency rules, `.npmrc` — plus a monorepo reference for `packages` globs, catalogs and `requiredScripts`.                      | Auto-applies on `**/pnpm-workspace.yaml` and `**/.npmrc`                         |
+| `tsconfig`     | Config layout, single-package-first with a monorepo section: a strict shared `tsconfig.base.json`, per-project `tsconfig.json` with the `@/` path alias, a `tsconfig.build.json` emit variant, project references.                              | Auto-applies on `**/tsconfig.json` and `**/tsconfig.*.json`                      |
 
 Three more skills exist but never auto-apply — they are the plugin's interface
 to vwf, invoked by name rather than by a file edit:

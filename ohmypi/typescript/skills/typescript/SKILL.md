@@ -2,13 +2,18 @@
 name: typescript
 description: TypeScript development — the always-on coding baseline plus deep
   references for Effect-TS patterns, Vitest testing, and the monorepo build
-  pipeline. Auto-applies when editing any TypeScript file. Use when writing or
-  reviewing any TypeScript code; read the reference matching your task.
+  pipeline. Auto-applies when editing any TypeScript or JavaScript file. Use
+  when writing or reviewing any TypeScript or JavaScript code; read the
+  reference matching your task.
 globs:
   - "**/*.ts"
   - "**/*.tsx"
   - "**/*.mts"
   - "**/*.cts"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.mjs"
+  - "**/*.cjs"
 alwaysApply: false
 ---
 
@@ -17,6 +22,13 @@ alwaysApply: false
 The single entry point for TypeScript work. Each topic lives in its own
 reference file — **read the one matching your task**. Start every change from
 the always-on baseline.
+
+**JavaScript files get this same baseline, minus the type-level rules.** New
+code is written in TypeScript; a `.js`/`.jsx`/`.mjs`/`.cjs` file you are asked
+to edit (a config file, a legacy module) follows the naming, import-ordering,
+and module-hygiene standards as written, and is a migration candidate — not an
+excuse to relax them. The **effect** skill never applies to JavaScript: Effect
+requires TypeScript with `strict` enabled.
 
 | Topic                                                                               | When to read                                                                                                |
 | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
