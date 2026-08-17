@@ -40,19 +40,14 @@ before. What is worth knowing:
 
 ### Why this repo no longer copies a payload
 
-Until the Claude-first release, the CLI shipped the plugin content *inside the
-npm package*, copied it to a fixed path under
-`~/.local/share/virajp/ai-plugins/`, and registered that directory as a
-marketplace. It had to copy rather than register in place because the documented
-way to run it is `pnpx`, whose store path is reclaimed the moment the run ends.
-
-That whole mechanism is gone, and with it a trap worth recording: Claude caches
-plugin content per version and answers "already installed" without re-resolving,
-so a newer payload would sit on disk while the old version stayed live. The
-installer had to compare its advertised version against Claude's own bookkeeping
-and run `plugin update` on a mismatch. Serving the marketplace from git removes
-the mismatch — there is one copy, and `marketplace update` is how you refresh
-it.
+Until the Claude-first release the CLI shipped the plugin content *inside* the
+npm package and registered a copy of it as a local marketplace. One trap from
+that era is worth keeping, because it is the reason git-serving is simpler
+rather than merely smaller: Claude caches plugin content per version and answers
+"already installed" without re-resolving, so a newer payload could sit on disk
+while the old version stayed live. The installer had to compare its own
+advertised version against Claude's bookkeeping and force an update. With one
+copy on `main`, `marketplace update` is the whole of it.
 
 ## The statusline
 

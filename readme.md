@@ -194,13 +194,13 @@ a `frontend` project. `--project flutter` from the app's own repo, or
 reference cannot give you: which service to pick, when it stops being the
 answer, how each one bills, which have local emulators, and what least-privilege
 IAM looks like. It supplies Firebase and Cloud SQL as backing choices and Cloud
-Run and GKE as deploy targets. Opt-in. `gcp@virajp-plugins`
+Run and GKE as deploy targets. `gcp@virajp-plugins`
 
 **[cloudflare](./docs/plugins/cloudflare.md)** — **deliberately parked at Zero
 Trust Access**: a private plane in front of a project that must not be publicly
 reachable, whichever cloud hosts it. Workers, Pages, R2, D1, KV and the rest are
 not offered here and arrive under their own plan; the menu says so out loud
-rather than coming back quietly short. Opt-in. `cloudflare@virajp-plugins`
+rather than coming back quietly short. `cloudflare@virajp-plugins`
 
 ### Capabilities
 
@@ -212,30 +212,30 @@ capability states the requirement; the provider states the mechanism.
 **[datastore](./docs/plugins/datastore.md)** — the datastore contract: write
 versioning, atomic multi-record writes, server-authoritative time, the
 services-layer access rule, and a deterministic local stack. Ships **Postgres**.
-Opt-in. `datastore@virajp-plugins`
+`datastore@virajp-plugins`
 
 **[identity](./docs/plugins/identity.md)** — the identity contract: verification
 per route, the *claims carry status, never roles* rule, revocation, and the
-operator plane. Ships any **OIDC** issuer. Opt-in. `identity@virajp-plugins`
+operator plane. Ships any **OIDC** issuer. `identity@virajp-plugins`
 
 **[observability](./docs/plugins/observability.md)** — the telemetry contract:
 **your product emits OTLP and never a vendor SDK**, signals correlate,
 cardinality is a design decision, retention is chosen. Ships the self-hosted
 **OpenTelemetry → Grafana OTel-LGTM** sink; a managed backend is a destination,
-not an import. Opt-in. `observability@virajp-plugins`
+not an import. `observability@virajp-plugins`
 
 **[orchestration](./docs/plugins/orchestration.md)** — the contract for work
 that happens later: at-least-once delivery and the idempotency it forces,
 bounded retry, the poison path, work-in-flight visibility, and when a queue
 beats a bus beats a scheduler beats a workflow engine. Ships **Temporal**.
-Opt-in. `orchestration@virajp-plugins`
+`orchestration@virajp-plugins`
 
 **[object-storage](./docs/plugins/object-storage.md)** — **contract-only by
 design**: buckets, lifecycle as a bucket policy, signed access, prefix-scoped
 credentials, the never-proxy-bytes rule, egress cost. Every object store is some
 cloud's, so the flavour comes from `gcp` or `cloudflare` — and this plugin says
 that explicitly rather than returning an empty menu, which would be
-indistinguishable from a broken adapter. Opt-in. `object-storage@virajp-plugins`
+indistinguishable from a broken adapter. `object-storage@virajp-plugins`
 
 ### Tooling, design and delivery
 
@@ -349,45 +349,20 @@ pnpx @askviraj/ai-plugins --version
 pnpx @askviraj/ai-plugins --uninstall
 ```
 
-Notes:
+Two things worth knowing before you run it; everything else is
+[docs/cli/usage.md](./docs/cli/usage.md), which is the one place the flag
+surface is described.
 
-- **A statusline you already have is never replaced without your say-so.** If
-  Claude is pointed at a bar this installer did not write, the run asks before
-  overwriting it, and `--statusline` is the flag that counts as consent. With no
-  terminal to ask in (a setup script, CI) the run **fails** rather than guessing
-  in either direction. Decline once and the refusal is remembered in
-  `~/.config/statusline.json` as `"autoConfigure": false`, so later runs stop
-  asking; `--statusline` clears it. The bar's own files are installed either
-  way, so a declined machine is one `--statusline` away from a working
-  statusline rather than back at the start.
-- **`--uninstall` is interactive.** It lists every piece of the toolkit it can
-  see — the marketplace registration, your plugin installs at either scope, the
-  statusline, graphify's hook and graph — with everything **selected**, so you
-  deselect what should stay. Each piece is removed through whatever owns it:
-  `claude plugin uninstall` for plugins, and for the statusline a **restore from
-  the receipt**, so the bar you had before comes back rather than nothing. With
-  no terminal it fails rather than guessing, unless there is nothing to remove.
-  `--dry-run` is the scriptable way to just look.
-- **It also cleans up the discontinued surfaces.** If an older, multi-target
-  version of this CLI installed the OpenCode plugin tree or the OpenCode and
-  Oh-My-Pi statuslines, `--uninstall` reads those old receipts and offers them
-  for removal too. That is kept for a release or two so nothing is orphaned.
-- **`--version` reports what is actually installed.** The statusline script
-  carries its own version and is asked for it directly, because under `pnpx` the
-  running package is whatever was just downloaded and says nothing about your
-  machine. An install predating that flag reports
-  `unknown (predates self-reporting)` rather than being guessed at.
-- **There is no `--upgrade`.** Re-running is the upgrade for the statusline;
-  plugins upgrade through `claude plugin marketplace update virajp-plugins` and
-  `claude plugin update <name>`.
-- **An invocation that installs nothing prints the help and exits 1.** `--help`
-  prints the same text on stdout and exits 0, and an unknown flag is an error
-  naming itself — which is how the retired `--all`, `--user`, `--project`,
-  `--platform` and `--upgrade` now answer.
-- **Behind shared egress**, set `$GITHUB_API_TOKEN` to a read-only (public-repo)
-  token. GitHub's anonymous rate limit is per source IP, so a corporate NAT or a
-  CI runner pool exhausts it between users. Nothing suggests it until you
-  actually hit a limit, and the npm registry call never sends it.
+- **A statusline you already have is never replaced without your say-so.**
+  `--statusline` is the flag that counts as consent, and with no terminal to ask
+  in (a setup script, CI) the run **fails** rather than guessing in either
+  direction. A refusal is remembered, and `--statusline` clears it.
+- **`--uninstall` shows you a list and removes what you do not deselect.** Each
+  piece goes through whatever owns it — `claude plugin uninstall` for plugins,
+  and for the statusline a restore from its receipt, so the bar you had before
+  comes back rather than nothing. It also finds the discontinued OpenCode and
+  Oh-My-Pi surfaces from an older install, so nothing is orphaned. `--dry-run`
+  is the scriptable way to just look.
 
 ## Credits & acknowledgements
 
@@ -400,11 +375,11 @@ maintainers. 🙏
   statusline plug into.
 - **[MemPalace](https://github.com/MemPalace/mempalace)** — the AI memory system
   that powers `vwf`'s cross-session recall. Its two skills are vendored into
-  `vwf` under MIT; see `templates/vwf/vendor/mempalace/`.
+  `vwf` under MIT; see `plugins/vwf/vendor/mempalace/`.
 - **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
   by `forrestchang` — behavioral coding guidelines derived from Andrej
   Karpathy's observations. Its `karpathy-guidelines` skill is vendored into
-  `vwf`; see `templates/vwf/vendor/andrej-karpathy-skills/`.
+  `vwf`; see `plugins/vwf/vendor/andrej-karpathy-skills/`.
 - **[Context7](https://github.com/upstash/context7)** by
   [Upstash](https://upstash.com) — the MCP docs server `vwf` declares.
 - **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the
