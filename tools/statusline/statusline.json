@@ -13,6 +13,7 @@
       "rl5h",
       "rl7d",
       "spend",
+      "monthly",
       "cost"
     ],
     [
@@ -100,6 +101,9 @@
       "bold": true,
       "fg": "white"
     },
+    "monthly": {
+      "bg": "purple"
+    },
     "project": {
       "bg": "green",
       "bold": true,
@@ -186,6 +190,7 @@
     "duration": "",
     "folder": "",
     "model": "⚡",
+    "monthly": "",
     "project": "",
     "repo": "",
     "reset": "↻",
