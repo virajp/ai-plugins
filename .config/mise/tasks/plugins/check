@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#MISE description="Static validation of the authored plugins/ tree"
+#MISE dir="{{ config_root }}"
+
+# Validates the one authored tree under plugins/. Much smaller than the checker
+# it replaces, because half of what that one checked stopped existing: with four
+# render trees gone there are no per-target passes to run, and the neutral-schema
+# assertions they protected — it.cmd() targets, prefixSkillNames, cross-plugin
+# skill-name uniqueness, invocation projection — describe mechanisms that are
+# gone. Deleting them was the point of the cutover, not a regression.
+#
+# What is left is what no format and no type can state: cross-file agreement,
+# things that must exist on disk, and the two contracts vwf enforces by
+# CONSTRUCTING a skill name — where a wrong name fails silently rather than
+# erroring, which is what makes a static check the only place to catch it.
+#
+# Exits non-zero on any finding.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+print_header "Checking plugins/ ..."
+
+# `2>&1` so the findings land in the same stream as the header. The checker
+# writes them to stderr, which is unbuffered while stdout is not — leave them
+# apart and the header prints *after* the failures it introduces, under mise and
+# in CI alike.
+if ! node scripts/src/check.ts 2>&1; then
+  print_error "plugins/ has findings — see above"
+  exit 1
+fi
+
+print_success "plugins/ is valid"

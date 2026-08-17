@@ -16,9 +16,9 @@
 # Graphify
 graphify-out/
 
-# OpenCode project config — dev-local state written by
-# `graphify install --platform opencode` (and installer smoke runs); this
-# repo ships OpenCode support but is not itself OpenCode-configured.
+# OpenCode project config. Nothing here writes it any more — the CLI's graphify
+# wiring is `--platform claude` only — but a stale copy from an earlier install
+# would otherwise start showing up as untracked.
 .opencode/
 
 # Scratchpad / temporary files
@@ -29,15 +29,16 @@ docs/scratchpad/
 # ============================================================
 node_modules/
 
-# TypeScript build artifacts.
-schema/dist/
-renderer/dist/
+# TypeScript build artifacts. Nothing here emits — `tsc` is only ever a checker —
+# but it still writes its incremental state, and `composite: true` in
+# tsconfig.base.json means every project has an outDir whether it fills it or not.
 cli/dist/
+scripts/dist/
 *.tsbuildinfo
 
 # Build output: tsup bundles cli/ into bin/, and bin/ is what npm publishes.
-# Not committed — unlike the rendered trees at the repo root (claude/, cursor/,
-# ohmypi/, opencode/), which are meant to be diffed in review. A bundle diff is
+# Not committed — unlike the authored plugins/ tree and the marketplace manifest
+# generated from it, which are meant to be read and diffed. A bundle diff is
 # noise, and `i:build` regenerates it before every publish.
 bin/
 
@@ -55,12 +56,7 @@ docs/memory/handoff/
 docs/memory/doctor/
 docs/memory/runs/
 
-# This repo's own Cursor plugin install, which is a developer's choice rather
-# than the project's. Cursor has no user scope — marketplace installs there are
-# account-side — so `--platform cursor` always lands in the working project, and
-# here that working project is this repo. Committing it would also pin every
-# reader to `main` via `gitUrl`, since a Cursor source takes no ref.
-#
-# Not to be confused with `cursor/`, the committed render tree, or
-# `.cursor-plugin/`, the generated marketplace manifest at the repo root.
+# A developer's own Cursor config, if they adapt these plugins for Cursor by the
+# prompt route. That is a personal choice rather than the project's, and this repo
+# ships nothing Cursor-specific any more.
 .cursor/

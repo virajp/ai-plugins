@@ -61,6 +61,16 @@ importers:
         specifier: latest
         version: 7.0.2
 
+  scripts:
+    dependencies:
+      yaml:
+        specifier: latest
+        version: 2.9.0
+    devDependencies:
+      typescript:
+        specifier: latest
+        version: 7.0.2
+
 packages:
 
   '@esbuild/aix-ppc64@0.28.1':

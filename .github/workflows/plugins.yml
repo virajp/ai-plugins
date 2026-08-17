@@ -1,17 +1,19 @@
 name: Plugins
 
-# Validates the plugin toolkit: the authored templates/ tree, the five rendered
-# target trees at the repo root, and the renderer itself.
+# Validates the plugin toolkit: the one authored tree under plugins/, the
+# marketplace manifest generated from its 13 manifests, and the repo tooling that
+# does both.
 #
 # Deliberately a SEPARATE workflow from release.yml. npm allows exactly one
 # Trusted Publisher per package and validates the entry-point workflow's
 # filename, so release.yml's trigger surface is left untouched — this file
 # publishes nothing and holds no id-token permission.
 #
-# Until now these checks ran only in pre-commit, which means they ran only for
-# whoever had the hooks installed. The render-clean gate in particular has no
-# other home: the rendered trees are committed, so a template edited without a
-# rebuild is invisible to every other check.
+# Until this workflow existed these checks ran only in pre-commit, which means
+# they ran only for whoever had the hooks installed. The marketplace-freshness
+# gate in particular has no other home: the manifest is generated *and*
+# committed, so a plugin manifest edited without a regenerate is invisible to
+# every other check.
 on:
   push:
     branches: [ main ]
@@ -40,19 +42,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Order matters: prove the rendered trees are what templates/ renders to
-      # BEFORE validating them, so a stale tree fails as staleness rather than
-      # as some confusing downstream assertion.
-      - name: Rendered trees match a fresh render
-        run: mise run plugins:render-clean
+      # Order matters: prove the committed manifest is what the plugin manifests
+      # generate BEFORE validating anything, so a stale manifest fails as
+      # staleness rather than as some confusing downstream assertion.
+      - name: Marketplace manifest matches the plugin manifests
+        run: mise run plugins:marketplace --check
 
-      - name: Static validation + coverage report
+      - name: Static validation of plugins/
         run: mise run plugins:check
 
-      - name: Renderer and schema tests
+      - name: Tooling and installer tests
         run: pnpm vitest run
 
       # The BSD-sed portability guarantee. Runs on GNU sed here, which is the
       # point: the script has to work under both.
       - name: typescript hook tests
         run: mise run typescript:test
+
+      # Nothing in this repo emits, so `tsc` is only ever a checker — and one
+      # `--noEmit` per project, because there are no project references to walk.
+      - name: Type-check every package
+        run: |
+          pnpm exec tsc --noEmit -p cli
+          pnpm exec tsc --noEmit -p scripts

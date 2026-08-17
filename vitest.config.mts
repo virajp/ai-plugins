@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["cli/src/**/*.test.ts"],
+    include: ["{cli,scripts}/src/**/*.test.ts"],
     environment: "node",
     // The adapter suites copy whole rendered trees — the OpenCode bundle alone
     // is 500+ files — so they are real filesystem work, not unit tests, and run

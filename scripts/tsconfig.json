@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // No `baseUrl`: removed in TypeScript 7 (TS5102).
+    "rootDir": ".",
+    "outDir": "./dist/",
+    "paths": { "@/*": ["./src/*"] },
+  },
+  // No project `references`: nothing here emits. node strips the types and runs
+  // the source, so `tsc` is only ever a checker.
+  "include": ["src/**/*.ts"],
+}

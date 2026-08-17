@@ -24,8 +24,11 @@ the same version is what every consumer resolves.
 Build → `publish`, wrapped in mise `release:*` tasks so the same command runs
 locally and in CI.
 
-Publishes obey the delivery-pipeline contract
-(`${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`): tag-triggered only,
+Publishes obey vwf's delivery-pipeline contract — vwf's own
+`assets/delivery-pipeline.md`, not a copy here, and reachable by no path from
+this plugin: `${CLAUDE_PLUGIN_ROOT}` resolves to *this* plugin's root, and
+nothing spells another plugin's. The caller fetching these conventions is vwf,
+which already has it: tag-triggered only,
 shaped `<project>-<env>-v<semver>`, branch-validated, and gated on the tagged
 project's tests plus its dependents'. Two rules are specific to a registry:
 

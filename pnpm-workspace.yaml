@@ -1,10 +1,15 @@
 # pnpm workspace. The root package is the published installer CLI; `cli` is the
-# private package it bundles. There is nothing else: `schema` and `renderer`
-# retired with the template layer — plugins are authored directly under
-# `plugins/` in Claude's native format, so nothing renders and no neutral
-# manifest needs a zod schema.
+# private package it bundles, and `scripts` is the repo tooling that validates
+# the authored `plugins/` tree and generates the marketplace manifest from it.
+# `schema` and `renderer` retired with the template layer — plugins are authored
+# directly under `plugins/` in Claude's native format, so nothing renders and no
+# neutral manifest needs a zod schema.
+#
+# `scripts` is private and never published: it runs from a checkout, straight
+# from source, so it needs no build step and appears in no tarball.
 packages:
   - cli
+  - scripts
 
 # Install scripts are blocked by default. esbuild is the one exception: it is
 # tsup's engine — which builds `cli/` into the published `bin/` — and its

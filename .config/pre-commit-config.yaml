@@ -24,11 +24,28 @@ repos:
         pass_filenames: false
         files: ^plugins/typescript/hooks/
         stages: [ pre-commit ]
+      - id: plugins-check
+        name: Static validation of the authored plugins/ tree
+        entry: mise x -- mise run plugins:check
+        language: system
+        pass_filenames: false
+        files: ^plugins/
+        stages: [ pre-commit ]
       # `plugins-build` and `render-clean` retired with the template layer: there
       # is one authored tree under `plugins/` and nothing renders, so there is no
-      # staleness for them to catch. The `plugins-check` hook comes back once the
-      # checker is rewritten against that single tree — the task it called was
-      # removed along with the renderer it read.
+      # staleness for them to catch — except in the one file that is still
+      # generated. `.claude-plugin/marketplace.json` is a projection of the 13
+      # plugin manifests AND committed, so nothing else notices when the two
+      # diverge; this is what render-clean narrowed down to. It fires on a
+      # manifest edit and on a hand-edit of the manifest itself, since either
+      # side moving is the drift.
+      - id: plugins-marketplace
+        name: Marketplace manifest matches the plugin manifests
+        entry: mise x -- mise run plugins:marketplace --check
+        language: system
+        pass_filenames: false
+        files: ^(plugins/|\.claude-plugin/)
+        stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

@@ -17,9 +17,12 @@ dprint ${CMD} \
   --allow-no-files \
   --log-level ${LOG_LEVEL}
 
-# `pnpm exec`, not `pnpm dlx` — the same pinned binary `plugins:build` sorts the
-# rendered bundles with. An unpinned checker here could disagree with the pinned
-# writer there and fail a tree that was sorted correctly.
+# `pnpm exec`, not `pnpm dlx` — the sorter rewrites committed files, so an
+# unpinned one picking up a new upstream key order would fail this check with
+# nothing having changed locally. (It used to have a second reason: the render
+# emitted the Oh-My-Pi bundles' package.json and `plugins:build` sorted them with
+# the same pinned binary. Both retired with the template layer — every
+# package.json in the tree is now hand-authored.)
 print_header "Sorting package.json files ..."
 pnpm exec sort-package-json ${SORT_PKGJSON} "**/package.json" --ignore "**/node_modules"
 
