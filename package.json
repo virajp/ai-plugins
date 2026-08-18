@@ -1,6 +1,6 @@
 {
   "name": "@askviraj/ai-plugins",
-  "version": "4.3.3",
+  "version": "5.0.0",
   "description": "Installs the powerline statusline for Claude Code, and wires up graphify. The plugins install through Claude Code's own marketplace commands",
   "keywords": [
     "claude",
