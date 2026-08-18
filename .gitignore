@@ -13,6 +13,11 @@
 # ============================================================
 .claude/settings.local.json
 
+# Scratch file for a long commit message passed to `git commit -F`. A `git add -A`
+# swept one into a commit once — it reached `main` but not the npm tarball, whose
+# `files` list is `bin` + `tools`. Ignored so that cannot happen again.
+.claude/commit-msg.txt
+
 # Graphify
 graphify-out/
 
