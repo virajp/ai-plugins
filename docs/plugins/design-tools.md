@@ -8,13 +8,21 @@ name vwf constructs a skill from.
 
 ## Install
 
+Once, if you have not already:
+
 ```sh
-pnpx @askviraj/ai-plugins --user design-tools
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-It is **not** a vwf dependency and **not** in the `--all` set: the design tool
-is a product decision, so the adapter is chosen rather than inherited. Install
-it by name, at user or project scope.
+```sh
+claude plugin install design-tools@virajp-plugins
+```
+
+Add `--scope project` to scope it to one repo instead of every repo on your
+machine. It is **not** a vwf dependency: the design tool is a product decision,
+so the adapter is chosen rather than inherited — install it by name, same as
+every other plugin here, since there is no default install set to be excluded
+from.
 
 The plugin carries the `vwf-design-adapter` tag, which is what
 `mise run plugins:check` keys the whole design-adapter validation off — an
@@ -34,9 +42,10 @@ tool, and never touch `docs/blueprint/`. Export needs no adapter at all —
 `/vwf:screens` in `prompt` mode writes design briefs as files, and a file is
 tool-agnostic.
 
-All three are `invocation: both`, which is load-bearing rather than cosmetic — a
-user-only skill is removed from the model's context and cannot be delegated to,
-and the failure is silent. `mise run plugins:check` enforces it.
+All three are model-invocable, which is load-bearing rather than cosmetic — a
+skill marked `disable-model-invocation: true` is removed from the model's
+context and cannot be delegated to, and the failure is silent.
+`mise run plugins:check` enforces it.
 
 **Only one of the three tools has a review conversation.**
 `import-conversations` therefore has an answer its siblings do not:

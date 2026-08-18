@@ -7,15 +7,17 @@
  * through and marks the output executable, which is what lets `package.json`'s
  * `bin` entry point straight at the bundle.
  *
- * Everything below this file is already built and tested: `plan.ts` turns flags
- * into one `AdapterPlan` per target, `executor.ts` runs them and renders the
- * result. So this stays a router: parse, resolve, execute, report, exit.
+ * **The CLI has three jobs**, down from "install the toolkit across four agents":
+ * the Claude statusline, graphify's wiring, and an interactive `--uninstall`.
+ * Plugins are installed by Claude Code itself from this repo on GitHub —
+ * `claude plugin marketplace add virajp/ai-plugins` — so the four plugin
+ * adapters, `--platform`, `--all` and the `requires:` dependency gate are all
+ * gone, along with `plan.ts` and `executor.ts`. What is left is short enough that
+ * `run` below *is* the orchestration: there is no plan to resolve, and one thing
+ * to install.
  *
- * Argument parsing lives in `args.ts`, on `node:util`'s `parseArgs`. It used to
- * be citty, which cannot express a repeatable flag and silently kept only the
- * last `--user` — see that file for the whole story.
+ * Argument parsing lives in `args.ts`, on `node:util`'s `parseArgs`.
  */
-import type { TargetId } from "@ai-plugins/schema";
 import {
   existsSync,
   readFileSync,
@@ -27,322 +29,113 @@ import {
   join,
 } from "node:path";
 import { fileURLToPath } from "node:url";
-import { claude } from "./adapters/claude.ts";
-import { cursor } from "./adapters/cursor.ts";
-import { ohmypi } from "./adapters/ohmypi.ts";
-import { opencode } from "./adapters/opencode.ts";
-import {
-  execCommand,
-  hasBin,
-  PACKAGE_NAME,
-} from "./adapters/support.ts";
-import type {
-  Adapter,
-  AdapterContext,
-  AdapterPlan,
-} from "./adapters/types.ts";
 import type { Args } from "./args.ts";
 import {
   parse,
   renderUsage,
 } from "./args.ts";
+import type {
+  Context,
+  RunOptions,
+} from "./context.ts";
 import {
-  missingTools,
-  renderMissing,
-  requiredTools,
-} from "./deps.ts";
+  execCommand,
+  hasBin,
+  PACKAGE_NAME,
+} from "./context.ts";
+import { setupGraphify } from "./graphify.ts";
+import { createProgress } from "./progress.ts";
+import type { Outcome } from "./report.ts";
 import {
-  execute,
-  executeStatusline,
-  executeStatuslineOhmypi,
-  executeStatuslineOpencode,
   failed,
-  ohmypiStatuslineInstalled,
-  opencodeStatuslineInstalled,
   renderDiff,
   renderProgress,
-  revert,
-  revertStatuslineInstall,
-  revertStatuslineOhmypiInstall,
-  revertStatuslineOpencodeInstall,
-  statuslineInstalled,
-} from "./executor.ts";
-import type { TargetOutcome } from "./executor.ts";
-import { setupGraphify } from "./graphify.ts";
-import type { PlanRequest } from "./plan.ts";
-import {
-  readPluginIndex,
-  resolvePlan,
-} from "./plan.ts";
-import { createProgress } from "./progress.ts";
+} from "./report.ts";
 import {
   ask,
   autoConfigureAllowed,
   interactive,
   resolveConsent,
   setAutoConfigure,
-  SURFACE_LABEL,
 } from "./statusline-consent.ts";
-import type { Surface } from "./statusline-consent.ts";
-import { ohmypiStatuslineConflict } from "./statusline-ohmypi.ts";
-import { opencodeStatuslineConflict } from "./statusline-opencode.ts";
-import { claudeStatuslineConflict } from "./statusline.ts";
+import {
+  claudeStatuslineConflict,
+  executeStatusline,
+} from "./statusline.ts";
+import {
+  askSelection,
+  enumerate,
+  removeItems,
+  renderItems,
+  resolveSelection,
+} from "./uninstall.ts";
 import {
   buildVersionReport,
   readCliVersion,
   renderVersionReport,
 } from "./version.ts";
 
-export { PACKAGE_NAME } from "./adapters/support.ts";
-
-export const ADAPTERS: readonly Adapter[] = [
-  claude,
-  cursor,
-  ohmypi,
-  opencode,
-];
+export { PACKAGE_NAME } from "./context.ts";
 
 /**
- * Resolve the tri-state statusline flag.
+ * May the bar be **configured** — may Claude be pointed at it?
  *
- * Unset defers to `--all`, which means the whole toolkit and therefore the bar
- * too. `--no-statusline` refuses it even under `--all`.
- */
-export function wantsStatusline(
-  flag: boolean | undefined,
-  all: boolean,
-): boolean {
-  return flag ?? all;
-}
-
-/**
- * Should an uninstall undo a statusline surface?
+ * `undefined` is the refusal: consent was needed and could not be got, so the
+ * caller stops the run. It was a per-surface record when there were three bars;
+ * with one, it is one answer.
  *
- * The install-side question is `wantsStatusline`; this is the other end of it,
- * and it is not the same question. On the way in an unset flag defers to
- * `--all`. On the way out there is no `--all`, so deferring to it meant a plain
- * `--uninstall` left every statusline installed — the user had to know to pass
- * `--statusline` to remove something they never separately asked to install.
- *
- * The gate is the **receipt**: uninstall undoes what this tool did, and the
- * receipt is the record of that.
- * `--no-statusline` still refuses outright, and `reachable` keeps a run that
- * names one target from stripping another's bar.
- */
-export function revertsStatusline(
-  reachable: boolean,
-  selected: boolean,
-  refused: boolean,
-  installed: () => boolean,
-): boolean {
-  if (refused || !reachable) {
-    return false;
-  }
-  return selected || installed();
-}
-
-/**
- * Whether each selected surface may be **configured** — pointed at the bar.
- *
- * `undefined` is the refusal: a surface needed an answer and could not get one,
- * so the caller stops the run. Anything else is per-surface, because the three
- * are independent installs and a foreign bar in one says nothing about another.
- *
- * The remembered refusal is deliberately *not* per surface — one flag, so
- * declining once is declining — but `--statusline` clears it, which is why the
- * clear happens here rather than inside the loop: it is an answer about the
- * user's intent for the run, not about whichever surface asked first.
+ * `--statusline` is the only way to ask for an install now, so `explicit` is
+ * always true here and this grants every time — see `statusline-consent.ts` for
+ * why the asking branches are kept rather than deleted. The reachable half is
+ * the **clear**: a machine carrying `autoConfigure: false` from a version where
+ * `--all` could install the bar has that refusal lifted here.
  *
  * A dry run never asks and never writes. It reports what an answered run would
- * do at its most complete, which is the same choice the missing-tools gate
- * makes just above: describe the whole diff, refuse nothing.
+ * do at its most complete.
  */
 export async function resolveStatuslineConsent(
-  context: AdapterContext,
-  selected: StatuslineSelection,
+  context: Context,
   explicit: boolean,
   dryRun: boolean,
-): Promise<Record<Surface, boolean> | undefined> {
-  const granted = { claude: true, ohmypi: true, opencode: true };
+): Promise<boolean | undefined> {
   if (dryRun) {
-    return granted;
+    return true;
   }
   if (explicit) {
     setAutoConfigure(context, true);
   }
 
-  const remembered = !autoConfigureAllowed(context);
-  const conflicts: Record<Surface, (c: AdapterContext) => string | undefined> =
-    {
-      claude: claudeStatuslineConflict,
-      ohmypi: ohmypiStatuslineConflict,
-      opencode: opencodeStatuslineConflict,
-    };
-
-  let declined = false;
-  for (const surface of ["claude", "ohmypi", "opencode"] as const) {
-    if (!selected[surface]) {
-      continue;
-    }
-    const conflict = conflicts[surface](context);
-    const verdict = resolveConsent({
-      conflict,
-      explicit,
-      remembered,
-      interactive: interactive(),
-    });
-    if (verdict === "fail") {
-      return undefined;
-    }
-    if (verdict === "configure") {
-      continue;
-    }
-    if (verdict === "skip" || !await ask(surface, conflict as string)) {
-      granted[surface] = false;
-      declined = true;
-      context.log(
-        `${SURFACE_LABEL[surface]}: kept your statusline; re-run with `
-          + "--statusline to replace it",
-      );
-    }
+  const verdict = resolveConsent({
+    conflict: claudeStatuslineConflict(context),
+    explicit,
+    remembered: !autoConfigureAllowed(context),
+    interactive: interactive(),
+  });
+  if (verdict === "fail") {
+    return undefined;
   }
-  if (declined) {
+  if (verdict === "configure") {
+    return true;
+  }
+  if (
+    verdict === "skip" || !await ask(claudeStatuslineConflict(context) ?? "")
+  ) {
     setAutoConfigure(context, false);
-  }
-  return granted;
-}
-
-/** Which targets to act on: those named, else every tool actually present. */
-export function selectAdapters(
-  platforms: readonly string[],
-  context: AdapterContext,
-  adapters: readonly Adapter[] = ADAPTERS,
-): Adapter[] {
-  if (platforms.length === 0) {
-    return adapters.filter(a => a.detect(context));
-  }
-  return platforms.map(name => {
-    const adapter = adapters.find(a => a.id === name);
-    if (adapter === undefined) {
-      throw new Error(
-        `unknown platform \`${name}\` — expected one of: ${
-          adapters.map(a => a.id).join(", ")
-        }`,
-      );
-    }
-    return adapter;
-  });
-}
-
-/**
- * One plan per adapter.
- *
- * The two per-target rules live here rather than in `resolvePlan`, because they
- * are facts about the *target*, not about the request: Claude's CLI installs
- * dependencies itself, and only a copy-based target needs a rendered bundle.
- */
-export function buildJobs(
-  adapters: readonly Adapter[],
-  request: PlanRequest,
-  sourceRoot: string,
-  log: (message: string) => void,
-): (readonly [Adapter, AdapterPlan])[] {
-  const index = readPluginIndex(sourceRoot);
-  // plugin → the targets that could not take it. Aggregated so the run says
-  // "skipped on cursor, ohmypi and opencode" once, rather than repeating one
-  // sentence per target and making a single fact look like three failures.
-  const skips = new Map<string, string[]>();
-  const jobs = adapters.map(adapter => {
-    const plan = resolvePlan(index, adapter.id as TargetId, request, {
-      expandDependencies: adapter.id !== "claude",
-      // Only Claude can install a plugin hosted in someone else's repo: its
-      // marketplace takes a `{source: "url"}` entry and fetches it. The other
-      // three cannot, each for its own reason — OpenCode has no marketplace at
-      // all and copies a rendered tree; Cursor's manifest is generated from
-      // local plugins only; Oh-My-Pi's accepts a URL string and then silently
-      // drops the entry, so `omp plugin discover` never lists it. Requesting
-      // one there fails, and used to: `--all` died on both.
-      localOnly: adapter.id !== "claude",
-      log,
-      onSkip: (plugin, target) =>
-        skips.set(plugin, [...(skips.get(plugin) ?? []), target]),
-    });
-    return [adapter, plan] as const;
-  });
-
-  for (const [plugin, targets] of skips) {
-    log(
-      `${plugin} installs from its own repo, so it is skipped on `
-        + `${list(targets)} — only Claude's marketplace can fetch a plugin `
-        + "hosted elsewhere.",
+    context.log(
+      "statusline: kept your statusline; re-run with --statusline to replace it",
     );
+    return false;
   }
-  return jobs;
-}
-
-/** `a`, `a and b`, `a, b and c` — an English list, not a CSV. */
-export function list(items: readonly string[]): string {
-  if (items.length <= 1) {
-    return items[0] ?? "";
-  }
-  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
-}
-
-/** Which status surfaces a run reaches. None is a plugin, so none is a target. */
-export interface StatuslineSelection {
-  /** The copied script bar plus the caps hook. */
-  readonly claude: boolean;
-  /** `omp config` keys mirroring the same information. */
-  readonly ohmypi: boolean;
-  /** A TUI plugin copied in and registered in `tui.json`. */
-  readonly opencode: boolean;
-}
-
-/**
- * Which status surfaces should this run touch?
- *
- * Resolved **per target**, because the three are different installs of the same
- * idea: Claude gets a script this CLI copies and points `settings.json` at,
- * Oh-My-Pi gets its own renderer configured through `omp config`, OpenCode gets
- * a TUI plugin registered in `tui.json`. **Cursor** is the one target left with
- * no status surface at all, so a run targeting only Cursor still has nothing to
- * install.
- *
- * The note is printed only for an **explicit** `--statusline`: under `--all` on
- * a machine with none of them, the bar was never separately asked for, and
- * saying so every time would be noise.
- */
-export function statuslineSelected(
-  wanted: boolean,
-  explicit: boolean,
-  adapters: readonly Adapter[],
-  log: (message: string) => void,
-): StatuslineSelection {
-  if (!wanted) {
-    return { claude: false, ohmypi: false, opencode: false };
-  }
-  const selection = {
-    claude: adapters.some(a => a.id === "claude"),
-    ohmypi: adapters.some(a => a.id === "ohmypi"),
-    opencode: adapters.some(a => a.id === "opencode"),
-  };
-  const reached = selection.claude || selection.ohmypi || selection.opencode;
-  if (explicit && !reached) {
-    log(
-      "statusline: skipped — Cursor is the only selected target with no "
-        + "status surface to install into",
-    );
-  }
-  return selection;
+  return true;
 }
 
 export async function run(args: Args): Promise<void> {
   const startedAt = Date.now();
-  // Collected rather than written as they happen: a note printed mid-run
-  // lands above the results, so you read caveats about an install before
-  // knowing whether it worked. `renderProgress` places them after the table.
+  // Collected rather than written as they happen: a note printed mid-run lands
+  // above the results, so you read caveats about an install before knowing
+  // whether it worked. `renderProgress` places them after the table.
   const notes: string[] = [];
-  const context: AdapterContext = {
+  const context: Context = {
     sourceRoot: packageRoot(),
     home: homedir(),
     cwd: process.cwd(),
@@ -351,9 +144,9 @@ export async function run(args: Args): Promise<void> {
     exec: execCommand,
   };
   const progress = createProgress(process.stderr);
-  const report = (outcomes: readonly TargetOutcome[]): void => {
-    // Always erase the live step first: it shares stderr with the report,
-    // and a half-written line would run into the header.
+  const report = (outcomes: readonly Outcome[]): void => {
+    // Always erase the live step first: it shares stderr with the report, and a
+    // half-written line would run into the header.
     progress.clear();
     process.stderr.write(
       `${
@@ -367,147 +160,65 @@ export async function run(args: Args): Promise<void> {
     );
   };
 
-  const options = {
+  const options: RunOptions = {
     context,
     dryRun: args.dryRun,
     receiptDir: receiptDir(),
-    force: args.force,
     progress,
   };
 
   if (args.version) {
-    const report = await buildVersionReport(context.sourceRoot);
+    const report = await buildVersionReport({
+      sourceRoot: context.sourceRoot,
+      home: context.home,
+    });
     // Data to stdout; the reason the remote half is missing is not data.
     process.stdout.write(`${renderVersionReport(report)}\n`);
-    // Non-zero without the network, as the documented contract has it: a
-    // report that could not compare against anything answered half the
-    // question, and a script checking for updates should notice.
+    // Non-zero without the network, as the documented contract has it: a report
+    // that could not compare against anything answered half the question, and a
+    // script checking for updates should notice.
     process.exit(report.remoteError === undefined ? 0 : 1);
   }
 
-  const adapters = selectAdapters(args.platform, context);
-  if (adapters.length === 0) {
-    // Never hang waiting for input that is not coming.
-    process.stderr.write(
-      "no supported agent found on PATH; name one with --platform\n",
-    );
-    process.exit(1);
-  }
-
-  const statusline = statuslineSelected(
-    wantsStatusline(args.statusline, args.all),
-    args.statusline === true,
-    adapters,
-    context.log,
-  );
-
   if (args.uninstall) {
-    const outcomes = revert(adapters, options);
-    // An uninstall undoes what this tool installed, so the gate is the
-    // **receipt**, not `--all`. The tri-state still governs — an explicit
-    // `--no-statusline` refuses — but an unset flag cannot mean "leave the
-    // bar configured": on the way in it defers to `--all`, and there is no
-    // `--all` on the way out, so a plain `--uninstall` silently left every
-    // statusline surface installed. Gating on the receipt
-    // this way; this is the same question asked at the other end.
-    //
-    // Still restricted to the selected targets: uninstalling Claude alone
-    // must not strip the Oh-My-Pi bar.
-    const reaches = (id: TargetId) => adapters.some(a => a.id === id);
-    const refused = args.statusline === false;
-    const undo: [boolean, boolean, () => boolean, () => TargetOutcome][] = [
-      [
-        reaches("claude"),
-        statusline.claude,
-        () => statuslineInstalled(options),
-        () => revertStatuslineInstall(options),
-      ],
-      [
-        reaches("ohmypi"),
-        statusline.ohmypi,
-        () => ohmypiStatuslineInstalled(options),
-        () => revertStatuslineOhmypiInstall(options),
-      ],
-      [
-        reaches("opencode"),
-        statusline.opencode,
-        () => opencodeStatuslineInstalled(options),
-        () => revertStatuslineOpencodeInstall(options),
-      ],
-    ];
-    for (const [reachable, selected, installed, run] of undo) {
-      if (revertsStatusline(reachable, selected, refused, installed)) {
-        outcomes.push(run());
-      }
-    }
-    report(outcomes);
-    process.exit(failed(outcomes) ? 1 : 0);
+    await uninstall(options, report);
+    return;
   }
 
-  const request: PlanRequest = {
-    all: args.all,
-    user: args.user,
-    project: args.project,
-  };
-  const named = request.all === true
-    || (request.user?.length ?? 0) > 0
-    || (request.project?.length ?? 0) > 0;
-
-  // No install request at all. There is no separate install verb — naming
-  // something *is* the request — so this covers both a bare invocation and
-  // one carrying only modifiers, `--platform opencode` being the one that
-  // reads like a request and is not: it says where to install, never what.
-  //
-  // The help comes with it because a run that installs nothing is a question
-  // about the flags, and answering it with one line of correction assumes the
-  // reader already knows the other nine.
-  if (
-    !named
-    // `--statusline` on its own is a complete request: it is not a plugin.
-    && !statusline.claude
-    && !statusline.ohmypi
-    && !statusline.opencode
-  ) {
+  if (args.statusline !== true) {
+    // No request at all. There is no install verb — asking for something *is*
+    // the request — so this covers a bare invocation and one carrying only
+    // modifiers, `--dry-run` being the one that reads like a request and is not.
+    //
+    // The help comes with it because a run that does nothing is a question about
+    // the flags, and answering it with one line of correction assumes the reader
+    // already knows the others.
     process.stderr.write(`${renderUsage()}`);
     process.stderr.write(
-      "\nnothing to install: pass --all, --statusline, or name plugins with --user/--project\n",
+      "\nnothing to do: pass --statusline to install the bar, or --uninstall\n",
     );
     process.exit(1);
   }
 
-  progress.step("resolving plugins");
-  const jobs = buildJobs(adapters, request, context.sourceRoot, context.log);
-
-  // Refuse before touching anything: a plugin whose tools are absent installs
-  // cleanly and fails later, somewhere with no visible link to the install.
-  //
-  // Not overridable by `--force`, which means something narrower — act on a
-  // target whose *own* CLI is missing. A plugin's runtime tools are a fact
-  // about the plugin, not about the target, and there is no useful state on
-  // the far side of installing vwf without graphify.
-  const wanted = [
-    ...new Set(jobs.flatMap(([, p]) => [...p.user, ...p.project])),
-  ];
-  const missing = missingTools(
-    requiredTools(readPluginIndex(context.sourceRoot), wanted),
-    hasBin,
-  );
-  if (missing.length > 0) {
-    process.stderr.write(`${renderMissing(missing)}\n`);
-    // A dry run reports it and carries on: it is showing what *would* happen,
-    // and the rest of the diff is still worth seeing.
-    if (!options.dryRun) {
-      process.exit(1);
-    }
+  // Writing into `~/.claude/settings.json` for a tool that is not on the machine
+  // leaves config behind for something that will never read it. A skip rather
+  // than a silent install, and `--force` is the override — for a machine where
+  // Claude is installed somewhere off `PATH`.
+  if (!hasBin("claude") && !args.force) {
+    process.stderr.write(
+      "claude is not on PATH, so there is nothing to configure the statusline "
+        + "for.\nInstall Claude Code, or pass --force if it is installed "
+        + "somewhere off PATH.\n",
+    );
+    process.exit(1);
   }
 
-  // Consent before the installs, not between them: a run that is going to
-  // refuse should refuse having written nothing, and the prompt has to reach
-  // a terminal the progress spinner is not mid-line on.
+  // Consent before the install, not after: a run that is going to refuse should
+  // refuse having written nothing, and the prompt has to reach a terminal the
+  // progress spinner is not mid-line on.
   progress.clear();
   const consent = await resolveStatuslineConsent(
     context,
-    statusline,
     args.statusline === true,
     options.dryRun,
   );
@@ -520,36 +231,19 @@ export async function run(args: Args): Promise<void> {
     process.exit(1);
   }
 
-  const outcomes = execute(jobs, options);
-  if (statusline.claude) {
-    outcomes.push(executeStatusline(options, consent.claude));
-  }
-  if (statusline.ohmypi && consent.ohmypi) {
-    // The one surface with nothing to install when it is declined: it is
-    // `omp config` keys and no files, so there is no half to leave behind.
-    outcomes.push(executeStatuslineOhmypi(options));
-  }
-  if (statusline.opencode) {
-    outcomes.push(executeStatuslineOpencode(options, consent.opencode));
-  }
+  const outcomes = [executeStatusline(options, consent)];
 
-  // After the install, and only for targets that actually took it: vwf's
-  // commands halt at their own entry gate without this.
-  if (!options.dryRun && wanted.includes("vwf")) {
+  // After the install: vwf's commands halt at their own entry gate without it.
+  if (!options.dryRun) {
     // The slowest tail of a run, and previously the longest silence in it.
     progress.step("wiring graphify");
-    setupGraphify(
-      context,
-      outcomes
-        .filter(o => o.error === undefined && o.skipped === undefined)
-        .map(o => o.target),
-    );
+    setupGraphify(context);
   }
 
   if (options.dryRun) {
-    // Data to stdout, so it can be piped or diffed.
-    // The diff goes to stdout while the step sits on stderr; in a terminal
-    // they share a screen, so an uncleared step runs into the first line.
+    // Data to stdout, so it can be piped or diffed. The diff goes to stdout
+    // while the step sits on stderr; in a terminal they share a screen, so an
+    // uncleared step runs into the first line.
     progress.clear();
     process.stdout.write(`${renderDiff(outcomes)}\n`);
   }
@@ -558,14 +252,89 @@ export async function run(args: Args): Promise<void> {
 }
 
 /**
- * The package root — what holds the rendered trees, the marketplace manifests
- * and `tools/`.
+ * The `--uninstall` interaction: enumerate, show, ask, remove.
+ *
+ * The order of the two guards matters. **Nothing found** is answered before
+ * **no TTY**, because a run with nothing to remove has nothing to guess about —
+ * failing it for want of a terminal would make `--uninstall` unusable in a
+ * script that is checking whether anything is left.
+ */
+async function uninstall(
+  options: RunOptions,
+  // The same reporter the install run uses, so an uninstall report carries the
+  // version that produced it and is worth pasting into an issue.
+  report: (outcomes: readonly Outcome[]) => void,
+): Promise<void> {
+  const { progress } = options;
+  progress?.step("looking for what is installed");
+  const items = enumerate(options);
+  progress?.clear();
+
+  if (items.length === 0) {
+    process.stderr.write(
+      "found nothing of the virajp-plugins toolkit installed from here.\n"
+        + "Plugins enabled from another marketplace, and anything a different "
+        + "tool\ninstalled, are deliberately not touched.\n",
+    );
+    process.exit(0);
+  }
+
+  process.stderr.write(
+    `\nFound ${items.length} piece${items.length === 1 ? "" : "s"} of the `
+      + `virajp-plugins toolkit:\n\n${renderItems(items)}\n`,
+  );
+
+  if (options.dryRun) {
+    // Every removal described, nothing asked and nothing written — which is what
+    // makes `--uninstall --dry-run` the safe way to see this in a script.
+    // The same defaults the interactive path would start from, so `--dry-run`
+    // describes the run you would get by pressing Enter — not a wider one.
+    const outcomes = removeItems(resolveSelection(items, new Set()), options);
+    process.stdout.write(`${renderDiff(outcomes)}\n`);
+    process.exit(0);
+  }
+
+  if (!interactive()) {
+    process.stderr.write(
+      "\nrefusing to remove any of it without an answer: there is no terminal "
+        + "to ask on.\nRe-run in a terminal, or pass --dry-run to see the list "
+        + "alone.\n",
+    );
+    process.exit(1);
+  }
+
+  const selection = await askSelection(items.length);
+  if (selection.kind === "cancel") {
+    process.stderr.write("cancelled — nothing removed.\n");
+    process.exit(0);
+  }
+  if (selection.kind === "invalid") {
+    process.stderr.write(
+      `did not understand: ${selection.tokens.join(", ")}\n`
+        + `Expected numbers between 1 and ${items.length}. Nothing removed.\n`,
+    );
+    process.exit(1);
+  }
+
+  const selected = resolveSelection(items, selection.toggle);
+  if (selected.length === 0) {
+    process.stderr.write("nothing selected — nothing removed.\n");
+    process.exit(0);
+  }
+
+  const outcomes = removeItems(selected, options);
+  report(outcomes);
+  process.exit(failed(outcomes) ? 1 : 0);
+}
+
+/**
+ * The package root — what holds `tools/` and this package's own `package.json`.
  *
  * Found by walking up rather than by counting `..` segments, because this code
  * runs from two depths: `cli/src/index.ts` in the repo and `bin/ai-plugins.mjs`
  * once tsup has bundled it. A fixed offset would be right in one and silently
  * wrong in the other, resolving `sourceRoot` to a directory that exists but
- * holds none of the trees an adapter reads.
+ * holds none of the assets the statusline copies from.
  *
  * Matched on the package *name*, so the workspace's own `cli/package.json` is
  * walked past rather than mistaken for the root.
@@ -623,13 +392,11 @@ function receiptDir(): string {
 }
 
 /**
- * The config root, matching `dataDir`'s treatment of the data root.
+ * The config root.
  *
  * `XDG_CONFIG_HOME` wins, then the platform default. Windows gets `APPDATA`
  * rather than a literal `~/.config`, which is a POSIX convention that means
- * nothing there. Fixed alongside the data directory rather than separately:
- * one of the two following the OS and the other not is the kind of split that
- * only shows up as a bug report from the one platform nobody tests on.
+ * nothing there.
  */
 function configBase(): string {
   const xdg = process.env["XDG_CONFIG_HOME"];

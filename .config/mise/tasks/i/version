@@ -23,4 +23,29 @@ print_header "Bumping ${LEVEL} version ..."
 pnpm version "${LEVEL}" --no-git-tag-version
 
 VERSION="$(node -p "require('./package.json').version")"
-print_header "Version is now ${VERSION} — commit package.json to record it."
+
+# The statusline reports its own version, so the number lives in two places and
+# this is where they are kept equal.
+#
+# Stamped at BUMP time, not build time. The script is a committed static asset
+# copied verbatim to ~/.claude/scripts/statusline — stamping it during `i:build`
+# would make the committed file and the published one differ, so a reader of the
+# repo could never tell what a user actually has. `i:test` asserts the two
+# numbers match, which is what makes a hand-synced second copy safe rather than
+# merely conventional.
+#
+# `sed -i ''` and a bracket class rather than `\d` or `\s`: this has to run under
+# BSD sed on the maintainer's machine, the same constraint the plugin hook
+# scripts carry.
+STATUSLINE="tools/statusline/statusline"
+print_header "Stamping ${VERSION} into ${STATUSLINE} ..."
+sed -i '' -E "s/^const VERSION = \"[0-9]+\.[0-9]+\.[0-9]+\";$/const VERSION = \"${VERSION}\";/" "${STATUSLINE}"
+
+STAMPED="$(node "${STATUSLINE}" --version)"
+if [[ "${STAMPED}" != "${VERSION}" ]]; then
+  print_error "Stamp failed: ${STATUSLINE} reports ${STAMPED}, expected ${VERSION}"
+  print_warn  "Has the 'const VERSION = \"x.y.z\";' line been reworded?"
+  exit 1
+fi
+
+print_header "Version is now ${VERSION} — commit package.json and ${STATUSLINE} to record it."

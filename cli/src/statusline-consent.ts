@@ -21,9 +21,15 @@
  *   receipt entries follow, and for the same reason: on the second run what is
  *   sitting there is the first run's own output. Without this every repeat run
  *   would prompt about the bar it installed itself.
- * - **`--statusline` is consent**, and the only thing that is. `--all` is not:
- *   it asks for the toolkit, and the toolkit including a status bar is not the
- *   same as the user choosing to replace the one they have.
+ * - **`--statusline` is consent**, and the only thing that is. It used to share
+ *   the job with `--all`, which asked for the whole toolkit — and the toolkit
+ *   including a status bar is not the same as the user choosing to replace the
+ *   one they have. `--all` is gone with the plugin installs, so **every install
+ *   run is now explicit and this gate grants every time**. The asking branches
+ *   are kept rather than deleted for one reachable reason and one latent one:
+ *   clearing a refusal remembered by an older version is a live path, and the
+ *   day anything other than the flag can trigger an install, deleting them would
+ *   be the silent overwrite this file exists to prevent.
  * - **No TTY is a failure, not a default.** A run that cannot ask has no
  *   business guessing, in either direction — silently overwriting is the bug
  *   this exists to fix, and silently skipping would make an unattended install
@@ -37,24 +43,15 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { createInterface } from "node:readline/promises";
 import writeFileAtomic from "write-file-atomic";
-import type { AdapterContext } from "./adapters/types.ts";
 import { readJsonc } from "./config/json.ts";
-
-/** The three surfaces that can carry a bar. Cursor has none. */
-export type Surface = "claude" | "ohmypi" | "opencode";
-
-export const SURFACE_LABEL: Readonly<Record<Surface, string>> = {
-  claude: "Claude Code",
-  ohmypi: "Oh-My-Pi",
-  opencode: "OpenCode",
-};
+import type { Context } from "./context.ts";
 
 /**
- * What to do about one surface.
+ * What to do about the bar.
  *
- * `skip` still installs the bar's files — it declines only to point the host
- * tool at them, which is what leaves a declined machine one `--statusline` away
- * from a working bar rather than back at the start.
+ * `skip` still installs the bar's files — it declines only to point Claude at
+ * them, which is what leaves a declined machine one `--statusline` away from a
+ * working bar rather than back at the start.
  */
 export type Consent = "configure" | "skip" | "fail";
 
@@ -109,14 +106,11 @@ export function interactive(): boolean {
  * dry-run diff and the version report go there, and a prompt in the middle of
  * a piped diff would corrupt it.
  */
-export async function ask(
-  surface: Surface,
-  conflict: string,
-): Promise<boolean> {
+export async function ask(conflict: string): Promise<boolean> {
   const rl = createInterface({ input: process.stdin, output: process.stderr });
   try {
     const answer = await rl.question(
-      `\n${SURFACE_LABEL[surface]} already has a statusline configured:\n`
+      "\nClaude Code already has a statusline configured:\n"
         + `  ${conflict}\n`
         + "Replace it? It is captured in the receipt, so --uninstall puts it "
         + "back. [y/N] ",
@@ -137,25 +131,27 @@ export async function ask(
  * lives where that script looks. `$HOME` rather than `XDG_CONFIG_HOME`, for
  * the same reason — `tools/statusline/statusline` resolves it from `$HOME`.
  */
-export function userConfigFile(context: AdapterContext): string {
+export function userConfigFile(context: Context): string {
   return `${context.home}/.config/statusline.json`;
 }
 
 /**
  * Has the user declined, and not since changed their mind?
  *
- * One flag for all three surfaces, so declining once is declining. A malformed
- * or missing file reads as *allowed* — the safe direction, since the worst case
- * is being asked again rather than silently never configuring anything.
+ * A malformed or missing file reads as *allowed* — the safe direction, since the
+ * worst case is being asked again rather than silently never configuring
+ * anything. The key is deliberately not per surface: it was one flag across the
+ * three bars this CLI used to install, so declining once was declining, and a
+ * machine still carrying it from then is cleared by the next `--statusline`.
  */
-export function autoConfigureAllowed(context: AdapterContext): boolean {
+export function autoConfigureAllowed(context: Context): boolean {
   const config = readUserConfig(context);
   return config?.["autoConfigure"] !== false;
 }
 
 /** Persist a refusal, or clear one. Deep-merge is unnecessary: one key. */
 export function setAutoConfigure(
-  context: AdapterContext,
+  context: Context,
   allowed: boolean,
 ): void {
   const file = userConfigFile(context);
@@ -174,7 +170,7 @@ export function setAutoConfigure(
 }
 
 function readUserConfig(
-  context: AdapterContext,
+  context: Context,
 ): Record<string, unknown> | undefined {
   const file = userConfigFile(context);
   if (!existsSync(file)) {

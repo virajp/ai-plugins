@@ -1,19 +1,18 @@
 /**
  * The flag surface, parsed by the platform.
  *
- * **This replaced `citty`, and the reason is a bug rather than a preference.**
- * citty's `ArgType` is `boolean | string | enum | positional` — there is no
- * array kind — so a repeated flag is not expressible in it at all and the last
- * occurrence silently wins. Three of the ten flags here are documented as
- * repeatable, so `--user vwf --user devtools` installed only `devtools` and
- * said nothing about the name it dropped. `index.ts` even carried a comment
- * asserting the opposite, most likely because citty's `ParsedArgs` includes
- * `string[]` in its index signature while no `ArgType` can ever produce one.
+ * **`node:util`'s `parseArgs` replaced `citty`, and the reason was a bug rather
+ * than a preference.** citty's `ArgType` is `boolean | string | enum |
+ * positional` — no array kind — so a repeated flag is not expressible in it at
+ * all and the last occurrence silently wins. `--user vwf --user devtools`
+ * installed only `devtools` and said nothing about the name it dropped.
  *
- * `node:util`'s `parseArgs` has `multiple: true`, which is exactly the missing
- * feature, and it is verified working on **Node 18.20.8** — this package's
- * `engines.node` floor — so nothing had to move to gain it. It also drops a
- * runtime dependency from the published package rather than swapping one in.
+ * **No flag here is repeatable any more**, because the three that were —
+ * `--user`, `--project`, `--platform` — all named plugins or targets, and this
+ * CLI installs neither. `parseArgs` stays regardless: it is the platform, it
+ * costs no dependency, and it works on this package's `engines.node` floor
+ * (verified on 18.20.8). Should a repeatable flag return, `multiple: true` is
+ * already the answer.
  *
  * Two things citty did that the platform does not, both handled here:
  *
@@ -24,8 +23,9 @@
  *   no-request path has to print help anyway, so this was going to exist.
  *
  * `strict` is on, so an unknown flag is an **error naming itself** rather than
- * a silent no-op. That is a real gain over what citty did — a retired flag like
- * `--upgrade` now says so instead of being ignored.
+ * a silent no-op. That is what makes a retired flag legible instead of ignored,
+ * and five have now been retired at once — `--all`, `--user`, `--project`,
+ * `--platform` and `--force` — so the failure mode matters more than it did.
  */
 import { parseArgs } from "node:util";
 
@@ -43,24 +43,6 @@ interface FlagDoc {
  */
 const FLAGS: readonly FlagDoc[] = [
   {
-    display: "--all",
-    description: "Install the default set at user scope: vwf, devtools",
-  },
-  {
-    display: "--user <name>",
-    description: "Install a plugin at user scope (repeatable)",
-  },
-  {
-    display: "--project <name>",
-    description: "Install a plugin at project scope (repeatable)",
-  },
-  {
-    display: "--platform <target>",
-    description:
-      "Target an agent: claude, cursor, ohmypi, opencode (repeatable). "
-      + "Defaults to every one installed",
-  },
-  {
     display: "--statusline",
     description:
       "Install the statusline, and consent to replacing one already there",
@@ -68,7 +50,9 @@ const FLAGS: readonly FlagDoc[] = [
   { display: "--no-statusline", description: "Skip the statusline" },
   {
     display: "--uninstall",
-    description: "Undo a previous install, from its receipt",
+    description:
+      "List everything this toolkit installed and remove what you do not "
+      + "deselect",
   },
   {
     display: "--dry-run",
@@ -76,20 +60,18 @@ const FLAGS: readonly FlagDoc[] = [
   },
   {
     display: "--force",
-    description: "Act on a target whose tool is not on PATH",
+    description: "Act even though Claude Code is not on PATH",
   },
   {
     display: "-v, --version",
-    description: "Report this CLI's version and every plugin's, vs the latest",
+    description:
+      "Report this CLI's version, the statusline installed on disk, and the "
+      + "plugins available on main",
   },
   { display: "-h, --help", description: "Show this help" },
 ];
 
 const OPTIONS = {
-  all: { type: "boolean" },
-  user: { type: "string", multiple: true },
-  project: { type: "string", multiple: true },
-  platform: { type: "string", multiple: true },
   statusline: { type: "boolean" },
   "no-statusline": { type: "boolean" },
   uninstall: { type: "boolean" },
@@ -102,11 +84,13 @@ const OPTIONS = {
 } as const;
 
 export interface Args {
-  readonly all: boolean;
-  readonly user: readonly string[];
-  readonly project: readonly string[];
-  readonly platform: readonly string[];
-  /** Tri-state: `true` asks, `false` refuses, `undefined` defers to `--all`. */
+  /**
+   * Tri-state: `true` asks, `false` refuses, `undefined` is unset.
+   *
+   * Unset used to defer to `--all`; with `--all` retired there is nothing left
+   * to defer to, so unset now means "the run said nothing about the bar" — which
+   * on an install run is a request for the help text.
+   */
   readonly statusline: boolean | undefined;
   readonly uninstall: boolean;
   readonly dryRun: boolean;
@@ -118,10 +102,10 @@ export interface Args {
 /**
  * Fold `--statusline` / `--no-statusline` back into one tri-state.
  *
- * The distinction is load-bearing twice over: unset defers to `--all`, and an
- * explicit `--statusline` is the *only* consent to replace a statusline this
- * installer did not write. Collapsing the pair to a plain boolean would lose
- * both, which is why citty's flag carried no `default` either.
+ * The distinction is still load-bearing: an explicit `--statusline` is the only
+ * consent to replace a statusline this installer did not write, and it is also
+ * what clears a refusal remembered by an earlier version. Collapsing the pair to
+ * a plain boolean would lose both.
  *
  * Both at once is a contradiction, and refusal wins: it is the answer that
  * changes nothing on the machine.
@@ -150,10 +134,6 @@ export function parse(argv: readonly string[]): Args {
     allowPositionals: false,
   });
   return {
-    all: values.all === true,
-    user: values.user ?? [],
-    project: values.project ?? [],
-    platform: values.platform ?? [],
     statusline: statuslineFlag(values.statusline, values["no-statusline"]),
     uninstall: values.uninstall === true,
     dryRun: values["dry-run"] === true,
@@ -163,7 +143,7 @@ export function parse(argv: readonly string[]): Args {
   };
 }
 
-/** The help text, printed on `--help` and on any run that installs nothing. */
+/** The help text, printed on `--help` and on any run that does nothing. */
 export function renderUsage(): string {
   const width = Math.max(...FLAGS.map(f => f.display.length));
   const wrap = (text: string, indent: number): string => {
@@ -187,13 +167,23 @@ export function renderUsage(): string {
     `  ${flag.display.padEnd(width)}  ${wrap(flag.description, width + 4)}`
   );
   return [
-    "Install the virajp-plugins toolkit across AI coding agents",
+    "Install the virajp-plugins statusline, and wire graphify for it",
     "",
     "USAGE",
     "  ai-plugins [options]",
     "",
     "OPTIONS",
     ...rows,
+    "",
+    "PLUGINS",
+    "  Installed by Claude Code itself, from this repo on GitHub:",
+    "",
+    "    claude plugin marketplace add virajp/ai-plugins",
+    "    claude plugin install vwf@virajp-plugins",
+    "",
+    "  Installing vwf pulls in devtools. Upgrade with",
+    "  `claude plugin marketplace update virajp-plugins` then",
+    "  `claude plugin update <name>`.",
     "",
   ]
     .join("\n");

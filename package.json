@@ -1,7 +1,7 @@
 {
   "name": "@askviraj/ai-plugins",
   "version": "4.3.3",
-  "description": "CLI to install Viraj Patel's AI coding toolkit across Claude Code, Cursor, Oh-My-Pi and OpenCode, plus the powerline statusline",
+  "description": "Installs the powerline statusline for Claude Code, and wires up graphify. The plugins install through Claude Code's own marketplace commands",
   "keywords": [
     "claude",
     "claude-code",
@@ -18,9 +18,7 @@
     "context7",
     "mempalace",
     "ai",
-    "anthropic",
-    "cursor",
-    "opencode"
+    "anthropic"
   ],
   "repository": "github:virajp/ai-plugins",
   "license": "MIT",
@@ -31,14 +29,7 @@
   },
   "files": [
     "bin",
-    "tools",
-    "claude",
-    "cursor",
-    "ohmypi",
-    "opencode",
-    "plugins.json",
-    ".claude-plugin",
-    ".cursor-plugin"
+    "tools"
   ],
   "dependencies": {
     "jsonc-parser": "^3.3.1",

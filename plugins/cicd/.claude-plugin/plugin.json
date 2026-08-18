@@ -1,0 +1,20 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "cicd",
+  "version": "1.1.0",
+  "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; multi-repo and monorepo layouts are both supported.",
+  "author": {
+    "name": "Viraj Patel"
+  },
+  "keywords": [
+    "cicd",
+    "ci",
+    "cd",
+    "pipeline",
+    "mise",
+    "workflow",
+    "monorepo",
+    "multi-repo",
+    "skills"
+  ]
+}

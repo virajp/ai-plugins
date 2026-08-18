@@ -29,29 +29,38 @@ corollaries:
 
 Every language plugin ships all of:
 
-1. **`languages:` in the manifest** — the token-ownership declaration, and what
-   makes each language *known* to `doctor` (an unknown language is a blocking
-   finding that halts `setup` and `execute`).
+1. **A `languages:` list in each project template's frontmatter** — the
+   token-ownership declaration, and what makes each language *known* to `doctor`
+   (an unknown language is a blocking finding that halts `setup` and `execute`).
+   Note where this lives: the **template**, not the plugin manifest. The
+   manifest carried a `languages:` key of its own until the Claude-first
+   cutover, but nothing ever read it — vwf reaches a plugin only at contracted
+   skill names, so the token it resolves is always the one the template
+   declares. The manifest key was documentation with a single checker assertion
+   behind it, and it folded into `keywords`. Do not reintroduce it: two
+   declarations of the same fact is the drift this repo keeps deleting.
 2. **≥ 1 project-axis stack template plus the adapter pair** —
-   `<plugin>-stack-menu` and `<plugin>-stack-template`, both `invocation: both`,
-   per vwf's `stack-adapter.md`. Under the closed menu a language with no
-   template is a dead end — `architecture` can never pin a project to it — so
-   the template is what makes the plugin usable, not an extra.
-3. **A router skill per major language** — lean SKILL.md, `invocation: model`,
-   `paths:` scoped to the language's extensions, loading on-demand references.
-   The minimum reference set is **coding standards, testing, and
-   build/packaging**; everything beyond (flutter's feature catalog) is
-   discretionary. One router may cover several of the plugin's tokens when their
-   doctrine is shared (the `typescript` router covers `javascript` too) — but
-   every claimed token must be covered by *some* router's `paths:`, and a
-   framework skill scopes to only the languages the framework actually supports
-   (`effect` is TS-only by Effect's own requirements).
+   `<plugin>-stack-menu` and `<plugin>-stack-template`, both model-invocable
+   (`disable-model-invocation: false`), per vwf's `stack-adapter.md`. Under the
+   closed menu a language with no template is a dead end — `architecture` can
+   never pin a project to it — so the template is what makes the plugin usable,
+   not an extra.
+3. **A router skill per major language** — lean SKILL.md,
+   `user-invocable: false`, `paths:` scoped to the language's extensions,
+   loading on-demand references. The minimum reference set is **coding
+   standards, testing, and build/packaging**; everything beyond (flutter's
+   feature catalog) is discretionary. One router may cover several of the
+   plugin's tokens when their doctrine is shared (the `typescript` router covers
+   `javascript` too) — but every claimed token must be covered by *some*
+   router's `paths:`, and a framework skill scopes to only the languages the
+   framework actually supports (`effect` is TS-only by Effect's own
+   requirements).
 4. **The bundled LSP server(s)**, where one exists — declared in `lspServers:`,
    launched through `mise x`, with an `extensions:` map covering the plugin's
    language tokens.
 5. **A config-doctrine skill per config file the toolchain owns**
    (`package-json`, `pnpm`, `tsconfig`, `lint-format` / `pubspec`,
-   `analysis-options`) — `invocation: model` + `paths:` scoped to that file.
+   `analysis-options`) — `user-invocable: false` + `paths:` scoped to that file.
 
 ## Conditional and optional
 
@@ -107,9 +116,9 @@ and repo gates (devtools'), toolchain installation (mise's), development secrets
 When the contract graduates to enforcement, these are the mechanical assertions
 `plugins:check` gains — everything else here stays judgment, reviewed in PRs:
 
-- `languages:` present ⇒ the `-stack-menu` / `-stack-template` pair exists and
-  is `invocation: both`;
+- a project template declaring `languages:` ⇒ the `-stack-menu` /
+  `-stack-template` pair exists and is model-invocable;
 - every declared language token appears in some `lspServers.*.extensions` map;
 - a project template declaring a screen platform ⇒ a `<plugin>-ux-gate` skill
   exists;
-- a plugin declaring `languages:` declares no `dependencies:`.
+- a plugin owning a language declares no `dependencies`.

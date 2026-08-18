@@ -16,12 +16,38 @@ import {
   it,
 } from "vitest";
 import { setJsonPath } from "./config/json.ts";
+import type {
+  Entry,
+  Receipt,
+} from "./receipt.ts";
 import {
   readReceipt,
+  RECEIPT_VERSION,
   ReceiptBuilder,
   revert,
   writeReceipt,
 } from "./receipt.ts";
+
+/**
+ * A receipt written by an older, multi-target version of this CLI.
+ *
+ * Built as a literal rather than through `ReceiptBuilder`, which no longer has a
+ * `tree` or `command` method — nothing this version installs writes those kinds.
+ * That is the right shape for these tests anyway: a legacy receipt is JSON on
+ * disk, and `revert` still has to meet it.
+ */
+function legacy(
+  installedAt: string,
+  entries: readonly Entry[],
+  plugins?: Receipt["plugins"],
+): Receipt {
+  return {
+    version: RECEIPT_VERSION,
+    installedAt,
+    entries: [...entries],
+    ...(plugins === undefined ? {} : { plugins }),
+  };
+}
 
 /**
  * The invariant under test is the one the whole receipt system exists for:
@@ -163,14 +189,14 @@ describe("receipts", () => {
       const path = join(root, "merge.json");
       writeReceipt(
         path,
-        new ReceiptBuilder().tree(join(root, "datastore")).build("t1", [
+        legacy("t1", [{ kind: "tree", path: join(root, "datastore") }], [
           { name: "datastore", scope: "user" },
         ]),
       );
 
       writeReceipt(
         path,
-        new ReceiptBuilder().tree(join(root, "identity")).build("t2", [
+        legacy("t2", [{ kind: "tree", path: join(root, "identity") }], [
           { name: "identity", scope: "user" },
         ]),
       );
@@ -209,10 +235,14 @@ describe("receipts", () => {
       // The statusline shape: everything was already set, so the run recorded
       // nothing — and that empty receipt used to replace the real one.
       const path = join(root, "noop.json");
-      const first = new ReceiptBuilder()
-        .createdFile(join(root, "config.yml"))
-        .command(["config", "set", "k", "v"], ["config", "set", "k", ""])
-        .build("t1");
+      const first = legacy("t1", [
+        { kind: "file", path: join(root, "config.yml") },
+        {
+          kind: "command",
+          ran: ["config", "set", "k", "v"],
+          undo: ["config", "set", "k", ""],
+        },
+      ]);
       writeReceipt(path, first);
 
       writeReceipt(path, new ReceiptBuilder().build("t2"));

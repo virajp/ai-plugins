@@ -22,36 +22,29 @@ repos:
         entry: mise x -- mise run typescript:test
         language: system
         pass_filenames: false
-        files: ^templates/typescript/hooks/
-        stages: [ pre-commit ]
-      # The rendered trees are generated, so they are rebuilt before they are
-      # validated: a template edit that was never re-rendered would otherwise
-      # pass the checker against a stale tree. The render is deterministic and
-      # destructive per target, so running it here is safe and makes
-      # `render-clean` below meaningful.
-      - id: plugins-build
-        name: render every target
-        entry: mise x -- mise run plugins:build
-        language: system
-        pass_filenames: false
-        files: ^(templates/|renderer/|schema/)
+        files: ^plugins/typescript/hooks/
         stages: [ pre-commit ]
       - id: plugins-check
-        name: plugin tree static validation
+        name: Static validation of the authored plugins/ tree
         entry: mise x -- mise run plugins:check
         language: system
         pass_filenames: false
-        files: ^(templates/|renderer/|schema/|claude/|cursor/|ohmypi/|opencode/)
+        files: ^plugins/
         stages: [ pre-commit ]
-      # The committed render must be exactly what templates/ renders to. Catches
-      # the case the two hooks above cannot: output edited by hand, or a render
-      # whose result was never staged.
-      - id: render-clean
-        name: rendered trees match a fresh render
-        entry: mise x -- mise run plugins:render-clean
+      # `plugins-build` and `render-clean` retired with the template layer: there
+      # is one authored tree under `plugins/` and nothing renders, so there is no
+      # staleness for them to catch — except in the one file that is still
+      # generated. `.claude-plugin/marketplace.json` is a projection of the 13
+      # plugin manifests AND committed, so nothing else notices when the two
+      # diverge; this is what render-clean narrowed down to. It fires on a
+      # manifest edit and on a hand-edit of the manifest itself, since either
+      # side moving is the drift.
+      - id: plugins-marketplace
+        name: Marketplace manifest matches the plugin manifests
+        entry: mise x -- mise run plugins:marketplace --check
         language: system
         pass_filenames: false
-        files: ^(templates/|renderer/|schema/|claude/|cursor/|ohmypi/|opencode/)
+        files: ^(plugins/|\.claude-plugin/)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -97,11 +90,16 @@ repos:
       - id: linter
         name: Linter
         entry: mise x -- pnpm dlx @askviraj/linter --fix
-        # The root trees are rendered output. pre-commit passes staged paths
-        # explicitly, and the linter warns on each one it is configured to
-        # ignore — enough warnings to fail the run. Keep them out of the
-        # argument list entirely.
-        exclude: ^(claude|cursor|ohmypi|opencode)/
+        # pre-commit passes staged paths explicitly, and the linter warns on every
+        # path it has no configuration for — enough warnings to fail the run. So
+        # anything it cannot lint must be kept out of the argument list, not merely
+        # ignored in .config/linter.yaml.
+        #
+        # Two kinds: the vwf blueprint templates and example bundle (ignored in
+        # linter.yaml, because OKF frontmatter reads as a second H1), and the hook
+        # scripts, which are shell — `typescript:test` is what actually tests those,
+        # through the system sed.
+        exclude: ^plugins/vwf/assets/(templates|examples)/|\.sh$
         language: system
         stages: [ pre-commit ]
 

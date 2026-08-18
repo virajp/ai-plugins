@@ -1,29 +1,60 @@
 #!/usr/bin/env bash
-#MISE description="Static validation of templates/ and every rendered target, plus the coverage report"
+#MISE description="Static validation of the authored plugins/ tree"
 #MISE dir="{{ config_root }}"
 
-# Validates the authored templates/ tree and all five rendered targets, then
-# prints the per-target coverage report.
+# Validates the one authored tree under plugins/. Much smaller than the checker
+# it replaces, because half of what that one checked stopped existing: with four
+# render trees gone there are no per-target passes to run, and the neutral-schema
+# assertions they protected — it.cmd() targets, prefixSkillNames, cross-plugin
+# skill-name uniqueness, invocation projection — describe mechanisms that are
+# gone. Deleting them was the point of the cutover, not a regression.
 #
-# This is deliberately smaller than the Python task it replaces. The neutral
-# manifest merged plugin.json with the marketplace entry, and the zod schemas
-# type what used to be checked by regex, so whole families of the old
-# assertions became unrepresentable rather than merely unchecked — the two
-# dependency lists that had to agree, marketplace registration in both
-# directions, skill name/description/model shape.
+# What is left is what no format and no type can state: cross-file agreement,
+# things that must exist on disk, and the two contracts vwf enforces by
+# CONSTRUCTING a skill name — where a wrong name fails silently rather than
+# erroring, which is what makes a static check the only place to catch it.
 #
-# What remains is what no type can state: cross-file agreement, things that must
-# exist on disk, and the properties of the *rendered* output. That second half
-# is the point — Claude has byte-parity against plugins/, and the other four
-# targets have nothing else.
-#
-# Exits non-zero on any finding. The coverage report always prints, including on
-# success: a capability silently disappearing from a target is exactly the kind
-# of regression that otherwise goes unnoticed.
+# Exits non-zero on any finding.
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-exec node --experimental-strip-types renderer/src/cli.ts check "$@"
+print_header "Checking plugins/ ..."
+
+# `2>&1` so the findings land in the same stream as the header. The checker
+# writes them to stderr, which is unbuffered while stdout is not — leave them
+# apart and the header prints *after* the failures it introduces, under mise and
+# in CI alike.
+if ! node scripts/src/check.ts 2>&1; then
+  print_error "plugins/ has findings — see above"
+  exit 1
+fi
+
+# Then Claude's own validator, which knows things no checker here can: which
+# fields it actually reads. `--strict` is the mode its help recommends for CI, and
+# it turns "unknown field, ignored at load time" from a warning into a failure —
+# which is how a `displayName` that named the marketplace to nobody survived in
+# the generated manifest for years.
+#
+# SKIPPED rather than failed when `claude` is absent, because CI installs the
+# toolchain from mise and this must not become the reason a container without the
+# agent CLI cannot validate a plugin tree. A skip is announced; a silent pass
+# would be worse than not running it.
+if command -v claude >/dev/null 2>&1; then
+  print_header "Validating manifests with claude plugin validate --strict ..."
+  failed=0
+  for manifest in .claude-plugin/marketplace.json plugins/*/; do
+    if ! out=$(claude plugin validate --strict "$manifest" 2>&1); then
+      print_error "$manifest"
+      printf '%s\n' "$out" | sed 's/^/    /'
+      failed=1
+    fi
+  done
+  [[ "$failed" -eq 0 ]] || exit 1
+else
+  print_warn "claude not on PATH — skipping \`plugin validate --strict\`"
+fi
+
+print_success "plugins/ is valid"

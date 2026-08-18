@@ -15,12 +15,21 @@ product's whole walk through the workflow, the journey-shaped guides are in
 ## Install
 
 ```sh
-# Installs vwf + its plugin dependencies, and wires up graphify
-pnpx @askviraj/ai-plugins --user vwf
+# Once
+claude plugin marketplace add virajp/ai-plugins
+
+# Installs vwf and its one dependency, devtools
+claude plugin install vwf@virajp-plugins
 ```
 
-Installing outside a git repo works too: `graphify install` still runs, and its
-repo-scoped post-commit hook is skipped automatically (with a note).
+Add `--scope project` to either command to keep it to one repo. Restart the
+agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
+time, and doctor is what reports a missing required binary.
+
+Separately, `pnpx @askviraj/ai-plugins --statusline` installs the statusline and
+wires up **graphify**, which vwf enforces at its own entry gate. Installing
+outside a git repo works too: `graphify install` still runs, and its repo-scoped
+post-commit hook is skipped automatically (with a note).
 
 Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
@@ -38,13 +47,14 @@ checks for each and prints the exact command for anything missing.
 | uv              | **required** | graphify's Python runtime                       | `mise use -g uv@latest`               |
 | rtk             | **required** | the token-saving `rtk hook claude` Bash hook    | `brew install --formulae rtk`         |
 
-Every row above is in `vwf`'s `requires:` list, which the installer treats as a
-**hard gate**: it refuses the install and prints the command for anything
-missing, rather than succeeding into a plugin that fails later with nothing
-pointing back at the install. `rtk` is the one whose *runtime* behaviour is
-softer than its install gate — the hook entry is guarded, so a `vwf` that
-somehow finds itself without `rtk` degrades (with a `/vwf:doctor` warning)
-instead of blocking every Bash call.
+**Nothing checks these at install time.** `claude plugin install vwf` succeeds
+regardless, so the first thing to run afterwards is **`/vwf:doctor`** — it
+reports a missing one as a **blocking** finding, and both `/vwf:setup` and
+`/vwf:execute` halt on one. An earlier installer refused the install outright
+and printed the command to fix each; that gate retired with it, so the failure
+now arrives at first use rather than at install. `rtk` is the one whose
+behaviour is softer still — the hook entry is guarded, so a `vwf` without `rtk`
+degrades (with a `/vwf:doctor` warning) instead of blocking every Bash call.
 
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
@@ -60,8 +70,8 @@ each other's local graph state. See [mempalace](./mempalace.md).
 
 Nothing else about memory needs installing. The two mempalace skills are
 **vendored into `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its
-auto-save hooks are reimplemented here, so memory ships on all four targets
-rather than only the three with a marketplace.
+auto-save hooks are reimplemented here, so memory arrives with the plugin rather
+than depending on anything being reachable at install time.
 
 `vwf` also depends on one plugin — `devtools` — resolved from the same
 `virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
@@ -73,9 +83,9 @@ The Markdown/documentation skills and the Context7 docs server used to be two
 more dependencies. They are **part of `vwf` now**: `documentation-standards` and
 `/vwf:readme` are vwf skills, and Context7 is one of vwf's two MCP servers. The
 Karpathy coding guidelines were a third, and are now a **vendored** skill —
-`karpathy-guidelines` — for the same reason mempalace's are: a url-sourced
-dependency has no rendered bundle, so three of the four targets installed `vwf`
-and silently went without it.
+`karpathy-guidelines` — for the same reason mempalace's are: as a url-sourced
+dependency it was silently absent for most installs, and vendoring puts the
+provenance beside the code it governs.
 
 **`cicd` is not among them.** vwf states the delivery-pipeline *contract*; the
 [`cicd`](./cicd.md) plugin implements it on whichever CI system a repo uses.
@@ -132,10 +142,11 @@ adopting it.
 
 **Dependencies**
 
-- **Hard external prerequisites.** `mise`, `graphify`, `uv`, `pnpm` and `rtk`
-  must be on your `PATH` — the installer refuses the install without them, and
-  `/vwf:setup` and `/vwf:execute` halt without mise or graphify at run time.
-  Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
+- **External prerequisites, checked at run time rather than install time.**
+  `mise`, `graphify`, `uv`, `pnpm` and `rtk` must be on your `PATH`. Nothing
+  refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on a
+  missing `mise` or `graphify`, and the other three fail later in their own
+  ways. Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
   [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
   to both `mempalace` (an **HTTP daemon you run** —
@@ -641,16 +652,15 @@ record.
 | `/vwf:git-workflow`      | Internal — worktree isolation, commits, merges                                                                   |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
-are declared `invocation: user` (which Claude spells
-`disable-model-invocation: true`), so the model never fires them on its own; you
-decide when a migration, a post-deploy check, a re-render, a plan retirement or
-a session resume happens. The rest stay model-invocable because the workflow
-**delegates to them by name** — `recall` resumes a paused run *through*
-`blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`,
-`setup` runs `doctor` inside its own spine, and `feedback` and `plan` route work
-into `product`/`architecture`/`design-system`/`blueprint`. Marking one of those
-user-only would silently break the chain: the flag blocks programmatic
-invocation, not just auto-triggering.
+carry `disable-model-invocation: true`, so the model never fires them on its
+own; you decide when a migration, a post-deploy check, a re-render, a plan
+retirement or a session resume happens. The rest stay model-invocable because
+the workflow **delegates to them by name** — `recall` resumes a paused run
+*through* `blueprint`/`plan`/`execute`, every skill commits *through*
+`git-workflow`, `setup` runs `doctor` inside its own spine, and `feedback` and
+`plan` route work into `product`/`architecture`/`design-system`/`blueprint`.
+Marking one of those user-only would silently break the chain: the flag blocks
+programmatic invocation, not just auto-triggering.
 
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
@@ -665,9 +675,9 @@ stage always runs and any downgrade is reported at that gate.
 
 Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
 Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
-needs a recent Claude Code), the model can also invoke them itself when the
-conversation calls for one, and the same artifact installs into OpenCode via the
-[installer CLI](../../readme.md#the-installer-cli).
+needs a recent Claude Code), and the model can also invoke them itself when the
+conversation calls for one. One artifact serves both paths, which is why this
+plugin ships no `commands/` directory.
 
 ### /vwf:setup
 
@@ -1596,8 +1606,9 @@ reviews (`karpathy-guidelines` is the exception, also reachable by hand as
   ruleset is [below](#documentation-standards).
 - **`karpathy-guidelines`** — the four behavioral pillars that cut the coding
   mistakes LLMs most reliably make. Vendored verbatim from
-  [upstream](./karpathy-guidelines.md) rather than depended on, so it ships on
-  every target; provenance in `templates/vwf/vendor/andrej-karpathy-skills/`.
+  [upstream](./karpathy-guidelines.md) rather than depended on, so it always
+  ships with the plugin; provenance in
+  `plugins/vwf/vendor/andrej-karpathy-skills/`.
 
 One more absorbed skill is user-invoked rather than doctrine:
 [`/vwf:readme`](#vwfreadme), which writes a repo's README against the same
@@ -1606,9 +1617,9 @@ standards.
 The memory pair also comes from outside: **`/vwf:mempalace`** (palace setup and
 mining) and **`/vwf:mempalace-recall`** (the search-before-answer protocol) are
 vendored from [MemPalace](https://github.com/MemPalace/mempalace) under MIT.
-They are here rather than in a plugin of their own because a url-sourced plugin
-has no rendered bundle for OpenCode to copy, so memory silently did not ship
-there at all — see [mempalace](./mempalace.md).
+They are here rather than in a plugin of their own because as a url-sourced
+dependency the memory layer was silently absent for most installs — see
+[mempalace](./mempalace.md).
 
 The behaviors `karpathy-guidelines` states are already reinforced structurally
 across the workflow — elicitation (think before coding), the plan-as-a-diff and
@@ -1725,9 +1736,10 @@ up current library docs instead of relying on training knowledge. It used to be
 its own plugin and a vwf dependency; vwf now declares the server itself.
 
 It runs over stdio, launched via `pnpm dlx @upstash/context7-mcp` — always the
-latest published server, which is why `pnpm` is in vwf's `requires:` list. The
-manifest passes a `CONTEXT7_API_KEY` env var through (defaulting to empty), so
-exporting one authenticates past Upstash's anonymous rate limits:
+latest published server, which is why `pnpm` is one of the binaries
+`/vwf:doctor` blocks on. The manifest passes a `CONTEXT7_API_KEY` env var
+through (defaulting to empty), so exporting one authenticates past Upstash's
+anonymous rate limits:
 
 ```yaml
 context7:

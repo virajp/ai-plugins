@@ -21,11 +21,20 @@ mandatory in the payload, including when the template list is empty.
 
 ## Install
 
+Once, if you have not already:
+
 ```sh
-pnpx @askviraj/ai-plugins --user cloudflare
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-`cloudflare` is **opt-in** — excluded from `--all`, installed by name.
+```sh
+claude plugin install cloudflare@virajp-plugins
+```
+
+Add `--scope project` to either command to scope it to one repo instead of every
+repo on your machine. There is no default install set — every plugin here,
+`cloudflare` included, is installed by name — so install it when the product
+actually needs a private plane in front of a project.
 
 Then list it in the product's adapter roster:
 
@@ -40,19 +49,20 @@ composes with whichever `deploy` template actually runs the project.
 
 ## Skills
 
-Two, both `invocation: both`, both reached by vwf through delegation at the
-exact names the stack-adapter contract fixes. Neither is a general-purpose
-Cloudflare skill.
+Two, both model-invocable, both reached by vwf through delegation at the exact
+names the stack-adapter contract fixes. Neither is a general-purpose Cloudflare
+skill.
 
 | Skill                       | Answers                                                                                                                                  |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `cloudflare-stack-menu`     | The templates this plugin offers, as a vwf menu payload — **always carrying the parked-scope `note`**, including when the list is empty. |
 | `cloudflare-stack-template` | One template as a vwf template payload: its axis fields, the per-capability `harness` block, and the template's prose as `conventions`.  |
 
-`invocation: both` is load-bearing rather than cosmetic. A `user` skill is
-removed from the model's context entirely and cannot be delegated to, so vwf
-would receive an empty menu rather than an error — the same silent failure the
-parked-scope note exists to rule out. `mise run plugins:check` enforces it.
+Staying model-invocable is load-bearing rather than cosmetic. A skill marked
+`disable-model-invocation: true` is removed from the model's context entirely
+and cannot be delegated to, so vwf would receive an empty menu rather than an
+error — the same silent failure the parked-scope note exists to rule out.
+`mise run plugins:check` enforces it.
 
 There is no `-ux-gate` skill: an access proxy owns no UI stack.
 

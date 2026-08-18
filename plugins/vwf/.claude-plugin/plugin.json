@@ -1,0 +1,50 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "vwf",
+  "version": "18.3.0",
+  "description": "Highly opinionated Product → Blueprint → Plan → Execute workflow for solo developers or small teams — enforced workspace structure with a selectable stack-template menu checked by /vwf:doctor, a flow-first blueprint (entities as data contracts, OpenAPI + JSON-Schema artifacts) with whole-product coherence review, chained dependency plans, an autonomous execute with review/security/acceptance/UX subagents behind one final merge gate that stamps blueprint implementation state, post-deploy verify with production release freezing + API backward-compat enforcement, feedback intake, and mempalace-backed memory.",
+  "author": {
+    "name": "Viraj Patel"
+  },
+  "repository": "https://github.com/virajp/ai-plugins",
+  "keywords": [
+    "agents",
+    "skills",
+    "workflow",
+    "blueprint",
+    "mockups",
+    "plan",
+    "execute",
+    "archive",
+    "coding",
+    "review",
+    "security",
+    "architecture",
+    "design-system",
+    "onboarding",
+    "tdd",
+    "git-workflow"
+  ],
+  "dependencies": [
+    {
+      "marketplace": "virajp-plugins",
+      "name": "devtools"
+    }
+  ],
+  "mcpServers": {
+    "mempalace": {
+      "type": "http",
+      "url": "http://127.0.0.1:8765/mcp"
+    },
+    "context7": {
+      "args": [
+        "dlx",
+        "@upstash/context7-mcp"
+      ],
+      "command": "pnpm",
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
+      }
+    }
+  }
+}

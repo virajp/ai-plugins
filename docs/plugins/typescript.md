@@ -20,16 +20,25 @@ both, and neither installs anything extra.
 
 ## Install
 
+Once, if you have not already:
+
 ```sh
-pnpx @askviraj/ai-plugins --user typescript
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-Install it by name — `--all` covers the workflow only, not the languages. Use
-`--project typescript` instead to scope it to one repo; nothing pins it either
-way.
+```sh
+claude plugin install typescript@virajp-plugins
+```
 
-It needs `mise` and `pnpm` on your `PATH` — the language server launches through
-both.
+Add `--scope project` to scope it to one repo instead of every repo on your
+machine; nothing pins it either way. There is no default install set any more —
+installing `vwf` pulls in only `devtools`, so a language plugin like this one is
+always installed by name.
+
+There is no install-time gate on `mise` or `pnpm` any more — the language server
+launches through both, so a missing binary now surfaces as a `/vwf:doctor`
+blocking finding rather than a failed install. Run `/vwf:doctor` after
+installing.
 
 ## Skills
 
@@ -147,11 +156,13 @@ The lockfile is ground truth because bun reuses npm's `workspaces` field, so
 nothing else distinguishes the two reliably.
 
 The hook lives here, not in `vwf`: rewriting a JS/TS command is a TypeScript
-fact, and vwf names no technology. It is authored as *intent*, so each target
-emits its own mechanism — Claude and OpenCode rewrite the command in place;
-Cursor and Oh-My-Pi cannot, so they deny it with a correction telling you to
-reissue the command yourself. `mise run typescript:test` table-tests the script
-through the system `sed` for both package managers.
+fact, and vwf names no technology. It is declared directly in `hooks/hooks.json`
+as a `PreToolUse` / `Bash` rewrite, in Claude's own format — there is no
+per-target projection any more, so what is written is what runs. Porting it to
+another agent means porting the rewrite mechanism yourself; see readme.md's
+[Other tools](../../readme.md#other-tools) section for what that involves.
+`mise run typescript:test` table-tests the script through the system `sed` for
+both package managers.
 
 ## Language server
 
@@ -179,9 +190,10 @@ JavaScript, JSX, and TSX:
 | `.jsx`                | `javascriptreact` |
 
 Startup is allowed up to 60 seconds (`startupTimeout: 60000`) to cover the
-first-run `dlx` resolution. OpenCode keys its LSP config by its own built-in
-ids, so the entry is aliased to `typescript` there; Cursor has no LSP surface at
-all.
+first-run `dlx` resolution. This is Claude Code's own `lspServers` manifest
+entry — there is no rendered variant for another agent any more. Running it
+under Cursor, OpenCode or Codex means porting the manifest yourself, per the
+[Other tools](../../readme.md#other-tools) guidance.
 
 ## See also
 

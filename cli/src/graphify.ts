@@ -3,39 +3,41 @@
  *
  * This is not a nicety. vwf's graphify protocol is enforced at its own entry
  * gate: `/vwf:doctor` reports a missing CLI or a missing graph as **blocking**,
- * and both `setup` and `execute` halt on one. So a vwf install that skips this
- * step succeeds and produces a plugin that refuses to run — the worst shape of
- * failure, because nothing connects it back to the install.
+ * and both `setup` and `execute` halt on one. So a machine with vwf and no
+ * graphify wiring has a plugin that refuses to run — the worst shape of failure,
+ * because nothing connects it back to the install.
  *
- * Both commands are idempotent, so re-running on every install or upgrade
- * self-heals a setup the user has since broken.
+ * Both commands are idempotent, so re-running self-heals a setup the user has
+ * since broken.
+ *
+ * **It used to run only for targets that had just taken a vwf install**, and
+ * neither half of that condition exists any more: plugins are installed by
+ * `claude plugin install`, which this CLI never sees, and
+ * `graphify install --platform opencode` went with the OpenCode support. So this
+ * runs whenever a run reaches it, for Claude alone. Wiring graphify on a machine
+ * with no vwf costs an idempotent no-op; *not* wiring it on a machine that has
+ * vwf costs every vwf command.
  */
-import { hasBin } from "./adapters/support.ts";
-import type { AdapterContext } from "./adapters/types.ts";
-
-/** The targets graphify itself knows how to install into. */
-const SUPPORTED = new Set(["claude", "opencode"]);
+import type { Context } from "./context.ts";
+import { hasBin } from "./context.ts";
 
 /**
- * Run graphify's setup for each target that supports it.
+ * Run graphify's own setup.
  *
- * Soft-skips throughout. The dependency gate already refuses a vwf install with
- * no `graphify` on PATH, so reaching this without it means the gate was bypassed
- * (`--force`, or an upgrade), and failing the whole run at that point would undo
- * an install that otherwise succeeded.
+ * Soft-skips throughout, and that matters more than it did. The `requires:`
+ * install gate used to refuse a vwf install with no `graphify` on PATH, so
+ * reaching this without it meant the gate had been bypassed; that gate is gone
+ * with the plugin installs, so an absent graphify is now the ordinary case on a
+ * machine that only wants the statusline. Failing the run for it would refuse an
+ * install that otherwise succeeded, over a tool the user may not want.
  */
 export function setupGraphify(
-  context: AdapterContext,
-  targets: readonly string[],
+  context: Context,
   // Injected so a test can decide graphify is absent without touching PATH —
   // it is installed on the machine this is developed on, which would make the
   // soft-skip path untestable.
   onPath: (bin: string) => boolean = hasBin,
 ): void {
-  const applicable = targets.filter(t => SUPPORTED.has(t));
-  if (applicable.length === 0) {
-    return;
-  }
   if (!onPath("graphify")) {
     context.log(
       "graphify is not on PATH — skipping its setup; vwf will report this as "
@@ -44,21 +46,17 @@ export function setupGraphify(
     return;
   }
 
-  for (const target of applicable) {
-    const install = ["install", "--platform", target];
-    const result = context.exec("graphify", install);
-    if (result.status !== 0) {
-      context.log(
-        `graphify ${install.join(" ")} failed: ${
-          result.stderr.trim() || result.stdout.trim()
-        }`,
-      );
-      continue;
-    }
-    context.log(`graphify: wired for ${target}`);
-  }
+  const install = ["install", "--platform", "claude"];
+  const installed = context.exec("graphify", install);
+  context.log(
+    installed.status === 0
+      ? "graphify: wired for claude"
+      : `graphify ${install.join(" ")} failed: ${
+        installed.stderr.trim() || installed.stdout.trim()
+      }`,
+  );
 
-  // `graphify hook install` attaches a git post-commit hook, so it only means
+  // `graphify hook install` attaches a post-commit hook, so it only means
   // anything inside a work tree. Outside one it is a skip, not a failure — the
   // CLI is frequently run from a home directory.
   if (!inGitRepo(context)) {
@@ -68,17 +66,17 @@ export function setupGraphify(
     return;
   }
   const hook = ["hook", "install"];
-  const result = context.exec("graphify", hook);
+  const hooked = context.exec("graphify", hook);
   context.log(
-    result.status === 0
+    hooked.status === 0
       ? "graphify: post-commit hook installed"
       : `graphify ${hook.join(" ")} failed: ${
-        result.stderr.trim() || result.stdout.trim()
+        hooked.stderr.trim() || hooked.stdout.trim()
       }`,
   );
 }
 
-function inGitRepo(context: AdapterContext): boolean {
+function inGitRepo(context: Context): boolean {
   return context
     .exec("git", ["rev-parse", "--is-inside-work-tree"], {
       cwd: context.cwd,

@@ -2,7 +2,7 @@
 #MISE description="Unit-test the typescript npm-normalize hook (table-driven)"
 #MISE dir="{{ config_root }}"
 
-# Feeds crafted PreToolUse payloads through templates/typescript/hooks/npm-normalize.sh
+# Feeds crafted PreToolUse payloads through plugins/typescript/hooks/npm-normalize.sh
 # and asserts the rewritten command, for BOTH package managers this plugin allows. Each
 # table runs inside a temp dir seeded with the lockfile that selects the
 # manager, so the resolution path is exercised too — not just the rewrite. Runs
@@ -14,10 +14,9 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# The authored script. Hook scripts are copied byte-for-byte rather than
-# rendered (only .md goes through the template engine), so testing the source
-# tests exactly what every target ships.
-HOOK="templates/typescript/hooks/npm-normalize.sh"
+# The authored script — there is only one tree now, so this is both the source
+# and exactly what ships.
+HOOK="plugins/typescript/hooks/npm-normalize.sh"
 
 command -v jq >/dev/null 2>&1 || { print_error "jq is required to run the hook tests"; exit 1; }
 [[ -f "$HOOK" ]] || { print_error "Hook not found: $HOOK"; exit 1; }

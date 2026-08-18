@@ -26,14 +26,15 @@ Same run as the spine's
 [Install the plugins](./single-repo.md#install-the-plugins), minus one name:
 
 ```sh
-pnpx @askviraj/ai-plugins --all --user typescript --user datastore
+claude plugin install vwf@virajp-plugins \
+  typescript@virajp-plugins datastore@virajp-plugins
 ```
 
 `design-tools` is absent, and that is the first consequence of having no
 screens: the design adapter exists to answer imports from a canvas, and Hookline
 never reaches one. Everything else is unchanged — `typescript` supplies the
-project-axis template, `datastore` the backing axis. Flags and scopes:
-[the installer CLI](../../cli/usage.md).
+project-axis template, `datastore` the backing axis. Scopes and upgrades:
+[the installer CLI](../../cli/usage.md#installing-plugins).
 
 ### 2. /vwf:setup
 

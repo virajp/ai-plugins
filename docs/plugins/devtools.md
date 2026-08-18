@@ -15,26 +15,33 @@ It is a **`vwf` dependency**, and that is load-bearing rather than tidiness:
 
 ## Install
 
-```bash
-pnpx @askviraj/ai-plugins --user devtools
+Once, if you have not already:
+
+```sh
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-Installing `vwf` pulls it in automatically.
+```sh
+claude plugin install devtools@virajp-plugins
+```
 
-### Why `requires:` names only `mise`
+Add `--scope project` to scope it to one repo instead of every repo on your
+machine. Installing `vwf` pulls this plugin in automatically, via Claude Code's
+own plugin-dependency resolution (≥ 2.1.143) — nothing here needs installing by
+name for a vwf user.
 
-A plugin's `requires:` is a **hard install gate**, computed over the
-dependency-expanded set and deliberately **not** overridable by `--force`. So
-the test is "does this plugin shell out to it", never "does it document it".
-`mise` passes: `scaffold` writes mise config and the whole task library is mise
-tasks.
+### There is no install-time binary gate any more
 
-`doppler`, `dprint`, `eslint`, `gitleaks`, `grype` and `pre-commit` are all
-documented here and executed by **your** repo, never by this plugin. Because
-`devtools` is a vwf dependency and vwf is in `--all`, adding any one of them
-would hard-fail a bare `pnpx @askviraj/ai-plugins --all` for every user lacking
-that binary — and with no install hint to offer, it would fail while naming no
-way to fix itself. The list is not incomplete; do not "complete" it.
+A plugin's `requires:` list — the hard install gate this section used to
+describe — is retired along with `--all` and `--force`. A missing binary no
+longer fails the install; it surfaces instead as a `/vwf:doctor` **blocking**
+finding, and `/vwf:setup` and `/vwf:execute` both halt on one. Run `/vwf:doctor`
+after installing to see what your machine is missing.
+
+`mise` is the one tool this plugin cannot work without — `scaffold` writes mise
+config and the whole task library is mise tasks. `doppler`, `dprint`, `eslint`,
+`gitleaks`, `grype` and `pre-commit` are all documented here and executed by
+**your** repo, never by this plugin — that has not changed.
 
 ## Skills
 

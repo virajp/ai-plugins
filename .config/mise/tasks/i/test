@@ -7,11 +7,6 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-if [[ ! -d node_modules/citty ]]; then
-  print_header "Installing dependencies ..."
-  pnpm install
-fi
-
 # Test the BUILT artifact, not the source. bin/ is what npm ships, and the
 # bundle is where a packaging mistake would show up — a missing external, a
 # broken package-root resolution — none of which `node cli/src/index.ts` can
@@ -20,6 +15,7 @@ print_header "Bundling cli/ into bin/ ..."
 pnpm exec tsup >/dev/null
 
 CLI=(node bin/ai-plugins.mjs)
+STATUSLINE="tools/statusline/statusline"
 
 print_header "Rendering --help ..."
 "${CLI[@]}" --help >/dev/null
@@ -31,84 +27,63 @@ if "${CLI[@]}" >/dev/null 2>&1; then
   exit 1
 fi
 
-print_header "Asserting unknown plugin is rejected ..."
-if "${CLI[@]}" --user bogus >/dev/null 2>&1; then
-  print_error "Expected non-zero exit for an unknown plugin"
+print_header "Asserting an unknown flag is rejected ..."
+if "${CLI[@]}" --platform claude >/dev/null 2>&1; then
+  print_error "Expected non-zero exit for a retired flag (--platform)"
   exit 1
 fi
 
-print_header "Asserting an unknown platform is rejected ..."
-if "${CLI[@]}" --platform bogus --user vwf >/dev/null 2>&1; then
-  print_error "Expected non-zero exit for --platform bogus"
-  exit 1
-fi
-
-print_header "Asserting no-detectable-platform exits non-zero ..."
-# With only node on PATH no agent CLI resolves, so auto-detection finds nothing.
-NODE_DIR="$(dirname "$(command -v node)")"
-if env PATH="$NODE_DIR" "${CLI[@]}" --user vwf >/dev/null 2>&1; then
-  print_error "Expected non-zero exit when no platform is detectable"
-  exit 1
-fi
-
-# The external-tool gate: vwf needs graphify/rtk/mise/pnpm/uv, none of which are
-# on a node-only PATH. The list is derived from each plugin's `requires:` via
-# plugins.json, so this also proves that projection survived the build.
-print_header "Asserting the missing-tool gate fires ..."
-if env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user vwf >/dev/null 2>&1; then
-  print_error "Expected non-zero exit when required tools are missing"
-  exit 1
-fi
-
-# Asserted positively, not just by the absence of the missing-tool line. An
-# unknown plugin name exits early with "unknown plugin", which also lacks that
-# line — so the negative form passed vacuously for as long as the plugin it
-# named did not exist. It did exactly that once, after `markdown` folded into
-# vwf. Requiring the run to reach the per-target skip proves the name resolved.
-print_header "Asserting per-plugin tools: datastore needs none ..."
-datastore_out="$(env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user datastore 2>&1)"
-if grep -q "missing required tool" <<<"$datastore_out"; then
-  print_error "datastore should require no external tools"
-  exit 1
-fi
-if ! grep -qE 'claude[[:space:]]+.*tool not on PATH' <<<"$datastore_out"; then
-  print_error "datastore did not resolve to a known plugin"
-  printf '%s\n' "$datastore_out"
-  exit 1
-fi
-
-print_header "Asserting per-plugin tools: devtools needs mise ..."
-if ! env PATH="$NODE_DIR" "${CLI[@]}" --platform claude --user devtools 2>&1 | grep -qE '^  mise '; then
-  print_error "the devtools plugin should require mise"
+# The one assertion that makes the hand-synced version safe.
+#
+# The statusline reports its own version from a hardcoded constant, because the
+# CLI cannot report what is on disk otherwise: under `pnpx` the running package
+# is whatever was just downloaded, not what the user installed. `i:version`
+# stamps that constant during the bump; this is what catches a bump that edited
+# package.json and missed the script — which would ship a bar lying about its
+# own version, silently, since nothing else ever compares them.
+print_header "Asserting the statusline reports package.json's version ..."
+PKG_VERSION="$(node -p "require('./package.json').version")"
+SCRIPT_VERSION="$("${STATUSLINE}" --version)"
+if [[ "${SCRIPT_VERSION}" != "${PKG_VERSION}" ]]; then
+  print_error "${STATUSLINE} reports ${SCRIPT_VERSION}, package.json says ${PKG_VERSION}"
+  print_warn  "Run 'mise run i:version' to stamp it, or fix the constant by hand."
   exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# End-to-end: install, install again, uninstall — against the BUILT bundle.
+# End-to-end: install, install again, then the two non-interactive uninstall
+# paths — against the BUILT bundle and a throwaway HOME.
 #
-# Everything above this line exits before an adapter runs, so until now nothing
-# here ever wrote a file. The 3.0.x bug class only ever showed up on a repeat
-# run, and the unit tests that cover it use fakes.
+# Everything above this line exits before anything is written. The bug class this
+# section exists for only ever showed up on a REPEAT run: an install that records
+# its own output as the state to restore, so the uninstall gives the user our bar
+# back instead of theirs. The unit tests cover that with fakes; this covers it
+# against the real filesystem and the real bundle.
 #
-# OpenCode is the target used because its adapter shells out to nothing: the
-# binary only has to exist for `detect()`, and every write below is the real
-# copy, prune, ownership record, config merge and receipt. Stubbing `claude` or
-# `omp` instead would test this tool against our own fiction of their CLIs —
-# their command sequences are already covered by the adapter suites, and the
-# packaging risk this file exists for (a missing external, a broken package-root
-# walk) is identical whichever adapter runs the bundle.
+# `claude` is stubbed because the statusline install only needs it to exist —
+# nothing here shells out to it. The plugin install path that did shell out is
+# gone: plugins are installed by `claude plugin install` from the GitHub-served
+# marketplace, and this CLI no longer has a hand in it.
 # ---------------------------------------------------------------------------
 print_header "Installing twice, then uninstalling, against a throwaway HOME ..."
 
 E2E_HOME="$(mktemp -d)"
 trap 'rm -rf "$E2E_HOME"' EXIT
 
-mkdir -p "$E2E_HOME/bin"
-printf '#!/bin/sh\nexit 0\n' >"$E2E_HOME/bin/opencode"
-chmod +x "$E2E_HOME/bin/opencode"
+NODE_DIR="$(dirname "$(command -v node)")"
+mkdir -p "$E2E_HOME/bin" "$E2E_HOME/.claude"
+printf '#!/bin/sh\nexit 0\n' >"$E2E_HOME/bin/claude"
+chmod +x "$E2E_HOME/bin/claude"
 
-# HOME drives `context.home`; the two XDG vars keep the receipt and any managed
-# payload inside the throwaway too. Without all three a "hermetic" run still
+# A statusline that is not ours, already in place. The install must record it and
+# every later run must leave that record alone — that is the whole point below.
+FOREIGN="/opt/somebody-elses/bar.sh"
+cat >"$E2E_HOME/.claude/settings.json" <<JSON
+{ "statusLine": { "type": "command", "command": "${FOREIGN}" } }
+JSON
+
+# HOME drives \`context.home\`; the two XDG vars keep the receipt and the user
+# config inside the throwaway too. Without all three a "hermetic" run still
 # writes into the developer's own config.
 e2e() {
   env \
@@ -119,47 +94,73 @@ e2e() {
     "${CLI[@]}" "$@"
 }
 
-E2E_CONFIG="$E2E_HOME/.config/opencode"
+RECEIPT="$E2E_HOME/.config/ai-plugins/receipts/statusline.json"
 
-# `datastore` is the plugin asserted above to require no external tools, so the
-# run reaches the adapter instead of stopping at the dependency gate.
-if ! e2e --platform opencode --user datastore >/dev/null; then
+# --statusline IS the consent to displace what is there; without it the run would
+# stop rather than replace the foreign bar.
+if ! e2e --statusline >/dev/null; then
   print_error "First install failed"
   exit 1
 fi
-if [[ ! -d "$E2E_CONFIG/virajp-plugins/datastore" ]]; then
-  print_error "First install wrote no bundle"
+if [[ ! -f "$E2E_HOME/.claude/scripts/statusline" ]]; then
+  print_error "First install wrote no statusline script"
   exit 1
 fi
-first="$(cd "$E2E_CONFIG" && find . -type f | sort)"
+if ! grep -q "$FOREIGN" "$RECEIPT"; then
+  print_error "The receipt does not record the statusline that was there before"
+  cat "$RECEIPT"
+  exit 1
+fi
 
-if ! e2e --platform opencode --user datastore >/dev/null; then
+# Content, not just filenames. The old version of this check compared `find`
+# output, so it would have passed while a file's bytes changed underneath it.
+# The receipt is excluded because `installedAt` is expected to move on every
+# run; its *contents* are asserted separately, above and below, which is the
+# claim that actually matters.
+snapshot() {
+  (cd "$E2E_HOME" \
+    && find . -type f -not -path "./bin/*" -not -path "*/receipts/*" \
+    | sort | xargs shasum)
+}
+first="$(snapshot)"
+
+if ! e2e --statusline >/dev/null; then
   print_error "Second install failed — the repeat-run path is broken"
   exit 1
 fi
-second="$(cd "$E2E_CONFIG" && find . -type f | sort)"
+if ! grep -q "$FOREIGN" "$RECEIPT"; then
+  print_error "The repeat install overwrote the prior state with its own output"
+  print_warn  "An uninstall would now restore OUR bar instead of the user's."
+  cat "$RECEIPT"
+  exit 1
+fi
 
+second="$(snapshot)"
 if [[ "$first" != "$second" ]]; then
   print_error "Second install changed the tree; it must be idempotent"
   diff <(printf '%s\n' "$first") <(printf '%s\n' "$second") || true
   exit 1
 fi
 
-if ! e2e --platform opencode --uninstall >/dev/null; then
-  print_error "Uninstall failed"
+# --uninstall is interactive by design, so the two paths reachable without a
+# terminal are what this asserts. Both matter: the dry run is how a script sees
+# what is installed, and the refusal is what stops an unattended run from
+# guessing which pieces the user wanted kept.
+print_header "Asserting --uninstall --dry-run finds the statusline and writes nothing ..."
+dry_out="$(e2e --uninstall --dry-run)"
+if ! grep -q "statusline" <<<"$dry_out"; then
+  print_error "--uninstall --dry-run did not list the statusline"
+  printf '%s\n' "$dry_out"
   exit 1
 fi
-if [[ -d "$E2E_CONFIG/virajp-plugins" ]]; then
-  print_error "Uninstall left the bundle behind"
-  find "$E2E_CONFIG/virajp-plugins" | head -20
+if [[ ! -f "$E2E_HOME/.claude/scripts/statusline" ]]; then
+  print_error "--uninstall --dry-run removed something; it must write nothing"
   exit 1
 fi
-# The config is the other half of the same claim, and the half that survived
-# a repeat install: a registration left pointing at the bundle just removed is
-# worse than a leftover file, because OpenCode reads it.
-if [[ -f "$E2E_CONFIG/opencode.jsonc" ]]; then
-  print_error "Uninstall left the OpenCode config behind"
-  cat "$E2E_CONFIG/opencode.jsonc"
+
+print_header "Asserting --uninstall refuses without a terminal ..."
+if e2e --uninstall </dev/null >/dev/null 2>&1; then
+  print_error "Expected non-zero exit for --uninstall with no TTY to ask on"
   exit 1
 fi
 

@@ -19,24 +19,29 @@ decisions; when it names a command, the manual section is the link.
 
 ### Install the plugins
 
-Relay needs more than the default set. `--all` installs `vwf` and its one hard
-dependency; the stack plugins that supply Relay's menu options are named
-alongside it in the same run.
+Relay needs more than the workflow. `vwf` brings `devtools` with it; the stack
+plugins that supply Relay's menu options are named explicitly.
 
 ```sh
-pnpx @askviraj/ai-plugins --all \
-  --user typescript --user datastore --user design-tools
+claude plugin marketplace add virajp/ai-plugins   # once
+
+claude plugin install vwf@virajp-plugins \
+  typescript@virajp-plugins \
+  datastore@virajp-plugins \
+  design-tools@virajp-plugins
 ```
 
 `typescript` supplies the project-axis template Relay will pin, `datastore`
 supplies Postgres on the backing axis, and `design-tools` answers the design
 imports. vwf ships no stack templates of its own, so without `typescript` and
 `datastore` the stack menus come back short; without `design-tools` there is no
-adapter to answer an import, and `/vwf:design-system` cannot run at all. Flags
-and scopes: [the installer CLI](../../cli/usage.md). The external binaries vwf
-shells out to are a hard install gate — see
-[Prerequisites](../../plugins/vwf.md#prerequisites) — and the memory daemon is
-yours to run.
+adapter to answer an import, and `/vwf:design-system` cannot run at all. Scopes
+and upgrades: [the installer CLI](../../cli/usage.md#installing-plugins).
+
+**Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is
+what tells you whether the binaries vwf shells out to are actually on your
+`PATH` — see [Prerequisites](../../plugins/vwf.md#prerequisites). The memory
+daemon is yours to run.
 
 Restart Claude Code, then `cd` into the empty Relay repo.
 

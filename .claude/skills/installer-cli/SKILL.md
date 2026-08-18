@@ -1,9 +1,9 @@
 ---
 name: installer-cli
-description: Authoring discipline for the @askviraj/ai-plugins installer CLI and
-  the statusline it ships — the receipt-completeness invariant, the adapter
-  split, packaging, and the flag surface. Auto-applies when editing cli/, tools/
-  or tsup.config.ts.
+description: Authoring discipline for the @askviraj/ai-plugins CLI and the
+  statusline it ships — the receipt-completeness invariant, the interactive
+  uninstall, packaging, and the flag surface. Auto-applies when editing cli/,
+  tools/ or tsup.config.ts.
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
@@ -15,14 +15,15 @@ paths:
 # Installer CLI
 
 `cli/src/` is the source; `bin/ai-plugins.mjs` is the tsup bundle, is
-**gitignored**, and is what npm publishes. Note the asymmetry with the rendered
-plugin trees, which are committed: a rendered tree is meant to be diffed in
-review, a bundle diff is noise.
+**gitignored**, and is what npm publishes. Shipping `cli/src/*.ts` directly
+would raise `engines.node` from `>=18` to `>=22.18`, which is the whole reason
+the bundle exists.
 
-The split is load-bearing, not stylistic. `@ai-plugins/schema` is a private
-workspace package that would not resolve from an installed tarball (every import
-of it is `import type`, so the bundle erases it), and shipping `cli/src/*.ts`
-directly would raise `engines.node` from `>=18` to `>=22.18`.
+**This CLI does three things**: installs the Claude statusline, wires graphify,
+and removes what the toolkit put on a machine. It installs **no plugins** — that
+is `claude plugin marketplace add virajp-plugins` + `claude plugin install`,
+served from this repo's `main`. If you find yourself adding a plugin code path,
+you are re-growing something that was deliberately cut.
 
 ## The invariant that keeps breaking
 
@@ -33,164 +34,139 @@ there is *the first run's own output*. Run 2's receipt then claims less than run
 1's, and since every run overwrites the receipt, the uninstall after it leaves
 that path behind.
 
-**It has now been found in every adapter**, which is why this is stated as a
-rule rather than a list of bugs. Three instances needed a new receipt kind —
-`createdFile`, `tree`, and `ownedDir`, where `dir` skipped the already-existing
-bundle root so `virajp-plugins/` survived as an empty directory. The rest needed
-only the ownership *test*, and each failed differently, which is why finding one
-never found the next:
+**It was found in all four retired plugin adapters and in the statusline**,
+which is why this is stated as a rule rather than a list of bugs. The adapters
+are gone; the rule is not, because the statusline still writes four paths and
+`--uninstall`'s new enumeration now depends on those records being complete.
 
-| Where                      | Run 2 did this                                            | So uninstall left                     |
-| -------------------------- | --------------------------------------------------------- | ------------------------------------- |
-| `opencode.jsonc`           | *downgraded* the claim to a key restore of our own value  | a `skills.paths` to a deleted bundle  |
-| `tui.json`                 | hit the already-registered early return, recorded nothing | the config, pointing at the plugin    |
-| Cursor `settings.json`     | recorded **an empty receipt**, overwriting the full one   | the entire install, reporting success |
-| Oh-My-Pi `marketplace add` | skipped the undo, since this run did not add it           | the marketplace, at a removed path    |
+The fix is always the same shape: compare what is on disk against what this
+tool's own merge **would** produce — identical means an earlier run of ours
+wrote it, whatever `existsSync` says. The strongest form, and the one to copy,
+reconstructs the file *without* our entries, so the claim is computed against
+what run 1 actually saw and every run records the same thing.
 
-Each is fixed by comparing what is on disk against what this tool's own merge
-would produce — identical means an earlier run of ours wrote it, whatever
-`existsSync` says. Cursor's `withoutOwnEntries` is the strongest form and the
-one to copy: it reconstructs the file **without** our entries, so the claim is
-computed against what run 1 actually saw and every run records the same thing.
+`cli/src/statusline.ts` still keys its `configKey` records on `existed`. It is
+covered by the receipt merge below rather than by its own ownership test — which
+holds, but means its claims are correct only in combination. That is a known
+soft spot, not a design.
 
-`cli/src/statusline.ts` (the Claude bar) still keys its `configKey` records on
-`existed` and was never separately fixed. It is covered by the merge below
-rather than by its own ownership test — which holds, but means its claims are
-correct only in combination.
-
-**And one fix underneath all of them**: a receipt now **merges with whatever is
+**And one fix underneath all of them**: a receipt **merges with whatever is
 already at its path**, in `writeReceipt`. A receipt describes an install, not a
 run — overwriting it wholesale is what let a second run record less than the
-first, and it is also why installing `identity` after `datastore` produced a
-receipt naming only `identity`. Merging in the one place every writer passes
-through is deliberate: this bug recurred all week precisely because each site
-decided for itself. The **older** entry wins a collision, since run 2 read a
-machine run 1 had already changed. That closes `statusline-ohmypi`, which could
-not use the file-comparison test at all — `config.yml` is `omp`'s own YAML and
-this CLI ships no YAML parser.
+first. Merging in the one place every writer passes through is deliberate: this
+bug recurred all week precisely because each site decided for itself. The
+**older** entry wins a collision, since run 2 read a machine run 1 had already
+changed.
 
-**A single install passes either way; only a repeat run shows it**, which is why
-`i:test` installs twice before uninstalling. Preserve that.
+**A single install passes either way; only a repeat run shows it.** `i:test`
+therefore installs **over a foreign statusline**, installs again, and asserts
+the receipt still records the foreign bar — not merely that the files exist.
+Preserve that shape, and preserve that it compares file *contents*, not
+filenames: the version this replaced compared `find` output and would have
+passed while bytes changed underneath it.
 
 Before adding or changing any write path, read
 [receipts.md](references/receipts.md).
+
+## `--uninstall` is interactive
+
+Enumerate → present with defaults applied → remove through each piece's owner.
+Four rules:
+
+- **Enumeration is a pure read** returning plain data with no closures in it, so
+  the list is testable against a fixture directory rather than only by
+  performing it. Removal is a separate switch.
+- **Machine state starts selected; git-tracked files do not.** The user asked to
+  uninstall, so re-naming each piece would turn a cleanup into a quiz — but a
+  row whose removal edits a file the checkout *tracks* would dirty their working
+  tree, which is not a cleanup. Those start off (`Item.tracked`), and the
+  numbers **toggle** rather than meaning "keep", since with two possible
+  defaults there are two directions to move a row in. Found by a real install,
+  not by a test: the enumeration and the removals were both right, and only the
+  default was wrong.
+- **Removal goes through the owner.** `claude plugin uninstall`, never an edit
+  to `enabledPlugins` — Claude keeps bookkeeping beside that key and
+  hand-editing strands the two apart. The statusline leaves by **restoring its
+  receipt**, so the user gets their own bar back; a bare delete would leave them
+  with none.
+- **No TTY refuses rather than guesses** — but only once there is something to
+  remove. A run that finds nothing has nothing to ask about, and failing it for
+  want of a terminal would make the flag unusable in a script that is checking
+  whether anything is left. `--dry-run` is the non-interactive path, and is what
+  `i:test` drives.
+
+**The legacy-receipt reader is deliberately temporary.** Every receipt other
+than the statusline's records an install by a multi-target version of this CLI —
+a copied OpenCode tree, the OpenCode TUI bar, Oh-My-Pi's `omp config` keys, a
+Cursor `settings.json` entry. Those surfaces are discontinued, and without this
+reader a machine carrying them is orphaned rather than cleaned, because nothing
+else knows those paths. `uninstall.ts` states the drop condition and names
+exactly what to delete when it comes.
 
 ## Testing
 
 - `mise run i:test` bundles first and smoke-tests **`bin/ai-plugins.mjs`, not
   `cli/src/index.ts`** — a packaging mistake only shows up in the built
   artifact, because in the repo everything resolves through the workspace. It
-  ends with a real install → install again → uninstall against a throwaway
-  `HOME` (plus `XDG_CONFIG_HOME` and `XDG_DATA_HOME`, or a "hermetic" run writes
-  into your own config). It drives **OpenCode**, whose adapter shells out to
-  nothing, and installs `datastore`, the plugin with no `requires:`, so the run
-  reaches the adapter instead of stopping at the dependency gate.
+  ends with a real install → install again → the two non-interactive uninstall
+  paths, against a throwaway `HOME` (plus `XDG_CONFIG_HOME` and `XDG_DATA_HOME`,
+  or a "hermetic" run writes into your own config).
+- It also asserts **`tools/statusline/statusline --version` equals
+  `package.json`'s version**. That is what makes the hand-synced second copy
+  safe: `i:version` stamps the constant at bump time, and nothing else ever
+  compares them, so a bump that missed the script would ship a bar lying about
+  itself.
 - **`vitest.config.mts` restricts collection to
-  `{schema,renderer,cli}/src/**/*.test.ts`.** A test file anywhere else is
-  silently never run rather than failing — which is why the statusline *script*
-  tests live at `cli/src/statusline-script.test.ts` even though what they
-  exercise is `tools/statusline/`.
-- Never stub `claude` or `omp` to exercise an adapter end to end: that tests
-  this tool against our own fiction of their CLIs. Their command sequences are
-  covered by the adapter suites with fakes; for a real run use the
-  `target-verifier` agent.
+  `{cli,scripts}/src/**/*.test.ts`.** A test file anywhere else is silently
+  never run rather than failing — which is why the statusline *script* tests
+  live at `cli/src/statusline-script.test.ts` even though what they exercise is
+  `tools/statusline/`.
+- `claude` is stubbed in `i:test` only because the statusline install needs it
+  to *exist*; nothing shells out to it. Do not stub a tool to exercise its
+  command sequence end to end — that tests this tool against our own fiction of
+  its CLI.
 
 ## The flag surface
 
-| Flag                          | Notes                                                                                                                                            |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `--all`                       | the marketplace's **`defaultInstall`** list, at user scope — `vwf`, `devtools`                                                                   |
-| `--user` / `--project <name>` | repeatable; bare names validated against `plugins.json`                                                                                          |
-| `--platform <target>`         | repeatable; omitted, every tool detected on `PATH`. A selected target whose tool is absent is **skipped with a note**, not failed                |
-| `--statusline`                | **tri-state**: explicit asks, `--no-statusline` refuses, unset defers to `--all`. Explicit is also the **only** consent to replace a foreign bar |
-| `--force`                     | acts on a target whose CLI is missing. Does **not** override the `requires:` gate                                                                |
-| `--version`                   | local versions against the manifest on `main`; exits 1 when it could not reach the network                                                       |
-| `--uninstall` / `--dry-run`   | uninstall reverts from the receipt; dry run writes nothing, diff to stdout, progress to stderr                                                   |
-| `-h, --help`                  | the usage text, on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                                     |
+| Flag           | Notes                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--statusline` | **tri-state**: explicit asks, `--no-statusline` refuses, unset defers. Explicit is also the **only** consent to replace a foreign bar |
+| `--uninstall`  | enumerate → deselect → remove. Interactive; no TTY refuses once there is something to remove                                          |
+| `--dry-run`    | writes nothing, diff to stdout, progress to stderr. The scriptable half of `--uninstall`                                              |
+| `--force`      | acts although Claude Code is not on `PATH`                                                                                            |
+| `--version`    | this CLI, the statusline **installed on disk**, and the plugins available on `main`; exits 1 when the network is unreachable          |
+| `-h, --help`   | usage on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                                    |
 
 **The parser is `node:util`'s `parseArgs`, in `args.ts`, and it must stay
 repeat-capable.** It was `citty` until `--user vwf --user devtools` was found to
-install only `devtools`: citty's `ArgType` is
-`boolean | string | enum | positional` with no array kind, so a repeated flag
-cannot be expressed in it and the last occurrence silently wins. Three flags
-here are documented as repeatable. `parseArgs` has `multiple: true`, works on
-the `engines.node` floor (verified on 18.20.8), and **removed** a runtime
-dependency rather than swapping one in — so any future parser has to support
-repeats natively. `@oclif/core` does, at 18 dependencies and 4.8 MB for a
-ten-flag, zero-subcommand CLI.
+install only `devtools`: citty's `ArgType` has no array kind, so a repeated flag
+cannot be expressed and the last occurrence silently wins. No flag is repeatable
+*today* — the ones that were are retired — but the constraint is kept, because
+the failure mode was silent and a future repeatable flag must not reintroduce
+it. `parseArgs` also **removed** a runtime dependency rather than swapping one
+in.
 
 Two things the platform does not do, both handled in `args.ts`: boolean negation
-(`--no-statusline` is its own flag, folded back into the tri-state by
-`statuslineFlag`) and usage rendering (`renderUsage`). `strict` is on, so an
-unknown flag is an error naming itself rather than the silent no-op citty gave —
-which is how a retired `--upgrade` now reports itself.
+(`--no-statusline` is its own flag, folded back into the tri-state) and usage
+rendering. `strict` is on, so a retired flag reports itself by name rather than
+being the silent no-op citty gave — which is how `--platform`, `--all`, `--user`
+and `--upgrade` now answer.
 
-**There is no `--upgrade`, and adding one back would be a mistake.** Plugin
-content ships *inside* the npm package — the marketplace source is an absolute
-path into `packageRoot()` and no adapter ever runs `marketplace update` — so
-re-running the install is the upgrade. The flag existed to replay each target's
-receipt, which did exactly what naming the plugins again did. `Receipt.plugins`
-is what remains of it: still written, read by nothing.
+**There is no `--upgrade` and no `--all`, and adding either back would be a
+mistake.** `--upgrade` replayed a receipt to do what naming the plugins again
+did, and plugin content no longer ships in the package at all. `--all` named a
+`defaultInstall` list that lived in a file this repo deleted; installing `vwf`
+pulls `devtools` through Claude's own native dependency resolution, which is
+where that belongs.
 
-**But copying the payload is not, by itself, an upgrade on Claude.** Claude
-caches plugin content per version under
-`plugins/cache/<marketplace>/<name>/<version>/` and keeps serving the cached
-copy, and `plugin install` answers "already installed" without re-resolving. So
-a newer payload sat on disk while the old version stayed live, and the
-documented upgrade path silently delivered nothing to anyone who already had the
-plugin enabled — found by the `target-verifier` agent doing a real
-seeded-previous-generation upgrade, not by any unit test. `claude.ts` now
-compares the manifest's advertised version against `installed_plugins.json`
-(Claude's own bookkeeping — read, never written) and runs `plugin update` on a
-mismatch only, so a no-change re-run stays a no-op. An unreadable or absent
-bookkeeping file means **"cannot tell"**, never "out of date". The update is
-deliberately not separately undoable: the undo for "this tool put this plugin
-here" is still `uninstall`, and there is no downgrade.
-
-**Oh-My-Pi has the same root cause and a different symptom.** `omp` caches the
-marketplace **catalog** it read when the pin was added, under
-`plugins/cache/marketplaces/`, and nothing re-reads it. There the payload does
-refresh, so behaviour upgrades — but `omp plugin list` kept reporting the old
-version, and a plugin **added** in a later release could not be installed at all
-(`Plugin "<name>" not found in marketplace`), with no remedy short of removing
-the marketplace by hand. `ohmypi.ts` now runs
-`omp plugin marketplace update <name>` on the already-registered-at-our-path
-branch. **Unconditional**, unlike Claude's version-gated update: the catalog is
-`omp`'s own cache with no version to compare against, so there is no cheap
-staleness test, and the refresh is idempotent. It records no undo — it restores
-no prior state and there is nothing to roll a catalog back to. The branch stays
-guarded on the pin being *ours*: a registration with no recorded URI is left
-entirely alone rather than refreshed on someone else's behalf.
-
-Cursor and OpenCode need neither — they copy or register a tree that *is* the
-content, with no cache in between.
-
-Both were found by the `target-verifier` agent against the real CLIs. Neither
-was reachable by a unit test, because both live in state the other tool keeps.
-
-**An invocation that installs nothing prints the help and exits 1.** That covers
-a bare run and one carrying only modifiers — `--platform opencode` is the one
-that reads like a request and is not.
-
-Every derived set (dependencies, `requires`, `local`) comes from `plugin.yaml`
-via `plugins.json`, and `--all` membership from `marketplace.yaml`'s
-`defaultInstall` through the same file — there is no second copy to disagree,
-and the old hardcoded constants are gone.
-
-**A plugin carries no install-time eligibility.** `scope`, `optIn` and
-`userOnly` were all removed: the first two excluded from `--all` in two
-spellings, the third pinned to user scope and was set by nothing. Scope is now
-whatever flag the caller passed, for every plugin, and `--all` is a list. If you
-find yourself wanting a per-plugin install flag again, add it to that list
-instead.
+**An invocation that installs nothing prints the help and exits 1.**
 
 ## References
 
 | Reference                                 | Covers                                                                        |
 | ----------------------------------------- | ----------------------------------------------------------------------------- |
 | [receipts.md](references/receipts.md)     | entry kinds, the unconditional three, undo recording, `RECEIPT_VERSION`       |
-| [adapters.md](references/adapters.md)     | copy vs marketplace, pruning, where the payload lives, scope fallback         |
-| [statusline.md](references/statusline.md) | the three surfaces, per-tool verified facts, the four files to keep in sync   |
+| [statusline.md](references/statusline.md) | the Claude surface, the consent rule, the four files to keep in sync          |
 | [packaging.md](references/packaging.md)   | tsup externals, the CJS/ESM split, the tarball, `packageRoot()`, distribution |
 
 ## Documentation

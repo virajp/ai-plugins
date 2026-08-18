@@ -6,8 +6,7 @@
     "outDir": "./dist/",
     "paths": { "@/*": ["./src/*"] },
   },
-  // No project `references`, for the same reason as renderer/: nothing here emits
-  // via `tsc --build` — tsup bundles this package and `@ai-plugins/schema`
-  // resolves through the workspace link.
+  // No project `references`: nothing in this repo emits via `tsc --build`, so
+  // `tsc` is only ever a checker here and tsup is what builds the bundle.
   "include": ["src/**/*.ts"],
 }

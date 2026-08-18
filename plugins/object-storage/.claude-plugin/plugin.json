@@ -1,0 +1,17 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "object-storage",
+  "version": "0.1.1",
+  "description": "Object-storage capability plugin for vwf — **contract only, and deliberately so**. It owns the neutral vocabulary and requirements (buckets, object lifecycle, signed access, retention, the never-proxy-bytes rule) and ships **no provider of its own**: every object store worth using is a cloud's, so the flavour comes from the project's cloud plugin — Cloud Storage from `gcp`, R2 from `cloudflare` once that plugin is unparked. Its menu says that out loud rather than coming back empty, because an empty menu is indistinguishable from a broken adapter. Implements the vwf stack-adapter contract.",
+  "author": {
+    "name": "Viraj Patel"
+  },
+  "keywords": [
+    "object-storage",
+    "buckets",
+    "files",
+    "capability",
+    "contract-only",
+    "vwf-stack-adapter"
+  ]
+}

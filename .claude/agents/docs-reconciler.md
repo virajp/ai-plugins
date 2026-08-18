@@ -43,7 +43,7 @@ context; work from what you were given.
 | `docs/plugins/<plugin>.md`       | that plugin's own reference                                                   |
 | `docs/plugins/statusline.md`     | the statusline's user-facing config reference                                 |
 | `docs/cli/usage.md`              | the installer's end-user flag reference                                       |
-| `docs/cli/targets.md`            | per-target install behaviour and where files land                             |
+| `docs/cli/targets.md`            | what the CLI installs for Claude, and where each file lands                   |
 | `docs/cli/statusline.md`         | why the statusline ships in the CLI; links out for the config reference       |
 | `docs/cli/internals.md`          | the installer's maintainer map, pointing into `.claude/skills/installer-cli/` |
 | `docs/cli/index.md`              | the installer's landing page and the index of the four pages above            |
@@ -63,7 +63,7 @@ exists to prevent.
 - A **duplicated** statement: the change made two surfaces state the same fact,
   and one of them should now point instead of restate.
 - A **table or list** that no longer enumerates what the code enumerates (plugin
-  tables, flag tables, target matrices, capability rows).
+  tables, flag tables, capability rows).
 
 Not findings: prose you would have written differently, formatting, or anything
 git already records. This repo deliberately keeps history out of its docs — vwf
@@ -73,14 +73,15 @@ but git; re-narrating it is the exact drift the density doctrine warns about.
 
 ## Two traps
 
-- **`CLAUDE.md` and `readme.md` are dprint-formatted** (the rendered trees and
-  `templates/**/*.md` are not). Widening one table cell re-pads every row of
-  that table, so a one-word change to a cell can be a large diff. Say so when
-  your suggestion widens a column.
-- **The rendered trees are output.** Never report a finding against `claude/`,
-  `cursor/`, `ohmypi/`, `opencode/`, `plugins.json` or the generated marketplace
-  manifests. If the prose there is wrong, the finding belongs on the template
-  under `templates/`.
+- **`CLAUDE.md` and `readme.md` are dprint-formatted** (`plugins/**/*.md` is
+  not). Widening one table cell re-pads every row of that table, so a one-word
+  change to a cell can be a large diff. Say so when your suggestion widens a
+  column.
+- **`.claude-plugin/marketplace.json` is generated** from the 13 plugin
+  manifests by `plugins:marketplace`. Never report a finding against it; the
+  finding belongs on the `plugins/<name>/.claude-plugin/plugin.json` it is
+  projected from. Everything under `plugins/` **is** authored, so prose there is
+  fair game — that is a change from when four render trees sat beside it.
 
 ## Output
 

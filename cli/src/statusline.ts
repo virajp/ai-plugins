@@ -1,11 +1,16 @@
 /**
  * The powerline statusline.
  *
- * **Not a plugin, and therefore not an adapter.** It installs no bundle, is
- * registered in no marketplace, and exists for Claude Code alone — so it is
- * wired straight from the router instead of being smuggled through
- * `AdapterPlan`. What it does share is the receipt, so `--uninstall` undoes it
- * exactly as it undoes a target.
+ * **Not a plugin, and now the only thing this CLI installs.** It is registered
+ * in no marketplace and exists for Claude Code alone, which is why it survived
+ * the narrowing that took the four plugin adapters with it: nothing else knows
+ * how to put it there. What it kept is the receipt, so `--uninstall` restores the
+ * bar the user had rather than deleting ours and leaving them with none.
+ *
+ * The OpenCode and Oh-My-Pi surfaces are **discontinued**, not merely unbuilt —
+ * a TUI plugin and four `omp config` keys, each its own install of the same
+ * idea. `uninstall.ts` still reads their receipts, so a machine carrying one is
+ * cleaned rather than orphaned.
  *
  * **Two roots, deliberately.** The settings file follows `CLAUDE_CONFIG_DIR`
  * like every other Claude write, because that is where Claude reads it back
@@ -29,21 +34,13 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  rmSync,
 } from "node:fs";
 import {
   dirname,
   join,
 } from "node:path";
 import writeFileAtomic from "write-file-atomic";
-import {
-  claudeConfigDir,
-  shallowestNew,
-} from "./adapters/support.ts";
-import type {
-  Action,
-  AdapterContext,
-  ApplyResult,
-} from "./adapters/types.ts";
 import type { FormatOptions } from "./config/json.ts";
 import {
   getPath,
@@ -51,11 +48,24 @@ import {
   setJsonPath,
 } from "./config/json.ts";
 import { deepMerge } from "./config/merge.ts";
+import type {
+  Action,
+  ApplyResult,
+  Context,
+  RunOptions,
+} from "./context.ts";
+import {
+  claudeConfigDir,
+  shallowestNew,
+} from "./context.ts";
 import type { Receipt } from "./receipt.ts";
 import {
+  readReceipt,
   ReceiptBuilder,
   revert as revertReceipt,
+  writeReceipt,
 } from "./receipt.ts";
+import type { Outcome } from "./report.ts";
 
 /**
  * Written verbatim, per `docs/plugins/statusline.md`. `${HOME}` is expanded by
@@ -114,7 +124,7 @@ function isArrayEdit(path: readonly (string | number)[]): boolean {
 
 /** What `install` would do, without doing it. Drives `--dry-run`. */
 export function planStatusline(
-  context: AdapterContext,
+  context: Context,
   configure = true,
 ): readonly Action[] {
   return run(context, true, configure).actions;
@@ -122,7 +132,7 @@ export function planStatusline(
 
 /** Install the bar, the config defaults and the caps hook. */
 export function installStatusline(
-  context: AdapterContext,
+  context: Context,
   configure = true,
 ): ApplyResult {
   return run(context, false, configure);
@@ -141,7 +151,7 @@ export function installStatusline(
  * preference this gate exists to respect.
  */
 export function claudeStatuslineConflict(
-  context: AdapterContext,
+  context: Context,
 ): string | undefined {
   const file = settingsFile(context);
   if (!existsSync(file)) {
@@ -168,33 +178,45 @@ export function claudeStatuslineConflict(
  * survives — it is seeded once and edited by the user thereafter.
  */
 export function revertStatusline(receipt: Receipt): void {
-  revertReceipt(receipt, {
-    restoreKey(file, path, hadKey, previous) {
-      if (!existsSync(file)) {
-        return;
-      }
-      const text = readFileSync(file, "utf8");
-      const parsed = readJsonc<Record<string, unknown>>(text);
-      // Deleting a path whose parent is already gone throws rather than
-      // no-opping, and an earlier entry in this same receipt may have removed
-      // that parent.
-      if (
-        !hadKey
-        && (parsed === undefined || getPath(parsed, path) === undefined)
-      ) {
-        return;
-      }
-      writeFileAtomic.sync(
-        file,
-        setJsonPath(
-          text,
-          path,
-          hadKey ? previous : undefined,
-          isArrayEdit(path) ? ARRAY_EDIT_FORMAT : undefined,
-        ),
-      );
-    },
-  });
+  revertReceipt(receipt, { restoreKey: restoreJsonKey });
+}
+
+/**
+ * Put one recorded key back in a JSON or JSONC file.
+ *
+ * Exported because `uninstall.ts` replays the receipts older multi-target
+ * versions left behind, and every config those adapters edited is this same
+ * format — `opencode.jsonc`, Cursor's `settings.json`, OpenCode's `tui.json`.
+ * One implementation rather than two, since the `ARRAY_EDIT_FORMAT` nuance below
+ * is exactly the kind of detail a second copy gets wrong.
+ */
+export function restoreJsonKey(
+  file: string,
+  path: readonly (string | number)[],
+  hadKey: boolean,
+  previous: unknown,
+): void {
+  if (!existsSync(file)) {
+    return;
+  }
+  const text = readFileSync(file, "utf8");
+  const parsed = readJsonc<Record<string, unknown>>(text);
+  // Deleting a path whose parent is already gone throws rather than no-opping,
+  // and an earlier entry in this same receipt may have removed that parent.
+  if (
+    !hadKey && (parsed === undefined || getPath(parsed, path) === undefined)
+  ) {
+    return;
+  }
+  writeFileAtomic.sync(
+    file,
+    setJsonPath(
+      text,
+      path,
+      hadKey ? previous : undefined,
+      isArrayEdit(path) ? ARRAY_EDIT_FORMAT : undefined,
+    ),
+  );
 }
 
 /**
@@ -202,7 +224,7 @@ export function revertStatusline(receipt: Receipt): void {
  * something other than what happens.
  */
 function run(
-  context: AdapterContext,
+  context: Context,
   dryRun: boolean,
   configure: boolean,
 ): ApplyResult {
@@ -232,7 +254,7 @@ function run(
 
 /** Copy one bundled asset to a path we own, executable. */
 function copyAsset(
-  context: AdapterContext,
+  context: Context,
   receipt: ReceiptBuilder,
   dryRun: boolean,
   name: string,
@@ -267,7 +289,7 @@ function copyAsset(
  * user; an uninstall that deleted it would throw away their palette because
  * they once ran `--uninstall --all`.
  */
-function seedUserConfig(context: AdapterContext, dryRun: boolean): Action[] {
+function seedUserConfig(context: Context, dryRun: boolean): Action[] {
   const file = userConfigFile(context);
   const defaults = JSON.parse(
     readFileSync(asset(context, "statusline.json"), "utf8"),
@@ -300,7 +322,7 @@ function seedUserConfig(context: AdapterContext, dryRun: boolean): Action[] {
 
 /** Set both bar keys, the usage-dir env var and the caps hook entry. */
 function mergeSettings(
-  context: AdapterContext,
+  context: Context,
   receipt: ReceiptBuilder,
   dryRun: boolean,
 ): Action[] {
@@ -424,25 +446,123 @@ function isCapsHook(entry: unknown): boolean {
     && hooks.some(h => (h as { command?: unknown; })?.command === HOOK_COMMAND);
 }
 
-function asset(context: AdapterContext, name: string): string {
+function asset(context: Context, name: string): string {
   return join(context.sourceRoot, "tools", "statusline", name);
 }
 
 /** Anchored to `$HOME`, because `COMMAND` names that path literally. */
-function scriptFile(context: AdapterContext): string {
-  return join(context.home, ".claude", "scripts", "statusline");
+function scriptFile(context: Context): string {
+  return statuslineScriptFile(context.home);
+}
+
+/**
+ * The same path, from `$HOME` alone.
+ *
+ * Exported because `--version` runs the *installed* script to ask what it is,
+ * and that question has no context around it. Kept here rather than duplicated
+ * there: `COMMAND` above names this path literally, so the two can never be
+ * allowed to disagree.
+ */
+export function statuslineScriptFile(home: string): string {
+  return join(home, ".claude", "scripts", "statusline");
 }
 
 /** Likewise — `HOOK_COMMAND` names it literally. */
-function hookFile(context: AdapterContext): string {
+function hookFile(context: Context): string {
   return join(context.home, ".claude", "hooks", "context-caps.js");
 }
 
-function userConfigFile(context: AdapterContext): string {
+function userConfigFile(context: Context): string {
   return join(context.home, ".config", "statusline.json");
 }
 
 /** Where Claude actually reads settings from, which may not be under `$HOME`. */
-function settingsFile(context: AdapterContext): string {
+function settingsFile(context: Context): string {
   return join(claudeConfigDir(context.home), "settings.json");
+}
+
+// ---------------------------------------------------------------------------
+// Driving it from the router
+// ---------------------------------------------------------------------------
+
+/**
+ * The statusline's receipt.
+ *
+ * It was one of four beside the per-target ones and is now the only one this
+ * CLI writes. The name is unchanged on purpose: an install from an older
+ * version left its record at exactly this path, and renaming it would strand
+ * every bar already on a machine.
+ */
+export function statuslineReceiptPath(receiptDir: string): string {
+  return join(receiptDir, "statusline.json");
+}
+
+/** Has the statusline been installed by this CLI? */
+export function statuslineInstalled(options: RunOptions): boolean {
+  return readReceipt(statuslineReceiptPath(options.receiptDir)) !== undefined;
+}
+
+/**
+ * Install the statusline, or describe the install under `--dry-run`.
+ *
+ * `configure` false still installs: the script and the caps hook land, and only
+ * the `settings.json` keys pointing Claude at them are withheld. That is what
+ * the consent gate declines — the overwrite, not the bar.
+ */
+export function executeStatusline(
+  options: RunOptions,
+  configure = true,
+): Outcome {
+  options.progress?.step("installing statusline");
+  try {
+    if (options.dryRun) {
+      return {
+        name: "statusline",
+        actions: planStatusline(options.context, configure),
+      };
+    }
+    const result = installStatusline(options.context, configure);
+    writeReceipt(statuslineReceiptPath(options.receiptDir), result.receipt);
+    return { name: "statusline", actions: result.actions };
+  }
+  catch (error) {
+    return {
+      name: "statusline",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
+}
+
+/**
+ * Undo a statusline install from its receipt, consuming it.
+ *
+ * The receipt is **kept on failure**, deliberately: a half-reverted install
+ * still has state to undo, and throwing the record away would strand it.
+ */
+export function revertStatuslineInstall(options: RunOptions): Outcome {
+  const path = statuslineReceiptPath(options.receiptDir);
+  const receipt = readReceipt(path);
+  if (receipt === undefined) {
+    return { name: "statusline", actions: [], skipped: "empty" };
+  }
+  const action: Action = {
+    summary: "restore the statusline Claude had before",
+    path,
+  };
+  if (options.dryRun) {
+    return { name: "statusline", actions: [action] };
+  }
+  try {
+    revertStatusline(receipt);
+    rmSync(path, { force: true });
+    return { name: "statusline", actions: [action] };
+  }
+  catch (error) {
+    return {
+      name: "statusline",
+      actions: [],
+      error: (error as Error).message,
+    };
+  }
 }

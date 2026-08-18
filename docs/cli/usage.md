@@ -1,288 +1,202 @@
-# The installer CLI
+# The installer CLI — usage
 
-`@askviraj/ai-plugins` installs the `virajp-plugins` toolkit — the plugins and
-the [statusline](../plugins/statusline.md) — across **four agents**: Claude
-Code, Cursor, Oh-My-Pi and OpenCode. Three of them have a native plugin
-marketplace, so the CLI registers `virajp-plugins` and lets the tool own the
-installing — Claude Code and Oh-My-Pi through their own CLI, Cursor (which has
-none) by writing the marketplace reference into its settings directly. OpenCode
-has no plugin concept at all, so its bundle is copied into place. Which target
-does what is [targets.md](./targets.md).
-
-**npm is the only distribution channel**, so this needs Node — on every
-platform, Windows included. There is no standalone binary, no Homebrew tap and
-no Scoop bucket: the marketplace targets re-read a real rendered directory on
-every later session, so the payload has to sit on disk beside the executable
-rather than inside it.
+`@askviraj/ai-plugins` installs the **statusline**, wires up **graphify**, and
+**removes** what this toolkit put on your machine. It installs no plugins; see
+[Installing plugins](#installing-plugins) for those.
 
 ```sh
-# The default set + the statusline, for every agent found on your PATH
-pnpx @askviraj/ai-plugins --all
-
-# Named plugins, at whichever scope you ask for
-pnpx @askviraj/ai-plugins --user typescript --project flutter
+# Install the statusline (the main bar and the subagent panel), and wire graphify
+pnpx @askviraj/ai-plugins --statusline
 
 # See what a run would do, without writing anything
-pnpx @askviraj/ai-plugins --all --dry-run
+pnpx @askviraj/ai-plugins --statusline --dry-run
 
-# Undo a previous install
+# List everything the toolkit installed, and remove what you do not deselect
 pnpx @askviraj/ai-plugins --uninstall
 ```
 
-Restart your agent afterward so the commands, hooks and dependencies load. The
-examples use `pnpx`; `npx` works identically if you don't use pnpm.
+The examples use `pnpx`; if you do not use pnpm, `npx` works the same.
 
 ## The flags
 
-There is no install verb — **naming something is the request**. Everything below
-either names what to install, or modifies how.
+| Flag              | Does                                                                       |
+| ----------------- | -------------------------------------------------------------------------- |
+| `--statusline`    | Install the statusline — **and consent** to replacing one already there    |
+| `--no-statusline` | Skip the statusline                                                        |
+| `--uninstall`     | List everything installed and remove what you do not deselect              |
+| `--dry-run`       | Show the full diff without writing anything                                |
+| `--force`         | Act even though Claude Code is not on `PATH`                               |
+| `-v`, `--version` | This CLI, the statusline on disk, and each plugin's version against `main` |
+| `-h`, `--help`    | The usage text                                                             |
 
-| Flag                  | What it does                                                                                        |
-| --------------------- | --------------------------------------------------------------------------------------------------- |
-| `--all`               | Install the default set at user scope: `vwf`, `devtools`                                            |
-| `--user <name>`       | Install a plugin at user scope (repeatable)                                                         |
-| `--project <name>`    | Install a plugin at project scope (repeatable)                                                      |
-| `--platform <target>` | Target an agent: `claude`, `cursor`, `ohmypi`, `opencode` (repeatable). Defaults to every one found |
-| `--statusline`        | Install the statusline, and consent to replacing one already there                                  |
-| `--no-statusline`     | Skip the statusline                                                                                 |
-| `--uninstall`         | Undo a previous install, from its receipt                                                           |
-| `--dry-run`           | Show the full diff without writing anything                                                         |
-| `--force`             | Act on a target whose tool is not on `PATH`                                                         |
-| `-v`, `--version`     | Report this CLI's version and every plugin's, against the latest                                    |
-| `-h`, `--help`        | Show this help                                                                                      |
+**An invocation that installs nothing prints the help and exits 1.** A bare run
+is the common case there.
 
-An unknown flag is an **error naming itself**, printed with the usage text, and
-exits 1. `--help` prints that same text on stdout and exits 0. Every other run
-exits 0 when nothing failed and 1 when something did.
+Parsing is strict, so a flag that no longer exists reports itself by name rather
+than being silently ignored. If you have `--all`, `--user`, `--project`,
+`--platform` or `--upgrade` in a script, that script is from before the
+Claude-first release; see [Installing plugins](#installing-plugins).
 
-## Which plugins, and at what scope
+## Installing plugins
 
-**`--all` is a list, not a rule.** It installs whatever `defaultInstall` names
-in [`templates/marketplace.yaml`](../../templates/marketplace.yaml), at user
-scope — today that is `vwf` and `devtools`: the workflow plus exactly its hard
-dependency. Changing the default set is an edit to that one list, and nothing
-else in the CLI carries a second copy of it.
+Plugins are installed by Claude Code itself, from this repo on GitHub:
 
-Every other plugin is installed **by name**, and a plugin declares no
-install-time eligibility of its own: `--user <name>` puts it at user scope,
-`--project <name>` at project scope, and nothing is pinned to either. Both flags
-are repeatable and **every occurrence counts**, so
-`--user vwf --user typescript` installs both. Mixing them in one run is fine; a
-name given at both scopes resolves once, and project wins, being the narrower of
-the two. A name the marketplace does not know is an error listing the names it
-does.
+```sh
+# Once
+claude plugin marketplace add virajp/ai-plugins
 
-**The three combine, and `--all` is a starting set rather than a mode.** Naming
-plugins beside it adds to what it installs; it never replaces or suppresses
-them. So `--all --user typescript --project flutter` installs the default set
-plus `typescript` at user scope, and `flutter` at project scope, in one run.
-
-> **`--project` means the directory you run the command in**, not the plugin's
-> subject matter. It writes into `<cwd>/.claude/`, `<cwd>/.cursor/` and so on,
-> so `--project flutter` run from your home directory enables Flutter for your
-> home directory. `cd` to the repo you mean first. Nothing warns about this —
-> the install succeeds, just somewhere else.
-
-Dependencies come along. Claude Code expands them natively, so the CLI leaves
-that to it; on the other three the planner expands them itself, which is why an
-OpenCode install of `vwf` also installs `devtools`. A dependency inherits the
-scope of whatever pulled it in.
-
-Two things narrow what a given target actually receives, and both say so rather
-than going quiet:
-
-- **A plugin hosted in someone else's repo installs on Claude alone.** A `url`
-  source has no rendered bundle, so the three targets that cannot fetch one skip
-  it. The run reports it once, naming every target that skipped it, rather than
-  once per target. **No plugin in this marketplace is url-sourced today** — the
-  last one, the Karpathy guidelines, was vendored into `vwf` precisely because
-  three of four targets silently went without it — so this narrows nothing at
-  present. The rule stays because the skip path is still live code.
-- **Cursor is project-scope only.** It has no locally-writable user-scope plugin
-  install, so a user-scope request there is redirected to project scope with a
-  note.
-
-## Which agents
-
-Omit `--platform` and the CLI installs for **every supported agent it finds on
-your `PATH`**. Name one or more to narrow it; the flag is repeatable, and a name
-that is not one of the four is an error listing them. If no supported agent is
-found at all, the run says so and exits 1 rather than waiting for input that is
-not coming.
-
-A *selected* target whose tool is missing is **skipped with a note**, not failed
-— a machine without Cursor should say so and move on. `--force` acts on it
-anyway, which is the entire meaning of that flag: it does not override anything
-else, least of all the tool gate below.
-
-When `vwf` lands on `claude` or `opencode`, the CLI also wires **graphify**
-(`graphify install --platform <target>` plus the git hook, both idempotent).
-That is not a nicety — vwf enforces graphify at its own entry gate, so an
-install that skipped it would produce a plugin that halts. It soft-skips
-throughout, since failing there would undo an install that already succeeded.
-
-## The external-tool gate
-
-Plugins shell out: `vwf` drives `graphify` and `rtk`, the Context7 server runs
-through `pnpm`, Flutter's language servers are system binaries. Each plugin
-declares those in its own `requires:`, and the CLI checks the **union over the
-dependency-expanded set** before writing anything. Anything missing is named,
-with the command that installs it, and the run stops:
-
-```text
-missing required tool(s): graphify, rtk
-
-Install them, then re-run:
-  graphify         mise use -g pipx:graphifyy@latest
-  rtk              brew install --formulae rtk
+# Then, per plugin
+claude plugin install vwf@virajp-plugins
 ```
 
-Installing `vwf` therefore needs five binaries on your `PATH` — `graphify`,
-`mise`, `pnpm`, `rtk` and `uv`. The CLI never installs one for you.
+Add `--scope project` to either command to keep the marketplace or the plugin to
+one repo instead of your user profile.
 
-**`--force` does not override this gate.** `--force` means something narrower:
-act on a target whose own CLI is missing. A plugin's runtime tools are a fact
-about the plugin rather than about the target, and there is no useful state on
-the far side of installing `vwf` without `graphify`. A `--dry-run` reports the
-missing tools and carries on, because the rest of the diff is still worth
-seeing.
+**Installing `vwf` pulls in `devtools` automatically** — Claude resolves plugin
+dependencies natively (2.1.143 and later), from the same marketplace, at the
+same scope. That is what replaced the old `--all` flag; there is no default set
+any more, and every other plugin is installed by name because which language,
+cloud and capability plugins you want is a question about your product.
+
+Restart your agent afterwards so the skills, hooks and MCP servers load.
+
+### Upgrading
+
+```sh
+claude plugin marketplace update virajp-plugins
+claude plugin update vwf
+```
+
+The marketplace is this repo's `main`, which CI validates on every push, so
+there is no separately published artifact to fall behind.
+
+## Nothing is gated at install time
+
+The CLI used to refuse an install when a plugin's required binaries were
+missing, and print the command to fix each one. **That gate is gone**, along
+with the plugin installer it belonged to.
+
+So after installing, run:
+
+```text
+/vwf:doctor
+```
+
+Doctor blocks on a missing **`mise`** or **`graphify`**, and both `/vwf:setup`
+and `/vwf:execute` halt on either. It is not a complete substitute for the
+retired gate: a missing language server is an ordinary finding, and `pnpm` and
+`rtk` are not checked — `rtk`'s hook is guarded so its absence only degrades,
+while a missing `pnpm` surfaces as the context7 MCP server failing to start.
+Install all five.
 
 ## The statusline
 
-`--statusline` installs the bar; `--no-statusline` refuses it; unset defers to
-`--all`, so the whole toolkit brings the whole toolkit. Which surfaces it
-reaches depends on the selected targets — a script bar on Claude Code,
-`omp config` keys on Oh-My-Pi, a TUI plugin on OpenCode. **Cursor exposes no
-status surface at all**, so a run reaching only Cursor has nothing to install
-and says so when you asked explicitly.
+The bar is installed whenever you ask for it. **Configuring Claude to use it**
+is a separate step, and that step is gated on consent, because it displaces
+whatever statusline you already had.
 
-One rule belongs here rather than in the configuration reference:
-**`--statusline` is the only consent to replace a statusline this installer did
-not write, and `--all` is not consent.** With no terminal to ask in — a setup
-script, CI, anything piping stdin — the run **fails** rather than guessing in
-either direction. Declining is remembered as `"autoConfigure": false` in
-`~/.config/statusline.json` and later runs stop asking; passing `--statusline`
-clears it. The bar's own files land either way, so a declined machine is one
-`--statusline` from a working statusline.
+- `--statusline` **is** the consent. Passing it is how you say "yes, replace
+  it".
+- A statusline this tool installed is not foreign, so a repeat run never asks
+  about its own bar.
+- With **no terminal** to ask on, the run **fails** rather than guessing.
+  Silently overwriting is the bug; silently skipping would make an unattended
+  install report success with the bar unconfigured.
+- A refusal is remembered, as `"autoConfigure": false` in
+  `~/.config/statusline.json`. Passing `--statusline` again clears it.
 
-Everything else about it — what each surface draws, the caps hook, the
-configuration layers — is in
-**[docs/plugins/statusline.md](../plugins/statusline.md)**.
+The full configuration reference — segments, palettes, the two config layers —
+is [docs/plugins/statusline.md](../plugins/statusline.md).
 
 ## Seeing what a run would do
 
-`--dry-run` resolves the whole request and prints the diff to **stdout**, so it
-can be piped or saved, while progress and the summary go to stderr. It writes
-nothing, asks nothing, and reports the statusline at its most complete rather
-than refusing a question it has decided not to ask.
+`--dry-run` writes nothing and prints the complete diff. It composes with every
+other flag, including `--uninstall`, which is the scriptable way to ask "what is
+installed here?" without touching it.
 
 ## Undoing an install
 
-Every install writes a **receipt** recording prior state — the previous contents
-of each file, whether a config key existed and what it held, and the command
-that undoes each command run. That is what lets `--uninstall` *restore* rather
-than guess, and the invariant it exists to hold is that install-then-remove
-leaves the tree and every touched config byte-identical. A statusline you
-allowed the CLI to replace comes back exactly as it was.
+`--uninstall` is **interactive**. It enumerates every piece of the toolkit it
+can see from where it runs:
 
-Receipts live under `<config>/ai-plugins/receipts/`, one JSON file per target
-plus one per statusline surface. `<config>` is `$XDG_CONFIG_HOME` when set,
-`%APPDATA%` on Windows, and `~/.config` otherwise.
+- **At user level** — the `virajp-plugins` marketplace registration, user-scoped
+  plugin installs, and the statusline.
+- **At repo level**, when run inside a repo — project-scoped plugin installs,
+  and graphify's hook, graph and `.graphifyignore`.
+- **Plus anything an older, multi-target install left behind** — the copied
+  OpenCode plugin tree, the OpenCode and Oh-My-Pi statuslines. Those surfaces
+  are discontinued; this is how they get removed cleanly rather than orphaned.
+  It is kept for a release or two and then dropped.
+
+Machine state starts **selected**; anything whose removal would edit a
+**git-tracked** file in the current checkout starts **unselected**, shown `[ ]`.
+You asked to uninstall, so re-naming each piece would turn a cleanup into a quiz
+— but dirtying your working tree is not a cleanup, so `.graphifyignore` and
+project-scope plugin rows read out of a committed `settings.json` have to be
+asked for. The numbers you enter **toggle** a row, either way.
+
+Each piece is removed through whatever owns it: `claude plugin uninstall` and
+`claude plugin marketplace remove` for plugins, and for the statusline a
+**restore from the receipt** rather than a delete, so the bar you had before
+comes back.
+
+With no terminal to ask on, it **fails** rather than guessing — unless there is
+nothing to remove, in which case it says so and exits 0, because a run with
+nothing to remove has nothing to guess about.
 
 ```sh
-# Undo everything this installer did, on every agent found
+# Interactive: see the list, deselect what stays
 pnpx @askviraj/ai-plugins --uninstall
 
-# Undo it on one agent, leaving the others alone
-pnpx @askviraj/ai-plugins --uninstall --platform opencode
+# Non-interactive: just show me what is installed and what removing it would do
+pnpx @askviraj/ai-plugins --uninstall --dry-run
 ```
 
-Two things about uninstall are worth knowing:
+**What an uninstall deliberately leaves**: `~/.config/statusline.json`. The
+installer seeds it once and it becomes yours — it may hold your palette and your
+layout, and throwing that away because you removed the bar would be the wrong
+trade.
 
-- **It is per target, not per plugin.** The receipt is the record of what a
-  target received, and `--uninstall` replays all of it. Plugin names on the
-  command line do not narrow that — `--platform` is what narrows an uninstall. A
-  target with no receipt is skipped rather than guessed at.
-- **The statusline goes with it**, on any selected target whose receipt says the
-  CLI installed one. `--no-statusline` alongside `--uninstall` leaves the bar
-  alone.
-
-A receipt is consumed once it has been replayed successfully, and deliberately
-kept when a revert fails — a half-reverted install still has state to undo.
+**What it never touches**: plugins enabled from another marketplace, a
+statusline this tool did not install, and any directory another tool owns.
 
 ## Versions
 
-`--version` reports this CLI's version against the one published on npm, the
-statusline (bundled with the CLI, so always the same number), and every plugin
-in this build against the marketplace manifest on `main`:
-
-```text
-@askviraj/ai-plugins  4.0.0  (latest)
-  statusline      4.0.0  (bundled with the CLI)
-
-Plugins (virajp-plugins):
-  cicd            1.0.0  (latest)
-  cloudflare      0.1.1  (latest)
-  …
-  typescript      2.0.1  (latest)
-  vwf             16.0.0  (latest)
+```sh
+pnpx @askviraj/ai-plugins --version
 ```
 
-Every plugin in the build is listed; the run above is elided in the middle. The
-name column is padded to the longest plugin name, so it widens or narrows as
-plugins are added and removed. A plugin whose build version is behind `main`
-carries a `→ <version> (update available)` annotation in place of `(latest)`.
+Three things, from three places:
 
-What it deliberately does not report is the version a given agent has installed
-right now. Because plugin content ships **inside** the npm package, a plugin's
-version in this build is what an install would give you — one comparison answers
-the question for all four targets, with no per-tool query and nothing to guess
-at. A plugin this build has and `main` does not is annotated `(not on main yet)`
-rather than left bare.
+- **This CLI** — the version of the package that is running. Under `pnpx` that
+  is whatever was just downloaded.
+- **The statusline on disk** — obtained by running the *installed* script and
+  asking it. This is the number that tells you whether your bar is current; the
+  CLI used to print its own version here and label it "bundled", which under
+  `pnpx` described nothing you had. An install old enough to predate the flag
+  reports `unknown (predates self-reporting)` rather than being guessed at.
+- **Each plugin** — the local marketplace manifest against the one on `main`,
+  since `main` is what you install from.
 
-The remote half is best-effort: with no network you still get a useful answer
-about what you have, followed by why the comparison is missing — and the run
-**exits 1**, so a script checking for updates notices that it never actually
-checked.
+It exits 1 if it could not reach the network. Note that the `main` side is read
+from raw GitHub and can be **CDN-cached for a few minutes** after a release — if
+a version looks stale immediately after one, wait and re-run before diagnosing.
 
-## There is no `--upgrade`
+If you are behind shared egress — a corporate NAT, a CI runner pool — GitHub's
+anonymous rate limit is per source IP and can be exhausted by other people.
+Setting `$GITHUB_API_TOKEN` to a read-only (public-repo) token makes the call
+authenticated. Nothing suggests it until you actually hit a rate limit; the npm
+registry call is not GitHub and never sends it.
 
-Plugin content ships inside the npm package — the marketplace source is an
-absolute path into the installed package, and no adapter ever runs
-`marketplace update` — so **re-running the install is the upgrade**. There is
-nothing remote to fetch and no per-tool version to bump. The flag once existed
-and did nothing that naming the plugins again did not already do; it is now an
-error that names itself, rather than a silent no-op.
+## Other agents
 
-Claude is the one target that needs a nudge to notice. It caches plugin content
-per version and answers "already installed" without re-checking, so the adapter
-compares the version this build advertises against the one Claude records and
-runs `claude plugin update` when they differ. You will see that line in the run
-output, with the two versions. **Restart the agent afterward** — Claude applies
-an update on the next start, not in the running session.
-
-Every install path is idempotent, so the same command is safe in a setup script.
-
-## A run that installs nothing
-
-A bare invocation prints the help on stderr and exits 1, and so does one
-carrying only modifiers. `--platform opencode` is the case that reads like a
-request and is not: it says *where* to install, never *what*.
-
-```text
-nothing to install: pass --all, --statusline, or name plugins with --user/--project
-```
-
-The help comes with it because a run that installs nothing is a question about
-the flags, and answering it with a single line of correction assumes the reader
-already knows the other ten. `--statusline` on its own is a complete request —
-it is not a plugin.
+There is no Cursor, OpenCode or Oh-My-Pi install path. Point your agent at this
+repo and ask it to adapt the plugin — the prompts are in the
+[readme](https://github.com/virajp/ai-plugins#other-tools), along with a plain
+statement of what that route does not promise.
 
 ## See also
 
-- [../../readme.md](../../readme.md) — the marketplace overview and what each
-  plugin is for.
-- [statusline.md](../plugins/statusline.md) — the bar this CLI also installs,
-  its three surfaces, and its configuration reference.
-- [vwf.md](../plugins/vwf.md) — the workflow `--all` installs, and the tools it
-  requires on your `PATH`.
+- [index.md](./index.md) — why the statusline ships here at all
+- [targets.md](./targets.md) — what lands on disk, and where
+- [internals.md](./internals.md) — the maintainer's map

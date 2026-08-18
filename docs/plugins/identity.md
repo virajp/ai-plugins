@@ -17,11 +17,19 @@ capability tokens. Blueprint prose calls the provider **the identity provider**
 
 ## Install
 
+Once, if you have not already:
+
 ```sh
-pnpx @askviraj/ai-plugins --user identity
+claude plugin marketplace add virajp/ai-plugins
 ```
 
-The plugin is opt-in, so it is excluded from `--all` and installed by name.
+```sh
+claude plugin install identity@virajp-plugins
+```
+
+Add `--scope project` to scope it to one repo instead of every repo on your
+machine. There is no default install set — every plugin here, `identity`
+included, is installed by name.
 
 ## The contract
 
@@ -134,10 +142,10 @@ product's `stacks:`.
 | `identity-stack-menu`     | The template above as a vwf menu payload — slug, axis, name, one-line summary — plus a `note` on every answer saying managed flavours come from the cloud plugin         |
 | `identity-stack-template` | One template as a vwf template payload: axis fields, the capability tokens it realizes, per-capability harness mechanisms, and the conventions `plan` and `execute` read |
 
-Both are `invocation: both`, and that is load-bearing rather than stylistic: a
-`user` skill is removed from the model's context entirely and **cannot be
-invoked by vwf**. The failure is silent — vwf does not get an error, it gets an
-empty menu.
+Both stay model-invocable, and that is load-bearing rather than stylistic: a
+skill marked `disable-model-invocation: true` is removed from the model's
+context entirely and **cannot be invoked by vwf**. The failure is silent — vwf
+does not get an error, it gets an empty menu.
 
 An unknown slug is an **error**, not a guess: the template skill names the slugs
 that do exist and adds that a managed identity service comes from the cloud

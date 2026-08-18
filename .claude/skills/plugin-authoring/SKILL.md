@@ -1,78 +1,87 @@
 ---
 name: plugin-authoring
-description: Authoring discipline for this repo's plugin templates — the
-  authored-vs-rendered split, the Eta helpers, the invocation decision tree, and
-  the flat-namespace rules. Auto-applies when editing anything under templates/.
+description: Authoring discipline for this repo's plugins — the one authored
+  tree, what is generated from it, the invocation frontmatter, and what
+  plugins:check asserts. Auto-applies when editing anything under plugins/.
   Read the reference matching what you are changing.
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
-  - "templates/**"
+  - "plugins/**"
 ---
 
 # Plugin Authoring
 
-`templates/` is the **only authored tree**. `claude/`, `cursor/`, `ohmypi/`,
-`opencode/`, `plugins.json`, `.claude-plugin/marketplace.json` and
-`.cursor-plugin/marketplace.json` are machine-written output — never edit them
-by hand, and never diagnose a bug by reading one as if it were source. Read the
-template and the renderer (`renderer/src/`) instead.
+`plugins/<name>/` is the **only authored tree**, and it is Claude Code's native
+plugin format — what you edit is exactly what a user installs. There is no
+template layer, no render step, and no per-target variant.
+
+One file is still generated: **`.claude-plugin/marketplace.json`**, a projection
+of the 13 per-plugin manifests. Never edit it by hand.
 
 ## The one rule
 
-A change under `templates/` is not done until the render has been rebuilt and
-staged:
+A change under `plugins/` is not done until both gates pass:
 
 ```sh
-mise run plugins:build   # renders templates/ into every <repo>/<target>/
-mise run plugins:check   # validates the source and all four rendered targets
+mise run plugins:check              # validates the authored tree
+mise run plugins:marketplace        # regenerate, if you touched a manifest
 ```
 
-The rendered trees are **committed**, so a template edited without a rebuild
-looks fine locally and fails `plugins:render-clean` in CI. Nothing else catches
-it — there is no runtime that reads `templates/`.
+`--check` on that second task is what CI and pre-commit run. It exists because
+the marketplace manifest is generated **and** committed, so a manifest edited
+without a regenerate is invisible to every other check — this is the one piece
+of staleness the retired `plugins:render-clean` was really guarding, narrowed to
+the one file that still has the problem.
 
 ## What is authored where
 
-| Path                        | Is                                                              |
-| --------------------------- | --------------------------------------------------------------- |
-| `plugin.yaml`               | the neutral manifest — name, version, servers, deps, `requires` |
-| `skills/<name>/SKILL.md`    | a skill; auto-discovered, never listed in the manifest          |
-| `skills/<name>/references/` | on-demand prose the SKILL.md points at                          |
-| `agents/<name>.md`          | a subagent; auto-discovered                                     |
-| `hooks/hooks.yaml`          | hooks as *intent*, plus the scripts beside it                   |
-| `opencode-plugin/*.ts`      | OpenCode-only behaviour, shipped as authored TypeScript         |
-| `stacks/<axis>/…`           | stack templates, on a stack plugin                              |
+| Path                         | Is                                                       |
+| ---------------------------- | -------------------------------------------------------- |
+| `.claude-plugin/plugin.json` | the manifest — name, version, description, servers, deps |
+| `skills/<name>/SKILL.md`     | a skill; auto-discovered, never listed in the manifest   |
+| `skills/<name>/references/`  | on-demand prose the SKILL.md points at                   |
+| `agents/<name>.md`           | a subagent; auto-discovered                              |
+| `hooks/hooks.json`           | hooks, plus the scripts beside them                      |
+| `assets/`                    | shared doctrine and data the skills read                 |
+| `stacks/<axis>/…`            | stack templates, on a stack plugin                       |
+| `vendor/`                    | provenance for vendored third-party skills               |
 
-Adding any of these is one edit: create the file, run `plugins:build`. There is
-no second place to register it.
+Adding any of these is one edit: create the file. Only a **manifest** change
+needs the generator re-run.
 
 ## The four traps
 
-Each is silent — the render succeeds and the mistake surfaces somewhere else.
+Each is silent — nothing errors, and the mistake surfaces somewhere else.
 
-1. **Eta needs `autoEscape: false` and `autoTrim: false`.** `autoTrim` strips
-   the newline next to a tag, which reflows folded YAML scalars: same text,
-   different bytes.
-2. **dprint deliberately excludes `templates/**/*.md`** and every rendered tree.
-   Do not format them — match the surrounding fold width by hand.
-3. **Frontmatter must be strict-YAML valid.** Claude's parser is lenient; a
-   strict parser rejects, and a rejected skill is dropped with no error.
-4. **Bare prose naming a prefixed skill is a `plugins:check` failure.** Under
-   `prefixSkillNames` (vwf) the flat targets emit `vwf-plan`, so a delegation
-   written as `plan` resolves to nothing there — silently. Use `it.cmd()`.
+1. **Frontmatter must be strict-YAML valid.** Claude's own parser is lenient; a
+   strict parser rejects, and a rejected skill is dropped with **no error**.
+   `plugins:check` is what catches it.
+2. **dprint deliberately excludes `plugins/**/*.md`.** Do not reach for the
+   formatter — match the surrounding fold width by hand. (The exclusion outlived
+   its original reason, which was Eta reflowing folded scalars. It stays because
+   formatting ~2000 authored prose files is a decision, not a side effect.)
+3. **`${CLAUDE_PLUGIN_ROOT}` is *this* plugin's root, and nothing spells
+   another's.** A reference to an asset a different plugin owns resolves to
+   nothing at runtime. Name the contract instead, and rely on the caller having
+   it. This shipped broken in every render tree for months before the checker
+   caught it — see `plugins/typescript/stacks/deploy/npm-package.md`.
+4. **A dependency is one edit, and only inside this marketplace.** Add the name
+   to `dependencies` in `plugin.json` with `"marketplace": "virajp-plugins"`;
+   the marketplace entry is generated from it. `plugins:check` asserts it
+   resolves.
 
 ## References
 
-Read the one matching the change; do not read all five.
+Read the one matching the change; do not read all four.
 
 | Reference                                             | Covers                                                                       |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [rendering.md](references/rendering.md)               | the pipeline, the Eta helpers, what `plugins:check` asserts, frontmatter     |
-| [invocation.md](references/invocation.md)             | `model` / `user` / `both`, the per-target spellings, the flat namespace      |
+| [checks.md](references/checks.md)                     | what `plugins:check` asserts, rule by rule, and the technology-free guard    |
+| [invocation.md](references/invocation.md)             | the two frontmatter keys, the three states, and which one a skill needs      |
 | [language-plugins.md](references/language-plugins.md) | the language-plugin contract — boundary, mandatory core, posture, collisions |
-| [manifests.md](references/manifests.md)               | `plugin.yaml` fields, the generated marketplaces, the three manifest traps   |
-| [hooks.md](references/hooks.md)                       | neutral events, per-target mechanisms, script portability                    |
+| [manifests.md](references/manifests.md)               | `plugin.json` fields, the generated marketplace, the manifest traps          |
+| [hooks.md](references/hooks.md)                       | the hook events, `hooks.json`, verdict shapes, script portability            |
 
 ## Documentation
 

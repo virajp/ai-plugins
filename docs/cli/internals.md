@@ -2,87 +2,65 @@
 
 > **This page is the map, not the rules.**
 > [`.claude/skills/installer-cli/`](../../.claude/skills/installer-cli/SKILL.md)
-> is authoritative for the receipt invariant, the adapter discipline, the
-> packaging traps and every per-tool statusline fact — and it auto-applies the
-> moment anyone edits `cli/` or `tools/`, so a contributor already has it in
-> context. What follows is the orientation: the shapes, the flow between them,
-> and where to go for the rule that governs each.
+> is authoritative for the receipt invariant, the uninstall discipline, the
+> packaging traps and every statusline fact — and it auto-applies the moment
+> anyone edits `cli/` or `tools/`, so a contributor already has it in context.
+> What follows is the orientation: the shapes, the flow between them, and where
+> to go for the rule that governs each.
+
+## What this CLI is for
+
+Three jobs: the **Claude statusline**, **graphify's wiring**, and an interactive
+**`--uninstall`**. It installs no plugins — `claude plugin marketplace add` and
+`claude plugin install` do that, reading this repo's `main`.
+
+That is a large reduction from what this page used to describe. Four plugin
+adapters, a dependency gate, a plan stage, an executor and a `--platform` flag
+are all gone, along with the template layer and the four render trees they
+installed from. If you are looking for any of it, it is in git, not here.
 
 ## The flow of a run
 
-A run is a straight line — **`args` → the router → adapters → a receipt** — with
-two pure stages in the middle that exist so the router stays a router.
+A straight line — **`args` → the router → the installer → a receipt** — with the
+router doing as little as possible itself.
 
 **`args.ts` parses.** One table drives both `parseArgs` and the help text, so a
-flag cannot be parsed but undocumented. The parser is `node:util`'s, and it has
-to stay repeat-capable: three flags are repeatable, and the last parser that
-could not express that dropped names silently. The whole flag surface is in the
-skill's [SKILL.md](../../.claude/skills/installer-cli/SKILL.md); the end-user
-view of the same flags is [usage.md](./usage.md).
+flag cannot be parsed but undocumented. `strict` is on, so a retired flag
+reports itself by name rather than being silently ignored. The parser must stay
+**repeat-capable** even though nothing is repeatable today: the parser this
+replaced could not express a repeated flag and dropped names silently, and that
+failure mode should not be reachable again. The end-user view of the same flags
+is [usage.md](./usage.md).
 
-**`index.ts` routes**: resolve, gate, execute, report, exit. It reads flags into
-one `AdapterContext` (source root, `$HOME`, cwd, timestamp, logger, command
-runner — all injected, so a test can point a whole install at a temp directory),
-selects which targets the run reaches, and then does nothing itself. Every
-sizeable decision below it is a call into a module that can be tested without a
-machine to install onto.
+**`index.ts` routes**: resolve, execute, report, exit. It reads flags into one
+`Context` (source root, `$HOME`, cwd, timestamp, logger, command runner — all
+injected, so a test can point a whole install at a temp directory) and then does
+nothing substantial itself.
 
-**Resolve — `plan.ts`.** A request becomes one `AdapterPlan` per target: plugin
-names at user scope, plugin names at project scope, dependencies expanded where
-the target's own CLI will not do it. Every derived set — dependencies, the
-`requires:` union, which plugins are local, what `--all` means — is read from
-`plugins.json`, which the build projects from each `templates/<plugin>/`
-manifest. There is no second copy to disagree with the manifests.
+**`statusline.ts` installs.** Copies the script and the caps hook, splices four
+keys into `settings.json` without reflowing the user's file, and seeds
+`~/.config/statusline.json`. Consent for the config step is
+`statusline-consent.ts`, whose `resolveConsent` is a pure function so every
+branch is testable without a terminal.
 
-**Gate — `deps.ts`.** The external-tool union over the dependency-expanded set,
-checked before anything is written, because a plugin whose tools are absent
-installs cleanly and fails later somewhere with no visible link to the install.
-What `--force` does and does not override is in
-[adapters.md](../../.claude/skills/installer-cli/references/adapters.md).
+**`uninstall.ts` removes.** `enumerate` is a pure read returning plain data —
+that split is what makes the list testable against a fixture directory rather
+than only by performing it. Removal is a separate switch, and goes through
+whatever owns each piece.
 
-**Execute — `executor.ts`.** One executor drives every target, so `--dry-run`
-and a real run walk the same code. A failing target does not abort the others:
-outcomes are collected per target and the run exits non-zero if any failed.
-
-**Report — `progress.ts`.** A live step on stderr while adapters block in
+**`report.ts` / `progress.ts`.** A live step on stderr while work blocks in
 `spawnSync`, and the final table after it, so stdout stays parseable for
 `--dry-run | jq`.
 
-**Receipt — `receipt.ts`.** Each adapter returns one, recording prior state so
-`--uninstall` restores rather than guesses. What kinds of entry exist and how a
-write must be attributed is the one thing in this CLI that has broken most
-often; it is stated once, in
+**`receipt.ts`.** Records prior state so removal restores rather than guesses.
+What kinds of entry exist and how a write must be attributed is the one thing in
+this CLI that has broken most often; it is stated once, in
 [receipts.md](../../.claude/skills/installer-cli/references/receipts.md), and
 deliberately not restated here.
 
-The **statusline is wired straight from the router**, not through an adapter: it
-installs no bundle and is registered in no marketplace. It shares only the
-receipt. That is why `statusline*.ts` sit at the top level beside `index.ts`
-rather than under `adapters/`.
-
-## Target vs Adapter
-
-This is the architectural spine, and the two halves are deliberately kept apart.
-
-| Half                                 | When         | Nature    | Does                                  |
-| ------------------------------------ | ------------ | --------- | ------------------------------------- |
-| **Target** (`renderer/src/targets/`) | build-time   | pure      | templates → the committed render tree |
-| **Adapter** (`cli/src/adapters/`)    | install-time | effectful | that tree → the user's machine        |
-
-Two things follow from the split. Format-preserving config mutation — splicing a
-key into someone else's `settings.json` without reflowing their file — stays out
-of the renderer, where it has no business. And installing became copying: the
-OpenCode installer shrank from a **1189-line renderer** to a copier, because the
-rendering it used to do on the user's machine, after release, now happens at
-build time where CI validates it.
-
-Which *kind* of adapter a target gets is dictated by the target rather than
-chosen — copy for OpenCode, which has no plugin concept at all, and marketplace
-for the other three, each of which owns bookkeeping this tool has no business
-editing. The pruning rules, where each payload lives and how scope falls back
-are in [adapters.md](../../.claude/skills/installer-cli/references/adapters.md);
-what each target does on disk, from the user's side, is
-[targets.md](./targets.md).
+**`github.ts`.** The token header and the rate-limit-only hint. Two functions
+worth knowing apart: `fetchGithubJson` attaches `$GITHUB_API_TOKEN` when set,
+`fetchJson` never does — the npm registry is not GitHub.
 
 ## The build split
 
@@ -94,69 +72,76 @@ publishes**.
 cli/src/index.ts  →  tsup  →  bin/ai-plugins.mjs
 ```
 
-Note the asymmetry with the rendered plugin trees, which are committed: a
-rendered tree is meant to be diffed in review, a bundle diff is noise.
-
-The split is load-bearing rather than stylistic — `@ai-plugins/schema` is a
-private workspace package that would not resolve from an installed tarball, and
-shipping the TypeScript directly would raise the Node floor. The externals rule,
-the ESM/CJS split and the rest of the packaging traps are in
+The split is load-bearing rather than stylistic: shipping the TypeScript
+directly would raise `engines.node` from `>=18` to `>=22.18`. The externals
+rule, the ESM/CJS split and the rest of the packaging traps are in
 [packaging.md](../../.claude/skills/installer-cli/references/packaging.md).
 
 `mise run i:test` bundles first and smoke-tests the **built artifact**, not the
-source, because a packaging mistake only shows up there.
+source, because a packaging mistake only shows up there. Its end-to-end section
+installs over a *foreign* statusline, installs again, and asserts the receipt
+still records the foreign bar — that repeat-run claim is the bug class the
+section exists for, and it compares file contents rather than filenames.
 
-## What ships, and why it is ~12 MB
+## What ships: 7 files, ~41 KB
 
-The published tarball is `package.json`'s `files` list: `bin`, `tools`, the four
-rendered trees (`claude`, `cursor`, `ohmypi`, `opencode`), `plugins.json`, and
-both root marketplace manifests (`.claude-plugin/`, `.cursor-plugin/`).
+`package.json`'s `files` list is `bin` + `tools`.
 
-Every one of those is read at install time. An adapter resolves `<target>/`
-through `context.sourceRoot`; Claude and Cursor read their marketplace manifest
-from the package root; `plan.ts` and `deps.ts` read `plugins.json`.
+It was ~12 MB until the Claude-first release, because the four rendered plugin
+trees, `plugins.json` and both root marketplace manifests shipped inside it —
+the cost of the committed-render guarantee, since every adapter read `<target>/`
+through `context.sourceRoot` at install time.
 
-**That size is the cost of the committed-render guarantee: what a user installs
-is what CI validated.** The alternative — fetching a tree at install time — is
-smaller and gives up the one property that makes a rendered tree reviewable.
-[index.md](./index.md) covers the other half of the same trade, which is why
-re-running the install *is* the upgrade.
+**What is actually read from the package root now is three files**, all under
+`tools/statusline/`:
+
+| File              | Read for                                    |
+| ----------------- | ------------------------------------------- |
+| `statusline`      | copied to `~/.claude/scripts/statusline`    |
+| `context-caps.js` | copied to `~/.claude/hooks/context-caps.js` |
+| `statusline.json` | parsed, to seed `~/.config/statusline.json` |
+
+Check that table before widening `files` — and before narrowing it, because a
+missing bundled asset throws at install time with a path the user cannot act on.
+
+The committed-and-CI-validated guarantee did not disappear; it moved channel.
+What users install is `main`, and `plugins.yml` validates `main` on every push.
 
 ## The map
 
-| Path                     | Is                                                                         |
-| ------------------------ | -------------------------------------------------------------------------- |
-| `cli/src/args.ts`        | the flag surface on `util.parseArgs`, plus the usage renderer              |
-| `cli/src/index.ts`       | the router — resolve, gate, execute, report, exit                          |
-| `cli/src/plan.ts`        | a request → one `AdapterPlan` per target, derived from `plugins.json`      |
-| `cli/src/deps.ts`        | the external-tool gate, derived from each plugin's `requires:`             |
-| `cli/src/executor.ts`    | runs the plans, collects one outcome per target, renders the report        |
-| `cli/src/progress.ts`    | the live step on stderr, off when stderr is not a TTY                      |
-| `cli/src/adapters/`      | one per target, plus `tree.ts` (copying) and `support.ts` (the shared few) |
-| `cli/src/config/`        | format-preserving edits to JSON/JSONC and TOML, and the deep merge         |
-| `cli/src/receipt.ts`     | prior state, so uninstall restores rather than guesses                     |
-| `cli/src/graphify.ts`    | `graphify install` + `hook install` when vwf is installed                  |
-| `cli/src/version.ts`     | `--version` — the local manifest against the one on `main`                 |
-| `cli/src/statusline*.ts` | the three statusline surfaces, each with its own receipt                   |
-| `tools/statusline/`      | the script, its defaults, the caps hook, the OpenCode TUI plugin           |
-| `cli/src/**/*.test.ts`   | vitest; `i:test` smoke-tests the **built** bundle, not the source          |
+| Path                            | Is                                                                  |
+| ------------------------------- | ------------------------------------------------------------------- |
+| `cli/src/args.ts`               | the flag surface on `util.parseArgs`, plus the usage renderer       |
+| `cli/src/index.ts`              | the router — resolve, execute, report, exit                         |
+| `cli/src/context.ts`            | the injected run context, so a test can redirect a whole install    |
+| `cli/src/uninstall.ts`          | enumerate → deselect → remove, plus the legacy-receipt reader       |
+| `cli/src/statusline.ts`         | the Claude bar and the caps hook                                    |
+| `cli/src/statusline-consent.ts` | the consent gate; `resolveConsent` is pure                          |
+| `cli/src/receipt.ts`            | prior state, so uninstall restores rather than guesses              |
+| `cli/src/github.ts`             | the token header and the rate-limit-only hint                       |
+| `cli/src/graphify.ts`           | `graphify install` + `hook install`                                 |
+| `cli/src/version.ts`            | `--version` — this CLI, the installed script, the plugins on `main` |
+| `cli/src/report.ts`             | the outcome table                                                   |
+| `cli/src/progress.ts`           | the live step on stderr, off when stderr is not a TTY               |
+| `cli/src/config/json.ts`        | format-preserving edits to JSON/JSONC, and the deep merge           |
+| `tools/statusline/`             | the script, its defaults, the caps hook                             |
+| `scripts/src/`                  | repo tooling — the marketplace generator and the plugin checker     |
+| `cli/src/**/*.test.ts`          | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
 
-Two placement rules that look arbitrary and are not. `vitest.config.mts`
-collects only `{schema,renderer,cli}/src/**/*.test.ts`, so a test file anywhere
-else is silently never run — which is why the tests for the statusline *script*
-and for the mempalace checkpoint *shell script* live under `cli/src/` even
-though what they exercise is `tools/` and `templates/`. And `config/toml.ts` has
-no consumer today; it stays as the third config format an adapter may meet.
+One placement rule that looks arbitrary and is not: `vitest.config.mts` collects
+only `{cli,scripts}/src/**/*.test.ts`, so a test file anywhere else is
+**silently never run** — which is why the tests for the statusline *script* and
+for the mempalace checkpoint *shell script* live under `cli/src/` even though
+what they exercise is `tools/` and `plugins/`.
 
 ## Where the rules live
 
-| For                                                               | Read                                                                         |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Any write path, any receipt entry                                 | [receipts.md](../../.claude/skills/installer-cli/references/receipts.md)     |
-| Copy vs marketplace, pruning, scope fallback, the dependency gate | [adapters.md](../../.claude/skills/installer-cli/references/adapters.md)     |
-| tsup externals, the tarball, `packageRoot()`, `--version`         | [packaging.md](../../.claude/skills/installer-cli/references/packaging.md)   |
-| The three surfaces and their per-tool verified facts              | [statusline.md](../../.claude/skills/installer-cli/references/statusline.md) |
-| The flag surface, the testing discipline, the derived sets        | [SKILL.md](../../.claude/skills/installer-cli/SKILL.md)                      |
+| For                                                       | Read                                                                         |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Any write path, any receipt entry                         | [receipts.md](../../.claude/skills/installer-cli/references/receipts.md)     |
+| tsup externals, the tarball, `packageRoot()`, `--version` | [packaging.md](../../.claude/skills/installer-cli/references/packaging.md)   |
+| The consent gate, the script, the config layers           | [statusline.md](../../.claude/skills/installer-cli/references/statusline.md) |
+| The flag surface, the uninstall shape, testing discipline | [SKILL.md](../../.claude/skills/installer-cli/SKILL.md)                      |
 
 Behaviour changes here must reconcile `readme.md`, `CLAUDE.md` and these pages
 in the same commit — the skill names the `docs-reconciler` agent for that sweep.
@@ -164,5 +149,5 @@ in the same commit — the skill names the `docs-reconciler` agent for that swee
 ## Related
 
 - [usage.md](./usage.md) — the same flags, from the outside.
-- [targets.md](./targets.md) — what each adapter does on disk.
+- [targets.md](./targets.md) — what lands on disk, and where.
 - [statusline.md](./statusline.md) — why the bar ships in the CLI at all.

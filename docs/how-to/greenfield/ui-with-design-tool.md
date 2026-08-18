@@ -28,15 +28,16 @@ Centwise swaps the spine's stack plugins for the one that owns Flutter, and
 keeps `design-tools` for the design imports.
 
 ```sh
-pnpx @askviraj/ai-plugins --all --user flutter --user design-tools
+claude plugin install vwf@virajp-plugins \
+  flutter@virajp-plugins design-tools@virajp-plugins
 ```
 
 `flutter` supplies the project-axis template and — this matters at the end of
 the run — the UX gate that renders Flutter screens; `design-tools` is the design
 adapter, without which `/vwf:design-system` has nothing to import from. Neither
-is a vwf dependency, so neither arrives on its own. Scopes and flags:
-[the installer CLI](../../cli/usage.md); the rest of this step is the spine's
-[Install the plugins](./single-repo.md#install-the-plugins).
+is a vwf dependency, so neither arrives on its own. Scopes and upgrades:
+[the installer CLI](../../cli/usage.md#installing-plugins); the rest of this
+step is the spine's [Install the plugins](./single-repo.md#install-the-plugins).
 
 Then connect the canvas. Claude Design is a remote MCP server the `design-tools`
 plugin declares; run `/mcp` and sign in once — see

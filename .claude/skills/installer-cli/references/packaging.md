@@ -10,10 +10,10 @@ point straight at the bundle.
 **tsup treats `dependencies` as external and inlines everything else.** So a
 runtime import that is only a `devDependency` gets **silently bundled**: it
 works, and it hides that package from `osv-scanner`, which reads the lockfile.
-Runtime deps are whatever the bundle leaves external — today `jsonc-parser`,
-`smol-toml` and `write-file-atomic`. **Argument parsing is not among them**: it
-was `citty` until that turned out to be unable to express a repeatable flag, and
-`node:util`'s `parseArgs` replaced it rather than another package.
+Runtime deps are whatever the bundle leaves external. **Argument parsing is not
+among them**: it was `citty` until that turned out to be unable to express a
+repeatable flag, and `node:util`'s `parseArgs` replaced it rather than another
+package.
 
 **The package `type` stays `commonjs`.** The bundle is ESM by its `.mjs`
 extension, while the standalone `tools/statusline/` scripts — run outside this
@@ -22,49 +22,74 @@ split is carried per file, not by a package-wide `type: module`.
 
 ## The tarball
 
-`files` is `bin` + `tools` + the four rendered trees + `plugins.json` + both
-root marketplace manifests. Every adapter reads `<target>/` at install time
-through `context.sourceRoot`, and the Claude and Cursor adapters read
-`.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json` from the
-package root.
+`files` is **`bin` + `tools`**. Seven files, ~41 KB.
 
-That makes the package ~12 MB. It is the cost of the committed-render guarantee:
-what a user installs is what CI validated.
+It was ~12 MB until the Claude-first cutover, because the four rendered plugin
+trees, `plugins.json` and both root marketplace manifests all shipped inside it
+— that was the cost of the committed-render guarantee, since every adapter read
+`<target>/` at install time through `context.sourceRoot`.
+
+None of that is read any more. **What the package reads from its own root at
+runtime is exactly three files**, all under `tools/statusline/`:
+
+| File              | Read for                                    |
+| ----------------- | ------------------------------------------- |
+| `statusline`      | copied to `~/.claude/scripts/statusline`    |
+| `context-caps.js` | copied to `~/.claude/hooks/context-caps.js` |
+| `statusline.json` | parsed, to seed `~/.config/statusline.json` |
+
+Nothing else in the CLI touches `packageRoot()`. Before widening `files`, check
+that the thing being added is genuinely read at runtime — and before narrowing
+it, check against that table, because a missing bundled asset throws at install
+time with a path the user cannot act on.
 
 ## Resolving the package root
 
 `cli/src/index.ts` resolves it by **walking up for a `package.json` whose name
 matches**, never by counting `..` segments — it runs from two depths (`cli/src/`
 in the repo, `bin/` once bundled), and a fixed offset would be right in one and
-silently wrong in the other.
+silently wrong in the other. `AI_PLUGINS_SOURCE_DIR` is the escape hatch, and is
+how the tests point it at a fixture.
 
 ## `--version`
 
-`cli/src/version.ts` does **not** ask each tool what it has installed, the way
-the old `bin/claude.mjs` asked `claude plugin list --json`; with four targets
-that is four bookkeeping formats. A plugin's version *in this build* is what an
-install would give you — every target reads `<target>/` from this package, in
-place or copied — so comparing the local manifest against the one on `main`
-answers it for all four at once.
+Three lines, from three different places, and the distinction matters:
 
-A plugin present here but not on `main` is labelled `(not on main yet)` rather
-than left bare, which read as a failed lookup. Note that the "latest" side is
+- **This CLI** — the running package's own version. Under `pnpx` that is
+  whatever was just downloaded.
+- **The statusline on disk** — obtained by running the *installed* script with
+  `--version`. It reports a hardcoded constant that `i:version` stamps at bump
+  time. This exists because the CLI used to print its own version for the
+  statusline line and annotate it "bundled with the CLI", which under `pnpx`
+  never described what the user actually had. An install predating the flag
+  degrades to `unknown (predates self-reporting)` rather than being guessed at.
+- **The plugins** — the local marketplace manifest against the one on `main`,
+  since `main` is what a user installs from.
+
+A plugin present locally but not on `main` is labelled `(not on main yet)`
+rather than left bare, which read as a failed lookup. The "latest" side is
 fetched from raw GitHub and can be **CDN-cached for a few minutes** after a
 push; re-run before diagnosing a stale-looking report.
 
-## Distribution: npm only
+That GitHub call sends `$GITHUB_API_TOKEN` when the variable is set, because
+GitHub's anonymous limit is per source IP and shared egress exhausts it between
+users. The hint to set one appears **only** for a real rate limit — `429`, or
+`403` with `x-ratelimit-remaining: 0`. A plain `403` is an authorization failure
+a read-only token would not fix. The npm registry call is not GitHub and stays
+tokenless; see `cli/src/github.ts`.
+
+## Distribution: npm for the statusline, GitHub for the plugins
 
 `pnpx @askviraj/ai-plugins`, which needs Node. There is deliberately no
-standalone binary, no Homebrew tap and no Scoop bucket.
+standalone binary, no Homebrew tap and no Scoop bucket — every non-npm channel
+would be a per-platform archive plus a per-release checksum plus an
+extract-and-symlink installer, a second distribution system delivering what npm
+already delivers.
 
-A binary here could never be self-contained: Claude and Oh-My-Pi each register a
-marketplace whose source is a real rendered directory, so the payload has to
-exist on disk as files rather than inside the executable. (Claude copies its
-copy to `~/.local/share/virajp/ai-plugins` first, but that only moves *which*
-directory it is, not the fact that there has to be one.) Every non-npm channel
-would be a per-platform archive plus a per-release checksum file plus an
-extract-and-symlink installer — a second distribution system to keep current,
-delivering exactly what the npm package already delivers.
-
-So `packageRoot()` resolves from `import.meta.dirname` alone, and Windows users
-run the same `pnpx` command everyone else does.
+The plugins go the other way entirely:
+`claude plugin marketplace add
+virajp/ai-plugins` reads this repo's `main`
+directly. The committed-tree-validated-by-CI guarantee survives with a new
+channel — what users install is `main`, and `plugins.yml` validates `main` on
+every push. The residual risk is the window between a bad merge and the red
+build, which is the same risk any git-served marketplace carries.

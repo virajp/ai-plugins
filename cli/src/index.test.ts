@@ -1,268 +1,152 @@
 import {
+  mkdirSync,
   mkdtempSync,
+  readFileSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
 import {
+  dirname,
+  join,
+} from "node:path";
+import {
+  afterEach,
+  beforeEach,
   describe,
   expect,
   it,
 } from "vitest";
-import type {
-  Adapter,
-  AdapterContext,
-} from "./adapters/types.ts";
-import {
-  ADAPTERS,
-  buildJobs,
-  revertsStatusline,
-  selectAdapters,
-  statuslineSelected,
-  wantsStatusline,
-} from "./index.ts";
-
-const context = {
-  sourceRoot: "/src",
-  home: "/home",
-  cwd: "/cwd",
-  now: "2026-01-01T00:00:00Z",
-  log: () => {},
-  exec: () => ({ status: 0, stdout: "", stderr: "" }),
-} satisfies AdapterContext;
-
-const repoRoot = new URL("../..", import.meta.url).pathname;
-
-function fake(id: string, detected: boolean): Adapter {
-  return {
-    id: id as Adapter["id"],
-    displayName: id,
-    scopes: ["user", "project"],
-    detect: () => detected,
-    configPaths: () => [],
-    plan: () => [],
-    apply: () => ({
-      receipt: { version: 2, installedAt: "", entries: [] },
-      actions: [],
-    }),
-    verify: () => [],
-    revert: () => {},
-  };
-}
+import type { Context } from "./context.ts";
+import { resolveStatuslineConsent } from "./index.ts";
 
 /**
- * A one-plugin marketplace whose single entry is url-sourced, written to disk
- * because `buildJobs` reads its index from `sourceRoot` rather than taking one.
+ * What is left of this file after the narrowing is one function.
  *
- * The fixture stands in for `andrej-karpathy-skills`, which is what these tests
- * used to name. It was the last url-sourced entry in the shipped marketplace
- * and it is now vendored into `vwf`, so nothing real exercises `localOnly` /
- * `onSkip` any more — while both are still live code, reachable again the day
- * another external plugin is re-listed. A synthetic entry keeps the path
- * covered rather than letting it go dark.
+ * It used to cover `selectAdapters`, `buildJobs`, `statuslineSelected`,
+ * `wantsStatusline` and `revertsStatusline` — every one of them a question about
+ * *which of four targets* a run reaches, and there is one target. The consent
+ * resolution is the piece with behaviour left in it, and it keeps its own
+ * temp-directory install so the remembered-refusal file is real rather than
+ * stubbed.
  */
-function urlSourcedRoot(): string {
-  const root = mkdtempSync(join(tmpdir(), "ai-plugins-url-"));
-  writeFileSync(
-    join(root, "plugins.json"),
-    JSON.stringify({
-      marketplace: "test-marketplace",
-      defaultInstall: ["elsewhere"],
-      plugins: [{ name: "elsewhere", local: false, dependencies: [] }],
-    }),
-  );
-  return root;
+let home: string;
+let configDir: string;
+let logged: string[];
+let context: Context;
+
+beforeEach(() => {
+  home = mkdtempSync(join(tmpdir(), "ai-plugins-idx-home-"));
+  configDir = mkdtempSync(join(tmpdir(), "ai-plugins-idx-cfg-"));
+  logged = [];
+  process.env["CLAUDE_CONFIG_DIR"] = configDir;
+  context = {
+    sourceRoot: join(import.meta.dirname, "..", ".."),
+    home,
+    cwd: home,
+    now: "2026-01-01T00:00:00Z",
+    log: (message: string) => {
+      logged.push(message);
+    },
+    exec: () => {
+      throw new Error("consent resolution runs no commands");
+    },
+  };
+});
+afterEach(() => {
+  delete process.env["CLAUDE_CONFIG_DIR"];
+  rmSync(home, { recursive: true, force: true });
+  rmSync(configDir, { recursive: true, force: true });
+});
+
+const userConfig = () => join(home, ".config", "statusline.json");
+
+function writeSettings(value: unknown): void {
+  const file = join(configDir, "settings.json");
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-describe("wantsStatusline", () => {
-  it("defers to --all when the flag is absent", () => {
-    // `--all` means the whole toolkit, so it implies the bar.
-    expect(wantsStatusline(undefined, true)).toBe(true);
-    expect(wantsStatusline(undefined, false)).toBe(false);
+describe("resolveStatuslineConsent", () => {
+  it("grants without asking when nothing of the user's is at stake", async () => {
+    expect(await resolveStatuslineConsent(context, true, false)).toBe(true);
   });
 
-  it("lets an explicit flag win either way", () => {
-    expect(wantsStatusline(true, false)).toBe(true);
-    // --no-statusline refuses it even under --all, which is the whole reason
-    // the flag carries no default.
-    expect(wantsStatusline(false, true)).toBe(false);
-  });
-});
-
-describe("selectAdapters", () => {
-  it("defaults to every tool actually present", () => {
-    const adapters = [fake("claude", true), fake("cursor", false)];
-
-    expect(selectAdapters([], context, adapters).map(a => a.id))
-      .toEqual(["claude"]);
+  it("grants a dry run without touching the remembered flag", async () => {
+    // A dry run describes the most complete thing an answered run would do, and
+    // writes nothing — including the refusal file.
+    expect(await resolveStatuslineConsent(context, true, true)).toBe(true);
+    expect(() => readFileSync(userConfig(), "utf8")).toThrow();
   });
 
-  it("takes named platforms regardless of detection", () => {
-    // Pairs with the executor's `force`: naming a target is a deliberate act.
-    const adapters = [fake("claude", true), fake("cursor", false)];
-
-    expect(selectAdapters(["cursor"], context, adapters).map(a => a.id))
-      .toEqual(["cursor"]);
-  });
-
-  it("rejects an unknown platform by name", () => {
-    expect(() => selectAdapters(["nope"], context, [fake("claude", true)]))
-      .toThrow(/unknown platform/);
-  });
-
-  it("ships every target", () => {
-    expect([...ADAPTERS].map(a => a.id).sort()).toEqual([
-      "claude",
-      "cursor",
-      "ohmypi",
-      "opencode",
-    ]);
-  });
-});
-
-describe("buildJobs", () => {
-  it("expands dependencies for every target except Claude", () => {
-    // Claude's CLI installs its own; expanding here would record undos for
-    // plugins it manages.
-    const jobs = buildJobs(
-      [fake("claude", true), fake("ohmypi", true)],
-      { user: ["vwf"] },
-      repoRoot,
-      () => {},
+  it("clears a refusal remembered by an older version", async () => {
+    // The reachable half of this gate now that `--all` is gone: nothing but
+    // `--statusline` can ask for an install, so the ask branches never fire, but
+    // a machine still carrying `autoConfigure: false` from a version where
+    // `--all` installed the bar has to be able to change its mind.
+    mkdirSync(dirname(userConfig()), { recursive: true });
+    writeFileSync(
+      userConfig(),
+      `${JSON.stringify({ autoConfigure: false })}\n`,
     );
-
-    expect(jobs[0]?.[1].user).toEqual(["vwf"]);
-    expect(jobs[1]?.[1].user).toContain("devtools");
-  });
-
-  it("keeps a url-sourced plugin for Claude alone", () => {
-    // This test used to assert the opposite for ohmypi, and that is exactly
-    // how the bug shipped: `--all` requested the url-sourced plugin on every
-    // marketplace target, and it failed on two of them. Only Claude's
-    // marketplace accepts a `{source: "url"}` entry and fetches it. Cursor's
-    // manifest is generated from local plugins only; Oh-My-Pi's takes a URL
-    // string, parses it, and then silently drops the entry — `omp plugin
-    // discover` listed 13 of 14 with nothing saying why; OpenCode has no
-    // marketplace at all and copies a rendered bundle that does not exist.
-    //
-    // `elsewhere` is the fixture standing in for andrej-karpathy-skills, which
-    // is the plugin the bug actually shipped against.
-    const jobs = buildJobs(
-      [
-        fake("claude", true),
-        fake("cursor", true),
-        fake("ohmypi", true),
-        fake("opencode", true),
-      ],
-      { user: ["elsewhere"] },
-      urlSourcedRoot(),
-      () => {},
-    );
-
-    expect(jobs[0]?.[1].user).toEqual(["elsewhere"]);
-    for (const job of jobs.slice(1)) {
-      expect(job[1].user, job[0].id).toEqual([]);
-    }
-  });
-
-  it("states a skipped plugin once, naming every target that skipped it", () => {
-    // One fact, not three: the same sentence per target reads as three
-    // separate problems.
-    const notes: string[] = [];
-    buildJobs(
-      [fake("cursor", true), fake("ohmypi", true), fake("opencode", true)],
-      { user: ["elsewhere"] },
-      urlSourcedRoot(),
-      message => notes.push(message),
-    );
-
-    const skips = notes.filter(n => n.includes("elsewhere"));
-    expect(skips).toHaveLength(1);
-    expect(skips[0]).toContain("cursor, ohmypi and opencode");
-  });
-});
-
-describe("statuslineSelected", () => {
-  const claudeOnly = [fake("claude", true)];
-  const ohmypiOnly = [fake("ohmypi", true)];
-  const openCodeOnly = [fake("opencode", true)];
-  const cursorOnly = [fake("cursor", true)];
-
-  it("resolves per target: three installs of the same information", () => {
-    // A script bar for Claude, `omp config` for Oh-My-Pi, a TUI plugin for
-    // OpenCode — so a run targeting all three gets all three.
-    expect(statuslineSelected(true, true, claudeOnly, () => {}))
-      .toEqual({ claude: true, ohmypi: false, opencode: false });
-    expect(statuslineSelected(true, true, ohmypiOnly, () => {}))
-      .toEqual({ claude: false, ohmypi: true, opencode: false });
-    expect(statuslineSelected(true, true, openCodeOnly, () => {}))
-      .toEqual({ claude: false, ohmypi: false, opencode: true });
-    expect(
-      statuslineSelected(
-        true,
-        true,
-        [...claudeOnly, ...ohmypiOnly, ...openCodeOnly],
-        () => {},
-      ),
-    )
-      .toEqual({ claude: true, ohmypi: true, opencode: true });
-  });
-
-  it("skips a target set with no status surface at all", () => {
-    // Cursor is the last one exposing none, so there is nothing to install.
-    expect(statuslineSelected(true, false, cursorOnly, () => {}))
-      .toEqual({ claude: false, ohmypi: false, opencode: false });
-  });
-
-  it("notes the skip only when the flag was explicit", () => {
-    const noted: string[] = [];
-    statuslineSelected(true, false, cursorOnly, m => noted.push(m));
-    expect(noted).toEqual([]);
-
-    statuslineSelected(true, true, cursorOnly, m => noted.push(m));
-    expect(noted[0]).toMatch(/Cursor/);
-  });
-
-  it("says nothing when one of the three surfaces is reachable", () => {
-    const noted: string[] = [];
-    statuslineSelected(true, true, ohmypiOnly, m => noted.push(m));
-    expect(noted).toEqual([]);
-  });
-
-  it("says nothing at all when it was not wanted", () => {
-    const noted: string[] = [];
-    expect(statuslineSelected(false, true, claudeOnly, m => noted.push(m)))
-      .toEqual({ claude: false, ohmypi: false, opencode: false });
-    expect(noted).toEqual([]);
-  });
-});
-
-describe("revertsStatusline", () => {
-  // The install-side default is `--all`; there is no `--all` on the way out, so
-  // a plain `--uninstall` used to leave every statusline surface installed.
-  it("undoes a surface this tool installed, with no flag given", () => {
-    expect(revertsStatusline(true, false, false, () => true)).toBe(true);
-  });
-
-  it("leaves a surface alone when nothing installed it", () => {
-    expect(revertsStatusline(true, false, false, () => false)).toBe(false);
-  });
-
-  it("refuses outright on --no-statusline, receipt or not", () => {
-    expect(revertsStatusline(true, true, true, () => true)).toBe(false);
-  });
-
-  it("never strips a surface the run does not target", () => {
-    // `--uninstall --platform claude` must not remove the Oh-My-Pi bar.
-    expect(revertsStatusline(false, true, false, () => true)).toBe(false);
-  });
-
-  it("does not consult the receipt when the flag already asked", () => {
-    let asked = false;
-    revertsStatusline(true, true, false, () => {
-      asked = true;
-      return false;
+    writeSettings({
+      statusLine: { type: "command", command: "~/bin/my-own-bar" },
     });
-    expect(asked).toBe(false);
+
+    expect(await resolveStatuslineConsent(context, true, false)).toBe(true);
+    expect(JSON.parse(readFileSync(userConfig(), "utf8")))
+      .not
+      .toHaveProperty("autoConfigure");
+  });
+
+  it("keeps the user's other statusline settings when clearing", async () => {
+    mkdirSync(dirname(userConfig()), { recursive: true });
+    writeFileSync(
+      userConfig(),
+      `${JSON.stringify({ autoConfigure: false, projectName: "mine" })}\n`,
+    );
+
+    await resolveStatuslineConsent(context, true, false);
+
+    expect(JSON.parse(readFileSync(userConfig(), "utf8")))
+      .toEqual({ projectName: "mine" });
+  });
+
+  it("skips without asking when a refusal stands and the flag is absent", async () => {
+    mkdirSync(dirname(userConfig()), { recursive: true });
+    writeFileSync(
+      userConfig(),
+      `${JSON.stringify({ autoConfigure: false })}\n`,
+    );
+    writeSettings({
+      statusLine: { type: "command", command: "~/bin/my-own-bar" },
+    });
+
+    expect(await resolveStatuslineConsent(context, false, false)).toBe(false);
+    expect(logged.join("\n")).toContain("--statusline");
+  });
+
+  it("refuses rather than guessing when it cannot ask", async () => {
+    // `undefined` is the refusal the caller turns into a non-zero exit. Under
+    // vitest stdin is not a TTY, which is exactly the unattended case.
+    writeSettings({
+      statusLine: { type: "command", command: "~/bin/my-own-bar" },
+    });
+
+    expect(await resolveStatuslineConsent(context, false, false))
+      .toBeUndefined();
+  });
+
+  it("does not treat our own bar as a conflict", async () => {
+    // Ownership, not existence: on the second run what is sitting there is the
+    // first run's output, and asking about it would prompt on every re-run.
+    writeSettings({
+      statusLine: {
+        type: "command",
+        command: "${HOME}/.claude/scripts/statusline",
+      },
+    });
+
+    expect(await resolveStatuslineConsent(context, false, false)).toBe(true);
   });
 });

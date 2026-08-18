@@ -44,6 +44,22 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
+// The version of THIS script, printed by `--version`.
+//
+// It is here rather than read from a package.json because the installed copy has
+// no package.json beside it: it is one standalone file at
+// ~/.claude/scripts/statusline. Before this constant existed, `ai-plugins
+// --version` reported the running npm package's version for the statusline —
+// which under `pnpx` is whatever was just downloaded, so the version actually on
+// disk was never shown and a stale bar was invisible.
+//
+// Rewritten by the `i:release` bump step, alongside package.json's `version`.
+// **Bump-time, not build-time**: this file is a committed static asset, and
+// stamping it during the build would split what is committed from what is
+// published. `i:test` asserts the two agree, which is the only thing that makes a
+// hand-synced second copy of a version number safe.
+const VERSION = "4.3.3";
+
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
 
@@ -737,10 +753,18 @@ function renderSubagents(d) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Entry — the --refresh-spend child fetches and exits; everything else is a
-// render, routed by payload shape from stdin.
+// Entry — --version answers and exits, the --refresh-spend child fetches and
+// exits; everything else is a render, routed by payload shape from stdin.
+//
+// --version is checked FIRST and prints nothing but the number. The CLI reads
+// this to tell what is installed from what it merely bundles, and it recognises
+// the answer by its shape — a script old enough to lack this flag ignores it and
+// renders a status bar, which is not a version and is what "unknown (predates
+// self-reporting)" reports.
 // ─────────────────────────────────────────────────────────────────────────────
-if (process.argv.includes("--refresh-spend")) {
+if (process.argv.includes("--version")) {
+  process.stdout.write(`${VERSION}\n`);
+} else if (process.argv.includes("--refresh-spend")) {
   refreshSpend().catch(() => { /* cache untouched; the next stale render retries */ });
 } else {
   let buf = "";

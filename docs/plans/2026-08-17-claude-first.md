@@ -1,6 +1,6 @@
 # Plan: Claude-first — retire the renderer, the multi-target trees, and the multi-target CLI
 
-**Status: proposed — awaiting approval. Nothing in this plan is built.**
+**Status: approved — in progress.**
 
 **Sequencing: this lands before the stackgen plan
 ([2026-08-17-stackgen.md](./2026-08-17-stackgen.md)) is implemented** — every

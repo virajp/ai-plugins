@@ -24,11 +24,11 @@ identical to starting from nothing, this guide links
 ### 1. Install the plugin that owns each language first
 
 ```sh
-pnpx @askviraj/ai-plugins --all \
-  --user typescript --user datastore --user design-tools
+claude plugin install vwf@virajp-plugins \
+  typescript@virajp-plugins datastore@virajp-plugins design-tools@virajp-plugins
 ```
 
-The flag surface and scopes are the same as the greenfield run —
+The commands and scopes are the same as the greenfield run —
 [install the plugins](../greenfield/single-repo.md#install-the-plugins) — but
 the ordering matters more here, because the repo already has languages in it. A
 language no installed stack plugin declares is recorded honestly by detection

@@ -27,29 +27,36 @@ tradeoff is stated in the skill itself.
 re-listing of
 [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills),
 and a `vwf` dependency — until it was folded into `vwf` itself. The skill is now
-vendored under `templates/vwf/skills/karpathy-guidelines/`. There is nothing to
+vendored under `plugins/vwf/skills/karpathy-guidelines/`. There is nothing to
 install by name.
 
 ## Why it was vendored
 
-A url-sourced plugin has no rendered bundle in this repo, and only Claude's
-marketplace can fetch a plugin hosted elsewhere. Cursor's manifest is generated
-from local plugins alone, Oh-My-Pi takes the URL and then silently drops the
-entry, and OpenCode has no marketplace at all — its adapter copies a rendered
-bundle, and there was none to copy. So installing `vwf` on three of the four
-targets left the guidelines it assumes are on simply absent.
+At the time, this repo authored plugins once and rendered a separate tree per
+agent, and only Claude's marketplace could fetch a plugin hosted at a URL:
+Cursor's manifest was generated from local plugins alone, Oh-My-Pi took the URL
+and then silently dropped the entry, and OpenCode had no marketplace at all —
+its adapter copied a rendered bundle, and there was none to copy. So installing
+`vwf` on three of the four targets left the guidelines it assumes are on simply
+absent.
 
 That is the same failure that got [mempalace](./mempalace.md) vendored, and the
-remedy is the same. This repo used to argue the gap was tolerable here —
+remedy was the same. This repo used to argue the gap was tolerable here —
 guidelines missing on one target degrade quality, whereas a missing memory layer
 breaks `/vwf:handoff` outright — but the reasoning rested on it being *one*
-target, which was never true: only Claude ever had it.
+target, which was never true: only Claude ever had it. The four-target renderer
+is retired now — this repo is Claude-first, and another agent is served by the
+copy-paste prompt in readme.md's [Other tools](../../readme.md#other-tools)
+section rather than a rendered tree — but the vendoring decision outlives the
+architecture that motivated it: it settled a licensing question a dependency
+edge does not, and a plain `url`-sourced dependency would still leave the
+guidelines outside this repo's own review.
 
 Provenance, the version taken, the licence position and the resync policy are
-recorded in `templates/vwf/vendor/andrej-karpathy-skills/`, which ships in every
-rendered bundle. It is a deliberate one-time fork, not a mirror and not a
-submodule — nothing automated watches upstream, so the **Version taken** row is
-the only thing that makes drift detectable.
+recorded in `plugins/vwf/vendor/andrej-karpathy-skills/`, which ships with the
+plugin. It is a deliberate one-time fork, not a mirror and not a submodule —
+nothing automated watches upstream, so the **Version taken** row is the only
+thing that makes drift detectable.
 
 **On the licence:** upstream declares MIT in its skill frontmatter and its
 `plugin.json`, and publishes no licence text at all. Both declarations are
@@ -61,8 +68,9 @@ honest note.
 
 The skill ships with `vwf` and installs with it:
 
-```bash
-pnpx @askviraj/ai-plugins --user vwf
+```sh
+claude plugin marketplace add virajp/ai-plugins
+claude plugin install vwf@virajp-plugins
 ```
 
 It is **doctrine**: it applies to how work is done rather than being invoked for
