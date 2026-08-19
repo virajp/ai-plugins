@@ -1,17 +1,21 @@
 # What lands on disk
 
-Two installers, and it is worth being clear about which puts what where —
-because they used to be one.
+Two writers, and it is worth being clear about which puts what where.
 
-| Installed by                | What                                                    |
+| Written by                  | What                                                    |
 | --------------------------- | ------------------------------------------------------- |
 | `claude plugin install`     | the plugins: skills, agents, hooks, MCP and LSP servers |
 | `pnpx @askviraj/ai-plugins` | the statusline, its caps hook, and graphify's wiring    |
 
+The CLI's plugin flags (`--all`, `--user`, `--project`) do not add a third
+writer: they **drive** `claude plugin` and never edit Claude's settings
+themselves — Claude keeps bookkeeping beside what it writes, and hand-editing
+would strand the two apart.
+
 ## The plugins
 
-Claude Code does this itself. You register the marketplace once and install by
-name:
+Claude Code writes these itself, whether you run its commands or let the CLI
+sequence them. You register the marketplace once and install by name:
 
 ```sh
 claude plugin marketplace add virajp/ai-plugins
@@ -82,10 +86,11 @@ blocking at first use, which is the honest place for it.
 
 ## Receipts
 
-Every install writes a receipt recording **what was there before**, so an
-uninstall restores rather than guesses. That is the difference between removing
-the keys we know we set — safe only while that inference holds — and putting
-your actual prior configuration back.
+The statusline install writes a receipt recording **what was there before**, so
+an uninstall restores rather than guesses. A plugin install writes none —
+Claude's own settings are the record, and `--uninstall` reads them live. That is
+the difference between removing the keys we know we set — safe only while that
+inference holds — and putting your actual prior configuration back.
 
 `--uninstall` reads those receipts, and also reads the receipts an **older,
 multi-target install** left behind, so a machine carrying the discontinued

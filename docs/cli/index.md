@@ -1,15 +1,15 @@
 # The installer CLI
 
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins) is
-a small CLI with three jobs: install the **statusline**, wire up **graphify**,
-and **remove** what this toolkit put on your machine.
+a small CLI with four jobs: install **plugins**, install the **statusline**,
+wire up **graphify**, and **remove** what this toolkit put on your machine.
 
 ```sh
-pnpx @askviraj/ai-plugins --statusline
+pnpx @askviraj/ai-plugins --all --statusline
 ```
 
-It does **not** install plugins. Those come from Claude Code's own commands,
-reading this repo from GitHub:
+The plugin half is a thin wrapper: it drives Claude Code's own commands, reading
+this repo from GitHub, and they work just as well directly:
 
 ```sh
 claude plugin marketplace add virajp/ai-plugins
@@ -35,7 +35,7 @@ Because no plugin mechanism can install a status bar. A Claude plugin can ship
 skills, agents, hooks and MCP servers; the status line is a key in the user's
 own `settings.json` pointing at an executable. Nothing in the plugin format
 reaches it, so it needs an installer of its own — and that installer is the one
-thing this package still is.
+job this package cannot hand to `claude plugin install`.
 
 ## Upgrading
 
@@ -58,9 +58,10 @@ pnpx @askviraj/ai-plugins --statusline   # safe to re-run; this is the upgrade
 ```
 
 There is **no `--upgrade` flag**, and its absence is deliberate. It only ever
-replayed a receipt to do what re-running the install already did — and now that
-plugin content has left the npm package entirely, there is nothing for it to
-replay.
+replayed a receipt to do what re-running the install already did — and plugin
+content has left the npm package entirely, so there is nothing for it to replay.
+Re-requesting an installed plugin reports it as satisfied and points at
+`claude plugin update`; it never upgrades behind your back.
 
 `--version` tells you what you actually have: this CLI's version, the version of
 the statusline **on disk** (obtained by running the installed script, not by
@@ -70,8 +71,8 @@ against `main`.
 ## After installing
 
 Run **`/vwf:doctor`**. Nothing is gated at install time any more — the CLI used
-to refuse an install when a required binary was missing, and that gate retired
-with the plugin installer.
+to refuse an install when a required binary was missing, and that gate stayed
+retired when the plugin flags returned.
 
 Doctor is the nearest replacement but not an equivalent one: it **blocks** on a
 missing `mise` or `graphify`, and `/vwf:setup` and `/vwf:execute` halt on

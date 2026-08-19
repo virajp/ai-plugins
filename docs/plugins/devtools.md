@@ -33,10 +33,11 @@ name for a vwf user.
 ### There is no install-time binary gate any more
 
 A plugin's `requires:` list — the hard install gate this section used to
-describe — is retired along with `--all` and `--force`. A missing binary no
-longer fails the install; it surfaces instead as a `/vwf:doctor` **blocking**
-finding, and `/vwf:setup` and `/vwf:execute` both halt on one. Run `/vwf:doctor`
-after installing to see what your machine is missing.
+describe — is retired, and did not come back with the installer's `--all`,
+`--user` and `--project` flags. A missing binary no longer fails the install; it
+surfaces instead as a `/vwf:doctor` **blocking** finding, and `/vwf:setup` and
+`/vwf:execute` both halt on one. Run `/vwf:doctor` after installing to see what
+your machine is missing.
 
 `mise` is the one tool this plugin cannot work without — `scaffold` writes mise
 config and the whole task library is mise tasks. `doppler`, `dprint`, `eslint`,

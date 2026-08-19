@@ -62,15 +62,18 @@ import {
 } from "node:path";
 import { createInterface } from "node:readline/promises";
 import {
-  getPath,
-  readJsonc,
-} from "./config/json.ts";
+  claudeEnv,
+  installedPlugins,
+  marketplaceRegistered,
+  projectSettingsFile,
+  readSettings,
+  userSettingsFile,
+} from "./claude-settings.ts";
 import type {
   Context,
   RunOptions,
 } from "./context.ts";
 import {
-  claudeConfigDir,
   hasBin,
   MARKETPLACE_NAME,
 } from "./context.ts";
@@ -215,10 +218,7 @@ function userItems(context: Context, receiptDir: string): Item[] {
   const items: Item[] = [];
   const settings = readSettings(userSettingsFile(context));
 
-  if (
-    getPath(settings, ["extraKnownMarketplaces", MARKETPLACE_NAME])
-      !== undefined
-  ) {
+  if (marketplaceRegistered(settings)) {
     items.push({
       id: "marketplace",
       level: "user",
@@ -524,10 +524,7 @@ export function removeItem(item: Item, options: RunOptions): Outcome {
         // has to be handed the same one rather than Claude's default.
         {
           cwd: item.removal.cwd ?? context.cwd,
-          env: {
-            ...process.env,
-            CLAUDE_CONFIG_DIR: claudeConfigDir(context.home),
-          },
+          env: claudeEnv(context),
         },
       );
 
@@ -672,42 +669,9 @@ function removeIfEmpty(path: string): void {
 // Reading the machine
 // ---------------------------------------------------------------------------
 
-function userSettingsFile(context: Context): string {
-  return join(claudeConfigDir(context.home), "settings.json");
-}
-
-function projectSettingsFile(context: Context): string {
-  return join(context.cwd, ".claude", "settings.json");
-}
-
-function readSettings(path: string): Record<string, unknown> | undefined {
-  if (!existsSync(path)) {
-    return undefined;
-  }
-  return readJsonc<Record<string, unknown>>(readFileSync(path, "utf8"));
-}
-
-/**
- * The plugins enabled from our marketplace, by bare name.
- *
- * Claude keys these `<name>@<marketplace>`, and only entries carrying our
- * marketplace are ours to offer — a plugin the user installed from somewhere
- * else has nothing to do with this toolkit.
- */
-export function installedPlugins(
-  settings: Record<string, unknown> | undefined,
-): string[] {
-  const enabled = getPath(settings, ["enabledPlugins"]);
-  if (typeof enabled !== "object" || enabled === null) {
-    return [];
-  }
-  const suffix = `@${MARKETPLACE_NAME}`;
-  return Object
-    .keys(enabled as Record<string, unknown>)
-    .filter(key => key.endsWith(suffix))
-    .map(key => key.slice(0, -suffix.length))
-    .sort();
-}
+// The settings readers moved to `claude-settings.ts` when the install path
+// returned; re-exported so the enumeration's callers keep one import site.
+export { installedPlugins } from "./claude-settings.ts";
 
 /**
  * Does git track this path in the checkout the run is inside?

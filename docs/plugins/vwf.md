@@ -35,8 +35,8 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
 ## Prerequisites
 
-`vwf` shells out to a few external tools. Install them first — the installer
-checks for each and prints the exact command for anything missing.
+`vwf` shells out to a few external tools. Install them first — nothing checks
+them at install time, and the table below gives the command for each.
 
 | Tool            | Required?    | Why                                             | Install                               |
 | --------------- | ------------ | ----------------------------------------------- | ------------------------------------- |
@@ -51,10 +51,11 @@ checks for each and prints the exact command for anything missing.
 regardless, so the first thing to run afterwards is **`/vwf:doctor`** — it
 reports a missing one as a **blocking** finding, and both `/vwf:setup` and
 `/vwf:execute` halt on one. An earlier installer refused the install outright
-and printed the command to fix each; that gate retired with it, so the failure
-now arrives at first use rather than at install. `rtk` is the one whose
-behaviour is softer still — the hook entry is guarded, so a `vwf` without `rtk`
-degrades (with a `/vwf:doctor` warning) instead of blocking every Bash call.
+and printed the command to fix each; that gate did not come back when the
+installer's plugin flags did, so the failure now arrives at first use rather
+than at install. `rtk` is the one whose behaviour is softer still — the hook
+entry is guarded, so a `vwf` without `rtk` degrades (with a `/vwf:doctor`
+warning) instead of blocking every Bash call.
 
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it

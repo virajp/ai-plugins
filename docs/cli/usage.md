@@ -1,15 +1,22 @@
 # The installer CLI — usage
 
-`@askviraj/ai-plugins` installs the **statusline**, wires up **graphify**, and
-**removes** what this toolkit put on your machine. It installs no plugins; see
-[Installing plugins](#installing-plugins) for those.
+`@askviraj/ai-plugins` installs **plugins** (by driving Claude Code's own
+commands), installs the **statusline**, wires up **graphify**, and **removes**
+what this toolkit put on your machine.
 
 ```sh
+# Install the default plugin set (vwf; devtools arrives as its dependency)
+pnpx @askviraj/ai-plugins --all
+
+# Install plugins by name, at either scope
+pnpx @askviraj/ai-plugins --user vwf --user typescript
+pnpx @askviraj/ai-plugins --project vwf
+
 # Install the statusline (the main bar and the subagent panel), and wire graphify
 pnpx @askviraj/ai-plugins --statusline
 
 # See what a run would do, without writing anything
-pnpx @askviraj/ai-plugins --statusline --dry-run
+pnpx @askviraj/ai-plugins --all --dry-run
 
 # List everything the toolkit installed, and remove what you do not deselect
 pnpx @askviraj/ai-plugins --uninstall
@@ -19,27 +26,32 @@ The examples use `pnpx`; if you do not use pnpm, `npx` works the same.
 
 ## The flags
 
-| Flag              | Does                                                                       |
-| ----------------- | -------------------------------------------------------------------------- |
-| `--statusline`    | Install the statusline — **and consent** to replacing one already there    |
-| `--no-statusline` | Skip the statusline                                                        |
-| `--uninstall`     | List everything installed and remove what you do not deselect              |
-| `--dry-run`       | Show the full diff without writing anything                                |
-| `--force`         | Act even though Claude Code is not on `PATH`                               |
-| `-v`, `--version` | This CLI, the statusline on disk, and each plugin's version against `main` |
-| `-h`, `--help`    | The usage text                                                             |
+| Flag               | Does                                                                       |
+| ------------------ | -------------------------------------------------------------------------- |
+| `--statusline`     | Install the statusline — **and consent** to replacing one already there    |
+| `--no-statusline`  | Skip the statusline                                                        |
+| `--all`            | Install the default plugin set (`vwf`, user scope)                         |
+| `--user <name>`    | Install a plugin at user scope; repeatable                                 |
+| `--project <name>` | Install a plugin at project scope, for this repo only; repeatable          |
+| `--uninstall`      | List everything installed and remove what you do not deselect              |
+| `--dry-run`        | Show the full diff without writing anything                                |
+| `--force`          | Act although Claude Code is not on `PATH` — statusline only                |
+| `-v`, `--version`  | This CLI, the statusline on disk, and each plugin's version against `main` |
+| `-h`, `--help`     | The usage text                                                             |
 
 **An invocation that installs nothing prints the help and exits 1.** A bare run
 is the common case there.
 
 Parsing is strict, so a flag that no longer exists reports itself by name rather
-than being silently ignored. If you have `--all`, `--user`, `--project`,
-`--platform` or `--upgrade` in a script, that script is from before the
-Claude-first release; see [Installing plugins](#installing-plugins).
+than being silently ignored. If you have `--platform` or `--upgrade` in a
+script, that script is from before the Claude-first release; upgrading is
+Claude's own `claude plugin update`.
 
 ## Installing plugins
 
-Plugins are installed by Claude Code itself, from this repo on GitHub:
+The plugin flags are a thin wrapper over Claude Code's own commands — the CLI
+sequences them and skips what is already installed, and this is all `--user vwf`
+runs:
 
 ```sh
 # Once
@@ -49,14 +61,23 @@ claude plugin marketplace add virajp/ai-plugins
 claude plugin install vwf@virajp-plugins
 ```
 
-Add `--scope project` to either command to keep the marketplace or the plugin to
-one repo instead of your user profile.
+Either route works; the marketplace is this repo's `main` in both. The CLI never
+edits Claude's settings itself — Claude's commands own that bookkeeping — so it
+needs `claude` on `PATH`, and `--force` cannot substitute for it.
+
+`--project` keeps a plugin to one repo (recorded in the repo's
+`.claude/settings.json`, resolved from the directory you run in) instead of your
+user profile. A name requested at both scopes installs once, at project scope.
 
 **Installing `vwf` pulls in `devtools` automatically** — Claude resolves plugin
 dependencies natively (2.1.143 and later), from the same marketplace, at the
-same scope. That is what replaced the old `--all` flag; there is no default set
-any more, and every other plugin is installed by name because which language,
-cloud and capability plugins you want is a question about your product.
+same scope. That is why `--all` is just `vwf`; every other plugin is installed
+by name because which language, cloud and capability plugins you want is a
+question about your product.
+
+An already-installed plugin is reported as satisfied, never auto-updated — see
+[Upgrading](#upgrading). No receipt is written for a plugin install: Claude's
+own settings are the record, and `--uninstall` reads them live.
 
 Restart your agent afterwards so the skills, hooks and MCP servers load.
 
@@ -73,8 +94,9 @@ there is no separately published artifact to fall behind.
 ## Nothing is gated at install time
 
 The CLI used to refuse an install when a plugin's required binaries were
-missing, and print the command to fix each one. **That gate is gone**, along
-with the plugin installer it belonged to.
+missing, and print the command to fix each one. **That gate is gone** and did
+not return with the plugin flags: an install cannot now fail for a reason you
+did not ask about.
 
 So after installing, run:
 
