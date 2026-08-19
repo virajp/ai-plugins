@@ -1,6 +1,8 @@
 # Plan: Claude-first — retire the renderer, the multi-target trees, and the multi-target CLI
 
-**Status: approved — in progress.**
+**Status: landed** — shipped as v5.0.0 (the cutover) and v5.1.0 (plugin installs
+restored to the CLI as a thin wrapper over `claude plugin`, a post-landing
+correction: removing them was an unwanted capability cut).
 
 **Sequencing: this lands before the stackgen plan
 ([2026-08-17-stackgen.md](./2026-08-17-stackgen.md)) is implemented** — every
