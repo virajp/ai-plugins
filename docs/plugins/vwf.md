@@ -571,6 +571,14 @@ UI slice on its UX contract; a stack no plugin defines supplies none of those,
 so a run against it would lose every guarantee *while reporting itself healthy*.
 Many stacks are supported — every one of them defined by a plugin.
 
+The one second door is the **materialized escape**: a materializing adapter (the
+[`stackgen`](./stackgen.md) plugin) can land a template in the repo-owned
+`.agents/` tree through consent-gated, reviewer-gated generation, and a language
+whose pin carries that template's emitted `language_facts` (LSP provision, mise
+tool, manifest) is *known* — doctor verifies against the facts instead of a
+language plugin. A token with neither stays blocking; nothing about the escape
+re-opens free text.
+
 Adding a stack option means adding a template file **to a plugin**, never to
 vwf. One entry per type today is a starting point, not a default.
 

@@ -14,8 +14,14 @@ stack vocabulary:
 - **LSP** — the row names a plugin. Check it is active
   (`claude plugin list --scope project`, falling back to user scope). Missing →
   finding, with `/plugin` as the remedy. Row says `none` → report *no LSP
-  available in this marketplace* and move on. **No installed plugin declares the
-  token at all** → report **unknown language** as a **blocking** finding: nothing
+  available in this marketplace* and move on. **No installed plugin declares
+  the token, but the project's pin resolves to a materialized template whose
+  payload carries `language_facts` for it** (the materialized escape,
+  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) → the language is
+  **known**: verify against those facts instead — the LSP per how the facts say
+  it is provided, the mise tool and manifest per the fact values, `n/a`
+  accepted silently as an answer. **No installed plugin declares the
+  token and no materialized facts cover it** → report **unknown language** as a **blocking** finding: nothing
   else can be checked for it, and a stack vwf has no template for is one it
   cannot plan or build against. The remedy is two lines — install the stack
   plugin that declares the language, or write one
