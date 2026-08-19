@@ -603,6 +603,18 @@ the doc it applies to and waived under `enforcement.rules`
 (`baseline/<rule>[/<unit>]`) — the blueprint reviewers flag either half missing,
 and the execute reviewers enforce the rules against the code itself.
 
+Beside the baseline sits the **principles catalog** (`assets/principles/` —
+thirteen entries: KISS, YAGNI, DRY and its limits, the five SOLID principles,
+information hiding, design by contract, idempotency, explicit error semantics,
+least privilege). The baseline is enforced contract; the catalog is the
+**judgment** applied where the baseline is silent. Every entry has the same
+fixed shape — definition, smells, how a reviewer verifies it, application
+patterns, and **when not to apply it**, the last section being the
+anti-rubber-stamp defense: a principle recited without its limits is a slogan.
+Reviewers may cite an entry to make a judgment-call finding contestable rather
+than taste, and the catalog is what the `stackgen` plugin instantiates when it
+generates stack skills for a technology no curated pack covers.
+
 Alongside it sits the **delivery-pipeline contract**
 (`conventions.md#pipeline`): three canonical environments — `development` (the
 developer's machine, any branch, never deployed), `staging` (testers only, built
