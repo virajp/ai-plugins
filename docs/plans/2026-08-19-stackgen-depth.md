@@ -1,6 +1,7 @@
 # Plan: stackgen depth — topic bars, framework ruling, coverage gate
 
-**Status: proposed — awaiting approval. Nothing in this plan is built.**
+**Status: approved 2026-08-20 — ready to execute; nothing is built yet.
+Execution follows the Execution section below.**
 
 Companion to [the stackgen plan](2026-08-19-stackgen.md) (Phases 1–4 executed
 and revised to `.claude/`-direct on branch `worktree-stackgen`). The Rust
@@ -157,6 +158,46 @@ whichever components supply each topic.
 7. **Docs ship with the change**: `docs/plugins/stackgen.md` (kinds/depth +
    component-model sections), CLAUDE.md rows if touched, and the stackgen plan
    doc's decision table gains a pointer to this plan.
+
+## Execution
+
+**Starting point.** This plan's artifacts exist only on branch
+`worktree-stackgen`. Enter the existing worktree at `.claude/worktrees/stackgen`
+(EnterWorktree with `path`, or work there directly); if that worktree is gone,
+recreate it from the `worktree-stackgen` branch — and only if the branch has
+already merged, branch fresh from `main`. Verify the baseline before starting:
+`mise run plugins:check` and `mise run plugins:marketplace --check` must pass,
+and `git log` must show the stackgen commits through
+`docs: settle component-granular packs…`.
+
+**Orchestration — subagents by default.** The orchestrator holds the plan and
+the gates; the reading and writing runs in subagents so their file loads never
+enter the orchestrator's context:
+
+- **Steps 1–4 (doctrine edits)**: one general-purpose subagent per step, given
+  the exact files to edit and the relevant plan sections verbatim; the
+  orchestrator reviews the diff, runs `mise run plugins:check`, and commits. One
+  commit per step, conventional message, never `git add -A`.
+- **Step 5 (bar shaping)**: orchestrator-led — this is elicitation with the
+  user, one bar at a time, MCQ where options are closed. Ground each draft by
+  sending an Explore subagent to extract the real table of contents from
+  `plugins/datastore` and `plugins/gcp` first.
+- **Step 6 (Rust regeneration)**: fan out **one research+writer subagent per bar
+  topic**, component-scoped, each doing its own Context7 passes and returning
+  the drafted artifact plus its citation entries; the orchestrator assembles the
+  composition. Reviewer rounds are **fresh stateless dispatches** of the
+  `stackgen-skill-reviewer` contract (its agent file is the subagent's
+  instructions), capped at 4 rounds with residuals reported. The consent gate
+  and the landing are the orchestrator's.
+- **Step 7 (docs)**: delegate the sweep to the `docs-reconciler` agent; apply
+  its findings, same commit as the step that caused them where feasible.
+
+**Gates.** User gates at: step 5's bar elicitation (each bar), step 6's dry-run
+consent, and one final review of the whole run before any merge/push (merge only
+via the git workflow, behind its own approval). Everything else is autonomous.
+If context pressure forces a handoff, commit first — the plan doc plus the
+committed worktree is the resume state, and this section is the resume
+instruction.
 
 ## Backlog
 
