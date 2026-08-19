@@ -6,29 +6,38 @@ to a repo, and every write it makes is consent-gated and committed once.
 
 ## Inputs
 
-- The resolved source: a pack directory
-  (`${CLAUDE_PLUGIN_ROOT}/stacks/<axis>/<slug>/`), or the generator's output
-  (an in-memory pack in the same shape — `pack.yaml` fields including the
-  `kind`, conventions prose, artifacts).
+- The resolved composition — one source per component: a pack directory
+  (`${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/`), or the generator's
+  output for that component (an in-memory pack in the same shape —
+  `pack.yaml` fields including the classification, conventions prose,
+  artifacts).
 - The target repo root — the current repo by default; in a multi-repo
   product the caller may have named a member repo instead.
 
 ## Steps
 
-1. **Assemble the landing set**, structured by the source's kind
-   (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`) and closed to the output
-   vocabulary (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`):
+1. **Assemble the landing set** — the whole composition lands as one set,
+   structured by the bundle's kind
+   (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`), each component contributing
+   the slice its type owns (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`),
+   closed to the output vocabulary
+   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`):
 
-   - `.claude/stackgen/templates/<slug>.md` — the payload fields (including
-     `kind` and per-language `facts`) as frontmatter, the conventions prose
-     as body.
-   - `.claude/stackgen/citations/<slug>.yaml` — the research sources with
-     URLs and fetch dates (generation; a pack lists its provenance here).
+   - `.claude/stackgen/templates/<slug>.md` — **one entry for the bundle**:
+     the payload fields (including `kind`, the `components:` refs and
+     per-language `facts`) as frontmatter, the components' conventions
+     prose as body.
+   - `.claude/stackgen/citations/<component-slug>.yaml` — per component:
+     the research sources with URLs and fetch dates (generation; a pack
+     lists its provenance here).
    - `.claude/skills/<name>/…`, `.claude/agents/<name>.md`,
-     `.claude/rules/<name>.md` — copied verbatim from the source.
+     `.claude/rules/<name>.md` — copied verbatim from each component's
+     source.
    - `.claude/hooks/<name>.sh` — **pack-sourced scripts only**; generation
      never emits an executable.
-   - The lockfile update — every path above, with source and content hash.
+   - The lockfile update — every path above, with its component ref,
+     source and content hash. The per-component record is what lets sync
+     act on one component alone.
 
    **Never in the set**: `.mcp.json`, any LSP configuration, CLAUDE.md.
 

@@ -20,8 +20,9 @@ reads).
 ├── rules/<name>.md            # short path-scoped constraints
 └── stackgen/                  # bookkeeping — not discovered by Claude Code
     ├── lock.yaml              # the materialization record (below)
-    ├── templates/<slug>.md    # template payloads: frontmatter + conventions body
-    └── citations/<slug>.yaml  # per-entry research sources with URLs + fetch dates
+    ├── templates/<slug>.md    # template payloads: frontmatter (incl. the
+    │                          #   components: composition) + conventions body
+    └── citations/<slug>.yaml  # per-component research sources with URLs + fetch dates
 ```
 
 **Skills vs rules — one mechanism per content, never both.** Doctrine that
@@ -49,21 +50,24 @@ that is where the repo's CLAUDE.md and workspace wiring get reconciled.
 
 `.claude/stackgen/lock.yaml` is what makes ownership real. `.claude/` also
 holds the user's own hand-written skills, agents and rules, so nothing may
-be inferred from presence in the tree. One record per materialized entry:
+be inferred from presence in the tree. One record per materialized path,
+each carrying the **component** it landed for — the grain sync acts at:
 
 ```yaml
 entries:
-  - path: .claude/skills/go-chi-sqlc/SKILL.md
-    slug: generated/go-chi-sqlc # the template it landed with
-    source: generated # or pack/<axis>/<slug>@<version>
+  - path: .claude/skills/go/SKILL.md
+    slug: generated/go # the template (bundle) it landed with
+    component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
+    source: generated # or pack/<type>/<slug>@<version>
     hash: <content hash at landing>
 settings_keys: [] # exact settings.json keys stackgen added, with consent
 ```
 
 Rules the lockfile enforces:
 
-- **Sync diffs against the lockfile, mechanically**: unchanged / pack moved /
-  repo edited are hash comparisons, not inference.
+- **Sync diffs against the lockfile, mechanically, per component**:
+  unchanged / pack moved / repo edited are hash comparisons, not inference,
+  and one component's drift never churns the rest of its bundle.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.
