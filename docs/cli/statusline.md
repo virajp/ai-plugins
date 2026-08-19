@@ -1,7 +1,8 @@
 # The statusline, and why it lives in the CLI
 
 The statusline is **not a plugin**. It ships inside `@askviraj/ai-plugins`, and
-installing it is that CLI's main job.
+installing it is the job that CLI exists for — the plugin flags beside it only
+drive Claude's own commands.
 
 ```sh
 pnpx @askviraj/ai-plugins --statusline
@@ -18,7 +19,8 @@ A plugin is content a host tool loads: skills, agents, hooks, servers. A
 statusline is not content — it is a **line the host tool draws**, configured by
 a key in the user's own `settings.json` pointing at an executable. No key in the
 plugin manifest reaches it. So the statusline needs an installer of its own, and
-that installer is what this package now is, almost entirely.
+that installer is the part of this package nothing else can replace — the plugin
+flags beside it only sequence Claude's own commands.
 
 That is also why it is gated differently from everything else. Installing a
 plugin adds a file; configuring a statusline **displaces what the user already

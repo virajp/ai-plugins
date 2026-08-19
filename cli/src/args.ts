@@ -7,12 +7,12 @@
  * all and the last occurrence silently wins. `--user vwf --user devtools`
  * installed only `devtools` and said nothing about the name it dropped.
  *
- * **No flag here is repeatable any more**, because the three that were —
- * `--user`, `--project`, `--platform` — all named plugins or targets, and this
- * CLI installs neither. `parseArgs` stays regardless: it is the platform, it
- * costs no dependency, and it works on this package's `engines.node` floor
- * (verified on 18.20.8). Should a repeatable flag return, `multiple: true` is
- * already the answer.
+ * **`--user` and `--project` are repeatable again**, and `multiple: true` is
+ * the sanctioned mechanism — the array kind citty could not express, which is
+ * how `--user vwf --user devtools` once installed only `devtools` and said
+ * nothing about the name it dropped. `parseArgs` stays regardless: it is the
+ * platform, it costs no dependency, and it works on this package's
+ * `engines.node` floor (verified on 18.20.8).
  *
  * Two things citty did that the platform does not, both handled here:
  *
@@ -23,9 +23,8 @@
  *   no-request path has to print help anyway, so this was going to exist.
  *
  * `strict` is on, so an unknown flag is an **error naming itself** rather than
- * a silent no-op. That is what makes a retired flag legible instead of ignored,
- * and five have now been retired at once — `--all`, `--user`, `--project`,
- * `--platform` and `--force` — so the failure mode matters more than it did.
+ * a silent no-op. That is what makes a retired flag legible instead of ignored
+ * — which is how `--platform` and `--upgrade` now answer.
  */
 import { parseArgs } from "node:util";
 
@@ -49,6 +48,21 @@ const FLAGS: readonly FlagDoc[] = [
   },
   { display: "--no-statusline", description: "Skip the statusline" },
   {
+    display: "--all",
+    description:
+      "Install the default plugin set (vwf, user scope) via claude plugin "
+      + "install",
+  },
+  {
+    display: "--user <name>",
+    description: "Install a plugin at user scope; repeatable",
+  },
+  {
+    display: "--project <name>",
+    description: "Install a plugin at project scope, for this repo only; "
+      + "repeatable",
+  },
+  {
     display: "--uninstall",
     description:
       "List everything this toolkit installed and remove what you do not "
@@ -60,7 +74,7 @@ const FLAGS: readonly FlagDoc[] = [
   },
   {
     display: "--force",
-    description: "Act even though Claude Code is not on PATH",
+    description: "Act even though Claude Code is not on PATH (statusline only)",
   },
   {
     display: "-v, --version",
@@ -74,6 +88,9 @@ const FLAGS: readonly FlagDoc[] = [
 const OPTIONS = {
   statusline: { type: "boolean" },
   "no-statusline": { type: "boolean" },
+  all: { type: "boolean" },
+  user: { type: "string", multiple: true },
+  project: { type: "string", multiple: true },
   uninstall: { type: "boolean" },
   "dry-run": { type: "boolean" },
   force: { type: "boolean" },
@@ -87,11 +104,18 @@ export interface Args {
   /**
    * Tri-state: `true` asks, `false` refuses, `undefined` is unset.
    *
-   * Unset used to defer to `--all`; with `--all` retired there is nothing left
-   * to defer to, so unset now means "the run said nothing about the bar" — which
-   * on an install run is a request for the help text.
+   * Unset means "the run said nothing about the bar". A run that requested
+   * plugins proceeds without it — `--all` never installs the statusline, so
+   * every statusline install stays explicit — and a run that requested nothing
+   * at all gets the help text.
    */
   readonly statusline: boolean | undefined;
+  /** Install the default plugin set (`DEFAULT_INSTALL`) at user scope. */
+  readonly all: boolean;
+  /** Plugins to install at user scope, in the order given. */
+  readonly user: readonly string[];
+  /** Plugins to install at project scope, in the order given. */
+  readonly project: readonly string[];
   readonly uninstall: boolean;
   readonly dryRun: boolean;
   readonly force: boolean;
@@ -135,6 +159,9 @@ export function parse(argv: readonly string[]): Args {
   });
   return {
     statusline: statuslineFlag(values.statusline, values["no-statusline"]),
+    all: values.all === true,
+    user: values.user ?? [],
+    project: values.project ?? [],
     uninstall: values.uninstall === true,
     dryRun: values["dry-run"] === true,
     force: values.force === true,
@@ -167,7 +194,7 @@ export function renderUsage(): string {
     `  ${flag.display.padEnd(width)}  ${wrap(flag.description, width + 4)}`
   );
   return [
-    "Install the virajp-plugins statusline, and wire graphify for it",
+    "Install the virajp-plugins plugins and statusline, and wire graphify",
     "",
     "USAGE",
     "  ai-plugins [options]",
@@ -176,7 +203,8 @@ export function renderUsage(): string {
     ...rows,
     "",
     "PLUGINS",
-    "  Installed by Claude Code itself, from this repo on GitHub:",
+    "  Installed by driving Claude Code's own commands, from this repo on",
+    "  GitHub — the manual equivalent of --user vwf is:",
     "",
     "    claude plugin marketplace add virajp/ai-plugins",
     "    claude plugin install vwf@virajp-plugins",

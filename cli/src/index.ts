@@ -7,14 +7,14 @@
  * through and marks the output executable, which is what lets `package.json`'s
  * `bin` entry point straight at the bundle.
  *
- * **The CLI has three jobs**, down from "install the toolkit across four agents":
- * the Claude statusline, graphify's wiring, and an interactive `--uninstall`.
- * Plugins are installed by Claude Code itself from this repo on GitHub —
- * `claude plugin marketplace add virajp/ai-plugins` — so the four plugin
- * adapters, `--platform`, `--all` and the `requires:` dependency gate are all
- * gone, along with `plan.ts` and `executor.ts`. What is left is short enough that
- * `run` below *is* the orchestration: there is no plan to resolve, and one thing
- * to install.
+ * **The CLI has four jobs**: plugins, the Claude statusline, graphify's wiring,
+ * and an interactive `--uninstall`. Plugins are installed by **driving Claude
+ * Code's own commands** against this repo on GitHub —
+ * `claude plugin marketplace add virajp/ai-plugins` then `claude plugin
+ * install` per plugin (`install.ts`) — so the four plugin adapters, the payload
+ * copy, `--platform` and the `requires:` dependency gate stay gone, along with
+ * `plan.ts` and `executor.ts`. What is left is short enough that `run` below
+ * *is* the orchestration.
  *
  * Argument parsing lives in `args.ts`, on `node:util`'s `parseArgs`.
  */
@@ -44,6 +44,13 @@ import {
   PACKAGE_NAME,
 } from "./context.ts";
 import { setupGraphify } from "./graphify.ts";
+import type { InstallRequest } from "./install.ts";
+import {
+  executeInstall,
+  planInstall,
+  pluginsRequested,
+  resolveRequest,
+} from "./install.ts";
 import { createProgress } from "./progress.ts";
 import type { Outcome } from "./report.ts";
 import {
@@ -185,7 +192,14 @@ export async function run(args: Args): Promise<void> {
     return;
   }
 
-  if (args.statusline !== true) {
+  const request: InstallRequest = {
+    all: args.all,
+    user: args.user,
+    project: args.project,
+  };
+  const wantsPlugins = pluginsRequested(request);
+
+  if (args.statusline !== true && !wantsPlugins) {
     // No request at all. There is no install verb — asking for something *is*
     // the request — so this covers a bare invocation and one carrying only
     // modifiers, `--dry-run` being the one that reads like a request and is not.
@@ -195,7 +209,8 @@ export async function run(args: Args): Promise<void> {
     // already knows the others.
     process.stderr.write(`${renderUsage()}`);
     process.stderr.write(
-      "\nnothing to do: pass --statusline to install the bar, or --uninstall\n",
+      "\nnothing to do: pass --all, --user or --project to install plugins, "
+        + "--statusline to install the bar, or --uninstall\n",
     );
     process.exit(1);
   }
@@ -203,37 +218,71 @@ export async function run(args: Args): Promise<void> {
   // Writing into `~/.claude/settings.json` for a tool that is not on the machine
   // leaves config behind for something that will never read it. A skip rather
   // than a silent install, and `--force` is the override — for a machine where
-  // Claude is installed somewhere off `PATH`.
-  if (!hasBin("claude") && !args.force) {
-    process.stderr.write(
-      "claude is not on PATH, so there is nothing to configure the statusline "
-        + "for.\nInstall Claude Code, or pass --force if it is installed "
-        + "somewhere off PATH.\n",
-    );
-    process.exit(1);
+  // Claude is installed somewhere off `PATH`. Plugin installs *are* `claude`
+  // invocations, so for those `--force` cannot substitute: the run fails either
+  // way, and refusing here fails it before anything is written.
+  if (!hasBin("claude")) {
+    if (wantsPlugins) {
+      process.stderr.write(
+        "claude is not on PATH, and plugin installs run claude itself — "
+          + "--force cannot substitute for it.\nInstall Claude Code first.\n",
+      );
+      process.exit(1);
+    }
+    if (!args.force) {
+      process.stderr.write(
+        "claude is not on PATH, so there is nothing to configure the statusline "
+          + "for.\nInstall Claude Code, or pass --force if it is installed "
+          + "somewhere off PATH.\n",
+      );
+      process.exit(1);
+    }
   }
 
-  // Consent before the install, not after: a run that is going to refuse should
-  // refuse having written nothing, and the prompt has to reach a terminal the
-  // progress spinner is not mid-line on.
-  progress.clear();
-  const consent = await resolveStatuslineConsent(
-    context,
-    args.statusline === true,
-    options.dryRun,
-  );
-  if (consent === undefined) {
-    process.stderr.write(
-      "\nrefusing to replace a statusline that is not this installer's "
-        + "without an answer.\nPass --statusline to replace it, or "
-        + "--no-statusline to leave it alone.\n",
-    );
-    process.exit(1);
+  // Before anything runs: a mistyped plugin name fails the run having written
+  // nothing, as one sentence rather than three failed commands.
+  if (wantsPlugins) {
+    try {
+      resolveRequest(request);
+    }
+    catch (error) {
+      process.stderr.write(`${(error as Error).message}\n`);
+      process.exit(1);
+    }
   }
 
-  const outcomes = [executeStatusline(options, consent)];
+  // Consent before *any* install, not just before the bar's: a run that is
+  // going to refuse should refuse having written nothing at all, and the prompt
+  // has to reach a terminal the progress spinner is not mid-line on. A
+  // plugins-only run never gets here, so it never prompts.
+  let consent: boolean | undefined;
+  if (args.statusline === true) {
+    progress.clear();
+    consent = await resolveStatuslineConsent(
+      context,
+      args.statusline === true,
+      options.dryRun,
+    );
+    if (consent === undefined) {
+      process.stderr.write(
+        "\nrefusing to replace a statusline that is not this installer's "
+          + "without an answer.\nPass --statusline to replace it, or "
+          + "--no-statusline to leave it alone.\n",
+      );
+      process.exit(1);
+    }
+  }
 
-  // After the install: vwf's commands halt at their own entry gate without it.
+  const outcomes: Outcome[] = [];
+  if (wantsPlugins) {
+    outcomes.push(...executeInstall(planInstall(request, options), options));
+  }
+  if (args.statusline === true && consent !== undefined) {
+    outcomes.push(executeStatusline(options, consent));
+  }
+
+  // After the install, whichever half ran: vwf's commands halt at their own
+  // entry gate without it.
   if (!options.dryRun) {
     // The slowest tail of a run, and previously the longest silence in it.
     progress.step("wiring graphify");

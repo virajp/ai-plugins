@@ -23,7 +23,9 @@ is not whenever a user edits a value the installer later removes wholesale.
 `tree` and `command` were the four plugin adapters' — a copied render tree, a
 `claude plugin install` paired with its uninstall. Those adapters are gone, and
 `ReceiptBuilder` accordingly has **no** `tree`, `command` or `ownedDir` method:
-a builder method with no caller is dead weight.
+a builder method with no caller is dead weight. The restored plugin install path
+(`install.ts`) deliberately writes **no receipt at all** — Claude's own settings
+are the record, and `--uninstall` enumerates them live.
 
 But `revert` still handles them, deliberately. `uninstall.ts` reads the receipts
 an older multi-target install left behind, which is the whole reason a machine

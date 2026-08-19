@@ -65,15 +65,17 @@ it.
 
 ### Installing, and the receipt
 
-The CLI no longer installs plugins — `claude plugin marketplace add` and
-`claude plugin install` do, reading this repo's `main`. What the CLI installs is
-the statusline and graphify's wiring, and what it removes is whatever the
-toolkit put on the machine.
+The CLI installs plugins as a **thin wrapper** — `--all` / `--user <name>` /
+`--project <name>` drive `claude plugin marketplace add` and
+`claude plugin install`, reading this repo's `main`, and Claude's own commands
+work just as well directly. The CLI also installs the statusline and graphify's
+wiring, and removes whatever the toolkit put on the machine.
 
-An install returns a **receipt** recording prior state, so uninstall restores
-rather than guesses. That invariant survives the adapters that made it
-necessary, because `--uninstall`'s enumeration now depends on those records
-being complete.
+A statusline or graphify install returns a **receipt** recording prior state, so
+uninstall restores rather than guesses; a **plugin** install writes none, since
+Claude's settings are the record `--uninstall` reads live. That invariant
+survives the adapters that made it necessary, because `--uninstall`'s
+enumeration now depends on those records being complete.
 
 > **Working on it:** the receipt entry kinds, the receipt-completeness bug
 > class, the interactive uninstall and the packaging traps are in
@@ -493,7 +495,7 @@ legitimately appears in two different keys with two different meanings: the
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded
 set and refused the install — explicitly not overridable by `--force`. That gate
-retired with the CLI's plugin installer.
+stayed retired when the CLI's plugin installs came back as a thin wrapper.
 
 **Doctor does not fully replace it, and the gap is worth stating precisely.** Of
 the five binaries vwf shells out to, `/vwf:doctor` blocks on **`mise` and
@@ -663,9 +665,12 @@ would be worse than an honest note.
 
 The statusline is **not** a plugin — no plugin mechanism can install a status
 bar — so it ships inside `@askviraj/ai-plugins`, run as
-`pnpx @askviraj/ai-plugins …`. That CLI **installs no plugins**: it does the
-statusline, graphify's wiring, and `--uninstall`. Plugins come from Claude's own
-`plugin marketplace add` + `plugin install`, reading this repo's `main`.
+`pnpx @askviraj/ai-plugins …`. That CLI does the statusline, graphify's wiring,
+`--uninstall`, and **plugin installs as a thin wrapper**: `--all` /
+`--user <name>` / `--project <name>` drive Claude's own
+`plugin marketplace add` + `plugin install`, reading this repo's `main` — the
+CLI never edits Claude's settings itself and writes **no receipt** for a plugin
+install (Claude's settings are the record `--uninstall` reads live).
 
 > **The user-facing reference is `docs/cli/`** — `usage.md` for the flags,
 > `targets.md` for what lands where, `internals.md` for the source map. What
@@ -673,8 +678,10 @@ statusline, graphify's wiring, and `--uninstall`. Plugins come from Claude's own
 > `internals.md`'s path table is the fuller one.
 
 **An invocation that installs nothing prints the help and exits 1.** `strict`
-parsing is on, so a retired flag — `--platform`, `--all`, `--user`, `--upgrade`
-— reports itself by name rather than being a silent no-op.
+parsing is on, so a retired flag — `--platform`, `--upgrade` — reports itself by
+name rather than being a silent no-op; `--user` and `--project` are repeatable
+(`multiple: true`), with the both-survive regression test that guards the
+silent-drop bug the old parser had.
 
 **`--uninstall` is interactive**: it enumerates what it can see (the marketplace
 registration, user- and project-scoped plugin installs, the statusline,
@@ -725,6 +732,7 @@ validates `main` on every push.
 | ----------------------- | ------------------------------------------------------------------- |
 | `cli/src/args.ts`       | the flag surface on `util.parseArgs`, plus the usage renderer       |
 | `cli/src/index.ts`      | the router — resolve, gate, execute, report, exit                   |
+| `cli/src/install.ts`    | the plugin installer — plan against Claude's settings, drive claude |
 | `cli/src/uninstall.ts`  | enumerate → deselect → remove, plus the legacy-receipt reader       |
 | `cli/src/receipt.ts`    | prior state, so uninstall restores rather than guesses              |
 | `cli/src/github.ts`     | the token header and the rate-limit-only hint                       |
@@ -895,10 +903,12 @@ not correctness, and `prefixSkillNames` is gone.
 ## Installation (end-user)
 
 ```sh
-# Add marketplace once (user-scoped)
-claude plugin marketplace add --scope user virajp/ai-plugins
+# The wrapper: registers the marketplace and installs in one run
+pnpx @askviraj/ai-plugins --all                      # vwf (+ devtools) at user scope
+pnpx @askviraj/ai-plugins --project <plugin-name>    # into this repo
 
-# Install a plugin into a project
+# Or Claude's own commands directly — the same thing, unsequenced
+claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 

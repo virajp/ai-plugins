@@ -72,14 +72,21 @@ delegating read-heavy work buys, and the rest of the fit questions — is in
 
 ## Install
 
-Two commands, both Claude Code's own. There is no installer to download and
-nothing to keep up to date but the marketplace itself.
+One command, which registers the marketplace and installs the workflow —
+`devtools`, its one dependency, comes with it:
+
+```sh
+pnpx @askviraj/ai-plugins --all
+```
+
+That is a thin wrapper over Claude Code's own two commands, which work just as
+well directly — the marketplace is this repo's `main` either way:
 
 ```sh
 # Register this repo as a plugin marketplace, once
 claude plugin marketplace add virajp/ai-plugins
 
-# Install the workflow. `devtools`, its one dependency, comes with it
+# Install the workflow
 claude plugin install vwf@virajp-plugins
 ```
 
@@ -88,12 +95,15 @@ Restart your agent afterward so the skills, hooks and MCP servers load, then run
 at install time — though see the [caveat](#caveats) on what it does and does not
 check.
 
-Scope is yours to choose: add `--scope project` to either command to keep the
-marketplace or the plugin to one repo instead of your user profile. Everything
-beyond `vwf` is installed by name, because which language, cloud and capability
-plugins you want is a question about your product rather than about the toolkit:
+Scope is yours to choose: `--user` / `--project` on the wrapper, or
+`--scope project` on Claude's commands, keep a plugin to one repo instead of
+your user profile. Everything beyond `vwf` is installed by name, because which
+language, cloud and capability plugins you want is a question about your product
+rather than about the toolkit:
 
 ```sh
+pnpx @askviraj/ai-plugins --user typescript --user gcp
+# or
 claude plugin install typescript@virajp-plugins gcp@virajp-plugins
 ```
 
@@ -324,9 +334,10 @@ the full configuration reference.
 ## The installer CLI
 
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins) is
-a small CLI with three jobs: install the **statusline**, wire up **graphify**,
-and **remove** what this toolkit put on your machine. It installs **no plugins**
-— those come from Claude's own commands, shown under [Install](#install) above.
+a small CLI with four jobs: install **plugins** (`--all`, `--user`, `--project`
+— a thin wrapper driving Claude's own commands, shown under [Install](#install)
+above), install the **statusline**, wire up **graphify**, and **remove** what
+this toolkit put on your machine.
 
 **[docs/cli/](./docs/cli/)** is the full reference —
 [usage](./docs/cli/usage.md) for the flag surface,

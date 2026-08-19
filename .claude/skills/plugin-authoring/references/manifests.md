@@ -21,11 +21,12 @@ use: `$schema`, `name`, `version`, `description`, `author`, `repository`,
 
 **A manifest declares no install-time eligibility.** There is no `scope`, no
 `optIn`, no `userOnly`, and no `requires`. Scope is whichever `--scope` the user
-passes to `claude plugin install`; there is no default set to be in or out of,
-because there is no `--all` any more. `requires` was a hard install gate the
-retired CLI enforced — a missing binary now surfaces as a `/vwf:doctor`
-**blocking** finding, which is the trade the Claude-first plan accepted on the
-grounds that doctor already halts `setup` and `execute` on it.
+passes to `claude plugin install`; there is no default set to be in or out of.
+The CLI's `--all` is only shorthand for `vwf`, handed to that same command.
+`requires` was a hard install gate the CLI's retired plugin installer enforced —
+a missing binary now surfaces as a `/vwf:doctor` **blocking** finding, which is
+the trade the Claude-first plan accepted on the grounds that doctor already
+halts `setup` and `execute` on it.
 
 Optional blocks:
 

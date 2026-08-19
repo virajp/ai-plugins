@@ -39,10 +39,10 @@ that have to end up on disk — the script, the caps hook and the seeded config 
 and `pnpx` already puts them there without a global install to keep current.
 Windows runs the same `pnpx` command everyone else does.
 
-**`--statusline` is now the only way to ask for an install.** The flag that used
-to bring the bar along with a plugin install — `--all` — is retired along with
-the plugin installs themselves, which Claude Code does natively now. Parsing is
-strict, so `--all`, `--user`, `--project`, `--platform` and `--upgrade` all fail
+**`--statusline` is the only way to ask for the bar.** The plugin flags
+(`--all`, `--user`, `--project`) never bring the statusline along — a toolkit
+install and choosing to replace your status bar are separate questions, asked
+separately. Parsing is strict, so the retired `--platform` and `--upgrade` fail
 naming themselves rather than being quietly ignored. `--no-statusline` remains,
 and a run that asks for nothing at all prints the help and exits 1.
 
@@ -78,10 +78,11 @@ a repeat install never asks about itself.
 - **`--statusline` is consent**, and the only thing that is. It used to share
   the job with `--all`, which asked for the whole toolkit — and a toolkit that
   happens to include a status bar is not the same as choosing to replace the one
-  you have. With `--all` gone, **every install run is explicit and this gate
-  grants every time**; the branches that ask are kept rather than deleted,
-  because the day anything other than the flag can trigger an install, deleting
-  them would be the silent overwrite they exist to prevent.
+  you have. `--all` is back for plugins but **never installs the bar**, so
+  **every statusline install run is explicit and this gate grants every time**;
+  the branches that ask are kept rather than deleted, because the day anything
+  other than the flag can trigger an install, deleting them would be the silent
+  overwrite they exist to prevent.
 - **With no terminal to ask in** — a setup script, CI, anything piping stdin —
   the run **fails** rather than guessing. Silently overwriting is the thing this
   gate exists to prevent, and silently skipping would let an unattended install

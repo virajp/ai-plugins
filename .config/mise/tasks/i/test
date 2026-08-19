@@ -60,10 +60,11 @@ fi
 # back instead of theirs. The unit tests cover that with fakes; this covers it
 # against the real filesystem and the real bundle.
 #
-# `claude` is stubbed because the statusline install only needs it to exist —
-# nothing here shells out to it. The plugin install path that did shell out is
-# gone: plugins are installed by `claude plugin install` from the GitHub-served
-# marketplace, and this CLI no longer has a hand in it.
+# `claude` is stubbed because the statusline install only needs it to exist,
+# and the plugin install path is exercised as `--dry-run` only — driving a real
+# install through a stub would test this tool against our own fiction of
+# Claude's CLI. The command *sequence* is covered by the vitest suite with an
+# injected fake exec.
 # ---------------------------------------------------------------------------
 print_header "Installing twice, then uninstalling, against a throwaway HOME ..."
 
@@ -95,6 +96,26 @@ e2e() {
 }
 
 RECEIPT="$E2E_HOME/.config/ai-plugins/receipts/statusline.json"
+
+# The plugin install path, dry only: the bundle must parse the restored flags
+# and describe the claude commands it would run, without writing anything.
+print_header "Asserting --user vwf --dry-run describes the claude commands ..."
+before_plugins="$(find "$E2E_HOME" -type f | sort)"
+plugin_dry="$(e2e --user vwf --dry-run)"
+for expected in \
+  "claude plugin marketplace add virajp/ai-plugins" \
+  "claude plugin install vwf@virajp-plugins --scope user"; do
+  if ! grep -qF "$expected" <<<"$plugin_dry"; then
+    print_error "--user vwf --dry-run did not describe: $expected"
+    printf '%s\n' "$plugin_dry"
+    exit 1
+  fi
+done
+after_plugins="$(find "$E2E_HOME" -type f | sort)"
+if [[ "$before_plugins" != "$after_plugins" ]]; then
+  print_error "--user vwf --dry-run wrote something; it must write nothing"
+  exit 1
+fi
 
 # --statusline IS the consent to displace what is there; without it the run would
 # stop rather than replace the foreign bar.

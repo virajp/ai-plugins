@@ -19,11 +19,14 @@ paths:
 would raise `engines.node` from `>=18` to `>=22.18`, which is the whole reason
 the bundle exists.
 
-**This CLI does three things**: installs the Claude statusline, wires graphify,
-and removes what the toolkit put on a machine. It installs **no plugins** — that
-is `claude plugin marketplace add virajp-plugins` + `claude plugin install`,
-served from this repo's `main`. If you find yourself adding a plugin code path,
-you are re-growing something that was deliberately cut.
+**This CLI does four things**: installs plugins, installs the Claude statusline,
+wires graphify, and removes what the toolkit put on a machine. The plugin path
+(`install.ts`) is a **thin wrapper** — it drives
+`claude plugin marketplace add virajp/ai-plugins` + `claude plugin install`,
+served from this repo's `main`, and never edits Claude's settings itself. What
+stays deliberately cut is everything thicker than that: the copied payload, the
+adapters, the `requires:` gate, and any receipt for a plugin install — Claude's
+settings are the record, and `--uninstall` reads them live.
 
 ## The invariant that keeps breaking
 
@@ -121,43 +124,45 @@ exactly what to delete when it comes.
   never run rather than failing — which is why the statusline *script* tests
   live at `cli/src/statusline-script.test.ts` even though what they exercise is
   `tools/statusline/`.
-- `claude` is stubbed in `i:test` only because the statusline install needs it
-  to *exist*; nothing shells out to it. Do not stub a tool to exercise its
-  command sequence end to end — that tests this tool against our own fiction of
-  its CLI.
+- `claude` is stubbed in `i:test` only because the runs need it to *exist*;
+  nothing shells out to it — the plugin path is exercised as `--dry-run` only,
+  which never spawns. Do not stub a tool to exercise its command sequence end to
+  end — that tests this tool against our own fiction of its CLI. The install's
+  command sequence is covered by `install.test.ts` with the injected fake exec.
 
 ## The flag surface
 
-| Flag           | Notes                                                                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `--statusline` | **tri-state**: explicit asks, `--no-statusline` refuses, unset defers. Explicit is also the **only** consent to replace a foreign bar |
-| `--uninstall`  | enumerate → deselect → remove. Interactive; no TTY refuses once there is something to remove                                          |
-| `--dry-run`    | writes nothing, diff to stdout, progress to stderr. The scriptable half of `--uninstall`                                              |
-| `--force`      | acts although Claude Code is not on `PATH`                                                                                            |
-| `--version`    | this CLI, the statusline **installed on disk**, and the plugins available on `main`; exits 1 when the network is unreachable          |
-| `-h, --help`   | usage on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                                    |
+| Flag               | Notes                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--statusline`     | **tri-state**: explicit asks, `--no-statusline` refuses, unset defers. Explicit is also the **only** consent to replace a foreign bar |
+| `--all`            | install `DEFAULT_INSTALL` (`vwf`) at user scope; `devtools` arrives via Claude's dependency resolution. Never installs the statusline |
+| `--user <name>`    | install a plugin at user scope; **repeatable** (`multiple: true`)                                                                     |
+| `--project <name>` | install a plugin at project scope; repeatable. Project wins a name requested at both scopes                                           |
+| `--uninstall`      | enumerate → deselect → remove. Interactive; no TTY refuses once there is something to remove                                          |
+| `--dry-run`        | writes nothing, diff to stdout, progress to stderr. The scriptable half of `--uninstall`, and of a plugin install                     |
+| `--force`          | acts although Claude Code is not on `PATH` — statusline only; a plugin install *is* `claude`, so it fails regardless                  |
+| `--version`        | this CLI, the statusline **installed on disk**, and the plugins available on `main`; exits 1 when the network is unreachable          |
+| `-h, --help`       | usage on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                                    |
 
-**The parser is `node:util`'s `parseArgs`, in `args.ts`, and it must stay
-repeat-capable.** It was `citty` until `--user vwf --user devtools` was found to
-install only `devtools`: citty's `ArgType` has no array kind, so a repeated flag
-cannot be expressed and the last occurrence silently wins. No flag is repeatable
-*today* — the ones that were are retired — but the constraint is kept, because
-the failure mode was silent and a future repeatable flag must not reintroduce
-it. `parseArgs` also **removed** a runtime dependency rather than swapping one
-in.
+**The parser is `node:util`'s `parseArgs`, in `args.ts`, and repeatability is
+why.** It was `citty` until `--user vwf --user devtools` was found to install
+only `devtools`: citty's `ArgType` has no array kind, so a repeated flag cannot
+be expressed and the last occurrence silently wins. `--user` and `--project` are
+repeatable again via `multiple: true`, and `args.test.ts` carries the
+both-survive regression test. `parseArgs` also **removed** a runtime dependency
+rather than swapping one in.
 
 Two things the platform does not do, both handled in `args.ts`: boolean negation
 (`--no-statusline` is its own flag, folded back into the tri-state) and usage
 rendering. `strict` is on, so a retired flag reports itself by name rather than
-being the silent no-op citty gave — which is how `--platform`, `--all`, `--user`
-and `--upgrade` now answer.
+being the silent no-op citty gave — which is how `--platform` and `--upgrade`
+now answer.
 
-**There is no `--upgrade` and no `--all`, and adding either back would be a
-mistake.** `--upgrade` replayed a receipt to do what naming the plugins again
-did, and plugin content no longer ships in the package at all. `--all` named a
-`defaultInstall` list that lived in a file this repo deleted; installing `vwf`
-pulls `devtools` through Claude's own native dependency resolution, which is
-where that belongs.
+**There is no `--upgrade`, and adding it back would be a mistake.** It replayed
+a receipt to do what naming the plugins again did; upgrading is Claude's own
+`claude plugin marketplace update` + `claude plugin update`, and the install
+path reports an already-installed plugin as satisfied with a note pointing there
+— never auto-updated.
 
 **An invocation that installs nothing prints the help and exits 1.**
 
@@ -171,6 +176,6 @@ where that belongs.
 
 ## Documentation
 
-Behaviour changes here must reconcile `readme.md`, `CLAUDE.md` and
+Behaviour changes here must reconcile `readme.md`, `CLAUDE.md`, `docs/cli/` and
 `docs/plugins/statusline.md` in the same commit. Delegate that sweep to the
 `docs-reconciler` agent.

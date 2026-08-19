@@ -38,9 +38,10 @@ without a terminal:
   same reason: on run 2 what is sitting there is run 1's own output. Skip this
   and every repeat run prompts about the bar it installed itself.
 - **`--statusline` is the only consent.** It is checked **before** the
-  remembered refusal, or the flag could never undo one. (`--all` used to be the
-  thing that explicitly did *not* count as consent; it no longer exists, but the
-  ordering rule is what mattered and it stands.)
+  remembered refusal, or the flag could never undo one. (`--all` is again the
+  thing that explicitly does *not* count as consent — it installs plugins and
+  never the bar — so the ordering rule matters for the same reason it always
+  did.)
 - **No TTY fails the run.** Not overwrite, not skip. Overwriting silently is the
   bug; skipping silently makes an unattended install report success with the bar
   unconfigured.

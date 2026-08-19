@@ -10,14 +10,16 @@
 
 ## What this CLI is for
 
-Three jobs: the **Claude statusline**, **graphify's wiring**, and an interactive
-**`--uninstall`**. It installs no plugins — `claude plugin marketplace add` and
-`claude plugin install` do that, reading this repo's `main`.
+Four jobs: **plugins**, the **Claude statusline**, **graphify's wiring**, and an
+interactive **`--uninstall`**. The plugin half is a thin wrapper — it drives
+`claude plugin marketplace add` and `claude plugin install`, reading this repo's
+`main`, and never edits Claude's settings itself.
 
-That is a large reduction from what this page used to describe. Four plugin
-adapters, a dependency gate, a plan stage, an executor and a `--platform` flag
-are all gone, along with the template layer and the four render trees they
-installed from. If you are looking for any of it, it is in git, not here.
+That is still a large reduction from what this page used to describe. Four
+plugin adapters, the copied payload, a dependency gate, a plan stage, an
+executor and a `--platform` flag are all gone, along with the template layer and
+the four render trees they installed from — none of them returned with the
+plugin flags. If you are looking for any of it, it is in git, not here.
 
 ## The flow of a run
 
@@ -26,16 +28,22 @@ router doing as little as possible itself.
 
 **`args.ts` parses.** One table drives both `parseArgs` and the help text, so a
 flag cannot be parsed but undocumented. `strict` is on, so a retired flag
-reports itself by name rather than being silently ignored. The parser must stay
-**repeat-capable** even though nothing is repeatable today: the parser this
-replaced could not express a repeated flag and dropped names silently, and that
-failure mode should not be reachable again. The end-user view of the same flags
-is [usage.md](./usage.md).
+reports itself by name rather than being silently ignored. `--user` and
+`--project` are repeatable via `multiple: true` — the array kind the parser this
+replaced could not express, which is how it once dropped names silently. The
+end-user view of the same flags is [usage.md](./usage.md).
 
 **`index.ts` routes**: resolve, execute, report, exit. It reads flags into one
 `Context` (source root, `$HOME`, cwd, timestamp, logger, command runner — all
 injected, so a test can point a whole install at a temp directory) and then does
 nothing substantial itself.
+
+**`install.ts` installs plugins.** The same planner/executor split as the
+uninstall: `planInstall` is a pure read of Claude's settings (via
+`claude-settings.ts`, shared with the enumeration) returning steps as plain
+data, and `executeInstall` drives `claude` through the injected runner. Already
+installed is a satisfied request, never an auto-update, and **no receipt is
+written** — Claude's settings are the record `--uninstall` reads live.
 
 **`statusline.ts` installs.** Copies the script and the caps hook, splices four
 keys into `settings.json` without reflowing the user's file, and seeds
@@ -114,6 +122,8 @@ What users install is `main`, and `plugins.yml` validates `main` on every push.
 | `cli/src/args.ts`               | the flag surface on `util.parseArgs`, plus the usage renderer       |
 | `cli/src/index.ts`              | the router — resolve, execute, report, exit                         |
 | `cli/src/context.ts`            | the injected run context, so a test can redirect a whole install    |
+| `cli/src/install.ts`            | the plugin installer — plan against Claude's settings, drive claude |
+| `cli/src/claude-settings.ts`    | reading Claude's settings, shared by install and uninstall          |
 | `cli/src/uninstall.ts`          | enumerate → deselect → remove, plus the legacy-receipt reader       |
 | `cli/src/statusline.ts`         | the Claude bar and the caps hook                                    |
 | `cli/src/statusline-consent.ts` | the consent gate; `resolveConsent` is pure                          |
