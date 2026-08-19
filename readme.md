@@ -24,11 +24,11 @@ until you approve. The whole manual, command by command, is
 starting fresh, adopting vwf in a codebase that already works, and running a
 live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 
-Around it the marketplace ships **twelve more plugins** — languages, clouds,
-capabilities, tooling and design. That is the point of the split: vwf owns the
-workflow and names no technology at all, so every concrete choice lives in a
-plugin you install only if your product uses it. They install through Claude
-Code's own plugin commands, straight from this repo; the
+Around it the marketplace ships **thirteen more plugins** — languages, clouds,
+capabilities, tooling, design and generation. That is the point of the split:
+vwf owns the workflow and names no technology at all, so every concrete choice
+lives in a plugin you install only if your product uses it. They install through
+Claude Code's own plugin commands, straight from this repo; the
 [statusline](#statusline) is separate, and ships through one small CLI,
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins).
 
@@ -167,7 +167,7 @@ Paste one of these, adjusting the plugin name:
 
 ## The plugins
 
-Thirteen plugins, each with its own guide. Install the workflow, then whichever
+Fourteen plugins, each with its own guide. Install the workflow, then whichever
 ones match the product you are building. The name in code at the end of each
 entry is what you pass to `claude plugin install`.
 
@@ -277,6 +277,18 @@ vwf's tag-triggered, branch-validated, tested-before-release contract. GitHub
 Actions is the one implementation today; adding a CI system is a single
 reference file. Independent — vwf states the contract, this implements it.
 `cicd@virajp-plugins`
+
+**[stackgen](./docs/plugins/stackgen.md)** — the principles-driven stack
+materializer. A stack a shipped **pack** covers is copied verbatim; anything
+uncovered is **generated** — researched via Context7, instantiated against vwf's
+principles catalog, gated by a reviewer agent and your explicit consent. Both
+paths land in a committed, repo-owned `.agents/` tree symlinked into `.claude/`,
+so the result is plain files your collaborators get with a `git
+pull` and no
+plugin install. Re-syncing against newer packs is an explicit, diffed decision —
+never a silent overwrite. Ships no packs yet: the curated plugins above remain
+the covered-stack path, and stackgen's value today is the uncovered tail.
+`stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
