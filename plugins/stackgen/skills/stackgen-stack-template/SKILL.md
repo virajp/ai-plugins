@@ -1,7 +1,7 @@
 ---
 name: stackgen-stack-template
 description: Return one stackgen stack as a vwf template payload — reading the
-  materialized entry from the repo's .agents/ tree, or, on a first pin,
+  materialized entry from the repo's .claude/ tree, or, on a first pin,
   running the dispatch (pack copy, or generation for an uncovered technology)
   behind a consent gate. Invoked by /vwf:architecture, /vwf:setup, /vwf:plan
   and /vwf:execute — not a general-purpose skill.
@@ -22,16 +22,16 @@ never a silent re-run**.
 
 ## Resolution order
 
-1. **Materialized already?** Read `.agents/templates/<slug>.md` at the repo
-   root (in a worktree, the tree is part of the checkout like any committed
-   file). If it exists: return the payload below, filled from its frontmatter
-   with the body as `conventions:`. **Stop — never regenerate, never diff.**
-   Drift against packs is `/stackgen:stackgen-sync`'s job, on the user's
-   clock.
+1. **Materialized already?** Read `.claude/stackgen/templates/<slug>.md` at
+   the repo root (in a worktree, the tree is part of the checkout like any
+   committed file). If it exists: return the payload below, filled from its
+   frontmatter with the body as `conventions:`. **Stop — never regenerate,
+   never diff.** Drift against packs is `/stackgen:stackgen-sync`'s job, on
+   the user's clock.
 2. **A shipped pack?** If `${CLAUDE_PLUGIN_ROOT}/stacks/*/<slug>/pack.yaml`
    exists, this is a first pin: read
    [the materializer](references/materializer.md) and follow it — dry-run
-   plan, consent, copy, symlinks, one commit — then return the payload from
+   plan, consent, copy, lockfile, one commit — then return the payload from
    the freshly materialized entry.
 3. **`generated/<technology-slug>`?** A first pin of an uncovered technology:
    read [the generator](references/generator.md) and follow it — research,
@@ -45,11 +45,12 @@ never a silent re-run**.
 
 ## The payload
 
-Return **only** this, filled from `.agents/templates/<slug>.md`:
+Return **only** this, filled from `.claude/stackgen/templates/<slug>.md`:
 
 ```yaml
 slug: <the requested slug>
 axis: project | backing | deploy | repo
+kind: language-bundle | database | cloud-provider # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 languages: [ <token> ]
 language_facts: # per language — what /vwf:doctor verifies
@@ -77,6 +78,14 @@ check real.
 - **Reads are cheap and pure.** Steps 2–3 run at most once per slug per repo;
   every later fetch is step 1 — a file read. `plan` and `execute` fetch
   conventions mid-run and must never trigger research, network, or a write.
+- **Structure follows the kind.** Every pack and every generation run
+  declares a kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`), and the kind
+  decides what artifacts land and their shape — the run never invents a
+  structure.
+- **The target repo is the current one by default.** In a multi-repo
+  product the caller may name a member repo; each repo gets its own
+  independent copies and its own lockfile — never one repo's copies pasted
+  around.
 - **The caller may pass context; this skill never reaches for another
   plugin's files.** vwf passes the principles-catalog paths into the
   invocation (the design-adapter payload style). If a generation run needs

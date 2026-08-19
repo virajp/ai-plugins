@@ -22,30 +22,41 @@ Generation is **explicit**: it runs on a pin, never as a background refresh.
 
 ## Pipeline
 
-1. **Detect the real stack.** Read the repo's manifests (and the graphify
-   graph when one exists) for the pinned technology's actual versions,
+1. **Resolve the kind, then detect the real stack.** The pinned technology
+   maps to one kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`) — the kind
+   fixes the output structure, scope, facts and invocation modes before a
+   word is written. Then read the repo's manifests (and the graphify graph
+   when one exists) for the technology's actual versions, config flags,
    companion tools, and usage shape. Generation targets what the repo has,
-   not the technology in the abstract.
+   not the technology in the abstract — a claim about a config-dependent
+   feature the detection never confirmed is a reviewer gap waiting to
+   happen.
 2. **Research.** Context7 for the technology and its detected companions:
    current APIs, configuration shape, testing idioms, the ecosystem's own
    conventions. Keep the source references — citations are mandatory in the
-   output.
+   output, and they land durably in
+   `.claude/stackgen/citations/<slug>.yaml`. For a `language-bundle`, keep
+   each technology's research separable, so sync can regenerate one part
+   without churning the others.
 3. **Instantiate the catalog.** For each principles-catalog entry, write how
    it lands in this stack — concrete idioms, not restated definitions — and
    honor each entry's **when-not-to-apply** section: where the stack's own
    idiom already embodies or supersedes a principle, the generated skill
    says so instead of prescribing ceremony. Every claim about the technology
    cites its research source; every judgment cites its catalog entry.
-4. **Assemble the pack shape**: payload fields (axis, languages **with
-   emitted facts** — how the LSP is provided, the mise tool, the manifest;
-   `n/a` where honest), the `harness` block naming tasks and mechanisms, the
-   conventions prose, and any generated skills.
+4. **Assemble the pack shape, per the kind's structure**: payload fields
+   (axis, `kind`, languages **with emitted facts** — how an LSP is
+   provided, the mise tool, the manifest; `n/a` where honest), the
+   `harness` block naming tasks and mechanisms, the conventions prose, and
+   the kind's artifacts — skills, agents, rules, within the output
+   vocabulary. **Never an executable** (hook scripts are pack-only), never
+   MCP or LSP configuration.
 5. **The reviewer gate.** Dispatch the `stackgen-skill-reviewer` agent —
-   stateless: it gets the catalog paths, the generated artifacts, and the
-   citation list; it returns `NO GAPS` or a numbered gap list. Loop
-   generation on the gaps until clean. It is a **gate**: a run that cannot
-   come clean is reported to the user with the residual gaps, never landed
-   quietly.
+   stateless: it gets the catalog paths, the declared kind, the detected
+   stack, the generated artifacts, and the citation list; it returns
+   `NO GAPS` or a numbered gap list. Loop generation on the gaps until
+   clean. It is a **gate**: a run that cannot come clean is reported to the
+   user with the residual gaps, never landed quietly.
 6. **Materialize.** Hand the clean pack shape to
    [the materializer](materializer.md) — its dry-run consent gate is where
    the user sees everything before it lands.

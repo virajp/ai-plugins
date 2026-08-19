@@ -22,8 +22,9 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
 ## How to answer
 
 1. List `${CLAUDE_PLUGIN_ROOT}/stacks/*/*/pack.yaml`. Each is one **pack**: its
-   slug is its directory name, and `axis`, `platforms`, `name` and `summary`
-   come from the file (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
+   slug is its directory name, and `axis`, `kind`, `platforms`, `name` and
+   `summary` come from the file
+   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
 2. Return the payload below. The `generate` block is present on **every**
    answer — it is the open entry, and it is what makes an empty pack list read
    as a decision rather than a fault.
@@ -34,17 +35,20 @@ note: Packs listed here are curated and copied verbatim. Any technology no
   pack covers can be GENERATED — pin `generated/<technology-slug>` on the
   axis that needs it, and the first template fetch runs the generation
   pipeline (researched via Context7, instantiated against vwf's principles
-  catalog, gated by review and your consent) into the repo-owned .agents/
-  tree. Generation needs Context7 reachable and halts without it.
+  catalog, gated by review and your consent) directly into the repo's
+  committed .claude/ tree. Generation needs Context7 reachable and halts
+  without it.
 templates:
   - slug: <pack directory name>
     axis: <pack.yaml axis>
+    kind: <pack.yaml kind> # assets/kinds.md
     platforms: [ <platform> ] # project axis only
     name: <display name>
     summary: <one line>
 generate:
   pin: generated/<technology-slug>
   axes: [ project, backing, deploy, repo ]
+  kinds: [ language-bundle, database, cloud-provider ] # the generatable kinds
   summary: Generate principles-grounded skills and conventions for any stack
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```

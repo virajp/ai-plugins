@@ -282,12 +282,13 @@ reference file. Independent — vwf states the contract, this implements it.
 materializer. A stack a shipped **pack** covers is copied verbatim; anything
 uncovered is **generated** — researched via Context7, instantiated against vwf's
 principles catalog, gated by a reviewer agent and your explicit consent. Both
-paths land in a committed, repo-owned `.agents/` tree symlinked into `.claude/`,
-so the result is plain files your collaborators get with a `git
-pull` and no
+paths land directly in the repo's committed `.claude/` tree — skills, agents,
+hooks and rules only, shaped by a closed kind vocabulary, recorded in a lockfile
+— so the result is plain files your collaborators get with a `git pull` and no
 plugin install. Re-syncing against newer packs is an explicit, diffed decision —
-never a silent overwrite. Ships no packs yet: the curated plugins above remain
-the covered-stack path, and stackgen's value today is the uncovered tail.
+never a silent overwrite, and never a `settings.json` edit without separate
+consent. Ships no packs yet: the curated plugins above remain the covered-stack
+path, and stackgen's value today is the uncovered tail.
 `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed

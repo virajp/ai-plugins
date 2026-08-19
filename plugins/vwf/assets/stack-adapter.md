@@ -234,10 +234,13 @@ first place.
 
 A stack plugin may be a **materializer** rather than a library: instead of
 serving templates from its own tree forever, it lands them — skills, agents,
-and the template payload itself — in a committed, repo-owned **`.agents/`
-tree** at the repo root, wired into `.claude/` by symlinks, on an explicit,
-consent-gated first pin. The `stackgen` plugin is this variant's
-implementation; vwf's side of the contract is three rules:
+hooks, rules, and the template payload itself — **directly in the repo's
+committed `.claude/` tree**, recorded in a lockfile the plugin owns, on an
+explicit, consent-gated first pin. The repo owns the copies; the plugin's
+own settings edits (hook wiring) take separate explicit consent, and the
+repo's CLAUDE.md stays vwf's domain — the materializer ends by recommending
+`/vwf:setup`. The `stackgen` plugin is this variant's implementation; vwf's
+side of the contract is three rules:
 
 - **The payload may carry `language_facts`** — per language, the facts a
   language plugin would otherwise supply (LSP provision, mise tool, manifest;
