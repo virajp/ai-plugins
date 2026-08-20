@@ -260,8 +260,11 @@ side of the contract is three rules:
   consent-gated, reviewer-gated generation — not the retired free-text
   `custom`: nothing lands unresearched, unreviewed, or unrecorded, and the
   resulting pin resolves to a real materialized template every later check
-  verifies. The no-fitting-template **halt** still applies when nothing on any
-  menu fits *and* no installed adapter offers generation.
+  verifies. The open entry is not the only door into generation: a
+  materializing adapter may also generate *part* of an otherwise curated pin,
+  and vwf sees the same thing either way — one payload, one consent-gated
+  materialization. The no-fitting-template **halt** still applies when
+  nothing on any menu fits *and* no installed adapter offers generation.
 
 ## The UX gate
 

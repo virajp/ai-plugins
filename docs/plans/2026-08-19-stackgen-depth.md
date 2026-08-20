@@ -1,7 +1,8 @@
 # Plan: stackgen depth — topic bars, framework ruling, coverage gate
 
-**Status: approved 2026-08-20 — ready to execute; nothing is built yet.
-Execution follows the Execution section below.**
+**Status: executed 2026-08-20 — steps 1–7 complete on branch
+`worktree-stackgen`; the Rust proof regenerated at full depth (see Depth proof
+below).**
 
 Companion to [the stackgen plan](2026-08-19-stackgen.md) (Phases 1–4 executed
 and revised to `.claude/`-direct on branch `worktree-stackgen`). The Rust
@@ -158,6 +159,24 @@ whichever components supply each topic.
 7. **Docs ship with the change**: `docs/plugins/stackgen.md` (kinds/depth +
    component-model sections), CLAUDE.md rows if touched, and the stackgen plan
    doc's decision table gains a pointer to this plan.
+
+**Depth proof (2026-08-20, Rust regenerated).** Step 6 re-ran the Rust fixture
+at full depth against the settled bars: 12 writer subagents, one per bar topic,
+across the four components (`language/rust`, `package-manager/cargo`,
+`framework/axum`, `toolchain-gate/rust-toolchain`), ~30 Context7 passes. Four
+stateless reviewer rounds under the convergence cap (5→2→5→1 gaps) caught —
+among others — an off-vocabulary harness key, two rules that had outgrown the
+rule form (converted to paths-scoped doctrine skills), two claims softened
+because their sources did not support them (clippy default groups; the RUSTFLAGS
+fingerprint claim), a vendor leak in capability prose, and an `e2e_staging`
+mechanism the bundle's own doctrine contradicted; the round-4 residual was fixed
+per the reviewer's own prescription post-cap and disclosed at the consent gate.
+The consent gate ran for real (an 18-file landing set approved); landing
+verified hash-clean with 17 per-component lockfile entries a single-component
+re-sync can act on, every relative link resolving, and the user's own
+hand-written skill untouched. All 12 topic artifacts landed at 124–130 dense
+lines — inside the band the bar demands. Check 8, not the user, caught the
+shallow and dishonest spots — the acceptance the plan named.
 
 ## Execution
 
