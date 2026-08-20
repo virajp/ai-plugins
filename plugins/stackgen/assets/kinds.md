@@ -178,22 +178,81 @@ The `language-bundle` band applies unchanged: each topic's artifact is
 
 ## `cloud-provider` — where the product runs and what it uses there
 
-**Topic bar pending elicitation.** The structure below is a sketch, not a
-settled bar, and the reviewer must not enforce one — a bar that was never
-settled would be enforced opinion nobody agreed to.
+The output is a **Cloud-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): one `cloud-provider`
+component plus one `cloud-service` component per service the product
+uses. The bar splits the same way — four provider topics carried once by
+the provider component, five service topics carried by **every**
+`cloud-service` component, plus a three-topic extension where the
+service's category is `compute`. The seam between the halves is
+citation: a service topic **cites the provider doctrine, never restates
+it**.
 
-- **Axis**: `backing` + `deploy`.
-- **Structure** (archetype: the `gcp` plugin): a **model-invocable judgment
-  skill** — which service to pick and when it stops being the answer, how
-  each bills, least-privilege IAM, which services have local emulators —
-  plus deploy-template conventions. Judgment skills are reference-shaped,
-  not paths-scoped: there is no file glob that means "thinking about the
-  cloud".
+- **Axis**: `backing` + `deploy` (a `compute` service is a deploy
+  target; the rest are backing).
+- **Structure**: the **topic bar** below, hung per the kind-general rule
+  — one artifact per topic behind a lean router skill. Judgment skills
+  are reference-shaped, not paths-scoped: there is no file glob that
+  means "thinking about the cloud".
 - **Scope**: the judgment an SDK reference cannot give. Never the deploy
   mechanics vwf's delivery-pipeline contract owns, never a vendor SDK in
   product code (the observability rule: OTLP out, sinks not SDKs).
 - **Facts**: provider CLI presence, the auth/project check doctor can run,
   emulator availability per service used.
+- **Invocation**: everything model-invocable; nothing paths-scoped.
+
+### The topic bar
+
+One artifact per topic, each individually researched and cited.
+Extracted from the curated archetype — the `gcp` plugin: its
+provider-wide judgment skills and its service and deploy templates.
+
+**Provider-component topics** — four, the provider-wide judgment that
+spans services:
+
+1. **Cost doctrine** — the provider's billing-model principle, the
+   day-one guardrails (budget alerts, environment attribution, labels),
+   a cost review checklist; never dollar figures.
+2. **Identity & IAM** — the workload identity shape (one identity per
+   workload, never the default), keyless auth, the roles broader than
+   they look, a privilege review checklist.
+3. **Local development map** — which services have emulators,
+   substitutions where none exists, the fidelity trap, wiring via env
+   vars.
+4. **Networking & private plane** — invisible-to-the-internet rather
+   than merely authenticated, internal ingress, the provider's
+   mechanisms. Provider-wide by ruling: compute services cite it rather
+   than each restating it.
+
+**Cloud-service-component topics** — five, for every `cloud-service`
+component in the bundle:
+
+1. **Pick & trade** — when this service is the answer, and when it
+   stops being it.
+2. **Service doctrine** — the service's own usage rules; where it
+   realizes a blueprint capability, clause-by-clause contract
+   satisfaction citing the category doctrine.
+3. **Cost shape** — this service's billing model and its trap, citing
+   the provider cost doctrine, never restating it.
+4. **Identity shape** — the least-privilege grants this service needs,
+   citing the provider IAM doctrine.
+5. **Local dev** — this service's emulator, or its substitution where
+   none exists.
+
+**Compute-category extension** — a `cloud-service` in category
+`compute` is a deploy target and carries three more:
+
+6. **Artifact** — the image contract: one multi-stage Dockerfile, the
+   same digest promoted across environments.
+7. **Pipeline** — release wiring behind mise tasks, satisfying vwf's
+   delivery-pipeline contract.
+8. **Health** — readiness/liveness wiring against vwf's `health`
+   harness capability.
+
+### Depth
+
+The `language-bundle` band applies unchanged: each topic's artifact is
+**60–130 dense lines of judgment**.
 
 ## Reserved kinds (defined at their merge wave, not before)
 
@@ -214,10 +273,12 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For `language-bundle` and `database` the structural
-checklist **is the topic bar** — every non-`n/a` topic covered by the
-composition, each artifact inside the depth sizing. For `database` the
-composition is the instance component alone, and citing rather than
-restating the category doctrine is part of the bar. For `cloud-provider`
-no bar exists yet: the reviewer checks scope, facts and invocation only,
-and never invents a structural checklist this file has not settled.
+the kind's ruling. For all three kinds the structural checklist **is the
+topic bar** — every non-`n/a` topic covered by the composition, each
+artifact inside the depth sizing. For `database` the composition is the
+instance component alone, and citing rather than restating the category
+doctrine is part of the bar. For `cloud-provider` the composition
+supplies the bar in halves — the provider topics by the `cloud-provider`
+component, the service topics by each `cloud-service` component, the
+extension by category — and the cite-not-restate seam between service
+topics and provider doctrine is part of the bar.
