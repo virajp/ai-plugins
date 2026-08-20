@@ -58,7 +58,7 @@ const os = require("os");
 // stamping it during the build would split what is committed from what is
 // published. `i:test` asserts the two agree, which is the only thing that makes a
 // hand-synced second copy of a version number safe.
-const VERSION = "5.1.0";
+const VERSION = "5.2.0";
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
