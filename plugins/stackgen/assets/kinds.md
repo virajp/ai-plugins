@@ -22,6 +22,13 @@ says "the datastore", never a database by name; a database kind never names
 a framework. Generating two kinds together must not weld them — each stays
 independently re-syncable.
 
+One structural rule is kind-general: **one artifact per topic, loaded only
+on demand**. Each bar topic lands as its own artifact, and every artifact
+hangs lazily — a reference behind a **lean router skill**, or paths-scoped
+to the files it governs — so nothing enters a session until the work at
+hand needs it. The bar decides what must exist; this rule decides how it
+hangs.
+
 ## `language-bundle` — the composition rooted at a `language` component
 
 The bundle is a `language` component plus its `package-manager`,
@@ -116,30 +123,64 @@ usually means API surface crept in.
 
 ## `database` — a datastore the product runs against
 
-**Topic bar pending elicitation.** This kind's bar has not been settled;
-what follows is a structure sketch, labelled as such. The reviewer must
-not enforce a bar for it — a bar that was never settled would be enforced
-opinion nobody agreed to.
+The output is a **Datastore-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the category-level doctrine —
+the neutral datastore capability contract — plus one **instance component**
+(`type: datastore`, or a cloud's `cloud-service` with a datastore
+category). All six bar topics belong to the instance component; the
+category doctrine is what the instance **cites, never restates**.
 
 - **Axis**: `backing`.
-- **Structure**: one paths-scoped doctrine skill (connection/config
-  discipline, migration discipline, query-layer conventions, the
-  local-stack story) with references as needed; a rule for the migration
-  directory when one exists.
-- **Scope**: how this store is operated and accessed well — schema
-  evolution, transactions/consistency posture, retention and backup notes.
-  It realizes the neutral datastore contract; it never restates it, and it
-  never reaches into the language bundle's layout.
+- **Structure**: the **topic bar** below, hung per the kind-general rule —
+  one artifact per topic behind a lean router skill, plus a rule for the
+  migration directory when one exists.
+- **Scope**: when this store is the answer and how it is operated and
+  accessed well. It realizes the neutral datastore contract by citation;
+  it never restates it, and it never reaches into the language bundle's
+  layout.
 - **Facts & harness**: the `local_stack` mechanism is fixed by vwf's
   harness contract — Docker-composed service behind a `wait-on` readiness
   gate — so the kind emits that task plus the client tool and healthcheck.
-- **Invocation**: doctrine paths-scoped to the data layer and migration
-  paths.
+- **Invocation**: the router paths-scoped to the data layer and migration
+  paths; its references load on demand.
+
+### The topic bar
+
+A closed list of six topics, one artifact per topic, each individually
+researched and cited. Extracted from the curated archetype — the
+`datastore` plugin's contract and its `postgres` template.
+
+1. **Pick & trade** — when to pick this datastore, and when it stops
+   being the answer.
+2. **Data model constraints** — what the store forces on the blueprint's
+   entities: denormalization pressure, index limits, the query patterns
+   it punishes.
+3. **Contract satisfaction** — clause by clause against the neutral
+   datastore capability contract (record versioning/optimistic
+   concurrency, atomic multi-record writes, server-generated time,
+   forward-only migrations), citing the category doctrine per clause,
+   never restating it.
+4. **Connection & access shape** — pooling as a design decision,
+   connection limits, the client-direct exception where it applies, and
+   credentials: env-injected names-not-values catalogued in
+   `environment.md`, identity-based auth preferred so no password exists,
+   throwaway local-stack creds.
+5. **Cost shape** — the billing model and its traps, never dollar
+   figures.
+6. **Local stack** — the real engine composed behind a `wait-on` gate (or
+   its emulator), pinned to production's major version; a seam plus a
+   fake where the store is hosted-only.
+
+### Depth
+
+The `language-bundle` band applies unchanged: each topic's artifact is
+**60–130 dense lines of judgment**.
 
 ## `cloud-provider` — where the product runs and what it uses there
 
-**Topic bar pending elicitation.** As with `database`: the structure below
-is a sketch, not a settled bar, and the reviewer must not enforce one.
+**Topic bar pending elicitation.** The structure below is a sketch, not a
+settled bar, and the reviewer must not enforce one — a bar that was never
+settled would be enforced opinion nobody agreed to.
 
 - **Axis**: `backing` + `deploy`.
 - **Structure** (archetype: the `gcp` plugin): a **model-invocable judgment
@@ -173,8 +214,10 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For `language-bundle` the structural checklist **is the
-topic bar** — every non-`n/a` topic covered by the composition, each
-artifact inside the depth sizing. For `database` and `cloud-provider` no
-bar exists yet: the reviewer checks scope, facts and invocation only, and
-never invents a structural checklist this file has not settled.
+the kind's ruling. For `language-bundle` and `database` the structural
+checklist **is the topic bar** — every non-`n/a` topic covered by the
+composition, each artifact inside the depth sizing. For `database` the
+composition is the instance component alone, and citing rather than
+restating the category doctrine is part of the bar. For `cloud-provider`
+no bar exists yet: the reviewer checks scope, facts and invocation only,
+and never invents a structural checklist this file has not settled.

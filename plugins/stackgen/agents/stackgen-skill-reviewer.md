@@ -61,14 +61,15 @@ edits. You never write files.
    outside the output vocabulary (no executables from generation, no MCP or
    LSP configuration) appears at all.
 8. **Coverage.** For a kind whose topic bar is settled in `assets/kinds.md`
-   (today: `language-bundle`), walk the bar topic by topic against the
-   **composition** — whichever components supply each topic, per the kind's
-   topic→component-type mapping — never a single component in isolation. A
+   (today: `language-bundle` and `database`), walk the bar topic by topic
+   against the **composition** — whichever components supply each topic,
+   per the kind's topic→component-type mapping — never a single component
+   in isolation. A
    bar topic with no artifact is a gap, with exactly two honest outs: the
    citations record the topic `n/a` with why (the detected stack makes it
    inapplicable), or the citations disclosed the research thin for that
    topic. Where the bar applies, each artifact must also sit inside the
    kind's depth sizing — well short of it usually means the research
    stopped early; well over usually means API surface crept in. A kind
-   whose bar is pending elicitation (`database`, `cloud-provider`) gets no
-   coverage check: never enforce a bar `assets/kinds.md` has not settled.
+   whose bar is pending elicitation (`cloud-provider`) gets no coverage
+   check: never enforce a bar `assets/kinds.md` has not settled.
