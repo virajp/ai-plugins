@@ -100,6 +100,15 @@ vwf invokes skills on each configured plugin, at **exactly** these names:
 So `stacks: [ gcp ]` resolves to `/gcp:gcp-stack-menu`. vwf constructs every
 name from the configured value — nothing is looked up or guessed.
 
+**The catalog handover.** Every `-stack-template` invocation passes the
+principles-catalog asset paths
+(`${CLAUDE_PLUGIN_ROOT}/assets/principles/index.md` and its entries) alongside
+the slug — the design-adapter payload style: vwf hands its own asset paths
+into the invocation, and no plugin ever reaches into vwf's files. A curated
+plugin ignores them; a **generating** adapter (the materialized-template
+variant below) requires them, and halts by contract when they are missing
+rather than substituting general knowledge.
+
 **Why the name repeats the plugin.** OpenCode installs skills into one flat
 namespace, so two plugins declaring `stack-menu` would overwrite each other;
 Claude Code namespaces a skill by its plugin, so a bare name need only be unique
@@ -220,6 +229,42 @@ where the conventions happened to say nothing.
 the line that keeps a vendor name structurally impossible in a blueprint doc
 rather than merely discouraged, and it is why the stack lives in config in the
 first place.
+
+## The materialized-template variant
+
+A stack plugin may be a **materializer** rather than a library: instead of
+serving templates from its own tree forever, it lands them — skills, agents,
+hooks, rules, and the template payload itself — **directly in the repo's
+committed `.claude/` tree**, recorded in a lockfile the plugin owns, on an
+explicit, consent-gated first pin. The repo owns the copies; the plugin's
+own settings edits (hook wiring) take separate explicit consent, and the
+repo's CLAUDE.md stays vwf's domain — the materializer ends by recommending
+`/vwf:setup`. The `stackgen` plugin is this variant's implementation; vwf's
+side of the contract is three rules:
+
+- **The payload may carry `language_facts`** — per language, the facts a
+  language plugin would otherwise supply (LSP provision, mise tool, manifest;
+  `n/a` where honest). That is the **materialized escape** in
+  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`: a token those facts
+  cover is *known* to `/vwf:doctor` without a claiming language plugin.
+- **A materialized fetch is a pure read.** Once a slug is materialized, every
+  `-stack-template` call returns the committed payload from the repo — so
+  `plan`'s and `execute`'s conventions resolution behaves exactly as
+  *Resolving the conventions* states, with no research, network, or write on
+  their clock. Materialization itself happens once, interactively, when the
+  pin is first made; a pin whose materialization was declined is unresolved,
+  and the fetch says so rather than generating silently.
+- **The menu may carry one open entry.** A materializing adapter's menu may
+  offer *generate for an uncovered technology* (pinned as
+  `generated/<technology-slug>`) alongside its curated entries. That entry is
+  consent-gated, reviewer-gated generation — not the retired free-text
+  `custom`: nothing lands unresearched, unreviewed, or unrecorded, and the
+  resulting pin resolves to a real materialized template every later check
+  verifies. The open entry is not the only door into generation: a
+  materializing adapter may also generate *part* of an otherwise curated pin,
+  and vwf sees the same thing either way — one payload, one consent-gated
+  materialization. The no-fitting-template **halt** still applies when
+  nothing on any menu fits *and* no installed adapter offers generation.
 
 ## The UX gate
 

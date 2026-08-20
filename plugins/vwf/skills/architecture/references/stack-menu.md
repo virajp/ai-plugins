@@ -68,7 +68,15 @@ stack plugin owning that language declares.
 
 **The menu is the whole answer — there is no *other (describe)*.** Every axis
 must resolve to a template an installed plugin ships, and every `languages` token
-to one an installed plugin declares. When nothing on the menu fits, **halt** and
+to one an installed plugin declares — or to a **materialized** template whose
+payload carries `language_facts` for it (the materialized-template variant in
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). A materializing adapter's menu
+may include its one open entry — *generate for an uncovered technology*, pinned
+as `generated/<technology-slug>` — which is a legitimate pick, not a free-text
+escape: the pin only resolves once the adapter's consent-gated materialization
+lands, and the invocation passes the principles-catalog paths per the catalog
+handover in that same asset. When nothing on any menu fits and no installed
+adapter offers generation, **halt** and
 say so, naming the two ways forward: install the stack plugin that has it, or
 write one (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "Writing a stack
 plugin"). Never record a free-text axis, never write `template: custom` (retired

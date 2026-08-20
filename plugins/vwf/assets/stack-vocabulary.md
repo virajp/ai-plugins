@@ -41,6 +41,20 @@ Adding a language means **shipping a plugin for it**, which is what supplies the
 rows this file used to hardcode. It does not mean editing vwf. Until that plugin
 exists, vwf declines the repo rather than half-running against it.
 
+**The materialized escape.** There is a second way a token is known, added for
+adapters that materialize templates into the repo (the materialized-template
+variant in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`): a language is
+**known** when the project's pin resolves to a materialized template whose
+payload carries **`language_facts`** for that token — the same three facts a
+language plugin would supply (how the LSP is provided, the mise tool, the
+manifest), emitted into the template when it was materialized. `/vwf:doctor`
+then verifies the repo against those facts instead of against a language
+plugin, and `n/a` in a fact is an answer, not an absence. The escape changes
+nothing about the closed menu: the facts entered the config through a
+consent-gated materialization, not through free text. A token with **neither**
+a claiming plugin **nor** materialized facts stays `unknown`, and unknown stays
+**blocking**.
+
 ## The four axes
 
 A stack is **composed from four independent templates**, not one monolith. Each
