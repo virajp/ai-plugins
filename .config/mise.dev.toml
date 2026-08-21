@@ -30,9 +30,9 @@ uv       = { version = "latest" }
 
 [shell_alias]
 be-setup  = "mise run --cd ../backend setup:all"
-cc        = "claude --allow-dangerously-skip-permissions --dangerously-skip-permissions --remote-control 'ai-plugins'"
-ccf       = "claude --model 'fable[1m]' --effort 'high' --allow-dangerously-skip-permissions --dangerously-skip-permissions --remote-control 'ai-plugins'"
-cco       = "claude --model 'opus[1m]' --effort 'high' --allow-dangerously-skip-permissions --dangerously-skip-permissions --remote-control 'ai-plugins'"
+cc        = "claude --name 'ai-plugins' --remote-control --continue --allow-dangerously-skip-permissions --dangerously-skip-permissions --remote-control 'ai-plugins'"
+ccf       = "claude --name 'ai-plugins' --remote-control --continue --model 'fable[1m]' --effort 'high' --allow-dangerously-skip-permissions --dangerously-skip-permissions --remote-control 'ai-plugins'"
+cco       = "claude --name 'ai-plugins' --remote-control --continue --model 'opus[1m]' --effort 'high' --allow-dangerously-skip-permissions --dangerously-skip-permissions --remote-control 'ai-plugins'"
 fe-setup  = "mise run --cd ../frontend setup:all"
 precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
