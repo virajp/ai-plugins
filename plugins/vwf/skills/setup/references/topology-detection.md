@@ -111,8 +111,12 @@ What each platform obliges:
 - **`iac`** — registered, exempt from blueprint coverage, and **always its own
   repo**, never a directory inside another project's
   (`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`).
-- **Every `data` and `system` platform** — exempt from blueprint coverage. A doc
-  shape for them is a later effort; until it exists their absence from the
+- **`plugin`** — **covered** by the blueprint, unlike every other `system`
+  platform. Its flows are its **extension points**: one flow per skill, command
+  or hook, `index.md` alone, with no standard-flow mandates. The completeness
+  bar is `skills/blueprint-authoring/references/plugin-contract.md`.
+- **Every other `data` and `system` platform** — exempt from blueprint coverage.
+  A doc shape for them is a later effort; until it exists their absence from the
   blueprint is by design, not a hole.
 
 An **operator back-office** is not its own platform: record it as

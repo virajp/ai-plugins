@@ -9,7 +9,7 @@ tags: [ commerce, checkout ]
 
 # Flow: Place order
 
-<!-- Conformance example (blueprint-format 22). The PLATFORM-AGNOSTIC contract:
+<!-- Conformance example (blueprint-format 23). The PLATFORM-AGNOSTIC contract:
      no screens — they live in webapp.md beside this file. The goal-traceability
      spine runs product goal → this flow → entity/API/screen. Code-independent:
      names entities, the `api` service, and operationIds only. -->

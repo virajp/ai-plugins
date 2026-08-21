@@ -106,6 +106,13 @@ by the product; the surveyor skips the mandate check for it the way it skips
 `iac`. A project mixing `cli` with a screen platform is in scope through the
 screen platform, and its `cli` surface simply contributes no platform file.
 
+**`plugin` works the same way, and is the one `system` platform the surveyor
+still covers.** A plugin project's flows are its **extension points** — one flow
+per skill, command or hook, named for what it does, `index.md` alone, never
+reaching the canvas, mockups or the scratchpad, and with no standard-flow
+mandates. Screenless does not mean uncovered: the bar it is held to is
+`${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/plugin-contract.md`.
+
 ## The platform vocabulary
 
 Every platform token vwf knows lives in the registry's closed per-role lists
@@ -138,8 +145,8 @@ cli-only project is `index.md` alone, like a service flow. What `cli` does
 require is the design system's **Terminal UX** section.
 
 Every **other** platform — `service`, `worker`, `packages`, and every `data` and
-`system` token — is screenless in exactly the same way, and for the same reason:
-a flow of theirs is `index.md` alone. What was one exemption for `cli` is now
+`system` token, `plugin` included — is screenless in exactly the same way, and
+for the same reason: a flow of theirs is `index.md` alone. What was one exemption for `cli` is now
 the general rule, with the six above as the exception.
 
 The vocabulary names **form factors, not vendors** — `mobile` already hides

@@ -10,7 +10,7 @@ tags: [ commerce, navigation ]
 
 # Flow: Home
 
-<!-- Conformance example (blueprint-format 22). The ANCHOR flow: every screen-platform
+<!-- Conformance example (blueprint-format 23). The ANCHOR flow: every screen-platform
      project carries `100-home`, so its screens are always coded 100a, 100b, …
      Platform-agnostic contract only — screens live in webapp.md. -->
 

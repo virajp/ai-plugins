@@ -8,7 +8,8 @@ description: Import the product's design system from the configured design tool
   design.design_system_id in .config/vwf.yaml. A vwf foundation, mandatory
   once the product has a UI surface. Design systems are authored and iterated
   in your design tool; this skill imports via its adapter plugin, and never
-  authors visual language itself.
+  authors visual language itself. A product with no screen surface at all
+  takes the text-only path and elicits Terminal UX directly.
 argument-hint: "[design-system id — omit to let the adapter resolve it]"
 model: sonnet
 effort: high
@@ -59,10 +60,11 @@ components-and-anti-patterns, terminal-ux, checklist).
 Read `docs/blueprint/registry.yaml`. **Halt if it does not exist:** "No registry
 found. Run `/vwf:architecture` first." If the registry has **no** project
 declaring a **screen platform** (`site`, `webapp`, `desktop`, `mobile`,
-`tablet`, `auto`), tell the
-user a design system may not be needed and ask whether to (a) **add the UI
-project to the registry first** via `/vwf:architecture` (then return here), or
-(b) proceed anyway.
+`tablet`, `auto`), the run takes the **text-only path**: tell the user no
+project has a screen surface and ask whether to (a) **add the UI project to the
+registry first** via `/vwf:architecture` (then return here), or (b) proceed
+text-only. On (b), **skip §3 and §4 entirely** — the adapter exists for screens
+and there are none — and elicit the doc directly at §5.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
@@ -81,6 +83,12 @@ rationale (room `decisions`), plus parked visual/UX points (room `gaps`, tag
 `parked`). Skip silently if mempalace is unavailable.
 
 ### 3. Preflight the design adapter — or halt
+
+**Skipped entirely on the text-only path** (§1: no project declares a screen
+platform). The adapter is only ever needed for screens, so preflighting it for
+a repo with none halts on a condition that is vacuously true — a `cli`-or-
+`plugin`-only product could otherwise never get a design system at all, while
+still owing the **Terminal UX** section §1 marks required.
 
 vwf does not talk to any design tool. Per
 `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`, the tool is a **per-project**
@@ -105,10 +113,14 @@ halts — never collapsed into one, since each needs a different fix:
 The preflight exists because the failure is **silent**: an adapter skill set to
 `disable-model-invocation: true` cannot be invoked programmatically and does not
 error, so attempting the call and inspecting the result cannot distinguish
-"missing adapter" from "empty design system". This skill still has no offline
-authoring mode.
+"missing adapter" from "empty design system". Its **only** offline mode is the
+text-only path above, which exists because there are no screens to import —
+never as a fallback when an adapter is missing for a product that has some.
 
 ### 4. Delegate the import
+
+**Skipped on the text-only path** — there is no payload to import; §5 elicits
+every section instead.
 
 Invoke `/<tool>:<tool>-import-design-system` and parse its reply as a
 **design-system payload** per the adapter contract. Everything downstream is
@@ -131,6 +143,12 @@ Map the payload onto the template's sections: semantic token values, type &
 spacing scales, motion, accessibility, component behaviors, anti-patterns.
 **Contract vs realization** holds — values and scales, never the component
 library or CSS framework the payload may mention.
+
+**On the text-only path there is no payload**, so every section is elicited
+here per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`, starting with **Terminal
+UX** (design-system-authoring's terminal-ux reference) for a product whose only
+surface is a terminal. Elicit only the sections the product's platforms oblige;
+a doc full of screen tokens no screen uses is the density bar's problem.
 
 **Nothing invented.** A field the adapter returned as `null`, or a section no
 tool decided (commonly the accessibility conformance target, anti-patterns, or

@@ -850,8 +850,15 @@ library, CSS framework, or design file. Every flow's Screens reference it;
 
 **Drift is one-way.** The canvas is the source; the doc is its distillation.
 Change the design system on claude.ai/design and re-run the import — the doc is
-never published back. With no Claude Design connection the command halts with
-connect instructions (`/mcp`); there is no offline authoring mode.
+never published back. With no design-tool connection the command halts with
+connect instructions (`/mcp`).
+
+**One offline path, and only one.** A registry declaring **no** screen platform
+at all — a `cli`- or `plugin`-only product — takes the **text-only path**: the
+adapter preflight is skipped (it exists for screens, and there are none) and the
+doc, starting with **Terminal UX**, is elicited directly. This is never a
+fallback for a missing adapter on a product that *does* have screens; that still
+halts.
 
 ### /vwf:blueprint
 
@@ -876,15 +883,16 @@ slugs — `splash`, `signin`, `home`, `onboarding`, `settings`, `notifications`,
 `profile`, `delete-account`, `recover-account` — with per-role mandates: a
 project on a device platform (`mobile`/`tablet`/`desktop`/`auto`) must have
 `splash` and `home`; one on a browser platform (`site`/`webapp`) must have
-`home` (`splash` optional). A project whose only platform is `cli` is exempt —
-the standard slugs are screen journeys a terminal tool does not have. A project
-whose registry entry carries an **Auth & identity capability** must additionally
-have `signin` — and with it `profile`, `delete-account`, and `recover-account`
-(an account you can sign into can be viewed, recovered, and deleted). A missing
-mandatory standard flow is a coverage hole like any other — waivable per flow
-under `enforcement.rules` in `.config/vwf.yaml`, with a reason, never re-asked.
-The slugs are exact: a `login` or `account` flow whose journey matches is
-proposed for a consent-gated rename (links, catalogs, and canvas join keys move
+`home` (`splash` optional). A project with no screen platform — `cli`-only or
+`plugin`-only — is exempt: the standard slugs are screen journeys a terminal
+tool or an extension has no equivalent for. A project whose registry entry
+carries an **Auth & identity capability** must additionally have `signin` — and
+with it `profile`, `delete-account`, and `recover-account` (an account you can
+sign into can be viewed, recovered, and deleted). A missing mandatory standard
+flow is a coverage hole like any other — waivable per flow under
+`enforcement.rules` in `.config/vwf.yaml`, with a reason, never re-asked. The
+slugs are exact: a `login` or `account` flow whose journey matches is proposed
+for a consent-gated rename (links, catalogs, and canvas join keys move
 together), never renamed silently.
 
 Flows live **grouped by the registry project that owns the journey**, and a flow
@@ -894,6 +902,15 @@ folder holds two kinds of file: **`index.md`** — the platform-agnostic contrac
 platform's screens. A non-UI flow is `index.md` alone. Because the platform is
 the *filename*, the flows tree and the design-brief tree have the **same shape
 and the same names**.
+
+**Plugin projects are blueprinted too, as of format 23.** Every other `system`
+platform (`packages`, `iac`, `misc`, `cicd`) is registered but exempt from
+blueprint coverage; `plugin` is the carve-out. Its flows are its **extension
+points** — one per skill, command or hook, `index.md` alone, no standard-flow
+mandates — and each pins the host and the extension point it registers against,
+the invocation surface and why it was chosen, what the host supplies, the gates
+and halts, and the artifacts written. An unrepresented `plugin` project is a
+coverage hole like any other.
 
 **Numbers are designated, not invented.** One number line per project:
 

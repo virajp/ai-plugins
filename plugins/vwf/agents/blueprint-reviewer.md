@@ -55,9 +55,9 @@ orchestrator passes both. Verify the contract and every platform file:
       the registry project, each from the vocabulary (`mobile` / `tablet` /
       `desktop` / `site` / `webapp` / `auto`). A file with no row, a row with no file, an
       undeclared platform, or a Platforms section on a **non-UI** flow is a gap.
-      `cli` is a platform with no screens: it never takes a `cli.md` file and
-      never appears in a Platforms table, so a flow of a cli-only project is
-      reviewed as a non-UI flow.
+      `cli` and `plugin` are platforms with no screens: neither takes a
+      platform file nor appears in a Platforms table, so a flow of a project
+      declaring only those is reviewed as a non-UI flow.
 - [ ] **Each platform file** carries `type: vwf-flow-platform`, a `platform:`
       key matching its filename, and a resolving
       `Flow contract: [<name>](./index.md)` link. A missing link or a
@@ -154,6 +154,36 @@ orchestrator passes both. Verify the contract and every platform file:
       invariant — flag anything added "just in case". Never flag a surface a
       safety guardrail requires (validation, data-loss, security,
       accessibility).
+
+### The `plugin` variant
+
+When the passed registry block gives the flow's project `platforms: [ plugin ]`,
+the flow is an **extension point** and carries five sections a service flow has
+no equivalent for, per
+`${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/plugin-contract.md`.
+Every checklist item above still applies (minus Platforms, which such a flow
+never has). Additionally verify:
+
+- [ ] **Host & extension point** — names the host application and the specific
+      extension mechanism this flow registers against. Absent, or naming only
+      the host, is a gap.
+- [ ] **Invocation surface** — names who triggers it, how, and **why that
+      surface rather than another**. The reasoning is required, not optional:
+      where a host offers several invocation states the wrong one typically
+      fails silently, so an unjustified choice is a gap.
+- [ ] **What the host supplies** — the inputs the extension point receives,
+      each marked guaranteed or conditional. A step reading an input this
+      section does not list is a gap.
+- [ ] **Gates & halts** — every refusal condition, each with what the user is
+      told. A flow declaring none must say so explicitly; silence is a gap.
+- [ ] **Artifacts written** — what lands on disk and where, and whether it is
+      committed or ignored, or `none — <what it returns instead>`.
+- [ ] **Acceptance covers the gates** — every gate declared above has at least
+      one Given/When/Then criterion. A halt nobody tested is a halt that
+      silently stopped happening.
+- [ ] **No host-version or mechanism-spelling detail** — directory layout, file
+      names, frontmatter keys and manifest fields are realization, and the
+      host's version behaviour is a stack fact. Either is a gap here.
 
 ## Entity mode — checklist
 

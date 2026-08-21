@@ -53,7 +53,10 @@ condition; a unit may fail more than one (report the most blocking).
    exist in the named `apis/<project>.openapi.yaml`.
 5. **Unrepresented registry surface** — a registry project with no unit
    representing it per its `doc_unit`. An explicit `N/A — <reason>` counts as
-   represented.
+   represented. Projects whose platforms are all exempt from blueprint coverage
+   (`iac`, and every `data` / `system` platform) do not fail this — **except
+   `plugin`, which is covered**: a `plugin` project with no flow is a hole,
+   reported as a missing flow against the project.
 6. **Unreviewed screens** — a flow platform listed under `blueprint.remaining`
    as `screens/<project>/<NNN>-<flow>/<platform>`.
 7. **Stale coherence** — `coherence` present in the passed `remaining` list. 7a.
@@ -73,8 +76,9 @@ condition; a unit may fail more than one (report the most blocking).
    conditional ones, resolved from the registry's capability tokens (an Auth &
    identity capability requires `signin`, and with it `profile`,
    `delete-account`, `recover-account`) — that has no flow folder on the
-   project. Skip the whole check for a project whose **only** platform is `cli`
-   (the standard slugs are screen journeys), as for `iac`. Skip any slug
+   project. Skip the whole check for a project with no screen platform — one
+   whose only platform is `cli` or `plugin` (the standard slugs are screen
+   journeys), as for `iac`. Skip any slug
    waived in the passed `enforcement.rules` (`standard-flows/<project>/<slug>`).
    Report as a missing flow at its **designated number**
    (`flows/<project>/<NNN>-<slug>`). While checking, also note **synonym
@@ -86,9 +90,9 @@ condition; a unit may fail more than one (report the most blocking).
 10. **Structural drift** — a flow folder with no `index.md`, a `device:` key on
     an `index.md`, a `<platform>.md` with no Platforms row (or the reverse), or
     a platform outside the screen vocabulary (`mobile` / `tablet` / `desktop` / `site` / `webapp` /
-    `auto` / `cli`), or a `cli.md` file (a terminal surface has no screens, so
-    `cli` never takes a platform file). These are format-15 holes; name the
-    file.
+    `auto` / `cli`), or a `cli.md` / `plugin.md` file (neither a terminal
+    surface nor an extension point has screens, so neither takes a platform
+    file). These are format-15 holes; name the file.
 
 ## Ordering
 

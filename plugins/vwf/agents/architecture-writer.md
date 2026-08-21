@@ -136,9 +136,11 @@ admin routes.
 
 **`iac` is registered but exempt from blueprint coverage** — it carries no
 flows, screens or API contracts, and the coverage stamp ignores it. The same
-exemption covers **every `data` and `system` platform**: a doc shape for them is
-a later effort, and until it exists their absence from the blueprint is by
-design, not a hole. Record them all so
+exemption covers **every other `data` and `system` platform**: a doc shape for
+them is a later effort, and until it exists their absence from the blueprint is
+by design, not a hole. **`plugin` is the exception** — it is covered: its flows
+are its extension points, one per skill, command or hook, `index.md` alone.
+Record them all so
 `plan`, `doctor` and `execute` can see them. An `iac` project's `path` is
 whatever the
 orchestrator elicited and passes you: it lives in **its own repo**

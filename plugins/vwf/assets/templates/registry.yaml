@@ -65,7 +65,15 @@ projects:
 #     never a directory inside another project's (assets/topologies/). The one
 #     structural rule vwf enforces rather than offers.
 #
-#   every `data` and `system` platform
+#   plugin
+#     Covered by the blueprint, unlike every other `system` platform. Its
+#     flows are its EXTENSION POINTS — one flow per skill, command or hook,
+#     index.md alone, no standard-flow mandates. Each pins the host and the
+#     extension point, the invocation surface, what the host supplies, the
+#     gates and halts, and the artifacts written
+#     (skills/blueprint-authoring/references/plugin-contract.md).
+#
+#   every other `data` and `system` platform
 #     Exempt from blueprint coverage. Registered, stack-checked, plannable and
 #     executable, but requiring no flows or entities. A doc shape for these is
 #     a later effort; until it exists, absence of coverage is by design and not

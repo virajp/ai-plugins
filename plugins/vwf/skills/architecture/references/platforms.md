@@ -45,7 +45,8 @@ Everything that used to key on `role` now keys on these:
 | `site` `webapp` `desktop` `mobile` `tablet` `auto` | **screen platforms** — design system mandatory, standard flows mandated, one `<platform>.md` per flow, `/vwf:screens` briefs, canvas pins, mockups |
 | `service` | `apis/<project>.openapi.yaml` and a health endpoint |
 | `iac` | registered, exempt from blueprint coverage, **always its own repo** |
-| every `data` and `system` platform | exempt from blueprint coverage |
+| `plugin` | **covered** — flows are the extension points, one per skill/command/hook, `index.md` alone, no standard-flow mandates |
+| every other `data` and `system` platform | exempt from blueprint coverage |
 | everything else | a flow is `index.md` alone |
 
 **`site` vs `webapp`.** `site` is a browser-delivered **content** surface — a

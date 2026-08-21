@@ -43,6 +43,7 @@ them on every turn — write for that reader, not for a human skimming a spec.
 | [Contract vs realization](references/contract-vs-realization.md) | **Read first.** Sorting any decision into blueprint / plan / execute; the code-independence test                        |
 | [Density](references/density.md)                                 | **Read with it.** Per-doc line budgets, the delete test, and the anti-patterns that inflate a contract                  |
 | [Flow contract](references/flow-contract.md)                     | The primary unit: per-flow sections, the screen home rule, jobs, the sequence diagram, acceptance, and `flows/index.md` |
+| [Plugin contract](references/plugin-contract.md)                 | The `plugin` platform's flows — extension points: host, invocation surface, what the host supplies, gates, artifacts     |
 | [Entity contract](references/entity-contract.md)                 | The slimmed entity: lifecycle, invariants, relationships, `Used by:`, the schema link — and what moved to flows         |
 | [API & schema contracts](references/api-and-schema-contracts.md) | The YAML artifacts: `schema.yaml` and `apis/<project>.openapi.yaml` bars, path-typing, released-snapshot additive rule  |
 | [UI / UX contract](references/ui-ux-contract.md)                 | Per-screen decisions (on the owning flow): navigation, interaction patterns, state UX, forms                            |

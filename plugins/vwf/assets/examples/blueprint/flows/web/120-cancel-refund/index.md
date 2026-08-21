@@ -10,7 +10,7 @@ tags: [ commerce, refunds ]
 
 # Flow: Order cancellation & refund
 
-<!-- Conformance example (blueprint-format 22). A worked, format-valid flow doc
+<!-- Conformance example (blueprint-format 23). A worked, format-valid flow doc
      with an operator actor, a background job, and a compensation branch. -->
 
 ## Purpose
