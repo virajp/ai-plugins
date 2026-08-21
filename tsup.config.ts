@@ -22,8 +22,11 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  // Named, so the output is `bin/ai-plugins.mjs` rather than `bin/index.mjs`.
-  entry: { "ai-plugins": "cli/src/index.ts" },
+  // Named, so the output is `bin/installer.mjs` rather than `bin/index.mjs`.
+  // The name is the artifact's, not the command's: `package.json`'s `bin` KEY
+  // stays `ai-plugins`, which is what users invoke and what npm's Trusted
+  // Publisher is bound to.
+  entry: { installer: "cli/src/index.ts" },
   outDir: "bin",
   format: ["esm"],
   // Matches `engines.node`. The bundle is what makes that floor holdable.

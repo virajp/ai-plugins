@@ -6,39 +6,7 @@ import {
 import {
   parse,
   renderUsage,
-  statuslineFlag,
 } from "./args.ts";
-
-describe("statuslineFlag", () => {
-  it("stays undefined when neither is passed", () => {
-    // Unset means the run said nothing about the bar: a plugins-only run
-    // proceeds without it (`--all` never installs the statusline), and a run
-    // requesting nothing at all gets the help text.
-    expect(statuslineFlag(undefined, undefined)).toBeUndefined();
-  });
-
-  it("is true only for an explicit --statusline", () => {
-    // Load-bearing twice: it is also the only consent to replace a statusline
-    // this installer did not write.
-    expect(statuslineFlag(true, undefined)).toBe(true);
-  });
-
-  it("is false for --no-statusline", () => {
-    expect(statuslineFlag(undefined, true)).toBe(false);
-  });
-
-  it("lets refusal win the contradiction", () => {
-    // Both at once is a contradiction; refusal is the answer that changes
-    // nothing on the machine.
-    expect(statuslineFlag(true, true)).toBe(false);
-  });
-
-  it("reaches the parsed args as one tri-state", () => {
-    expect(parse([]).statusline).toBeUndefined();
-    expect(parse(["--statusline"]).statusline).toBe(true);
-    expect(parse(["--no-statusline"]).statusline).toBe(false);
-  });
-});
 
 describe("parse", () => {
   it("settles every value, so no consumer sees undefined", () => {
@@ -49,7 +17,6 @@ describe("parse", () => {
     expect(args.project).toEqual([]);
     expect(args.uninstall).toBe(false);
     expect(args.dryRun).toBe(false);
-    expect(args.force).toBe(false);
     expect(args.version).toBe(false);
     expect(args.help).toBe(false);
   });
@@ -90,7 +57,18 @@ describe("parse", () => {
     // The whole point of `strict`: a user with a retired flag in a script
     // deserves to be told rather than to watch a run do something other than
     // what they asked.
-    for (const flag of ["--platform", "--upgrade"]) {
+    for (
+      const flag of [
+        "--platform",
+        "--upgrade",
+        // Retired with the statusline. `strict` is what turns each of these
+        // into an error naming itself rather than a run quietly doing less
+        // than the script that invoked it asked for.
+        "--statusline",
+        "--no-statusline",
+        "--force",
+      ]
+    ) {
       expect(() => parse([flag, "claude"]), flag).toThrow(new RegExp(flag));
     }
   });
@@ -108,14 +86,11 @@ describe("renderUsage", () => {
 
     for (
       const flag of [
-        "--statusline",
-        "--no-statusline",
         "--all",
         "--user",
         "--project",
         "--uninstall",
         "--dry-run",
-        "--force",
         "--version",
         "--help",
       ]
@@ -128,7 +103,15 @@ describe("renderUsage", () => {
     // The table is the source for both parsing and help, so this is really an
     // assertion that nothing was left in the prose after being removed from
     // `OPTIONS`.
-    for (const flag of ["--platform", "--upgrade"]) {
+    for (
+      const flag of [
+        "--platform",
+        "--upgrade",
+        "--statusline",
+        "--no-statusline",
+        "--force",
+      ]
+    ) {
       expect(renderUsage().includes(`  ${flag}`), flag).toBe(false);
     }
   });

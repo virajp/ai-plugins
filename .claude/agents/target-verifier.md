@@ -1,11 +1,10 @@
 ---
 name: target-verifier
-description: Real-install verifier — proves the marketplace and the statusline
-  installer work against the actual `claude` CLI, hermetically. Invoked when a
-  change to plugins/, the marketplace generator or the installer needs proving
-  against the real tool; do not delegate to it for general tasks. Reports what
-  landed, what the receipt claims, and what survived. Pass what changed; no
-  conversation context.
+description: Real-install verifier — proves the marketplace and the installer
+  CLI work against the actual `claude` CLI, hermetically. Invoked when a change
+  to plugins/, the marketplace generator or the installer needs proving against
+  the real tool; do not delegate to it for general tasks. Reports what landed
+  and what survived an uninstall. Pass what changed; no conversation context.
 tools: Bash, Read, Grep, Glob
 model: opus
 effort: high
@@ -24,16 +23,20 @@ are what found the Claude plugin-cache bug (a newer payload on disk while the
 old version stayed live) and Oh-My-Pi's stale marketplace catalog — neither
 reachable by any unit test.
 
-There are **two independent things to verify**, and they no longer travel
-together:
+There are **two routes to the same result**, and both are worth verifying:
 
-| What                                 | Installed by                                              |
-| ------------------------------------ | --------------------------------------------------------- |
-| the plugins, from the marketplace    | `claude plugin marketplace add` + `claude plugin install` |
-| the statusline and graphify's wiring | `node bin/ai-plugins.mjs --statusline`                    |
+| Route                | Command                                                   |
+| -------------------- | --------------------------------------------------------- |
+| Claude's own, direct | `claude plugin marketplace add` + `claude plugin install` |
+| through this CLI     | `node bin/installer.mjs --user <name>`                    |
 
-The CLI installs **no plugins**. If you find yourself passing it a plugin name,
-re-read `cli/src/args.ts`.
+The CLI is a **thin wrapper** over the first route — it sequences those same
+commands and never edits Claude's settings itself — so the two should leave the
+machine in the same state. A divergence is a finding.
+
+The CLI installs nothing else of its own. Everything it puts on a machine
+belongs to `claude` or to `graphify`, which is why it writes **no receipt**; the
+statusline, which was the one exception, has moved to `@askviraj/claude-status`.
 
 ## Hard rules
 
@@ -58,14 +61,14 @@ re-read `cli/src/args.ts`.
    untouched, and say so in your report — an isolation claim you did not check
    is not an isolation claim.
 2. **Verify the built bundle, not the source**, for the CLI half. Run
-   `mise run i:build` first and drive `node bin/ai-plugins.mjs`. In the repo
+   `mise run i:build` first and drive `node bin/installer.mjs`. In the repo
    everything resolves through the workspace, so a packaging fault only appears
    in the artifact.
 3. **Do not stub `claude`.** A stub tests this repo against our fiction of that
    CLI, and the whole value here is the real one. If `claude` is not on `PATH`,
-   say so and stop. (`i:test` puts a no-op `claude` on `PATH` because the
-   statusline install only needs the binary to *exist*; that is a different job
-   from yours.)
+   say so and stop. (`i:test` puts a no-op `claude` on `PATH` because its runs
+   only need the binary to *exist* — the plugin path there is `--dry-run` only;
+   that is a different job from yours.)
 4. **Read the flag surface from `cli/src/args.ts`** rather than trusting any
    document, including this one.
 5. **Compare with `/usr/bin/diff`, never bare `diff`.** On this machine `diff`
@@ -115,12 +118,17 @@ re-read `cli/src/args.ts`.
    via `claude plugin marketplace remove`. Compare against the pre-install
    snapshot: report every path that survived and every registration left
    pointing at something gone.
-7. **Separately**, verify the CLI half: `--statusline` into the same hermetic
-   home, twice, then `--uninstall --dry-run`. The receipt must still record the
-   prior state after the second run — that is the bug class that keeps
-   recurring. Do not drive the interactive `--uninstall`; it refuses without a
-   TTY by design.
-8. Remove the temp home.
+7. **Separately**, verify the CLI route into a fresh hermetic home:
+   `node bin/installer.mjs --user vwf`, then `--uninstall --dry-run`. Compare
+   the resulting settings against what the direct route produced in step 1–6 —
+   the wrapper should be indistinguishable from the commands it drives. Do not
+   drive the interactive `--uninstall`; it refuses without a TTY by design.
+8. **If the home you are given carries a legacy receipt** (`statusline.json` or
+   any `*-opencode.json` / `*-ohmypi.json` / `cursor.json`), assert
+   `--uninstall --dry-run` lists it. That reader is the only thing standing
+   between an upgrading machine and being orphaned, and nothing writes those
+   receipts any more — so no run can produce one to test with by accident.
+9. Remove the temp home.
 
 ## Output
 

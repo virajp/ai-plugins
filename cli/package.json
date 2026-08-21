@@ -2,7 +2,7 @@
   "name": "@ai-plugins/cli",
   "version": "0.0.0",
   "private": true,
-  "description": "Installs the Claude statusline, wires graphify, and removes what the toolkit put on a machine. Bundled into the published @askviraj/ai-plugins package.",
+  "description": "Installs the virajp-plugins plugins, wires graphify, and removes what the toolkit put on a machine. Bundled into the published @askviraj/ai-plugins package.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "jsonc-parser": "latest",
-    "smol-toml": "latest",
     "write-file-atomic": "latest"
   },
   "devDependencies": {

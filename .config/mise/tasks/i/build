@@ -13,17 +13,16 @@ cd "$MISE_PROJECT_ROOT"
 print_header "Bundling cli/ into bin/ ..."
 pnpm exec tsup
 
-if [[ ! -f bin/ai-plugins.mjs ]]; then
-  print_error "tsup produced no bin/ai-plugins.mjs"
+if [[ ! -f bin/installer.mjs ]]; then
+  print_error "tsup produced no bin/installer.mjs"
   exit 1
 fi
 
-# The bundle finds its own package root by walking up for package.json and reads
-# the rendered trees from there. If that resolution broke, every adapter would
-# silently point
-# at the wrong tree — so prove the built artifact runs, not merely that it exists.
+# The bundle finds its own package root by walking up for package.json, and the
+# version report reads that manifest. Existing is not the same as running — so
+# prove the built artifact runs.
 print_header "Smoke-testing the bundle ..."
-node bin/ai-plugins.mjs --help >/dev/null
+node bin/installer.mjs --help >/dev/null
 
 print_header "Listing package contents (dry run) ..."
 pnpm pack --dry-run

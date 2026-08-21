@@ -7,9 +7,9 @@
  * through and marks the output executable, which is what lets `package.json`'s
  * `bin` entry point straight at the bundle.
  *
- * **The CLI has four jobs**: plugins, the Claude statusline, graphify's wiring,
- * and an interactive `--uninstall`. Plugins are installed by **driving Claude
- * Code's own commands** against this repo on GitHub —
+ * **The CLI has three jobs**: plugins, graphify's wiring, and an interactive
+ * `--uninstall`. Plugins are installed by **driving Claude Code's own commands**
+ * against this repo on GitHub —
  * `claude plugin marketplace add virajp/ai-plugins` then `claude plugin
  * install` per plugin (`install.ts`) — so the four plugin adapters, the payload
  * copy, `--platform` and the `requires:` dependency gate stay gone, along with
@@ -59,19 +59,9 @@ import {
   renderProgress,
 } from "./report.ts";
 import {
-  ask,
-  autoConfigureAllowed,
-  interactive,
-  resolveConsent,
-  setAutoConfigure,
-} from "./statusline-consent.ts";
-import {
-  claudeStatuslineConflict,
-  executeStatusline,
-} from "./statusline.ts";
-import {
   askSelection,
   enumerate,
+  interactive,
   removeItems,
   renderItems,
   resolveSelection,
@@ -83,58 +73,6 @@ import {
 } from "./version.ts";
 
 export { PACKAGE_NAME } from "./context.ts";
-
-/**
- * May the bar be **configured** — may Claude be pointed at it?
- *
- * `undefined` is the refusal: consent was needed and could not be got, so the
- * caller stops the run. It was a per-surface record when there were three bars;
- * with one, it is one answer.
- *
- * `--statusline` is the only way to ask for an install now, so `explicit` is
- * always true here and this grants every time — see `statusline-consent.ts` for
- * why the asking branches are kept rather than deleted. The reachable half is
- * the **clear**: a machine carrying `autoConfigure: false` from a version where
- * `--all` could install the bar has that refusal lifted here.
- *
- * A dry run never asks and never writes. It reports what an answered run would
- * do at its most complete.
- */
-export async function resolveStatuslineConsent(
-  context: Context,
-  explicit: boolean,
-  dryRun: boolean,
-): Promise<boolean | undefined> {
-  if (dryRun) {
-    return true;
-  }
-  if (explicit) {
-    setAutoConfigure(context, true);
-  }
-
-  const verdict = resolveConsent({
-    conflict: claudeStatuslineConflict(context),
-    explicit,
-    remembered: !autoConfigureAllowed(context),
-    interactive: interactive(),
-  });
-  if (verdict === "fail") {
-    return undefined;
-  }
-  if (verdict === "configure") {
-    return true;
-  }
-  if (
-    verdict === "skip" || !await ask(claudeStatuslineConflict(context) ?? "")
-  ) {
-    setAutoConfigure(context, false);
-    context.log(
-      "statusline: kept your statusline; re-run with --statusline to replace it",
-    );
-    return false;
-  }
-  return true;
-}
 
 export async function run(args: Args): Promise<void> {
   const startedAt = Date.now();
@@ -177,7 +115,6 @@ export async function run(args: Args): Promise<void> {
   if (args.version) {
     const report = await buildVersionReport({
       sourceRoot: context.sourceRoot,
-      home: context.home,
     });
     // Data to stdout; the reason the remote half is missing is not data.
     process.stdout.write(`${renderVersionReport(report)}\n`);
@@ -199,7 +136,7 @@ export async function run(args: Args): Promise<void> {
   };
   const wantsPlugins = pluginsRequested(request);
 
-  if (args.statusline !== true && !wantsPlugins) {
+  if (!wantsPlugins) {
     // No request at all. There is no install verb — asking for something *is*
     // the request — so this covers a bare invocation and one carrying only
     // modifiers, `--dry-run` being the one that reads like a request and is not.
@@ -210,79 +147,39 @@ export async function run(args: Args): Promise<void> {
     process.stderr.write(`${renderUsage()}`);
     process.stderr.write(
       "\nnothing to do: pass --all, --user or --project to install plugins, "
-        + "--statusline to install the bar, or --uninstall\n",
+        + "or --uninstall\n",
     );
     process.exit(1);
   }
 
-  // Writing into `~/.claude/settings.json` for a tool that is not on the machine
-  // leaves config behind for something that will never read it. A skip rather
-  // than a silent install, and `--force` is the override — for a machine where
-  // Claude is installed somewhere off `PATH`. Plugin installs *are* `claude`
-  // invocations, so for those `--force` cannot substitute: the run fails either
-  // way, and refusing here fails it before anything is written.
+  // Plugin installs *are* `claude` invocations, so there is nothing to fall back
+  // to when it is absent: the run would fail either way, and refusing here fails
+  // it before anything is written. (`--force` existed to override this for the
+  // statusline, which only needed Claude to *exist*; with the bar gone there is
+  // no case left where forcing makes sense.)
   if (!hasBin("claude")) {
-    if (wantsPlugins) {
-      process.stderr.write(
-        "claude is not on PATH, and plugin installs run claude itself — "
-          + "--force cannot substitute for it.\nInstall Claude Code first.\n",
-      );
-      process.exit(1);
-    }
-    if (!args.force) {
-      process.stderr.write(
-        "claude is not on PATH, so there is nothing to configure the statusline "
-          + "for.\nInstall Claude Code, or pass --force if it is installed "
-          + "somewhere off PATH.\n",
-      );
-      process.exit(1);
-    }
+    process.stderr.write(
+      "claude is not on PATH, and plugin installs run claude itself.\n"
+        + "Install Claude Code first.\n",
+    );
+    process.exit(1);
   }
 
   // Before anything runs: a mistyped plugin name fails the run having written
   // nothing, as one sentence rather than three failed commands.
-  if (wantsPlugins) {
-    try {
-      resolveRequest(request);
-    }
-    catch (error) {
-      process.stderr.write(`${(error as Error).message}\n`);
-      process.exit(1);
-    }
+  try {
+    resolveRequest(request);
+  }
+  catch (error) {
+    process.stderr.write(`${(error as Error).message}\n`);
+    process.exit(1);
   }
 
-  // Consent before *any* install, not just before the bar's: a run that is
-  // going to refuse should refuse having written nothing at all, and the prompt
-  // has to reach a terminal the progress spinner is not mid-line on. A
-  // plugins-only run never gets here, so it never prompts.
-  let consent: boolean | undefined;
-  if (args.statusline === true) {
-    progress.clear();
-    consent = await resolveStatuslineConsent(
-      context,
-      args.statusline === true,
-      options.dryRun,
-    );
-    if (consent === undefined) {
-      process.stderr.write(
-        "\nrefusing to replace a statusline that is not this installer's "
-          + "without an answer.\nPass --statusline to replace it, or "
-          + "--no-statusline to leave it alone.\n",
-      );
-      process.exit(1);
-    }
-  }
+  const outcomes: Outcome[] = [
+    ...executeInstall(planInstall(request, options), options),
+  ];
 
-  const outcomes: Outcome[] = [];
-  if (wantsPlugins) {
-    outcomes.push(...executeInstall(planInstall(request, options), options));
-  }
-  if (args.statusline === true && consent !== undefined) {
-    outcomes.push(executeStatusline(options, consent));
-  }
-
-  // After the install, whichever half ran: vwf's commands halt at their own
-  // entry gate without it.
+  // After the install: vwf's commands halt at their own entry gate without it.
   if (!options.dryRun) {
     // The slowest tail of a run, and previously the longest silence in it.
     progress.step("wiring graphify");
@@ -377,20 +274,21 @@ async function uninstall(
 }
 
 /**
- * The package root — what holds `tools/` and this package's own `package.json`.
+ * The package root — what holds this package's own `package.json`, which the
+ * version report reads.
  *
  * Found by walking up rather than by counting `..` segments, because this code
- * runs from two depths: `cli/src/index.ts` in the repo and `bin/ai-plugins.mjs`
+ * runs from two depths: `cli/src/index.ts` in the repo and `bin/installer.mjs`
  * once tsup has bundled it. A fixed offset would be right in one and silently
  * wrong in the other, resolving `sourceRoot` to a directory that exists but
- * holds none of the assets the statusline copies from.
+ * holds no manifest.
  *
  * Matched on the package *name*, so the workspace's own `cli/package.json` is
  * walked past rather than mistaken for the root.
  */
 function packageRoot(): string {
   // Escape hatch, and the same name the old installer used for it. Needed
-  // whenever the payload is not somewhere above this module — a checkout being
+  // whenever the manifest is not somewhere above this module — a checkout being
   // driven from elsewhere, as the tests do.
   const override = process.env["AI_PLUGINS_SOURCE_DIR"];
   if (override !== undefined && override.length > 0) {

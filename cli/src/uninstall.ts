@@ -23,27 +23,33 @@
  *   `Item.tracked`. The numbers **toggle**.
  * - **Removal goes through the owner.** A plugin leaves by
  *   `claude plugin uninstall`, never by editing `enabledPlugins` — Claude keeps
- *   bookkeeping beside that key and hand-editing it strands the two apart. The
- *   statusline leaves by **restoring its receipt**, so the bar the user had
- *   before comes back; a bare delete would leave them with no statusline at all
- *   and no way to tell what they had.
- * - **No TTY fails rather than guesses**, the same rule the statusline consent
- *   follows — but only once there is something to remove. A run that finds
- *   nothing has nothing to ask about, so it says so and exits 0 whether or not
- *   anyone is watching.
+ *   bookkeeping beside that key and hand-editing it strands the two apart. A
+ *   receipted install leaves by **being reverted**, so what the user had before
+ *   comes back; a bare delete would leave them with nothing there at all and no
+ *   way to tell what it had been.
+ * - **No TTY fails rather than guesses** — but only once there is something to
+ *   remove. A run that finds nothing has nothing to ask about, so it says so and
+ *   exits 0 whether or not anyone is watching.
  *
  * ## The legacy-receipt reader
  *
- * Every receipt in the receipt directory **other than the statusline's** is the
- * record of an install by a multi-target version of this CLI: a copied OpenCode
- * plugin tree, the OpenCode TUI bar, the Oh-My-Pi `omp config` keys, a Cursor
- * `settings.json` entry, the copied Claude marketplace payload. Those surfaces
- * are discontinued, and this is the one piece of multi-target code deliberately
- * kept: without it a machine carrying them is orphaned rather than cleaned,
- * because nothing else on earth knows those paths.
+ * **This CLI writes no receipts.** It installs plugins by driving Claude's own
+ * commands and wires graphify by driving graphify's, and both tools keep their
+ * own records — so every receipt in the receipt directory is the record of an
+ * install by an *older* version: the statusline it used to ship, a copied
+ * OpenCode plugin tree, the OpenCode TUI bar, the Oh-My-Pi `omp config` keys, a
+ * Cursor `settings.json` entry, the copied Claude marketplace payload. Those
+ * surfaces are all discontinued, and this reader is deliberately kept: without
+ * it a machine carrying them is orphaned rather than cleaned, because nothing
+ * else on earth knows those paths.
  *
- * **Drop it once no supported version can have written one** — concretely, two
- * releases after the Claude-first major, or as soon as the maintainer's own
+ * `statusline.json` is the newest of them and the one most machines will have.
+ * It records the statusline the user had *before* ours displaced it, so
+ * reverting it is what puts their own bar back — the one behaviour the
+ * statusline's removal had to not break.
+ *
+ * **Drop this once no supported version can have written one** — concretely,
+ * two releases after the statusline major, or as soon as the maintainer's own
  * machine and any reported install have been through one `--uninstall`. What to
  * delete then: `LEGACY_RECEIPTS`, `legacyItems`, the `receipt` removal kind, and
  * the `tree` / `command` entry kinds in `receipt.ts` that exist only for these.
@@ -69,6 +75,7 @@ import {
   readSettings,
   userSettingsFile,
 } from "./claude-settings.ts";
+import { restoreJsonKey } from "./config/json.ts";
 import type {
   Context,
   RunOptions,
@@ -83,11 +90,6 @@ import {
   revert as revertReceipt,
 } from "./receipt.ts";
 import type { Outcome } from "./report.ts";
-import {
-  restoreJsonKey,
-  revertStatuslineInstall,
-  statuslineReceiptPath,
-} from "./statusline.ts";
 
 /** Which half of the machine a piece belongs to, and how the list is grouped. */
 export type Level = "user" | "repo" | "legacy";
@@ -112,8 +114,6 @@ export type Removal =
     /** Project scope is resolved from the working directory Claude is given. */
     readonly cwd?: string;
   }
-  /** Restore the statusline receipt, putting the user's own bar back. */
-  | { readonly kind: "statusline"; }
   /**
    * Replay a receipt an older multi-target install left behind.
    *
@@ -192,6 +192,10 @@ const LEGACY_RECEIPTS: Readonly<
   "cursor.json": { label: "Cursor plugin registration" },
   "ohmypi.json": { label: "Oh-My-Pi plugins and marketplace", bin: "omp" },
   "opencode.json": { label: "the copied OpenCode plugin tree" },
+  // The newest of them, and the one most machines will carry: it records the
+  // statusline the user had before this toolkit's displaced it, so reverting it
+  // is what puts their own bar back.
+  "statusline.json": { label: "the Claude statusline" },
   "statusline-ohmypi.json": {
     label: "the Oh-My-Pi statusline",
     bin: "omp",
@@ -208,13 +212,13 @@ const LEGACY_RECEIPTS: Readonly<
  */
 export function enumerate(options: RunOptions): Item[] {
   return [
-    ...userItems(options.context, options.receiptDir),
+    ...userItems(options.context),
     ...repoItems(options.context),
     ...legacyItems(options.receiptDir),
   ];
 }
 
-function userItems(context: Context, receiptDir: string): Item[] {
+function userItems(context: Context): Item[] {
   const items: Item[] = [];
   const settings = readSettings(userSettingsFile(context));
 
@@ -251,10 +255,6 @@ function userItems(context: Context, receiptDir: string): Item[] {
     });
   }
 
-  const bar = statuslineItem(receiptDir);
-  if (bar !== undefined) {
-    items.push(bar);
-  }
   return items;
 }
 
@@ -325,11 +325,12 @@ function repoItems(context: Context): Item[] {
 }
 
 /**
- * One item per surviving receipt that is not the statusline's.
+ * One item per surviving receipt.
  *
- * Described from the receipt's own `plugins` list where it has one — that field
- * was written by every adapter and read by nothing for two versions, and this is
- * what finally reads it.
+ * Every receipt is a legacy one now — nothing this version installs writes one —
+ * so there is no exclusion here. Described from the receipt's own `plugins` list
+ * where it has one: that field was written by every adapter and read by nothing
+ * for two versions, and this is what finally reads it.
  */
 function legacyItems(receiptDir: string): Item[] {
   let names: string[];
@@ -342,9 +343,6 @@ function legacyItems(receiptDir: string): Item[] {
 
   const items: Item[] = [];
   for (const name of names) {
-    if (name === "statusline.json") {
-      continue;
-    }
     const path = join(receiptDir, name);
     const receipt = readReceipt(path);
     if (receipt === undefined) {
@@ -461,6 +459,17 @@ export const PROMPT =
   "\nEnter the numbers to TOGGLE, Enter to accept as shown, "
   + "or q to cancel: ";
 
+/**
+ * Is the terminal able to carry a question and an answer?
+ *
+ * The one guard `--uninstall` refuses on: a run with no terminal cannot be asked
+ * which pieces to keep, and guessing is the worst available answer for a
+ * destructive command. `--dry-run` is the scriptable path instead.
+ */
+export function interactive(): boolean {
+  return process.stdin.isTTY === true && process.stderr.isTTY === true;
+}
+
 /** Ask, on stderr — stdout is the data channel the dry-run diff goes to. */
 export async function askSelection(count: number): Promise<Selection> {
   const rl = createInterface({ input: process.stdin, output: process.stderr });
@@ -511,9 +520,6 @@ export function removeItem(item: Item, options: RunOptions): Outcome {
   const { context, dryRun } = options;
 
   switch (item.removal.kind) {
-    case "statusline":
-      return revertStatuslineInstall(options);
-
     case "claude":
       return runTool(
         item,
@@ -729,18 +735,4 @@ export function graphifyHookInstalled(context: Context): boolean {
       return false;
     }
   });
-}
-
-/** The statusline item, when there is a receipt to restore it from. */
-export function statuslineItem(receiptDir: string): Item | undefined {
-  if (!existsSync(statuslineReceiptPath(receiptDir))) {
-    return undefined;
-  }
-  return {
-    id: "statusline",
-    level: "user",
-    label: "the Claude statusline",
-    note: "restores whatever statusline you had before it",
-    removal: { kind: "statusline" },
-  };
 }

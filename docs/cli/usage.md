@@ -1,8 +1,8 @@
 # The installer CLI — usage
 
 `@askviraj/ai-plugins` installs **plugins** (by driving Claude Code's own
-commands), installs the **statusline**, wires up **graphify**, and **removes**
-what this toolkit put on your machine.
+commands), wires up **graphify**, and **removes** what this toolkit put on your
+machine.
 
 ```sh
 # Install the default plugin set (vwf; devtools arrives as its dependency)
@@ -11,9 +11,6 @@ pnpx @askviraj/ai-plugins --all
 # Install plugins by name, at either scope
 pnpx @askviraj/ai-plugins --user vwf --user typescript
 pnpx @askviraj/ai-plugins --project vwf
-
-# Install the statusline (the main bar and the subagent panel), and wire graphify
-pnpx @askviraj/ai-plugins --statusline
 
 # See what a run would do, without writing anything
 pnpx @askviraj/ai-plugins --all --dry-run
@@ -26,26 +23,24 @@ The examples use `pnpx`; if you do not use pnpm, `npx` works the same.
 
 ## The flags
 
-| Flag               | Does                                                                       |
-| ------------------ | -------------------------------------------------------------------------- |
-| `--statusline`     | Install the statusline — **and consent** to replacing one already there    |
-| `--no-statusline`  | Skip the statusline                                                        |
-| `--all`            | Install the default plugin set (`vwf`, user scope)                         |
-| `--user <name>`    | Install a plugin at user scope; repeatable                                 |
-| `--project <name>` | Install a plugin at project scope, for this repo only; repeatable          |
-| `--uninstall`      | List everything installed and remove what you do not deselect              |
-| `--dry-run`        | Show the full diff without writing anything                                |
-| `--force`          | Act although Claude Code is not on `PATH` — statusline only                |
-| `-v`, `--version`  | This CLI, the statusline on disk, and each plugin's version against `main` |
-| `-h`, `--help`     | The usage text                                                             |
+| Flag               | Does                                                              |
+| ------------------ | ----------------------------------------------------------------- |
+| `--all`            | Install the default plugin set (`vwf`, user scope)                |
+| `--user <name>`    | Install a plugin at user scope; repeatable                        |
+| `--project <name>` | Install a plugin at project scope, for this repo only; repeatable |
+| `--uninstall`      | List everything installed and remove what you do not deselect     |
+| `--dry-run`        | Show the full diff without writing anything                       |
+| `-v`, `--version`  | This CLI's version, and each plugin's version on `main`           |
+| `-h`, `--help`     | The usage text                                                    |
 
 **An invocation that installs nothing prints the help and exits 1.** A bare run
 is the common case there.
 
 Parsing is strict, so a flag that no longer exists reports itself by name rather
-than being silently ignored. If you have `--platform` or `--upgrade` in a
-script, that script is from before the Claude-first release; upgrading is
-Claude's own `claude plugin update`.
+than being silently ignored. **`--statusline`, `--no-statusline` and `--force`
+join `--platform` and `--upgrade` on that list** — the statusline has moved to
+another project, and `--force` existed only for it. Upgrading is Claude's own
+`claude plugin update`.
 
 ## Installing plugins
 
@@ -63,7 +58,7 @@ claude plugin install vwf@virajp-plugins
 
 Either route works; the marketplace is this repo's `main` in both. The CLI never
 edits Claude's settings itself — Claude's commands own that bookkeeping — so it
-needs `claude` on `PATH`, and `--force` cannot substitute for it.
+needs `claude` on `PATH`, and there is nothing it can do without one.
 
 `--project` keeps a plugin to one repo (recorded in the repo's
 `.claude/settings.json`, resolved from the directory you run in) instead of your
@@ -76,8 +71,10 @@ by name because which language, cloud and capability plugins you want is a
 question about your product.
 
 An already-installed plugin is reported as satisfied, never auto-updated — see
-[Upgrading](#upgrading). No receipt is written for a plugin install: Claude's
-own settings are the record, and `--uninstall` reads them live.
+[Upgrading](#upgrading). **No receipt is written at all** — not for a plugin
+install and not for anything else this CLI does. Claude's own settings are the
+record for plugins, graphify keeps its own for the hook, and `--uninstall` reads
+both live.
 
 Restart your agent afterwards so the skills, hooks and MCP servers load.
 
@@ -111,24 +108,14 @@ retired gate: a missing language server is an ordinary finding, and `pnpm` and
 while a missing `pnpm` surfaces as the context7 MCP server failing to start.
 Install all five.
 
-## The statusline
+## The statusline has moved
 
-The bar is installed whenever you ask for it. **Configuring Claude to use it**
-is a separate step, and that step is gated on consent, because it displaces
-whatever statusline you already had.
+Earlier versions installed a powerline statusline for Claude Code. It now lives
+in a separate project and is not installed from here; `--statusline`,
+`--no-statusline` and `--force` are retired flags.
 
-- `--statusline` **is** the consent. Passing it is how you say "yes, replace
-  it".
-- A statusline this tool installed is not foreign, so a repeat run never asks
-  about its own bar.
-- With **no terminal** to ask on, the run **fails** rather than guessing.
-  Silently overwriting is the bug; silently skipping would make an unattended
-  install report success with the bar unconfigured.
-- A refusal is remembered, as `"autoConfigure": false` in
-  `~/.config/statusline.json`. Passing `--statusline` again clears it.
-
-The full configuration reference — segments, palettes, the two config layers —
-is [docs/plugins/statusline.md](../plugins/statusline.md).
+**If you installed it from here, `--uninstall` still removes it** and restores
+the statusline you had before it. See [Undoing an install](#undoing-an-install).
 
 ## Seeing what a run would do
 
@@ -141,14 +128,15 @@ installed here?" without touching it.
 `--uninstall` is **interactive**. It enumerates every piece of the toolkit it
 can see from where it runs:
 
-- **At user level** — the `virajp-plugins` marketplace registration, user-scoped
-  plugin installs, and the statusline.
+- **At user level** — the `virajp-plugins` marketplace registration and
+  user-scoped plugin installs.
 - **At repo level**, when run inside a repo — project-scoped plugin installs,
   and graphify's hook, graph and `.graphifyignore`.
-- **Plus anything an older, multi-target install left behind** — the copied
-  OpenCode plugin tree, the OpenCode and Oh-My-Pi statuslines. Those surfaces
-  are discontinued; this is how they get removed cleanly rather than orphaned.
-  It is kept for a release or two and then dropped.
+- **Plus anything an older install left behind** — **this toolkit's own
+  statusline**, the copied OpenCode plugin tree, the OpenCode and Oh-My-Pi
+  statuslines, and the Cursor registration. Those surfaces are all discontinued;
+  this is how they get removed cleanly rather than orphaned. It is kept for a
+  release or two and then dropped.
 
 Machine state starts **selected**; anything whose removal would edit a
 **git-tracked** file in the current checkout starts **unselected**, shown `[ ]`.
@@ -158,9 +146,10 @@ project-scope plugin rows read out of a committed `settings.json` have to be
 asked for. The numbers you enter **toggle** a row, either way.
 
 Each piece is removed through whatever owns it: `claude plugin uninstall` and
-`claude plugin marketplace remove` for plugins, and for the statusline a
-**restore from the receipt** rather than a delete, so the bar you had before
-comes back.
+`claude plugin marketplace remove` for plugins, `graphify hook uninstall` for
+the hook, and for anything with a receipt a **restore from that receipt** rather
+than a delete — so the statusline you had before this toolkit's comes back,
+rather than leaving you with none at all and no record of what it was.
 
 With no terminal to ask on, it **fails** rather than guessing — unless there is
 nothing to remove, in which case it says so and exits 0, because a run with
@@ -174,10 +163,10 @@ pnpx @askviraj/ai-plugins --uninstall
 pnpx @askviraj/ai-plugins --uninstall --dry-run
 ```
 
-**What an uninstall deliberately leaves**: `~/.config/statusline.json`. The
-installer seeds it once and it becomes yours — it may hold your palette and your
-layout, and throwing that away because you removed the bar would be the wrong
-trade.
+**What an uninstall deliberately leaves**: `~/.config/statusline.json`, if you
+have one. It was seeded once and became yours — it may hold your palette and
+your layout, and throwing that away would be the wrong trade, all the more so
+now that the statusline lives in another project you may still be using it from.
 
 **What it never touches**: plugins enabled from another marketplace, a
 statusline this tool did not install, and any directory another tool owns.
@@ -188,17 +177,16 @@ statusline this tool did not install, and any directory another tool owns.
 pnpx @askviraj/ai-plugins --version
 ```
 
-Three things, from three places:
+Two things, from two places:
 
-- **This CLI** — the version of the package that is running. Under `pnpx` that
-  is whatever was just downloaded.
-- **The statusline on disk** — obtained by running the *installed* script and
-  asking it. This is the number that tells you whether your bar is current; the
-  CLI used to print its own version here and label it "bundled", which under
-  `pnpx` described nothing you had. An install old enough to predate the flag
-  reports `unknown (predates self-reporting)` rather than being guessed at.
-- **Each plugin** — the local marketplace manifest against the one on `main`,
-  since `main` is what you install from.
+- **This CLI** — the running package's version, against the latest on npm. Under
+  `pnpx` the running one is whatever was just downloaded.
+- **Each plugin** — what the marketplace manifest on `main` lists, since `main`
+  is what you install from.
+
+It reports nothing off your disk. What you actually have installed is
+`claude plugin list`, which answers that natively — parsing Claude's bookkeeping
+a second time to say the same thing would only be a second thing to drift.
 
 It exits 1 if it could not reach the network. Note that the `main` side is read
 from raw GitHub and can be **CDN-cached for a few minutes** after a release — if
@@ -219,6 +207,6 @@ statement of what that route does not promise.
 
 ## See also
 
-- [index.md](./index.md) — why the statusline ships here at all
+- [index.md](./index.md) — what the CLI is for, and how to upgrade
 - [targets.md](./targets.md) — what lands on disk, and where
 - [internals.md](./internals.md) — the maintainer's map

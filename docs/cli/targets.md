@@ -2,15 +2,19 @@
 
 Two writers, and it is worth being clear about which puts what where.
 
-| Written by                  | What                                                    |
-| --------------------------- | ------------------------------------------------------- |
-| `claude plugin install`     | the plugins: skills, agents, hooks, MCP and LSP servers |
-| `pnpx @askviraj/ai-plugins` | the statusline, its caps hook, and graphify's wiring    |
+| Written by              | What                                                    |
+| ----------------------- | ------------------------------------------------------- |
+| `claude plugin install` | the plugins: skills, agents, hooks, MCP and LSP servers |
+| `graphify`              | its own index and the git hooks that refresh it         |
 
-The CLI's plugin flags (`--all`, `--user`, `--project`) do not add a third
-writer: they **drive** `claude plugin` and never edit Claude's settings
-themselves — Claude keeps bookkeeping beside what it writes, and hand-editing
-would strand the two apart.
+**`pnpx @askviraj/ai-plugins` is not a third writer.** It sequences the other
+two and writes nothing itself: the plugin flags (`--all`, `--user`, `--project`)
+drive `claude plugin` and never edit Claude's settings directly — Claude keeps
+bookkeeping beside what it writes, and hand-editing would strand the two apart —
+and graphify's wiring is `graphify`'s own two commands.
+
+This is why the CLI leaves **no receipt**. There is nothing of its own on disk
+to record; what is there belongs to a tool that already tracks it.
 
 ## The plugins
 
@@ -23,7 +27,7 @@ claude plugin install vwf@virajp-plugins
 ```
 
 The marketplace is **this repo on GitHub**. `.claude-plugin/marketplace.json` at
-the repo root lists all 13 plugins, each with a `source` of `./plugins/<name>` —
+the repo root lists all 14 plugins, each with a `source` of `./plugins/<name>` —
 resolved against the marketplace root, which is why that manifest sits at the
 root rather than inside `plugins/`.
 
@@ -53,49 +57,46 @@ while the old version stayed live. The installer had to compare its own
 advertised version against Claude's bookkeeping and force an update. With one
 copy on `main`, `marketplace update` is the whole of it.
 
-## The statusline
-
-```sh
-pnpx @askviraj/ai-plugins --statusline
-```
-
-| Path                              | What                                                |
-| --------------------------------- | --------------------------------------------------- |
-| `~/.claude/scripts/statusline`    | the bar itself — one script, both surfaces          |
-| `~/.claude/hooks/context-caps.js` | the `PostToolUse` hook that feeds it usage data     |
-| `~/.claude/settings.json`         | four keys: two status lines, one env var, one hook  |
-| `~/.config/statusline.json`       | the seeded default config — **yours** after that    |
-| `~/.config/ai-plugins/receipts/`  | what the install touched, and what was there before |
-
-One script drives both surfaces: a payload carrying a `tasks` array renders the
-subagent panel, anything else the main two-line bar.
-
-**Configuring Claude is gated on consent**, since it displaces whatever bar you
-had — `--statusline` is that consent, and with no terminal to ask on the run
-fails rather than guessing. See [usage.md](./usage.md#the-statusline).
-
-Claude Code must be on `PATH`, or the run needs `--force`.
-
 ## graphify
 
-Installed alongside the statusline, when `graphify` is on `PATH`:
-`graphify
-install` plus `graphify hook install`, for the `claude` platform. If
-graphify is missing the run says so and carries on — vwf will report it as
-blocking at first use, which is the honest place for it.
+Wired after every install, when `graphify` is on `PATH`: `graphify install` plus
+`graphify hook install`, for the `claude` platform. If graphify is missing the
+run says so and carries on — vwf will report it as blocking at first use, which
+is the honest place for it.
+
+## The statusline no longer lands here
+
+Earlier versions wrote a powerline bar — `~/.claude/scripts/statusline`, a
+`context-caps.js` hook, and four keys in `~/.claude/settings.json`. **That has
+moved to a separate project**, and nothing in this CLI writes any of it.
+
+Claude Code must be on `PATH` for a run to do anything at all now, since every
+install is a `claude` invocation. `--force`, which existed only to install the
+bar on a machine where Claude was off `PATH`, is retired.
 
 ## Receipts
 
-The statusline install writes a receipt recording **what was there before**, so
-an uninstall restores rather than guesses. A plugin install writes none —
-Claude's own settings are the record, and `--uninstall` reads them live. That is
-the difference between removing the keys we know we set — safe only while that
-inference holds — and putting your actual prior configuration back.
+**Nothing writes one any more.** The install paths belong to `claude` and
+`graphify`, and both tools keep their own records — which is what `--uninstall`
+reads live.
 
-`--uninstall` reads those receipts, and also reads the receipts an **older,
-multi-target install** left behind, so a machine carrying the discontinued
-OpenCode plugin tree or the OpenCode and Oh-My-Pi statuslines can be cleaned
-rather than orphaned. See [usage.md](./usage.md#undoing-an-install).
+What is left is the **reader**, and it earns its place: a machine that installed
+an earlier version still has receipts on disk, and each records what was there
+*before* that install. `--uninstall` replays them, so what comes back is your
+actual prior configuration rather than the keys this tool guesses it once set.
+
+| Receipt                    | Restores                                     |
+| -------------------------- | -------------------------------------------- |
+| `statusline.json`          | the statusline you had before this toolkit's |
+| `statusline-opencode.json` | the OpenCode TUI bar                         |
+| `statusline-ohmypi.json`   | the Oh-My-Pi `omp config` segments           |
+| `opencode.json`            | the copied OpenCode plugin tree              |
+| `cursor.json`              | the Cursor plugin registration               |
+| `claude.json`              | the copied Claude marketplace payload        |
+
+All six surfaces are discontinued. This reader is what lets a machine carrying
+one be cleaned rather than orphaned, and it is kept for a release or two and
+then dropped. See [usage.md](./usage.md#undoing-an-install).
 
 ## Other agents
 
@@ -104,12 +105,8 @@ them. Point your agent at this repo and ask it to adapt the plugin; the prompts
 and the caveats are in the
 [readme](https://github.com/virajp/ai-plugins#other-tools).
 
-**Cursor never had a status surface** and still does not. The OpenCode TUI bar
-and Oh-My-Pi's `omp config` segments were discontinued — `--uninstall` removes
-them cleanly.
-
 ## See also
 
 - [usage.md](./usage.md) — every flag, and the uninstall interaction
-- [index.md](./index.md) — why the statusline ships in a CLI at all
+- [index.md](./index.md) — what the CLI is for, and how to upgrade
 - [internals.md](./internals.md) — the maintainer's map

@@ -15,6 +15,12 @@ import {
  * same one: an edit must disturb what it names and nothing else — comments,
  * key order, quoting and indentation all survive, because the alternative is
  * silently rewriting somebody's hand-maintained config.
+ *
+ * The fixture keeps a `statusLine` key even though this CLI installs no
+ * statusline: it is Claude Code's own key, and it is the exact `configKey` a
+ * v5.2.0 receipt names. Restoring that key byte-for-byte is what `--uninstall`
+ * still has to do on an upgrading machine, so it is the right thing to be
+ * pinning here rather than a made-up one.
  */
 
 describe("jsonc", () => {

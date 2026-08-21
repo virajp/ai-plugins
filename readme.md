@@ -28,9 +28,10 @@ Around it the marketplace ships **thirteen more plugins** — languages, clouds,
 capabilities, tooling, design and generation. That is the point of the split:
 vwf owns the workflow and names no technology at all, so every concrete choice
 lives in a plugin you install only if your product uses it. They install through
-Claude Code's own plugin commands, straight from this repo; the
-[statusline](#statusline) is separate, and ships through one small CLI,
-[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins).
+Claude Code's own plugin commands, straight from this repo — or through one
+small CLI,
+[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins),
+which sequences those same commands and wires up graphify.
 
 These are **Claude Code plugins**, authored natively. Other agents are served by
 [a prompt, not a bespoke build](#other-tools) — see that section for what you do
@@ -111,9 +112,12 @@ Upgrading is `claude plugin marketplace update` followed by
 `claude plugin update <name>` — the marketplace is served from this repo's
 `main`, which every push validates in CI.
 
-The [statusline](#statusline) is the one piece that is *not* a plugin, because
-no plugin mechanism can install a status bar. It comes from npm; see that
-section.
+**The statusline used to ship here and no longer does** — it has moved to
+[`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status),
+which is also where the caps hook that pauses a long `/vwf:execute` run now
+comes from. If you installed the bar from here,
+`pnpx @askviraj/ai-plugins --uninstall` still removes it and restores whatever
+statusline you had before it.
 
 ## Other tools
 
@@ -162,8 +166,6 @@ Paste one of these, adjusting the plugin name:
   ask.
 - **Per-plugin dependencies are yours to follow.** `vwf` depends on `devtools`;
   nothing outside Claude Code will resolve that for you.
-- **The statusline is Claude-only.** The OpenCode and Oh-My-Pi status surfaces
-  were discontinued; see [Statusline](#statusline).
 
 ## The plugins
 
@@ -308,59 +310,40 @@ claude plugin install --scope project flutter@virajp-plugins
 
 ## Statusline
 
-A standalone, powerline-style statusline (main two-line bar + subagent panel),
-fully data-driven from JSON and themeable across three config layers (defaults →
-`~/.config/statusline.json` → `<repo-root>/.config/statusline.json`). It
-installs through the same CLI — not the plugin marketplace — copying the script
-to `~/.claude/scripts/` and writing the chosen key(s) into
-`~/.claude/settings.json`. Requires a [Nerd Font](https://www.nerdfonts.com/).
-
-**Claude Code is the only surface.** An OpenCode TUI bar and an Oh-My-Pi
-configuration existed and were discontinued in the Claude-first release; if you
-have either, `pnpx @askviraj/ai-plugins --uninstall` reads the old receipt and
-removes it cleanly. Cursor exposes no status surface at all, and never did.
-
-![The statusline: model and effort, context used, rate-limit windows, session cost, repo and branch](./docs/plugins/how-it-looks.png)
+**The statusline has moved to its own project.** It is not installed from here
+any more, and `--statusline`, `--no-statusline` and `--force` are retired flags
+that now exit non-zero naming themselves.
 
 ```sh
-# install the statusline (both the main bar and the subagent panel)
-pnpx @askviraj/ai-plugins --statusline
+pnpx @askviraj/claude-status --install
 ```
 
-Installing it also wires a **context & rate-limit caps hook** — it pauses long
-`/vwf:execute` runs at budget thresholds (context over 65%, 5-hour over 90%,
-7-day over 80%) by triggering a handoff. Its sensor *is* that bar, which is why
-the two travel together.
+That is also where the **context & rate-limit caps hook** now comes from — the
+`PostToolUse` hook that pauses long `/vwf:execute` runs at budget thresholds
+(context over 65%, 5-hour over 90%, 7-day over 80%) by triggering a handoff. Its
+sensor *is* the bar: those figures reach a session only on the statusline
+payload, never on hook stdin, which is why the two travel together. **vwf cannot
+detect its absence**, so install it before a long autonomous run rather than
+after — without it the pause never fires.
 
-The script reports its own version, so `--version` tells you what is actually
-installed rather than what the package you just ran happens to contain:
-
-```sh
-pnpx @askviraj/ai-plugins --version
-```
-
-The Claude bar also carries a **monthly spend** segment — the budget from
-claude.ai → Settings → Usage, e.g. `$75.93/$150 (51%)`. It sits in the default
-layout but draws only for team and enterprise seats, whose limit is a monthly
-spend cap rather than the 5-hour and 7-day windows; the figure is refreshed in
-the background into a machine-wide cache, so a render never waits on a request.
-
-See **[docs/plugins/statusline.md](./docs/plugins/statusline.md)** for setup and
-the full configuration reference.
+**If you installed the bar from here, nothing is stranded.**
+`pnpx @askviraj/ai-plugins --uninstall` still finds the old receipt and restores
+whatever statusline you had before it, rather than leaving `settings.json`
+pointing at a script that is gone. The same is true of the discontinued OpenCode
+TUI bar and Oh-My-Pi configuration.
 
 ## The installer CLI
 
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins) is
-a small CLI with four jobs: install **plugins** (`--all`, `--user`, `--project`
+a small CLI with three jobs: install **plugins** (`--all`, `--user`, `--project`
 — a thin wrapper driving Claude's own commands, shown under [Install](#install)
-above), install the **statusline**, wire up **graphify**, and **remove** what
-this toolkit put on your machine.
+above), wire up **graphify**, and **remove** what this toolkit put on your
+machine.
 
 **[docs/cli/](./docs/cli/)** is the full reference —
 [usage](./docs/cli/usage.md) for the flag surface,
-[targets](./docs/cli/targets.md) for what lands where,
-[statusline](./docs/cli/statusline.md) for why the bar ships here rather than as
-a plugin, and [internals](./docs/cli/internals.md) for the maintainer's map.
+[targets](./docs/cli/targets.md) for what lands where, and
+[internals](./docs/cli/internals.md) for the maintainer's map.
 
 ### Using it
 
@@ -368,13 +351,13 @@ a plugin, and [internals](./docs/cli/internals.md) for the maintainer's map.
 Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
-# Install the statusline, and wire graphify
-pnpx @askviraj/ai-plugins --statusline
+# Install the default set (vwf, plus devtools as its dependency), and wire graphify
+pnpx @askviraj/ai-plugins --all
 
-# See exactly what a run would write, without writing it
-pnpx @askviraj/ai-plugins --statusline --dry-run
+# See exactly what a run would do, without writing anything
+pnpx @askviraj/ai-plugins --all --dry-run
 
-# Versions: this CLI, the statusline on disk, and each plugin against main
+# Versions: this CLI against npm, and each plugin on main
 pnpx @askviraj/ai-plugins --version
 
 # List everything the toolkit installed, and remove what you do not deselect
@@ -385,16 +368,16 @@ Two things worth knowing before you run it; everything else is
 [docs/cli/usage.md](./docs/cli/usage.md), which is the one place the flag
 surface is described.
 
-- **A statusline you already have is never replaced without your say-so.**
-  `--statusline` is the flag that counts as consent, and with no terminal to ask
-  in (a setup script, CI) the run **fails** rather than guessing in either
-  direction. A refusal is remembered, and `--statusline` clears it.
+- **It writes nothing of its own.** Every install goes through the tool that
+  owns it — `claude plugin install` for plugins, `graphify` for its wiring — so
+  running the CLI and running those commands yourself leave the same machine.
+  That is also why it keeps no receipt: what is on disk belongs to a tool that
+  already tracks it.
 - **`--uninstall` shows you a list and removes what you do not deselect.** Each
-  piece goes through whatever owns it — `claude plugin uninstall` for plugins,
-  and for the statusline a restore from its receipt, so the bar you had before
-  comes back rather than nothing. It also finds the discontinued OpenCode and
-  Oh-My-Pi surfaces from an older install, so nothing is orphaned. `--dry-run`
-  is the scriptable way to just look.
+  piece goes through whatever owns it, and anything an *older* version installed
+  — this toolkit's statusline, the discontinued OpenCode and Oh-My-Pi surfaces —
+  is restored from its receipt rather than deleted, so what you had before comes
+  back. `--dry-run` is the scriptable way to just look.
 
 ## Credits & acknowledgements
 
@@ -403,8 +386,8 @@ or would be far poorer — without these. Thank you to their authors and
 maintainers. 🙏
 
 - **[Claude Code](https://claude.ai/code)** by
-  [Anthropic](https://anthropic.com) — the host these plugins, hooks, and
-  statusline plug into.
+  [Anthropic](https://anthropic.com) — the host these plugins and hooks plug
+  into.
 - **[MemPalace](https://github.com/MemPalace/mempalace)** — the AI memory system
   that powers `vwf`'s cross-session recall. Its two skills are vendored into
   `vwf` under MIT; see `plugins/vwf/vendor/mempalace/`.
@@ -431,6 +414,3 @@ maintainers. 🙏
 - **[tsup](https://tsup.egoist.dev/)** — bundles the installer CLI for
   publication. Argument parsing is Node's own `util.parseArgs`; the CLI carries
   no parser dependency.
-- **[Nerd Fonts](https://www.nerdfonts.com/)** — the glyphs that make the
-  statusline render, and the **[Gruvbox](https://github.com/morhetz/gruvbox)**
-  palette it ships by default.

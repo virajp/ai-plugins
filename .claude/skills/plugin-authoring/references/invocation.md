@@ -26,9 +26,10 @@ delegated to by name somewhere:
   its continuation through all three); `product` / `architecture` /
   `design-system` / `doctor` (`setup` orchestrates them — and `doctor` also has
   `plan` and `execute` as callers, both of which halt on a blocking finding);
-  `handoff` (`execute` runs it at a resource cap, and the statusline caps hook
-  instructs it); `feedback` (`verify` routes failures through it); `screens`
-  (`feedback canvas` routes into it); `readme` (`setup` orchestrates it).
+  `handoff` (`execute` runs it at a resource cap, and the external caps hook's
+  directive names it); `feedback` (`verify` routes failures through it);
+  `screens` (`feedback canvas` routes into it); `readme` (`setup` orchestrates
+  it).
 - **User-only when nothing does**, and the user owns the timing: `setup`,
   `verify`, `mockups`, `archive`, `recall`. Every reference to these from
   another skill must read as a **recommendation to the user**, never an

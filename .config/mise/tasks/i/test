@@ -14,8 +14,7 @@ cd "$MISE_PROJECT_ROOT"
 print_header "Bundling cli/ into bin/ ..."
 pnpm exec tsup >/dev/null
 
-CLI=(node bin/ai-plugins.mjs)
-STATUSLINE="tools/statusline/statusline"
+CLI=(node bin/installer.mjs)
 
 print_header "Rendering --help ..."
 "${CLI[@]}" --help >/dev/null
@@ -27,63 +26,50 @@ if "${CLI[@]}" >/dev/null 2>&1; then
   exit 1
 fi
 
-print_header "Asserting an unknown flag is rejected ..."
-if "${CLI[@]}" --platform claude >/dev/null 2>&1; then
-  print_error "Expected non-zero exit for a retired flag (--platform)"
-  exit 1
-fi
-
-# The one assertion that makes the hand-synced version safe.
-#
-# The statusline reports its own version from a hardcoded constant, because the
-# CLI cannot report what is on disk otherwise: under `pnpx` the running package
-# is whatever was just downloaded, not what the user installed. `i:version`
-# stamps that constant during the bump; this is what catches a bump that edited
-# package.json and missed the script — which would ship a bar lying about its
-# own version, silently, since nothing else ever compares them.
-print_header "Asserting the statusline reports package.json's version ..."
-PKG_VERSION="$(node -p "require('./package.json').version")"
-SCRIPT_VERSION="$("${STATUSLINE}" --version)"
-if [[ "${SCRIPT_VERSION}" != "${PKG_VERSION}" ]]; then
-  print_error "${STATUSLINE} reports ${SCRIPT_VERSION}, package.json says ${PKG_VERSION}"
-  print_warn  "Run 'mise run i:version' to stamp it, or fix the constant by hand."
-  exit 1
-fi
+# `strict` parsing is what makes a retired flag answer by name instead of being
+# a silent no-op — a user with one in a script is told, rather than watching a
+# run do less than they asked for. --statusline, --no-statusline and --force
+# joined this list when the statusline left.
+print_header "Asserting every retired flag is rejected ..."
+for flag in --platform --upgrade --statusline --no-statusline --force; do
+  if "${CLI[@]}" "$flag" claude >/dev/null 2>&1; then
+    print_error "Expected non-zero exit for a retired flag (${flag})"
+    exit 1
+  fi
+done
 
 # ---------------------------------------------------------------------------
-# End-to-end: install, install again, then the two non-interactive uninstall
-# paths — against the BUILT bundle and a throwaway HOME.
+# End-to-end, against the BUILT bundle and a throwaway HOME.
 #
-# Everything above this line exits before anything is written. The bug class this
-# section exists for only ever showed up on a REPEAT run: an install that records
-# its own output as the state to restore, so the uninstall gives the user our bar
-# back instead of theirs. The unit tests cover that with fakes; this covers it
-# against the real filesystem and the real bundle.
+# Everything above this line exits before anything is read or written. What
+# follows covers the one thing this version can break invisibly: a machine
+# upgrading from v5.2.0 carries a `statusline.json` receipt recording the bar
+# our statusline displaced. This CLI no longer installs a statusline and has no
+# `statusline` removal kind — so unless that receipt is read as a LEGACY one,
+# `--uninstall` stops finding it and the user's own bar never comes back, while
+# reporting a clean uninstall.
 #
-# `claude` is stubbed because the statusline install only needs it to exist,
-# and the plugin install path is exercised as `--dry-run` only — driving a real
-# install through a stub would test this tool against our own fiction of
-# Claude's CLI. The command *sequence* is covered by the vitest suite with an
-# injected fake exec.
+# It is seeded here rather than produced, because nothing in this version can
+# produce it: the writer went with the bar. The fixture below is the shape
+# v5.2.0 wrote.
+#
+# `claude` is stubbed because the plugin install path is exercised as
+# `--dry-run` only — driving a real install through a stub would test this tool
+# against our own fiction of Claude's CLI. The command *sequence* is covered by
+# the vitest suite with an injected fake exec.
 # ---------------------------------------------------------------------------
-print_header "Installing twice, then uninstalling, against a throwaway HOME ..."
+print_header "Setting up a throwaway HOME ..."
+
 
 E2E_HOME="$(mktemp -d)"
 trap 'rm -rf "$E2E_HOME"' EXIT
 
 NODE_DIR="$(dirname "$(command -v node)")"
-mkdir -p "$E2E_HOME/bin" "$E2E_HOME/.claude"
+mkdir -p "$E2E_HOME/bin" "$E2E_HOME/.claude/scripts"
 printf '#!/bin/sh\nexit 0\n' >"$E2E_HOME/bin/claude"
 chmod +x "$E2E_HOME/bin/claude"
 
-# A statusline that is not ours, already in place. The install must record it and
-# every later run must leave that record alone — that is the whole point below.
-FOREIGN="/opt/somebody-elses/bar.sh"
-cat >"$E2E_HOME/.claude/settings.json" <<JSON
-{ "statusLine": { "type": "command", "command": "${FOREIGN}" } }
-JSON
-
-# HOME drives \`context.home\`; the two XDG vars keep the receipt and the user
+# HOME drives `context.home`; the two XDG vars keep the receipt and the user
 # config inside the throwaway too. Without all three a "hermetic" run still
 # writes into the developer's own config.
 e2e() {
@@ -95,10 +81,8 @@ e2e() {
     "${CLI[@]}" "$@"
 }
 
-RECEIPT="$E2E_HOME/.config/ai-plugins/receipts/statusline.json"
-
-# The plugin install path, dry only: the bundle must parse the restored flags
-# and describe the claude commands it would run, without writing anything.
+# The plugin install path, dry only: the bundle must parse the flags and
+# describe the claude commands it would run, without writing anything.
 print_header "Asserting --user vwf --dry-run describes the claude commands ..."
 before_plugins="$(find "$E2E_HOME" -type f | sort)"
 plugin_dry="$(e2e --user vwf --dry-run)"
@@ -117,69 +101,95 @@ if [[ "$before_plugins" != "$after_plugins" ]]; then
   exit 1
 fi
 
-# --statusline IS the consent to displace what is there; without it the run would
-# stop rather than replace the foreign bar.
-if ! e2e --statusline >/dev/null; then
-  print_error "First install failed"
-  exit 1
-fi
-if [[ ! -f "$E2E_HOME/.claude/scripts/statusline" ]]; then
-  print_error "First install wrote no statusline script"
-  exit 1
-fi
-if ! grep -q "$FOREIGN" "$RECEIPT"; then
-  print_error "The receipt does not record the statusline that was there before"
-  cat "$RECEIPT"
-  exit 1
-fi
+# --- The v5.2.0 migration ---------------------------------------------------
+#
+# The state a machine on the previous release is in: our bar configured in
+# settings.json, our script on disk, and a receipt recording the FOREIGN bar
+# that was there first.
+print_header "Seeding a v5.2.0 statusline install ..."
 
-# Content, not just filenames. The old version of this check compared `find`
-# output, so it would have passed while a file's bytes changed underneath it.
-# The receipt is excluded because `installedAt` is expected to move on every
-# run; its *contents* are asserted separately, above and below, which is the
-# claim that actually matters.
-snapshot() {
-  (cd "$E2E_HOME" \
-    && find . -type f -not -path "./bin/*" -not -path "*/receipts/*" \
-    | sort | xargs shasum)
+FOREIGN="/opt/somebody-elses/bar.sh"
+SETTINGS="$E2E_HOME/.claude/settings.json"
+SCRIPT="$E2E_HOME/.claude/scripts/statusline"
+RECEIPT_DIR="$E2E_HOME/.config/ai-plugins/receipts"
+RECEIPT="$RECEIPT_DIR/statusline.json"
+
+printf '#!/usr/bin/env node\n// the bar v5.2.0 installed\n' >"$SCRIPT"
+chmod +x "$SCRIPT"
+cat >"$SETTINGS" <<'JSON'
+{
+  "statusLine": {
+    "type": "command",
+    "command": "${HOME}/.claude/scripts/statusline"
+  }
 }
-first="$(snapshot)"
+JSON
 
-if ! e2e --statusline >/dev/null; then
-  print_error "Second install failed — the repeat-run path is broken"
-  exit 1
-fi
-if ! grep -q "$FOREIGN" "$RECEIPT"; then
-  print_error "The repeat install overwrote the prior state with its own output"
-  print_warn  "An uninstall would now restore OUR bar instead of the user's."
-  cat "$RECEIPT"
-  exit 1
-fi
+mkdir -p "$RECEIPT_DIR"
+cat >"$RECEIPT" <<JSON
+{
+  "version": 3,
+  "installedAt": "2026-08-01T00:00:00Z",
+  "entries": [
+    { "kind": "dir", "path": "${E2E_HOME}/.claude/scripts" },
+    { "kind": "file", "path": "${SCRIPT}" },
+    {
+      "kind": "configKey",
+      "file": "${SETTINGS}",
+      "path": ["statusLine"],
+      "hadKey": true,
+      "previous": { "type": "command", "command": "${FOREIGN}" }
+    }
+  ]
+}
+JSON
 
-second="$(snapshot)"
-if [[ "$first" != "$second" ]]; then
-  print_error "Second install changed the tree; it must be idempotent"
-  diff <(printf '%s\n' "$first") <(printf '%s\n' "$second") || true
-  exit 1
-fi
-
-# --uninstall is interactive by design, so the two paths reachable without a
-# terminal are what this asserts. Both matter: the dry run is how a script sees
-# what is installed, and the refusal is what stops an unattended run from
-# guessing which pieces the user wanted kept.
-print_header "Asserting --uninstall --dry-run finds the statusline and writes nothing ..."
-dry_out="$(e2e --uninstall --dry-run)"
-if ! grep -q "statusline" <<<"$dry_out"; then
-  print_error "--uninstall --dry-run did not list the statusline"
+# What this proves, and what it deliberately leaves to vitest.
+#
+# The dry run is the whole reachable half here: `--uninstall` is interactive by
+# design and refuses without a TTY, and allocating one portably is a BSD-vs-GNU
+# `script` trap this repo already pays elsewhere. So the CLI-level assertion is
+# that the built bundle, resolving HOME and both XDG vars for real, FINDS the
+# v5.2.0 receipt at the path v5.2.0 wrote it to — which is the half that breaks
+# if `statusline.json` falls out of `LEGACY_RECEIPTS`.
+#
+# The restore itself — settings.json carrying the foreign command again, byte
+# for byte — is asserted in `uninstall.test.ts`, against a real temp filesystem
+# through the same `revertLegacyReceipt` path this run would take.
+print_header "Asserting --uninstall --dry-run finds the v5.2.0 receipt ..."
+# Both streams: the enumerated list goes to stderr (it is a question, even in
+# dry-run form) and the diff to stdout, and this asserts against each.
+dry_out="$(e2e --uninstall --dry-run 2>&1)"
+if ! grep -qi "statusline" <<<"$dry_out"; then
+  print_error "--uninstall --dry-run did not list the statusline receipt"
+  print_warn  "Is statusline.json still in LEGACY_RECEIPTS?"
   printf '%s\n' "$dry_out"
   exit 1
 fi
-if [[ ! -f "$E2E_HOME/.claude/scripts/statusline" ]]; then
+if ! grep -qF "$RECEIPT" <<<"$dry_out"; then
+  print_error "--uninstall --dry-run did not name ${RECEIPT}"
+  print_warn  "It found something, but not the receipt v5.2.0 actually wrote."
+  printf '%s\n' "$dry_out"
+  exit 1
+fi
+if ! grep -qF "revert" <<<"$dry_out"; then
+  print_error "--uninstall --dry-run described no revert for it"
+  print_warn  "A delete rather than a revert would leave the user with no bar."
+  printf '%s\n' "$dry_out"
+  exit 1
+fi
+if [[ ! -f "$SCRIPT" || ! -f "$RECEIPT" ]]; then
   print_error "--uninstall --dry-run removed something; it must write nothing"
+  exit 1
+fi
+if ! grep -q "scripts/statusline" "$SETTINGS"; then
+  print_error "--uninstall --dry-run edited settings.json; it must write nothing"
   exit 1
 fi
 
 print_header "Asserting --uninstall refuses without a terminal ..."
+# The rule the dry run exists beside: an unattended run must not guess which
+# pieces the user wanted kept.
 if e2e --uninstall </dev/null >/dev/null 2>&1; then
   print_error "Expected non-zero exit for --uninstall with no TTY to ask on"
   exit 1

@@ -16,6 +16,11 @@ import {
   modify,
   parse as parseJsonc,
 } from "jsonc-parser";
+import {
+  existsSync,
+  readFileSync,
+} from "node:fs";
+import writeFileAtomic from "write-file-atomic";
 
 /**
  * Formatting for inserted content.
@@ -190,4 +195,75 @@ function deepEqual(a: unknown, b: unknown): boolean {
     return false;
   }
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Formatting for editing one element of an array.
+ *
+ * The default — no formatting pass — is what keeps an add-then-remove round-trip
+ * byte-identical. For an object key that works: `modify` deletes a key cleanly.
+ * For an array element it does not: removing one leaves the separator whitespace
+ * behind (`}\n    ]` comes back as `} ]`), so install-then-uninstall is a diff.
+ *
+ * With the pass on, the element round-trips exactly. What it costs is scoped:
+ * sibling keys keep their own formatting — a neighbouring inline
+ * `"env": { "A": 1 }` survives untouched — but an array whose elements were
+ * written inline comes back expanded. That is confined to the one array being
+ * edited, and `settings.json` is written by Claude Code with two-space
+ * indentation, so in practice it is a no-op.
+ *
+ * Verified by round-tripping `modify` both ways, with and without the pass.
+ */
+const ARRAY_EDIT_FORMAT: FormatOptions = {
+  insertSpaces: true,
+  tabSize: 2,
+  eol: "\n",
+};
+
+/** Array elements are addressed by index; object keys never are. */
+function isArrayEdit(path: readonly (string | number)[]): boolean {
+  return typeof path.at(-1) === "number";
+}
+
+/**
+ * Put one recorded key back in a JSON or JSONC file — the receipt's
+ * `restoreKey` hook.
+ *
+ * Every config this tool has ever written a `configKey` entry for is this one
+ * format: `~/.claude/settings.json`, `opencode.jsonc`, Cursor's
+ * `settings.json`, OpenCode's `tui.json`. `uninstall.ts` is the caller — it
+ * replays the receipts older multi-target versions left behind, and a
+ * `configKey` entry is undone by writing the prior value back here.
+ *
+ * It lives beside the helpers it calls rather than beside its caller, because
+ * the `ARRAY_EDIT_FORMAT` nuance above is exactly the kind of detail a second
+ * copy gets wrong.
+ */
+export function restoreJsonKey(
+  file: string,
+  path: readonly (string | number)[],
+  hadKey: boolean,
+  previous: unknown,
+): void {
+  if (!existsSync(file)) {
+    return;
+  }
+  const text = readFileSync(file, "utf8");
+  const parsed = readJsonc<Record<string, unknown>>(text);
+  // Deleting a path whose parent is already gone throws rather than no-opping,
+  // and an earlier entry in this same receipt may have removed that parent.
+  if (
+    !hadKey && (parsed === undefined || getPath(parsed, path) === undefined)
+  ) {
+    return;
+  }
+  writeFileAtomic.sync(
+    file,
+    setJsonPath(
+      text,
+      path,
+      hadKey ? previous : undefined,
+      isArrayEdit(path) ? ARRAY_EDIT_FORMAT : undefined,
+    ),
+  );
 }

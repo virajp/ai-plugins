@@ -256,7 +256,7 @@ intact. The stage table and the resource caps:
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
 A long run can pause on a resource cap and hand off instead of finishing, which
-needs the statusline installed —
+needs an external caps hook (`pnpx @askviraj/claude-status --install`) —
 [sessions and handoff](../operate/sessions-and-handoff.md) covers that.
 
 ### /vwf:verify

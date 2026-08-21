@@ -7,18 +7,30 @@
  * whenever a user edits a value the installer later removes wholesale.
  *
  * A receipt records the prior state instead, so `revert` restores rather than
- * guesses. The invariant this exists to make testable: **install then remove
+ * guesses. The invariant it exists to make testable: **install then remove
  * leaves the tree and every touched config byte-identical.**
+ *
+ * **This module is read-only now.** Nothing this version installs writes a
+ * receipt — plugins go in through `claude plugin install` and graphify through
+ * its own CLI, and both tools keep their own records, which is what
+ * `--uninstall` reads live. So the builder and the writer are gone, and what is
+ * left is the reader and `revert`, for the receipts *older* versions left on
+ * disk: the statusline's, and the multi-target adapters' before it. Every
+ * `Entry` kind stays reachable in `revert` for that reason — dropping one would
+ * turn an existing receipt into a file nothing can undo.
+ *
+ * If something here ever writes again, `writeReceipt` is in git and its merge
+ * semantics are the part worth recovering rather than re-deriving: an install
+ * is not a run, and each run overwriting the record wholesale is the
+ * receipt-completeness bug that recurred across all four adapters.
  */
 import {
   existsSync,
-  mkdirSync,
   readdirSync,
   readFileSync,
   rmdirSync,
   rmSync,
 } from "node:fs";
-import { dirname } from "node:path";
 import writeFileAtomic from "write-file-atomic";
 import type { Scope } from "./context.ts";
 
@@ -35,20 +47,16 @@ import type { Scope } from "./context.ts";
 export const RECEIPT_VERSION = 3;
 
 /**
- * **Every kind is still read; only three are still written.**
+ * **Every kind is still read; none are written any more.**
  *
- * The statusline is the one thing this CLI installs, and it writes `file`, `dir`
- * and `configKey` alone. `tree` and `command` were the plugin adapters' — a
- * copied render tree, a `claude plugin install` paired with its uninstall — and
- * those adapters are gone. The kinds stay because `revert` still meets them:
- * `uninstall.ts` reads the receipts an older multi-target install left behind,
- * which is the whole reason a machine carrying an OpenCode bundle or an Oh-My-Pi
- * bar can be cleaned rather than orphaned. Dropping them from `revert` would
- * turn those receipts into files nothing can undo.
- *
- * `ReceiptBuilder` therefore has no `tree`, `command` or `ownedDir` method: a
- * builder method with no caller is dead weight, and a legacy receipt is JSON on
- * disk rather than something this version constructs.
+ * The statusline wrote `file`, `dir` and `configKey`; `tree` and `command` were
+ * the plugin adapters' — a copied render tree, a `claude plugin install` paired
+ * with its uninstall. All of those writers are gone. The kinds stay because
+ * `revert` still meets them: `uninstall.ts` reads the receipts older versions
+ * left behind, which is the whole reason a machine carrying an OpenCode bundle,
+ * an Oh-My-Pi bar or this toolkit's statusline can be cleaned rather than
+ * orphaned. Dropping one from `revert` would turn those receipts into files
+ * nothing can undo.
  */
 export type Entry =
   /** A file we wrote. `previous` is absent when we created it. */
@@ -137,161 +145,6 @@ export interface Receipt {
     readonly name: string;
     readonly scope: Scope;
   }[];
-}
-
-/** Accumulates entries during an install. One per run. */
-export class ReceiptBuilder {
-  private readonly entries: Entry[] = [];
-
-  /** Record a file write, capturing its prior contents if it existed. */
-  file(path: string, mode?: number): this {
-    const previous = existsSync(path)
-      ? readFileSync(path, "utf8")
-      : undefined;
-    this.entries.push(
-      previous === undefined
-        ? { kind: "file", path, ...(mode === undefined ? {} : { mode }) }
-        : {
-          kind: "file",
-          path,
-          previous,
-          ...(mode === undefined ? {} : { mode }),
-        },
-    );
-    return this;
-  }
-
-  /**
-   * Record a file as **created**, whatever is already at that path.
-   *
-   * For a path this tool owns outright — `~/.claude/scripts/statusline` — a file
-   * already holding our bytes is ours, whichever run put it there. Recording it
-   * as pre-existing instead would make an uninstall *after a second install*
-   * restore the script rather than remove it, because the second install found
-   * the first one's output sitting there and dutifully captured it as prior
-   * state.
-   */
-  createdFile(path: string, mode?: number): this {
-    this.entries.push({
-      kind: "file",
-      path,
-      ...(mode === undefined ? {} : { mode }),
-    });
-    return this;
-  }
-
-  /** Record a directory we are about to create. Existing dirs are not recorded. */
-  dir(path: string): this {
-    if (!existsSync(path)) {
-      this.entries.push({ kind: "dir", path });
-    }
-    return this;
-  }
-
-  /** Record a config key, capturing whether it existed and its prior value. */
-  configKey(
-    file: string,
-    path: readonly (string | number)[],
-    current: { readonly present: boolean; readonly value?: unknown; },
-  ): this {
-    this.entries.push({
-      kind: "configKey",
-      file,
-      path,
-      hadKey: current.present,
-      ...(current.present ? { previous: current.value } : {}),
-    });
-    return this;
-  }
-
-  build(
-    installedAt: string,
-    plugins?: readonly { readonly name: string; readonly scope: Scope; }[],
-  ): Receipt {
-    return {
-      version: RECEIPT_VERSION,
-      installedAt,
-      entries: [...this.entries],
-      ...(plugins === undefined ? {} : { plugins: [...plugins] }),
-    };
-  }
-}
-
-/**
- * Write a receipt, **merged with whatever is already at that path**.
- *
- * A receipt describes an install, not a run — and those came apart the moment
- * anyone installed twice. Each run used to overwrite the record wholesale, so
- * installing `identity` after `datastore` produced a receipt naming only
- * `identity`: the uninstall then removed half the install and reported success.
- * Every adapter had this, because every
- * adapter got its own fresh `ReceiptBuilder` and none of them could see what an
- * earlier run had claimed.
- *
- * Merging here rather than at each call site is deliberate, and stays that way
- * now that one writer is left. Four reached this function — the adapters and the
- * three statusline surfaces — and the receipt-completeness bug recurred across
- * all of them precisely because each site decided for itself; the statusline
- * still needs it, since install → install → uninstall is the sequence that
- * exposed it and the bar is installed repeatedly by design.
- *
- * **The older entry wins a collision.** Two runs claiming the same path differ
- * only in what they captured as prior state, and the earlier capture is the
- * truer one: run 2 read a machine run 1 had already changed. Entry order is
- * preserved oldest-first, so revert — which replays backwards — undoes the most
- * recent claims before the ones underneath them.
- */
-export function writeReceipt(path: string, receipt: Receipt): void {
-  const merged = mergeReceipts(readReceipt(path), receipt);
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileAtomic.sync(path, `${JSON.stringify(merged, null, 2)}\n`);
-}
-
-/**
- * What makes two entries the same claim.
- *
- * Deliberately not the whole entry: the point is to recognise a path this tool
- * has already claimed *whatever it captured about it*, so the captured state is
- * excluded from the identity and the older one is kept.
- */
-function identity(entry: Entry): string {
-  switch (entry.kind) {
-    case "command":
-      return `command ${entry.ran.join(" ")}`;
-    case "configKey":
-      return `configKey ${entry.file} ${entry.path.join(" ")}`;
-    default:
-      return `${entry.kind} ${entry.path}`;
-  }
-}
-
-export function mergeReceipts(
-  previous: Receipt | undefined,
-  current: Receipt,
-): Receipt {
-  if (previous === undefined) {
-    return current;
-  }
-  const seen = new Set(previous.entries.map(identity));
-  const entries = [
-    ...previous.entries,
-    ...current.entries.filter(entry => !seen.has(identity(entry))),
-  ];
-
-  // Union by name+scope, current last: a plugin installed by an earlier run is
-  // still installed, so this run's list must not narrow the record.
-  const plugins = [...previous.plugins ?? [], ...current.plugins ?? []];
-  const unique = plugins.filter((plugin, index) =>
-    plugins.findIndex(other =>
-      other.name === plugin.name && other.scope === plugin.scope
-    ) === index
-  );
-
-  return {
-    ...current,
-    entries,
-    ...(unique.length === 0 ? {} : { plugins: unique }),
-  };
 }
 
 /**

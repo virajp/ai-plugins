@@ -84,13 +84,9 @@ rooms:
       under docs/plugins/
     keywords: [ plugins, plugin ]
   - name: installer
-    description: The install-time half — the @askviraj/ai-plugins CLI and
-      statusline in cli/, tools/, and docs/cli/
-    keywords: [ cli, tools, statusline ]
-  - name: schemas
-    description: The JSON schemas under schemas/ — the statusline config
-      contract
-    keywords: [ schema, schemas ]
+    description: The install-time half — the @askviraj/ai-plugins CLI in cli/
+      and docs/cli/
+    keywords: [ cli, installer ]
   - name: configuration
     description: Repo machinery under .config/ — mise envs, linter, formatter,
       and pre-commit config

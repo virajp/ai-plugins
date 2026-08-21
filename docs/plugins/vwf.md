@@ -26,10 +26,14 @@ Add `--scope project` to either command to keep it to one repo. Restart the
 agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
 time, and doctor is what reports a missing required binary.
 
-Separately, `pnpx @askviraj/ai-plugins --statusline` installs the statusline and
-wires up **graphify**, which vwf enforces at its own entry gate. Installing
-outside a git repo works too: `graphify install` still runs, and its repo-scoped
-post-commit hook is skipped automatically (with a note).
+Any `pnpx @askviraj/ai-plugins` install also wires up **graphify**, which vwf
+enforces at its own entry gate. Installing outside a git repo works too:
+`graphify install` still runs, and its repo-scoped post-commit hook is skipped
+automatically (with a note).
+
+Separately, `pnpx @askviraj/claude-status --install` installs the statusline —
+and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause. See
+[/vwf:execute](#vwfexecute).
 
 Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
@@ -1221,10 +1225,17 @@ the same cycle, in this run's worktree, with its report relayed at the gate
 (stale docs are more harmful than no docs). Archiving is offered once a merged
 run has no open gaps.
 
-The resource-cap pause is delivered by the
-**[statusline caps hook](../../readme.md#statusline)** — a command can't measure
-its own context window, so install the statusline (`--statusline`) before a run
-or that pause won't fire.
+The resource-cap pause is delivered by an **external `PostToolUse` caps hook** —
+a command can't measure its own context window, since those figures reach a
+session only on the statusline payload. `@askviraj/claude-status` provides one:
+
+```sh
+pnpx @askviraj/claude-status --install
+```
+
+Install it before an autonomous run or that pause won't fire. The hook must read
+`.config/vwf.yaml` → `pipeline.execute_caps` **tighten-only**; vwf never invokes
+it and cannot detect its absence.
 
 ### /vwf:archive
 
@@ -1790,5 +1801,5 @@ queries that library's documentation when a question is about a specific library
 - [cicd](./cicd.md) — implements the delivery-pipeline contract vwf states.
 - [typescript](./typescript.md) and [flutter](./flutter.md) — the language
   plugins that ship the stack templates `/vwf:architecture` offers.
-- [Statusline](./statusline.md) — the caps hook that pauses a long
-  `/vwf:execute` run.
+- [`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status)
+  — the statusline, and the caps hook that pauses a long `/vwf:execute` run.

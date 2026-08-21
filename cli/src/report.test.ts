@@ -16,13 +16,15 @@ import {
  * adapters. What survived the narrowing is the rendering, and it kept its tests:
  * these are the only assertions on what a run actually prints.
  *
- * One test did not survive — the three statusline outcomes collapsing into a
- * single row. There is one bar now, so there is nothing to collapse.
+ * The step names below are a plugin row and two legacy-receipt rows, which is
+ * every shape a run can now produce. `legacy:statusline-*.json` are real
+ * filenames on disk, not leftovers: a machine carrying an Oh-My-Pi or OpenCode
+ * bar from a multi-target version is what those rows exist to clean up.
  */
 describe("renderProgress", () => {
   it("distinguishes success, skip and failure", () => {
     const text = renderProgress([
-      { name: "statusline", actions: [{ summary: "a" }] },
+      { name: "plugin:user:vwf", actions: [{ summary: "a" }] },
       {
         name: "legacy:statusline-ohmypi.json",
         actions: [],
@@ -31,7 +33,7 @@ describe("renderProgress", () => {
       { name: "marketplace", actions: [], error: "boom" },
     ]);
 
-    expect(text).toContain("statusline");
+    expect(text).toContain("plugin:user:vwf");
     expect(text).toContain("1 change");
     expect(text).toContain("tool not on PATH");
     expect(text).toContain("✘ failed");
@@ -42,7 +44,7 @@ describe("renderProgress", () => {
   it("aligns the columns whatever the step names are", () => {
     const lines = renderProgress([
       { name: "legacy:statusline-opencode.json", actions: [{ summary: "a" }] },
-      { name: "statusline", actions: [{ summary: "b" }] },
+      { name: "plugin:user:vwf", actions: [{ summary: "b" }] },
     ])
       .split("\n")
       .filter(l => l.includes("1 change"));
@@ -55,7 +57,7 @@ describe("renderProgress", () => {
 
   it("counts the verdict over the rows, so it cannot contradict the table", () => {
     const text = renderProgress([
-      { name: "statusline", actions: [{ summary: "a" }] },
+      { name: "plugin:user:vwf", actions: [{ summary: "a" }] },
       { name: "graph", actions: [{ summary: "b" }] },
     ]);
 
@@ -63,13 +65,13 @@ describe("renderProgress", () => {
   });
 
   it("says so when a run changed nothing", () => {
-    expect(renderProgress([{ name: "statusline", actions: [] }]))
+    expect(renderProgress([{ name: "plugin:user:vwf", actions: [] }]))
       .toContain("already up to date");
   });
 
   it("replaces the home directory with ~ in notes", () => {
     const text = renderProgress({
-      outcomes: [{ name: "statusline", actions: [] }],
+      outcomes: [{ name: "plugin:user:vwf", actions: [] }],
       notes: [`installing from ${homedir()}/Library/pnpm/store/v11/links`],
     });
 
@@ -80,7 +82,7 @@ describe("renderProgress", () => {
   it("puts the version in the header, so a pasted report names its build", () => {
     expect(
       renderProgress({
-        outcomes: [{ name: "statusline", actions: [] }],
+        outcomes: [{ name: "plugin:user:vwf", actions: [] }],
         version: "4.3.3",
       }),
     )
@@ -103,7 +105,7 @@ describe("shorten", () => {
 describe("renderDiff", () => {
   it("shows the changed lines of a config edit", () => {
     const text = renderDiff([{
-      name: "statusline",
+      name: "plugin:user:vwf",
       actions: [{
         summary: "update /c",
         path: "/c",
@@ -111,7 +113,7 @@ describe("renderDiff", () => {
       }],
     }]);
 
-    expect(text).toContain("# statusline");
+    expect(text).toContain("# plugin:user:vwf");
     expect(text).toContain("-   \"a\": 1");
     expect(text).toContain("+   \"a\": 2");
     // Unchanged context is not repeated as a change.
@@ -120,7 +122,7 @@ describe("renderDiff", () => {
 
   it("renders a new file as all additions", () => {
     const text = renderDiff([{
-      name: "statusline",
+      name: "plugin:user:vwf",
       actions: [{
         summary: "update /c",
         diff: { before: "", after: "{\n  \"a\": 1\n}\n" },
@@ -145,7 +147,7 @@ describe("renderDiff", () => {
   });
 
   it("says nothing at all about a step with no actions", () => {
-    expect(renderDiff([{ name: "statusline", actions: [] }])).toBe("");
+    expect(renderDiff([{ name: "plugin:user:vwf", actions: [] }])).toBe("");
   });
 });
 

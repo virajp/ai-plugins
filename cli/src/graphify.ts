@@ -28,8 +28,9 @@ import { hasBin } from "./context.ts";
  * install gate used to refuse a vwf install with no `graphify` on PATH, so
  * reaching this without it meant the gate had been bypassed; that gate is gone
  * with the plugin installs, so an absent graphify is now the ordinary case on a
- * machine that only wants the statusline. Failing the run for it would refuse an
- * install that otherwise succeeded, over a tool the user may not want.
+ * machine installing a plugin that does not need it. Failing the run for it
+ * would refuse an install that otherwise succeeded, over a tool the user may not
+ * want. `/vwf:doctor` is what reports it as blocking, for the plugin that does.
  */
 export function setupGraphify(
   context: Context,

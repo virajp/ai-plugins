@@ -197,12 +197,23 @@ the Resume check).
   a dead stage.
 - **Resource caps** — context > 65%, 5-hour > 90%, or 7-day > 80% (a repo may
   **tighten** these — never loosen — via `.config/vwf.yaml`
-  `pipeline.execute_caps`; the caps hook honors the lower value). A command
-  cannot measure its own context window, so this signal is **delivered by the
-  statusline caps hook** (install via `@askviraj/ai-plugins --statusline`); for
-  autonomous runs, install it or this pause will not fire. On the injected cap
-  directive, run `/vwf:handoff` with no argument to snapshot state as the
-  reserved `next` handoff, then stop; resume later with `/vwf:recall next`.
+  `pipeline.execute_caps`; the hook honors the lower value). A command cannot
+  measure its own context window — those figures reach the session only on the
+  statusline payload — so this signal is **delivered by an external
+  `PostToolUse` hook** that reads them and injects a cap directive.
+  `@askviraj/claude-status` provides one
+  (`pnpx @askviraj/claude-status --install`); for autonomous runs, install it or
+  this pause will not fire. On the injected cap directive, run `/vwf:handoff`
+  with no argument to snapshot state as the reserved `next` handoff, then stop;
+  resume later with `/vwf:recall next`.
+
+  **The contract vwf states, for whoever provides the hook**: read
+  `<cwd>/.config/vwf.yaml` → `pipeline.execute_caps` and apply it
+  **tighten-only** (a value above the shipped default is ignored — config may
+  lower a cap, never raise one), and name `/vwf:handoff` and `/vwf:recall next`
+  in the directive, since those are what make the pause resumable. vwf never
+  invokes the hook and cannot detect its absence; a hook that skips the config
+  read leaves `pipeline.execute_caps` a key nothing honors.
 
 **Judgment**
 

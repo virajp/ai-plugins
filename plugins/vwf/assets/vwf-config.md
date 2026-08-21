@@ -136,7 +136,7 @@ docs_sync:
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
 | `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                             |
-| `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, the statusline caps hook                                                                             |
+| `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
 | `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) — the tool itself is `projects.<name>.design` |
@@ -181,7 +181,7 @@ earlier than 65/90/80), never loosen.
   note here) when a key's shape changes.
 - **`1 → 2` migration** (performed by `/vwf:setup`): rename
   `pipeline.autopilot_caps` → `pipeline.execute_caps` (same shape and
-  semantics); the statusline caps hook reads both names during the transition.
+  semantics); the caps hook reads both names during the transition.
 - **`2 → 3` migration** (performed by `/vwf:setup`): bump the number — no key is
   reshaped. New semantics: the environment named `production` (or the one named
   by the new optional `production_env` key) is the **release environment** — a

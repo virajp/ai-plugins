@@ -1,11 +1,11 @@
 # The installer CLI
 
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins) is
-a small CLI with four jobs: install **plugins**, install the **statusline**,
-wire up **graphify**, and **remove** what this toolkit put on your machine.
+a small CLI with three jobs: install **plugins**, wire up **graphify**, and
+**remove** what this toolkit put on your machine.
 
 ```sh
-pnpx @askviraj/ai-plugins --all --statusline
+pnpx @askviraj/ai-plugins --all
 ```
 
 The plugin half is a thin wrapper: it drives Claude Code's own commands, reading
@@ -22,26 +22,28 @@ Homebrew tap and no Scoop bucket.
 
 ## The pages
 
-| Page                             | Covers                                                                           |
-| -------------------------------- | -------------------------------------------------------------------------------- |
-| [usage.md](./usage.md)           | The end-user reference — every flag, uninstall, and what a receipt restores      |
-| [targets.md](./targets.md)       | What lands on disk, and where — the statusline, the hook, graphify, the plugins  |
-| [statusline.md](./statusline.md) | Why the statusline ships in the CLI rather than as a plugin                      |
-| [internals.md](./internals.md)   | The maintainer's map — the flow through the source, the build split, the tarball |
+| Page                           | Covers                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| [usage.md](./usage.md)         | The end-user reference — every flag, and what uninstall removes                  |
+| [targets.md](./targets.md)     | What lands on disk, and where — the plugins, graphify, the marketplace           |
+| [internals.md](./internals.md) | The maintainer's map — the flow through the source, the build split, the tarball |
 
-## Why the statusline is not a plugin
+## The statusline has moved
 
-Because no plugin mechanism can install a status bar. A Claude plugin can ship
-skills, agents, hooks and MCP servers; the status line is a key in the user's
-own `settings.json` pointing at an executable. Nothing in the plugin format
-reaches it, so it needs an installer of its own — and that installer is the one
-job this package cannot hand to `claude plugin install`.
+Earlier versions of this CLI also installed a powerline statusline for Claude
+Code. **It has moved to a separate project** and ships here no longer — the
+`--statusline`, `--no-statusline` and `--force` flags are retired, and each now
+exits non-zero naming itself rather than being silently ignored.
+
+If you installed it from here, **`--uninstall` still removes it and restores the
+statusline you had before it**. That is the one thing the removal was careful
+about: the receipt recording your own bar is read as a legacy receipt, exactly
+like the Cursor and Oh-My-Pi records already were, so an upgrade does not strand
+you with a `settings.json` pointing at a script that is gone.
 
 ## Upgrading
 
-Two different things, upgraded two different ways.
-
-**The plugins** upgrade through Claude:
+The plugins upgrade through Claude:
 
 ```sh
 claude plugin marketplace update virajp-plugins
@@ -51,22 +53,15 @@ claude plugin update vwf
 The marketplace is served from this repo's `main`, and every push to `main` is
 validated in CI, so there is no separately published artifact to lag behind.
 
-**The statusline** upgrades by re-running the CLI:
-
-```sh
-pnpx @askviraj/ai-plugins --statusline   # safe to re-run; this is the upgrade
-```
-
 There is **no `--upgrade` flag**, and its absence is deliberate. It only ever
 replayed a receipt to do what re-running the install already did — and plugin
 content has left the npm package entirely, so there is nothing for it to replay.
 Re-requesting an installed plugin reports it as satisfied and points at
 `claude plugin update`; it never upgrades behind your back.
 
-`--version` tells you what you actually have: this CLI's version, the version of
-the statusline **on disk** (obtained by running the installed script, not by
-assuming it matches the package you just downloaded), and each plugin's version
-against `main`.
+`--version` reports this CLI's own version against npm, and each plugin's
+version on `main`. It no longer reads anything off disk: what you have installed
+is `claude plugin list`, which answers it natively.
 
 ## After installing
 
@@ -90,5 +85,3 @@ statement of what is and is not promised, are in the repo's
 ## Related
 
 - [docs/plugins/](../plugins/) — the reference for each plugin.
-- [docs/plugins/statusline.md](../plugins/statusline.md) — the statusline's full
-  configuration reference.

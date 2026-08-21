@@ -54,7 +54,8 @@ describe("setupGraphify", () => {
 
     expect(ran).toEqual([]);
     // The `requires:` gate used to refuse first; with it gone, an absent
-    // graphify is the ordinary case on a machine that only wants the statusline.
+    // graphify is the ordinary case on a machine installing a plugin that does
+    // not need it. /vwf:doctor is what blocks on it, for the plugin that does.
     expect(logged.join("\n")).toMatch(/blocking/);
   });
 

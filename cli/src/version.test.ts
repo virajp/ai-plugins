@@ -1,17 +1,4 @@
 import {
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import {
-  dirname,
-  join,
-} from "node:path";
-import {
-  afterEach,
-  beforeEach,
   describe,
   expect,
   it,
@@ -21,9 +8,7 @@ import {
   buildVersionReport,
   cmpPre,
   cmpVer,
-  describeStatusline,
   manifestVersions,
-  readInstalledStatusline,
   renderVersionReport,
   updateNote,
 } from "./version.ts";
@@ -102,147 +87,16 @@ describe("manifestVersions", () => {
   });
 });
 
-/**
- * The statusline's own version, which is the point of this whole block.
- *
- * `--version` used to print the running package's number here and call it
- * "bundled with the CLI" — under `pnpx` that is whatever was just downloaded, so
- * the copy actually installed at `~/.claude/scripts/statusline` was invisible and
- * a stale bar could not be diagnosed at all.
- */
-describe("readInstalledStatusline", () => {
-  let home: string;
-
-  beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), "ai-plugins-ver-"));
-  });
-  afterEach(() => {
-    rmSync(home, { recursive: true, force: true });
-  });
-
-  const install = (): string => {
-    const script = join(home, ".claude", "scripts", "statusline");
-    mkdirSync(dirname(script), { recursive: true });
-    writeFileSync(script, "#!/usr/bin/env node\n");
-    return script;
-  };
-
-  it("reports nothing installed when the script is not there", () => {
-    expect(readInstalledStatusline(home, () => "4.0.0")).toEqual({
-      state: "absent",
-    });
-  });
-
-  it("takes a bare version as the answer", () => {
-    install();
-
-    expect(readInstalledStatusline(home, () => "4.3.3\n")).toEqual({
-      state: "known",
-      version: "4.3.3",
-    });
-  });
-
-  it("degrades to unknown when the script rendered a bar instead", () => {
-    // Exactly what every install predating the flag does: it ignores an
-    // unrecognised argument and renders. So the check is on the SHAPE of the
-    // answer, never on the exit code, which is 0 either way.
-    install();
-
-    const rendered = "\u001b[38;2;69;133;136m ⚡ Claude ";
-    expect(readInstalledStatusline(home, () => rendered)).toEqual({
-      state: "unknown",
-    });
-  });
-
-  it("degrades to unknown when the script could not be run at all", () => {
-    install();
-
-    expect(readInstalledStatusline(home, () => undefined)).toEqual({
-      state: "unknown",
-    });
-  });
-
-  it("runs the script that the install actually writes", () => {
-    // The path comes from `statusline.ts` rather than a second copy: `COMMAND`
-    // names it literally in the settings this installer writes, so a divergence
-    // would have `--version` report on a file Claude never runs.
-    const script = install();
-    const seen: string[] = [];
-    readInstalledStatusline(home, path => {
-      seen.push(path);
-      return "1.0.0";
-    });
-
-    expect(seen).toEqual([script]);
-  });
-});
-
-describe("describeStatusline", () => {
-  const base = { cli: "4.3.3", statuslineBundled: "4.3.3", plugins: [] };
-
-  it("says nothing is installed, and how to install it", () => {
-    expect(
-      describeStatusline({ ...base, statuslineInstalled: { state: "absent" } }),
-    )
-      .toContain("--statusline");
-  });
-
-  it("names the version on disk when it is behind", () => {
-    const text = describeStatusline({
-      ...base,
-      statuslineInstalled: { state: "known", version: "4.1.0" },
-    });
-
-    expect(text).toContain("4.1.0  →  4.3.3");
-  });
-
-  it("confirms a current bar without telling the user to re-run", () => {
-    const text = describeStatusline({
-      ...base,
-      statuslineInstalled: { state: "known", version: "4.3.3" },
-    });
-
-    expect(text).toBe("4.3.3  (latest)");
-  });
-
-  it("does not call a NEWER installed bar out of date", () => {
-    // A maintainer running the CLI from a checkout older than what they last
-    // installed. Reporting an update available would send them backwards.
-    const text = describeStatusline({
-      ...base,
-      statuslineInstalled: { state: "known", version: "5.0.0" },
-    });
-
-    expect(text).toBe("5.0.0  (latest)");
-  });
-
-  it("explains an install too old to answer", () => {
-    expect(
-      describeStatusline({
-        ...base,
-        statuslineInstalled: { state: "unknown" },
-      }),
-    )
-      .toContain("predates self-reporting");
-  });
-});
-
 describe("renderVersionReport", () => {
   const report: VersionReport = {
     cli: "2.7.3",
     cliLatest: "2.8.0",
-    statuslineBundled: "2.7.3",
-    statuslineInstalled: { state: "known", version: "2.7.0" },
     plugins: [{ name: "vwf", version: "13.1.0" }, { name: "external" }],
   };
 
   it("flags the CLI itself", () => {
     expect(renderVersionReport(report))
       .toContain("2.7.3  →  2.8.0  (update available)");
-  });
-
-  it("reports the statusline installed on disk, not the bundled number", () => {
-    expect(renderVersionReport(report)).toContain("2.7.0  →  2.7.3 here");
   });
 
   it("lists what main offers, and how to install it", () => {
@@ -263,17 +117,17 @@ describe("renderVersionReport", () => {
   });
 
   it("explains a missing remote half rather than listing nothing", () => {
+    // The whole report is the remote half now, so this is also the only path
+    // where `plugins` is empty — and `Math.max()` over nothing is `-Infinity`,
+    // which `padEnd` throws on. Rendering at all is half the assertion.
     const text = renderVersionReport({
       cli: "2.7.3",
-      statuslineBundled: "2.7.3",
-      statuslineInstalled: { state: "absent" },
       plugins: [],
       remoteError: "getaddrinfo ENOTFOUND raw.githubusercontent.com",
     });
 
     expect(text).toContain("Could not list the plugins on main");
-    // The statusline half is still reported: it is read from disk, not network.
-    expect(text).toContain("statusline");
+    expect(text).toContain("2.7.3");
   });
 });
 
@@ -284,7 +138,6 @@ describe("buildVersionReport", () => {
     const asked: string[] = [];
     const report = await buildVersionReport({
       sourceRoot: repoRoot,
-      home: "/nowhere",
       fetchNpm: async url => {
         asked.push(`npm ${url}`);
         return { version: "99.0.0" } as never;
@@ -293,7 +146,6 @@ describe("buildVersionReport", () => {
         asked.push(`github ${url}`);
         return { plugins: [{ name: "vwf", version: "99.0.0" }] } as never;
       },
-      runStatusline: () => undefined,
     });
 
     expect(asked[0]).toBe(
@@ -305,23 +157,21 @@ describe("buildVersionReport", () => {
     expect(report.remoteError).toBeUndefined();
   });
 
-  it("still reports what is on this machine when the network is gone", async () => {
+  it("still reports this CLI's own version when the network is gone", async () => {
     const report = await buildVersionReport({
       sourceRoot: repoRoot,
-      home: "/nowhere",
       fetchNpm: () => {
         throw new Error("ENOTFOUND");
       },
       fetchGithub: () => {
         throw new Error("ENOTFOUND");
       },
-      runStatusline: () => undefined,
     });
 
     expect(report.remoteError).toBe("ENOTFOUND");
     expect(report.cliLatest).toBeUndefined();
+    expect(report.plugins).toEqual([]);
     // Read from this checkout's package.json, so this pins the real wiring.
     expect(report.cli).toMatch(/^\d+\.\d+\.\d+/);
-    expect(report.statuslineBundled).toBe(report.cli);
   });
 });

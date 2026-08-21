@@ -195,25 +195,27 @@ describe("installedPlugins", () => {
 });
 
 describe("enumerate", () => {
-  it("finds the marketplace, the user plugins and the statusline", () => {
+  it("finds the marketplace and the user plugins", () => {
     writeUserSettings({
       extraKnownMarketplaces: { "virajp-plugins": { source: {} } },
       enabledPlugins: { "vwf@virajp-plugins": true },
     });
-    writeReceiptFile("statusline.json", receipt([]));
 
     expect(ids(enumerate(options)))
-      .toEqual(["marketplace", "plugin:user:vwf", "statusline"]);
+      .toEqual(["marketplace", "plugin:user:vwf"]);
   });
 
   it("finds nothing on a machine this tool never touched", () => {
     expect(enumerate(options)).toEqual([]);
   });
 
-  it("does not offer the statusline without a receipt to restore from", () => {
+  it("does not offer a statusline without a receipt to restore from", () => {
     // The invariant the whole receipt system exists for: uninstall restores what
     // was there. With no record of the previous bar there is nothing to put back,
     // and a bare delete would leave the user with no statusline at all.
+    //
+    // This CLI no longer installs one, so `settings.json` naming a bar says
+    // nothing about who put it there — only a receipt does.
     writeUserSettings({ statusLine: { type: "command", command: "x" } });
 
     expect(ids(enumerate(options))).toEqual([]);
@@ -490,7 +492,28 @@ describe("removeItem", () => {
   });
 });
 
-describe("the statusline, removed by restoring its receipt", () => {
+/**
+ * The migration this workstream could break invisibly.
+ *
+ * A machine on v5.2.0 has this toolkit's statusline installed and a
+ * `statusline.json` receipt recording the bar it displaced. This version ships
+ * no statusline and has no `statusline` removal kind — so unless
+ * `statusline.json` is in `LEGACY_RECEIPTS`, `--uninstall` stops finding it and
+ * the user's own bar never comes back, while reporting a clean uninstall.
+ *
+ * These two assert it is found and reverted through the generic legacy path.
+ */
+describe("a v5.2.0 statusline receipt, read as a legacy one", () => {
+  it("is enumerated under the legacy heading", () => {
+    const path = writeReceiptFile("statusline.json", receipt([]));
+    const items = enumerate(options);
+
+    expect(ids(items)).toEqual(["legacy:statusline.json"]);
+    expect(items[0]?.level).toBe("legacy");
+    expect(items[0]?.label).toContain("statusline");
+    expect(items[0]?.note).toContain(path);
+  });
+
   it("puts back the bar the user had, rather than deleting ours", () => {
     const settings = join(configDir, "settings.json");
     writeUserSettings({
@@ -561,8 +584,8 @@ describe("the legacy-receipt reader", () => {
 
     expect(outcome.error).toBeUndefined();
     expect(existsSync(bundle)).toBe(false);
-    // JSONC, restored by the statusline's own hook — every config a retired
-    // adapter touched is this format, so there is one implementation.
+    // JSONC, restored by `restoreJsonKey` — every config a retired adapter
+    // touched is this format, so there is one implementation.
     expect(readFileSync(config, "utf8")).toContain("The user's own comment.");
     expect(readFileSync(config, "utf8")).toContain("\"theme\": \"dark\"");
     expect(readFileSync(config, "utf8")).not.toContain("skills");
@@ -690,7 +713,7 @@ describe("removeItems", () => {
     const kept = writeReceiptFile("opencode.json", receipt([]));
     const items = enumerate(options);
 
-    removeItems(items.filter(i => i.id === "statusline"), options);
+    removeItems(items.filter(i => i.id === "legacy:statusline.json"), options);
 
     expect(existsSync(kept)).toBe(true);
     expect(existsSync(receiptDir)).toBe(true);
@@ -706,20 +729,20 @@ describe("the tracked default", () => {
       id: "i1",
       level: "user" as const,
       label: "item 1",
-      removal: { kind: "statusline" as const },
+      removal: { kind: "graphify-hook" as const, cwd: "/tmp" },
     },
     {
       id: "i2",
       level: "user" as const,
       label: "item 2",
-      removal: { kind: "statusline" as const },
+      removal: { kind: "graphify-hook" as const, cwd: "/tmp" },
       tracked: true as const,
     },
     {
       id: "i3",
       level: "user" as const,
       label: "item 3",
-      removal: { kind: "statusline" as const },
+      removal: { kind: "graphify-hook" as const, cwd: "/tmp" },
     },
   ];
 

@@ -1,7 +1,7 @@
 /**
- * Version reporting — what is here, what is on disk, and what is available.
+ * Version reporting — this CLI's own version, and what `main` offers.
  *
- * The shape of this question changed twice. `bin/installer.mjs` asked Claude
+ * The shape of this question changed twice. The original installer asked Claude
  * Code (`claude plugin list --json`); the four-target CLI could not, so it
  * compared the marketplace manifest *inside the package* against the one on
  * `main`, on the premise that a plugin's version in this build is what an
@@ -15,14 +15,12 @@
  * is deliberately not done here: it is a second bookkeeping format to parse for
  * a report, and `claude plugin list` answers it natively.
  *
- * **The statusline is the opposite case, and the one that was actually wrong.**
- * This block used to print the running package's version beside it, annotated
- * "bundled with the CLI" — which under `pnpx` is whatever was just downloaded,
- * so the version *installed on disk* was never shown and a stale bar was
- * invisible. The script now self-reports (`statusline --version`), so this runs
- * the installed copy and prints installed against bundled.
+ * Nothing here reports on-disk state any more. The statusline was the one thing
+ * this CLI installed whose *installed* version could differ from the running
+ * package's — under `pnpx` the two are routinely different — and it has moved to
+ * another project. What is left is installed by Claude and by graphify, each of
+ * which answers for its own.
  */
-import { spawnSync } from "node:child_process";
 import {
   existsSync,
   readFileSync,
@@ -32,7 +30,6 @@ import {
   fetchGithubJson,
   fetchJson,
 } from "./github.ts";
-import { statuslineScriptFile } from "./statusline.ts";
 
 /** The published package, and the manifest on `main`. */
 export const NPM_LATEST_URL =
@@ -116,27 +113,10 @@ export interface PluginVersion {
   readonly version?: string;
 }
 
-/**
- * What the statusline copy on disk reports.
- *
- * Three states rather than an optional string, because "no bar installed" and
- * "a bar too old to answer" are different facts and the second is the one that
- * needs explaining: every install before the `--version` flag existed lands
- * here, and reading it as absent would tell the user to install something they
- * already have.
- */
-export type InstalledStatusline =
-  | { readonly state: "absent"; }
-  | { readonly state: "unknown"; }
-  | { readonly state: "known"; readonly version: string; };
-
 export interface VersionReport {
   readonly cli: string;
   /** Absent when npm could not be reached. */
   readonly cliLatest?: string;
-  /** What this package ships, which `i:test` asserts the script agrees with. */
-  readonly statuslineBundled: string;
-  readonly statuslineInstalled: InstalledStatusline;
   readonly plugins: readonly PluginVersion[];
   /** Why the remote half is missing, when it is. */
   readonly remoteError?: string;
@@ -164,64 +144,12 @@ export function manifestVersions(manifest: Manifest): PluginVersion[] {
   }));
 }
 
-/**
- * Run one script and return its stdout, or `undefined` if it could not run.
- *
- * **Invoked through `process.execPath` rather than as an executable**, which the
- * script itself does for its own `--refresh-spend` child. It is a `#!/usr/bin/env
- * node` file installed at 0755, so executing it directly works — until a copy
- * loses its bit, or the machine is Windows, where the shebang means nothing.
- *
- * **`input: ""` is load-bearing.** A statusline old enough to lack `--version`
- * ignores the flag and waits on stdin for a render payload; inheriting this
- * process's stdin would hang `--version` forever on the one case the flag exists
- * to detect. Closing it immediately makes that script render a bar and exit,
- * which the caller recognises as "not a version".
- */
-export type RunScript = (script: string) => string | undefined;
-
-/** A semver-ish line and nothing else — what the `--version` flag prints. */
-const VERSION_LINE = /^v?\d+\.\d+\.\d+[\w.+-]*$/;
-
-/**
- * Ask the installed script what it is.
- *
- * Anything other than a bare version means the flag was not understood: an old
- * script answers a `--version` it does not know about by rendering a powerline
- * bar, so the check is on the *shape of the answer*, never on the exit code
- * (which is 0 in both cases).
- */
-export function readInstalledStatusline(
-  home: string,
-  run: RunScript = runScript,
-): InstalledStatusline {
-  const script = statuslineScriptFile(home);
-  if (!existsSync(script)) {
-    return { state: "absent" };
-  }
-  const output = run(script)?.trim() ?? "";
-  return VERSION_LINE.test(output)
-    ? { state: "known", version: output.replace(/^v/, "") }
-    : { state: "unknown" };
-}
-
-const runScript: RunScript = script => {
-  const result = spawnSync(process.execPath, [script, "--version"], {
-    encoding: "utf8",
-    input: "",
-    timeout: 5000,
-  });
-  return result.error !== undefined ? undefined : result.stdout;
-};
-
 export interface VersionInputs {
   readonly sourceRoot: string;
-  readonly home: string;
   /** The npm registry — **not** GitHub, so no credential is attached. */
   readonly fetchNpm?: <T>(url: string) => Promise<T>;
   /** GitHub — `$GITHUB_API_TOKEN` when the environment offers one. */
   readonly fetchGithub?: <T>(url: string) => Promise<T>;
-  readonly runStatusline?: RunScript;
 }
 
 /**
@@ -234,15 +162,7 @@ export interface VersionInputs {
 export async function buildVersionReport(
   inputs: VersionInputs,
 ): Promise<VersionReport> {
-  const cli = readCliVersion(inputs.sourceRoot);
-  const local = {
-    cli,
-    statuslineBundled: cli,
-    statuslineInstalled: readInstalledStatusline(
-      inputs.home,
-      inputs.runStatusline,
-    ),
-  };
+  const local = { cli: readCliVersion(inputs.sourceRoot) };
 
   const npm = inputs.fetchNpm ?? fetchJson;
   const github = inputs.fetchGithub ?? fetchGithubJson;
@@ -272,41 +192,15 @@ export function updateNote(current: string, latest?: string): string {
     : "  (latest)";
 }
 
-/**
- * The statusline's line.
- *
- * The version that matters is the one on disk: a `pnpx` run reports whatever it
- * just downloaded, which is why "bundled" is only ever context for the installed
- * number rather than the answer itself.
- */
-export function describeStatusline(report: VersionReport): string {
-  const bundled = report.statuslineBundled;
-  switch (report.statuslineInstalled.state) {
-    case "absent":
-      return `not installed  (${bundled} here — run --statusline)`;
-    case "unknown":
-      return `unknown (predates self-reporting)  →  ${bundled} here `
-        + "(re-run --statusline)";
-    case "known": {
-      const installed = report.statuslineInstalled.version;
-      return cmpVer(bundled, installed) > 0
-        ? `${installed}  →  ${bundled} here  (re-run --statusline)`
-        : `${installed}  (latest)`;
-    }
-  }
-}
-
 /** The whole report as text. Pure, so what it prints is what the tests read. */
 export function renderVersionReport(report: VersionReport): string {
-  const width = Math.max(
-    ...report.plugins.map(p => p.name.length),
-    "statusline".length,
-  );
+  // `0` guards the spread: with no plugins to measure — the offline path —
+  // `Math.max()` of nothing is `-Infinity`, and `padEnd(-Infinity)` throws.
+  const width = Math.max(0, ...report.plugins.map(p => p.name.length));
   const lines = [
     `@askviraj/ai-plugins  ${report.cli}${
       updateNote(report.cli, report.cliLatest)
     }`,
-    `  ${"statusline".padEnd(width)}  ${describeStatusline(report)}`,
   ];
 
   if (report.remoteError !== undefined) {

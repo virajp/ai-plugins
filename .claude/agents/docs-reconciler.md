@@ -36,19 +36,16 @@ context; work from what you were given.
 
 ## What each surface owns
 
-| Surface                          | Owns                                                                          |
-| -------------------------------- | ----------------------------------------------------------------------------- |
-| `readme.md`                      | the end-user view: what exists, how to install it, what each plugin gives you |
-| `CLAUDE.md`                      | the maintainer's view: why the repo is shaped this way, and the traps         |
-| `docs/plugins/<plugin>.md`       | that plugin's own reference                                                   |
-| `docs/plugins/statusline.md`     | the statusline's user-facing config reference                                 |
-| `docs/cli/usage.md`              | the installer's end-user flag reference                                       |
-| `docs/cli/targets.md`            | what the CLI installs for Claude, and where each file lands                   |
-| `docs/cli/statusline.md`         | why the statusline ships in the CLI; links out for the config reference       |
-| `docs/cli/internals.md`          | the installer's maintainer map, pointing into `.claude/skills/installer-cli/` |
-| `docs/cli/index.md`              | the installer's landing page and the index of the four pages above            |
-| `.claude/skills/**`              | maintainer doctrine that auto-applies while editing a given tree              |
-| `schemas/statusline.schema.json` | the statusline config shape, alongside the script and its defaults            |
+| Surface                    | Owns                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `readme.md`                | the end-user view: what exists, how to install it, what each plugin gives you |
+| `CLAUDE.md`                | the maintainer's view: why the repo is shaped this way, and the traps         |
+| `docs/plugins/<plugin>.md` | that plugin's own reference                                                   |
+| `docs/cli/usage.md`        | the installer's end-user flag reference                                       |
+| `docs/cli/targets.md`      | what lands on disk for Claude, and which tool put it there                    |
+| `docs/cli/internals.md`    | the installer's maintainer map, pointing into `.claude/skills/installer-cli/` |
+| `docs/cli/index.md`        | the installer's landing page and the index of the three pages above           |
+| `.claude/skills/**`        | maintainer doctrine that auto-applies while editing a given tree              |
 
 A fact belongs in **exactly one** of these. When a change makes the same fact
 appear in two, say which copy should go — duplication is the drift this rule
@@ -77,7 +74,7 @@ but git; re-narrating it is the exact drift the density doctrine warns about.
   not). Widening one table cell re-pads every row of that table, so a one-word
   change to a cell can be a large diff. Say so when your suggestion widens a
   column.
-- **`.claude-plugin/marketplace.json` is generated** from the 13 plugin
+- **`.claude-plugin/marketplace.json` is generated** from the 14 plugin
   manifests by `plugins:marketplace`. Never report a finding against it; the
   finding belongs on the `plugins/<name>/.claude-plugin/plugin.json` it is
   projected from. Everything under `plugins/` **is** authored, so prose there is

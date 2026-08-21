@@ -131,8 +131,10 @@ describe("resolveRequest", () => {
   it("throws naming a malformed token", () => {
     expect(() => resolveRequest(request({ user: ["vwf@main"] })))
       .toThrow(/vwf@main/);
-    expect(() => resolveRequest(request({ project: ["--statusline"] })))
-      .toThrow(/--statusline/);
+    // A flag reaching the name list means the user's shell split their command
+    // somewhere they did not expect; naming it beats installing nothing quietly.
+    expect(() => resolveRequest(request({ project: ["--dry-run"] })))
+      .toThrow(/--dry-run/);
   });
 });
 

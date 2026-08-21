@@ -15,7 +15,10 @@ import {
   expect,
   it,
 } from "vitest";
-import { setJsonPath } from "./config/json.ts";
+import {
+  restoreJsonKey,
+  setJsonPath,
+} from "./config/json.ts";
 import type {
   Entry,
   Receipt,
@@ -23,18 +26,23 @@ import type {
 import {
   readReceipt,
   RECEIPT_VERSION,
-  ReceiptBuilder,
   revert,
-  writeReceipt,
 } from "./receipt.ts";
 
 /**
- * A receipt written by an older, multi-target version of this CLI.
+ * A receipt written by an older version of this CLI.
  *
- * Built as a literal rather than through `ReceiptBuilder`, which no longer has a
- * `tree` or `command` method — nothing this version installs writes those kinds.
- * That is the right shape for these tests anyway: a legacy receipt is JSON on
- * disk, and `revert` still has to meet it.
+ * **Every receipt is one now** — nothing this version installs writes one, so
+ * `ReceiptBuilder` and `writeReceipt` are gone and there is nothing left to
+ * round-trip through. Which is the right shape for these tests anyway: what
+ * `revert` has to meet is JSON already on disk, written by a version whose code
+ * is no longer here to build a fixture with.
+ *
+ * That makes this file the only guard on a specific failure: dropping an
+ * `Entry` kind from `revert` turns an existing receipt into a file nothing can
+ * undo, and the half-revert reports as a clean uninstall. So every kind gets a
+ * case below, including the two — `tree` and `command` — that only a retired
+ * adapter ever wrote.
  */
 function legacy(
   installedAt: string,
@@ -63,34 +71,23 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-/** Restores config keys through the JSONC mutator, as the adapters do. */
-const jsonHooks = {
-  restoreKey(
-    file: string,
-    path: readonly (string | number)[],
-    hadKey: boolean,
-    previous: unknown,
-  ) {
-    if (!existsSync(file)) {
-      return;
-    }
-    const text = readFileSync(file, "utf8");
-    writeFileSync(file, setJsonPath(text, path, hadKey ? previous : undefined));
-  },
-};
+/** The real hook `uninstall.ts` passes, not a stand-in for it. */
+const jsonHooks = { restoreKey: restoreJsonKey };
 
-describe("receipts", () => {
+describe("reverting a receipt", () => {
   it("deletes a file it created and restores one it overwrote", () => {
     const created = join(root, "created.txt");
     const existing = join(root, "existing.txt");
     writeFileSync(existing, "original\n");
-
-    const builder = new ReceiptBuilder();
-    builder.file(created).file(existing);
     writeFileSync(created, "new\n");
-    writeFileSync(existing, "clobbered\n");
 
-    revert(builder.build("2026-01-01T00:00:00Z"), jsonHooks);
+    revert(
+      legacy("t1", [
+        { kind: "file", path: created },
+        { kind: "file", path: existing, previous: "original\n" },
+      ]),
+      jsonHooks,
+    );
 
     expect(existsSync(created)).toBe(false);
     expect(readFileSync(existing, "utf8")).toBe("original\n");
@@ -99,18 +96,82 @@ describe("receipts", () => {
   it("removes a directory it created, but not one holding user files", () => {
     const ours = join(root, "ours");
     const shared = join(root, "shared");
-
-    const builder = new ReceiptBuilder();
-    builder.dir(ours).dir(shared);
     mkdirSync(ours);
     mkdirSync(shared);
     writeFileSync(join(shared, "user.txt"), "mine\n");
 
-    revert(builder.build("2026-01-01T00:00:00Z"), jsonHooks);
+    revert(
+      legacy("t1", [
+        { kind: "dir", path: ours },
+        { kind: "dir", path: shared },
+      ]),
+      jsonHooks,
+    );
 
     expect(existsSync(ours)).toBe(false);
     // Still there, because the user put something in it.
     expect(existsSync(shared)).toBe(true);
+  });
+
+  it("removes a `tree` recursively, files and all", () => {
+    // The distinction from `dir`: nothing but this tool ever wrote here, which
+    // is what makes recursive removal safe rather than reckless. Only the
+    // retired adapters wrote these — a copied render tree, the copied Claude
+    // marketplace payload — so a machine carrying one has no other way out.
+    const tree = join(root, "payload");
+    mkdirSync(join(tree, "nested"), { recursive: true });
+    writeFileSync(join(tree, "nested", "a.txt"), "x\n");
+
+    revert(legacy("t1", [{ kind: "tree", path: tree }]), jsonHooks);
+
+    expect(existsSync(tree)).toBe(false);
+  });
+
+  it("tolerates a `tree` that is already gone", () => {
+    // An interrupted uninstall, or a hand-deleted payload. `force` covers it;
+    // throwing here would strand every later entry in the same receipt.
+    expect(() =>
+      revert(
+        legacy("t1", [{ kind: "tree", path: join(root, "never-existed") }]),
+        jsonHooks,
+      )
+    )
+      .not
+      .toThrow();
+  });
+
+  it("runs a recorded undo command through the hook", () => {
+    // Oh-My-Pi's `config.yml` is the one config no adapter could edit directly —
+    // this CLI ships no YAML parser — so that adapter recorded the command to
+    // unmake it instead.
+    const ran: string[][] = [];
+    revert(
+      legacy("t1", [
+        {
+          kind: "command",
+          ran: ["config", "set", "k", "v"],
+          undo: ["config", "set", "k", ""],
+        },
+      ]),
+      { ...jsonHooks, runUndo: undo => ran.push([...undo]) },
+    );
+
+    expect(ran).toEqual([["config", "set", "k", ""]]);
+  });
+
+  it("skips a `command` entry when no undo hook was supplied", () => {
+    // Absent for the receipts whose adapter never recorded one; a skip rather
+    // than an error, or one such entry would fail an otherwise clean revert.
+    expect(() =>
+      revert(
+        legacy("t1", [
+          { kind: "command", ran: ["a"], undo: ["b"] },
+        ]),
+        jsonHooks,
+      )
+    )
+      .not
+      .toThrow();
   });
 
   it("leaves a config byte-identical after install then revert", () => {
@@ -123,46 +184,97 @@ describe("receipts", () => {
 `;
     writeFileSync(file, original);
 
-    const builder = new ReceiptBuilder();
-    builder
-      .configKey(file, ["statusLine"], { present: false })
-      .configKey(file, ["env", "EXISTING"], { present: true, value: "keep" });
-
-    let text = readFileSync(file, "utf8");
+    let text = original;
     text = setJsonPath(text, ["statusLine"], { type: "command" });
     text = setJsonPath(text, ["env", "EXISTING"], "clobbered");
     writeFileSync(file, text);
 
-    revert(builder.build("2026-01-01T00:00:00Z"), jsonHooks);
+    revert(
+      legacy("t1", [
+        { kind: "configKey", file, path: ["statusLine"], hadKey: false },
+        {
+          kind: "configKey",
+          file,
+          path: ["env", "EXISTING"],
+          hadKey: true,
+          previous: "keep",
+        },
+      ]),
+      jsonHooks,
+    );
 
     // Byte-identical, comment included — not merely semantically equal.
     expect(readFileSync(file, "utf8")).toBe(original);
   });
 
+  it("restores a foreign statusLine command from a v5.2.0 receipt", () => {
+    // The one behaviour the statusline's removal had to not break: a machine
+    // upgrading from v5.2.0 carries `statusline.json`, and reverting it is what
+    // puts the user's own bar back. Nothing writes that receipt any more, so
+    // this fixture is the shape as it exists on disk.
+    const file = join(root, "settings.json");
+    writeFileSync(
+      file,
+      `${
+        JSON.stringify(
+          {
+            statusLine: {
+              type: "command",
+              command: "${HOME}/.claude/scripts/statusline",
+            },
+          },
+          null,
+          2,
+        )
+      }\n`,
+    );
+
+    revert(
+      legacy("t1", [
+        {
+          kind: "configKey",
+          file,
+          path: ["statusLine"],
+          hadKey: true,
+          previous: { type: "command", command: "/opt/theirs/bar.sh" },
+        },
+      ]),
+      jsonHooks,
+    );
+
+    expect(JSON.parse(readFileSync(file, "utf8"))).toEqual({
+      statusLine: { type: "command", command: "/opt/theirs/bar.sh" },
+    });
+  });
+
   it("reverts in reverse, so a file inside a created dir is removed first", () => {
     const dir = join(root, "nested");
     const file = join(dir, "inside.txt");
-
-    const builder = new ReceiptBuilder();
-    builder.dir(dir);
     mkdirSync(dir);
-    builder.file(file);
     writeFileSync(file, "x\n");
 
-    revert(builder.build("2026-01-01T00:00:00Z"), jsonHooks);
+    revert(
+      legacy("t1", [
+        { kind: "dir", path: dir },
+        { kind: "file", path: file },
+      ]),
+      jsonHooks,
+    );
 
     // Forward order would have tried to rmdir a non-empty directory and left both.
     expect(existsSync(file)).toBe(false);
     expect(existsSync(dir)).toBe(false);
   });
+});
 
-  it("round-trips through disk", () => {
+describe("reading a receipt", () => {
+  it("reads one written to disk by an older version", () => {
     const path = join(root, "receipt.json");
-    const receipt = new ReceiptBuilder()
-      .file(join(root, "a.txt"))
-      .build("2026-01-01T00:00:00Z");
+    const receipt = legacy("2026-01-01T00:00:00Z", [
+      { kind: "file", path: join(root, "a.txt") },
+    ], [{ name: "vwf", scope: "user" }]);
+    writeFileSync(path, `${JSON.stringify(receipt, null, 2)}\n`);
 
-    writeReceipt(path, receipt);
     expect(readReceipt(path)).toEqual(receipt);
   });
 
@@ -179,75 +291,5 @@ describe("receipts", () => {
     const bad = join(root, "bad.json");
     writeFileSync(bad, "{ not json");
     expect(readReceipt(bad)).toBeUndefined();
-  });
-
-  describe("merging with what is already recorded", () => {
-    // A receipt describes an install, not a run. Overwriting it wholesale meant
-    // installing a second plugin discarded the first one's claims: the
-    // uninstall removed half the install and reported success.
-    it("keeps the earlier run's entries when a later run adds its own", () => {
-      const path = join(root, "merge.json");
-      writeReceipt(
-        path,
-        legacy("t1", [{ kind: "tree", path: join(root, "datastore") }], [
-          { name: "datastore", scope: "user" },
-        ]),
-      );
-
-      writeReceipt(
-        path,
-        legacy("t2", [{ kind: "tree", path: join(root, "identity") }], [
-          { name: "identity", scope: "user" },
-        ]),
-      );
-
-      const merged = readReceipt(path);
-      expect(merged?.entries.map(e => (e as { path: string; }).path)).toEqual([
-        join(root, "datastore"),
-        join(root, "identity"),
-      ]);
-      // The record must not narrow: datastore is still installed.
-      expect(merged?.plugins).toEqual([
-        { name: "datastore", scope: "user" },
-        { name: "identity", scope: "user" },
-      ]);
-      expect(merged?.installedAt).toBe("t2");
-    });
-
-    it("keeps the OLDER claim when both runs name the same path", () => {
-      // The two differ only in what they captured as prior state, and run 2
-      // read a machine run 1 had already changed.
-      const file = join(root, "settings.json");
-      writeFileSync(file, "original");
-      const path = join(root, "collide.json");
-      writeReceipt(path, new ReceiptBuilder().file(file).build("t1"));
-
-      writeFileSync(file, "ours");
-      writeReceipt(path, new ReceiptBuilder().file(file).build("t2"));
-
-      const merged = readReceipt(path);
-      expect(merged?.entries).toHaveLength(1);
-      expect((merged?.entries[0] as { previous: string; }).previous)
-        .toBe("original");
-    });
-
-    it("carries a no-op run's claims forward rather than losing them", () => {
-      // The statusline shape: everything was already set, so the run recorded
-      // nothing — and that empty receipt used to replace the real one.
-      const path = join(root, "noop.json");
-      const first = legacy("t1", [
-        { kind: "file", path: join(root, "config.yml") },
-        {
-          kind: "command",
-          ran: ["config", "set", "k", "v"],
-          undo: ["config", "set", "k", ""],
-        },
-      ]);
-      writeReceipt(path, first);
-
-      writeReceipt(path, new ReceiptBuilder().build("t2"));
-
-      expect(readReceipt(path)?.entries).toEqual(first.entries);
-    });
   });
 });

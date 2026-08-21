@@ -14,17 +14,16 @@
  * platform, it costs no dependency, and it works on this package's
  * `engines.node` floor (verified on 18.20.8).
  *
- * Two things citty did that the platform does not, both handled here:
- *
- * - **Boolean negation.** There is no `negativeDescription`, so `--no-statusline`
- *   is declared as its own flag and the pair is folded back into one tri-state
- *   by `statuslineFlag`.
- * - **Usage rendering.** `renderUsage` below is ours. It is not a loss: the
- *   no-request path has to print help anyway, so this was going to exist.
+ * The one thing citty did that the platform does not is **usage rendering**, so
+ * `renderUsage` below is ours. It is not a loss: the no-request path has to
+ * print help anyway, so this was going to exist. (Boolean negation was the
+ * other, and it went with the statusline — `--no-statusline` was the only
+ * negated flag, and there is no tri-state left to fold.)
  *
  * `strict` is on, so an unknown flag is an **error naming itself** rather than
  * a silent no-op. That is what makes a retired flag legible instead of ignored
- * — which is how `--platform` and `--upgrade` now answer.
+ * — which is how `--platform`, `--upgrade` and now `--statusline`,
+ * `--no-statusline` and `--force` all answer.
  */
 import { parseArgs } from "node:util";
 
@@ -41,12 +40,6 @@ interface FlagDoc {
  * but unparsed — the drift citty's separate `description` field invited.
  */
 const FLAGS: readonly FlagDoc[] = [
-  {
-    display: "--statusline",
-    description:
-      "Install the statusline, and consent to replacing one already there",
-  },
-  { display: "--no-statusline", description: "Skip the statusline" },
   {
     display: "--all",
     description:
@@ -73,27 +66,18 @@ const FLAGS: readonly FlagDoc[] = [
     description: "Show the full diff without writing anything",
   },
   {
-    display: "--force",
-    description: "Act even though Claude Code is not on PATH (statusline only)",
-  },
-  {
     display: "-v, --version",
-    description:
-      "Report this CLI's version, the statusline installed on disk, and the "
-      + "plugins available on main",
+    description: "Report this CLI's version and the plugins available on main",
   },
   { display: "-h, --help", description: "Show this help" },
 ];
 
 const OPTIONS = {
-  statusline: { type: "boolean" },
-  "no-statusline": { type: "boolean" },
   all: { type: "boolean" },
   user: { type: "string", multiple: true },
   project: { type: "string", multiple: true },
   uninstall: { type: "boolean" },
   "dry-run": { type: "boolean" },
-  force: { type: "boolean" },
   version: { type: "boolean", short: "v" },
   // Declared rather than special-cased: `strict` rejects anything undeclared,
   // so an undeclared `--help` would error instead of helping.
@@ -101,15 +85,6 @@ const OPTIONS = {
 } as const;
 
 export interface Args {
-  /**
-   * Tri-state: `true` asks, `false` refuses, `undefined` is unset.
-   *
-   * Unset means "the run said nothing about the bar". A run that requested
-   * plugins proceeds without it — `--all` never installs the statusline, so
-   * every statusline install stays explicit — and a run that requested nothing
-   * at all gets the help text.
-   */
-  readonly statusline: boolean | undefined;
   /** Install the default plugin set (`DEFAULT_INSTALL`) at user scope. */
   readonly all: boolean;
   /** Plugins to install at user scope, in the order given. */
@@ -118,30 +93,8 @@ export interface Args {
   readonly project: readonly string[];
   readonly uninstall: boolean;
   readonly dryRun: boolean;
-  readonly force: boolean;
   readonly version: boolean;
   readonly help: boolean;
-}
-
-/**
- * Fold `--statusline` / `--no-statusline` back into one tri-state.
- *
- * The distinction is still load-bearing: an explicit `--statusline` is the only
- * consent to replace a statusline this installer did not write, and it is also
- * what clears a refusal remembered by an earlier version. Collapsing the pair to
- * a plain boolean would lose both.
- *
- * Both at once is a contradiction, and refusal wins: it is the answer that
- * changes nothing on the machine.
- */
-export function statuslineFlag(
-  yes: boolean | undefined,
-  no: boolean | undefined,
-): boolean | undefined {
-  if (no === true) {
-    return false;
-  }
-  return yes === true ? true : undefined;
 }
 
 /**
@@ -158,13 +111,11 @@ export function parse(argv: readonly string[]): Args {
     allowPositionals: false,
   });
   return {
-    statusline: statuslineFlag(values.statusline, values["no-statusline"]),
     all: values.all === true,
     user: values.user ?? [],
     project: values.project ?? [],
     uninstall: values.uninstall === true,
     dryRun: values["dry-run"] === true,
-    force: values.force === true,
     version: values.version === true,
     help: values.help === true,
   };
@@ -194,7 +145,7 @@ export function renderUsage(): string {
     `  ${flag.display.padEnd(width)}  ${wrap(flag.description, width + 4)}`
   );
   return [
-    "Install the virajp-plugins plugins and statusline, and wire graphify",
+    "Install the virajp-plugins plugins, and wire graphify",
     "",
     "USAGE",
     "  ai-plugins [options]",

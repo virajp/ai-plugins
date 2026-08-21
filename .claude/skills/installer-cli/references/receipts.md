@@ -8,62 +8,74 @@ The old installer inferred what it must have written and deleted the keys it
 knew it set. That is safe only while the inference stays true, and it silently
 is not whenever a user edits a value the installer later removes wholesale.
 
+## This module is read-only
+
+**Nothing this version installs writes a receipt.** Plugins go in through
+`claude plugin install` and graphify through its own CLI; both tools keep their
+own records, which is what `--uninstall` reads live. `ReceiptBuilder`,
+`writeReceipt` and `mergeReceipts` are gone with the statusline, the last
+writer.
+
+What is left is `readReceipt` and `revert`, for the receipts **older versions**
+left on disk. Everything below the next two sections is therefore knowledge
+about what you will *meet*, not rules for what you will write — until something
+writes again, at which point the write-path sections become live and are the
+first thing to re-read.
+
 ## The five kinds
 
-**Every kind is still read; only three are still written.**
+**Every kind is still read; none are written.**
 
-| Kind        | On revert                         | Written today | Safe because                                                      |
-| ----------- | --------------------------------- | ------------- | ----------------------------------------------------------------- |
-| `file`      | restores `previous`, else deletes | yes           | `previous` absent means we created it                             |
-| `dir`       | removes **only if empty**         | yes           | the user shares it — `~/.claude/scripts`                          |
-| `configKey` | restores the key, else deletes it | yes           | `previous` absent is the signal to delete, not to write a default |
-| `tree`      | removes **recursively**           | **no**        | only ever pointed at a directory nothing but this tool wrote to   |
-| `command`   | runs the recorded undo command    | **no**        | the tool owns bookkeeping we must not edit                        |
+| Kind        | On revert                         | Was written by                            |
+| ----------- | --------------------------------- | ----------------------------------------- |
+| `file`      | restores `previous`, else deletes | the statusline                            |
+| `dir`       | removes **only if empty**         | the statusline (`~/.claude/scripts`)      |
+| `configKey` | restores the key, else deletes it | the statusline, and every retired adapter |
+| `tree`      | removes **recursively**           | the four plugin adapters                  |
+| `command`   | runs the recorded undo command    | the Oh-My-Pi and Cursor adapters          |
 
-`tree` and `command` were the four plugin adapters' — a copied render tree, a
-`claude plugin install` paired with its uninstall. Those adapters are gone, and
-`ReceiptBuilder` accordingly has **no** `tree`, `command` or `ownedDir` method:
-a builder method with no caller is dead weight. The restored plugin install path
-(`install.ts`) deliberately writes **no receipt at all** — Claude's own settings
-are the record, and `--uninstall` enumerates them live.
-
-But `revert` still handles them, deliberately. `uninstall.ts` reads the receipts
-an older multi-target install left behind, which is the whole reason a machine
-carrying an OpenCode bundle or an Oh-My-Pi bar can be **cleaned rather than
-orphaned**. Dropping the kinds from `revert` would turn those receipts into
-files nothing can undo. When the legacy window closes, they go together —
+**`revert` must keep handling all five.** `uninstall.ts` reads the receipts
+older installs left behind, which is the whole reason a machine carrying this
+toolkit's statusline, an OpenCode bundle or an Oh-My-Pi bar can be **cleaned
+rather than orphaned**. Dropping a kind turns those receipts into files nothing
+can undo — and the half-revert reports as a clean uninstall, which is the
+failure worth preventing. When the legacy window closes they go together;
 `uninstall.ts` names the set.
 
-## The unconditional rule
+`configKey` is the one that matters most in practice, because it is what
+restores a v5.2.0 machine's own statusline: `settings.json` → `statusLine`, with
+the foreign command as `previous`. `restoreJsonKey` in `cli/src/config/json.ts`
+is the hook that performs it — it moved there when `statusline.ts` was deleted,
+since it is a generic JSONC key-writer and every config any adapter ever touched
+is that format.
 
-`file` (when it creates), `dir` and the retired `tree`/`ownedDir` are recorded
-**unconditionally** — recording is not gated on what is currently at the path.
-Removal stays conditional; the *claim* does not.
+## If a write path ever returns
 
-This is the same invariant as the SKILL.md's, seen from the receipt side. Every
-guarded form asks the wrong question, because on run 2 what is sitting at the
-path is run 1's own output. The claim must be computed against what run 1 saw,
-and the only way to do that is to ask **who owns the path**, never **what is at
-it**.
+These are the rules that governed every writer this CLI had, and the bug class
+they exist for was rediscovered **five** times — in all four plugin adapters and
+again in the statusline. Do not re-derive them.
 
-The strongest form of the ownership test reconstructs the file *without* our
-entries and compares — so it answers "would our merge produce exactly this?"
-rather than "does something exist here?". Copy that shape.
+**The unconditional rule.** `file` (when it creates), `dir` and `tree` were
+recorded **unconditionally** — recording is not gated on what is currently at
+the path. Removal stays conditional; the *claim* does not.
 
-`cli/src/statusline.ts` still keys its `configKey` records on `existed`, and is
-covered by the receipt merge below rather than by its own test. That holds, but
-it means its claims are correct only in combination — a known soft spot.
+Every guarded form asks the wrong question, because on run 2 what is sitting at
+the path is run 1's own output. The claim must be computed against what run 1
+saw, and the only way to do that is to ask **who owns the path**, never **what
+is at it**. The strongest form reconstructs the file *without* our entries and
+compares, answering "would our merge produce exactly this?" rather than "does
+something exist here?".
 
-## Receipts merge
+**Receipts merge.** `writeReceipt` merged with whatever was already at the path,
+because a receipt describes an install, not a run: overwriting it wholesale is
+what let a second run record less than the first. The **older** entry won a
+collision, since run 2 read a machine run 1 had already changed. Merging in the
+one place every writer passed through was deliberate — the bug recurred across
+every adapter precisely because each site decided for itself.
 
-`writeReceipt` **merges with whatever is already at the path**. A receipt
-describes an install, not a run: overwriting it wholesale is what let a second
-run record less than the first.
-
-The **older** entry wins a collision, since run 2 read a machine run 1 had
-already changed. Merging in the one place every writer passes through is
-deliberate — this bug class recurred across every adapter precisely because each
-site decided for itself.
+**A single install passes either way; only a repeat run shows it.** Any test for
+a new writer has to install twice and assert the receipt still records the
+*original* prior state, comparing file contents rather than filenames.
 
 ## Project scope follows the working directory
 
@@ -81,16 +93,17 @@ check `git status --porcelain` afterwards rather than assuming.
 
 ## Uninstall asks the receipt, not the flags
 
-The statusline had a second defect that hid the first: a plain `--uninstall`
-never reverted it at all, because the tri-state `--statusline` deferred to
-`--all` when unset and there was no `--all` on the way out. A user who installed
-with `--all` had to know to pass `--statusline` to remove a bar they never
-separately asked for.
+The statusline had a defect worth remembering even though the flag is gone: a
+plain `--uninstall` never reverted it at all, because the tri-state
+`--statusline` deferred to `--all` when unset and there was no `--all` on the
+way out. A user who installed with `--all` had to know to pass `--statusline` to
+remove a bar they never separately asked for.
 
-The rule that fixed it survives the interactive rewrite and is now structural:
-**uninstall undoes what this tool did, and the receipt is the record of that.**
-`enumerate` finds the statusline *by its receipt*, which is why a bar this tool
-did not install is never listed. `--no-statusline` still refuses.
+The rule that fixed it is now structural: **uninstall undoes what this tool did,
+and the receipt is the record of that.** `enumerate` finds a piece *by its
+receipt*, which is why a statusline this tool did not install is never listed —
+and why `statusline.json` had to join `LEGACY_RECEIPTS` rather than being
+deleted along with the code that wrote it.
 
 ## Directories nobody claimed
 
@@ -102,7 +115,7 @@ backwards, so the payload comes out before its containers are asked whether they
 are empty.
 
 The receipt directory is the one case an entry cannot cover, since no receipt
-can record the directory holding itself. `revert` removes it after the last
+can record the directory holding itself. `removeItems` removes it after the last
 receipt is consumed, and removes its parent **only when that parent is our own
 `ai-plugins/`** — walking up blindly would target whatever happens to hold the
 receipt dir, which under a test is `/tmp`.
@@ -113,8 +126,6 @@ directory OpenCode owns is a worse failure than leaving an empty one. Same
 ownership question as everywhere else in this file; it just answers "no" here.
 
 ## When a legacy `command` entry has an undo
-
-Read-only knowledge now, but it explains what you will meet in an old receipt.
 
 An undo was recorded when the command **changed something**, *or when the
 resulting state was provably this tool's* — ownership, not activity. Gating on
@@ -131,7 +142,8 @@ themselves. `enumerate` keeps that rule for the live path.
 
 `RECEIPT_VERSION` is **3** (2 added `command`, 3 added `tree`). `readReceipt`
 refuses only a **future** version, so older receipts still revert — which is
-exactly what the legacy reader depends on.
+exactly what the legacy reader depends on, and why the constant stays even
+though nothing stamps it any more.
 
 Bump it only when an older CLI would *mis-handle* a new entry; adding a field an
 old CLI ignores harmlessly is deliberately not a bump. The failure worth

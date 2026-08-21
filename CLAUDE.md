@@ -13,9 +13,11 @@ A multi-agent plugin toolkit (`virajp-plugins`) containing LSP servers, MCP
 servers, and `vwf` — a full Product → Blueprint → Plan → Execute workflow plugin
 (with post-deploy verify + production-feedback intake).
 
-The repo also ships a **statusline**, installed via a small CLI
-(`@askviraj/ai-plugins`) rather than the marketplace — see The installer &
-statusline CLI.
+The repo also ships a small **installer CLI** (`@askviraj/ai-plugins`), which
+sequences Claude's own plugin commands and wires graphify — see The installer
+CLI. It used to ship a **statusline** too; that has moved to
+`@askviraj/claude-status`, and what is left behind is the receipt reader that
+uninstalls it from a machine that already has it.
 
 ### One authored tree
 
@@ -31,7 +33,7 @@ plugins/<plugin>/          the authored source, and the installed shape
 
 cli/src/**                 installer source (TypeScript)
   ↓  tsup
-bin/ai-plugins.mjs         gitignored build output — the published entrypoint
+bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
 ```
 
@@ -63,19 +65,26 @@ every build. Other agents are now served by [a documented prompt](./readme.md),
 not a bespoke render. Do not reconstruct any of it from this paragraph; git has
 it.
 
-### Installing, and the receipt
+### Installing, and the receipts nothing writes
 
 The CLI installs plugins as a **thin wrapper** — `--all` / `--user <name>` /
 `--project <name>` drive `claude plugin marketplace add` and
 `claude plugin install`, reading this repo's `main`, and Claude's own commands
-work just as well directly. The CLI also installs the statusline and graphify's
-wiring, and removes whatever the toolkit put on the machine.
+work just as well directly. It also wires graphify, and removes whatever the
+toolkit put on the machine.
 
-A statusline or graphify install returns a **receipt** recording prior state, so
-uninstall restores rather than guesses; a **plugin** install writes none, since
-Claude's settings are the record `--uninstall` reads live. That invariant
-survives the adapters that made it necessary, because `--uninstall`'s
-enumeration now depends on those records being complete.
+**Nothing it does writes a receipt.** Both install paths belong to another tool
+— `claude` for plugins, `graphify` for its own wiring — and each keeps its own
+records, which is what `--uninstall` reads live. The statusline was the last
+writer, and it left with the bar.
+
+What survives is the **reader**, and it is load-bearing rather than vestigial: a
+machine that installed an earlier version still carries receipts recording what
+was there *before* that install, and `--uninstall` replays them so the user gets
+their own state back rather than a deletion. `statusline.json` is the newest of
+them and the one most machines will have — leave it out of `LEGACY_RECEIPTS` and
+an upgrading user's own bar never comes back, while the run reports a clean
+uninstall.
 
 > **Working on it:** the receipt entry kinds, the receipt-completeness bug
 > class, the interactive uninstall and the packaging traps are in
@@ -663,16 +672,21 @@ vendor directory carries a `NOTICE.md` quoting both declarations verbatim rather
 than a `LICENSE` file. Shipping an MIT text the upstream author never published
 would be worse than an honest note.
 
-## The installer & statusline CLI
+## The installer CLI
 
-The statusline is **not** a plugin — no plugin mechanism can install a status
-bar — so it ships inside `@askviraj/ai-plugins`, run as
-`pnpx @askviraj/ai-plugins …`. That CLI does the statusline, graphify's wiring,
-`--uninstall`, and **plugin installs as a thin wrapper**: `--all` /
-`--user <name>` / `--project <name>` drive Claude's own
-`plugin marketplace add` + `plugin install`, reading this repo's `main` — the
-CLI never edits Claude's settings itself and writes **no receipt** for a plugin
-install (Claude's settings are the record `--uninstall` reads live).
+`@askviraj/ai-plugins`, run as `pnpx @askviraj/ai-plugins …`, does three things:
+**plugin installs as a thin wrapper** (`--all` / `--user <name>` /
+`--project <name>` drive Claude's own `plugin marketplace add` +
+`plugin install`, reading this repo's `main`), **graphify's wiring**, and
+**`--uninstall`**. It never edits Claude's settings itself, and writes **no
+receipt** — both install paths belong to a tool that keeps its own records, and
+those records are what `--uninstall` reads live.
+
+**It shipped a statusline until 6.0.0**, which is where the `tools/` tree, the
+consent gate, `merge.ts`, a JSON schema, a 23 KB user doc and every write path
+in this CLI went. The bar is now `@askviraj/claude-status`
+(`pnpx @askviraj/claude-status --install`), and with it the caps hook
+`/vwf:execute` depends on — see the contract stated in vwf's `execute` skill.
 
 > **The user-facing reference is `docs/cli/`** — `usage.md` for the flags,
 > `targets.md` for what lands where, `internals.md` for the source map. What
@@ -680,40 +694,34 @@ install (Claude's settings are the record `--uninstall` reads live).
 > `internals.md`'s path table is the fuller one.
 
 **An invocation that installs nothing prints the help and exits 1.** `strict`
-parsing is on, so a retired flag — `--platform`, `--upgrade` — reports itself by
-name rather than being a silent no-op; `--user` and `--project` are repeatable
+parsing is on, so a retired flag — `--platform`, `--upgrade`, and now
+`--statusline`, `--no-statusline`, `--force` — reports itself by name rather
+than being a silent no-op; `--user` and `--project` are repeatable
 (`multiple: true`), with the both-survive regression test that guards the
-silent-drop bug the old parser had.
+silent-drop bug the old parser had. `--force` is worth its own sentence: it
+existed only to configure the bar on a machine where Claude was off `PATH`, and
+every remaining install *is* a `claude` invocation, so nothing is left to force.
 
 **`--uninstall` is interactive**: it enumerates what it can see (the marketplace
-registration, user- and project-scoped plugin installs, the statusline,
-graphify's hook and graph), presents it **all selected** so the interaction is
-deselection, and removes each piece through whatever owns it —
-`claude plugin uninstall` rather than an edit to `enabledPlugins`, and a
-**receipt restore** for the statusline so the user's own bar comes back. No TTY
-refuses rather than guesses, but only once there is something to remove;
-`--dry-run` is the scriptable path.
+registration, user- and project-scoped plugin installs, graphify's hook and
+graph), presents it **all selected** so the interaction is deselection, and
+removes each piece through whatever owns it — `claude plugin uninstall` rather
+than an edit to `enabledPlugins`. No TTY refuses rather than guesses, but only
+once there is something to remove; `--dry-run` is the scriptable path.
 
-It also reads **legacy multi-target receipts** to clean the discontinued
-OpenCode and Oh-My-Pi surfaces. That is the one piece of multi-target code
-deliberately kept, so an existing install migrates rather than being orphaned;
-`uninstall.ts` states the drop condition and names what to delete.
+**It also reads legacy receipts**, and that reader is now the whole receipt
+story. It cleans this toolkit's own statusline alongside the discontinued
+OpenCode, Oh-My-Pi and Cursor surfaces, restoring each from its recorded prior
+state so an existing install migrates rather than being orphaned; `uninstall.ts`
+states the drop condition and names what to delete.
 
-**A statusline that is not ours is never replaced silently.** The bar is
-installed whenever asked for, but *configuring* Claude is gated on consent,
-since that is the step that displaces what the user had. `--statusline` is the
-only consent; with no TTY the run **fails** rather than guessing; a refusal is
-remembered as `autoConfigure: false` in `~/.config/statusline.json` and cleared
-by `--statusline`. Ownership, not existence, decides what counts as foreign —
-otherwise every repeat run prompts about its own bar. Details, including why
-this reverses a documented decision:
-`.claude/skills/installer-cli/references/statusline.md`.
-
-**The statusline reports its own version**, from a constant `i:version` stamps
-at bump time and `i:test` asserts equals `package.json`. `--version` runs the
-*installed* script to ask what is actually on disk, instead of printing the
-running package's version as if it were the same thing — under `pnpx` it never
-was.
+**`statusline.json` joining `LEGACY_RECEIPTS` is the load-bearing half of the
+statusline's removal.** A machine on 5.2.0 has our bar configured and that
+receipt recording the bar it displaced. Take it out of that map and
+`--uninstall` stops finding it: the user's own statusline never comes back and
+`settings.json` is left pointing at a script that no longer exists — while the
+run reports success. It is why `i:test`'s gutted E2E was *replaced* rather than
+deleted.
 
 **Every GitHub call sends `$GITHUB_API_TOKEN` when it is set**, because GitHub's
 anonymous limit is per source IP and shared egress exhausts it between users.
@@ -723,30 +731,31 @@ read-only token would not fix. The npm registry call is not GitHub and stays
 tokenless.
 
 **`cli/` is the source; `bin/` is the build output, and `bin/` is what npm
-publishes.** tsup bundles `cli/src/index.ts` → `bin/ai-plugins.mjs`; `bin/` is
-gitignored and `i:build` regenerates it. The published tarball is `bin` +
-`tools` — **7 files, ~41 KB**, down from ~12 MB when the four render trees
-shipped inside it. The committed-tree-validated-by-CI guarantee moved channel
-rather than disappearing: what users install is `main`, and `plugins.yml`
-validates `main` on every push.
+publishes.** tsup bundles `cli/src/index.ts` → `bin/installer.mjs`; `bin/` is
+gitignored and `i:build` regenerates it. **The artifact was renamed; the command
+was not** — `package.json`'s `bin` *key* stays `ai-plugins`, which is what users
+invoke and what npm's Trusted Publisher is bound to. The published tarball is
+`bin` alone — **4 files**, down from 7 with the statusline and ~12 MB when the
+four render trees shipped inside it. The committed-tree-validated-by-CI
+guarantee moved channel rather than disappearing: what users install is `main`,
+and `plugins.yml` validates `main` on every push.
 
-| Path                    | Is                                                                  |
-| ----------------------- | ------------------------------------------------------------------- |
-| `cli/src/args.ts`       | the flag surface on `util.parseArgs`, plus the usage renderer       |
-| `cli/src/index.ts`      | the router — resolve, gate, execute, report, exit                   |
-| `cli/src/install.ts`    | the plugin installer — plan against Claude's settings, drive claude |
-| `cli/src/uninstall.ts`  | enumerate → deselect → remove, plus the legacy-receipt reader       |
-| `cli/src/receipt.ts`    | prior state, so uninstall restores rather than guesses              |
-| `cli/src/github.ts`     | the token header and the rate-limit-only hint                       |
-| `cli/src/graphify.ts`   | `graphify install` + `hook install`                                 |
-| `cli/src/version.ts`    | `--version` — this CLI, the installed statusline, plugins on `main` |
-| `cli/src/statusline.ts` | the Claude bar, with its own receipt                                |
-| `tools/statusline/`     | the script, its defaults, the caps hook                             |
-| `cli/src/**/*.test.ts`  | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
+| Path                     | Is                                                                  |
+| ------------------------ | ------------------------------------------------------------------- |
+| `cli/src/args.ts`        | the flag surface on `util.parseArgs`, plus the usage renderer       |
+| `cli/src/index.ts`       | the router — resolve, gate, execute, report, exit                   |
+| `cli/src/install.ts`     | the plugin installer — plan against Claude's settings, drive claude |
+| `cli/src/uninstall.ts`   | enumerate → deselect → remove, plus the legacy-receipt reader       |
+| `cli/src/receipt.ts`     | read-only: reverting the receipts older versions wrote              |
+| `cli/src/github.ts`      | the token header and the rate-limit-only hint                       |
+| `cli/src/graphify.ts`    | `graphify install` + `hook install`                                 |
+| `cli/src/version.ts`     | `--version` — this CLI against npm, plugins on `main`               |
+| `cli/src/config/json.ts` | format-preserving JSON/JSONC edits, and `restoreJsonKey`            |
+| `cli/src/**/*.test.ts`   | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
 
-> **Working here:** the flag surface, the receipt invariant, the interactive
+> **Working here:** the flag surface, the receipt rules, the interactive
 > uninstall and the packaging traps are in `.claude/skills/installer-cli/`,
-> which auto-applies while you edit `cli/` or `tools/`.
+> which auto-applies while you edit `cli/`.
 
 ## CI & Releases
 
@@ -918,8 +927,8 @@ Available plugin names: `vwf`, `typescript`, `flutter`, `design-tools`,
 `devtools`, `cicd`, `cloudflare`, `gcp`, `datastore`, `identity`,
 `observability`, `orchestration`, `object-storage`, `stackgen`. Every one of
 them is authored here — no name on this list is re-listed from another repo.
-(The statusline is not a plugin — install it via `pnpx @askviraj/ai-plugins …`;
-see The installer & statusline CLI.)
+(The statusline is not among them and is not a plugin — it is a separate
+package, `pnpx @askviraj/claude-status --install`.)
 
 Installing `vwf` pulls in its dependency (`devtools`) automatically from the
 same `virajp-plugins` marketplace — no other marketplace needs to be registered.

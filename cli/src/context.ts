@@ -16,16 +16,13 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { getPath } from "./config/json.ts";
-// Type-only, and deliberately circular: `receipt.ts` needs `Scope` from here.
-// Both sides are erased at build time, so the cycle never reaches the bundle.
 import type { Progress } from "./progress.ts";
-import type { Receipt } from "./receipt.ts";
 
 /** Where a Claude plugin install lands. */
 export type Scope = "user" | "project";
 
 export interface Context {
-  /** Root of the checkout or unpacked package — what holds `tools/`. */
+  /** Root of the checkout or unpacked package — what holds `package.json`. */
   readonly sourceRoot: string;
   /** `$HOME`, injectable so tests never touch the real one. */
   readonly home: string;
@@ -48,9 +45,9 @@ export interface Context {
 /**
  * The run's settings, as opposed to its environment.
  *
- * Shared by the two things a run can do — install the statusline, or uninstall —
- * because both write receipts, both honour `--dry-run`, and both report through
- * the same progress indicator.
+ * Shared by the two things a run can do — install plugins, or uninstall —
+ * because both honour `--dry-run` and both report through the same progress
+ * indicator.
  */
 export interface RunOptions {
   readonly context: Context;
@@ -103,17 +100,12 @@ export const execCommand: Exec = (command, args, options) => {
 
 /** A single intended change, rendered for `--dry-run` and for the reporter. */
 export interface Action {
-  /** Imperative, user-facing: "install ~/.claude/scripts/statusline". */
+  /** Imperative, user-facing: "claude plugin install vwf@virajp-plugins". */
   readonly summary: string;
   /** Absolute path this touches, when it is a file operation. */
   readonly path?: string;
   /** A diff to show under `--dry-run`, when the change is to a text file. */
   readonly diff?: { readonly before: string; readonly after: string; };
-}
-
-export interface ApplyResult {
-  readonly receipt: Receipt;
-  readonly actions: readonly Action[];
 }
 
 /** Is `bin` on the PATH? */
@@ -128,9 +120,9 @@ export function hasBin(bin: string): boolean {
  * Where Claude Code keeps its user-level config.
  *
  * `CLAUDE_CONFIG_DIR` wins, which is also how the tests point a whole run at a
- * throwaway directory. Both the statusline and the uninstall enumeration read
- * `settings.json` from here, and the two disagreeing would put the status bar in
- * a file Claude never loads.
+ * throwaway directory. The install planner and the uninstall enumeration both
+ * read `settings.json` from here, and the two disagreeing would have an
+ * uninstall unable to see what an install had just written.
  */
 export function claudeConfigDir(home: string): string {
   const override = process.env["CLAUDE_CONFIG_DIR"];

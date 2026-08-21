@@ -16,9 +16,6 @@ importers:
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
-      smol-toml:
-        specifier: ^1.7.1
-        version: 1.8.0
       write-file-atomic:
         specifier: ^8.0.0
         version: 8.0.0
@@ -50,9 +47,6 @@ importers:
       jsonc-parser:
         specifier: latest
         version: 3.3.1
-      smol-toml:
-        specifier: latest
-        version: 1.8.0
       write-file-atomic:
         specifier: latest
         version: 8.0.0
@@ -940,10 +934,6 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
-  smol-toml@1.8.0:
-    resolution: {integrity: sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ==}
-    engines: {node: '>= 18'}
-
   sort-object-keys@2.1.0:
     resolution: {integrity: sha512-SOiEnthkJKPv2L6ec6HMwhUcN0/lppkeYuN1x63PbyPRrgSPIuBJCiYxYyvWRTtjMlOi14vQUCGUJqS6PLVm8g==}
 
@@ -1732,8 +1722,6 @@ snapshots:
   siginfo@2.0.0: {}
 
   signal-exit@4.1.0: {}
-
-  smol-toml@1.8.0: {}
 
   sort-object-keys@2.1.0: {}
 

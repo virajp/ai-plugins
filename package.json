@@ -1,15 +1,13 @@
 {
   "name": "@askviraj/ai-plugins",
   "version": "5.2.0",
-  "description": "Installs the powerline statusline for Claude Code, and wires up graphify. The plugins install through Claude Code's own marketplace commands",
+  "description": "Installs the virajp-plugins plugins for Claude Code and wires up graphify. The plugins install through Claude Code's own marketplace commands",
   "keywords": [
     "claude",
     "claude-code",
     "claude-code-plugin",
     "claude-code-plugins",
     "marketplace",
-    "statusline",
-    "powerline",
     "subagent",
     "cli",
     "mcp",
@@ -25,15 +23,13 @@
   "author": "Viraj Patel",
   "type": "commonjs",
   "bin": {
-    "ai-plugins": "./bin/ai-plugins.mjs"
+    "ai-plugins": "./bin/installer.mjs"
   },
   "files": [
-    "bin",
-    "tools"
+    "bin"
   ],
   "dependencies": {
     "jsonc-parser": "^3.3.1",
-    "smol-toml": "^1.7.1",
     "write-file-atomic": "^8.0.0"
   },
   "devDependencies": {

@@ -3,8 +3,8 @@
  *
  * This is the reporting half of the retired `executor.ts`. The other half drove
  * one plan per target across four adapters; there are no targets and no plans
- * left, so what a run reports is a handful of independent **steps** — the
- * statusline, and one row per thing an uninstall removed.
+ * left, so what a run reports is a handful of independent **steps** — one row
+ * per plugin installed, or per thing an uninstall removed.
  *
  * The table survived the narrowing, and the reason is the uninstall: it
  * enumerates a variable number of pieces and each one succeeds or fails on its
@@ -15,7 +15,7 @@ import { homedir } from "node:os";
 import type { Action } from "./context.ts";
 
 export interface Outcome {
-  /** What the row is about — `statusline`, or one enumerated uninstall item. */
+  /** What the row is about — a plugin, or one enumerated uninstall item. */
   readonly name: string;
   readonly actions: readonly Action[];
   /** Absent on success; the failure message otherwise. */
@@ -31,8 +31,8 @@ export function failed(outcomes: readonly Outcome[]): boolean {
 export interface ProgressReport {
   readonly outcomes: readonly Outcome[];
   /**
-   * Everything the run wanted to say that is not a per-step result — graphify
-   * wiring, a replaced statusline. **Collected, not printed as it happens**:
+   * Everything the run wanted to say that is not a per-step result — a caveat
+   * about graphify's wiring, say. **Collected, not printed as it happens**:
    * interleaved with the results they read as noise before you know whether
    * anything worked.
    */
