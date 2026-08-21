@@ -37,7 +37,7 @@ bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
 ```
 
-**One file is generated**: the marketplace manifest, a projection of the 14
+**One file is generated**: the marketplace manifest, a projection of the 15
 plugin manifests. It lives at the repo **root**, not under `plugins/`, because
 every `source` inside it resolves relative to the marketplace root — which is
 where Claude looks when this repo is added. It is committed so what users
@@ -48,7 +48,7 @@ Note the two neighbours that read confusingly: `.claude-plugin/` is that
 generated manifest, while `.claude/` is this repo's own skills, agents and
 worktrees. Neither is `plugins/`.
 
-> **Authoring one:** the nine checker rules, the invocation frontmatter, the
+> **Authoring one:** the ten checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -114,7 +114,7 @@ which is the installer's and whose trigger surface must stay untouched — npm
 allows one Trusted Publisher and validates the entry-point filename):
 
 - **`plugins:marketplace`** — generates `.claude-plugin/marketplace.json` from
-  the 14 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
+  the 15 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
   `tags` and supplying what no manifest holds: the marketplace header, and the
   per-entry `category`, `strict` and `source`. **`--check`** regenerates in
   memory and fails if the committed file differs. That mode is the only guard on
@@ -122,7 +122,7 @@ allows one Trusted Publisher and validates the entry-point filename):
   regenerate is invisible to every other check, and the committed manifest keeps
   advertising the old version. It is what `plugins:render-clean` narrowed down
   to.
-- **`plugins:check`** — validates the authored tree. Nine rules: manifest
+- **`plugins:check`** — validates the authored tree. Ten rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **strict-YAML frontmatter**; relative links under
   `assets/examples/**`; **root-relative reference resolution** (every such
@@ -131,7 +131,10 @@ allows one Trusted Publisher and validates the entry-point filename):
   own prose names a real agent, and every declared agent is referenced at least
   once — the two directions cover each other on a rename); the vwf
   design-adapter contract (all **three** import skills present and
-  model-invocable); and the **technology-free vwf** guard.
+  model-invocable); the vwf **stack-adapter** contract (both
+  `<plugin>-stack-menu` and `<plugin>-stack-template` present and
+  model-invocable on every plugin keyworded `vwf-stack-adapter`); and the
+  **technology-free vwf** guard.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
@@ -192,6 +195,7 @@ design (a plugin may hold skills versioned on their own cadence).
 | `observability`  | `plugins/observability`  | **Capability** plugin — the neutral telemetry contract (**the product emits OTLP and never a vendor SDK**, signal correlation, cardinality as a design decision, retention) plus the self-hosted sink: **OpenTelemetry → Grafana OTel-LGTM**. A managed backend is a destination, not an import.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `orchestration`  | `plugins/orchestration`  | **Capability** plugin — the neutral contract for work that happens later (at-least-once and the idempotency it forces, bounded retry, the poison path, work-in-flight visibility, queue vs bus vs scheduler vs workflow engine) plus the self-hosted engine: **Temporal**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `object-storage` | `plugins/object-storage` | **Capability** plugin, **contract-only by design** — buckets, lifecycle as a bucket policy, signed access, prefix-scoped credentials, the never-proxy-bytes rule, egress cost. It ships **no provider**: every object store is a cloud's, so the flavour comes from `gcp` (Cloud Storage) or `cloudflare` (R2, once unparked). Its menu and template skills **say so explicitly** rather than returning empty, which would be indistinguishable from a broken adapter.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `claude-code`    | `plugins/claude-code`    | The **Claude Code plugin-authoring plugin** — the host doctrine for writing plugins against Claude Code, promoted out of this repo's private `.claude/` copy so it ships: directory-convention discovery and the corollary that a misplaced file is never discovered rather than an error, the invocation policy's three states and the **silent** failure a user-only skill causes a delegating caller, `plugin.json` fields with the two marketplace traps (sources resolve against the marketplace root; an entry omitting `version` lists as `0.0.0`), and hooks with their per-event verdict shapes. Owns the `claude-code-plugin` **project** template for vwf's `plugin` platform, so it also implements the stack-adapter contract — and its `languages: [ markdown ]` is what keeps that token out of `unknown = blocking`. This repo's own gates (the two mise tasks, the ten checker rules, the language-plugin contract) stay in `.claude/skills/plugin-authoring/`, which now points here for doctrine                                                                                                                                                                                                         |
 | `stackgen`       | `plugins/stackgen`       | The **principles-driven stack materializer** — implements the stack-adapter contract with a dispatch rule that runs **per component** (closed types/categories in `assets/taxonomy.md`; a bundle is a recorded composition of component refs, never a directory): a component a shipped **pack** covers is copied verbatim; an uncovered one is **generated** (per-topic Context7 research → vwf's principles catalog → the `stackgen-skill-reviewer` gate, capped at four rounds), with one consent and one landing per bundle. Both paths land **directly in the repo's committed `.claude/` tree** — output closed to skills/agents/hooks/rules (never MCP or LSP config), shaped by the **kind vocabulary** (`assets/kinds.md` — each kind a closed topic bar, one artifact per topic at 60–130 dense lines), recorded in `.claude/stackgen/lock.yaml`; `settings.json` is never edited without separate explicit consent, CLAUDE.md is vwf's (the materializer recommends `/vwf:setup`); re-sync is explicit and lockfile-diffed via the user-only `stackgen-sync`. Ships **no packs yet** — the merge waves land them; until then the curated plugins are the covered path and stackgen's value is the uncovered tail |
 
 ## Plugin Structure
@@ -231,12 +235,12 @@ Optional manifest blocks: `lspServers`, `mcpServers`, `dependencies`, `author`,
 `repository`, `keywords`.
 
 > Field by field, including the cross-marketplace dependency rules:
-> `.claude/skills/plugin-authoring/references/manifests.md`.
+> `plugins/claude-code/skills/plugin-authoring/references/manifests.md`.
 
 ### The marketplace manifest
 
 One file, `.claude-plugin/marketplace.json`, at the repo **root** — generated by
-`plugins:marketplace` from the 14 plugin manifests, with `source` set to
+`plugins:marketplace` from the 15 plugin manifests, with `source` set to
 `./plugins/<name>`. Root rather than under `plugins/`, because every source
 resolves relative to the marketplace root, which is where Claude looks when this
 repo is added.
@@ -251,7 +255,8 @@ wrong: **sources resolve against the marketplace root** (a path that exists but
 resolves from the wrong base looks fine in the manifest), and **every entry must
 state its own `version`** (omitting it does not leave the version unset — the
 tool falls back through a chain that resolves by accident, and the plugin lists
-as `0.0.0`). Details: `.claude/skills/plugin-authoring/references/manifests.md`.
+as `0.0.0`). Details:
+`plugins/claude-code/skills/plugin-authoring/references/manifests.md`.
 
 ## The vwf Plugin
 
@@ -891,7 +896,8 @@ whole verdict if a `hookSpecificOutput` arrives without a matching
 verdict reads exactly like a hook that decided to stay quiet.
 
 > Details, including why the mempalace hooks are reimplemented rather than
-> vendored: `.claude/skills/plugin-authoring/references/hooks.md`.
+> vendored: `plugins/claude-code/skills/plugin-authoring/references/hooks.md`
+> (host rules) and `.claude/skills/plugin-authoring/` (ours).
 
 ## Adding a Plugin
 
@@ -928,7 +934,7 @@ to its plugin. The `<plugin>-` prefix on adapter skill names is readability now,
 not correctness, and `prefixSkillNames` is gone.
 
 > The per-skill rulings and the two contracts the checker enforces are in
-> `.claude/skills/plugin-authoring/references/invocation.md`.
+> `plugins/claude-code/skills/plugin-authoring/references/invocation.md`.
 
 ## Installation (end-user)
 
@@ -944,10 +950,10 @@ claude plugin install --scope project <plugin-name>@virajp-plugins
 
 Available plugin names: `vwf`, `typescript`, `flutter`, `design-tools`,
 `devtools`, `cicd`, `cloudflare`, `gcp`, `datastore`, `identity`,
-`observability`, `orchestration`, `object-storage`, `stackgen`. Every one of
-them is authored here — no name on this list is re-listed from another repo.
-(The statusline is not among them and is not a plugin — it is a separate
-package, `pnpx @askviraj/claude-status --install`.)
+`observability`, `orchestration`, `object-storage`, `stackgen`, `claude-code`.
+Every one of them is authored here — no name on this list is re-listed from
+another repo. (The statusline is not among them and is not a plugin — it is a
+separate package, `pnpx @askviraj/claude-status --install`.)
 
 Installing `vwf` pulls in its dependency (`devtools`) automatically from the
 same `virajp-plugins` marketplace — no other marketplace needs to be registered.

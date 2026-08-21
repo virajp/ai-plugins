@@ -35,6 +35,27 @@
         "name": "Viraj Patel"
       },
       "category": "development",
+      "description": "The Claude Code plugin-authoring plugin — doctrine for writing plugins against Claude Code itself: directory-convention discovery, the invocation policy's three states and the silent failure the wrong one causes, manifest fields and the two marketplace traps, and hooks with their per-event verdict shapes. Owns the claude-code-plugin project template for vwf's `plugin` platform, so it also implements the vwf stack-adapter contract.",
+      "name": "claude-code",
+      "source": "./plugins/claude-code",
+      "strict": true,
+      "tags": [
+        "claude-code",
+        "plugin",
+        "authoring",
+        "skills",
+        "hooks",
+        "marketplace",
+        "markdown",
+        "vwf-stack-adapter"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "author": {
+        "name": "Viraj Patel"
+      },
+      "category": "development",
       "description": "Cloudflare stack plugin for vwf — **scope is deliberately parked**. It currently covers **Zero Trust Access** only: putting a project that must not be publicly reachable behind an identity-aware proxy on its own hostname, independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered yet and arrive under their own dedicated plan — so the menu says what it does not cover rather than coming back quietly short. Implements the vwf stack-adapter contract.",
       "name": "cloudflare",
       "source": "./plugins/cloudflare",

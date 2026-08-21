@@ -297,6 +297,18 @@ explicit, diffed decision — never a silent overwrite, and never a
 plugins above remain the covered-stack path, and stackgen's value today is the
 uncovered tail. `stackgen@virajp-plugins`
 
+**[claude-code](./docs/plugins/claude-code.md)** — doctrine for writing plugins
+against Claude Code itself, which until now lived in this repo's own `.claude/`
+and travelled nowhere. Discovery is by directory convention, so adding a skill
+is one file — and the corollary is the trap: a file in the wrong place is never
+discovered, and nothing says so. Same shape for the invocation frontmatter,
+where marking a skill user-only removes it from the model's context entirely, so
+a skill that delegates to it gets no error, just nothing back. Plus the manifest
+fields, the two marketplace traps that are silent when wrong, and hooks with
+their per-event verdict shapes. It also owns the `claude-code-plugin` project
+template, which is what makes vwf's `plugin` platform buildable.
+`claude-code@virajp-plugins`
+
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
 guidelines — is now a

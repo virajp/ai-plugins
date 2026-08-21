@@ -8,7 +8,7 @@ format, and the one generated file that needs a freshness gate of its own.
 | Task                          | Does                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------ |
 | `plugins:check`               | validates the authored tree; non-zero on any finding                           |
-| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 13 plugin manifests     |
+| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 15 plugin manifests     |
 | `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                      |
 | `typescript:test`             | table-tests `plugins/typescript/hooks/npm-normalize.sh` through the system sed |
 | `pnpm vitest run`             | the `scripts/` and `cli/` suites                                               |
@@ -23,7 +23,7 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The nine rules
+## The ten rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
@@ -51,9 +51,17 @@ much smaller than the one it replaced: whole families of assertion became
    in a plugin's prose names a real agent of that plugin, and every declared
    agent is referenced at least once. Either direction alone misses a rename.
 8. **The vwf design-adapter contract.** All three import skills present in
-   `design-tools` and model-invocable — see [invocation.md](invocation.md) for
-   why a user-only adapter skill is worse than a missing one.
-9. **The technology-free vwf guard.** Below.
+   `design-tools` and model-invocable — see the claude-code plugin's
+   [invocation reference](../../../../plugins/claude-code/skills/plugin-authoring/references/invocation.md)
+   for why a user-only adapter skill is worse than a missing one.
+9. **The vwf stack-adapter contract.** Every plugin keyworded
+   `vwf-stack-adapter` ships `<plugin>-stack-menu` and
+   `<plugin>-stack-template`, both model-invocable. Same failure as rule 8 on
+   the other constructed name: vwf never reads an adapter name from config, so a
+   skill the model cannot see yields an **empty menu** rather than an error —
+   and because the stack menu is closed, that silently removes every option the
+   plugin was the only source of.
+10. **The technology-free vwf guard.** Below.
 
 ### The plugin-root trap (rule 6)
 

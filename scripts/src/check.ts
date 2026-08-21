@@ -76,6 +76,7 @@ export function check(repoRoot: string): Finding[] {
   }
 
   findings.push(...checkDesignAdapters(plugins));
+  findings.push(...checkStackAdapters(plugins));
   findings.push(...checkVwfIsTechnologyFree(plugins));
   return findings;
 }
@@ -436,6 +437,60 @@ function checkDesignAdapters(plugins: readonly Plugin[]): Finding[] {
             + `delegates to it by name, and a skill the model cannot invoke `
             + `returns an empty payload rather than an error, which is `
             + `indistinguishable from a design nobody authored`,
+        });
+      }
+    }
+  }
+  return findings;
+}
+
+/**
+ * The vwf stack-adapter contract.
+ *
+ * The same failure as the design adapter, on the other constructed name. vwf
+ * reaches a stack plugin at `<plugin>-stack-menu` and `<plugin>-stack-template`
+ * and never at anything it read from config, so a skill the model cannot invoke
+ * does not error — `architecture` gets an empty menu, which is
+ * indistinguishable from a plugin that genuinely offers nothing. The stack
+ * menu is closed, so an empty one silently removes every option that plugin
+ * was the only source of.
+ *
+ * Unlike the design adapter, both skills are also documented as user-runnable,
+ * so the assertion is again the explicit `disable-model-invocation: false`
+ * rather than the mere absence of `true` — `user-invocable: false` would be
+ * model-invocable but hidden from the user, and would wrongly pass.
+ */
+function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
+  const findings: Finding[] = [];
+
+  for (const plugin of plugins) {
+    const keywords = plugin.manifest.keywords;
+    if (!Array.isArray(keywords) || !keywords.includes("vwf-stack-adapter")) {
+      continue;
+    }
+    const skills = new Map(
+      plugin.skills.map(path => [skillName(path), path] as const),
+    );
+
+    for (const kind of ["stack-menu", "stack-template"]) {
+      const expected = `${plugin.dir}-${kind}`;
+      const path = skills.get(expected);
+      if (path === undefined) {
+        findings.push({
+          scope: plugin.dir,
+          message: `stack adapter is missing its "${expected}" skill`,
+        });
+        continue;
+      }
+      const front = frontmatterBlock(readText(join(plugin.root, path))) ?? "";
+      if (!/^disable-model-invocation:\s*false\s*$/m.test(front)) {
+        findings.push({
+          scope: plugin.dir,
+          message:
+            `${expected} is not \`disable-model-invocation: false\` — vwf `
+            + `reaches it by constructed name, and a skill the model cannot `
+            + `invoke returns an empty menu rather than an error, which is `
+            + `indistinguishable from a plugin that offers nothing`,
         });
       }
     }
