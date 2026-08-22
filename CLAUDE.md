@@ -735,9 +735,12 @@ once there is something to remove; `--dry-run` is the scriptable path.
 
 **It also reads legacy receipts**, and that reader is now the whole receipt
 story. It cleans this toolkit's own statusline alongside the discontinued
-OpenCode, Oh-My-Pi and Cursor surfaces, restoring each from its recorded prior
-state so an existing install migrates rather than being orphaned; `uninstall.ts`
-states the drop condition and names what to delete.
+OpenCode, Oh-My-Pi and Cursor surfaces — those lost their named entries once
+Claude Code was the only target, but a receipt of theirs on disk is still read
+and reverted under a generic label, since the map names receipts rather than
+gating them — restoring each from its recorded prior state so an existing
+install migrates rather than being orphaned; `uninstall.ts` states the drop
+condition and names what to delete.
 
 **`statusline.json` joining `LEGACY_RECEIPTS` is the load-bearing half of the
 statusline's removal.** A machine on 5.2.0 has our bar configured and that

@@ -93,12 +93,11 @@ Four rules:
 
 **The legacy-receipt reader is now the whole receipt story, and is deliberately
 temporary.** Every receipt on disk records an install by an older version: this
-toolkit's own statusline, a copied OpenCode tree, the OpenCode TUI bar,
-Oh-My-Pi's `omp config` keys, a Cursor `settings.json` entry, the copied Claude
-marketplace payload. Those surfaces are all discontinued, and without this
-reader a machine carrying them is orphaned rather than cleaned, because nothing
-else knows those paths. `uninstall.ts` states the drop condition and names
-exactly what to delete when it comes.
+toolkit's own statusline, or the copied Claude marketplace payload. Those
+surfaces are all discontinued, and without this reader a machine carrying them
+is orphaned rather than cleaned, because nothing else knows those paths.
+`uninstall.ts` states the drop condition and names exactly what to delete when
+it comes.
 
 **`statusline.json` joining `LEGACY_RECEIPTS` is load-bearing, not tidying.** A
 machine on v5.2.0 has this toolkit's bar configured and that receipt recording

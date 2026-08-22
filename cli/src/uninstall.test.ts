@@ -42,8 +42,8 @@ import {
  * a temp receipt directory, and a temp `PATH` holding fake tool binaries.
  *
  * `PATH` is real rather than stubbed because `hasBin` reads it directly, and the
- * absent-tool branch is one of the behaviours under test — a machine that no
- * longer has `omp` is exactly the machine most in need of an uninstall.
+ * absent-tool branch is one of the behaviours under test — `graphify hook
+ * uninstall` on a machine without graphify has to skip, not fail.
  */
 let tmp: string;
 let home: string;
@@ -70,7 +70,7 @@ beforeEach(() => {
   for (const dir of [home, configDir, repo, receiptDir, binDir]) {
     mkdirSync(dir, { recursive: true });
   }
-  for (const bin of ["claude", "omp", "graphify"]) {
+  for (const bin of ["claude", "graphify"]) {
     writeFileSync(join(binDir, bin), "");
   }
   realPath = process.env["PATH"];
@@ -252,36 +252,31 @@ describe("enumerate", () => {
     expect(ids(enumerate(options))).not.toContain("graphify-hook");
   });
 
-  it("lists every legacy receipt, naming the surface each one covers", () => {
-    // The one piece of multi-target code deliberately kept: without it a machine
-    // carrying an OpenCode bundle or an Oh-My-Pi bar is orphaned rather than
-    // cleaned, because nothing else knows those paths.
+  it("names the two receipts it knows, and still lists one it does not", () => {
+    // Only Claude Code is supported, so the retired targets lost their labels.
+    // They did NOT lose their rows: LEGACY_RECEIPTS is a label lookup, not an
+    // allowlist, and a receipt records files that may still be on disk.
     writeReceiptFile(
-      "opencode.json",
+      "claude.json",
       receipt([
-        { kind: "tree", path: join(tmp, "opencode-bundle") },
+        { kind: "tree", path: join(tmp, "claude-payload") },
       ], [{ name: "vwf", scope: "user" }]),
     );
     writeReceiptFile(
-      "statusline-ohmypi.json",
-      receipt([
-        {
-          kind: "command",
-          ran: ["config", "set", "a", "b"],
-          undo: ["config", "set", "a", ""],
-        },
-      ]),
+      "opencode.json",
+      receipt([{ kind: "tree", path: join(tmp, "opencode-bundle") }]),
     );
 
     const items = enumerate(options);
 
     expect(ids(items))
-      .toEqual(["legacy:opencode.json", "legacy:statusline-ohmypi.json"]);
-    expect(items[0]?.label).toContain("OpenCode plugin tree");
+      .toEqual(["legacy:claude.json", "legacy:opencode.json"]);
+    expect(items[0]?.label).toContain("copied Claude marketplace payload");
     // `Receipt.plugins` was written by every adapter and read by nothing for two
     // versions. This is its reader.
     expect(items[0]?.note).toContain("vwf");
-    expect(items[1]?.label).toContain("Oh-My-Pi statusline");
+    // No label of its own any more — but still offered, and still reverted.
+    expect(items[1]?.label).toBe("an install recorded in opencode.json");
   });
 
   it("skips an unreadable legacy receipt rather than offering an empty row", () => {
@@ -589,42 +584,6 @@ describe("the legacy-receipt reader", () => {
     expect(readFileSync(config, "utf8")).toContain("The user's own comment.");
     expect(readFileSync(config, "utf8")).toContain("\"theme\": \"dark\"");
     expect(readFileSync(config, "utf8")).not.toContain("skills");
-  });
-
-  it("runs an Oh-My-Pi undo through omp, which recorded no program name", () => {
-    writeReceiptFile(
-      "statusline-ohmypi.json",
-      receipt([{
-        kind: "command",
-        ran: ["config", "set", "statusline.left", "ours"],
-        undo: ["config", "set", "statusline.left", "theirs"],
-      }]),
-    );
-
-    removeItem(enumerate(options)[0] as Item, options);
-
-    expect(tools()).toEqual([{
-      command: "omp",
-      args: ["config", "set", "statusline.left", "theirs"],
-    }]);
-  });
-
-  it("skips an Oh-My-Pi receipt when omp is gone", () => {
-    rmSync(join(binDir, "omp"));
-    const path = writeReceiptFile(
-      "statusline-ohmypi.json",
-      receipt([{
-        kind: "command",
-        ran: ["config", "set", "k", "v"],
-        undo: ["config", "set", "k", ""],
-      }]),
-    );
-
-    expect(removeItem(enumerate(options)[0] as Item, options).skipped)
-      .toBe("not-installed");
-    // Kept: there is still state to undo, and throwing the record away would
-    // strand it.
-    expect(existsSync(path)).toBe(true);
   });
 
   it("replays the Claude payload's files but NOT its plugin uninstalls", () => {

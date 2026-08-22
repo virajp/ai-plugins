@@ -1,9 +1,9 @@
 /**
  * The live indicator, shown while a run is working.
  *
- * **Deliberately not an animated spinner.** Every adapter shells out through
- * `spawnSync`, which blocks the event loop for the whole of each `claude` /
- * `omp` invocation — so a `setInterval` spinner would stop on one frame for
+ * **Deliberately not an animated spinner.** Every step shells out through
+ * `spawnSync`, which blocks the event loop for the whole of each `claude` or
+ * `graphify` invocation — so a `setInterval` spinner would stop on one frame for
  * exactly the seconds it is meant to reassure you, and a frozen spinner reads
  * as a hang rather than as work. What moves here is the *step*, which advances
  * only when something real has finished.

@@ -36,12 +36,16 @@
  * **This CLI writes no receipts.** It installs plugins by driving Claude's own
  * commands and wires graphify by driving graphify's, and both tools keep their
  * own records — so every receipt in the receipt directory is the record of an
- * install by an *older* version: the statusline it used to ship, a copied
- * OpenCode plugin tree, the OpenCode TUI bar, the Oh-My-Pi `omp config` keys, a
- * Cursor `settings.json` entry, the copied Claude marketplace payload. Those
- * surfaces are all discontinued, and this reader is deliberately kept: without
- * it a machine carrying them is orphaned rather than cleaned, because nothing
- * else on earth knows those paths.
+ * install by an *older* version: the statusline it used to ship, and the copied
+ * Claude marketplace payload. Those mechanisms are discontinued, and this
+ * reader is deliberately kept: without it a machine carrying them is orphaned
+ * rather than cleaned, because nothing else on earth knows those paths.
+ *
+ * **Only Claude Code is supported**, so the retired targets — OpenCode, Cursor,
+ * Oh-My-Pi — lost their named entries. A receipt of theirs still on disk is
+ * still enumerated and still reverted, under a generic label: the map is a
+ * label lookup, not an allowlist, and a machine carrying one is the machine
+ * most in need of cleaning.
  *
  * `statusline.json` is the newest of them and the one most machines will have.
  * It records the statusline the user had *before* ours displaced it, so
@@ -121,16 +125,17 @@ export type Removal =
     readonly cwd?: string;
   }
   /**
-   * Replay a receipt an older multi-target install left behind.
+   * Replay a receipt an older version left behind.
    *
-   * `bin` is the CLI whose `command` entries the receipt holds — implied by
-   * which receipt it is, since an adapter recorded `["plugin", "install", …]`
-   * without the program in front of it.
+   * There is no `bin` any more. It named the CLI whose `command` entries a
+   * receipt held — `omp`, for the two Oh-My-Pi receipts — and both went with
+   * the discontinued targets. Every receipt still read is Claude Code's, and
+   * neither replays a `command` entry: `claude.json` is `filesOnly`, and the
+   * statusline's holds only files and config keys.
    */
   | {
     readonly kind: "receipt";
     readonly path: string;
-    readonly bin?: string;
   }
   /** graphify's own undo for the git hooks it installed. */
   | { readonly kind: "graphify-hook"; readonly cwd: string; }
@@ -190,23 +195,40 @@ export interface Item {
 }
 
 /**
- * The receipts a multi-target install could have left, and the CLI that has to
- * unmake each one.
+ * The receipts this reader can **name**, which is not the same as the ones it
+ * will act on.
+ *
+ * This is a label lookup, **not an allowlist**. `legacyItems` enumerates every
+ * readable `*.json` in the receipt directory; a name absent from this map still
+ * gets a row, reverted the same way, under the generic
+ * `an install recorded in <name>`. That is deliberate — a receipt records files
+ * that may still be on disk, and refusing to read one because its target was
+ * discontinued would strand exactly the machine most in need of cleaning.
+ *
+ * So the five entries for the retired targets — `cursor.json`, `ohmypi.json`,
+ * `opencode.json`, `statusline-ohmypi.json`, `statusline-opencode.json` — were
+ * dropped for their **labels and their `omp` plumbing**, not to stop them being
+ * processed. Only Claude Code is supported now, and a row naming a tool this
+ * project no longer ships for was describing a surface, not doing work.
+ *
+ * What went with them: the `bin` field, the `hasBin` skip, and the `runUndo`
+ * hook. Both remaining receipts are Claude Code's and neither replays a
+ * `command` entry.
  *
  * `claude.json` is the odd one: its `command` entries claim the marketplace
  * registration and the plugin installs, which the **user-level enumeration
  * above already covers** by reading Claude's settings directly. Replaying them
  * too would run `claude plugin uninstall` twice for one plugin and report the
- * second, failing, call as a broken uninstall. So it is replayed for its files
- * alone — the copied marketplace payload under `~/.local/share/virajp/`, which
- * nothing else can see.
+ * second, failing, call as a broken uninstall. So it is `filesOnly` — replayed
+ * for the copied marketplace payload under `~/.local/share/virajp/`, which
+ * nothing else can see, and which a machine may still be resolving its
+ * marketplace from.
  */
 const LEGACY_RECEIPTS: Readonly<
   Record<
     string,
     {
       readonly label: string;
-      readonly bin?: string;
       readonly filesOnly?: boolean;
     }
   >
@@ -215,18 +237,12 @@ const LEGACY_RECEIPTS: Readonly<
     label: "the copied Claude marketplace payload",
     filesOnly: true,
   },
-  "cursor.json": { label: "Cursor plugin registration" },
-  "ohmypi.json": { label: "Oh-My-Pi plugins and marketplace", bin: "omp" },
-  "opencode.json": { label: "the copied OpenCode plugin tree" },
   // The newest of them, and the one most machines will carry: it records the
   // statusline the user had before this toolkit's displaced it, so reverting it
-  // is what puts their own bar back.
+  // is what puts their own bar back. The scripts and the `settings.json` keys
+  // are cleaned by `statuslineItems` whether or not this receipt exists; what
+  // only the receipt can do is *restore*.
   "statusline.json": { label: "the Claude statusline" },
-  "statusline-ohmypi.json": {
-    label: "the Oh-My-Pi statusline",
-    bin: "omp",
-  },
-  "statusline-opencode.json": { label: "the OpenCode statusline" },
 };
 
 /**
@@ -597,11 +613,7 @@ function legacyItems(receiptDir: string): Item[] {
       ...(describePlugins(receipt) === undefined
         ? { note: path }
         : { note: `${describePlugins(receipt) as string} — ${path}` }),
-      removal: {
-        kind: "receipt",
-        path,
-        ...(known?.bin === undefined ? {} : { bin: known.bin }),
-      },
+      removal: { kind: "receipt", path },
     });
   }
   return items;
@@ -894,23 +906,20 @@ function runTool(
 /**
  * Replay one legacy receipt and consume it.
  *
- * The restore hook is the statusline's, because every config a retired adapter
- * touched is JSON or JSONC — `opencode.jsonc`, Cursor's `settings.json`,
- * OpenCode's `tui.json`. The one that is not is Oh-My-Pi's `config.yml`, and
- * that adapter recorded `command` entries precisely because this CLI ships no
- * YAML parser; those go to `runUndo`.
+ * `restoreJsonKey` is the only hook passed, because every config a `configKey`
+ * entry can name is JSON or JSONC. The one that never was is Oh-My-Pi's
+ * `config.yml` — that adapter recorded `command` entries precisely because this
+ * CLI ships no YAML parser, and with `omp` support gone there is no program to
+ * run them against, so `revert` skips them.
  */
 function revertLegacyReceipt(item: Item, options: RunOptions): Outcome {
   if (item.removal.kind !== "receipt") {
     throw new Error(`not a receipt removal: ${item.id}`);
   }
-  const { path, bin } = item.removal;
+  const { path } = item.removal;
   const receipt = readReceipt(path);
   if (receipt === undefined) {
     return { name: item.id, actions: [], skipped: "empty" };
-  }
-  if (bin !== undefined && !hasBin(bin)) {
-    return { name: item.id, actions: [], skipped: "not-installed" };
   }
 
   const filesOnly = LEGACY_RECEIPTS[basename(path)]?.filesOnly === true;
@@ -930,14 +939,10 @@ function revertLegacyReceipt(item: Item, options: RunOptions): Outcome {
           entries: receipt.entries.filter(e => e.kind !== "command"),
         }
         : receipt,
-      {
-        restoreKey: restoreJsonKey,
-        ...(bin === undefined ? {} : {
-          runUndo: (undo: readonly string[]) => {
-            options.context.exec(bin, undo);
-          },
-        }),
-      },
+      // No `runUndo`: it existed for the retired targets' `command` entries,
+      // and nothing still read replays one. A receipt that somehow holds one
+      // is skipped by `revert` rather than run against a guessed program.
+      { restoreKey: restoreJsonKey },
     );
     // Consumed. A receipt describes an install that exists; leaving it behind
     // after undoing one makes every later run believe in it and offer it again.

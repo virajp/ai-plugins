@@ -85,14 +85,17 @@ an earlier version still has receipts on disk, and each records what was there
 *before* that install. `--uninstall` replays them, so what comes back is your
 actual prior configuration rather than the keys this tool guesses it once set.
 
-| Receipt                    | Restores                                     |
-| -------------------------- | -------------------------------------------- |
-| `statusline.json`          | the statusline you had before this toolkit's |
-| `statusline-opencode.json` | the OpenCode TUI bar                         |
-| `statusline-ohmypi.json`   | the Oh-My-Pi `omp config` segments           |
-| `opencode.json`            | the copied OpenCode plugin tree              |
-| `cursor.json`              | the Cursor plugin registration               |
-| `claude.json`              | the copied Claude marketplace payload        |
+| Receipt           | Restores                                     |
+| ----------------- | -------------------------------------------- |
+| `statusline.json` | the statusline you had before this toolkit's |
+| `claude.json`     | the copied Claude marketplace payload        |
+
+Only Claude Code is supported, so those are the two the reader **names**. It is
+a label lookup rather than an allowlist: a receipt from a retired target —
+`opencode.json`, `cursor.json`, `ohmypi.json` and the two per-target statusline
+records — is still listed and still reverted, just under a generic
+`an install recorded in <name>`. Refusing to read one would strand the files it
+records on exactly the machine that needs them cleaned.
 
 All six surfaces are discontinued. This reader is what lets a machine carrying
 one be cleaned rather than orphaned, and it is kept for a release or two and

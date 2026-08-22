@@ -26,21 +26,31 @@ first thing to re-read.
 
 **Every kind is still read; none are written.**
 
-| Kind        | On revert                         | Was written by                            |
-| ----------- | --------------------------------- | ----------------------------------------- |
-| `file`      | restores `previous`, else deletes | the statusline                            |
-| `dir`       | removes **only if empty**         | the statusline (`~/.claude/scripts`)      |
-| `configKey` | restores the key, else deletes it | the statusline, and every retired adapter |
-| `tree`      | removes **recursively**           | the four plugin adapters                  |
-| `command`   | runs the recorded undo command    | the Oh-My-Pi and Cursor adapters          |
+| Kind        | On revert                            | Was written by                            |
+| ----------- | ------------------------------------ | ----------------------------------------- |
+| `file`      | restores `previous`, else deletes    | the statusline                            |
+| `dir`       | removes **only if empty**            | the statusline (`~/.claude/scripts`)      |
+| `configKey` | restores the key, else deletes it    | the statusline, and every retired adapter |
+| `tree`      | removes **recursively**              | the four plugin adapters                  |
+| `command`   | **skipped** — no `runUndo` is passed | the Oh-My-Pi and Cursor adapters          |
 
 **`revert` must keep handling all five.** `uninstall.ts` reads the receipts
 older installs left behind, which is the whole reason a machine carrying this
-toolkit's statusline, an OpenCode bundle or an Oh-My-Pi bar can be **cleaned
-rather than orphaned**. Dropping a kind turns those receipts into files nothing
-can undo — and the half-revert reports as a clean uninstall, which is the
-failure worth preventing. When the legacy window closes they go together;
-`uninstall.ts` names the set.
+toolkit's statusline, a copied marketplace payload or a discontinued target's
+bundle can be **cleaned rather than orphaned**. Dropping a kind turns those
+receipts into files nothing can undo — and the half-revert reports as a clean
+uninstall, which is the failure worth preventing. When the legacy window closes
+they go together; `uninstall.ts` names the set.
+
+**`command` is now inert, and that is a deliberate narrowing rather than a
+regression.** Its `runUndo` hook was only ever supplied for `omp`, and only
+`ohmypi.json` / `statusline-ohmypi.json` held one. Only Claude Code is supported
+now, so nothing passes a program to run an undo against, and `revert` skips the
+entry rather than guessing one. Both receipts still named in `LEGACY_RECEIPTS`
+are Claude Code's, and neither holds a `command` entry — `claude.json` is
+`filesOnly`, and the statusline's holds files and config keys. The kind stays
+reachable in the type because a receipt on disk may still carry one; it simply
+no longer runs.
 
 `configKey` is the one that matters most in practice, because it is what
 restores a v5.2.0 machine's own statusline: `settings.json` → `statusLine`, with
@@ -122,7 +132,7 @@ receipt dir, which under a test is `/tmp`.
 
 What is deliberately *not* claimed: another tool's config directory. An empty
 `<config>/opencode/` surviving an uninstall is the right trade — removing a
-directory OpenCode owns is a worse failure than leaving an empty one. Same
+directory another tool owns is a worse failure than leaving an empty one. Same
 ownership question as everywhere else in this file; it just answers "no" here.
 
 ## When a legacy `command` entry has an undo
