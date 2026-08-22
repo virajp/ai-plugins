@@ -86,6 +86,23 @@ them and the one most machines will have — leave it out of `LEGACY_RECEIPTS` a
 an upgrading user's own bar never comes back, while the run reports a clean
 uninstall.
 
+**But the reader alone was not enough, and the gap was real rather than
+theoretical.** The statusline receipt records the two script files and — on
+every machine checked — **no `configKey` entries at all**, so reverting it
+deleted the scripts and left `settings.json` still naming them: Claude then
+re-ran a path that no longer existed, every few seconds. So `uninstall.ts` also
+carries a **debris cleanup** the receipts never covered — the `settings.json`
+wiring, and the two scripts when no receipt claims them. The split between the
+two is **ownership**: a key the receipt records is the receipt's to *restore*,
+never this path's to delete. Every key is fingerprinted against the value this
+toolkit wrote, at enumeration and again at the write — the second check is what
+stops a receipt revert earlier in the same run from having its restored bar
+deleted a moment later. **Configuration is deliberately left at both tiers** —
+`~/.config/statusline.json` and a repo's own `.config/statusline.json` — as is
+`~/.claude/usage/`. The rule is that this CLI deletes only what it wrote; those
+hold settings the user chose, and are a plausible input to whatever bar they
+configure next.
+
 > **Working on it:** the receipt entry kinds, the receipt-completeness bug
 > class, the interactive uninstall and the packaging traps are in
 > `.claude/skills/installer-cli/`, which auto-applies while you edit `cli/`.

@@ -771,3 +771,152 @@ describe("the tracked default", () => {
       .toEqual(["i3"]);
   });
 });
+
+/**
+ * The statusline's leftovers, which no receipt covers.
+ *
+ * The bar shipped until 6.0.0 and wrote four things. Its receipt records the two
+ * script files and — on every machine checked — no `configKey` entries at all,
+ * so reverting it deletes the scripts and leaves Claude pointing `statusLine` at
+ * a path that no longer exists, re-running it every few seconds. These cover the
+ * gap, and the two ways filling it could go wrong: clobbering the bar the user
+ * migrated to, and racing the receipt that restores the bar they had.
+ */
+describe("the retired statusline's leftovers", () => {
+  const ourBar = {
+    type: "command",
+    command: "${HOME}/.claude/scripts/statusline",
+  };
+  const capsHook = {
+    hooks: [{
+      type: "command",
+      command: "node ${HOME}/.claude/hooks/context-caps.js",
+    }],
+  };
+
+  function settingsPath(): string {
+    return join(configDir, "settings.json");
+  }
+  function readBack(): Record<string, unknown> {
+    return JSON.parse(readFileSync(settingsPath(), "utf8")) as Record<
+      string,
+      unknown
+    >;
+  }
+
+  it("offers the wiring, naming each key it found", () => {
+    writeUserSettings({
+      statusLine: ourBar,
+      subagentStatusLine: ourBar,
+      env: { AI_PLUGINS_USAGE_DIR: "${HOME}/.claude/usage" },
+      hooks: { PostToolUse: [capsHook] },
+    });
+
+    const item = enumerate(options).find(i => i.id === "statusline-settings");
+
+    expect(item).toBeDefined();
+    expect(item?.level).toBe("user");
+    expect(item?.note).toContain("statusLine");
+    expect(item?.note).toContain("subagentStatusLine");
+    expect(item?.note).toContain("AI_PLUGINS_USAGE_DIR");
+    expect(item?.note).toContain("the context-caps hook");
+  });
+
+  it("removes exactly the four, and nothing beside them", () => {
+    writeUserSettings({
+      statusLine: ourBar,
+      subagentStatusLine: ourBar,
+      env: { AI_PLUGINS_USAGE_DIR: "x", EDITOR: "vim" },
+      hooks: { PostToolUse: [capsHook, { hooks: [{ command: "mine" }] }] },
+      disableArtifact: true,
+    });
+
+    const item = enumerate(options)
+      .find(i => i.id === "statusline-settings") as Item;
+    expect(removeItem(item, options).error).toBeUndefined();
+
+    const after = readBack();
+    expect(after["statusLine"]).toBeUndefined();
+    expect(after["subagentStatusLine"]).toBeUndefined();
+    // The user's own env key and hook survive; so does unrelated config.
+    expect(after["env"]).toEqual({ EDITOR: "vim" });
+    expect(after["hooks"]).toEqual({
+      PostToolUse: [{ hooks: [{ command: "mine" }] }],
+    });
+    expect(after["disableArtifact"]).toBe(true);
+  });
+
+  /**
+   * The reason every key is fingerprinted before it is offered. The bar moved to
+   * `@askviraj/claude-status`, which may claim the same key — and a blind delete
+   * would silently unwire the tool the user migrated to.
+   */
+  it("does not touch a statusLine that is not ours", () => {
+    writeUserSettings({ statusLine: { command: "~/bin/some-other-bar" } });
+
+    expect(ids(enumerate(options))).not.toContain("statusline-settings");
+  });
+
+  /**
+   * The ordering trap. When the receipt records a prior bar, reverting it is a
+   * *restore*; this item must not then delete what the restore just put back.
+   * Ownership is settled at enumeration — the receipt keeps the key — and
+   * re-checked at the write.
+   */
+  it("leaves a key the receipt will restore to the receipt", () => {
+    writeUserSettings({ statusLine: ourBar, subagentStatusLine: ourBar });
+    writeReceiptFile(
+      "statusline.json",
+      receipt([{
+        kind: "configKey",
+        file: settingsPath(),
+        path: ["statusLine"],
+        hadKey: true,
+        previous: { type: "command", command: "~/bin/my-own-bar" },
+      }]),
+    );
+
+    const item = enumerate(options)
+      .find(i => i.id === "statusline-settings") as Item;
+    // Only the key the receipt is silent about.
+    expect(item.note).toContain("subagentStatusLine");
+
+    // The whole run, in enumeration order.
+    for (const each of enumerate(options)) {
+      expect(removeItem(each, options).error).toBeUndefined();
+    }
+
+    expect((readBack()["statusLine"] as { command: string; }).command)
+      .toBe("~/bin/my-own-bar");
+    expect(readBack()["subagentStatusLine"]).toBeUndefined();
+  });
+
+  it("offers the orphaned script and hook when no receipt claims them", () => {
+    mkdirSync(join(home, ".claude", "scripts"), { recursive: true });
+    mkdirSync(join(home, ".claude", "hooks"), { recursive: true });
+    writeFileSync(
+      join(home, ".claude", "scripts", "statusline"),
+      "#!/bin/sh\n",
+    );
+    writeFileSync(join(home, ".claude", "hooks", "context-caps.js"), "//\n");
+
+    expect(ids(enumerate(options))).toEqual([
+      "statusline-script",
+      "statusline-caps-hook",
+    ]);
+  });
+
+  /** One piece of debris, one row — the receipt already removes both files. */
+  it("stays quiet about them when the receipt does claim them", () => {
+    mkdirSync(join(home, ".claude", "scripts"), { recursive: true });
+    writeFileSync(
+      join(home, ".claude", "scripts", "statusline"),
+      "#!/bin/sh\n",
+    );
+    writeReceiptFile("statusline.json", receipt([]));
+
+    const found = ids(enumerate(options));
+    expect(found).toContain("legacy:statusline.json");
+    expect(found).not.toContain("statusline-script");
+  });
+});

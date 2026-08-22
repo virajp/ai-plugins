@@ -75,6 +75,16 @@ Four rules:
   hand-editing strands the two apart. A receipted install leaves by **being
   reverted**, so the user gets their prior state back; a bare delete would leave
   them with nothing and no record of what it had been.
+- **A receipt owns its keys; debris cleanup takes the rest.** The statusline's
+  receipt records the two script files and, on the machines checked, no
+  `configKey` entries — so reverting it deleted the scripts and left
+  `settings.json` naming them. `statuslineItems` fills that gap, and the split
+  is by ownership: a key the receipt records is *restored* by the receipt and
+  never offered here, and the script files are only listed when no receipt
+  claims them. **Every key is fingerprinted against the value this toolkit
+  wrote, at enumeration and again at the write** — the second check is not
+  belt-and-braces, it is what stops a receipt revert earlier in the same run
+  from having its restored bar deleted a moment later.
 - **No TTY refuses rather than guesses** — but only once there is something to
   remove. A run that finds nothing has nothing to ask about, and failing it for
   want of a terminal would make the flag unusable in a script that is checking

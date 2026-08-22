@@ -114,8 +114,17 @@ Earlier versions installed a powerline statusline for Claude Code. It now lives
 in a separate project and is not installed from here; `--statusline`,
 `--no-statusline` and `--force` are retired flags.
 
-**If you installed it from here, `--uninstall` still removes it** and restores
-the statusline you had before it. See [Undoing an install](#undoing-an-install).
+**If you installed it from here, `--uninstall` still removes it** — the script,
+the context-caps hook, and the `settings.json` keys that pointed Claude at them
+— and restores the statusline you had before it, where there is a record of one.
+Your configuration is left where it is. See
+[Undoing an install](#undoing-an-install).
+
+Removing the wiring is the part that matters most, and it is newer than the
+rest: an older `--uninstall` deleted the script but left `statusLine` naming it,
+so Claude went on trying to run a file that was no longer there. Every key is
+matched against the value this toolkit wrote before it is offered, so a bar you
+have since installed from somewhere else is never touched.
 
 ## Seeing what a run would do
 
@@ -163,10 +172,19 @@ pnpx @askviraj/ai-plugins --uninstall
 pnpx @askviraj/ai-plugins --uninstall --dry-run
 ```
 
-**What an uninstall deliberately leaves**: `~/.config/statusline.json`, if you
-have one. It was seeded once and became yours — it may hold your palette and
-your layout, and throwing that away would be the wrong trade, all the more so
-now that the statusline lives in another project you may still be using it from.
+**What an uninstall deliberately leaves**, all of it from the retired
+statusline:
+
+- **Your statusline configuration**, at both tiers — `~/.config/statusline.json`
+  and any repo's own `.config/statusline.json`. These were seeded once and
+  became yours: they hold your palette, your layout, a project name you chose.
+  This tool did not write what is in them and will not delete them, all the more
+  so now that the statusline lives in another project you may want to carry
+  those settings into.
+- **`~/.claude/usage/`**, the usage history the bar accumulated. Data rather
+  than an installed artifact, and nothing reads it once the bar is gone.
+
+All of it is inert. Delete it by hand if you want the space back.
 
 **What it never touches**: plugins enabled from another marketplace, a
 statusline this tool did not install, and any directory another tool owns.

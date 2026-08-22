@@ -67,6 +67,7 @@ import {
   join,
 } from "node:path";
 import { createInterface } from "node:readline/promises";
+import writeFileAtomic from "write-file-atomic";
 import {
   claudeEnv,
   installedPlugins,
@@ -75,7 +76,12 @@ import {
   readSettings,
   userSettingsFile,
 } from "./claude-settings.ts";
-import { restoreJsonKey } from "./config/json.ts";
+import {
+  getPath,
+  removeFromJsonArray,
+  restoreJsonKey,
+  setJsonPath,
+} from "./config/json.ts";
 import type {
   Context,
   RunOptions,
@@ -133,6 +139,26 @@ export type Removal =
     readonly kind: "delete";
     readonly path: string;
     readonly recursive: boolean;
+  }
+  /**
+   * Unwire the statusline from `settings.json`.
+   *
+   * One removal rather than four rows, because the four edits are one thing:
+   * a run that dropped `statusLine` but left the caps hook, or vice versa,
+   * would leave a half-wired bar that is harder to reason about than either
+   * end state. The **values are captured at enumeration time**, already
+   * fingerprinted — see `statuslineSettingsItem` for why that matters.
+   */
+  | {
+    readonly kind: "settings-edits";
+    readonly file: string;
+    /** Key paths to delete outright. */
+    readonly keys: readonly (readonly (string | number)[])[];
+    /** Exact array elements to drop, by the hooks event holding them. */
+    readonly hookEntries: readonly {
+      readonly path: readonly (string | number)[];
+      readonly entry: unknown;
+    }[];
   };
 
 export interface Item {
@@ -212,13 +238,13 @@ const LEGACY_RECEIPTS: Readonly<
  */
 export function enumerate(options: RunOptions): Item[] {
   return [
-    ...userItems(options.context),
+    ...userItems(options.context, options.receiptDir),
     ...repoItems(options.context),
     ...legacyItems(options.receiptDir),
   ];
 }
 
-function userItems(context: Context): Item[] {
+function userItems(context: Context, receiptDir: string): Item[] {
   const items: Item[] = [];
   const settings = readSettings(userSettingsFile(context));
 
@@ -255,7 +281,222 @@ function userItems(context: Context): Item[] {
     });
   }
 
+  items.push(...statuslineItems(context, receiptDir));
+
   return items;
+}
+
+// ---------------------------------------------------------------------------
+// The statusline's leftovers
+// ---------------------------------------------------------------------------
+
+/**
+ * What the retired statusline left behind that **no receipt covers**.
+ *
+ * The statusline shipped until 6.0.0 and wrote four things. Its receipt records
+ * the two script files and — on the machines checked — *nothing else*: the
+ * `settings.json` keys were never captured, so reverting the receipt deletes
+ * the scripts and leaves Claude pointing `statusLine` at a path that no longer
+ * exists, trying to run it every few seconds. That is the gap this fills.
+ *
+ * **Configuration is deliberately left alone**, at both tiers, and it is not an
+ * oversight. `~/.config/statusline.json` is the user's own palette after it is
+ * seeded once — the install recorded nothing precisely so an uninstall could
+ * not throw it away — and a repo's `.config/statusline.json` is the same kind
+ * of thing scoped narrower: settings somebody chose, not an artifact this tool
+ * placed. `~/.claude/usage/` is likewise accumulated history. All of it is
+ * inert once nothing reads it, and all of it is a plausible input to whatever
+ * the user configures next; deleting a file we did not write, to reclaim
+ * nothing, is the wrong side of that trade.
+ *
+ * **What is cleaned is only ever what this toolkit wrote**: the two scripts,
+ * and the `settings.json` keys pointing at them.
+ */
+function statuslineItems(context: Context, receiptDir: string): Item[] {
+  const items: Item[] = [];
+  const settingsItem = statuslineSettingsItem(context, receiptDir);
+  if (settingsItem !== undefined) {
+    items.push(settingsItem);
+  }
+  items.push(...orphanedStatuslineFiles(context, receiptDir));
+  return items;
+}
+
+/** `~/.claude/scripts/statusline`, and the caps hook beside it. */
+const STATUSLINE_SCRIPT = join(".claude", "scripts", "statusline");
+const CAPS_HOOK = join(".claude", "hooks", "context-caps.js");
+
+/**
+ * The script and the caps hook, **only when no receipt claims them**.
+ *
+ * A machine whose `statusline.json` receipt is still present has these covered
+ * by the legacy row, and listing them twice would read as two separate pieces
+ * of debris when there is one. A machine that has already reverted that receipt
+ * — or never had one — still has the files, and nothing else would ever find
+ * them.
+ */
+function orphanedStatuslineFiles(
+  context: Context,
+  receiptDir: string,
+): Item[] {
+  if (readReceipt(join(receiptDir, "statusline.json")) !== undefined) {
+    return [];
+  }
+  const items: Item[] = [];
+  for (
+    const [id, relative, label] of [
+      ["statusline-script", STATUSLINE_SCRIPT, "the retired statusline script"],
+      ["statusline-caps-hook", CAPS_HOOK, "the retired context-caps hook"],
+    ] as const
+  ) {
+    const path = join(context.home, relative);
+    if (!existsSync(path)) {
+      continue;
+    }
+    items.push({
+      id,
+      level: "user",
+      label: `${label} (${path})`,
+      note: "left by a version before 6.0.0; the bar now ships separately",
+      removal: { kind: "delete", path, recursive: false },
+    });
+  }
+  return items;
+}
+
+/**
+ * The `settings.json` keys the statusline wired, **fingerprinted before they
+ * are offered**.
+ *
+ * Every key here is checked against the value *this* toolkit wrote before it is
+ * listed. That is the whole safety property: the bar moved to
+ * `@askviraj/claude-status`, which may reasonably claim the same
+ * `statusLine` key, and a blind delete would silently unwire the tool the user
+ * migrated to. A key holding someone else's value is not ours to remove, so it
+ * is not offered at all.
+ */
+function statuslineSettingsItem(
+  context: Context,
+  receiptDir: string,
+): Item | undefined {
+  const file = userSettingsFile(context);
+  const settings = readSettings(file);
+  if (settings === undefined) {
+    return undefined;
+  }
+
+  // A key the statusline receipt records belongs to the **receipt**, which
+  // restores what was there before rather than deleting. Offering it here too
+  // would be a second row for one key, and — read in isolation, which is how a
+  // deselected list gets read — the wrong one: a delete where a restore was
+  // available. Every key the receipt is silent about is ours to clean.
+  const receipted = receiptedKeys(receiptDir, file);
+
+  const keys: (readonly (string | number)[])[] = [];
+  for (const key of ["statusLine", "subagentStatusLine"]) {
+    if (!receipted.has(key) && isOurBar(getPath(settings, [key]))) {
+      keys.push([key]);
+    }
+  }
+  // Namespaced to this toolkit, so the name alone is the fingerprint.
+  if (getPath(settings, ["env", USAGE_ENV_KEY]) !== undefined) {
+    keys.push(["env", USAGE_ENV_KEY]);
+  }
+
+  const hookEntries = capsHookEntries(settings);
+  if (keys.length === 0 && hookEntries.length === 0) {
+    return undefined;
+  }
+
+  return {
+    id: "statusline-settings",
+    level: "user",
+    label: "the retired statusline's settings.json wiring",
+    note: `${describeWiring(keys, hookEntries)} — ${file}`,
+    removal: { kind: "settings-edits", file, keys, hookEntries },
+  };
+}
+
+const USAGE_ENV_KEY = "AI_PLUGINS_USAGE_DIR";
+
+/**
+ * The top-level settings keys the statusline receipt will restore itself.
+ *
+ * Only single-segment paths matter here: those are the two bar keys, the only
+ * ones both surfaces could claim.
+ */
+function receiptedKeys(receiptDir: string, file: string): Set<string> {
+  const claimed = new Set<string>();
+  const receipt = readReceipt(join(receiptDir, "statusline.json"));
+  for (const entry of receipt?.entries ?? []) {
+    if (
+      entry.kind === "configKey"
+      && entry.file === file
+      && entry.path.length === 1
+      && typeof entry.path[0] === "string"
+    ) {
+      claimed.add(entry.path[0]);
+    }
+  }
+  return claimed;
+}
+
+/** The two keys whose value has to be ours before it may be removed. */
+function isBarKey(path: readonly (string | number)[]): boolean {
+  return path.length === 1
+    && (path[0] === "statusLine" || path[0] === "subagentStatusLine");
+}
+
+/** Is this `statusLine` value the bar this toolkit installed? */
+function isOurBar(value: unknown): boolean {
+  const command = (value as { command?: unknown; })?.command;
+  return typeof command === "string" && command.includes(STATUSLINE_SCRIPT);
+}
+
+/**
+ * The hook array elements whose command runs the caps hook.
+ *
+ * The exact element is captured, not its index: `removeFromJsonArray` matches
+ * by deep equality, so an unrelated edit that reorders the array between
+ * enumeration and removal cannot make this drop the wrong entry.
+ */
+function capsHookEntries(
+  settings: Record<string, unknown>,
+): { path: readonly (string | number)[]; entry: unknown; }[] {
+  const found: { path: readonly (string | number)[]; entry: unknown; }[] = [];
+  const hooks = getPath(settings, ["hooks"]);
+  if (typeof hooks !== "object" || hooks === null) {
+    return found;
+  }
+  for (const [event, value] of Object.entries(hooks)) {
+    if (!Array.isArray(value)) {
+      continue;
+    }
+    for (const entry of value) {
+      const inner = (entry as { hooks?: unknown; })?.hooks;
+      if (
+        Array.isArray(inner)
+        && inner.some(h =>
+          typeof (h as { command?: unknown; })?.command === "string"
+          && (h as { command: string; }).command.includes(CAPS_HOOK)
+        )
+      ) {
+        found.push({ path: ["hooks", event], entry });
+      }
+    }
+  }
+  return found;
+}
+
+function describeWiring(
+  keys: readonly (readonly (string | number)[])[],
+  hookEntries: readonly unknown[],
+): string {
+  const named = keys.map(k => k[k.length - 1] as string);
+  if (hookEntries.length > 0) {
+    named.push("the context-caps hook");
+  }
+  return named.join(", ");
 }
 
 function repoItems(context: Context): Item[] {
@@ -558,8 +799,59 @@ export function removeItem(item: Item, options: RunOptions): Outcome {
       }
     }
 
+    case "settings-edits":
+      return editSettings(item, item.removal, options);
+
     case "receipt":
       return revertLegacyReceipt(item, options);
+  }
+}
+
+/**
+ * Drop the recorded keys and hook entries from one settings file.
+ *
+ * **Every edit is applied to one text, then written once.** Writing per edit
+ * would leave a half-unwired `settings.json` behind if a later edit threw —
+ * the exact state this item exists to prevent.
+ */
+function editSettings(
+  item: Item,
+  removal: Extract<Removal, { kind: "settings-edits"; }>,
+  options: RunOptions,
+): Outcome {
+  const { file, keys, hookEntries } = removal;
+  const action = {
+    summary: `unwire the statusline from ${file}`,
+    path: file,
+  };
+  if (options.dryRun) {
+    return { name: item.id, actions: [action] };
+  }
+  if (!existsSync(file)) {
+    return { name: item.id, actions: [] };
+  }
+  try {
+    let text = readFileSync(file, "utf8");
+    // Re-read and re-fingerprint rather than trusting the enumeration. A
+    // `statusline.json` receipt reverted earlier in this same run may have just
+    // put the user's OWN bar back under `statusLine`, and deleting that is the
+    // one outcome this whole item exists to avoid. The enumeration is a
+    // snapshot; the write is the moment that has to be right.
+    const now = readSettings(file);
+    for (const { path, entry } of hookEntries) {
+      text = removeFromJsonArray(text, path, [entry]);
+    }
+    for (const path of keys) {
+      if (isBarKey(path) && !isOurBar(getPath(now ?? {}, path))) {
+        continue;
+      }
+      text = setJsonPath(text, path, undefined);
+    }
+    writeFileAtomic.sync(file, text);
+    return { name: item.id, actions: [action] };
+  }
+  catch (error) {
+    return { name: item.id, actions: [], error: (error as Error).message };
   }
 }
 

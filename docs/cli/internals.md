@@ -52,6 +52,16 @@ that split is what makes the list testable against a fixture directory rather
 than only by performing it. Removal is a separate switch, and goes through
 whatever owns each piece.
 
+Its one non-receipt cleanup is `statuslineItems`, for what the retired bar left
+that no receipt records: the `settings.json` wiring (`statusLine`,
+`subagentStatusLine`, the caps hook entry, `AI_PLUGINS_USAGE_DIR`), the two
+script files when no receipt claims them. Ownership decides the split — a key
+the statusline receipt records is the receipt's to *restore* and is not offered
+here — and every key is fingerprinted against the value this toolkit wrote, both
+when listed and again when written. **Configuration is left at both tiers**
+(`~/.config/statusline.json` and a repo's own), as is `~/.claude/usage/`: this
+CLI deletes only what it wrote.
+
 **`report.ts` / `progress.ts`.** A live step on stderr while work blocks in
 `spawnSync`, and the final table after it, so stdout stays parseable for
 `--dry-run | jq`.
