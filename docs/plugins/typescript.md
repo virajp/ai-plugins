@@ -98,21 +98,30 @@ rules a TypeScript repo runs and how it runs them.
 
 ## Stack templates
 
-The plugin owns **ten** vwf stack templates across three axes. vwf itself ships
-none — it states the axes and the role vocabulary, and this plugin supplies the
-rows for TypeScript.
+The plugin owns **eleven** vwf stack templates across three axes. vwf itself
+ships none — it states the axes and the platform vocabulary, and this plugin
+supplies the rows for TypeScript.
 
-Project axis — one per role:
+Project axis. Each template declares the **platforms** it serves — a list since
+blueprint format 22, because one template routinely serves several, and the same
+platform may be served by more than one template:
 
-| Slug                         | Role        | Stack                                       |
-| ---------------------------- | ----------- | ------------------------------------------- |
-| `typescript-effect`          | `packages`  | TypeScript · Effect                         |
-| `typescript-effect-hono`     | `service`   | TypeScript · Hono · Effect                  |
-| `typescript-hono-refine`     | `fullstack` | TypeScript · Hono + Effect · React + Refine |
-| `typescript-astro-react`     | `site`      | TypeScript · Astro (SSR) · React            |
-| `typescript-effect-temporal` | `worker`    | TypeScript · Temporal · Effect              |
-| `typescript-effect-cli`      | `frontend`  | TypeScript · Effect CLI — platform `cli`    |
-| `typescript-pulumi`          | `iac`       | TypeScript · Pulumi                         |
+| Slug                         | Platforms           | Stack                                       |
+| ---------------------------- | ------------------- | ------------------------------------------- |
+| `typescript-effect`          | `packages`          | TypeScript · Effect                         |
+| `typescript-effect-hono`     | `service`           | TypeScript · Hono · Effect                  |
+| `typescript-hono-refine`     | `service`, `webapp` | TypeScript · Hono + Effect · React + Refine |
+| `typescript-astro-react`     | `site`              | TypeScript · Astro (SSR) · React            |
+| `typescript-effect-temporal` | `worker`            | TypeScript · Temporal · Effect              |
+| `typescript-effect-cli`      | `cli`               | TypeScript · Effect CLI                     |
+| `typescript-parseargs-cli`   | `cli`               | TypeScript · parseArgs CLI                  |
+| `typescript-pulumi`          | `iac`               | TypeScript · Pulumi                         |
+
+**`cli` has two templates, deliberately.** `typescript-effect-cli` is for a tree
+of subcommands with typed arguments, or a CLI that is one surface of an Effect
+codebase. `typescript-parseargs-cli` is `node:util`'s `parseArgs` and no
+framework, for a flat set of flags where a CLI framework would be the larger
+dependency. vwf presents both and the user picks; neither is a default.
 
 Deploy and repo axes:
 

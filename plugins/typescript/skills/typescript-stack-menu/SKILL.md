@@ -61,8 +61,17 @@ templates:
     axis: project
     platforms: [ cli ]
     name: TypeScript · Effect CLI
-    summary: A shipped command-line tool on `@effect/cli` — a terminal surface
-      with no screens, governed by the design system's Terminal UX section.
+    summary: A shipped command-line tool on `@effect/cli` — declarative
+      commands with typed flags and DI, for a tree of subcommands or a CLI
+      that is one surface of an Effect codebase. A terminal surface with no
+      screens, governed by the design system's Terminal UX section.
+  - slug: typescript-parseargs-cli
+    axis: project
+    platforms: [ cli ]
+    name: TypeScript · parseArgs CLI
+    summary: A shipped command-line tool on `node:util`'s `parseArgs` and no
+      framework — for a flat set of flags, where a CLI framework would be the
+      larger dependency. Same terminal surface and same Terminal UX section.
   - slug: typescript-pulumi
     axis: project
     platforms: [ iac ]
@@ -97,8 +106,11 @@ templates:
   halts and names the two ways forward (install a plugin that has it, or write
   one). Return the menu as it is; never invent an entry to spare the user that
   halt.
-- **Every project entry carries a `role`**, and no two share one — so the
-  project-axis menu vwf renders for a given role is a single entry or none.
+- **Every project entry carries `platforms`** — a list since format 22, because
+  one template routinely serves several. More than one entry **may** serve the
+  same platform: `cli` has two, an Effect CLI and a parseArgs one, and the
+  choice between them is the user's. vwf presents the union and the user picks;
+  narrowing it here would hide an option.
 - **The `backing` axis is not ours.** A language plugin does not decide the
   datastore, the identity provider or the queue; those come from the capability
   and cloud plugins, and a `typescript` entry never carries `capabilities`.
