@@ -21,11 +21,6 @@
 # Graphify
 graphify-out/
 
-# OpenCode project config. Nothing here writes it any more — the CLI's graphify
-# wiring is `--platform claude` only — but a stale copy from an earlier install
-# would otherwise start showing up as untracked.
-.opencode/
-
 # Scratchpad / temporary files
 docs/scratchpad/
 
