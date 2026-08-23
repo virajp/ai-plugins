@@ -4,6 +4,7 @@ title: Entities
 description: Catalog of the product's entities and the product-wide
   entity-relationship view.
 status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
 ---
 
 # Entities

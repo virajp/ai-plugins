@@ -4,6 +4,7 @@ title: Flows & Cross-Flow Contracts
 description: Catalog of the product's flows plus the inter-service contracts
   and consistency boundaries no single flow owns.
 status: draft # draft | reviewed | stable
+# optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
 ---
 
 # Flows & Cross-Flow Contracts

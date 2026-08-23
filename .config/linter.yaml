@@ -13,13 +13,32 @@ ignores:
   # Gitignored working notes and session handoffs. Never committed, so linting
   # them only ever fails the local gate on prose nobody reviews.
   - "docs/scratchpad/**"
-  # vwf blueprint templates + example bundle carry OKF frontmatter (a `title`)
-  # alongside a body H1; the linter counts the frontmatter title as an H1, so
-  # exclude these template/example docs from markdown linting.
-  - "plugins/vwf/assets/templates/**"
-  - "plugins/vwf/assets/examples/**"
 
 overrides:
   markdown:
     rules:
       markdown/no-reversed-media-syntax: off
+
+# Every blueprint doc carries OKF frontmatter with a `title` AND a body H1.
+# Two separate things made that fail `no-multiple-h1`, and both need fixing —
+# which is why this is a `configs:` block rather than a `rules` override:
+#
+#   1. Frontmatter was parsed as markdown BODY, so a YAML comment inside it
+#      (`# optional, standardized: …`) became an H1 and the real title was the
+#      second one. `frontmatter: yaml` is a LANGUAGE option, not a rule option,
+#      and `overrides:` only reaches `rules`.
+#   2. Once parsed, the rule counts a frontmatter `title:` as the document's H1
+#      by default, so the body's own `# Title` becomes the second. Here the two
+#      coexist by convention — the frontmatter title is metadata for tooling,
+#      the H1 is for the reader — so `frontmatterTitle: ""` counts only real
+#      headings.
+#
+# This replaced blanket ignores of the vwf template and example trees, which
+# hid the problem by not linting those docs at all. They are linted now. A
+# genuine duplicate H1 still errors.
+configs:
+  - files: [ "**/*.md" ]
+    languageOptions:
+      frontmatter: yaml
+    rules:
+      markdown/no-multiple-h1: [ "error", { frontmatterTitle: "" } ]
