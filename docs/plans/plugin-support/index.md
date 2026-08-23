@@ -1,6 +1,7 @@
 # Plan: plugin support — statusline removal, installer rename, `plugin` platform
 
-**Status: approved 2026-08-21. WS1, WS2 and WS3 landed; WS4 not started.**
+**Status: approved 2026-08-21. WS1, WS2 and WS3 landed. WS4 in progress —
+`/vwf:setup` done (`f6fb407`); `/vwf:product` next.**
 
 This index is written to be executed from cold, by a session with no prior
 context. Read it end to end before touching anything, then read the workstream
@@ -123,9 +124,12 @@ usable against it.
 - **Only `plugin` loses the blueprint-coverage exemption.** `packages`, `iac`,
   `misc`, `cicd` and every `data` platform stay exempt. Surgical carve-out, not
   a rewrite of the exemption rule.
-- **Registry shape for WS4**: three projects — `vwf` (`system`/`[plugin]`),
+- **Registry shape for WS4**: ~~three projects — `vwf` (`system`/`[plugin]`),
   `plugins` (`system`/`[plugin]`, the other 14), `installer`
-  (`frontend`/`[cli]`). `scripts/` and `.config/mise/tasks/` get **no** project
+  (`frontend`/`[cli]`)~~ — **superseded at setup time (2026-08-23): two
+  projects.** `vwf` folds into `plugins`; the size argument for splitting it out
+  did not outweigh a second `[plugin]` project the blueprint would have to keep
+  disambiguating. `scripts/` and `.config/mise/tasks/` still get **no** project
   entry; they are repo tooling.
 - **Full scope for WS4** — the whole vwf chain, not foundations only.
 
