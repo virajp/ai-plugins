@@ -31,15 +31,14 @@ Homebrew tap and no Scoop bucket.
 ## The statusline has moved
 
 Earlier versions of this CLI also installed a powerline statusline for Claude
-Code. **It has moved to a separate project** and ships here no longer — the
-`--statusline`, `--no-statusline` and `--force` flags are retired, and each now
-exits non-zero naming itself rather than being silently ignored.
+Code. It now lives in
+[`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status)
+— `pnpx @askviraj/claude-status --install` — and nothing here installs it or
+cleans up after the versions that did.
 
-If you installed it from here, **`--uninstall` still removes it and restores the
-statusline you had before it**. That is the one thing the removal was careful
-about: the receipt recording your own bar is read as a legacy receipt, exactly
-like the Cursor and Oh-My-Pi records already were, so an upgrade does not strand
-you with a `settings.json` pointing at a script that is gone.
+So if you installed the bar from here, an upgrade can leave your `settings.json`
+naming a script this CLI no longer ships; installing that package re-points it.
+The detail is in [usage.md](./usage.md#the-statusline-has-moved).
 
 ## Upgrading
 

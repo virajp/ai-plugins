@@ -61,11 +61,6 @@ describe("parse", () => {
       const flag of [
         "--platform",
         "--upgrade",
-        // Retired with the statusline. `strict` is what turns each of these
-        // into an error naming itself rather than a run quietly doing less
-        // than the script that invoked it asked for.
-        "--statusline",
-        "--no-statusline",
         "--force",
       ]
     ) {
@@ -107,8 +102,6 @@ describe("renderUsage", () => {
       const flag of [
         "--platform",
         "--upgrade",
-        "--statusline",
-        "--no-statusline",
         "--force",
       ]
     ) {

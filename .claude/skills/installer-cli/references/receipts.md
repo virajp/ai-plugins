@@ -13,8 +13,7 @@ is not whenever a user edits a value the installer later removes wholesale.
 **Nothing this version installs writes a receipt.** Plugins go in through
 `claude plugin install` and graphify through its own CLI; both tools keep their
 own records, which is what `--uninstall` reads live. `ReceiptBuilder`,
-`writeReceipt` and `mergeReceipts` are gone with the statusline, the last
-writer.
+`writeReceipt` and `mergeReceipts` went with the last writer this CLI had.
 
 What is left is `readReceipt` and `revert`, for the receipts **older versions**
 left on disk. Everything below the next two sections is therefore knowledge
@@ -26,44 +25,51 @@ first thing to re-read.
 
 **Every kind is still read; none are written.**
 
-| Kind        | On revert                            | Was written by                            |
-| ----------- | ------------------------------------ | ----------------------------------------- |
-| `file`      | restores `previous`, else deletes    | the statusline                            |
-| `dir`       | removes **only if empty**            | the statusline (`~/.claude/scripts`)      |
-| `configKey` | restores the key, else deletes it    | the statusline, and every retired adapter |
-| `tree`      | removes **recursively**              | the four plugin adapters                  |
-| `command`   | **skipped** — no `runUndo` is passed | the Oh-My-Pi and Cursor adapters          |
+| Kind        | On revert                            | Where you meet it                                           |
+| ----------- | ------------------------------------ | ----------------------------------------------------------- |
+| `file`      | restores `previous`, else deletes    | any legacy install that placed a file                       |
+| `dir`       | removes **only if empty**            | a parent a file-placing install created on the way down     |
+| `configKey` | restores the key, else deletes it    | every retired adapter, and the render targets' own receipts |
+| `tree`      | removes **recursively**              | the four plugin adapters — `claude.json`'s copied payload   |
+| `command`   | **skipped** — no `runUndo` is passed | the Oh-My-Pi and Cursor adapters                            |
 
 **`revert` must keep handling all five.** `uninstall.ts` reads the receipts
-older installs left behind, which is the whole reason a machine carrying this
-toolkit's statusline, a copied marketplace payload or a discontinued target's
-bundle can be **cleaned rather than orphaned**. Dropping a kind turns those
-receipts into files nothing can undo — and the half-revert reports as a clean
-uninstall, which is the failure worth preventing. When the legacy window closes
-they go together; `uninstall.ts` names the set.
+older installs left behind, which is the whole reason a machine carrying a
+copied marketplace payload or a discontinued target's bundle can be **cleaned
+rather than orphaned**. Dropping a kind turns those receipts into files nothing
+can undo — and the half-revert reports as a clean uninstall, which is the
+failure worth preventing. There is **no scheduled end** for any of this: the
+drop condition `uninstall.ts` used to carry was tied to a removal that has since
+happened, and the reader outlived it. These kinds go when the reader does, and
+nothing currently proposes retiring either.
 
 **`command` is now inert, and that is a deliberate narrowing rather than a
-regression.** Its `runUndo` hook was only ever supplied for `omp`, and only
-`ohmypi.json` / `statusline-ohmypi.json` held one. Only Claude Code is supported
-now, so nothing passes a program to run an undo against, and `revert` skips the
-entry rather than guessing one. Both receipts still named in `LEGACY_RECEIPTS`
-are Claude Code's, and neither holds a `command` entry — `claude.json` is
-`filesOnly`, and the statusline's holds files and config keys. The kind stays
+regression.** Its `runUndo` hook was only ever supplied for `omp`, and only the
+Oh-My-Pi receipts held one. Only Claude Code is supported now, so nothing passes
+a program to run an undo against, and `revert` skips the entry rather than
+guessing one. `LEGACY_RECEIPTS` names exactly one receipt, `claude.json`, and it
+is `filesOnly` — its `command` entries claim the marketplace registration and
+the plugin installs, which the live enumeration already covers by reading
+Claude's settings directly. Replaying them too would uninstall one plugin twice
+and report the second, failing, call as a broken uninstall. The kind stays
 reachable in the type because a receipt on disk may still carry one; it simply
 no longer runs.
 
-`configKey` is the one that matters most in practice, because it is what
-restores a v5.2.0 machine's own statusline: `settings.json` → `statusLine`, with
-the foreign command as `previous`. `restoreJsonKey` in `cli/src/config/json.ts`
-is the hook that performs it — it moved there when `statusline.ts` was deleted,
-since it is a generic JSONC key-writer and every config any adapter ever touched
-is that format.
+`configKey` is the one that matters most in practice, because it is what gives a
+user their own setting back rather than an empty one. The shape `i:test` seeds
+is the worked example: a `cursor.json` receipt records `~/.cursor/settings.json`
+→ `virajp`, with the value that was there before that install as `previous`.
+Reverting writes that value back; it deletes the key only when `hadKey` says
+there was none to begin with, which is why `hadKey` is separate from a
+`previous` of literal `undefined`. `restoreJsonKey` in `cli/src/config/json.ts`
+is the hook that performs it — a generic JSONC key-writer, since every config
+any adapter ever touched is that format.
 
 ## If a write path ever returns
 
 These are the rules that governed every writer this CLI had, and the bug class
-they exist for was rediscovered **five** times — in all four plugin adapters and
-again in the statusline. Do not re-derive them.
+they exist for was rediscovered **five** times — in all four plugin adapters,
+and once more in the last write path to be added. Do not re-derive them.
 
 **The unconditional rule.** `file` (when it creates), `dir` and `tree` were
 recorded **unconditionally** — recording is not gated on what is currently at
@@ -101,19 +107,23 @@ from this checkout emptied the checkout's own `enabledPlugins` exactly once,
 that way. Any hermetic run must therefore `cd` somewhere throwaway first, and
 check `git status --porcelain` afterwards rather than assuming.
 
-## Uninstall asks the receipt, not the flags
+## Uninstall asks the receipt, not the machine
 
-The statusline had a defect worth remembering even though the flag is gone: a
-plain `--uninstall` never reverted it at all, because the tri-state
-`--statusline` deferred to `--all` when unset and there was no `--all` on the
-way out. A user who installed with `--all` had to know to pass `--statusline` to
-remove a bar they never separately asked for.
+**Uninstall undoes what this tool did, and the receipt is the record of that.**
+`enumerate` finds a legacy piece *by its receipt*, never by scanning the machine
+for state that resembles ours — so a file or a config key this tool did not
+write is never listed, and never offered for removal. That is also why there is
+no debris cleanup anywhere in this CLI: a path with no receipt and no owning
+tool is not ours to touch.
 
-The rule that fixed it is now structural: **uninstall undoes what this tool did,
-and the receipt is the record of that.** `enumerate` finds a piece *by its
-receipt*, which is why a statusline this tool did not install is never listed —
-and why `statusline.json` had to join `LEGACY_RECEIPTS` rather than being
-deleted along with the code that wrote it.
+**`LEGACY_RECEIPTS` is a label lookup, not an allowlist.** `legacyItems`
+enumerates every readable `*.json` in the receipt directory with no exclusion
+and reverts each the same way; a name absent from the map still gets a row,
+under the generic `an install recorded in <name>`. Adding or removing an entry
+changes a display label and the `filesOnly` flag, and nothing else. Do not
+reason about that map as if membership decided whether a receipt is found — it
+does not, and the mistaken version of that claim was written down three times
+before it was checked against `legacyItems`.
 
 ## Directories nobody claimed
 

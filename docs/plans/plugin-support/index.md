@@ -1,6 +1,6 @@
 # Plan: plugin support — statusline removal, installer rename, `plugin` platform
 
-**Status: approved 2026-08-21. Not started.**
+**Status: approved 2026-08-21. WS1, WS2 and WS3 landed; WS4 not started.**
 
 This index is written to be executed from cold, by a session with no prior
 context. Read it end to end before touching anything, then read the workstream

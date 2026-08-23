@@ -16,14 +16,11 @@
  *
  * The one thing citty did that the platform does not is **usage rendering**, so
  * `renderUsage` below is ours. It is not a loss: the no-request path has to
- * print help anyway, so this was going to exist. (Boolean negation was the
- * other, and it went with the statusline — `--no-statusline` was the only
- * negated flag, and there is no tri-state left to fold.)
+ * print help anyway, so this was going to exist.
  *
  * `strict` is on, so an unknown flag is an **error naming itself** rather than
  * a silent no-op. That is what makes a retired flag legible instead of ignored
- * — which is how `--platform`, `--upgrade` and now `--statusline`,
- * `--no-statusline` and `--force` all answer.
+ * — which is how `--platform`, `--upgrade` and `--force` all answer.
  */
 import { parseArgs } from "node:util";
 

@@ -18,9 +18,9 @@ That is a large reduction from what this page used to describe, in two steps.
 The Claude-first release took four plugin adapters, the copied payload, a
 dependency gate, a plan stage, an executor and a `--platform` flag, along with
 the template layer and the four render trees they installed from. The statusline
-removal took the rest of the write surface: the bar, its caps hook, the consent
-gate, the whole `tools/` tree, and with them the last thing that wrote a
-receipt. If you are looking for any of it, it is in git, not here.
+moving to its own package took the rest of the write surface: the consent gate,
+the whole `tools/` tree, and with them the last thing that wrote a receipt. If
+you are looking for any of it, it is in git, not here.
 
 ## The flow of a run
 
@@ -30,10 +30,10 @@ doing as little as possible itself.
 **`args.ts` parses.** One table drives both `parseArgs` and the help text, so a
 flag cannot be parsed but undocumented. `strict` is on, so a retired flag
 reports itself by name rather than being silently ignored — `--platform`,
-`--upgrade`, `--statusline`, `--no-statusline` and `--force` all answer that
-way. `--user` and `--project` are repeatable via `multiple: true` — the array
-kind the parser this replaced could not express, which is how it once dropped
-names silently. The end-user view of the same flags is [usage.md](./usage.md).
+`--upgrade` and `--force` all answer that way. `--user` and `--project` are
+repeatable via `multiple: true` — the array kind the parser this replaced could
+not express, which is how it once dropped names silently. The end-user view of
+the same flags is [usage.md](./usage.md).
 
 **`index.ts` routes**: resolve, execute, report, exit. It reads flags into one
 `Context` (source root, `$HOME`, cwd, timestamp, logger, command runner — all
@@ -49,18 +49,15 @@ written** — Claude's settings are the record `--uninstall` reads live.
 
 **`uninstall.ts` removes.** `enumerate` is a pure read returning plain data —
 that split is what makes the list testable against a fixture directory rather
-than only by performing it. Removal is a separate switch, and goes through
-whatever owns each piece.
-
-Its one non-receipt cleanup is `statuslineItems`, for what the retired bar left
-that no receipt records: the `settings.json` wiring (`statusLine`,
-`subagentStatusLine`, the caps hook entry, `AI_PLUGINS_USAGE_DIR`), the two
-script files when no receipt claims them. Ownership decides the split — a key
-the statusline receipt records is the receipt's to *restore* and is not offered
-here — and every key is fingerprinted against the value this toolkit wrote, both
-when listed and again when written. **Configuration is left at both tiers**
-(`~/.config/statusline.json` and a repo's own), as is `~/.claude/usage/`: this
-CLI deletes only what it wrote.
+than only by performing it. Removal is a separate switch, and every arm of it
+goes through whatever owns the piece: `claude` for the plugins and the
+marketplace registration, `graphify hook uninstall` plus a `delete` of the graph
+and `.graphifyignore` for graphify's side, and for a receipt an older version
+left, a **revert** through `receipt.ts`. **Nothing here edits a config file
+directly** — `settings.json` is Claude's, and the only key this CLI ever writes
+is one a receipt is restoring. That is also why `~/.config/statusline.json`, a
+repo's own `.config/statusline.json` and `~/.claude/usage/` never appear: this
+version neither writes nor reads them, so they are not its to remove.
 
 **`report.ts` / `progress.ts`.** A live step on stderr while work blocks in
 `spawnSync`, and the final table after it, so stdout stays parseable for
@@ -101,13 +98,18 @@ rule, the ESM/CJS split and the rest of the packaging traps are in
 
 `mise run i:test` bundles first and smoke-tests the **built artifact**, not the
 source, because a packaging mistake only shows up there. Its end-to-end section
-seeds a throwaway `HOME` with a **v5.2.0-shaped `statusline.json` receipt** and
-asserts `--uninstall --dry-run` finds it — the one thing the statusline's
-removal could break invisibly, since a machine upgrading from that release has a
-`settings.json` pointing at a script this version no longer ships. The restore
-itself is asserted in `uninstall.test.ts`, against a real temp filesystem;
-`--uninstall` refuses without a TTY, and allocating one portably is a BSD-vs-GNU
-`script` trap not worth paying for one assertion.
+seeds a throwaway `HOME` with a **`cursor.json` legacy receipt** — one `file`
+entry and one `configKey` entry — and asserts three things about
+`--uninstall --dry-run`: that the built bundle, resolving `HOME` and both XDG
+vars for real, **finds** it at the path it was written to; that it plans a
+**revert** rather than a delete; and that it **writes nothing**, leaving the
+receipt, the recorded file and the recorded config key exactly as seeded. No
+version writes a receipt any more, so seeding one is the only way to exercise
+the reader end to end at all. It then asserts that `--uninstall` **refuses
+without a TTY**. The restore itself is left to `uninstall.test.ts`, against a
+real temp filesystem — the E2E stops at the dry run because of that refusal, and
+allocating a TTY portably is a BSD-vs-GNU `script` trap not worth paying for one
+assertion.
 
 ## What ships: 4 files
 
@@ -116,8 +118,7 @@ itself is asserted in `uninstall.test.ts`, against a real temp filesystem;
 It was ~12 MB until the Claude-first release, because the four rendered plugin
 trees, `plugins.json` and both root marketplace manifests shipped inside it —
 the cost of the committed-render guarantee, since every adapter read `<target>/`
-through `context.sourceRoot` at install time. It was ~41 KB across 7 files until
-the statusline left, which took `tools/` with it.
+through `context.sourceRoot` at install time.
 
 **Nothing is read from the package root now except `package.json`**, and only
 for its `version`. That is worth knowing before widening `files`: there is no

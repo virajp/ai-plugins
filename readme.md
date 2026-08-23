@@ -115,9 +115,9 @@ Upgrading is `claude plugin marketplace update` followed by
 **The statusline used to ship here and no longer does** — it has moved to
 [`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status),
 which is also where the caps hook that pauses a long `/vwf:execute` run now
-comes from. If you installed the bar from here,
-`pnpx @askviraj/ai-plugins --uninstall` still removes it and restores whatever
-statusline you had before it.
+comes from. If you installed the bar from here, `settings.json` still names a
+script this toolkit no longer ships — installing `@askviraj/claude-status`
+re-points it.
 
 ## Other tools
 
@@ -323,8 +323,8 @@ claude plugin install --scope project flutter@virajp-plugins
 ## Statusline
 
 **The statusline has moved to its own project.** It is not installed from here
-any more, and `--statusline`, `--no-statusline` and `--force` are retired flags
-that now exit non-zero naming themselves.
+any more, and `--platform`, `--upgrade` and `--force` are retired flags that now
+exit non-zero naming themselves.
 
 ```sh
 pnpx @askviraj/claude-status --install
@@ -338,11 +338,14 @@ payload, never on hook stdin, which is why the two travel together. **vwf cannot
 detect its absence**, so install it before a long autonomous run rather than
 after — without it the pause never fires.
 
-**If you installed the bar from here, nothing is stranded.**
-`pnpx @askviraj/ai-plugins --uninstall` still finds the old receipt and restores
-whatever statusline you had before it, rather than leaving `settings.json`
-pointing at a script that is gone. The same is true of the discontinued OpenCode
-TUI bar and Oh-My-Pi configuration.
+**If you installed the bar from here, `--uninstall` no longer tidies up after
+it.** `pnpx @askviraj/ai-plugins --uninstall` still reads and reverts the old
+receipt like any other, which removes the script files it recorded — but nothing
+unwires the `statusLine` and `subagentStatusLine` keys or the context-caps hook
+entry, and no receipt is known to have recorded them. So the key is left naming
+a script that is gone; installing `@askviraj/claude-status` re-points it. The
+discontinued OpenCode TUI bar and Oh-My-Pi configuration are still restored from
+their receipts.
 
 ## The installer CLI
 
@@ -387,9 +390,9 @@ surface is described.
   already tracks it.
 - **`--uninstall` shows you a list and removes what you do not deselect.** Each
   piece goes through whatever owns it, and anything an *older* version installed
-  — this toolkit's statusline, the discontinued OpenCode and Oh-My-Pi surfaces —
-  is restored from its receipt rather than deleted, so what you had before comes
-  back. `--dry-run` is the scriptable way to just look.
+  — the discontinued OpenCode and Oh-My-Pi surfaces — is restored from its
+  receipt rather than deleted, so what you had before comes back. `--dry-run` is
+  the scriptable way to just look.
 
 ## Credits & acknowledgements
 

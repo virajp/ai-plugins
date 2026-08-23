@@ -31,9 +31,8 @@ that: the copied payload, the adapters, the `requires:` gate, and any receipt
 for a plugin install — Claude's settings are the record, and `--uninstall` reads
 them live.
 
-The statusline was the fourth thing. It has moved to `@askviraj/claude-status`,
-and with it the whole `tools/` tree, the consent gate, and every write path this
-CLI had.
+The status bar was once the fourth thing. It lives in `@askviraj/claude-status`
+now, and that package is where anyone looking for it should be sent.
 
 ## Nothing writes a receipt any more
 
@@ -44,10 +43,12 @@ gone and `receipt.ts` is read-only.
 
 **Do not reintroduce a write path without reading
 [receipts.md](references/receipts.md) first.** The receipt-completeness bug
-class it documents was found in all four retired plugin adapters *and* in the
-statusline — five independent rediscoveries of the same mistake — and the
-merge-on-write that fixed it went with the last writer. A new writer that
-overwrites its receipt wholesale reintroduces it immediately.
+class it documents was found in all four retired plugin adapters, and again in
+the last write path this CLI had — five independent rediscoveries of one
+mistake, which is why the merge-on-write that fixed it lived in the single place
+every writer passed through rather than at each site. That merge went with the
+last writer. A new writer that overwrites its receipt wholesale reintroduces the
+bug immediately.
 
 What survives, and must keep surviving: **`revert` still meets every `Entry`
 kind**, including `tree` and `command`, which only the retired adapters ever
@@ -75,49 +76,49 @@ Four rules:
   hand-editing strands the two apart. A receipted install leaves by **being
   reverted**, so the user gets their prior state back; a bare delete would leave
   them with nothing and no record of what it had been.
-- **A receipt owns its keys; debris cleanup takes the rest.** The statusline's
-  receipt records the two script files and, on the machines checked, no
-  `configKey` entries — so reverting it deleted the scripts and left
-  `settings.json` naming them. `statuslineItems` fills that gap, and the split
-  is by ownership: a key the receipt records is *restored* by the receipt and
-  never offered here, and the script files are only listed when no receipt
-  claims them. **Every key is fingerprinted against the value this toolkit
-  wrote, at enumeration and again at the write** — the second check is not
-  belt-and-braces, it is what stops a receipt revert earlier in the same run
-  from having its restored bar deleted a moment later.
 - **No TTY refuses rather than guesses** — but only once there is something to
   remove. A run that finds nothing has nothing to ask about, and failing it for
   want of a terminal would make the flag unusable in a script that is checking
   whether anything is left. `--dry-run` is the non-interactive path, and is what
   `i:test` drives.
 
-**The legacy-receipt reader is now the whole receipt story, and is deliberately
-temporary.** Every receipt on disk records an install by an older version: this
-toolkit's own statusline, or the copied Claude marketplace payload. Those
-surfaces are all discontinued, and without this reader a machine carrying them
-is orphaned rather than cleaned, because nothing else knows those paths.
-`uninstall.ts` states the drop condition and names exactly what to delete when
-it comes.
+**This CLI does no debris cleanup, and adding some back is a design decision
+rather than a fix.** Every removal it performs is either owner-driven or
+receipt-driven; nothing scans the machine for state that *looks* like ours and
+deletes it. A path with no receipt and no owning tool is not this CLI's to
+touch.
 
-**`statusline.json` joining `LEGACY_RECEIPTS` is load-bearing, not tidying.** A
-machine on v5.2.0 has this toolkit's bar configured and that receipt recording
-the bar it displaced. Take it out of that map and `--uninstall` stops finding
-it: the user's own statusline never comes back, and `settings.json` is left
-pointing at a script that no longer exists — while the run reports a clean
-uninstall.
+**The legacy-receipt reader is now the whole receipt story, and is deliberately
+kept.** Every receipt on disk records an install by an older version — the
+copied Claude marketplace payload, or one of the discontinued render targets.
+Those surfaces are all gone, and without this reader a machine carrying them is
+orphaned rather than cleaned, because nothing else knows those paths. There is
+**no drop condition** — the one that used to be written here was tied to a
+removal that has since happened, and the reader outlived it. `uninstall.ts`'s
+module comment states why it is kept.
+
+**`LEGACY_RECEIPTS` is a label lookup, not an allowlist.** `legacyItems`
+enumerates every readable `*.json` in the receipt directory with no exclusion,
+and reverts each the same way; a name absent from the map still gets a row,
+under the generic `an install recorded in <name>`. Adding or removing an entry
+changes a display label and the `filesOnly` flag — never whether a receipt is
+found. Do not reason about that map as if it gated the reader.
 
 ## Testing
 
 - `mise run i:test` bundles first and smoke-tests **`bin/installer.mjs`, not
   `cli/src/index.ts`** — a packaging mistake only shows up in the built
   artifact, because in the repo everything resolves through the workspace.
-- Its end-to-end section **seeds a v5.2.0-shaped `statusline.json` receipt** in
-  a throwaway `HOME` (plus `XDG_CONFIG_HOME` and `XDG_DATA_HOME`, or a
-  "hermetic" run writes into your own config) and asserts the built bundle finds
-  it. It is seeded rather than produced because nothing in this version can
-  produce one. **The restore itself is asserted in `uninstall.test.ts`**, not
-  here: `--uninstall` refuses without a TTY, and allocating one portably is a
-  BSD-vs-GNU `script` trap not worth paying for one assertion.
+- Its end-to-end section **seeds a `cursor.json` legacy receipt** into a
+  throwaway `HOME`'s receipt dir (plus `XDG_CONFIG_HOME` and `XDG_DATA_HOME`, or
+  a "hermetic" run writes into your own config), carrying a `file` entry and a
+  `configKey` entry with a `previous` value. It asserts the built bundle
+  **finds** it, describes a **revert** rather than a delete, and **writes
+  nothing** — receipt, artifact and the untouched config key are all re-checked
+  afterwards. It is seeded rather than produced because nothing in this version
+  writes a receipt. **The restore itself is asserted in `uninstall.test.ts`**,
+  not here: `--uninstall` refuses without a TTY, and allocating one portably is
+  a BSD-vs-GNU `script` trap not worth paying for one assertion.
 - **`vitest.config.mts` restricts collection to
   `{cli,scripts}/src/**/*.test.ts`.** A test file anywhere else is silently
   never run rather than failing — which is why the mempalace checkpoint *shell
@@ -141,13 +142,13 @@ uninstall.
 | `--version`        | this CLI against npm, and the plugins available on `main`; exits 1 when the network is unreachable. Reads nothing off disk |
 | `-h, --help`       | usage on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                         |
 
-**Retired, and each answers by name**: `--platform`, `--upgrade`,
-`--statusline`, `--no-statusline`, `--force`. That legibility is the entire
-point of `strict` being on — a user with one in a script is told, rather than
-watching a run do less than they asked for. `--force` is worth a sentence of its
-own: it existed only to install the bar on a machine where Claude was off
-`PATH`, and every remaining install *is* a `claude` invocation, so there is no
-case left where forcing means anything.
+**Retired, and each answers by name**: `--platform`, `--upgrade`, `--force`.
+That legibility is the entire point of `strict` being on — a user with one in a
+script is told, rather than watching a run do less than they asked for.
+`--force` is worth a sentence of its own: it existed only for the status bar
+that has since moved to `@askviraj/claude-status`, so it could be configured on
+a machine where Claude was off `PATH`. Every remaining install *is* a `claude`
+invocation, so there is no case left where forcing means anything.
 
 **The parser is `node:util`'s `parseArgs`, in `args.ts`, and repeatability is
 why.** It was `citty` until `--user vwf --user devtools` was found to install
@@ -158,8 +159,8 @@ both-survive regression test. `parseArgs` also **removed** a runtime dependency
 rather than swapping one in.
 
 Boolean negation was the one other thing citty did that the platform does not,
-and it left with `--no-statusline` — there is no negated flag and no tri-state
-left. Usage rendering stays ours.
+and it went with the last negated flag — there is no `--no-` flag and no
+tri-state left anywhere in the surface. Usage rendering stays ours.
 
 **There is no `--upgrade`, and adding it back would be a mistake.** It replayed
 a receipt to do what naming the plugins again did; upgrading is Claude's own

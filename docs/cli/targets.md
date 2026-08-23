@@ -64,16 +64,6 @@ Wired after every install, when `graphify` is on `PATH`: `graphify install` plus
 run says so and carries on — vwf will report it as blocking at first use, which
 is the honest place for it.
 
-## The statusline no longer lands here
-
-Earlier versions wrote a powerline bar — `~/.claude/scripts/statusline`, a
-`context-caps.js` hook, and four keys in `~/.claude/settings.json`. **That has
-moved to a separate project**, and nothing in this CLI writes any of it.
-
-Claude Code must be on `PATH` for a run to do anything at all now, since every
-install is a `claude` invocation. `--force`, which existed only to install the
-bar on a machine where Claude was off `PATH`, is retired.
-
 ## Receipts
 
 **Nothing writes one any more.** The install paths belong to `claude` and
@@ -85,21 +75,21 @@ an earlier version still has receipts on disk, and each records what was there
 *before* that install. `--uninstall` replays them, so what comes back is your
 actual prior configuration rather than the keys this tool guesses it once set.
 
-| Receipt           | Restores                                     |
-| ----------------- | -------------------------------------------- |
-| `statusline.json` | the statusline you had before this toolkit's |
-| `claude.json`     | the copied Claude marketplace payload        |
+| Receipt       | Restores                              |
+| ------------- | ------------------------------------- |
+| `claude.json` | the copied Claude marketplace payload |
 
-Only Claude Code is supported, so those are the two the reader **names**. It is
-a label lookup rather than an allowlist: a receipt from a retired target —
-`opencode.json`, `cursor.json`, `ohmypi.json` and the two per-target statusline
-records — is still listed and still reverted, just under a generic
+Only Claude Code is supported, so that is the one the reader **names**. It is a
+label lookup rather than an allowlist, not a gate: **every readable `*.json` in
+the receipt directory is enumerated and reverted**, whatever it is called — a
+retired target's `opencode.json`, `cursor.json` or `ohmypi.json`, or the
+`statusline.json` an older version wrote — just under a generic
 `an install recorded in <name>`. Refusing to read one would strand the files it
 records on exactly the machine that needs them cleaned.
 
-All six surfaces are discontinued. This reader is what lets a machine carrying
-one be cleaned rather than orphaned, and it is kept for a release or two and
-then dropped. See [usage.md](./usage.md#undoing-an-install).
+Every one of those surfaces is discontinued. This reader is what lets a machine
+carrying a receipt be cleaned rather than orphaned, and it is kept for a release
+or two and then dropped. See [usage.md](./usage.md#undoing-an-install).
 
 ## Other agents
 

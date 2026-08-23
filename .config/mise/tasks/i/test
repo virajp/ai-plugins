@@ -28,10 +28,9 @@ fi
 
 # `strict` parsing is what makes a retired flag answer by name instead of being
 # a silent no-op — a user with one in a script is told, rather than watching a
-# run do less than they asked for. --statusline, --no-statusline and --force
-# joined this list when the statusline left.
+# run do less than they asked for.
 print_header "Asserting every retired flag is rejected ..."
-for flag in --platform --upgrade --statusline --no-statusline --force; do
+for flag in --platform --upgrade --force; do
   if "${CLI[@]}" "$flag" claude >/dev/null 2>&1; then
     print_error "Expected non-zero exit for a retired flag (${flag})"
     exit 1
@@ -42,16 +41,8 @@ done
 # End-to-end, against the BUILT bundle and a throwaway HOME.
 #
 # Everything above this line exits before anything is read or written. What
-# follows covers the one thing this version can break invisibly: a machine
-# upgrading from v5.2.0 carries a `statusline.json` receipt recording the bar
-# our statusline displaced. This CLI no longer installs a statusline and has no
-# `statusline` removal kind — so unless that receipt is read as a LEGACY one,
-# `--uninstall` stops finding it and the user's own bar never comes back, while
-# reporting a clean uninstall.
-#
-# It is seeded here rather than produced, because nothing in this version can
-# produce it: the writer went with the bar. The fixture below is the shape
-# v5.2.0 wrote.
+# follows exercises the two read paths that resolve real directories: the
+# plugin install plan, and the legacy-receipt enumeration `--uninstall` reads.
 #
 # `claude` is stubbed because the plugin install path is exercised as
 # `--dry-run` only — driving a real install through a stub would test this tool
@@ -60,12 +51,11 @@ done
 # ---------------------------------------------------------------------------
 print_header "Setting up a throwaway HOME ..."
 
-
 E2E_HOME="$(mktemp -d)"
 trap 'rm -rf "$E2E_HOME"' EXIT
 
 NODE_DIR="$(dirname "$(command -v node)")"
-mkdir -p "$E2E_HOME/bin" "$E2E_HOME/.claude/scripts"
+mkdir -p "$E2E_HOME/bin"
 printf '#!/bin/sh\nexit 0\n' >"$E2E_HOME/bin/claude"
 chmod +x "$E2E_HOME/bin/claude"
 
@@ -101,44 +91,39 @@ if [[ "$before_plugins" != "$after_plugins" ]]; then
   exit 1
 fi
 
-# --- The v5.2.0 migration ---------------------------------------------------
+# --- A legacy receipt on disk -----------------------------------------------
 #
-# The state a machine on the previous release is in: our bar configured in
-# settings.json, our script on disk, and a receipt recording the FOREIGN bar
-# that was there first.
-print_header "Seeding a v5.2.0 statusline install ..."
+# `legacyItems` enumerates every readable `*.json` in the receipt directory,
+# and reverts it — restoring what the recorded install displaced rather than
+# deleting. A receipt from one of the retired render targets is the surviving
+# case: no version installs one any more, so it can only be seeded, and a
+# machine still carrying one is exactly the machine an uninstall must clean.
+#
+# It is also what gives `--dry-run` something real to not-write: an enumerated
+# row naming a file and a config key it would otherwise touch.
+print_header "Seeding a legacy receipt ..."
 
-FOREIGN="/opt/somebody-elses/bar.sh"
-SETTINGS="$E2E_HOME/.claude/settings.json"
-SCRIPT="$E2E_HOME/.claude/scripts/statusline"
 RECEIPT_DIR="$E2E_HOME/.config/ai-plugins/receipts"
-RECEIPT="$RECEIPT_DIR/statusline.json"
+RECEIPT="$RECEIPT_DIR/cursor.json"
+ARTIFACT="$E2E_HOME/.cursor/rules/virajp.md"
+CONFIG="$E2E_HOME/.cursor/settings.json"
 
-printf '#!/usr/bin/env node\n// the bar v5.2.0 installed\n' >"$SCRIPT"
-chmod +x "$SCRIPT"
-cat >"$SETTINGS" <<'JSON'
-{
-  "statusLine": {
-    "type": "command",
-    "command": "${HOME}/.claude/scripts/statusline"
-  }
-}
-JSON
+mkdir -p "$E2E_HOME/.cursor/rules" "$RECEIPT_DIR"
+printf 'the file that install wrote\n' >"$ARTIFACT"
+printf '{\n  "virajp": "ours"\n}\n' >"$CONFIG"
 
-mkdir -p "$RECEIPT_DIR"
 cat >"$RECEIPT" <<JSON
 {
   "version": 3,
   "installedAt": "2026-08-01T00:00:00Z",
   "entries": [
-    { "kind": "dir", "path": "${E2E_HOME}/.claude/scripts" },
-    { "kind": "file", "path": "${SCRIPT}" },
+    { "kind": "file", "path": "${ARTIFACT}" },
     {
       "kind": "configKey",
-      "file": "${SETTINGS}",
-      "path": ["statusLine"],
+      "file": "${CONFIG}",
+      "path": ["virajp"],
       "hadKey": true,
-      "previous": { "type": "command", "command": "${FOREIGN}" }
+      "previous": "theirs"
     }
   ]
 }
@@ -150,40 +135,35 @@ JSON
 # design and refuses without a TTY, and allocating one portably is a BSD-vs-GNU
 # `script` trap this repo already pays elsewhere. So the CLI-level assertion is
 # that the built bundle, resolving HOME and both XDG vars for real, FINDS the
-# v5.2.0 receipt at the path v5.2.0 wrote it to — which is the half that breaks
-# if `statusline.json` falls out of `LEGACY_RECEIPTS`.
+# receipt at the path it was written to and plans a revert for it.
 #
-# The restore itself — settings.json carrying the foreign command again, byte
-# for byte — is asserted in `uninstall.test.ts`, against a real temp filesystem
-# through the same `revertLegacyReceipt` path this run would take.
-print_header "Asserting --uninstall --dry-run finds the v5.2.0 receipt ..."
+# The restore itself — the config carrying the prior value again, byte for byte
+# — is asserted in `uninstall.test.ts`, against a real temp filesystem through
+# the same `revertLegacyReceipt` path this run would take.
+print_header "Asserting --uninstall --dry-run finds the legacy receipt ..."
 # Both streams: the enumerated list goes to stderr (it is a question, even in
 # dry-run form) and the diff to stdout, and this asserts against each.
 dry_out="$(e2e --uninstall --dry-run 2>&1)"
-if ! grep -qi "statusline" <<<"$dry_out"; then
-  print_error "--uninstall --dry-run did not list the statusline receipt"
-  print_warn  "Is statusline.json still in LEGACY_RECEIPTS?"
-  printf '%s\n' "$dry_out"
-  exit 1
-fi
 if ! grep -qF "$RECEIPT" <<<"$dry_out"; then
   print_error "--uninstall --dry-run did not name ${RECEIPT}"
-  print_warn  "It found something, but not the receipt v5.2.0 actually wrote."
   printf '%s\n' "$dry_out"
   exit 1
 fi
 if ! grep -qF "revert" <<<"$dry_out"; then
   print_error "--uninstall --dry-run described no revert for it"
-  print_warn  "A delete rather than a revert would leave the user with no bar."
+  print_warn "A delete rather than a revert would leave the user with nothing."
   printf '%s\n' "$dry_out"
   exit 1
 fi
-if [[ ! -f "$SCRIPT" || ! -f "$RECEIPT" ]]; then
+
+# `--dry-run` writes nothing: the receipt and both of the things reverting it
+# would touch are still exactly as seeded.
+if [[ ! -f "$RECEIPT" || ! -f "$ARTIFACT" ]]; then
   print_error "--uninstall --dry-run removed something; it must write nothing"
   exit 1
 fi
-if ! grep -q "scripts/statusline" "$SETTINGS"; then
-  print_error "--uninstall --dry-run edited settings.json; it must write nothing"
+if ! grep -qF '"virajp": "ours"' "$CONFIG"; then
+  print_error "--uninstall --dry-run edited ${CONFIG}; it must write nothing"
   exit 1
 fi
 

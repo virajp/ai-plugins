@@ -15,9 +15,9 @@
  * its own CLI, and both tools keep their own records, which is what
  * `--uninstall` reads live. So the builder and the writer are gone, and what is
  * left is the reader and `revert`, for the receipts *older* versions left on
- * disk: the statusline's, and the multi-target adapters' before it. Every
- * `Entry` kind stays reachable in `revert` for that reason — dropping one would
- * turn an existing receipt into a file nothing can undo.
+ * disk: the copied Claude marketplace payload, and the multi-target adapters'
+ * before it. Every `Entry` kind stays reachable in `revert` for that reason —
+ * dropping one would turn an existing receipt into a file nothing can undo.
  *
  * If something here ever writes again, `writeReceipt` is in git and its merge
  * semantics are the part worth recovering rather than re-deriving: an install
@@ -49,14 +49,14 @@ export const RECEIPT_VERSION = 3;
 /**
  * **Every kind is still read; none are written any more.**
  *
- * The statusline wrote `file`, `dir` and `configKey`; `tree` and `command` were
- * the plugin adapters' — a copied render tree, a `claude plugin install` paired
- * with its uninstall. All of those writers are gone. The kinds stay because
- * `revert` still meets them: `uninstall.ts` reads the receipts older versions
- * left behind, which is the whole reason a machine carrying an OpenCode bundle,
- * an Oh-My-Pi bar or this toolkit's statusline can be cleaned rather than
- * orphaned. Dropping one from `revert` would turn those receipts into files
- * nothing can undo.
+ * The per-target installs wrote `file`, `dir` and `configKey`; `tree` and
+ * `command` were the plugin adapters' — a copied render tree, a
+ * `claude plugin install` paired with its uninstall. All of those writers are
+ * gone. The kinds stay because `revert` still meets them: `uninstall.ts` reads
+ * the receipts older versions left behind, which is the whole reason a machine
+ * carrying an OpenCode bundle, an Oh-My-Pi bar or a copied render tree can be
+ * cleaned rather than orphaned. Dropping one from `revert` would turn those
+ * receipts into files nothing can undo.
  */
 export type Entry =
   /** A file we wrote. `previous` is absent when we created it. */

@@ -17,7 +17,7 @@ import {
  * these are the only assertions on what a run actually prints.
  *
  * The step names below are a plugin row and two legacy-receipt rows, which is
- * every shape a run can now produce. `legacy:statusline-*.json` are real
+ * every shape a run can now produce. `legacy:ohmypi.json` and `legacy:opencode.json` are real
  * filenames on disk, not leftovers: a machine carrying an Oh-My-Pi or OpenCode
  * bar from a multi-target version is what those rows exist to clean up.
  */
@@ -26,7 +26,7 @@ describe("renderProgress", () => {
     const text = renderProgress([
       { name: "plugin:user:vwf", actions: [{ summary: "a" }] },
       {
-        name: "legacy:statusline-ohmypi.json",
+        name: "legacy:ohmypi.json",
         actions: [],
         skipped: "not-installed",
       },
@@ -43,7 +43,7 @@ describe("renderProgress", () => {
 
   it("aligns the columns whatever the step names are", () => {
     const lines = renderProgress([
-      { name: "legacy:statusline-opencode.json", actions: [{ summary: "a" }] },
+      { name: "legacy:opencode.json", actions: [{ summary: "a" }] },
       { name: "plugin:user:vwf", actions: [{ summary: "b" }] },
     ])
       .split("\n")

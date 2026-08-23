@@ -22,11 +22,8 @@ it was `citty` until that turned out to be unable to express a repeatable flag,
 and `node:util`'s `parseArgs` replaced it rather than another package.
 
 **The package `type` stays `commonjs`**, and the bundle is ESM by its `.mjs`
-extension. The split used to be load-bearing — the standalone
-`tools/statusline/` scripts ran outside this package with no `package.json`
-beside them and had to stay CommonJS. Those are gone with the statusline, so
-nothing now depends on the `type` either way; leaving it alone is one less thing
-to re-verify.
+extension — nothing this package ships depends on the `type` either way any
+more, and leaving it alone is one less thing to re-verify.
 
 ## The tarball
 
@@ -35,8 +32,7 @@ to re-verify.
 It was ~12 MB until the Claude-first cutover, because the four rendered plugin
 trees, `plugins.json` and both root marketplace manifests all shipped inside it
 — that was the cost of the committed-render guarantee, since every adapter read
-`<target>/` at install time through `context.sourceRoot`. It was ~41 KB across
-seven files until the statusline left, which took `tools/` with it.
+`<target>/` at install time through `context.sourceRoot`.
 
 **Nothing is read from the package root at runtime now except `package.json`**,
 and only for its `version`. There is no bundled asset left to lose, so narrowing
@@ -61,12 +57,12 @@ Two lines, from two different places:
 - **The plugins** — what the marketplace manifest on `main` lists, since `main`
   is what a user installs from.
 
-**It reads nothing off disk**, and that is deliberate rather than an omission.
-The statusline was the one thing this CLI installed whose on-disk version could
-differ from the running package's, and reporting it needed the script to
-self-report a stamped constant. With the bar gone, what a user has installed is
-`claude plugin list` — parsing Claude's bookkeeping a second time to say the
-same thing would only be a second thing to drift.
+**It reports no on-disk state**, and that is deliberate rather than an omission.
+Everything this CLI installs is installed by Claude or by graphify, each of
+which answers for its own version — what a user has is `claude plugin list`.
+Parsing Claude's bookkeeping a second time to say the same thing would only be a
+second thing to drift. `cli/src/version.ts` says so at the top; keep the two in
+agreement if a reader is ever added.
 
 The "latest" side is fetched from raw GitHub and can be **CDN-cached for a few
 minutes** after a push; re-run before diagnosing a stale-looking report.

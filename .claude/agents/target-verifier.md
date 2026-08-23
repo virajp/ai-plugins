@@ -35,8 +35,7 @@ commands and never edits Claude's settings itself — so the two should leave th
 machine in the same state. A divergence is a finding.
 
 The CLI installs nothing else of its own. Everything it puts on a machine
-belongs to `claude` or to `graphify`, which is why it writes **no receipt**; the
-statusline, which was the one exception, has moved to `@askviraj/claude-status`.
+belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
 
 ## Hard rules
 
@@ -121,13 +120,164 @@ statusline, which was the one exception, has moved to `@askviraj/claude-status`.
 7. **Separately**, verify the CLI route into a fresh hermetic home:
    `node bin/installer.mjs --user vwf`, then `--uninstall --dry-run`. Compare
    the resulting settings against what the direct route produced in step 1–6 —
-   the wrapper should be indistinguishable from the commands it drives. Do not
-   drive the interactive `--uninstall`; it refuses without a TTY by design.
-8. **If the home you are given carries a legacy receipt** (`statusline.json` or
-   any `*-opencode.json` / `*-ohmypi.json` / `cursor.json`), assert
-   `--uninstall --dry-run` lists it. That reader is the only thing standing
-   between an upgrading machine and being orphaned, and nothing writes those
-   receipts any more — so no run can produce one to test with by accident.
+   the wrapper should be indistinguishable from the commands it drives. Stay on
+   `--dry-run` here — it refuses without a TTY by design. Step 8 is where the
+   interactive path is driven, on a pty, against a home holding only receipts.
+8. **The legacy-receipt path — seed it, then prove both halves.** Nothing writes
+   a receipt any more, so no run produces one to test with by accident: you have
+   to seed them. That reader is the only thing standing between an upgrading
+   machine and being orphaned, and this step is the only check of `legacyItems`
+   and `revertLegacyReceipt` against a real filesystem — `uninstall.test.ts` no
+   longer carries these assertions.
+
+   Use a **fresh** hermetic home per sub-step, `cd`'d into a throwaway directory
+   per rule 1. Two paths matter:
+
+   - receipts: `$XDG_CONFIG_HOME/ai-plugins/receipts/` (`receiptDir()` in
+     `cli/src/index.ts`)
+   - Claude's user config: `$CLAUDE_CONFIG_DIR/settings.json`
+
+   Write every seed file with `printf` or `node -e`, never through `cat` — it is
+   aliased to `bat` here and injects ANSI escapes. Receipts hold **absolute**
+   paths, so expand `$HOME` and `$CLAUDE_CONFIG_DIR` rather than writing `~` or
+   the literal placeholders below.
+
+   **8a — a non-statusline receipt is still enumerated, labelled and reverted.**
+   Seed the prior state the receipt claims to have displaced:
+
+   ```sh
+   mkdir -p "$XDG_CONFIG_HOME/ai-plugins/receipts" "$HOME/.cursor"
+   printf 'ours\n'                      > "$HOME/.cursor/ours.txt"
+   printf '{"editor":{"theme":"ours"}}' > "$HOME/.cursor/settings.json"
+   ```
+
+   Then write `receipts/cursor.json`, carrying the two entry kinds that have to
+   *restore* rather than delete:
+
+   ```json
+   {
+     "version": 3,
+     "installedAt": "2026-01-01T00:00:00.000Z",
+     "plugins": [{ "name": "vwf", "scope": "user" }],
+     "entries": [
+       {
+         "kind": "file",
+         "path": "<HOME>/.cursor/ours.txt",
+         "previous": "theirs\n"
+       },
+       {
+         "kind": "configKey",
+         "file": "<HOME>/.cursor/settings.json",
+         "path": ["editor", "theme"],
+         "hadKey": true,
+         "previous": "solarized"
+       }
+     ]
+   }
+   ```
+
+   Assert on `node bin/installer.mjs --uninstall --dry-run`:
+
+   - a row appears under the heading `Older multi-target installs`, reading
+     `an install recorded in cursor.json`. **That generic label is correct and
+     is not a finding** — `LEGACY_RECEIPTS` has held only `claude.json` since
+     `7154c03`, and a name absent from it falls back to that wording.
+   - the row's note names `vwf` and the receipt path — the receipt's own
+     `plugins` list is what supplies the name.
+   - stdout carries `# legacy:cursor.json` and
+     `revert an install recorded in cursor.json`.
+
+   **`--dry-run` exits before removing anything**, so it proves enumeration
+   only. To prove the revert, run it for real on a pty — the interactive path
+   refuses without one by design, and pressing Enter accepts the default
+   selection, which is every row:
+
+   ```sh
+   node -e 'setTimeout(()=>process.stdout.write("\n"),4000); setTimeout(()=>process.exit(0),9000);' \
+     | /usr/bin/script -q /dev/null node bin/installer.mjs --uninstall
+   ```
+
+   **The obvious `printf '\n' | script …` does not work**, and its failure looks
+   like a regression rather than a harness problem: `script` forwards the
+   newline and the EOF in one burst, the newline is discarded before readline
+   attaches, and the `^D` reaches the prompt as
+   `AbortError: Aborted with Ctrl+D`, exit 1. The writer above holds stdin open
+   instead, which is what makes the Enter land. Use `/usr/bin/script` explicitly
+   — that is BSD `script`, as on macOS; on Linux it is
+   `script -qec '<command>' /dev/null`.
+
+   Compare files with `/usr/bin/diff` and a `shasum -a 256` second witness: bare
+   `diff` is aliased to `diff-so-fancy` here and always exits 0. Then assert:
+
+   - `$HOME/.cursor/ours.txt` reads `theirs` — **restored**, not deleted.
+   - `$HOME/.cursor/settings.json` has `editor.theme` back to `solarized`.
+   - `receipts/cursor.json` is gone: a reverted receipt is consumed.
+
+   If `script` is unavailable, say so and report 8a's revert half as
+   **unverified** rather than reaching for a stub.
+
+   **8b — a statusline receipt reverts generically, and nothing
+   statusline-shaped is offered.** This is the regression the whole step exists
+   for. In a second fresh home, seed the shape a real v5.2.0 install left
+   behind: two script files the receipt records, and a `statusLine` key in
+   `settings.json` that **no receipt records**.
+
+   ```sh
+   mkdir -p "$XDG_CONFIG_HOME/ai-plugins/receipts" "$CLAUDE_CONFIG_DIR/scripts"
+   printf '// ours\n' > "$CLAUDE_CONFIG_DIR/scripts/statusline.js"
+   printf '// ours\n' > "$CLAUDE_CONFIG_DIR/scripts/context-caps.js"
+   ```
+
+   `$CLAUDE_CONFIG_DIR/settings.json`:
+
+   ```json
+   {
+     "statusLine": {
+       "type": "command",
+       "command": "<CLAUDE_CONFIG_DIR>/scripts/statusline.js"
+     }
+   }
+   ```
+
+   `receipts/statusline.json` — `file` entries only, **no `configKey`**, which
+   is what those receipts were actually observed to hold:
+
+   ```json
+   {
+     "version": 3,
+     "installedAt": "2026-01-01T00:00:00.000Z",
+     "entries": [
+       { "kind": "file", "path": "<CLAUDE_CONFIG_DIR>/scripts/statusline.js" },
+       { "kind": "file", "path": "<CLAUDE_CONFIG_DIR>/scripts/context-caps.js" }
+     ]
+   }
+   ```
+
+   Assert on `--uninstall --dry-run`:
+
+   - exactly one row for it, labelled `an install recorded in statusline.json`.
+   - **no row anywhere** matches `statusline-settings`, `statusline-script` or
+     `statusline-caps-hook`. Grep the whole run, stdout *and* stderr:
+
+     ```sh
+     node bin/installer.mjs --uninstall --dry-run 2>&1 \
+       | command grep -nE 'statusline-settings|statusline-script|statusline-caps-hook'
+     ```
+
+     Exit status 1 from that grep — no match — is the pass. **Any match is a
+     finding**: those rows left with the debris cleanup and cannot be produced
+     any more.
+
+   Then the real run, the same pty invocation as 8a, and assert:
+
+   - both scripts are gone — the receipt owned them, so reverting deletes them.
+   - `receipts/statusline.json` is gone.
+   - `$CLAUDE_CONFIG_DIR/settings.json` is **byte-identical to what you
+     seeded**: the `statusLine` key still names the now-absent script. **This is
+     expected and is not a finding.** No receipt records that key, and this CLI
+     deletes only what it wrote; re-pointing it is what installing
+     `@askviraj/claude-status` does. Report it as observed and say it matched
+     expectation.
 9. Remove the temp home.
 
 ## Output

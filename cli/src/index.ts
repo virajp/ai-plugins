@@ -154,9 +154,8 @@ export async function run(args: Args): Promise<void> {
 
   // Plugin installs *are* `claude` invocations, so there is nothing to fall back
   // to when it is absent: the run would fail either way, and refusing here fails
-  // it before anything is written. (`--force` existed to override this for the
-  // statusline, which only needed Claude to *exist*; with the bar gone there is
-  // no case left where forcing makes sense.)
+  // it before anything is written. That is why `--force` is retired — every
+  // remaining install *is* a `claude` invocation, so there is nothing to force.
   if (!hasBin("claude")) {
     process.stderr.write(
       "claude is not on PATH, and plugin installs run claude itself.\n"

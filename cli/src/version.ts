@@ -15,11 +15,8 @@
  * is deliberately not done here: it is a second bookkeeping format to parse for
  * a report, and `claude plugin list` answers it natively.
  *
- * Nothing here reports on-disk state any more. The statusline was the one thing
- * this CLI installed whose *installed* version could differ from the running
- * package's — under `pnpx` the two are routinely different — and it has moved to
- * another project. What is left is installed by Claude and by graphify, each of
- * which answers for its own.
+ * Nothing here reports on-disk state any more. Everything this CLI installs is
+ * installed by Claude or by graphify, each of which answers for its own version.
  */
 import {
   existsSync,

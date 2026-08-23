@@ -37,10 +37,10 @@ The examples use `pnpx`; if you do not use pnpm, `npx` works the same.
 is the common case there.
 
 Parsing is strict, so a flag that no longer exists reports itself by name rather
-than being silently ignored. **`--statusline`, `--no-statusline` and `--force`
-join `--platform` and `--upgrade` on that list** — the statusline has moved to
-another project, and `--force` existed only for it. Upgrading is Claude's own
-`claude plugin update`.
+than being silently ignored. **`--platform`, `--upgrade` and `--force` are the
+three on that list.** Upgrading is Claude's own `claude plugin update`, and
+`--force` existed only for the statusline, which installs from another package
+now.
 
 ## Installing plugins
 
@@ -110,21 +110,19 @@ Install all five.
 
 ## The statusline has moved
 
-Earlier versions installed a powerline statusline for Claude Code. It now lives
-in a separate project and is not installed from here; `--statusline`,
-`--no-statusline` and `--force` are retired flags.
+Earlier versions installed a powerline statusline for Claude Code, and its
+context-caps hook with it. Both now live in
+[`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status)
+— `pnpx @askviraj/claude-status --install` — and this CLI neither installs nor
+removes them.
 
-**If you installed it from here, `--uninstall` still removes it** — the script,
-the context-caps hook, and the `settings.json` keys that pointed Claude at them
-— and restores the statusline you had before it, where there is a record of one.
-Your configuration is left where it is. See
-[Undoing an install](#undoing-an-install).
-
-Removing the wiring is the part that matters most, and it is newer than the
-rest: an older `--uninstall` deleted the script but left `statusLine` naming it,
-so Claude went on trying to run a file that was no longer there. Every key is
-matched against the value this toolkit wrote before it is offered, so a bar you
-have since installed from somewhere else is never touched.
+**If you installed the bar from here, `--uninstall` no longer tidies up after
+it.** A `statusline.json` receipt that version left is still read and reverted
+like any other legacy receipt, which removes the script files it recorded — but
+nothing unwires the `statusLine` and `subagentStatusLine` keys or the
+context-caps hook entry, and no receipt is known to have recorded them. So an
+upgrade can leave `settings.json` naming a script that is gone; installing
+`@askviraj/claude-status` re-points it.
 
 ## Seeing what a run would do
 
@@ -141,11 +139,12 @@ can see from where it runs:
   user-scoped plugin installs.
 - **At repo level**, when run inside a repo — project-scoped plugin installs,
   and graphify's hook, graph and `.graphifyignore`.
-- **Plus anything an older install left behind** — **this toolkit's own
-  statusline**, the copied OpenCode plugin tree, the OpenCode and Oh-My-Pi
-  statuslines, and the Cursor registration. Those surfaces are all discontinued;
-  this is how they get removed cleanly rather than orphaned. It is kept for a
-  release or two and then dropped.
+- **Plus anything an older install left behind**, read from the receipts those
+  versions wrote — the copied Claude marketplace payload, the copied OpenCode
+  plugin tree, the Cursor registration, the statusline. Every one of those is
+  discontinued; the reader is how a machine still carrying a receipt gets
+  cleaned rather than orphaned. It is kept for a release or two and then
+  dropped.
 
 Machine state starts **selected**; anything whose removal would edit a
 **git-tracked** file in the current checkout starts **unselected**, shown `[ ]`.
@@ -157,8 +156,8 @@ asked for. The numbers you enter **toggle** a row, either way.
 Each piece is removed through whatever owns it: `claude plugin uninstall` and
 `claude plugin marketplace remove` for plugins, `graphify hook uninstall` for
 the hook, and for anything with a receipt a **restore from that receipt** rather
-than a delete — so the statusline you had before this toolkit's comes back,
-rather than leaving you with none at all and no record of what it was.
+than a delete — so whatever the recorded install displaced comes back, rather
+than leaving you with nothing at all and no record of what was there.
 
 With no terminal to ask on, it **fails** rather than guessing — unless there is
 nothing to remove, in which case it says so and exits 0, because a run with
@@ -172,22 +171,13 @@ pnpx @askviraj/ai-plugins --uninstall
 pnpx @askviraj/ai-plugins --uninstall --dry-run
 ```
 
-**What an uninstall deliberately leaves**, all of it from the retired
-statusline:
-
-- **Your statusline configuration**, at both tiers — `~/.config/statusline.json`
-  and any repo's own `.config/statusline.json`. These were seeded once and
-  became yours: they hold your palette, your layout, a project name you chose.
-  This tool did not write what is in them and will not delete them, all the more
-  so now that the statusline lives in another project you may want to carry
-  those settings into.
-- **`~/.claude/usage/`**, the usage history the bar accumulated. Data rather
-  than an installed artifact, and nothing reads it once the bar is gone.
-
-All of it is inert. Delete it by hand if you want the space back.
-
-**What it never touches**: plugins enabled from another marketplace, a
-statusline this tool did not install, and any directory another tool owns.
+**What it never touches**: plugins enabled from another marketplace, any
+directory another tool owns, and everything the retired statusline left —
+`~/.config/statusline.json`, any repo's own `.config/statusline.json`, and
+`~/.claude/usage/`. This CLI no longer writes, reads or reasons about any of
+those, so it does not delete them either. They hold your palette, your layout
+and a usage history you accumulated, and they are a plausible input to whatever
+bar you configure next. Delete them by hand if you want the space back.
 
 ## Versions
 

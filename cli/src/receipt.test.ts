@@ -207,11 +207,11 @@ describe("reverting a receipt", () => {
     expect(readFileSync(file, "utf8")).toBe(original);
   });
 
-  it("restores a foreign statusLine command from a v5.2.0 receipt", () => {
-    // The one behaviour the statusline's removal had to not break: a machine
-    // upgrading from v5.2.0 carries `statusline.json`, and reverting it is what
-    // puts the user's own bar back. Nothing writes that receipt any more, so
-    // this fixture is the shape as it exists on disk.
+  it("restores the value a configKey entry displaced, rather than deleting", () => {
+    // The invariant the receipt system exists for. An older version overwrote a
+    // key the user had already set; reverting has to put *their* value back, not
+    // remove the key. Nothing writes a receipt any more, so this fixture is the
+    // shape as it exists on disk.
     const file = join(root, "settings.json");
     writeFileSync(
       file,
@@ -220,7 +220,7 @@ describe("reverting a receipt", () => {
           {
             statusLine: {
               type: "command",
-              command: "${HOME}/.claude/scripts/statusline",
+              command: "${HOME}/.claude/scripts/ours",
             },
           },
           null,

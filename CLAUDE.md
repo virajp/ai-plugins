@@ -15,9 +15,7 @@ servers, and `vwf` — a full Product → Blueprint → Plan → Execute workflo
 
 The repo also ships a small **installer CLI** (`@askviraj/ai-plugins`), which
 sequences Claude's own plugin commands and wires graphify — see The installer
-CLI. It used to ship a **statusline** too; that has moved to
-`@askviraj/claude-status`, and what is left behind is the receipt reader that
-uninstalls it from a machine that already has it.
+CLI.
 
 ### One authored tree
 
@@ -75,37 +73,20 @@ toolkit put on the machine.
 
 **Nothing it does writes a receipt.** Both install paths belong to another tool
 — `claude` for plugins, `graphify` for its own wiring — and each keeps its own
-records, which is what `--uninstall` reads live. The statusline was the last
-writer, and it left with the bar.
+records, which is what `--uninstall` reads live.
 
 What survives is the **reader**, and it is load-bearing rather than vestigial: a
 machine that installed an earlier version still carries receipts recording what
 was there *before* that install, and `--uninstall` replays them so the user gets
-their own state back rather than a deletion. `statusline.json` is the newest of
-them and the one most machines will have — leave it out of `LEGACY_RECEIPTS` and
-an upgrading user's own bar never comes back, while the run reports a clean
-uninstall.
+their own state back rather than a deletion. What it can still meet are the
+retired render targets' receipts — `claude.json`, `cursor.json`, `ohmypi.json`
+and `opencode.json` among them. Nothing this CLI does adds to that pile, and
+**it deletes only what it wrote** — which, since it writes nothing, means it
+deletes nothing a receipt or another tool does not account for.
 
-**But the reader alone was not enough, and the gap was real rather than
-theoretical.** The statusline receipt records the two script files and — on
-every machine checked — **no `configKey` entries at all**, so reverting it
-deleted the scripts and left `settings.json` still naming them: Claude then
-re-ran a path that no longer existed, every few seconds. So `uninstall.ts` also
-carries a **debris cleanup** the receipts never covered — the `settings.json`
-wiring, and the two scripts when no receipt claims them. The split between the
-two is **ownership**: a key the receipt records is the receipt's to *restore*,
-never this path's to delete. Every key is fingerprinted against the value this
-toolkit wrote, at enumeration and again at the write — the second check is what
-stops a receipt revert earlier in the same run from having its restored bar
-deleted a moment later. **Configuration is deliberately left at both tiers** —
-`~/.config/statusline.json` and a repo's own `.config/statusline.json` — as is
-`~/.claude/usage/`. The rule is that this CLI deletes only what it wrote; those
-hold settings the user chose, and are a plausible input to whatever bar they
-configure next.
-
-> **Working on it:** the receipt entry kinds, the receipt-completeness bug
-> class, the interactive uninstall and the packaging traps are in
-> `.claude/skills/installer-cli/`, which auto-applies while you edit `cli/`.
+> **Working on it:** the receipt entry kinds, the interactive uninstall and the
+> packaging traps are in `.claude/skills/installer-cli/`, which auto-applies
+> while you edit `cli/`.
 
 ### Tasks
 
@@ -706,11 +687,12 @@ would be worse than an honest note.
 receipt** — both install paths belong to a tool that keeps its own records, and
 those records are what `--uninstall` reads live.
 
-**It shipped a statusline until 6.0.0**, which is where the `tools/` tree, the
-consent gate, `merge.ts`, a JSON schema, a 23 KB user doc and every write path
-in this CLI went. The bar is now `@askviraj/claude-status`
-(`pnpx @askviraj/claude-status --install`), and with it the caps hook
-`/vwf:execute` depends on — see the contract stated in vwf's `execute` skill.
+**The statusline is a separate package** — `@askviraj/claude-status`
+(`pnpx @askviraj/claude-status --install`) — and it is what provides the caps
+hook `/vwf:execute` depends on; see the contract stated in vwf's `execute`
+skill. Nothing here installs, configures or removes it — so a machine upgrading
+from a version that did keeps a `statusLine` key naming a script this CLI no
+longer deletes, and re-points it by installing `@askviraj/claude-status`.
 
 > **The user-facing reference is `docs/cli/`** — `usage.md` for the flags,
 > `targets.md` for what lands where, `internals.md` for the source map. What
@@ -718,13 +700,13 @@ in this CLI went. The bar is now `@askviraj/claude-status`
 > `internals.md`'s path table is the fuller one.
 
 **An invocation that installs nothing prints the help and exits 1.** `strict`
-parsing is on, so a retired flag — `--platform`, `--upgrade`, and now
-`--statusline`, `--no-statusline`, `--force` — reports itself by name rather
-than being a silent no-op; `--user` and `--project` are repeatable
-(`multiple: true`), with the both-survive regression test that guards the
-silent-drop bug the old parser had. `--force` is worth its own sentence: it
-existed only to configure the bar on a machine where Claude was off `PATH`, and
-every remaining install *is* a `claude` invocation, so nothing is left to force.
+parsing is on, so a retired flag — `--platform`, `--upgrade`, `--force` —
+reports itself by name rather than being a silent no-op; `--user` and
+`--project` are repeatable (`multiple: true`), with the both-survive regression
+test that guards the silent-drop bug the old parser had. `--force` is worth its
+own sentence: it existed only to configure the statusline on a machine where
+Claude was off `PATH`, and every remaining install *is* a `claude` invocation,
+so nothing is left to force.
 
 **`--uninstall` is interactive**: it enumerates what it can see (the marketplace
 registration, user- and project-scoped plugin installs, graphify's hook and
@@ -734,21 +716,19 @@ than an edit to `enabledPlugins`. No TTY refuses rather than guesses, but only
 once there is something to remove; `--dry-run` is the scriptable path.
 
 **It also reads legacy receipts**, and that reader is now the whole receipt
-story. It cleans this toolkit's own statusline alongside the discontinued
-OpenCode, Oh-My-Pi and Cursor surfaces — those lost their named entries once
-Claude Code was the only target, but a receipt of theirs on disk is still read
-and reverted under a generic label, since the map names receipts rather than
-gating them — restoring each from its recorded prior state so an existing
-install migrates rather than being orphaned; `uninstall.ts` states the drop
-condition and names what to delete.
-
-**`statusline.json` joining `LEGACY_RECEIPTS` is the load-bearing half of the
-statusline's removal.** A machine on 5.2.0 has our bar configured and that
-receipt recording the bar it displaced. Take it out of that map and
-`--uninstall` stops finding it: the user's own statusline never comes back and
-`settings.json` is left pointing at a script that no longer exists — while the
-run reports success. It is why `i:test`'s gutted E2E was *replaced* rather than
-deleted.
+story. It cleans up after the discontinued OpenCode, Oh-My-Pi and Cursor
+surfaces — those lost their named entries once Claude Code was the only target,
+but a receipt of theirs on disk is still read and reverted under a generic
+label, since `LEGACY_RECEIPTS` supplies a display label and the `filesOnly`
+flag, **never** the gate on what is found: `legacyItems` enumerates every
+readable `*.json` in the receipt directory, so dropping an entry downgrades a
+row's label and changes no behaviour — deliberately, since refusing to read a
+receipt because its target was discontinued would strand exactly the machine
+most in need of cleaning. Each is restored from its recorded prior state, so an
+existing install migrates rather than being orphaned. The one remaining named
+entry is `claude.json`, and it is `filesOnly` — replaying its `command` entries
+would uninstall each plugin a second time and report the failure as a broken
+run; `uninstall.ts`'s comment on the map is authoritative for that.
 
 **Every GitHub call sends `$GITHUB_API_TOKEN` when it is set**, because GitHub's
 anonymous limit is per source IP and shared egress exhausts it between users.
@@ -762,10 +742,10 @@ publishes.** tsup bundles `cli/src/index.ts` → `bin/installer.mjs`; `bin/` is
 gitignored and `i:build` regenerates it. **The artifact was renamed; the command
 was not** — `package.json`'s `bin` *key* stays `ai-plugins`, which is what users
 invoke and what npm's Trusted Publisher is bound to. The published tarball is
-`bin` alone — **4 files**, down from 7 with the statusline and ~12 MB when the
-four render trees shipped inside it. The committed-tree-validated-by-CI
-guarantee moved channel rather than disappearing: what users install is `main`,
-and `plugins.yml` validates `main` on every push.
+`bin` alone — **4 files**, where the four render trees once shipped ~12 MB
+inside it. The committed-tree-validated-by-CI guarantee moved channel rather
+than disappearing: what users install is `main`, and `plugins.yml` validates
+`main` on every push.
 
 | Path                     | Is                                                                  |
 | ------------------------ | ------------------------------------------------------------------- |
