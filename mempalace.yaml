@@ -9,9 +9,28 @@
 # Routing walks a file's path parts outermost-first and returns on the first room
 # whose name or keywords match, so every top-level directory is claimed below on
 # purpose — that is what stops `plugins/vwf/skills/doctor/` landing in the
-# protocol `doctor` room. `docs` is deliberately left unclaimed so that
+# protocol `doctor` room. `docs` itself stays unclaimed so that
 # docs/memory/<room>/ reaches its own room, docs/cli/ reaches `installer`, and
 # docs/plugins/ reaches `plugins`.
+#
+# But leaving `docs` unclaimed is only half a rule, and the other half had to be
+# learned from a mine: an unclaimed part means routing walks *past* it, so any
+# docs/ subtree whose own name — or, worse, whose filename — brushes a protocol
+# room's keyword is captured by it. Two did.
+#
+#   docs/plans/**                            → `planning`, on the `plans` keyword
+#   docs/how-to/operate/sessions-and-handoff.md → `handoff`, on the *filename*
+#
+# The second is the one that shows. A guide *about* the handoff mechanism ranked
+# above the actual handoffs in the room they live in, so a recall there answered
+# with doctrine instead of state. Nothing errored; the room just stopped meaning
+# one thing.
+#
+# So every docs/ subtree is now claimed as deliberately as every top-level
+# directory, and the two keywords that did the capturing are gone: `planning`
+# keeps only its own name, and `handoff` drops the broad `session`. A protocol
+# room should be reachable by its own name — which is how docs/memory/<room>/
+# still finds it — and by little else.
 
 wing: ai-plugins
 
@@ -59,7 +78,9 @@ rooms:
     keywords: [ problems, findings ]
   - name: planning
     description: Plan rationale and deferred options, from docs/memory/planning/
-    keywords: [ planning, plans ]
+    # `plans` removed: it captured all of docs/plans/, which is cycle-plan
+    # documents rather than the rationale vwf files here. They go to `repo-plans`.
+    keywords: [ planning ]
   - name: gaps
     description: Blueprint and plan holes surfaced during execution, plus scope
       parked during elicitation
@@ -74,7 +95,10 @@ rooms:
     keywords: [ doctor ]
   - name: handoff
     description: Session handoffs, including the reserved next handoff
-    keywords: [ handoff, handoffs, session ]
+    # `session` removed: it matched the filename sessions-and-handoff.md, filing
+    # a how-to guide into the room the actual handoffs live in, where it
+    # outranked them. The room name alone still claims docs/memory/handoff/.
+    keywords: [ handoff, handoffs ]
 
   # ---------------------------------------------------------------------------
   # Path-derived rooms — what this repo actually holds.
@@ -99,6 +123,19 @@ rooms:
     description: This repo's own Claude Code skills and agents under .claude/,
       plus CLAUDE.md
     keywords: [ claude ]
+  - name: guides
+    description: The task-shaped operator guides under docs/how-to/ - the
+      greenfield and brownfield walkthroughs, and the operating loops
+    # Claims the `how-to` part so routing returns there. Without it these walk
+    # past `docs` and past `how-to` and are then routed by whatever their own
+    # filename brushes — which put ten of them in `plugins` and one in `handoff`.
+    keywords: [ how-to, guides ]
+  - name: repo-plans
+    description: Cycle-plan documents under docs/plans/, including the archived
+      and multi-workstream ones
+    # Named `repo-plans` rather than `plans` so it cannot be misread as the
+    # protocol room `planning`, which holds vwf's own plan rationale.
+    keywords: [ plans ]
   - name: general
     description: Files that don't fit other rooms
     keywords: []
