@@ -62,7 +62,7 @@ to vwf, invoked by name rather than by a file edit:
 
 | Skill                       | What it returns                                                                                                                                                                                              |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `typescript-stack-menu`     | The ten templates below, as a vwf menu payload — slug, axis, role, name, one-line summary. Nothing else; choosing is the user's job. Invoked by `/vwf:architecture` and `/vwf:setup`.                        |
+| `typescript-stack-menu`     | The twelve templates below, as a vwf menu payload — slug, axis, role, name, one-line summary. Nothing else; choosing is the user's job. Invoked by `/vwf:architecture` and `/vwf:setup`.                     |
 | `typescript-stack-template` | One template as a vwf template payload — axis fields, per-capability harness mechanisms, and the conventions `plan` and `execute` read. Invoked after the user picks from the menu.                          |
 | `typescript-ux-gate`        | The **UX gate for a web slice**: boots the project's own `dev` task, captures each changed screen in every reachable state, and runs a WCAG A/AA accessibility scan. Invoked by vwf's `execute-ux-reviewer`. |
 
@@ -98,7 +98,7 @@ rules a TypeScript repo runs and how it runs them.
 
 ## Stack templates
 
-The plugin owns **eleven** vwf stack templates across three axes. vwf itself
+The plugin owns **twelve** vwf stack templates across three axes. vwf itself
 ships none — it states the axes and the platform vocabulary, and this plugin
 supplies the rows for TypeScript.
 
@@ -125,11 +125,18 @@ dependency. vwf presents both and the user picks; neither is a default.
 
 Deploy and repo axes:
 
-| Slug          | Axis     | What it pins                                                            |
-| ------------- | -------- | ----------------------------------------------------------------------- |
-| `npm-package` | `deploy` | The registry as the host — for a project users install, not one you run |
-| `pnpm-turbo`  | `repo`   | pnpm workspace + Turborepo                                              |
-| `bun`         | `repo`   | bun as package manager, runtime, bundler and test runner                |
+| Slug             | Axis     | What it pins                                                            |
+| ---------------- | -------- | ----------------------------------------------------------------------- |
+| `npm-package`    | `deploy` | The registry as the host — for a project users install, not one you run |
+| `pnpm-turbo`     | `repo`   | pnpm workspace + Turborepo                                              |
+| `pnpm-workspace` | `repo`   | pnpm workspace, task runner as the only orchestration                   |
+| `bun`            | `repo`   | bun as package manager, runtime, bundler and test runner                |
+
+**`repo` has two pnpm templates for the same reason `cli` has two project
+templates.** `pnpm-turbo` is for a workspace with enough members that
+Turborepo's cache and `dependsOn` graph pay for themselves; `pnpm-workspace` is
+for one where they do not, and the task runner is the whole orchestration layer.
+Neither is a default.
 
 `typescript-effect` is the **shared kernel**: every domain schema and every
 third-party integration lives in that package as an Effect service, so

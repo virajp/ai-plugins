@@ -91,6 +91,12 @@ templates:
     summary: A pnpm workspace with Turborepo orchestrating builds across
       members — the larger ecosystem, and the answer whenever the repo needs a
       tool bun does not cover natively.
+  - slug: pnpm-workspace
+    axis: repo
+    name: pnpm · workspace
+    summary: A pnpm workspace with no build orchestrator — the task runner is
+      the only orchestration. For a handful of members with a shallow
+      dependency graph, where Turborepo's cache and task graph earn nothing.
   - slug: bun
     axis: repo
     name: bun · workspaces
