@@ -1,0 +1,54 @@
+config_format: 15
+blueprint_format: 23
+
+product:
+  name: ai-plugins
+
+topology: monorepo
+topology_reason: One pnpm workspace holds the authored plugin tree and the
+  installer that publishes from it; they release on separate cadences but share
+  every gate, so splitting them would duplicate the toolchain to no end.
+
+ui: false
+integrations: true
+
+repo:
+  stack:
+    template: repo/pnpm-workspace
+    package_manager: pnpm
+    tools: [ mise, dprint, eslint, pre-commit, gitleaks, grype ]
+
+projects:
+  plugins:
+    stack:
+      template: project/claude-code-plugin
+      backing_template: []
+      deploy_template: n/a
+      languages: [ markdown, bash ]
+      frameworks: []
+      dependencies: []
+      note: A plugin is served from the marketplace on `main`, never deployed,
+        so the deploy axis is n/a rather than unset.
+    cicd: github-actions
+  installer:
+    stack:
+      template: project/typescript-parseargs-cli
+      backing_template: []
+      deploy_template: deploy/npm-package
+      languages: [ typescript ]
+      frameworks: []
+      dependencies: [ tsup, vitest ]
+      note: node:util parseArgs rather than a CLI framework — the flag surface
+        is flat, and the published tarball is four files.
+    cicd: github-actions
+
+harness:
+  dev: false
+  e2e_local: false
+  local_stack: false
+  e2e_staging: false
+  health: false
+  screenshots: false
+
+memory:
+  wing: ai-plugins
