@@ -112,6 +112,22 @@ export async function run(args: Args): Promise<void> {
     progress,
   };
 
+  // Printed last on any run that asked for a statusline, and always followed by
+  // a non-zero exit: part of what was requested did not happen here and cannot,
+  // so a script must not read the run as fully satisfied.
+  const reportStatuslineMoved = (): void => {
+    process.stderr.write(
+      "\nThe statusline is not installed from here any more.\n\n"
+        + "It moved to @askviraj/claude-status, which is also where the caps "
+        + "hook\n/vwf:execute depends on now comes from:\n\n"
+        + "  pnpx @askviraj/claude-status --install\n\n"
+        // PLACEHOLDER: the site is not live yet. Until it is, this link does
+        // not resolve — swap it for the real URL at launch, or drop it and
+        // leave the install command, which works today.
+        + "  https://claude-status.virajp.dev\n",
+    );
+  };
+
   if (args.version) {
     const report = await buildVersionReport({
       sourceRoot: context.sourceRoot,
@@ -137,6 +153,14 @@ export async function run(args: Args): Promise<void> {
   const wantsPlugins = pluginsRequested(request);
 
   if (!wantsPlugins) {
+    if (args.statusline) {
+      // `--statusline` on its own *is* a request, so it gets its answer rather
+      // than the whole flag table with "nothing to do" under it — which is what
+      // the generic empty-invocation path below would print, burying the one
+      // line this user came for.
+      reportStatuslineMoved();
+      process.exit(1);
+    }
     // No request at all. There is no install verb — asking for something *is*
     // the request — so this covers a bare invocation and one carrying only
     // modifiers, `--dry-run` being the one that reads like a request and is not.
@@ -193,6 +217,12 @@ export async function run(args: Args): Promise<void> {
     process.stdout.write(`${renderDiff(outcomes)}\n`);
   }
   report(outcomes);
+  if (args.statusline) {
+    // Last, and after the install report: the plugins the user also asked for
+    // did land, and the exit code says the statusline half did not.
+    reportStatuslineMoved();
+    process.exit(1);
+  }
   process.exit(failed(outcomes) ? 1 : 0);
 }
 

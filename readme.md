@@ -323,8 +323,9 @@ claude plugin install --scope project flutter@virajp-plugins
 ## Statusline
 
 **The statusline has moved to its own project.** It is not installed from here
-any more, and `--platform`, `--upgrade` and `--force` are retired flags that now
-exit non-zero naming themselves.
+any more — `pnpx @askviraj/ai-plugins --statusline` says so and exits non-zero,
+which is all that flag does now. `--platform`, `--upgrade` and `--force` are
+retired flags that exit non-zero naming themselves.
 
 ```sh
 pnpx @askviraj/claude-status --install

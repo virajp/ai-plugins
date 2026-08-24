@@ -29,12 +29,15 @@ The examples use `pnpx`; if you do not use pnpm, `npx` works the same.
 | `--user <name>`    | Install a plugin at user scope; repeatable                        |
 | `--project <name>` | Install a plugin at project scope, for this repo only; repeatable |
 | `--uninstall`      | List everything installed and remove what you do not deselect     |
+| `--statusline`     | Report where the statusline moved; it is its own package now      |
 | `--dry-run`        | Show the full diff without writing anything                       |
 | `-v`, `--version`  | This CLI's version, and each plugin's version on `main`           |
 | `-h`, `--help`     | The usage text                                                    |
 
 **An invocation that installs nothing prints the help and exits 1.** A bare run
-is the common case there.
+is the common case there. The one exception is `--statusline`: it installs
+nothing either, but it is a question rather than an empty run, so it answers
+with where the bar went and exits 1 without the flag table.
 
 Parsing is strict, so a flag that no longer exists reports itself by name rather
 than being silently ignored. **`--platform`, `--upgrade` and `--force` are the
@@ -114,7 +117,9 @@ Earlier versions installed a powerline statusline for Claude Code, and its
 context-caps hook with it. Both now live in
 [`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status)
 — `pnpx @askviraj/claude-status --install` — and this CLI neither installs nor
-removes them.
+removes them. `--statusline` is kept only to say so: it prints that redirection
+and exits 1. It composes — `--all --statusline` still installs the plugins and
+prints the install report, then the notice last, and still exits 1.
 
 **If you installed the bar from here, `--uninstall` no longer tidies up after
 it.** A `statusline.json` receipt that version left is still read and reverted

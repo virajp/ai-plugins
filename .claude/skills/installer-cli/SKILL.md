@@ -32,7 +32,11 @@ for a plugin install — Claude's settings are the record, and `--uninstall` rea
 them live.
 
 The status bar was once the fourth thing. It lives in `@askviraj/claude-status`
-now, and that package is where anyone looking for it should be sent.
+now, and that package is where anyone looking for it should be sent — which
+`--statusline` does itself rather than leaving to the docs. It was briefly
+retired outright, and that was wrong: `strict` answered a user who had not heard
+about the move with `unknown option` and nowhere to go, which is the one
+population that most needed the pointer.
 
 ## Nothing writes a receipt any more
 
@@ -138,6 +142,7 @@ found. Do not reason about that map as if it gated the reader.
 | `--user <name>`    | install a plugin at user scope; **repeatable** (`multiple: true`)                                                          |
 | `--project <name>` | install a plugin at project scope; repeatable. Project wins a name requested at both scopes                                |
 | `--uninstall`      | enumerate → deselect → remove. Interactive; no TTY refuses once there is something to remove                               |
+| `--statusline`     | installs nothing — reports where the bar moved and exits **1**. Composes: other installs still run, the notice prints last |
 | `--dry-run`        | writes nothing, diff to stdout, progress to stderr. The scriptable half of `--uninstall`, and of a plugin install          |
 | `--version`        | this CLI against npm, and the plugins available on `main`; exits 1 when the network is unreachable. Reads nothing off disk |
 | `-h, --help`       | usage on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                         |
@@ -168,7 +173,9 @@ a receipt to do what naming the plugins again did; upgrading is Claude's own
 path reports an already-installed plugin as satisfied with a note pointing there
 — never auto-updated.
 
-**An invocation that installs nothing prints the help and exits 1.**
+**An invocation that installs nothing prints the help and exits 1** — with one
+exception: `--statusline` alone is a *request*, not an empty invocation, so it
+prints its own answer instead of the flag table with "nothing to do" under it.
 
 ## References
 

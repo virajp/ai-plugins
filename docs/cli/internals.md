@@ -30,10 +30,12 @@ doing as little as possible itself.
 **`args.ts` parses.** One table drives both `parseArgs` and the help text, so a
 flag cannot be parsed but undocumented. `strict` is on, so a retired flag
 reports itself by name rather than being silently ignored — `--platform`,
-`--upgrade` and `--force` all answer that way. `--user` and `--project` are
-repeatable via `multiple: true` — the array kind the parser this replaced could
-not express, which is how it once dropped names silently. The end-user view of
-the same flags is [usage.md](./usage.md).
+`--upgrade`, `--force` and `--no-statusline` all answer that way. `--statusline`
+is declared instead, and installs nothing: strict would otherwise answer a user
+looking for the bar with `unknown option` and nowhere to go. `--user` and
+`--project` are repeatable via `multiple: true` — the array kind the parser this
+replaced could not express, which is how it once dropped names silently. The
+end-user view of the same flags is [usage.md](./usage.md).
 
 **`index.ts` routes**: resolve, execute, report, exit. It reads flags into one
 `Context` (source root, `$HOME`, cwd, timestamp, logger, command runner — all

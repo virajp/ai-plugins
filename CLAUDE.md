@@ -736,23 +736,26 @@ those records are what `--uninstall` reads live.
 **The statusline is a separate package** — `@askviraj/claude-status`
 (`pnpx @askviraj/claude-status --install`) — and it is what provides the caps
 hook `/vwf:execute` depends on; see the contract stated in vwf's `execute`
-skill. Nothing here installs, configures or removes it — so a machine upgrading
-from a version that did keeps a `statusLine` key naming a script this CLI no
-longer deletes, and re-points it by installing `@askviraj/claude-status`.
+skill. Nothing here installs, configures or removes it; `--statusline` survives
+only to say so, printing the redirect and exiting 1. A machine upgrading from a
+version that did keeps a `statusLine` key naming a script this CLI no longer
+deletes, and re-points it by installing `@askviraj/claude-status`.
 
 > **The user-facing reference is `docs/cli/`** — `usage.md` for the flags,
 > `targets.md` for what lands where, `internals.md` for the source map. What
 > follows is the shape a maintainer needs in context, not a second copy of them;
 > `internals.md`'s path table is the fuller one.
 
-**An invocation that installs nothing prints the help and exits 1.** `strict`
-parsing is on, so a retired flag — `--platform`, `--upgrade`, `--force` —
-reports itself by name rather than being a silent no-op; `--user` and
-`--project` are repeatable (`multiple: true`), with the both-survive regression
-test that guards the silent-drop bug the old parser had. `--force` is worth its
-own sentence: it existed only to configure the statusline on a machine where
-Claude was off `PATH`, and every remaining install *is* a `claude` invocation,
-so nothing is left to force.
+**An invocation that installs nothing prints the help and exits 1** — except
+`--statusline`, which installs nothing but is a request, so it answers with
+where the bar went instead of the flag table. `strict` parsing is on, so a
+retired flag — `--platform`, `--upgrade`, `--force`, `--no-statusline` — reports
+itself by name rather than being a silent no-op; `--user` and `--project` are
+repeatable (`multiple: true`), with the both-survive regression test that guards
+the silent-drop bug the old parser had. `--force` is worth its own sentence: it
+existed only to configure the statusline on a machine where Claude was off
+`PATH`, and every remaining install *is* a `claude` invocation, so nothing is
+left to force.
 
 **`--uninstall` is interactive**: it enumerates what it can see (the marketplace
 registration, user- and project-scoped plugin installs, graphify's hook and

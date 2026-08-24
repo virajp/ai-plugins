@@ -34,7 +34,8 @@ Earlier versions of this CLI also installed a powerline statusline for Claude
 Code. It now lives in
 [`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status)
 — `pnpx @askviraj/claude-status --install` — and nothing here installs it or
-cleans up after the versions that did.
+cleans up after the versions that did. `--statusline` prints that redirection
+and exits 1; that is the only thing the flag still does.
 
 So if you installed the bar from here, an upgrade can leave your `settings.json`
 naming a script this CLI no longer ships; installing that package re-points it.
