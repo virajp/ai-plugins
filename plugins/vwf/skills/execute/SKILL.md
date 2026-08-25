@@ -201,9 +201,11 @@ the Resume check).
   measure its own context window — those figures reach the session only on the
   statusline payload — so this signal is **delivered by an external
   `PostToolUse` hook** that reads them and injects a cap directive.
-  `@askviraj/claude-status` provides one
-  (`pnpx @askviraj/claude-status --install`); for autonomous runs, install it or
-  this pause will not fire. On the injected cap directive, run `/vwf:handoff`
+  `claude-status` provides one
+  (`brew install virajp/tap/claude-status`, **macOS on Apple silicon only**);
+  for autonomous runs, install it or this pause will not fire — and on any
+  other platform it cannot be installed at all, so plan long runs around a
+  pause that will never arrive. On the injected cap directive, run `/vwf:handoff`
   with no argument to snapshot state as the reserved `next` handoff, then stop;
   resume later with `/vwf:recall next`.
 

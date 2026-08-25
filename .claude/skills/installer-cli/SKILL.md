@@ -31,12 +31,12 @@ that: the copied payload, the adapters, the `requires:` gate, and any receipt
 for a plugin install — Claude's settings are the record, and `--uninstall` reads
 them live.
 
-The status bar was once the fourth thing. It lives in `@askviraj/claude-status`
-now, and that package is where anyone looking for it should be sent — which
-`--statusline` does itself rather than leaving to the docs. It was briefly
-retired outright, and that was wrong: `strict` answered a user who had not heard
-about the move with `unknown option` and nowhere to go, which is the one
-population that most needed the pointer.
+The status bar was once the fourth thing. It lives in `claude-status` now
+(`brew install virajp/tap/claude-status`), and that package is where anyone
+looking for it should be sent — which `--statusline` does itself rather than
+leaving to the docs. It was briefly retired outright, and that was wrong:
+`strict` answered a user who had not heard about the move with `unknown option`
+and nowhere to go, which is the one population that most needed the pointer.
 
 ## Nothing writes a receipt any more
 
@@ -151,9 +151,9 @@ found. Do not reason about that map as if it gated the reader.
 That legibility is the entire point of `strict` being on — a user with one in a
 script is told, rather than watching a run do less than they asked for.
 `--force` is worth a sentence of its own: it existed only for the status bar
-that has since moved to `@askviraj/claude-status`, so it could be configured on
-a machine where Claude was off `PATH`. Every remaining install *is* a `claude`
-invocation, so there is no case left where forcing means anything.
+that has since moved to `claude-status`, so it could be configured on a machine
+where Claude was off `PATH`. Every remaining install *is* a `claude` invocation,
+so there is no case left where forcing means anything.
 
 **The parser is `node:util`'s `parseArgs`, in `args.ts`, and repeatability is
 why.** It was `citty` until `--user vwf --user devtools` was found to install

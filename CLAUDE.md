@@ -733,13 +733,13 @@ would be worse than an honest note.
 receipt** — both install paths belong to a tool that keeps its own records, and
 those records are what `--uninstall` reads live.
 
-**The statusline is a separate package** — `@askviraj/claude-status`
-(`pnpx @askviraj/claude-status --install`) — and it is what provides the caps
+**The statusline is a separate package** — `claude-status`
+(`brew install virajp/tap/claude-status`) — and it is what provides the caps
 hook `/vwf:execute` depends on; see the contract stated in vwf's `execute`
 skill. Nothing here installs, configures or removes it; `--statusline` survives
 only to say so, printing the redirect and exiting 1. A machine upgrading from a
 version that did keeps a `statusLine` key naming a script this CLI no longer
-deletes, and re-points it by installing `@askviraj/claude-status`.
+deletes, and re-points it by installing `claude-status`.
 
 > **The user-facing reference is `docs/cli/`** — `usage.md` for the flags,
 > `targets.md` for what lands where, `internals.md` for the source map. What
@@ -985,7 +985,7 @@ Available plugin names: `vwf`, `typescript`, `flutter`, `design-tools`,
 `observability`, `orchestration`, `object-storage`, `stackgen`, `claude-code`.
 Every one of them is authored here — no name on this list is re-listed from
 another repo. (The statusline is not among them and is not a plugin — it is a
-separate package, `pnpx @askviraj/claude-status --install`.)
+separate package, `brew install virajp/tap/claude-status`.)
 
 Installing `vwf` pulls in its dependency (`devtools`) automatically from the
 same `virajp-plugins` marketplace — no other marketplace needs to be registered.

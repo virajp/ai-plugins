@@ -134,10 +134,10 @@ You do not have to watch the bar during an unattended
 resource cap, hands off on its own when it hits one, and is resumed with the
 same `/vwf:recall`. That pause is delivered by an external `PostToolUse` caps
 hook, because a command cannot measure its own context window —
-`pnpx @askviraj/claude-status --install` provides one. **Without it the pause
-never fires** and the run keeps going into a full window; vwf cannot detect its
-absence, so this is worth installing before the first long run rather than
-after.
+`brew install virajp/tap/claude-status` provides one (macOS on Apple silicon
+only). **Without it the pause never fires** and the run keeps going into a full
+window; vwf cannot detect its absence, so this is worth installing before the
+first long run rather than after.
 
 ### Named handoff, or `next`
 

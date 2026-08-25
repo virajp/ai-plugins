@@ -1,7 +1,8 @@
 # Plan: generalize vwf, finish the onboarding, release once
 
-**Status: 2026-08-24. WS1 and WS2 are DEFERRED — they move to their own plan, to
-be written when the work is picked up. WS3 is held. WS0 is done.**
+**Status: 2026-08-25. WS0 and WS3 are DONE — the flag shipped and `6.0.0` is
+released. WS1 and WS2 remain DEFERRED: they move to their own plan, to be
+written when the work is picked up.**
 
 Supersedes the pending half of `docs/plans/plugin-support/`. WS1, WS2 and WS3 of
 that series landed; only its WS4 remains, and it is restated here — deferred
@@ -12,12 +13,12 @@ touching anything.
 
 ## What is live, and what is not
 
-| WS | Scope                       | State                                         |
-| -- | --------------------------- | --------------------------------------------- |
-| 0  | The statusline pointer flag | **Done** — this is the only work that ran     |
-| 1  | Generalize vwf              | **Deferred** — its own plan, not yet written  |
-| 2  | Finish onboarding this repo | **Deferred** — blocked on WS1                 |
-| 3  | Release `6.0.0`             | **Held** — waits on `@askviraj/claude-status` |
+| WS | Scope                       | State                                        |
+| -- | --------------------------- | -------------------------------------------- |
+| 0  | The statusline pointer flag | **Done** — this is the only work that ran    |
+| 1  | Generalize vwf              | **Deferred** — its own plan, not yet written |
+| 2  | Finish onboarding this repo | **Deferred** — blocked on WS1                |
+| 3  | Release `6.0.0`             | **Released 2026-08-25** — the gate cleared   |
 
 WS1 and WS2 are kept here as the **record of what was found**, not as scheduled
 work. Do not start either from this document: the decision on 2026-08-24 was to
@@ -39,9 +40,15 @@ The flag is restored, installs nothing, and reports where the bar went:
   statusline half of the request did not happen.
 - `--platform`, `--upgrade`, `--force` and `--no-statusline` stay retired.
 
-The URL `https://claude-status.virajp.dev` is a **deliberate placeholder** — the
-site is not live. It is marked with a comment in `cli/src/index.ts`; swap it at
-launch, or drop it for the install command, which works today.
+The URL `https://claude-status.virajp.dev` is **live as of 2026-08-25**, and the
+notice now prints `brew install virajp/tap/claude-status`. The placeholder
+comment is gone.
+
+**The install command it originally printed was wrong** —
+`@askviraj/claude-status` was never published to npm, so
+`pnpx @askviraj/claude-status --install` would have failed for every user who
+ran it. Nine files carried that command; all were corrected before the release,
+which is the reason the release did not go out on the day the flag landed.
 
 ## Why WS1 and WS2 exist
 
@@ -63,10 +70,13 @@ together.
 
 ## The hard constraint
 
-**Nothing is released until `@askviraj/claude-status` is ready.** The statusline
-and its caps hook moved to that package; this repo's `main` already carries the
-breaking removal. Publishing `6.0.0` before the replacement exists would leave a
-user whose statusline stops working with nothing to install instead.
+**RESOLVED 2026-08-25 — claude-status shipped, and this constraint is lifted.**
+What it said, kept because it is why the release waited:
+
+**Nothing is released until `claude-status` is ready.** The statusline and its
+caps hook moved to that package; this repo's `main` already carries the breaking
+removal. Publishing `6.0.0` before the replacement exists would leave a user
+whose statusline stops working with nothing to install instead.
 
 This is why the version bump and the release sit at the end of this plan rather
 than shipping on their own — they are finished work, deliberately held.
@@ -85,8 +95,8 @@ Verified against the tree on 2026-08-24, not taken from a status line:
 | Onboarding: `/vwf:setup`                | `f6fb407` — `.config/vwf.yaml` stamped, both projects, stacks recorded |
 | Onboarding: `/vwf:product`              | `1c56902` — eight goals, reviewer returned NO GAPS first round         |
 
-The installer is still `5.2.0` and `v5.2.0` is the latest tag. That is the held
-release, not an oversight.
+At the time of writing the installer was `5.2.0`; `6.0.0` released on 2026-08-25
+once `claude-status` shipped.
 
 ## WS1 — Generalize vwf (DEFERRED)
 
@@ -164,17 +174,18 @@ to be re-asked: both projects declare `depends_on: []`; `installer` declares
 `backing_template: []` by explicit decision, knowing `/vwf:doctor` reports the
 missing pin every run until 1a lands. It is a known finding, not a regression.
 
-## WS3 — Release, once (HELD)
+## WS3 — Release, once (DONE)
 
-Gated on `@askviraj/claude-status` being ready. Only then:
+Gate cleared 2026-08-25 — `claude-status` ships from `virajp/homebrew-tap`
+(macOS on Apple silicon only) and its site is live.
 
 - Bump `@askviraj/ai-plugins` 5.2.0 → **6.0.0** (breaking: retired flags,
   `--uninstall` no longer restores a pre-statusline bar).
 - Re-run `mise run plugins:marketplace` if any plugin version moved.
 - `mise run i:release`, then a GitHub Release for the tag — **ask before running
   it**, every time.
-- Release notes must name `@askviraj/claude-status` as the way back for anyone
-  whose statusline stops working.
+- Release notes must name `claude-status` as the way back for anyone whose
+  statusline stops working.
 
 ## Parked — decide before acting
 

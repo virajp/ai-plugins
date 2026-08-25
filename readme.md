@@ -24,7 +24,7 @@ until you approve. The whole manual, command by command, is
 starting fresh, adopting vwf in a codebase that already works, and running a
 live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 
-Around it the marketplace ships **thirteen more plugins** — languages, clouds,
+Around it the marketplace ships **fourteen more plugins** — languages, clouds,
 capabilities, tooling, design and generation. That is the point of the split:
 vwf owns the workflow and names no technology at all, so every concrete choice
 lives in a plugin you install only if your product uses it. They install through
@@ -113,11 +113,10 @@ Upgrading is `claude plugin marketplace update` followed by
 `main`, which every push validates in CI.
 
 **The statusline used to ship here and no longer does** — it has moved to
-[`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status),
-which is also where the caps hook that pauses a long `/vwf:execute` run now
-comes from. If you installed the bar from here, `settings.json` still names a
-script this toolkit no longer ships — installing `@askviraj/claude-status`
-re-points it.
+[`claude-status`](https://claude-status.virajp.dev), which is also where the
+caps hook that pauses a long `/vwf:execute` run now comes from. If you installed
+the bar from here, `settings.json` still names a script this toolkit no longer
+ships — `brew install virajp/tap/claude-status` re-points it.
 
 ## Other tools
 
@@ -328,8 +327,12 @@ which is all that flag does now. `--platform`, `--upgrade` and `--force` are
 retired flags that exit non-zero naming themselves.
 
 ```sh
-pnpx @askviraj/claude-status --install
+brew install virajp/tap/claude-status
 ```
+
+**It requires macOS on Apple silicon.** The formula declares both, so Homebrew
+refuses an Intel Mac rather than installing a binary that cannot run, and there
+is no Linux build — see the caps-hook consequence below.
 
 That is also where the **context & rate-limit caps hook** now comes from — the
 `PostToolUse` hook that pauses long `/vwf:execute` runs at budget thresholds
@@ -337,16 +340,18 @@ That is also where the **context & rate-limit caps hook** now comes from — the
 sensor *is* the bar: those figures reach a session only on the statusline
 payload, never on hook stdin, which is why the two travel together. **vwf cannot
 detect its absence**, so install it before a long autonomous run rather than
-after — without it the pause never fires.
+after — without it the pause never fires. On any platform the formula refuses,
+that is not a step you can complete: the pause is simply unavailable, and a long
+autonomous run has to be sized accordingly.
 
 **If you installed the bar from here, `--uninstall` no longer tidies up after
 it.** `pnpx @askviraj/ai-plugins --uninstall` still reads and reverts the old
 receipt like any other, which removes the script files it recorded — but nothing
 unwires the `statusLine` and `subagentStatusLine` keys or the context-caps hook
 entry, and no receipt is known to have recorded them. So the key is left naming
-a script that is gone; installing `@askviraj/claude-status` re-points it. The
-discontinued OpenCode TUI bar and Oh-My-Pi configuration are still restored from
-their receipts.
+a script that is gone; installing `claude-status` re-points it. The discontinued
+OpenCode TUI bar and Oh-My-Pi configuration are still restored from their
+receipts.
 
 ## The installer CLI
 

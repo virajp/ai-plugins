@@ -31,7 +31,7 @@ enforces at its own entry gate. Installing outside a git repo works too:
 `graphify install` still runs, and its repo-scoped post-commit hook is skipped
 automatically (with a note).
 
-Separately, `pnpx @askviraj/claude-status --install` installs the statusline —
+Separately, `brew install virajp/tap/claude-status` installs the statusline —
 and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause. See
 [/vwf:execute](#vwfexecute).
 
@@ -1244,11 +1244,14 @@ run has no open gaps.
 
 The resource-cap pause is delivered by an **external `PostToolUse` caps hook** —
 a command can't measure its own context window, since those figures reach a
-session only on the statusline payload. `@askviraj/claude-status` provides one:
+session only on the statusline payload. `claude-status` provides one:
 
 ```sh
-pnpx @askviraj/claude-status --install
+brew install virajp/tap/claude-status
 ```
+
+**It requires macOS on Apple silicon.** Where the formula refuses, the pause
+cannot be installed at all — size a long autonomous run accordingly.
 
 Install it before an autonomous run or that pause won't fire. The hook must read
 `.config/vwf.yaml` → `pipeline.execute_caps` **tighten-only**; vwf never invokes
@@ -1818,5 +1821,5 @@ queries that library's documentation when a question is about a specific library
 - [cicd](./cicd.md) — implements the delivery-pipeline contract vwf states.
 - [typescript](./typescript.md) and [flutter](./flutter.md) — the language
   plugins that ship the stack templates `/vwf:architecture` offers.
-- [`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status)
-  — the statusline, and the caps hook that pauses a long `/vwf:execute` run.
+- [`claude-status`](https://claude-status.virajp.dev) — the statusline, and the
+  caps hook that pauses a long `/vwf:execute` run. macOS on Apple silicon only.

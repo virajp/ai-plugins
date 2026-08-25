@@ -40,10 +40,10 @@ nothing either, but it is a question rather than an empty run, so it answers
 with where the bar went and exits 1 without the flag table.
 
 Parsing is strict, so a flag that no longer exists reports itself by name rather
-than being silently ignored. **`--platform`, `--upgrade` and `--force` are the
-three on that list.** Upgrading is Claude's own `claude plugin update`, and
-`--force` existed only for the statusline, which installs from another package
-now.
+than being silently ignored. **`--platform`, `--upgrade`, `--force` and
+`--no-statusline` are the four on that list.** Upgrading is Claude's own
+`claude plugin update`, and `--force` existed only for the statusline, which
+installs from another package now.
 
 ## Installing plugins
 
@@ -115,8 +115,8 @@ Install all five.
 
 Earlier versions installed a powerline statusline for Claude Code, and its
 context-caps hook with it. Both now live in
-[`@askviraj/claude-status`](https://www.npmjs.com/package/@askviraj/claude-status)
-— `pnpx @askviraj/claude-status --install` — and this CLI neither installs nor
+[`claude-status`](https://claude-status.virajp.dev) —
+`brew install virajp/tap/claude-status` — and this CLI neither installs nor
 removes them. `--statusline` is kept only to say so: it prints that redirection
 and exits 1. It composes — `--all --statusline` still installs the plugins and
 prints the install report, then the notice last, and still exits 1.
@@ -127,7 +127,7 @@ like any other legacy receipt, which removes the script files it recorded — bu
 nothing unwires the `statusLine` and `subagentStatusLine` keys or the
 context-caps hook entry, and no receipt is known to have recorded them. So an
 upgrade can leave `settings.json` naming a script that is gone; installing
-`@askviraj/claude-status` re-points it.
+`claude-status` re-points it.
 
 ## Seeing what a run would do
 

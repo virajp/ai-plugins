@@ -118,12 +118,13 @@ export async function run(args: Args): Promise<void> {
   const reportStatuslineMoved = (): void => {
     process.stderr.write(
       "\nThe statusline is not installed from here any more.\n\n"
-        + "It moved to @askviraj/claude-status, which is also where the caps "
-        + "hook\n/vwf:execute depends on now comes from:\n\n"
-        + "  pnpx @askviraj/claude-status --install\n\n"
-        // PLACEHOLDER: the site is not live yet. Until it is, this link does
-        // not resolve — swap it for the real URL at launch, or drop it and
-        // leave the install command, which works today.
+        + "It moved to claude-status, which is also where the caps hook\n"
+        + "/vwf:execute depends on now comes from:\n\n"
+        + "  brew install virajp/tap/claude-status\n\n"
+        // macOS arm64 only — the formula declares `depends_on arch: :arm64`
+        // and `depends_on :macos`, so brew refuses an Intel Mac outright
+        // rather than installing a binary that cannot run.
+        + "  Requires macOS on Apple silicon.\n\n"
         + "  https://claude-status.virajp.dev\n",
     );
   };
