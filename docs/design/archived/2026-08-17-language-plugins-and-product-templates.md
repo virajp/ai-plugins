@@ -1,5 +1,41 @@
 # Language plugins and product templates
 
+> **ARCHIVED 2026-08-26, never built. Read nothing here as current.** This is
+> the losing side of a decision, kept because the argument is worth having on
+> the record — not a backlog.
+>
+> **What superseded it:** the two-plugin north star
+> (`docs/memory/decisions/2026-08-17-north-star-two-plugins.md`) and
+> [the stackgen plan](../../plans/2026-08-19-stackgen.md). This draft's own
+> header called stackgen "the narrower alternative it competes with"; stackgen
+> is what won. It proposes **a plugin per language behind a nineteen-property
+> mandate**; the decided direction is the opposite — every language plugin
+> merges into `stackgen` at Wave C and becomes a component pack, with uncovered
+> technologies generated rather than authored.
+>
+> **It also describes a tree that no longer exists.** `templates/`,
+> `schema/src/manifest.ts` and `plugins:render-clean` all went with the
+> Claude-first cutover, so the Order of work table names files nothing can edit.
+>
+> **Two things in here were still live when it was archived**, and both were
+> resolved elsewhere rather than by this doc:
+>
+> - **"Frameworks become a closed vocabulary"** (Part 1) — **not adopted.**
+>   `plugins/vwf/assets/stack-vocabulary.md` still declares `frameworks:` open,
+>   deliberately. The *languages* menu is closed (`config_format` 14, and
+>   `unknown = blocking`); frameworks are not, and stackgen's generate path is
+>   why — a framework no pack covers is researched, not rejected. The passage
+>   below saying this "reverses a standing decision" describes a reversal that
+>   never happened.
+> - **The capability-vocabulary territory** it shares with decision 1a of the
+>   generalization plan — settled on 2026-08-26 in
+>   `docs/memory/decisions/2026-08-26-vwf-generalization-stage-1.md`: tokens
+>   gained a **kind** marker (`B`/`F`/`P`) and the domain grouping stayed.
+>
+> Everything below is the original 2026-08-17 text, unedited.
+
+---
+
 Draft for review. Nothing here is built yet.
 
 > **Path/terminology pass applied 2026-08-17**, after the Claude-first cutover:

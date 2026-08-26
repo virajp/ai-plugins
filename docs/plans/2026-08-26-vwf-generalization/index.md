@@ -262,6 +262,20 @@ rewrite it against the current shape or archive it with a note saying what
 superseded it. **Do not leave it as-is** — a design doc describing `templates/`
 and `schema/` reads as current to anyone who finds it.
 
+**Done 2026-08-26 — archived, not rewritten.** It moved to
+`docs/design/archived/2026-08-17-language-plugins-and-product-templates.md`
+under a banner naming what superseded it. Rewriting was rejected: the doc
+proposes **a plugin per language behind a nineteen-property mandate**, which is
+the losing side of the two-plugin north star — its own header already called
+stackgen "the narrower alternative it competes with". Rewriting it against the
+current shape would have meant re-deciding a settled direction.
+
+The banner also resolves the two things in it that were still live: its
+**closed-frameworks** proposal was **not adopted** (`stack-vocabulary.md` keeps
+`frameworks:` open by design — stackgen researches an uncovered framework rather
+than rejecting it, so only the *languages* menu is closed), and its
+capability-vocabulary overlap was settled by 1a.1 above.
+
 ## Verification
 
 Per stage, and all of it before any commit:
