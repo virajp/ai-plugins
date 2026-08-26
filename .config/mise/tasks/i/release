@@ -36,7 +36,7 @@ TAG="v${VERSION}"
 # 4. Commit the bump and create an annotated tag. One file: package.json is the
 #    only place the version lives, and `release.yml` asserts the tag matches it.
 git add package.json
-git commit -m "ops: release ${TAG}"
+mise x -- git commit -m "ops: release ${TAG}"
 git tag -a "${TAG}" -m "${TAG}"
 
 print_header "Created ${TAG}."

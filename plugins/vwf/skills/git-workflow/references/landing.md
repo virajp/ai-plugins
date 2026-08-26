@@ -27,7 +27,7 @@ pointers current — then remove it. Order matters:
 
    ```bash
    git add <submodule-paths>            # the gitlinks that moved
-   git commit -m "ops: update submodule pointers"
+   mise x -- git commit -m "ops: update submodule pointers"
    ```
 
 3. **Land the outer repo.** Merge this branch to the destination — its own
