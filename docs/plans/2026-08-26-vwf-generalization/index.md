@@ -301,9 +301,21 @@ Plus, specific to this plan:
 ## Constraints
 
 - **Ask before any commit.** Do not push, tag or release.
-- Work happens in the **main checkout**, not a worktree: the marketplace is a
+- Work happens in the **main checkout**, not a worktree. ~~The marketplace is a
   directory source pointing at this checkout, so a worktree hides plugin edits
-  from the running tools. Deliberate, recorded, do not "fix" it.
+  from the running tools.~~ **That reason is false — verified 2026-08-26.** The
+  marketplace *source* is this directory, but `installed_plugins.json` shows vwf
+  installed as a **cached copy** under
+  `~/.claude/plugins/cache/virajp-plugins/vwf/<version>/`. The running tools
+  read that cache, never the checkout, so a worktree hides nothing that an
+  ordinary edit does not already hide. Reaching the running tools takes
+  `claude plugin marketplace update virajp-plugins` +
+  `claude plugin update vwf@virajp-plugins` **and a session restart** —
+  whichever tree you edited in.
+
+  Keep working in the main checkout anyway (it is simpler here, and this repo's
+  own plan docs and memory live alongside the plugin edits), but **do not cite
+  the marketplace as the reason**.
 - `plugins/**/*.md` is **not** dprint-formatted — match the surrounding fold
   width by hand. `docs/**`, `CLAUDE.md` and `readme.md` are.
 - Use the Write tool for whole-file writes; `cat > file <<EOF` writes ANSI
