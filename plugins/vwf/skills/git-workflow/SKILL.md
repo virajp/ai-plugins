@@ -134,7 +134,7 @@ Work from the **repository root**.
 3. `git diff --cached` — review staged changes
 4. Read `.config/git-conventional-commits.yaml` for authoritative types and
    scopes — do not invent scopes
-5. `git commit -m "<type>(<scope>): <description>"`
+5. `mise x -- git commit -m "<type>(<scope>): <description>"`
 6. If hooks fail: fix, then **new commit** (never `--amend`, never
    `--no-verify`)
 
