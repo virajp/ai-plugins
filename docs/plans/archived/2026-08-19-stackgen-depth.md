@@ -4,7 +4,7 @@
 `worktree-stackgen`; the Rust proof regenerated at full depth (see Depth proof
 below).**
 
-Companion to [the stackgen plan](2026-08-19-stackgen.md) (Phases 1–4 executed
+Companion to [the stackgen plan](../2026-08-19-stackgen.md) (Phases 1–4 executed
 and revised to `.claude/`-direct on branch `worktree-stackgen`). The Rust
 revision proof exposed the gap this plan closes: **generated output was
 structurally valid but shallow** — four thin references where the curated
