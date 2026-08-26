@@ -29,8 +29,9 @@ the product — it is a question about `api`, or about `website`:
   declares in the registry. Records a **list**: one slug per capability it needs
   (datastore, identity, queue, object storage, telemetry sink). A project that
   talks to no backing service records `[]`.
-- **deploy** — once per project. A `frontend` on a screen platform records
-  `n/a`, a `cli` frontend `deploy/npm-package`, an `iac` project `n/a`.
+- **deploy** — once per project, keyed on the **platform**, never the role. A
+  project on a screen platform records `n/a`, one declaring `cli`
+  `deploy/npm-package` (whichever role carries it), an `iac` project `n/a`.
 - **repo** — once per repo, filtered to templates whose `topologies` include
   this repo's.
 

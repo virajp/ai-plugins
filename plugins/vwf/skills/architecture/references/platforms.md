@@ -18,7 +18,7 @@ semantics in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`:
 | `backend`  | `packages`, `service`, `worker`                                              |
 | `frontend` | `packages`, `site`, `webapp`, `desktop`, `mobile`, `tablet`, `auto`, `cli`   |
 | `data`     | `packages`, `data-lake`, `analytics`, `ingestion`, `ml-platform`             |
-| `system`   | `packages`, `iac`, `plugin`, `misc`, `cicd`                                  |
+| `system`   | `packages`, `iac`, `plugin`, `misc`, `cicd`, `cli`                           |
 
 **A project may declare several.** One Flutter codebase shipping phone, tablet,
 desktop and web is **one** project with `platforms: [mobile, tablet, desktop,
@@ -62,7 +62,21 @@ shipped command-line tool, not internal dev scripts. For each that does, offer
 `cli` among its platforms. A terminal surface has no screens, so `cli`
 never admits a `cli.md` platform file and never triggers Screens, mockups, or
 the canvas; what it does require is the design system's **Terminal UX** section.
-A CLI-only tool is `role: frontend` with `platforms: [ cli ]` — and is exempt
-from the standard-flows mandates, since `splash` and `home` are screen journeys
-it does not have. A project mixing `cli` with a screen platform is **not**
-exempt: the screen platform brings the mandates with it.
+A CLI-only tool is `platforms: [ cli ]` — and is exempt from the standard-flows
+mandates, since `splash` and `home` are screen journeys it does not have. A
+project mixing `cli` with a screen platform is **not** exempt: the screen
+platform brings the mandates with it.
+
+**`cli` sits under two roles, and the question is who the tool serves.** A CLI
+the product's *end users* run is `frontend` — it is a user-facing surface that
+happens to be textual. A CLI that exists to build, scaffold, install or deliver
+something else is `system`: "infrastructure and tooling" is exactly what that
+is, and typing it `frontend` forces it to claim a user-facing role it does not
+have. Ask which it is rather than defaulting; an installer is the clear
+`system` case, a `git`-like tool the clear `frontend` one.
+
+**Nothing downstream keys on that choice.** Every gate reads the platform
+token, not the role: Terminal UX, the screens/mockups exemption, the
+`deploy/npm-package` pin, and blueprint coverage — which excepts `cli`
+alongside `plugin` precisely so the role cannot silently change it. Picking the
+wrong role misdescribes the project; it does not misconfigure it.

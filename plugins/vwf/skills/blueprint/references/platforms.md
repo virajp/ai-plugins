@@ -48,7 +48,11 @@ the OS; custom layout does not apply.
 Each registry project declares a `doc_unit` (`entity` / `page` / `module`).
 Under format 9 these map as: `page` doc units (typically a project declaring the
 `site` platform) are authored as **flows** — a page journey is a flow; `module`
-doc units (typically a `packages` platform) stay under `entities/` — a module boundary is a
-supporting contract, with `schema.yaml` written as `N/A — <reason>` when the
-module has no data shape. The same section structure and completeness bars
-apply; an inapplicable surface is `N/A — <reason>`, never silently omitted.
+doc units (a `packages`, `iac`, `plugin` or `cli` platform) stay under
+`entities/` — a module boundary is a supporting contract, with `schema.yaml`
+written as `N/A — <reason>` when the module has no data shape. The same section
+structure and completeness bars apply; an inapplicable surface is
+`N/A — <reason>`, never silently omitted.
+
+A **`cli`** project is the clearest case for that `N/A`: its contract is a set
+of commands, flags and exit codes, none of which has a data shape.

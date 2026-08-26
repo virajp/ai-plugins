@@ -91,6 +91,29 @@ exactly the product-wide assumption format 13 removed. A config still carrying a
 product-wide `backing:`, `deploy:` or `design.tool` key is `12` drift: report it
 and nudge `/vwf:setup`.
 
+**A declared backing capability should have a provider.** For each registry
+project, read its `capabilities:` and classify each token by the **kind** marked
+in `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md`. For every **`B`**
+(backing-service) token, check that some entry of that project's
+`backing_template` list declares it — resolve each pinned template and read the
+`capabilities:` its payload carries. A `B` token no pinned template provides is
+a **finding**: name the project, the token, and the pins that were checked.
+
+Three rules keep it honest:
+
+- **`F` and `P` tokens are never reported.** A product foundation is the
+  product's own code and a project-axis fact belongs to the project template;
+  neither has anything to pin, so asking for one is a category error.
+- **Consumers follow the publisher.** A capability this project only *consumes*
+  is provided by the publishing project's pin, not its own — resolve the
+  publisher before reporting (the rule is in the vocabulary asset). A consumer
+  with `backing_template: []` is correct, not drift.
+- **Never blocking.** Some `B` tokens have no template offering them anywhere in
+  the installed plugins, so this would otherwise halt `setup` and `execute` over
+  a gap in the template library rather than in the user's repo. Report it and
+  nudge `/vwf:architecture`; do not raise it to blocking without deciding that
+  separately.
+
 **An `iac` project must be its own repo.** For each registry project declaring
 the `iac` platform, resolve its `path` and check which repo's working tree it
 falls in (`git -C <path> rev-parse --show-toplevel`). If that resolves to

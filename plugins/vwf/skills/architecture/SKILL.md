@@ -129,7 +129,15 @@ Hosting and deployment — ask in sequence:
 
 First **read `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md`** — its
 grouped tokens are the multi-select options you offer for the `capabilities`
-field. Then ask the user to enumerate all projects, and walk the projects one at
+field. Offer them **by domain group**, as they are written: that is the axis
+someone picking capabilities thinks along. Each token also carries a **kind**
+(`B` backing service / `F` product foundation / `P` project-axis fact) — do not
+surface it as a grouping, but do use it: only a `B` token can be answered by a
+`backing_template` pin, so a project declaring one and pinning nothing is what
+`/vwf:doctor` §5 reports. A token added via **Other** must be classified into
+the asset before it is recorded.
+
+Then ask the user to enumerate all projects, and walk the projects one at
 a time, gathering for each:
 
 | Field          | How to elicit                                                                        |
@@ -147,9 +155,14 @@ is realization, recorded in `.config/vwf.yaml` (see the stack menu below). The
 registry describes what the system *is*; config records what it is *built with*.
 
 Offer the **platform** defaults for `doc_unit` — it follows the platforms, not
-the role: `site`/`webapp` → `page`; `packages`, `iac`, `plugin` → `module`;
-everything else → `entity`. A project whose platforms disagree takes the first
-match in that order.
+the role: `site`/`webapp` → `page`; `packages`, `iac`, `plugin`, `cli` →
+`module`; everything else → `entity`. A project whose platforms disagree takes
+the first match in that order.
+
+`cli` is a **stated row, not a fall-through**. A CLI's contract is its commands
+and its exit codes, which have no data shape, so `module` is what lets those
+docs carry `schema.yaml: N/A — <reason>`; under `entity` every flag surface
+would have to invent a schema to pass the surveyor.
 
 **Publishing an API is the `service` platform.** Ask by the API question, not by
 how the user describes the code: a project that **publishes its own API**
@@ -172,8 +185,14 @@ that rather than inventing a role. **Synonyms** normalize on the way in — role
 between `site` and `webapp`** — ask, never pick.
 
 **`iac`** is registered but exempt from blueprint coverage — it has no flows,
-screens or API contracts. So is **every `data` and `system` platform**. Record
-them, then skip them in every coverage question.
+screens or API contracts. So is **every `data` and `system` platform**, with two
+exceptions: **`plugin` and `cli` are covered**. Record the exempt ones, then
+skip them in every coverage question.
+
+`cli` is excepted because it belongs to **both** the `frontend` and `system`
+lists, and a CLI's flows are its commands whichever role the project carries —
+coverage that turned on the role would make the same tool covered or exempt
+depending on how it was typed.
 
 **An `iac` project must be its own repo** — independent, or a submodule of the
 product parent. The rule and its rationale live in

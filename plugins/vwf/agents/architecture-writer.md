@@ -104,11 +104,13 @@ used to be a role lives on as a platform.
 | `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker`                                              |
 | `frontend` | User-facing surfaces           | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli`        |
 | `data`     | Data and ML systems            | `packages` `data-lake` `analytics` `ingestion` `ml-platform`               |
-| `system`   | Infrastructure and tooling     | `packages` `iac` `plugin` `misc` `cicd`                                    |
+| `system`   | Infrastructure and tooling     | `packages` `iac` `plugin` `misc` `cicd` `cli`                              |
 
 `doc_unit` defaults follow the **platforms**, not the role: `site`/`webapp` →
-`page`; `packages`, `iac`, `plugin` → `module`; everything else → `entity`. A
-project whose platforms disagree takes the first match in that order.
+`page`; `packages`, `iac`, `plugin`, `cli` → `module`; everything else →
+`entity`. A project whose platforms disagree takes the first match in that
+order. `cli` is a stated row rather than a fall-through: a command surface has
+no data shape, and `module` is the unit that accepts `schema.yaml: N/A`.
 
 **A project may declare several platforms, and usually should.** One Flutter
 codebase shipping phone, tablet, desktop and web is **one** project with

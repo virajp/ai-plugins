@@ -10,19 +10,65 @@ deep, stack-specific questions `blueprint` asks. Pick all that apply per
 project; add Other for anything not listed. Extensible — add new capabilities as
 the system grows.
 
-- **Data & storage:** `document-datastore`, `relational-datastore`,
-  `object-file-storage`, `cache-layer`, `search-index`
-- **Async & messaging:** `durable-workflows`, `message-queue`, `pub-sub`,
-  `scheduled-jobs`
-- **Realtime & comms:** `realtime-sync`, `realtime-location`,
-  `push-notifications`, `email`, `sms`, `voice-audio`
-- **Auth & identity:** `third-party-auth`, `custom-claims-rbac`, `operator-rbac`
-- **Commerce:** `payments-subscriptions`
-- **Geo:** `maps-navigation`
-- **Web rendering:** `ssr`, `ssg`, `cms-content`, `seo`
-- **Mobile:** `offline-first`, `deep-linking`, `device-permissions`
-- **Observability & governance:** `distributed-tracing`, `audit-log`,
-  `rate-limiting`, `runtime-settings`
+**Every token carries a kind**, marked below. The groups are by subject domain,
+because that is how someone picking capabilities thinks; the **kind** is the
+orthogonal fact about *what answers the token*, and it is what makes "this
+capability has no provider" checkable rather than ambiguous:
+
+| Kind    | Means                                                                                                     |
+| ------- | ----------------------------------------------------------------------------------------------------------- |
+| **`B`** | **backing service** — something outside the product provides it, so the project pins a `backing_template`  |
+| **`F`** | **product foundation** — implemented in the product's own code; there is nothing to pin. See the `product-foundations` skill |
+| **`P`** | **project-axis fact** — a property of how the project is built, not a service it talks to; belongs to the project template |
+
+A new token **must** be classified when it is added. An unclassified token is
+the ambiguity this table exists to remove.
+
+- **Data & storage:** `document-datastore` **B**, `relational-datastore` **B**,
+  `object-file-storage` **B**, `cache-layer` **B**, `search-index` **B**
+- **Async & messaging:** `durable-workflows` **B**, `message-queue` **B**,
+  `pub-sub` **B**, `scheduled-jobs` **B**
+- **Realtime & comms:** `realtime-sync` **B**, `realtime-location` **B**,
+  `push-notifications` **B**, `email` **B**, `sms` **B**, `voice-audio` **B**
+- **Auth & identity:** `third-party-auth` **B**, `custom-claims-rbac` **F**,
+  `operator-rbac` **F**
+- **Commerce:** `payments-subscriptions` **B**
+- **Geo:** `maps-navigation` **B**
+- **Web rendering:** `ssr` **P**, `ssg` **P**, `cms-content` **B**, `seo` **P**
+- **Mobile:** `offline-first` **P**, `deep-linking` **P**,
+  `device-permissions` **P**
+- **Observability & governance:** `distributed-tracing` **B**, `audit-log`
+  **F**, `rate-limiting` **F**, `runtime-settings` **F**
+
+Three classifications are worth their reasoning, since each looks like the
+neighbouring kind:
+
+- **`custom-claims-rbac` and `operator-rbac` are `F`, while `third-party-auth`
+  is `B`.** The issuer is a service the product talks to; what the claims *mean*
+  and who may act on them is the product's own authorization code. An identity
+  provider does not decide your roles.
+- **`cms-content` is `B`, alone among Web rendering.** `ssr`/`ssg`/`seo` are
+  rendering strategies the project template settles; a CMS is a service holding
+  content the product does not own.
+- **`distributed-tracing` is `B`.** The product emits OTLP and a sink receives
+  it — the sink is a backing service, even though the instrumentation is the
+  product's own code.
+
+**Only `B` tokens are pinnable.** Asking which template provides `rate-limiting`
+or `ssr` is a category error, and the check below relies on that.
+
+## A declared `B` capability should have a provider
+
+Nothing used to verify this: a product could declare `document-datastore`, pin
+nothing, and pass every gate. `/vwf:doctor` now reports a **`B`** capability
+declared by a project whose `backing_template` list contains no entry declaring
+it — and stays silent on every `F` and `P` token, which have nothing to pin.
+
+It is a **finding, not blocking**. Several `B` tokens have no template offering
+them anywhere in the installed plugins, so halting `setup` and `execute` would
+punish a product for a gap in the template library rather than for anything
+wrong in its own repo. That trade changes once stack coverage is real; the
+finding is written to be promotable without re-deciding its shape.
 
 ## Consumers follow the publisher
 

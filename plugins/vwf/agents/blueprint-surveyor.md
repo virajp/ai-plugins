@@ -55,8 +55,10 @@ condition; a unit may fail more than one (report the most blocking).
    representing it per its `doc_unit`. An explicit `N/A — <reason>` counts as
    represented. Projects whose platforms are all exempt from blueprint coverage
    (`iac`, and every `data` / `system` platform) do not fail this — **except
-   `plugin`, which is covered**: a `plugin` project with no flow is a hole,
-   reported as a missing flow against the project.
+   `plugin` and `cli`, both of which are covered**: such a project with no flow
+   is a hole, reported as a missing flow against the project. `cli` is excepted
+   because it is a `frontend` **and** a `system` platform, and a tool's coverage
+   must not turn on which role its project carries.
 6. **Unreviewed screens** — a flow platform listed under `blueprint.remaining`
    as `screens/<project>/<NNN>-<flow>/<platform>`.
 7. **Stale coherence** — `coherence` present in the passed `remaining` list. 7a.

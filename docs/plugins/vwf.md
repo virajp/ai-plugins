@@ -905,12 +905,17 @@ and the same names**.
 
 **Plugin projects are blueprinted too, as of format 23.** Every other `system`
 platform (`packages`, `iac`, `misc`, `cicd`) is registered but exempt from
-blueprint coverage; `plugin` is the carve-out. Its flows are its **extension
-points** — one per skill, command or hook, `index.md` alone, no standard-flow
-mandates — and each pins the host and the extension point it registers against,
-the invocation surface and why it was chosen, what the host supplies, the gates
-and halts, and the artifacts written. An unrepresented `plugin` project is a
-coverage hole like any other.
+blueprint coverage; **`plugin` and `cli`** are the two carve-outs. `cli` is
+excepted because since vwf 19.1.0 it belongs to the `system` list as well as the
+`frontend` one, and a tool's coverage must not turn on which role its project
+carries — the same CLI would otherwise be covered or exempt depending on how it
+was typed.
+
+A `plugin` project's flows are its **extension points** — one per skill, command
+or hook, `index.md` alone, no standard-flow mandates — and each pins the host
+and the extension point it registers against, the invocation surface and why it
+was chosen, what the host supplies, the gates and halts, and the artifacts
+written. An unrepresented `plugin` project is a coverage hole like any other.
 
 **Numbers are designated, not invented.** One number line per project:
 

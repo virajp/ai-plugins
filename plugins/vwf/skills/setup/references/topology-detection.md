@@ -72,7 +72,7 @@ are what vwf branches on; the role is an index, never a gate.
 | `backend` | `packages` `service` `worker` |
 | `frontend` | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli` |
 | `data` | `packages` `data-lake` `analytics` `ingestion` `ml-platform` |
-| `system` | `packages` `iac` `plugin` `misc` `cicd` |
+| `system` | `packages` `iac` `plugin` `misc` `cicd` `cli` |
 
 `packages` is available under every role; the role names the primary consumer
 domain. A package consumed by both the API and the web app is a judgment call —
