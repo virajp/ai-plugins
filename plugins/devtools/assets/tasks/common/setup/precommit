@@ -10,4 +10,4 @@ pre-commit autoupdate --config .config/pre-commit-config.yaml
 
 print_header "Installing pre-commit hooks ..."
 git config --local --unset-all core.hooksPath || true
-pre-commit install --config .config/pre-commit-config.yaml --install-hooks --overwrite
+mise x -- pre-commit install --config .config/pre-commit-config.yaml --install-hooks --overwrite
