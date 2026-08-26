@@ -27,10 +27,14 @@ or vocabulary token is recorded and worked around, never authored mid-sweep.**
 
 Two things are explicitly **out**:
 
-- **Authoring backing templates beyond what Stage 1c decides is required.** A
-  template written here is a file
-  [Wave C of the stackgen plan](../2026-08-19-stackgen.md) would later convert
-  to a pack. Decide the taxonomy; author the minimum.
+- **Authoring backing templates — at all.** Hardened from "beyond the minimum"
+  to a flat prohibition on 2026-08-26, when the boundary against
+  [the stackgen plan](../2026-08-19-stackgen.md) was settled
+  (`docs/memory/decisions/2026-08-26-generalization-vs-stackgen-wave-c-boundary.md`).
+  A template written here is a file **Wave C** would convert to a pack, and
+  "author the minimum" is what a gate wanting a pin talks you out of mid-sweep.
+  Decide the taxonomy; author nothing. If 1a.3 turns out to need a store, it is
+  a Wave C item and this repo re-declares its capability in the meantime.
 - **Anything in `docs/design/language-plugins-and-product-templates.md`.** That
   doc is written against `templates/`, `schema/src/manifest.ts` and
   `plugins:render-clean`, none of which exist since claude-first. It is an input
@@ -193,6 +197,22 @@ about files:
 survives the stackgen merge waves; a template written now is Wave C's problem
 later. If 3 does turn out to need a file, the honest answer for this repo is
 likely re-declaring the capability, not authoring a store.
+
+**Boundary settled 2026-08-26**, before this stage ran
+(`docs/memory/decisions/2026-08-26-generalization-vs-stackgen-wave-c-boundary.md`).
+`plugins/stackgen/assets/taxonomy.md` already states the seam under *The
+capability seam* — capability tokens are vwf's, categories are stackgen's,
+*minting capabilities is vwf's move* — so **1 and 2 are vwf-side work Wave C
+never owned**, and 1c and 1b touch no stackgen surface at all. Two rulings bind
+this stage:
+
+- **Deferring 3 is binding, not recommended** — see the scope boundary above.
+- **1 restructures and mints nothing.** The kind classification lands; **no
+  missing token is added**, including `cdn`, which `taxonomy.md` names as a
+  known vwf-side hole. The parked audit
+  (`docs/memory/gaps/2026-08-26-stack-vocabulary-coverage-audit.md`) then
+  inherits a settled shape and shrinks to adding rows. Rejected: minting `cdn`
+  here; folding the whole audit in, which the drawer itself argues against.
 
 ## Stage 2 — Implement what Stage 1 settled
 

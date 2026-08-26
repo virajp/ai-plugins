@@ -53,4 +53,22 @@ vocabulary, this audit inherits the new shape and shrinks to the
 stackgen-surface half; if 1a defers, the missing tokens (`cdn`, and whatever
 else the category lists surface) are this audit's to find. **Whoever answers 1a
 should read this drawer first.**
+
+## Resolved 2026-08-26 — the first branch, both halves
+
+Settled before either plan's Stage 1 ran; full reasoning in
+[the boundary decision](../decisions/2026-08-26-generalization-vs-stackgen-wave-c-boundary.md).
+
+**1a.1 restructures and mints nothing.** The kind classification
+(backing-service / product-foundations / project-axis) lands in the
+generalization plan; no missing token is added there, `cdn` included. So this
+audit **inherits the new shape** — and keeps the missing-token half anyway,
+which the paragraph above had treated as an either/or. It shrinks to *adding
+rows to a settled structure*, not restructuring and populating at once.
+
+The seam that decided it was already written, in
+`plugins/stackgen/assets/taxonomy.md` under *The capability seam*: capability
+tokens are vwf's, categories are stackgen's, *minting capabilities is vwf's
+move*. This audit's remaining job is the stackgen-surface sweep plus those rows;
+it is no longer a taxonomy decision. Still Phase 5, still after the waves.
 </content>
