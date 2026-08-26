@@ -1,4 +1,4 @@
-# Gaps — editing `plugins/vwf/` does not change the vwf that runs
+# Gaps — vwf was resolving to a stale install, and the diagnosis went wrong first
 
 **Date** 2026-08-26 · **Branch** `main` · **Tag** `ws2/toolchain`
 
@@ -9,19 +9,35 @@ Found at the start of WS2 (Stage 3 of
 [the generalization plan](../../plans/2026-08-26-vwf-generalization/index.md)),
 while about to run `/vwf:architecture` against this repo for the first time.
 
-## The gap
+## Corrected 2026-08-26, same day
 
-**An edit to `plugins/vwf/` reaches nothing until it is committed, the
-marketplace is updated, the plugin is updated, and the session is restarted.**
+**This drawer first concluded that skills always load from a cache copy and
+never from the checkout. That is wrong**, and the wrong version was committed
+(`e0c437a`) before the evidence that settled it arrived. Recorded here rather
+than quietly rewritten, because the mistake is the instructive part.
 
-The marketplace *source* really is a directory pointing at this checkout
-(`~/.claude/plugins/known_marketplaces.json`). But installation **copies**:
-`installed_plugins.json` records vwf at
-`~/.claude/plugins/cache/virajp-plugins/vwf/<version>/`, and that copy is what
-skills load. On 2026-08-26 the cache held 19.0.0 from **2026-08-23**, three days
-and one format-relevant change behind the checkout.
+**What is actually true.** With a directory-source marketplace in a healthy
+state, skills load **from the checkout**. After
+`claude plugin marketplace update virajp-plugins` +
+`claude plugin update vwf@virajp-plugins` and a session restart,
+`/vwf:architecture` reported its base directory as
+`.../ai-plugins/plugins/vwf/skills/architecture` — the source tree. So the
+plan's long-standing constraint (*work in the main checkout, because a worktree
+hides plugin edits from the running tools*) **holds**, and briefly marking it
+false was an error.
 
-The full path back to a running change:
+## The real gap
+
+**vwf can silently resolve to a stale install, and nothing announces it.**
+
+Before the update, `/vwf:architecture` reported its base directory as
+`~/.local/share/virajp/ai-plugins/claude/claude/plugins/vwf/...` — the retired
+render-tree install, `assets/blueprint-format` reading **22**, and a
+`plugin.json` carrying **no `version` key at all** (so it lists as `0.0.0`, per
+the marketplace trap in CLAUDE.md). Meanwhile the checkout was at 19.1.0 /
+format 23.
+
+The repair:
 
 ```sh
 # commit first — the directory source resolves the committed tree
@@ -30,28 +46,30 @@ claude plugin update vwf@virajp-plugins     # bare `vwf` fails: Plugin "vwf" not
 # then RESTART the session — the CLI says so and means it
 ```
 
-Two traps inside that:
+Three traps, each of which contributed to getting this wrong:
 
 - **`claude plugin update vwf` fails** with `Plugin "vwf" not found`. The
   marketplace-qualified `vwf@virajp-plugins` is what works.
-- **Updating does not affect the live session.** The CLI prints "Restart to
-  apply changes." A run started before the restart still executes the old skill
-  text, silently and with no version banner to notice it by.
+- **`installed_plugins.json`'s `installPath` is a version ledger, not the
+  resolution path.** It names `cache/virajp-plugins/vwf/<version>/` even while
+  skills load from the source directory. Diagnosing from it is what produced the
+  wrong conclusion above.
+- **A stale resolution is silent.** No version banner, no warning. The **only**
+  tell is the base directory a skill announces on invocation — check it whenever
+  a plugin edit appears not to have taken.
 
-## Why it matters beyond convenience
+## Why it matters
 
-**It falsified a recorded constraint.** The plan carried: *"Work happens in the
-main checkout, not a worktree: the marketplace is a directory source pointing at
-this checkout, so a worktree hides plugin edits from the running tools.
-Deliberate, recorded, do not 'fix' it."* The premise is true and the conclusion
-does not follow — the cache hides the edits from the running tools regardless of
-worktree. Corrected in the plan's Constraints section on the same day.
+**WS2's result is conditional on it.** WS2 exists to test whether the blueprint
+format fits a plugin product. Run against a stale install it tests a *previous*
+format instead, and every gap it logs is suspect — indistinguishable from a real
+finding. **Confirm the loaded vwf version before trusting any WS2 output**, by
+reading the base directory of the first skill invoked.
 
-**And it makes WS2's result conditional.** WS2 exists to test whether the
-blueprint format fits a plugin product. Run against a stale install it tests a
-*previous* format instead, and every gap it logs is suspect — indistinguishable
-from a real finding. Before trusting any WS2 output, confirm the loaded vwf
-version.
+**And it cost a wrong correction.** The stale resolution was real, but the
+inference drawn from it — that the checkout is never served — was not, and it
+went into a commit. The general lesson: the announced base directory is direct
+evidence; `installed_plugins.json` is not.
 
 ## A second install, still on disk
 
@@ -69,15 +87,15 @@ would also drop the marketplace registration, `devtools`, the graphify hooks and
 the graph. **Not removed**; left for a deliberate cleanup.
 
 One honest caveat on the evidence: `skills/architecture/SKILL.md` is
-**byte-identical** between that tree and the 19.0.0 cache, so the skill text
-served at the time could not discriminate between them. What is certain is that
-neither is the checkout.
+**byte-identical** between that tree and the 19.0.0 cache, so the skill *text*
+served at the time could not discriminate between them — only the announced base
+directory could, and it named this legacy tree.
 
 ## Which pass it belongs to
 
 The install refresh is done (19.1.0 is in the cache and verified to carry the
 day's five decisions). What remains:
 
-- **Restart before WS2 runs.** Nothing else in the chain is trustworthy first.
 - **Decide the legacy tree's fate** — delete, or leave with this note as the
-  record of what it is.
+  record of what it is. It is the tree that was being served, so leaving it is
+  not free: it is a live candidate for the same silent substitution.

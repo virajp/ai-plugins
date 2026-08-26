@@ -301,21 +301,29 @@ Plus, specific to this plan:
 ## Constraints
 
 - **Ask before any commit.** Do not push, tag or release.
-- Work happens in the **main checkout**, not a worktree. ~~The marketplace is a
+- Work happens in the **main checkout**, not a worktree: the marketplace is a
   directory source pointing at this checkout, so a worktree hides plugin edits
-  from the running tools.~~ **That reason is false — verified 2026-08-26.** The
-  marketplace *source* is this directory, but `installed_plugins.json` shows vwf
-  installed as a **cached copy** under
-  `~/.claude/plugins/cache/virajp-plugins/vwf/<version>/`. The running tools
-  read that cache, never the checkout, so a worktree hides nothing that an
-  ordinary edit does not already hide. Reaching the running tools takes
-  `claude plugin marketplace update virajp-plugins` +
-  `claude plugin update vwf@virajp-plugins` **and a session restart** —
-  whichever tree you edited in.
+  from the running tools. Deliberate, recorded, do not "fix" it.
 
-  Keep working in the main checkout anyway (it is simpler here, and this repo's
-  own plan docs and memory live alongside the plugin edits), but **do not cite
-  the marketplace as the reason**.
+  **Confirmed 2026-08-26, after one wrong turn.** A skill invoked mid-session
+  reported its base directory as
+  `~/.local/share/virajp/ai-plugins/claude/claude/plugins/vwf/...` — the retired
+  render-tree install — which looked like proof that the checkout is never
+  served, and this constraint was briefly (and wrongly) marked false. It is not:
+  once `claude plugin marketplace update virajp-plugins` +
+  `claude plugin update vwf@virajp-plugins` ran and the session restarted, the
+  same skill reported `.../ai-plugins/plugins/vwf/skills/architecture` — **the
+  checkout**. The premise holds; what had failed was the install resolving to a
+  stale tree.
+
+  Two facts worth keeping, since each misleads on its own:
+
+  - **`installed_plugins.json`'s `installPath` is a version ledger, not the
+    resolution path.** It names a cache directory even while skills load from
+    the source directory. Do not diagnose from it.
+  - **A stale resolution is silent.** There is no version banner on a skill
+    invocation; the only tell is the announced base directory. Check it when a
+    plugin edit appears not to have taken.
 - `plugins/**/*.md` is **not** dprint-formatted — match the surrounding fold
   width by hand. `docs/**`, `CLAUDE.md` and `readme.md` are.
 - Use the Write tool for whole-file writes; `cat > file <<EOF` writes ANSI
