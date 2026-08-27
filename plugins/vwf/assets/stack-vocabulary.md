@@ -101,7 +101,7 @@ axis: project # which of the four menus this template joins
 platforms: [ <platform>, <...> ] # which registry platforms this template serves; see assets/templates/registry.yaml for the closed per-role lists
 name: <display name> # what the menu shows
 languages: [<token>] # open; the plugin owning the language defines its facts
-optional_languages: [] # admitted by the template, not required — e.g. a mobile template's platform languages
+optional_languages: [] # admitted by the template, not required — e.g. a mobile template's platform languages. DECLARES the token for doctor's unknown-language test, but carries NO language facts, so doctor reports it known-but-unverified
 frameworks: [] # open, lowercase-kebab; 0..n
 dependencies: [] # open, lowercase-kebab; the few that characterize the stack
 ---

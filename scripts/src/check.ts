@@ -569,6 +569,12 @@ const TOOL_NAME_EXCEPTIONS = new Set([
   "assets/stack-adapter.md",
   // Documents a repo it did not choose, so it has to recognise what is there.
   "skills/readme/SKILL.md",
+  // Maps product names to the prose nouns that replace them. The names are the
+  // LOOKUP KEY: an author who wrote "npm" finds the row by searching for it, so
+  // removing them would break the one job the table has. Pure recognition —
+  // every occurrence sits in an "instead of" column whose row prescribes the
+  // opposite.
+  "assets/capability-vocabulary.md",
 ]);
 
 /** How far either side of a match still counts as the same enumeration. */

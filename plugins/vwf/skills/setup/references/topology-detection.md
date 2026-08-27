@@ -112,9 +112,13 @@ What each platform obliges:
   repo**, never a directory inside another project's
   (`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`).
 - **`plugin`** — **covered** by the blueprint, unlike every other `system`
-  platform. Its flows are its **extension points**: one flow per skill, command
-  or hook, `index.md` alone, with no standard-flow mandates. The completeness
-  bar is `skills/blueprint-authoring/references/plugin-contract.md`.
+  platform. Its flows are its **invocable** extension points: one flow per
+  registration something can trigger — a command, an invocable skill, a hook —
+  `index.md` alone, with no standard-flow mandates. A **subagent** is a step of
+  the flow that dispatches it and **auto-applying doctrine** is a Reference on
+  the flows it governs; neither is a flow, since neither has a trigger or an
+  outcome of its own. The completeness bar is
+  `skills/blueprint-authoring/references/plugin-contract.md`.
 - **Every other `data` and `system` platform** — exempt from blueprint coverage.
   A doc shape for them is a later effort; until it exists their absence from the
   blueprint is by design, not a hole.

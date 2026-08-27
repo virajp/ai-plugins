@@ -137,11 +137,14 @@ no API is published (`idempotency-keys`, `error-envelope`, `cursor-pagination`),
 there is no logging pipeline or long-lived process (`structured-logs-no-pii`,
 `graceful-shutdown`), and there is no money (`integer-money`).
 
-They are recorded as **inapplicable, not waived**, and the distinction is
-deliberate: a waiver asserts a considered departure from a rule that applies,
-which would be a false claim about rules this product has no surface for. See
-[the format-fit gap](../memory/gaps/2026-08-27-plugin-flow-granularity.md); vwf
-has no vocabulary for this state yet, and probably should.
+They are recorded as **inapplicable, not waived**, and carry no
+`enforcement.rules` entry: a waiver asserts a considered departure from a rule
+that *applies*, which would be a false claim about rules this product has no
+surface for.
+
+This is the engineering baseline's third state, alongside enforced and waived.
+It was added to vwf **because this product needed it** — the bar is a missing
+*surface*, not missing work, and when in doubt the rule applies.
 
 ## Delivery pipeline {#pipeline}
 

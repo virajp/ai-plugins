@@ -31,6 +31,33 @@ the reviewers flag. The hard floor applies: `baseline/boundary-validation` may
 be scoped-waived for a named unit with a reason, but never product-wide —
 unvalidated boundaries are a security surface.
 
+## Inapplicable is a third state, and not a waiver
+
+A rule the product has **no surface for** is neither enforced nor waived. It is
+**inapplicable**, and the distinction is not pedantry: a waiver asserts a
+considered departure from a rule that *applies*, so recording one for a rule
+with no referent puts a false claim on the record — it reads as *we decided not
+to do this* when the truth is *there is nothing here to do it to*.
+
+A product with no datastore has nothing to version-check; one publishing no API
+has no error envelope; a one-shot command has nothing to shut down gracefully.
+These are not decisions.
+
+**How to record it.** On first touch, `#baseline` seeds only the rules with a
+surface, and closes with **one paragraph naming the inapplicable ones and why**,
+grouped by the missing surface rather than listed rule by rule. **No
+`enforcement.rules` entry** — there is nothing to waive.
+
+**The bar for calling a rule inapplicable is the missing surface, not the
+missing work.** "We have no datastore" qualifies; "we have not implemented
+versioning yet" does not — that is an unmet contract, which stays stated and
+becomes a planning delta. When in doubt the rule **applies**: an inapplicable
+claim that later acquires a surface is a silent hole, whereas a stated rule that
+turns out vacuous costs a reader one line.
+
+Reviewers treat a rule absent from `#baseline` **and** named in the inapplicable
+paragraph as complete. A rule absent from both is a gap.
+
 ## The rules
 
 **Data-write discipline**

@@ -20,7 +20,13 @@ stack vocabulary:
   `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) → the language is
   **known**: verify against those facts instead — the LSP per how the facts say
   it is provided, the mise tool and manifest per the fact values, `n/a`
-  accepted silently as an answer. **No installed plugin declares the
+  accepted silently as an answer. **A token declared only under a template's
+  `optional_languages:` counts as declared** — the template admits it, which is
+  what this test asks. Say so in the report, though: an optional token carries
+  no language facts of its own, so its LSP/toolchain/manifest rows read
+  **unverified** rather than passing. Known-but-unverified is an honest third
+  answer, and quietly reporting it as a pass would be the drift this check
+  exists to catch. **No installed plugin declares the
   token and no materialized facts cover it** → report **unknown language** as a **blocking** finding: nothing
   else can be checked for it, and a stack vwf has no template for is one it
   cannot plan or build against. The remedy is two lines — install the stack

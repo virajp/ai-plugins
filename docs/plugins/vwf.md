@@ -911,11 +911,13 @@ excepted because since vwf 19.1.0 it belongs to the `system` list as well as the
 carries — the same CLI would otherwise be covered or exempt depending on how it
 was typed.
 
-A `plugin` project's flows are its **extension points** — one per skill, command
-or hook, `index.md` alone, no standard-flow mandates — and each pins the host
-and the extension point it registers against, the invocation surface and why it
-was chosen, what the host supplies, the gates and halts, and the artifacts
-written. An unrepresented `plugin` project is a coverage hole like any other.
+A `plugin` project's flows are its **invocable** extension points — one per
+registration something can *trigger* (a command, an invocable skill, a hook). A
+**subagent** is a step of the flow that dispatches it and **auto-applying
+doctrine** is a Reference on the flows it governs: neither has a trigger or an
+outcome of its own, so neither is a flow. Narrowed in 19.2.0 from *one flow per
+skill, agent or hook*, which measured at 102 flows on a repo shipping fifteen
+plugins from one project — a sweep nobody completes.
 
 **Numbers are designated, not invented.** One number line per project:
 

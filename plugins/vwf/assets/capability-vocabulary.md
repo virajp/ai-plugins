@@ -121,6 +121,33 @@ somewhere it should not have, and is a reviewer failure.
 | `maps-navigation`                            | the maps provider                |
 | `distributed-tracing`                        | telemetry                        |
 
+## Nouns for things that are not capabilities
+
+The table above covers **backing services**, because those are what a capability
+token names. But blueprint prose keeps reaching for a second group — the
+developer-facing machinery every product sits on — and with no noun offered, the
+product name goes in instead. These are the ones observed leaking:
+
+| Instead of                        | Write                                              |
+| --------------------------------- | -------------------------------------------------- |
+| Git, GitHub, GitLab               | version control / the version-control host         |
+| "gitignored", "in `.gitignore`"   | ignored by version control                         |
+| "the main checkout", "the worktree" | the primary checkout / an isolated checkout       |
+| the default branch's product name | the default branch                                 |
+| npm, PyPI, crates.io              | a package registry                                 |
+| GitHub Actions, GitLab CI         | the continuous-integration workflow                |
+| Docker, Podman                    | the container runtime                              |
+| VS Code, JetBrains, a named agent | the editor / the agent host                        |
+
+**These are not capability tokens** and never appear in a registry
+`capabilities:` list — they are prose nouns only, and they live here because
+this is the file every author already reads for the same purpose.
+
+The **plugin contract's** carve-out sits beside this and is genuinely different:
+a plugin flow **must** name its host's extension mechanism, because that choice
+decides what the host supplies. See the plugin-contract reference; do not
+generalize it past the extension model.
+
 **Two carve-outs**, where a real product name is the contract:
 
 - **`environment.md`** — a secret's **issuer** is a fact about the world

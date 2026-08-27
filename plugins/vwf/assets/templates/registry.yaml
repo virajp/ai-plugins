@@ -67,10 +67,12 @@ projects:
 #
 #   plugin
 #     Covered by the blueprint, unlike every other `system` platform. Its
-#     flows are its EXTENSION POINTS — one flow per skill, command or hook,
-#     index.md alone, no standard-flow mandates. Each pins the host and the
-#     extension point, the invocation surface, what the host supplies, the
-#     gates and halts, and the artifacts written
+#     flows are its INVOCABLE EXTENSION POINTS — one flow per registration
+#     something can trigger (a command, an invocable skill, a hook), index.md
+#     alone, no standard-flow mandates. A subagent is a STEP of the flow that
+#     dispatches it; auto-applying doctrine is a REFERENCE — neither is a flow.
+#     Each pins the host and the extension point, the invocation surface, what
+#     the host supplies, the gates and halts, and the artifacts written
 #     (skills/blueprint-authoring/references/plugin-contract.md).
 #
 #   every other `data` and `system` platform

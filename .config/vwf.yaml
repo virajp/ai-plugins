@@ -55,11 +55,12 @@ memory:
 
 blueprint:
   coverage: partial
-  # Sweep PAUSED 2026-08-27, deliberately — not abandoned. Per-extension-point
-  # flow granularity was measured at ~250k tokens / ~10 min per flow, i.e. ~12M
-  # tokens for the 48-flow scope, and the format-fit findings in
-  # docs/memory/gaps/2026-08-27-plugin-flow-granularity.md need a vwf-side
-  # decision before more flows are authored against a contract known not to fit.
+  # Sweep PAUSED 2026-08-27, deliberately — not abandoned. The granularity
+  # finding that paused it is RESOLVED in vwf 19.2.0: a plugin project's flows
+  # are its INVOCABLE extension points, so subagents are steps and auto-applying
+  # doctrine is a Reference. Scope fell 48 -> 25 flows (~6M tokens).
+  # Resume with /vwf:blueprint; 010-vwf-setup needs a fix round first (its six
+  # gaps include three caused by the now-corrected code-independence conflict).
   # /vwf:plan stays blocked while this reads `partial`, which is correct.
   remaining:
     - flows/plugins # 010-vwf-setup written (status: draft, 6 open reviewer gaps); ~47 unwritten
