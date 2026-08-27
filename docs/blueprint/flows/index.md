@@ -32,10 +32,11 @@ status: draft # draft | reviewed | stable
 
 ### plugins
 
-| #   | Flow                                              | Platforms | Serves goal                                                                                                                                                        | Entities touched | Status |
-| --- | ------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ------ |
-| 010 | [vwf Setup](./plugins/010-vwf-setup/index.md)     | —         | [A working codebase adopts it without a rewrite](../product.md#goal-adopt-without-rewrite), [Getting started is one command](../product.md#goal-one-command-start) | —                | draft  |
-| 020 | [vwf Product](./plugins/020-vwf-product/index.md) | —         | [Work traces to a stated outcome](../product.md#goal-traceable-work), [The blueprint stays authoritative](../product.md#goal-authoritative-blueprint)              | —                | draft  |
+| #   | Flow                                                        | Platforms | Serves goal                                                                                                                                                        | Entities touched | Status |
+| --- | ----------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ------ |
+| 010 | [vwf Setup](./plugins/010-vwf-setup/index.md)               | —         | [A working codebase adopts it without a rewrite](../product.md#goal-adopt-without-rewrite), [Getting started is one command](../product.md#goal-one-command-start) | —                | draft  |
+| 020 | [vwf Product](./plugins/020-vwf-product/index.md)           | —         | [Work traces to a stated outcome](../product.md#goal-traceable-work), [The blueprint stays authoritative](../product.md#goal-authoritative-blueprint)              | —                | draft  |
+| 030 | [vwf Architecture](./plugins/030-vwf-architecture/index.md) | —         | [Dependencies precede dependents](../product.md#goal-ordered-dependencies), [The workflow imposes no stack](../product.md#goal-stack-agnostic-workflow)            | —                | draft  |
 
 ## Inter-Service Contracts
 

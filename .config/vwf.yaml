@@ -59,14 +59,17 @@ blueprint:
   # finding that paused it is RESOLVED in vwf 19.2.0: a plugin project's flows
   # are its INVOCABLE extension points, so subagents are steps and auto-applying
   # doctrine is a Reference. Scope fell 48 -> 25 flows (~6M tokens).
-  # Two flows REVIEWED. 010-vwf-setup: 4 rounds (6->5->5->1), ~615k tokens, 181
-  # lines. 020-vwf-product: 3 rounds (5->3->0), ~429k tokens, 172 lines — the
-  # improvement came from front-loading the writer prompt with the eight failure
-  # modes 010's reviews found, none of which recurred. Budget ~400k per flow;
-  # both sit over the 160-line budget, each certified as genuine overage.
+  # Three flows REVIEWED, each certified over the 160-line budget as genuine
+  # overage rather than padding:
+  #   010-vwf-setup       4 rounds (6->5->5->1)  ~615k tokens  181 lines
+  #   020-vwf-product     3 rounds (5->3->0)     ~429k tokens  172 lines
+  #   030-vwf-architecture 3 rounds (8->4->1)    ~525k tokens  215 lines
+  # Front-loading the writer prompt with prior rounds' failure modes stops them
+  # recurring; 030 was longer only because it genuinely has 11 steps and 4 gates.
+  # Working budget ~450k per flow, so the remaining 22 are ~10M.
   # /vwf:plan stays blocked while this reads `partial`, which is correct.
   remaining:
-    - flows/plugins # 010-vwf-setup + 020-vwf-product REVIEWED; 23 unwritten
+    - flows/plugins # 010, 020, 030 REVIEWED; 22 unwritten
     - coherence
 
 enforcement:
