@@ -36,9 +36,14 @@ jobs:
     steps:
       # The triggering ref: the pushed tag, or whatever ref the dispatch named
       # (deps-update.yml dispatches this workflow on the tag it just pushed).
+      # fetch-depth: 0 because the branch check below needs enough history to
+      # answer whether the tagged commit is reachable from main. A shallow
+      # checkout makes `merge-base --is-ancestor` fail for lack of commits
+      # rather than for the reason the gate exists.
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
+          fetch-depth: 0
 
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
@@ -55,6 +60,21 @@ jobs:
             exit 1
           fi
           echo "Releasing @askviraj/ai-plugins@$pkg"
+
+      # conventions.md#pipeline, rule `pipeline/branch-validated`: a release tag
+      # must be reachable from the default branch. Without this, a tag pushed
+      # from any branch publishes — the tag/package.json check above proves the
+      # version is consistent, never that the commit was ever reviewed.
+      # Skipped for a dispatch on a branch, like the version check.
+      - name: Verify the tag is reachable from main
+        if: github.ref_type == 'tag'
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::tag $GITHUB_REF_NAME is not reachable from main — refusing to publish"
+            exit 1
+          fi
+          echo "$GITHUB_REF_NAME is on main."
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

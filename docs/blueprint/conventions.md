@@ -177,8 +177,9 @@ registry that has exactly one. `pipeline/staging-is-not-a-release` is therefore
    `pipeline/tag-triggered-deploys`.
 3. **`pipeline/branch-validated`** — the release workflow validates that the
    tagged commit is reachable from `main` before publishing, and fails
-   otherwise. **Not met today** — no such check exists, so a tag on any branch
-   would publish. Stated as the contract; the delta is a planning item.
+   otherwise. **Conforms today.** The version check that precedes it proves the
+   tag and the manifest agree; it has never proved the commit was reviewed,
+   which is the separate thing this rule asks for.
 4. **`pipeline/staging-is-not-a-release`** — **inapplicable**; see above.
 5. **`pipeline/tested-before-release`** — no publish step runs until the tests
    pass **in the same workflow run**; a green status from an earlier run does
