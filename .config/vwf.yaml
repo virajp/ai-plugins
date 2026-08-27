@@ -52,3 +52,12 @@ harness:
 
 memory:
   wing: ai-plugins
+
+enforcement:
+  rules:
+    pipeline/tag-triggered-deploys:
+      waived: true
+      reason: No staging destination exists, so the <env> segment would encode a
+        distinction this product does not have. Tags keep the <project> segment
+        and read <project>-v<semver> (installer-v6.0.0). Paired with the note in
+        docs/blueprint/conventions.md#pipeline.
