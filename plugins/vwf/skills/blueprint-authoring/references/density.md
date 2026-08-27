@@ -30,6 +30,7 @@ so the number is a trigger to look, not an automatic failure.
 | Doc                  | Budget              | Hard smell       |
 | -------------------- | ------------------- | ---------------- |
 | flow `index.md`      | 120 lines           | > 200            |
+| **plugin** flow `index.md` | **160 lines** | > 240            |
 | flow `<platform>.md` | 100 lines           | > 160            |
 | entity `index.md`    | 120 lines           | > 200            |
 | `product.md`         | 120 lines           | > 200            |
@@ -38,6 +39,15 @@ so the number is a trigger to look, not an automatic failure.
 
 A doc genuinely over budget with every line passing the test is fine — say so in
 the review and move on. A doc over budget because nobody trimmed it is a gap.
+
+**A plugin flow gets 160, not 120, and the extra is structural.** It owes five
+sections a service flow has no equivalent for — host & extension point,
+invocation surface, what the host supplies, gates & halts, artifacts written
+(see the plugin-contract reference) — which measured at ~40 lines on the first
+one authored. Judging it against 120 flags every plugin flow ever written, which
+is a budget that has stopped measuring anything. The **anti-patterns below still
+apply unchanged**: the allowance is for the extra sections, not for looser prose
+inside them.
 
 ## Anti-patterns
 

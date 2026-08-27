@@ -59,11 +59,14 @@ blueprint:
   # finding that paused it is RESOLVED in vwf 19.2.0: a plugin project's flows
   # are its INVOCABLE extension points, so subagents are steps and auto-applying
   # doctrine is a Reference. Scope fell 48 -> 25 flows (~6M tokens).
-  # Resume with /vwf:blueprint; 010-vwf-setup needs a fix round first (its six
-  # gaps include three caused by the now-corrected code-independence conflict).
+  # 010-vwf-setup is now REVIEWED and is the template for the other 24. It took
+  # 4 review rounds (6->5->5->1 gaps) and ~615k tokens; three of round 1's gaps
+  # were caused by the code-independence conflict since fixed, so later flows
+  # should converge faster. It sits at 181 lines against the 160 plugin budget,
+  # certified by the reviewer as genuine overage, not padding.
   # /vwf:plan stays blocked while this reads `partial`, which is correct.
   remaining:
-    - flows/plugins # 010-vwf-setup written (status: draft, 6 open reviewer gaps); ~47 unwritten
+    - flows/plugins # 010-vwf-setup REVIEWED — the template for the rest; 24 unwritten
     - coherence
 
 enforcement:

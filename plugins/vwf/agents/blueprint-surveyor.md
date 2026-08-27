@@ -62,7 +62,9 @@ condition; a unit may fail more than one (report the most blocking).
 6. **Unreviewed screens** — a flow platform listed under `blueprint.remaining`
    as `screens/<project>/<NNN>-<flow>/<platform>`.
 7. **Stale coherence** — `coherence` present in the passed `remaining` list. 7a.
-   **Over-budget doc (density)** — a flow `index.md` over **120** lines, a
+   **Over-budget doc (density)** — a flow `index.md` over **120** lines (a
+   **plugin** project's flow over **160**: it owes five sections a service flow
+   does not), a
    `<platform>.md` over **100**, or an entity `index.md` over **120**, per
    `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/density.md`.
    Count lines only — do **not** judge whether the content is padded; that is
