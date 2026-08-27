@@ -30,11 +30,11 @@ status: draft # draft | reviewed | stable
      110–890 product flows, 910 profile, 920 settings, 930 notifications,
      940 delete-account. -->
 
-### <project>
+### plugins
 
-| #     | Flow                                             | Platforms    | Serves goal                         | Entities touched | Status |
-| ----- | ------------------------------------------------ | ------------ | ----------------------------------- | ---------------- | ------ |
-| <NNN> | [<flow name>](./<project>/<NNN>-<flow>/index.md) | mobile, auto | [<goal>](../product.md#goal-<slug>) | <links>          | draft  |
+| #   | Flow                                          | Platforms | Serves goal                                                                                                                                                        | Entities touched | Status |
+| --- | --------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ------ |
+| 010 | [vwf Setup](./plugins/010-vwf-setup/index.md) | —         | [A working codebase adopts it without a rewrite](../product.md#goal-adopt-without-rewrite), [Getting started is one command](../product.md#goal-one-command-start) | —                | draft  |
 
 ## Inter-Service Contracts
 

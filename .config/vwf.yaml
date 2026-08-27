@@ -53,6 +53,18 @@ harness:
 memory:
   wing: ai-plugins
 
+blueprint:
+  coverage: partial
+  # Sweep PAUSED 2026-08-27, deliberately — not abandoned. Per-extension-point
+  # flow granularity was measured at ~250k tokens / ~10 min per flow, i.e. ~12M
+  # tokens for the 48-flow scope, and the format-fit findings in
+  # docs/memory/gaps/2026-08-27-plugin-flow-granularity.md need a vwf-side
+  # decision before more flows are authored against a contract known not to fit.
+  # /vwf:plan stays blocked while this reads `partial`, which is correct.
+  remaining:
+    - flows/plugins # 010-vwf-setup written (status: draft, 6 open reviewer gaps); ~47 unwritten
+    - coherence
+
 enforcement:
   rules:
     pipeline/tag-triggered-deploys:

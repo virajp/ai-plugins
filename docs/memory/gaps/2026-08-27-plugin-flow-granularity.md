@@ -101,6 +101,65 @@ two-plugin north star keeps — with the other thirteen represented by an explic
 That still leaves roughly **48 flows**, which is a large sweep but not a
 throwaway one.
 
+## Measured cost — the evidence that settled it
+
+One flow was authored end-to-end (`flows/plugins/010-vwf-setup`) before the
+sweep was paused, specifically to replace the estimate with a number:
+
+| Stage                | Tokens   | Wall clock |
+| -------------------- | -------- | ---------- |
+| `flow-writer`        | 104k     | 4m 39s     |
+| `blueprint-reviewer` | 66k      | 2m 13s     |
+| **one round**        | **170k** | **~7 min** |
+
+The reviewer returned **six gaps**, so at least one fix round follows: call it
+**~250k tokens and ~10 minutes per flow**, and that is for a flow whose contract
+was already written down in a `SKILL.md` — the cheapest case this product has.
+
+Across the 48-flow scope: **~12M tokens and ~8 hours.** The session in which
+this was measured had ~14.9M remaining, so a single sweep would consume nearly
+all of it and still not finish.
+
+**This converts the finding from a judgment call into arithmetic.**
+Per-extension-point granularity is not merely verbose at this repo's scale — it
+is unaffordable, and a contract whose only conformant reading cannot be executed
+is a contract that needs changing. The sweep was **paused** here rather than
+worked around, on the reasoning that authoring 48 flows against a format known
+not to fit would produce expensive artifacts nobody should trust.
+
+## What the first flow taught about the contract itself
+
+The six gaps split three and three, and both halves are informative.
+
+**Three were defects in how the flow was commissioned**, not in the flow:
+
+- **Code-independence was applied too strictly, and the plugin contract says
+  so.** `plugin-contract.md` *requires* naming the host's extension mechanism
+  ("the mechanism is named in the host's own vocabulary"), because skill,
+  command and hook supply different inputs — so the choice is load-bearing. A
+  blanket "name no technology" instruction makes the required section
+  unwritable. **The two rules genuinely conflict at this one point**, and the
+  plugin contract wins; that is worth stating explicitly somewhere, because the
+  obvious reading of the code-independence rule forbids it.
+- Real product names still leaked through anyway ("git flow", "gitignored", "the
+  main checkout"), which suggests the prose nouns for version control are
+  missing from `capability-vocabulary.md`'s mapping table.
+- A configuration **key spelling** reached the doc, which the plugin contract
+  classes as realization.
+
+**Three were genuine contract holes** the reviewer was right to catch: steps
+carrying no actors and no resolving links; two declared non-halting degradations
+with no acceptance criteria; and a two-way fork stated without saying what
+differs between the branches.
+
+**The link finding compounds the scale problem.** A flow's steps must link to
+the sibling flows they delegate to — and this one delegates to at least three.
+With 48 flows the cross-link graph is dense, so flows cannot be authored
+independently: each early flow accrues `target not yet authored` gaps that only
+close once the later ones exist. The sweep is therefore not 48 independent units
+but one large interdependent graph, which the per-flow cost above does not
+capture.
+
 ## What would close it
 
 A vwf-side decision on **plugin flow granularity** — whether a plugin project
