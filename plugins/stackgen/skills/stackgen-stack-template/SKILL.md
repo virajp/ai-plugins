@@ -62,7 +62,7 @@ Return **only** this, filled from `.claude/stackgen/templates/<slug>.md`:
 ```yaml
 slug: <the requested slug>
 axis: project | backing | deploy | repo
-kind: language-bundle | database | cloud-provider # assets/kinds.md
+kind: language-bundle | database | cloud-provider | repo-gate # assets/kinds.md
 components: # the bundle's composition — the per-component dispatch record
   - <type>/<slug>@<pack version> # pack-sourced
   - <type>/<slug>@generated # generated

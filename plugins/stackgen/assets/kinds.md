@@ -254,6 +254,80 @@ component in the bundle:
 The `language-bundle` band applies unchanged: each topic's artifact is
 **60–130 dense lines of judgment**.
 
+## `repo-gate` — the gates that run over the whole repo
+
+The output is a **Repo-Gate-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the `toolchain-gate`
+components that apply to a repository as a whole rather than to one
+toolchain inside it. It is the only kind rooted at the `repo` axis, and the
+only one a polyglot repo materializes **once** rather than per language.
+
+**The seam with `language-bundle` topics 9–10, which is the whole reason
+this kind exists.** A gate whose config is meaningful only for one toolchain
+— a JavaScript linter, a Rust clippy table — is topic 10 of *that
+language's* bundle and never appears here. A gate that runs over every file
+regardless of what language wrote it belongs here. Getting this backwards is
+how a polyglot repo ends up with three secret scanners, one per language
+bundle, each with its own allowlist.
+
+- **Axis**: `repo`.
+- **Structure**: the **topic bar** below — but **no router skill**. Each
+  gate is one self-contained paths-scoped skill bound to its own config
+  file, which is how the curated archetype ships them; there is no
+  on-demand reference tier to route to, because a gate's doctrine is one
+  screen of judgment and its config is one file.
+- **Scope**: what each gate must catch, what it must not scan, and how a
+  finding is answered. Never the language's lint rules — those are the
+  language bundle's. Never CI system syntax — that is the reserved
+  `ci-system` kind's.
+- **Facts & harness**: gates satisfy no vwf harness capability, so
+  `harness:` is `n/a` throughout. What they contribute is the `repo`-axis
+  fact of **one task name per gate**, which is what topic 5 exists to pin.
+- **Invocation**: every gate skill paths-scoped to its config file and
+  **not** user-invocable — a gate the model applies while editing the file
+  it governs, never a command someone runs.
+
+### The topic bar
+
+A closed list of five topics, one artifact per topic, each individually
+researched and cited. Extracted from the curated archetype — the `devtools`
+plugin's five repo gates. A gate the repo has no surface for is recorded
+`n/a`, never silently absent.
+
+1. **Format authority** — one formatter for the repo, one root config,
+   plugins pinned by version, generated trees excluded, and the escape
+   hatch for languages the formatter has no plugin for. Formatting only:
+   correctness belongs to the linter, and saying so is part of the topic.
+2. **Secret scanning** — the working tree on every commit and the history
+   once; allowlist by fingerprint rather than by rule; and the rule that a
+   hit is a credential to **rotate**, never a line to silence.
+3. **Dependency vulnerability scanning** — the source tree per commit and
+   the built artifact before release; the severity threshold that fails a
+   run; and time-boxed ignore rules, since an ignore with no expiry is a
+   permanent silence nobody re-reads.
+4. **Hook running** — the local gate: hooks that call the repo's task
+   library so the identical command runs locally and in CI, revs pinned and
+   updated deliberately, and `files:` scoping so a hook fires only for what
+   it validates.
+5. **Gate wiring & CI parity** — every gate reachable as one task name, the
+   same task names run in CI, cheap gates ordered before expensive ones,
+   and the exclusion set stated **once** rather than drifting per gate.
+   This topic is what makes the gates a bundle rather than unrelated tools.
+
+The bar maps onto components one-to-one for topics 1–4 — one
+`toolchain-gate` component each. **Topic 5 belongs to the hook-runner
+component**, because that is where gates are actually wired and where local
+and CI are made to run the same command; it is the one topic that is about
+the others rather than about a tool of its own. A repo with no hook runner
+records topic 5 `n/a` and loses the parity guarantee with it, which is worth
+saying out loud rather than discovering later.
+
+### Depth
+
+The `language-bundle` band applies unchanged: each topic's artifact is
+**60–130 dense lines of judgment**. The curated archetype's five gate skills
+sit at 73–90 lines, which is the band's evidence.
+
 ## Reserved kinds (defined at their merge wave, not before)
 
 - **`ci-system`** — the `cicd` plugin's shape: neutral rules shared, one
@@ -273,7 +347,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all three kinds the structural checklist **is the
+the kind's ruling. For all four kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -281,4 +355,7 @@ doctrine is part of the bar. For `cloud-provider` the composition
 supplies the bar in halves — the provider topics by the `cloud-provider`
 component, the service topics by each `cloud-service` component, the
 extension by category — and the cite-not-restate seam between service
-topics and provider doctrine is part of the bar.
+topics and provider doctrine is part of the bar. For `repo-gate` the
+composition is the gate components together, and one check carries the
+kind: a **language-specific** linter or formatter appearing here is a gap,
+because it belongs to topic 10 of its language bundle.

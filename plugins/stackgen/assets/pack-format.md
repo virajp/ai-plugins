@@ -53,7 +53,7 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | repo-gate # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language components only

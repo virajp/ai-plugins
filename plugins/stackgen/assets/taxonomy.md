@@ -81,6 +81,12 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   components.
 - A **Datastore-Bundle** is category-level doctrine + an instance
   component (a `datastore`, or a cloud's `cloud-service`/`sql`).
+- A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
+  the whole repository rather than to one toolchain in it — the only
+  composition rooted at the `repo` axis. A gate meaningful for exactly one
+  toolchain is **not** here: it belongs to that language's bundle, which is
+  what keeps a polyglot repo from materializing the same scanner once per
+  language.
 
 ## Category-level doctrine
 

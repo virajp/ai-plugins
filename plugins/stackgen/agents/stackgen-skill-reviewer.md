@@ -61,7 +61,7 @@ edits. You never write files.
    outside the output vocabulary (no executables from generation, no MCP or
    LSP configuration) appears at all.
 8. **Coverage.** For a kind whose topic bar is settled in `assets/kinds.md`
-   (today: `language-bundle`, `database` and `cloud-provider`), walk the
+   (today: `language-bundle`, `database`, `cloud-provider` and `repo-gate`), walk the
    bar topic by topic against the **composition** — whichever components
    supply each topic, per the kind's topic→component-type mapping — never
    a single component in isolation. A
