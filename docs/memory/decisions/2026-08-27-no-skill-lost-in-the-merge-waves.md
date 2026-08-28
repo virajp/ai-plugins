@@ -6,6 +6,11 @@ full-product sweep, deciding how the `plugins` project is represented
 Mirrors the mempalace drawer (wing `ai-plugins`, room `decisions`); both stores
 written together, per `plugins/vwf/assets/memory.md`.
 
+**Corrected 2026-08-28: the count is 53 skills, not 58.** 82 total, less `vwf`'s
+26 and `stackgen`'s 3, leaves 53 — the original arithmetic was five too high,
+and it is the figure Wave D's completeness check is anchored on. Counted
+directly off the tree.
+
 ## The constraint
 
 **Every skill in the thirteen plugins slated for retirement must be migrated
@@ -27,7 +32,7 @@ stack templates and judgment prose become packs; Wave B says the capability
 contracts become curated knowledge. Neither list is a *complete* inventory of
 what the thirteen plugins contain.
 
-Concretely, the thirteen hold **58 skills** (82 total, less `vwf`'s 26 and
+Concretely, the thirteen hold **53 skills** (82 total, less `vwf`'s 26 and
 `stackgen`'s 3) — among them `devtools`' eleven and `flutter`'s nine, which
 include doctrine with no obvious pack-shaped destination. A wave that
 successfully lands every *template* could still drop a doctrine skill nobody
@@ -35,6 +40,21 @@ listed, and the deletion would look complete.
 
 **The check Wave D now owes:** an explicit before/after inventory of skills, not
 of templates. A skill with no destination blocks the deletion until it has one.
+
+## What the 2026-08-28 re-plan added
+
+Grouping the 53 **by shape** rather than by destination is what exposed the real
+hole: 22 stack-adapter pairs (retired, superseded by stackgen's own two), 25
+doctrine skills (become packs — the easy bulk), and **6 runtime seams** that
+fail stackgen's charter test, because nothing about them materializes into a
+repo. Plus five manifest-only machinery items. See
+[the re-derived waves](../../plans/2026-08-28-merge-waves.md).
+
+**The residue means the two-plugin north star does not close:** four LSP
+declarations, the `claude-design` MCP server, and the design-import seam that
+depends on it are plugin-manifest features no repo file can express. Wave D
+cannot start until that is decided — vwf absorbs it, a third plugin survives, or
+the surfaces are dropped.
 
 ## Effect on this sweep
 
