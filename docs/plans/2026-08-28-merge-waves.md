@@ -114,13 +114,13 @@ which held that it could not.
 `design-tools` already separates along the line the decision draws, so the split
 is mechanical rather than a judgement per file:
 
-| Artifact                                        | Lands in                          | Because                                                          |
-| ----------------------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
-| 3 × `SKILL.md` (the dispatch logic)             | **vwf**                           | Neutral — knows what a payload *is*, not how to fetch one        |
-| 9 × `references/<tool>.md` (3 tools × 3 skills) | **stackgen**                      | Per-tool API knowledge is stack knowledge                        |
-| `assets/canvas-push.md`                         | **stackgen**                      | The Canvas Push Protocol is one tool's MCP operations            |
-| `assets/canvas-claude.md`                       | **vwf**                           | A neutral deliverable template, written by `/vwf:screens prompt` |
-| the `claude-design` MCP server                  | **stackgen**, as generated wiring | Installed on demand, never held                                  |
+| Artifact                                        | Lands in                          | Because                                                                                                                               |
+| ----------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 3 × `SKILL.md` (the dispatch logic)             | **vwf**                           | Neutral — knows what a payload *is*, not how to fetch one                                                                             |
+| 9 × `references/<tool>.md` (3 tools × 3 skills) | **stackgen**                      | Per-tool API knowledge is stack knowledge                                                                                             |
+| `assets/canvas-push.md`                         | **stackgen**                      | The Canvas Push Protocol is one tool's MCP operations                                                                                 |
+| `assets/canvas-claude.md`                       | **vwf**                           | Names no design tool — its only `stitch` hits are the English verb, the very false positive that keeps the token out of `TOOL_TOKENS` |
+| the `claude-design` MCP server                  | **stackgen**, as generated wiring | Installed on demand, never held                                                                                                       |
 
 **The seam vwf uses to reach the per-tool knowledge is the `ux-gate` mechanism,
 not a second one.** stackgen materializes the resolved tool's reference as a
@@ -130,9 +130,13 @@ One mechanism covers both seams, and neither needs vwf to construct a name from
 configuration, which is the property the old adapter contract existed to
 protect.
 
-> **Found while inventorying, unrelated to this plan:** `CLAUDE.md` lists
-> `canvas-claude` among vwf's `assets/templates/`. It is not there — it lives in
-> `plugins/design-tools/assets/`. Fix it wherever the design move lands.
+**Why the template is the adapter's today, and why moving it is safe.**
+`/vwf:screens prompt` names it only as *the adapter's conventions template*
+(`skills/screens/references/prompt-mode.md`) and never constructs a path into
+another plugin — which is correct, since `${CLAUDE_PLUGIN_ROOT}` names only its
+own. Once the adapter dissolves, vwf can own the file outright, because it names
+no tool. **Fixed in passing 2026-08-28:** `CLAUDE.md` had listed `canvas-claude`
+among vwf's `assets/templates/`, where it has never been.
 
 ### What the decision costs
 
