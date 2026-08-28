@@ -292,9 +292,10 @@ agents, hooks and rules only, shaped by a closed kind vocabulary whose per-kind
 lockfile per component — so the result is plain files your collaborators get
 with a `git pull` and no plugin install. Re-syncing against newer packs is an
 explicit, diffed decision — never a silent overwrite, and never a
-`settings.json` edit without separate consent. Ships no packs yet: the curated
-plugins above remain the covered-stack path, and stackgen's value today is the
-uncovered tail. `stackgen@virajp-plugins`
+`settings.json` edit without separate consent. The first four packs landed with
+Wave A — the repo gates `dprint`, `gitleaks`, `grype` and `pre-commit`; for
+everything else the curated plugins above remain the covered-stack path, and
+stackgen's value today is the uncovered tail. `stackgen@virajp-plugins`
 
 **[claude-code](./docs/plugins/claude-code.md)** — doctrine for writing plugins
 against Claude Code itself, which until now lived in this repo's own `.claude/`

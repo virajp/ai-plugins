@@ -75,10 +75,15 @@ Mixed compositions are the ordinary case — a covered language beside an
 uncovered framework copies the language's packs and generates only the
 framework's artifact — so a later re-sync can act on one component alone.
 
-**No packs ship yet.** Until the merge waves fold the curated plugins' knowledge
-into packs, the menu honestly returns `templates: []` plus the open `generate`
-entry, and the curated plugins remain the covered-stack path. stackgen's value
-today is the uncovered tail — the stack you use that nobody wrote a plugin for.
+**Wave A landed the first four packs** — `dprint`, `gitleaks`, `grype` and
+`pre-commit`, the `repo-gate` kind's components. Their doctrine still ships from
+`devtools` as well: a pack is the destination the no-skill-lost rule requires
+*before* a curated plugin can retire, not a replacement the moment it lands.
+
+Everything else waits for its wave, so the menu still leans on the open
+`generate` entry and the curated plugins remain the covered-stack path for every
+language, cloud and capability. stackgen's value today is the uncovered tail —
+the stack you use that nobody wrote a plugin for.
 
 ## Kinds — what can be generated, and its shape
 

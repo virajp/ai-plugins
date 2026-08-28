@@ -9,10 +9,11 @@ floods no session with every stack's doctrine, because nothing under
 `stacks/` is discovered by Claude Code — it only reaches a session once the
 materializer copies it into a repo's `.claude/` tree.
 
-**No packs ship yet.** Until the merge waves land them, the curated plugins
-remain the covered path and this file is the contract they will be folded
-into. The format is stated now so Wave B/C authors target a shape the
-materializer already reads.
+**The first packs landed with Wave A** — the four `toolchain-gate`
+components under `stacks/toolchain-gate/`. Everything else remains the
+curated plugins' until its wave lands, and this file is the contract each is
+folded into, so Wave B/C authors target a shape the materializer already
+reads.
 
 ## Layout
 

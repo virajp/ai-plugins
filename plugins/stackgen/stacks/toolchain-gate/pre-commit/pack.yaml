@@ -1,0 +1,10 @@
+name: pre-commit
+summary: The local gate, and the wiring that makes local and CI run the
+  identical command.
+version: 0.1.0
+type: toolchain-gate
+kind: repo-gate
+axis: repo
+# Topic 4 (hook running) and 5 (gate wiring & CI parity) of the repo-gate bar (assets/kinds.md).
+# Gates satisfy no vwf harness capability.
+harness: n/a

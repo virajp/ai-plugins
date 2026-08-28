@@ -1,0 +1,10 @@
+name: grype
+summary: The repo's dependency vulnerability scanner — source per commit,
+  artifact before release, ignores time-boxed.
+version: 0.1.0
+type: toolchain-gate
+kind: repo-gate
+axis: repo
+# Topic 3 (dependency vulnerability scanning) of the repo-gate bar (assets/kinds.md).
+# Gates satisfy no vwf harness capability.
+harness: n/a

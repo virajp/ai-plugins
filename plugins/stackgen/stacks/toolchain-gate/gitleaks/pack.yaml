@@ -1,0 +1,10 @@
+name: gitleaks
+summary: The repo's secret scanner — working tree every commit, history once,
+  allowlist by fingerprint.
+version: 0.1.0
+type: toolchain-gate
+kind: repo-gate
+axis: repo
+# Topic 2 (secret scanning) of the repo-gate bar (assets/kinds.md).
+# Gates satisfy no vwf harness capability.
+harness: n/a
