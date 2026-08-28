@@ -1,8 +1,10 @@
 # Plan: the merge waves, re-derived from stackgen's charter
 
-**Status: draft, 2026-08-28. Not approved. Nothing moves.** This supersedes
-Phase 5 of [2026-08-19-stackgen.md](./2026-08-19-stackgen.md), whose Wave A does
-not survive the charter that plan's own post-execution revision produced.
+**Status: draft, 2026-08-28. Not approved. Nothing moves.** The residue question
+the first draft was blocked on is **answered** (see *Decided 2026-08-28*); the
+waves themselves still need their individual go-aheads. This supersedes Phase 5
+of [2026-08-19-stackgen.md](./2026-08-19-stackgen.md), whose Wave A does not
+survive the charter that plan's own post-execution revision produced.
 
 ## Why the old Phase 5 fails
 
@@ -49,16 +51,17 @@ gates and tool doctrine, `typescript`'s six, `flutter`'s six, `gcp`'s three,
 `plugin-authoring`, and `cicd:workflow`. Every one teaches how to configure a
 file the repo owns, which is exactly what a materialized skill is for.
 
-## The residue, which is the real finding
+## The residue, and how it dissolves
 
 Six skills and five machinery items share one property: **they are
 plugin-manifest features or live delegation seams, and no repo file can express
-them.** They are what the two-plugin north star has no room for.
+them.** Grouping by destination hid them; grouping by shape is what surfaced
+them.
 
 | Item                                                             | Why it resists                                                                                                                                                |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 4 LSP declarations (`typescript`, `dart`, `kotlin`, `sourcekit`) | A language server is declared in a plugin manifest. Charter excludes it; `language_facts` only tells `/vwf:doctor` what to *check*, never provides the server |
-| the `claude-design` HTTP MCP server                              | Same: manifest-only                                                                                                                                           |
+| the `claude-design` HTTP MCP server                              | Same: manifest-only, under the charter as written                                                                                                             |
 | 3 design-adapter import skills                                   | A live seam, and it needs that MCP server to speak the tool's API                                                                                             |
 | 2 `-ux-gate` skills                                              | A live seam vwf reaches by **constructing** `<plugin>-ux-gate` from the stack pin                                                                             |
 | the npm→pnpm/bun hook                                            | **Passes** — a hook script is a file; packs carry scripts                                                                                                     |
@@ -74,39 +77,94 @@ failure mode this repo already knows worst:
   ([`stack-adapter.md`](../../plugins/vwf/assets/stack-adapter.md)). Once stacks
   are packs there is no plugin name to construct from.
 
-### One residue item has a clean answer
+### Decided 2026-08-28 — generate the wiring, don't hold it
 
-**The `-ux-gate` seam dissolves if stackgen materializes it.** The gate is
-stack-specific (Flutter golden tests + `meetsGuideline`; Playwright + axe), and
-the stack is known at materialization time — so the pack lands a repo-owned
-`ux-gate` skill and vwf invokes a **fixed** name in the repo's own `.claude/`
-instead of constructing one. That removes the name-construction contract rather
-than rehoming it, and it passes the charter.
+**The residue is not rehomed. It stops being a registry.**
 
-The design seam cannot take the same route: the tool is per-project config and
-would materialize fine, but the **MCP server underneath it is manifest-only**.
+The archived depth plan reasoned that curated machinery "cannot be a pack — the
+output vocabulary excludes MCP/LSP — so it merges into stackgen's own plugin
+manifest … a per-language `lspServers` registry". That does not follow, and the
+reason it does not is the point of stackgen: **a curated registry can only ever
+hold what someone curated, and stackgen exists for the uncovered tail.** A
+manifest listing four language servers is structurally unable to serve "any
+technology". It fails on scaling, before it fails on charter.
 
-## The decision this plan is blocked on
+So stackgen **ships or generates the scripts that install LSP and MCP
+configuration on demand**, and holds no list. The artifact materialized is the
+installer, not the config — which is what makes it work for a technology nobody
+curated.
 
-**The two-plugin north star does not close.** After every pack lands and every
-doctrine skill materializes, a residue remains that only a plugin manifest can
-hold: four language servers, one MCP server, and the design-import seam that
-depends on it. Three ways out, and this plan does not pick one:
+That the charter excluded these was policy, not capability. `.mcp.json` is
+already an ordinary repo file this toolkit edits
+([`cli/src/config/json.ts`](../../cli/src/config/json.ts) treats it as one of
+the user's own project files). LSP has no project-level surface in evidence,
+which is exactly why the mechanism there is a generated **install script**
+rather than a generated config file.
 
-1. **vwf absorbs it.** Precedent exists — vwf already absorbed context7's MCP
-   server on the grounds it was useful only alongside vwf. The cost is the
-   coupling both contracts exist to prevent: vwf would ship four language
-   servers and three design-tool references, and `design-tools`' pointed absence
-   from vwf's dependencies becomes meaningless.
-2. **A third plugin survives** holding the manifest layer — the north star
-   becomes vwf + stackgen + adapters. Honest about what a manifest can do that a
-   repo file cannot, at the cost of the two-plugin goal.
-3. **Drop the surfaces.** Language servers become the user's own config; design
-   import retires to export-only, which
-   [`design-adapter.md`](../../plugins/vwf/assets/design-adapter.md) notes has
-   always been adapter-free. Smallest surface, real capability loss.
+**The design seam goes to vwf, invoked conditionally** — the three import skills
+load only when a project declares a design tool, so a product without one never
+sees them. The MCP server underneath comes from stackgen's generated install, so
+vwf ships no server.
 
-## Re-derived waves, once that is answered
+**The north star closes at two.** This supersedes the finding one section above,
+which held that it could not.
+
+### Where each design artifact lands
+
+`design-tools` already separates along the line the decision draws, so the split
+is mechanical rather than a judgement per file:
+
+| Artifact                                        | Lands in                          | Because                                                          |
+| ----------------------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| 3 × `SKILL.md` (the dispatch logic)             | **vwf**                           | Neutral — knows what a payload *is*, not how to fetch one        |
+| 9 × `references/<tool>.md` (3 tools × 3 skills) | **stackgen**                      | Per-tool API knowledge is stack knowledge                        |
+| `assets/canvas-push.md`                         | **stackgen**                      | The Canvas Push Protocol is one tool's MCP operations            |
+| `assets/canvas-claude.md`                       | **vwf**                           | A neutral deliverable template, written by `/vwf:screens prompt` |
+| the `claude-design` MCP server                  | **stackgen**, as generated wiring | Installed on demand, never held                                  |
+
+**The seam vwf uses to reach the per-tool knowledge is the `ux-gate` mechanism,
+not a second one.** stackgen materializes the resolved tool's reference as a
+repo-owned artifact and vwf invokes a **fixed name in the repo's own
+`.claude/`** — the same shape that dissolves the `-ux-gate` name construction.
+One mechanism covers both seams, and neither needs vwf to construct a name from
+configuration, which is the property the old adapter contract existed to
+protect.
+
+> **Found while inventorying, unrelated to this plan:** `CLAUDE.md` lists
+> `canvas-claude` among vwf's `assets/templates/`. It is not there — it lives in
+> `plugins/design-tools/assets/`. Fix it wherever the design move lands.
+
+### What the decision costs
+
+Three amendments, none of them free:
+
+- **The output vocabulary gains an install-script kind**, or "hook scripts are
+  pack-only, never generated" relaxes to admit them
+  ([`output-tree.md`](../../plugins/stackgen/assets/output-tree.md),
+  [`kinds.md`](../../plugins/stackgen/assets/kinds.md)).
+- **`.mcp.json` reopens as a permitted target**, under the existing tier-2
+  consent model that already governs `.claude/settings.json` — a separate,
+  skippable consent line, never folded into the ordinary dry-run gate.
+- **The technology-free guard must survive the design move.** `plugins:check`
+  bans `claude-design` in vwf outside a three-path allowlist, and the guard's
+  own comment says adding an entry "should require arguing for it, which is the
+  point". Keep the **per-tool** references (`claude-design`, `lovable`,
+  `stitch`) on the stackgen side, materialized beside the MCP wiring — tool-
+  specific API knowledge is stack knowledge. vwf then holds only the neutral
+  dispatch skills, whose mention of all three reads as an enumeration and
+  already passes. **If the per-tool references land in vwf instead, the guard
+  needs new exceptions**, and that is the argument this plan declines to make.
+
+### The ux-gate seam dissolves the same way
+
+The gate is stack-specific (Flutter golden tests + `meetsGuideline`; Playwright
+
+- axe) and the stack is known at materialization time — so the pack lands a
+  repo-owned `ux-gate` skill and vwf invokes a **fixed** name in the repo's own
+  `.claude/`. That removes the name-construction contract rather than rehoming
+  it.
+
+## Re-derived waves
 
 - **Wave A — the part that passes today.** `devtools`' `scaffold` plus its five
   repo gates (`dprint`, `eslint`, `gitleaks`, `grype`, `pre-commit`) become
@@ -123,19 +181,23 @@ depends on it. Three ways out, and this plan does not pick one:
   here.
 - **Wave D — retirement, conditional.** Deletion still gated on the
   [no-skill-lost](../memory/decisions/2026-08-27-no-skill-lost-in-the-merge-waves.md)
-  rule, with the before/after inventory counted against **53**, not 58. Wave D
-  cannot start until the residue decision above is executed, because that is
-  what decides whether the marketplace shrinks to two entries or three.
+  rule, with the before/after inventory counted against **53**, not 58. The
+  marketplace shrinks to **two** entries. Wave D now also owes the three
+  amendments under *What the decision costs* — the install-script kind, the
+  `.mcp.json` reopening, and the guard surviving the design move — since each is
+  a precondition for something Wave D deletes.
 
 ## Verification
 
 Unchanged per wave: `plugins:marketplace --check`, `plugins:check`,
 `vitest run`, `typescript:test`, `dprint check`. Two additions this plan owes:
 
-- The **LSP-inertness claim** is unverified. The old Wave A assumed a merged
-  registry stays inert until matching files exist; nothing in this repo
-  documents that. If it is wrong, every install starts four language servers in
-  every repo. Prove it against the real CLI before any LSP move — it is
-  `target-verifier`'s job.
+- The **LSP-inertness claim** is moot for the registry that will not now be
+  built, but the generated installer inherits the same question in a smaller
+  form: what an install script writes must not start a language server in a repo
+  that has no matching files. Prove the mechanism against the real CLI before
+  Wave C ships one — it is `target-verifier`'s job.
+- **That a generated install script is discovered and runnable at all** is
+  unproven. It is a new output kind, and the charter forbade it until today.
 - The **skill census** — 53 in, 53 accounted for — runs at every wave boundary,
   not only at Wave D.

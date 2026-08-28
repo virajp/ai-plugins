@@ -50,11 +50,19 @@ fail stackgen's charter test, because nothing about them materializes into a
 repo. Plus five manifest-only machinery items. See
 [the re-derived waves](../../plans/2026-08-28-merge-waves.md).
 
-**The residue means the two-plugin north star does not close:** four LSP
+The residue looked like it broke the two-plugin north star: four LSP
 declarations, the `claude-design` MCP server, and the design-import seam that
-depends on it are plugin-manifest features no repo file can express. Wave D
-cannot start until that is decided — vwf absorbs it, a third plugin survives, or
-the surfaces are dropped.
+depends on it are plugin-manifest features no repo file can express.
+
+**Resolved 2026-08-28 — generate the wiring, do not hold it.** A curated
+registry can only ever hold what someone curated, and stackgen exists for the
+uncovered tail, so a manifest listing four language servers fails on *scaling*
+before it fails on charter. stackgen instead ships or generates the scripts that
+install LSP and MCP config on demand: the artifact materialized is the
+installer, not the config. The design-import skills go to **vwf, invoked
+conditionally** — only when a project declares a design tool — with the per-tool
+references staying stackgen-side so vwf's technology-free guard survives intact.
+**The north star closes at two.**
 
 ## Effect on this sweep
 
