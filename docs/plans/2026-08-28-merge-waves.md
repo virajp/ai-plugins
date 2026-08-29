@@ -223,12 +223,12 @@ The check
 demanded, run against the thirteen plugins' **53** skills as they stood at
 `65d2acd`. Every destination below was verified to exist on disk, not asserted.
 
-| Outcome          | Count | Meaning                                                           |
-| ---------------- | ----- | ----------------------------------------------------------------- |
-| **Migrated**     | 25    | Lives in a pack, a stackgen asset, or vwf; file confirmed present |
-| **Retired**      | 18    | Stack adapters superseded by stackgen's two plus bundles          |
-| **Kept**         | 4     | `gcp` and `cloudflare` adapters — their templates are unbundled   |
-| **Not migrated** | 6     | **Blocks its plugin's deletion**                                  |
+| Outcome          | Count | Meaning                                                                                   |
+| ---------------- | ----- | ----------------------------------------------------------------------------------------- |
+| **Migrated**     | 25    | Lives in a pack, a stackgen asset, or vwf; file confirmed present                         |
+| **Retired**      | 18    | Stack adapters superseded by stackgen's two plus bundles                                  |
+| **Kept**         | 7     | The 4 `gcp`/`cloudflare` adapters, plus `mise`/`scaffold`/`doppler` — `devtools` survives |
+| **Not migrated** | 3     | **Blocks its plugin's deletion** — the `gcp` three                                        |
 
 **53 of 53 accounted for.** Nothing is unexplained, which is the property the
 census exists to establish.
@@ -246,19 +246,19 @@ skills whose curated source still ships beside its pack. `docker` moves from
 repo's private tree — leaving **six** blockers. Both totals still reconcile
 against 53.
 
+**Re-run once more after `devtools` was reprieved.** Nothing moved on disk, but
+three rows changed meaning: `mise`, `scaffold` and `doppler` are **kept**, not
+*not migrated*, because the plugin holding them is no longer scheduled for
+deletion. **Three blockers remain** — the `gcp` three — and they are the
+deferred cloud research, blocking by design.
+
 ### The eight that blocked deletion
 
 - `gcp/gcp-cost`, `gcp/gcp-iam`, `gcp/gcp-local-stack` — the deferred cloud
   research. Known, and blocking by design rather than by oversight.
-- `devtools/mise`, `devtools/scaffold` — the toolchain manager and its
-  scaffolder. **No component type fits**: a task runner is not a gate, a package
-  manager or a build orchestrator. `mise` is also a `/vwf:doctor` blocking
-  mandate, so its doctrine disappearing would leave users the halt without the
-  explanation.
+- ~~`devtools/mise`, `devtools/scaffold`~~ — **resolved 2026-08-29**; see below.
 - ~~`devtools/docker`~~ — **resolved 2026-08-29**; see below.
-- `devtools/doppler` — development-time secret injection. vwf's capability
-  vocabulary has **no `secrets` token**, so there is no capability for it to
-  realize; minting one is vwf's move, not stackgen's.
+- ~~`devtools/doppler`~~ — **resolved 2026-08-29**, by dissolution; see below.
 - ~~`claude-code/plugin-authoring`~~ — **resolved 2026-08-29**; see below.
 
 Each is a **destination question, not a fold** — which is why the census is
@@ -314,7 +314,8 @@ them undefined; it now lists all eight.
 - **Wave D — retirement, conditional.** Deletion still gated on the
   [no-skill-lost](../memory/decisions/2026-08-27-no-skill-lost-in-the-merge-waves.md)
   rule, with the before/after inventory counted against **53**, not 58. The
-  marketplace shrinks to **two** entries. Wave D now also owes the three
+  marketplace floor is **three** entries (`vwf`, `stackgen`, `devtools`) plus
+  whatever `gcp` and `cloudflare` resolve to. Wave D now also owes the three
   amendments under *What the decision costs* — the install-script kind, the
   `.mcp.json` reopening, and the guard surviving the design move — since each is
   a precondition for something Wave D deletes.
@@ -356,6 +357,38 @@ also not a special case — every one of the 19 bundles is a stack its author
 uses, so "no outside demand" is a test this repo applies to nothing else. What
 was actually wrong was its **body**, which restated plugin-structure doctrine
 and shipped it to everyone; that is cut back to bare stack facts.
+
+### Resolved 2026-08-29 — `devtools` survives, and three blockers dissolve
+
+Put to Viraj as the type decision the plan said it was. The answer: `mise`
+**stays in `devtools`**, and that plugin survives as vwf's one dependency.
+Recorded in full at
+[`2026-08-29-devtools-survives-the-waves.md`](../memory/decisions/2026-08-29-devtools-survives-the-waves.md).
+
+The reasoning that outlives the call:
+
+- **`mise` is a `/vwf:doctor` blocking mandate.** Doctrine explaining a halt
+  belongs beside the halt, not in a plugin the user may not have pinned.
+- **`scaffold` is a live seam, not doctrine** — `/vwf:setup` invokes it, and a
+  skill vwf cannot see fails silently. The same shape that sent the design
+  adapters to vwf. It also copies 28 task files into `.config/`, outside
+  stackgen's `.claude/`-only output vocabulary.
+- **`scaffold` cannot be split from `mise`**: it lays down the standard the
+  `mise` skill defines. A writer and its spec do not live in different plugins.
+
+**`devtools/doppler` stopped being a blocker without being answered.** It only
+blocked because it had no home once `devtools` was deleted. There is no
+deletion, so no `secrets` capability token needs minting in vwf — closed, not
+deferred.
+
+**The cost, stated rather than discovered later.** Seven bundles name mise in
+prose and no component supplies it — `pnpm-workspace.md` says *"the task runner
+is the only orchestration"*. That hole is permanent by choice now. A bundle
+assuming the machine has a toolchain manager is no stranger than assuming it has
+git, but it is an assumption, and `devtools` is where a user gets it.
+
+**The north star closes at three**, not two: `vwf` + `stackgen` + `devtools`.
+That supersedes the count in the 2026-08-17 decision, not its reasoning.
 
 ## Verification
 
