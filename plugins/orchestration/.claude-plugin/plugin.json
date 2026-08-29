@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "orchestration",
   "version": "0.1.2",
-  "description": "Async orchestration capability plugin for vwf — the neutral contract every durable-work backend must satisfy (at-least-once delivery and the idempotency it forces, retry and back-off discipline, the poison-message path, visibility into work in flight) plus the self-hosted engine that belongs to no cloud: **Temporal**. Managed flavours — Cloud Workflows, Pub/Sub, task queues and the rest — come from the project's own cloud plugin, not from here. Implements the vwf stack-adapter contract.",
+  "description": "Async orchestration capability plugin for vwf \u2014 the neutral contract every durable-work backend must satisfy (at-least-once delivery and the idempotency it forces, retry and back-off discipline, the poison-message path, visibility into work in flight) plus the self-hosted engine that belongs to no cloud: **Temporal**. Managed flavours \u2014 Cloud Workflows, Pub/Sub, task queues and the rest \u2014 come from the project's own cloud plugin, not from here. Implements the vwf stack-adapter contract.",
   "author": {
     "name": "Viraj Patel"
   },
@@ -11,7 +11,6 @@
     "workflows",
     "queue",
     "temporal",
-    "capability",
-    "vwf-stack-adapter"
+    "capability"
   ]
 }

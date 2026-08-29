@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "claude-code",
   "version": "0.1.0",
-  "description": "The Claude Code plugin-authoring plugin — doctrine for writing plugins against Claude Code itself: directory-convention discovery, the invocation policy's three states and the silent failure the wrong one causes, manifest fields and the two marketplace traps, and hooks with their per-event verdict shapes. Owns the claude-code-plugin project template for vwf's `plugin` platform, so it also implements the vwf stack-adapter contract.",
+  "description": "The Claude Code plugin-authoring plugin \u2014 doctrine for writing plugins against Claude Code itself: directory-convention discovery, the invocation policy's three states and the silent failure the wrong one causes, manifest fields and the two marketplace traps, and hooks with their per-event verdict shapes. Owns the claude-code-plugin project template for vwf's `plugin` platform, so it also implements the vwf stack-adapter contract.",
   "author": {
     "name": "Viraj Patel"
   },
@@ -13,7 +13,6 @@
     "skills",
     "hooks",
     "marketplace",
-    "markdown",
-    "vwf-stack-adapter"
+    "markdown"
   ]
 }

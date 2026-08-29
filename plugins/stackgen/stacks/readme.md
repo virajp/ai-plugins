@@ -59,6 +59,13 @@ A component answers *what is TypeScript*; a bundle answers *what is a
 TypeScript service*. The menu lists bundles only — offering bare components
 would ask a user to assemble a stack rather than choose one.
 
+**Nine stack adapters retired here** — `typescript`, `flutter`, `devtools`,
+`claude-code`, `datastore`, `identity`, `observability`, `orchestration` and
+`object-storage` no longer ship a `-stack-menu` / `-stack-template` pair,
+because every template they offered is a bundle above. The retirement test was
+mechanical rather than a judgement: an adapter retires only when **every** slug
+it offered has a bundle. `gcp` and `cloudflare` fail that test and keep theirs.
+
 **Deferred — `gcp` and `cloudflare`.** Their `cloud-provider` bar wants ~30
 and ~9 artifacts; the curated plugins supply three provider skills and four
 ~80-line service templates. Folding them honestly needs per-topic research

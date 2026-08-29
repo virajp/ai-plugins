@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "datastore",
   "version": "0.1.2",
-  "description": "Datastore capability plugin for vwf — the neutral contract every datastore must satisfy (write versioning, transactional multi-record writes, server-generated time, the services-layer access rule, a deterministic local stack) plus the one provider that needs no cloud: **PostgreSQL**, self-hosted or managed anywhere. Managed flavours — Firestore, Cloud SQL, and the rest — come from the project's own cloud plugin, not from here. Implements the vwf stack-adapter contract.",
+  "description": "Datastore capability plugin for vwf \u2014 the neutral contract every datastore must satisfy (write versioning, transactional multi-record writes, server-generated time, the services-layer access rule, a deterministic local stack) plus the one provider that needs no cloud: **PostgreSQL**, self-hosted or managed anywhere. Managed flavours \u2014 Firestore, Cloud SQL, and the rest \u2014 come from the project's own cloud plugin, not from here. Implements the vwf stack-adapter contract.",
   "author": {
     "name": "Viraj Patel"
   },
@@ -11,7 +11,6 @@
     "database",
     "postgres",
     "relational",
-    "capability",
-    "vwf-stack-adapter"
+    "capability"
   ]
 }

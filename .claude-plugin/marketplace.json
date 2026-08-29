@@ -46,8 +46,7 @@
         "skills",
         "hooks",
         "marketplace",
-        "markdown",
-        "vwf-stack-adapter"
+        "markdown"
       ],
       "version": "0.1.0"
     },
@@ -83,8 +82,7 @@
         "database",
         "postgres",
         "relational",
-        "capability",
-        "vwf-stack-adapter"
+        "capability"
       ],
       "version": "0.1.2"
     },
@@ -127,8 +125,7 @@
         "lint",
         "format",
         "security",
-        "skills",
-        "vwf-stack-adapter"
+        "skills"
       ],
       "version": "1.0.2"
     },
@@ -155,8 +152,7 @@
         "mobile",
         "skills",
         "language-server",
-        "lsp",
-        "vwf-stack-adapter"
+        "lsp"
       ],
       "version": "0.9.0"
     },
@@ -196,8 +192,7 @@
         "auth",
         "oidc",
         "authorization",
-        "capability",
-        "vwf-stack-adapter"
+        "capability"
       ],
       "version": "0.1.2"
     },
@@ -215,8 +210,7 @@
         "buckets",
         "files",
         "capability",
-        "contract-only",
-        "vwf-stack-adapter"
+        "contract-only"
       ],
       "version": "0.1.1"
     },
@@ -234,8 +228,7 @@
         "opentelemetry",
         "otlp",
         "tracing",
-        "capability",
-        "vwf-stack-adapter"
+        "capability"
       ],
       "version": "0.1.2"
     },
@@ -253,8 +246,7 @@
         "workflows",
         "queue",
         "temporal",
-        "capability",
-        "vwf-stack-adapter"
+        "capability"
       ],
       "version": "0.1.2"
     },
@@ -276,7 +268,7 @@
         "materializer",
         "vwf-stack-adapter"
       ],
-      "version": "0.11.0"
+      "version": "0.12.0"
     },
     {
       "author": {
@@ -300,8 +292,7 @@
         "testing",
         "skills",
         "language-server",
-        "lsp",
-        "vwf-stack-adapter"
+        "lsp"
       ],
       "version": "3.3.0"
     },

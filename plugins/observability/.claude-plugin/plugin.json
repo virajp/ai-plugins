@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "observability",
   "version": "0.1.2",
-  "description": "Observability capability plugin for vwf — the neutral contract every telemetry backend must satisfy (the product emits **OTLP** and never a vendor SDK, one correlated trace/metric/log story, cardinality as a design decision, retention and cost) plus the self-hosted sink that needs no cloud: **OpenTelemetry into a Grafana OTel-LGTM stack**. Managed flavours — Cloud Monitoring and the rest — come from the project's own cloud plugin, and appear only as OTLP destinations. Implements the vwf stack-adapter contract.",
+  "description": "Observability capability plugin for vwf \u2014 the neutral contract every telemetry backend must satisfy (the product emits **OTLP** and never a vendor SDK, one correlated trace/metric/log story, cardinality as a design decision, retention and cost) plus the self-hosted sink that needs no cloud: **OpenTelemetry into a Grafana OTel-LGTM stack**. Managed flavours \u2014 Cloud Monitoring and the rest \u2014 come from the project's own cloud plugin, and appear only as OTLP destinations. Implements the vwf stack-adapter contract.",
   "author": {
     "name": "Viraj Patel"
   },
@@ -11,7 +11,6 @@
     "opentelemetry",
     "otlp",
     "tracing",
-    "capability",
-    "vwf-stack-adapter"
+    "capability"
   ]
 }
