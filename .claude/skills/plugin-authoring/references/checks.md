@@ -51,9 +51,9 @@ much smaller than the one it replaced: whole families of assertion became
    in a plugin's prose names a real agent of that plugin, and every declared
    agent is referenced at least once. Either direction alone misses a rename.
 8. **The vwf design-adapter contract.** All three import skills present in
-   `design-tools` and model-invocable — see the claude-code plugin's
-   [invocation reference](../../../../plugins/claude-code/skills/plugin-authoring/references/invocation.md)
-   for why a user-only adapter skill is worse than a missing one.
+   `design-tools` and model-invocable — see stackgen's
+   [artifact doctrine](../../../../plugins/stackgen/assets/artifact-doctrine.md)
+   §2 for why a user-only adapter skill is worse than a missing one.
 9. **The vwf stack-adapter contract.** Every plugin keyworded
    `vwf-stack-adapter` ships `<plugin>-stack-menu` and
    `<plugin>-stack-template`, both model-invocable. Same failure as rule 8 on

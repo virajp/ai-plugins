@@ -223,12 +223,12 @@ The check
 demanded, run against the thirteen plugins' **53** skills as they stood at
 `65d2acd`. Every destination below was verified to exist on disk, not asserted.
 
-| Outcome          | Count | Meaning                                                         |
-| ---------------- | ----- | --------------------------------------------------------------- |
-| **Migrated**     | 24    | Lives in a pack or in vwf; file confirmed present               |
-| **Retired**      | 18    | Stack adapters superseded by stackgen's two plus bundles        |
-| **Kept**         | 4     | `gcp` and `cloudflare` adapters — their templates are unbundled |
-| **Not migrated** | 7     | **Blocks its plugin's deletion**                                |
+| Outcome          | Count | Meaning                                                           |
+| ---------------- | ----- | ----------------------------------------------------------------- |
+| **Migrated**     | 25    | Lives in a pack, a stackgen asset, or vwf; file confirmed present |
+| **Retired**      | 18    | Stack adapters superseded by stackgen's two plus bundles          |
+| **Kept**         | 4     | `gcp` and `cloudflare` adapters — their templates are unbundled   |
+| **Not migrated** | 6     | **Blocks its plugin's deletion**                                  |
 
 **53 of 53 accounted for.** Nothing is unexplained, which is the property the
 census exists to establish.
@@ -241,7 +241,12 @@ the kept `gcp`/`cloudflare` adapters, 7 block deletion, and 18 are migrated
 skills whose curated source still ships beside its pack. `docker` moves from
 *not migrated* to *migrated*, which is the only cell that changed.
 
-### The eight that block deletion
+**Re-run again after the `claude-code` dissolution**: 28 remain, 25 are gone.
+`plugin-authoring` moves to *migrated* — split across a stackgen asset and this
+repo's private tree — leaving **six** blockers. Both totals still reconcile
+against 53.
+
+### The eight that blocked deletion
 
 - `gcp/gcp-cost`, `gcp/gcp-iam`, `gcp/gcp-local-stack` — the deferred cloud
   research. Known, and blocking by design rather than by oversight.
@@ -254,9 +259,7 @@ skills whose curated source still ships beside its pack. `docker` moves from
 - `devtools/doppler` — development-time secret injection. vwf's capability
   vocabulary has **no `secrets` token**, so there is no capability for it to
   realize; minting one is vwf's move, not stackgen's.
-- `claude-code/plugin-authoring` — host doctrine for writing Claude Code
-  plugins. Arguably the doctrine half of the `claude-code-plugin` bundle, whose
-  `language/markdown` ref is currently `@generated`.
+- ~~`claude-code/plugin-authoring`~~ — **resolved 2026-08-29**; see below.
 
 Each is a **destination question, not a fold** — which is why the census is
 worth running before deletions rather than after.
@@ -315,6 +318,44 @@ them undefined; it now lists all eight.
   amendments under *What the decision costs* — the install-script kind, the
   `.mcp.json` reopening, and the guard surviving the design move — since each is
   a precondition for something Wave D deletes.
+
+### Resolved 2026-08-29 — `claude-code`, dissolved rather than folded
+
+The framing in the item above was wrong, and Viraj's correction is what fixed
+it:
+
+> Plugin creation is limited to this repo only and NOT part of distribution.
+>
+> - **Structure of plugin** (marketplace.json, plugin.json, etc) — limited to
+>   this repo, must NOT be distributed.
+> - **Doctrine to validate skills, agents, hooks, mcp, lsp, etc** — distributed
+>   via stackgen, since it will generate skills, agents, etc which will be
+>   validated by this doctrine.
+
+`plugin-authoring` was never one thing, which is why no component type fit it.
+It was two, with two different reasons to exist:
+
+| Half                                                                                    | Landed in                                                 | Because                                                                                    |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Plugin structure — manifest, discovery, versions, marketplace + its traps               | `.claude/skills/plugin-authoring/references/structure.md` | Nobody outside this repo builds plugins; distributing it teaches a thing we do not offer   |
+| Artifact validity — frontmatter, invocation states, hook verdict shapes, MCP/LSP wiring | `plugins/stackgen/assets/artifact-doctrine.md`            | stackgen **generates** skills, agents and hooks; this is what its output is judged against |
+
+The second is an **asset, not a pack** — it governs stackgen's output rather
+than being part of it, is never materialized, and applies to every generation
+run whatever the stack. The seam against `kinds.md` is clean: kinds decide what
+an artifact must *cover*, this decides whether it *works*. The reviewer gained a
+ninth check and the generator's write step now names it.
+
+**The plugin is deleted**, along with `docs/plugins/claude-code.md`. The
+marketplace is 14 entries.
+
+**The `claude-code-plugin` bundle survives, trimmed.** It was kept for a reason
+that had to be argued rather than assumed: it exists so this repo can stay
+onboarded on vwf, and dogfooding is what has surfaced vwf's real gaps. It is
+also not a special case — every one of the 19 bundles is a stack its author
+uses, so "no outside demand" is a test this repo applies to nothing else. What
+was actually wrong was its **body**, which restated plugin-structure doctrine
+and shipped it to everyone; that is cut back to bare stack facts.
 
 ## Verification
 

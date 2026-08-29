@@ -1,10 +1,9 @@
 ---
 name: plugin-authoring
-description: This repo's own plugin gates — the two mise tasks, what
-  plugins:check asserts, the language-plugin contract, and the traps specific
-  to this marketplace. Auto-applies when editing anything under plugins/. The
-  host doctrine lives in the claude-code plugin; this covers only what is
-  ours.
+description: This repo's plugin doctrine — how a plugin is structured,
+  packaged and registered, the two mise tasks, what plugins:check asserts, the
+  language-plugin contract, and the traps specific to this marketplace.
+  Auto-applies when editing anything under plugins/.
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
@@ -13,24 +12,30 @@ paths:
 
 # Plugin Authoring — this repo
 
-> **Claude Code's own plugin doctrine is not here.** Directory-convention
-> discovery, the invocation frontmatter and its silent failure, the manifest
-> fields, the `${CLAUDE_PLUGIN_ROOT}` trap and hooks all live in
-> `plugins/claude-code/skills/plugin-authoring/` — a shipped plugin, so the
-> doctrine travels to any repo writing Claude Code plugins. This skill covers
-> only what is **this marketplace's**: our gates, our checker, our contract for
-> a language plugin.
+> **Plugin creation is this repo's alone and is deliberately not distributed.**
+> There is no shipped plugin-authoring plugin: the one that existed was
+> dissolved on 2026-08-29 because the toolkit has no business teaching plugin
+> creation to anyone else.
 >
-> That plugin is authored here, so its references are readable at
-> `plugins/claude-code/skills/plugin-authoring/references/`. Read them for the
-> host rules; read below for ours.
+> The doctrine split in two on the way out, and the halves have different homes:
+>
+> - **How a plugin is structured, packaged and registered** — the manifest,
+>   directory-convention discovery, versions, the marketplace and its two traps
+>   — is **here**, in [structure.md](references/structure.md).
+> - **What makes a skill, agent or hook valid** — the invocation states and
+>   their silent failure, strict-YAML frontmatter, hook verdict shapes, MCP and
+>   LSP wiring — is **distributed via stackgen**, at
+>   `plugins/stackgen/assets/artifact-doctrine.md`, because stackgen generates
+>   those artifacts and its reviewer gates them against it. Read it when writing
+>   a skill or a hook **anywhere**, including here: the rules are the host's and
+>   apply to a plugin's artifacts exactly as they apply to a generated one.
 
 `plugins/<name>/` is the **only authored tree** — what you edit is exactly what
 a user installs. There is no template layer, no render step, and no per-target
 variant.
 
 One file is generated: **`.claude-plugin/marketplace.json`** at the repo root, a
-projection of the 15 per-plugin manifests. Never edit it by hand.
+projection of the 14 per-plugin manifests. Never edit it by hand.
 
 ## The one rule
 
@@ -65,8 +70,12 @@ the one file that still has the problem.
 
 | Reference                                             | Covers                                                                       |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [structure.md](references/structure.md)               | the authored tree, `plugin.json`, versions, the marketplace and its traps    |
 | [checks.md](references/checks.md)                     | what `plugins:check` asserts, rule by rule, and the technology-free guard    |
 | [language-plugins.md](references/language-plugins.md) | the language-plugin contract — boundary, mandatory core, posture, collisions |
+
+Artifact validity — frontmatter, invocation, hooks — is **not** in this table.
+It is stackgen's `assets/artifact-doctrine.md`, and it applies here too.
 
 ## Documentation
 

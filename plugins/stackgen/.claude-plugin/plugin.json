@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "stackgen",
-  "version": "0.13.0",
-  "description": "The principles-driven stack materializer \u2014 implements the vwf stack-adapter contract with a dispatch rule: a technology a shipped pack covers is copied from the pack; anything uncovered is generated (Context7 research \u2192 vwf's principles catalog \u2192 the stackgen-skill-reviewer gate). Both paths land directly in the repo's committed .claude/ tree \u2014 skills, agents, hooks and rules only, structured per a closed kind vocabulary, recorded in a lockfile \u2014 editable and plugin-independent for collaborators. Re-sync is explicit and diffed, never silent. Waves A\u2013C landed 21 packs and 19 bundles across seven kinds; Wave D adds the eighth kind, deploy-target, whose container-image pack is the curated answer the container-generic bundle used to generate.",
+  "version": "0.14.0",
+  "description": "The principles-driven stack materializer \u2014 implements the vwf stack-adapter contract with a dispatch rule: a technology a shipped pack covers is copied from the pack; anything uncovered is generated (Context7 research \u2192 vwf's principles catalog \u2192 the stackgen-skill-reviewer gate). Both paths land directly in the repo's committed .claude/ tree \u2014 skills, agents, hooks and rules only, structured per a closed kind vocabulary, recorded in a lockfile \u2014 editable and plugin-independent for collaborators. Re-sync is explicit and diffed, never silent. Waves A\u2013C landed 21 packs and 19 bundles across seven kinds; Wave D adds the eighth kind, deploy-target, whose container-image pack is the curated answer the container-generic bundle used to generate, and assets/artifact-doctrine.md \u2014 the host rules deciding whether a generated skill, agent or hook is valid at all, which the generator writes against and the reviewer gates on.",
   "author": {
     "name": "Viraj Patel"
   },

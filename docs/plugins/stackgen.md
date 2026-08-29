@@ -190,7 +190,7 @@ its own lockfile.
 
 ## Trust: how a generated skill earns its place
 
-A generated artifact is only as good as its checks, so every one passes three
+A generated artifact is only as good as its checks, so every one passes four
 before it lands:
 
 1. **The catalog.** Each judgment instantiates a principles-catalog entry (vwf's
@@ -204,9 +204,17 @@ before it lands:
    file per component keyed per topic. Supplementary sources are allowed only
    where that topic's Context7 coverage is thin, and both the supplement and the
    thinness are disclosed.
-3. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
-   or a numbered list — checking the kind's **topic-bar coverage** and depth as
-   well as the content — and generation loops under a convergence guard of
+3. **Artifact validity.** Separately from what it covers, every artifact has to
+   *work*: strict-YAML frontmatter (a rejected skill is dropped with no error),
+   the invocation state its kind rules (a user-only skill is invisible to a
+   delegating caller, silently), a **fixed** skill name rather than one
+   assembled from configuration, and the hook verdict shape its event requires.
+   These are host rules rather than stack rules, they live in
+   `assets/artifact-doctrine.md`, and every one of them fails **silently at run
+   time** — which is why they are gated here and nowhere downstream.
+4. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
+   or a numbered list — checking the kind's **topic-bar coverage**, artifact
+   validity and the content — and generation loops under a convergence guard of
    **four rounds**, after which residuals are reported rather than looped
    forever or landed quietly; then the materializer shows the full landing set
    as a dry-run plan and writes nothing without your approval.

@@ -58,8 +58,15 @@ the composition's single consent gate and landing. Generation is
      is thin — and the thinness itself is recorded for the topic, which
      is what lets the reviewer accept a thin topic honestly instead of
      flagging it as a coverage gap.
-   - **Write** — the topic's artifact, per the kind's structure and sized
-     per the kind's depth bar. Instantiate the catalog as it lands in
+   - **Write** — the topic's artifact, per the kind's structure and per
+     the host rules in `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md`,
+     which decide whether the artifact is valid at all: strict-YAML
+     frontmatter, the invocation state its kind rules, fixed skill names,
+     and the hook verdict shape its event requires. Every one of those
+     fails **silently**, so nothing downstream catches what is missed
+     here. There is **no line cap** — an artifact that has outgrown one
+     sitting is decomposed into a router plus on-demand references, never
+     trimmed. Instantiate the catalog as it lands in
      this topic — concrete idioms, not restated definitions — honoring
      each entry's **when-not-to-apply** section: where the stack's own
      idiom already embodies or supersedes a principle, the artifact says
@@ -80,7 +87,9 @@ the composition's single consent gate and landing. Generation is
    satisfies, the conventions prose, and the artifacts its slice defines —
    skills, agents, rules, within the output vocabulary. **Never an
    executable** (hook scripts are pack-only), never MCP or LSP
-   configuration.
+   configuration — where wiring is genuinely needed, what is generated is
+   the **installer**, per `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md`
+   §5, never a held registry.
 5. **The reviewer gate.** Dispatch the `stackgen-skill-reviewer` agent per
    generated component — stateless: it gets the catalog paths, the
    declared kind and the component's classification, the detected stack,

@@ -3,7 +3,6 @@
   "respectGitignore": true,
   "enabledPlugins": {
     "cicd@virajp-plugins": true,
-    "typescript@virajp-plugins": true,
-    "claude-code@virajp-plugins": true
+    "typescript@virajp-plugins": true
   }
 }

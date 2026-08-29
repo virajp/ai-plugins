@@ -35,26 +35,6 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "The Claude Code plugin-authoring plugin — doctrine for writing plugins against Claude Code itself: directory-convention discovery, the invocation policy's three states and the silent failure the wrong one causes, manifest fields and the two marketplace traps, and hooks with their per-event verdict shapes. Owns the claude-code-plugin project template for vwf's `plugin` platform, so it also implements the vwf stack-adapter contract.",
-      "name": "claude-code",
-      "source": "./plugins/claude-code",
-      "strict": true,
-      "tags": [
-        "claude-code",
-        "plugin",
-        "authoring",
-        "skills",
-        "hooks",
-        "marketplace",
-        "markdown"
-      ],
-      "version": "0.1.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
       "description": "Cloudflare stack plugin for vwf — **scope is deliberately parked**. It currently covers **Zero Trust Access** only: putting a project that must not be publicly reachable behind an identity-aware proxy on its own hostname, independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered yet and arrive under their own dedicated plan — so the menu says what it does not cover rather than coming back quietly short. Implements the vwf stack-adapter contract.",
       "name": "cloudflare",
       "source": "./plugins/cloudflare",
@@ -254,7 +234,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "The principles-driven stack materializer — implements the vwf stack-adapter contract with a dispatch rule: a technology a shipped pack covers is copied from the pack; anything uncovered is generated (Context7 research → vwf's principles catalog → the stackgen-skill-reviewer gate). Both paths land directly in the repo's committed .claude/ tree — skills, agents, hooks and rules only, structured per a closed kind vocabulary, recorded in a lockfile — editable and plugin-independent for collaborators. Re-sync is explicit and diffed, never silent. Waves A–C landed 21 packs and 19 bundles across seven kinds; Wave D adds the eighth kind, deploy-target, whose container-image pack is the curated answer the container-generic bundle used to generate.",
+      "description": "The principles-driven stack materializer — implements the vwf stack-adapter contract with a dispatch rule: a technology a shipped pack covers is copied from the pack; anything uncovered is generated (Context7 research → vwf's principles catalog → the stackgen-skill-reviewer gate). Both paths land directly in the repo's committed .claude/ tree — skills, agents, hooks and rules only, structured per a closed kind vocabulary, recorded in a lockfile — editable and plugin-independent for collaborators. Re-sync is explicit and diffed, never silent. Waves A–C landed 21 packs and 19 bundles across seven kinds; Wave D adds the eighth kind, deploy-target, whose container-image pack is the curated answer the container-generic bundle used to generate, and assets/artifact-doctrine.md — the host rules deciding whether a generated skill, agent or hook is valid at all, which the generator writes against and the reviewer gates on.",
       "name": "stackgen",
       "source": "./plugins/stackgen",
       "strict": true,
@@ -267,7 +247,7 @@
         "materializer",
         "vwf-stack-adapter"
       ],
-      "version": "0.13.0"
+      "version": "0.14.0"
     },
     {
       "author": {

@@ -71,6 +71,25 @@ pairing does elsewhere. Fixing it exposed that both deploy bundles had been
 declaring `kind: language-bundle` as a placeholder; `npm-package` now declares
 `deploy-target` too, with its ref still `@generated`.
 
+**Wave D — the `claude-code` plugin dissolved**, and its doctrine split along
+a line the plugin had blurred. Plugin *creation* is the authoring repo's own
+business and is deliberately not distributed, so how a plugin is packaged and
+registered went back to that repo's private `.claude/`. What **is**
+distributed is `../assets/artifact-doctrine.md`: the host rules deciding
+whether a skill, agent or hook is **valid at all** — strict-YAML frontmatter,
+the invocation states and their silent failure, fixed rather than constructed
+skill names, hook verdict shapes, and MCP/LSP wiring. stackgen generates those
+artifacts, so it is stackgen that has to know.
+
+It is an **asset, never a pack**: it governs stackgen's output rather than
+being part of it, and it applies to every generation run whatever the stack.
+`kinds.md` decides what an artifact must *cover*; this decides whether it
+works. The reviewer gained a ninth check for it.
+
+The `claude-code-plugin` bundle survives, trimmed to stack facts. It is what
+lets the authoring repo stay onboarded on vwf, and it is not a special case —
+every bundle here is a stack its author uses.
+
 **Bundles — `bundles/`, the recorded compositions users actually pick.** All
 fifteen curated options survive the merge: the twelve TypeScript ones, the
 Flutter app, the provider-neutral container deploy and the Claude Code plugin
@@ -83,8 +102,9 @@ TypeScript service*. The menu lists bundles only — offering bare components
 would ask a user to assemble a stack rather than choose one.
 
 **Nine stack adapters retired here** — `typescript`, `flutter`, `devtools`,
-`claude-code`, `datastore`, `identity`, `observability`, `orchestration` and
-`object-storage` no longer ship a `-stack-menu` / `-stack-template` pair,
+`claude-code` (since dissolved entirely), `datastore`, `identity`,
+`observability`, `orchestration` and `object-storage` no longer ship a
+`-stack-menu` / `-stack-template` pair,
 because every template they offered is a bundle above. The retirement test was
 mechanical rather than a judgement: an adapter retires only when **every** slug
 it offered has a bundle. `gcp` and `cloudflare` fail that test and keep theirs.

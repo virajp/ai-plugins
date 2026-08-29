@@ -71,8 +71,7 @@ Every language plugin ships all of:
   `service`/`cli` templates ships none.
 - **Hooks — optional.** Only where the ecosystem has a real normalization need
   (npm→pnpm/bun has one; `go`/`cargo` almost certainly do not). Portability
-  rules per the claude-code plugin's
-  `skills/plugin-authoring/references/hooks.md`.
+  rules per stackgen's `assets/artifact-doctrine.md` §4.
 
 ## Posture
 
