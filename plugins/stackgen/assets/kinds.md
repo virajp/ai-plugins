@@ -29,6 +29,24 @@ to the files it governs — so nothing enters a session until the work at
 hand needs it. The bar decides what must exist; this rule decides how it
 hangs.
 
+## There is no line cap on any artifact
+
+Deliberately, and it is the corollary of the rule above. A skill puts only
+its **description** in context; its body loads when it activates, and a
+`references/` file only when something reads it. Length is therefore not
+what costs — **loading** is what costs, and lazy hanging is what already
+pays that bill.
+
+A line cap fixes nothing that structure has not already fixed, and it does
+real harm: it caps *depth*, so the pressure it applies is to stop
+researching. That is the failure worth preventing, and a cap causes it.
+
+So the rule a large artifact obeys is structural, never numeric: **split it
+into references and let them load on demand, one per topic, only the one
+the task needs.** An artifact too big to read in one sitting is a router
+skill and its references that has not been decomposed yet — and *that* is
+the finding to report. Never "too long".
+
 ## `language-bundle` — the composition rooted at a `language` component
 
 The bundle is a `language` component plus its `package-manager`,
@@ -114,23 +132,6 @@ own seam and names neighbors only through the capability vocabulary;
 cross-framework integration judgment lives in standards (topic 1), never
 in per-pair references.
 
-### Depth
-
-**Measured 2026-08-29 against both curated language archetypes**, because
-the band this section used to state (60–130) described neither. The
-`typescript` router references run **57–230**; `flutter`'s run **119–360**.
-The spread is not noise — it tracks the topic's shape:
-
-- **Topic-shaped artifacts** (standards, testing, build & run, manifest
-  discipline) — **60–140 dense lines**.
-- **Framework references** (topic 2) — **sized by the framework's surface,
-  not capped**; the archetypes run 119–360 and a deep framework legitimately
-  needs it.
-
-Below the floor usually means the research stopped early. Above the top of a
-topic-shaped artifact usually means API surface crept in — which is the
-smell the number exists for, not a limit to enforce.
-
 ## `database` — a datastore the product runs against
 
 The output is a **Datastore-Bundle**
@@ -180,15 +181,6 @@ researched and cited. Extracted from the curated archetype — the
 6. **Local stack** — the real engine composed behind a `wait-on` gate (or
    its emulator), pinned to production's major version; a seam plus a
    fake where the store is hosted-only.
-
-### Depth
-
-**Measured 2026-08-29** against the curated archetypes — `datastore`'s
-contract and `postgres` template, and `gcp`'s `cloud-sql` and `firebase`
-templates: **50–85 dense lines** per topic's artifact. A datastore topic is
-naturally tighter than a language one, and the `language-bundle` band this
-section used to borrow was ~50% too high at the ceiling. A 70-line datastore
-artifact is at depth, not thin.
 
 ## `cloud-provider` — where the product runs and what it uses there
 
@@ -263,13 +255,6 @@ component in the bundle:
 8. **Health** — readiness/liveness wiring against vwf's `health`
    harness capability.
 
-### Depth
-
-**Measured 2026-08-29** against the curated `gcp` archetype — its
-`gcp-cost`, `gcp-iam` and `gcp-local-stack` doctrine skills and its
-`cloud-run`/`gke` deploy templates: **80–125 dense lines** per topic's
-artifact. This is the one kind the old borrowed band described accurately.
-
 ## `repo-gate` — the gates that run over the whole repo
 
 The output is a **Repo-Gate-Bundle**
@@ -337,13 +322,6 @@ and CI are made to run the same command; it is the one topic that is about
 the others rather than about a tool of its own. A repo with no hook runner
 records topic 5 `n/a` and loses the parity guarantee with it, which is worth
 saying out loud rather than discovering later.
-
-### Depth
-
-**Measured** against the curated `devtools` gate skills, which sit at
-**73–90 lines**: the band is **70–110 dense lines** per topic's artifact. A
-gate's doctrine is one screen of judgment about one config file, which is
-why this is the tightest band of the four.
 
 ## Reserved kinds (defined at their merge wave, not before)
 
