@@ -1,7 +1,7 @@
 # Identity — the capability contract
 
 What **any** identity provider has to satisfy to serve a vwf product, stated
-without naming one. The provider templates under `stacks/backing/` say how a
+without naming one. The provider packs the stack plugin ships say how a
 particular one satisfies it; a cloud plugin's managed flavour says the same for
 its own.
 

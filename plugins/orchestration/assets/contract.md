@@ -1,7 +1,7 @@
 # Async orchestration — the capability contract
 
 What **any** backend for work that happens later has to satisfy, stated without
-naming one. The provider templates under `stacks/backing/` say how a particular
+naming one. The provider packs the stack plugin ships say how a particular
 engine satisfies it; a cloud plugin's managed flavour says the same for its own.
 
 Capability tokens realized here: `durable-workflows`, `message-queue`,
