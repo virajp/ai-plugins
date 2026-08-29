@@ -54,7 +54,7 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework | deploy-target # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
@@ -65,7 +65,7 @@ languages: # language and app-framework components only
       mise_tool: <the mise tool name — or n/a>
       manifest: <the manifest file doctor checks deps against — or n/a>
 package_manager: <token> # package-manager components only
-artifact: <token> # deploy-side cloud-service components only
+artifact: <token> # deploy-target components, and deploy-side cloud-service ones
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
 ```
@@ -114,7 +114,7 @@ A bundle is the composition rooted per kind
 `language` component + its `package-manager`, `framework` and
 `toolchain-gate` components; a Cloud-Bundle a `cloud-provider` + its
 `cloud-service`s; a Datastore-Bundle category doctrine + an instance
-component. No bundle directory exists anywhere: the materializer folds the
+component; a Deploy-Bundle one `deploy-target` component alone. No bundle directory exists anywhere: the materializer folds the
 resolved composition into **one** `.claude/stackgen/templates/<slug>.md` —
 the vwf payload as frontmatter, including the `components:` refs
 (`<type>/<slug>@<version>`, or `@generated`), with the components'

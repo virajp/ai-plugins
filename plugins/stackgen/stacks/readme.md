@@ -13,9 +13,11 @@ shape `../assets/pack-format.md` defines (`<type>/<slug>/pack.yaml` + prose
 `otel-lgtm` (telemetry), `temporal` (workflow). The neutral contracts they
 cite live once, in `../assets/contracts/`.
 
-Every landed pack's doctrine **still ships from its curated plugin too**. The
-copies here are the destination the no-skill-lost rule requires **before**
-that plugin can retire, not a replacement yet.
+Most landed packs' doctrine **still ships from its curated plugin too**. Those
+copies are the destination the no-skill-lost rule requires **before** that
+plugin can retire, not a replacement yet. Wave D's `container-image` is the
+first exception: its source skill was deleted in the same commit, because the
+pack plus the harness contract together carry everything it said.
 
 **Wave C — `ci-system/`, kind `ci-system`:** `github-actions`. Exactly one CI
 system per repo, so this bundle never composes two.
@@ -47,6 +49,27 @@ repo's own `.claude/skills/`. vwf invokes that fixed name instead of building
 `<plugin>-ux-gate` from the stack pin — once stacks are packs there is no
 plugin name to build from, and a name assembled from configuration is one that
 can silently resolve to nothing.
+
+**Wave D — `deploy-target/container-image`**, kind `deploy-target`, the
+eighth kind. Folded from `devtools`' Docker/OCI doctrine, and the fold split
+it in two, because that skill was two skills wearing one hat:
+
+- **The deploy artifact** — the build file, its ignore file, and promoting
+  one digest rather than rebuilding per environment — is this pack, and it
+  turns `container-generic`'s `@generated` ref into a curated one.
+- **The local stack** — Compose behind `wait-on` readiness gates — is *not*.
+  It went to `../assets/contracts/local-stack.md`, because a repo needs a
+  local stack whether or not it pins a container deploy target, and welding
+  the two is the exact conflation the retired skill's own opening paragraph
+  warned about. That contract is the one file in `contracts/` that is a
+  **harness** contract rather than a capability one.
+
+`deploy-target` is also the first kind whose bundle has **no second half** —
+one component, standing alone, because there is no category above a
+provider-neutral target to write doctrine at. Its scope fence does the work a
+pairing does elsewhere. Fixing it exposed that both deploy bundles had been
+declaring `kind: language-bundle` as a placeholder; `npm-package` now declares
+`deploy-target` too, with its ref still `@generated`.
 
 **Bundles — `bundles/`, the recorded compositions users actually pick.** All
 fifteen curated options survive the merge: the twelve TypeScript ones, the

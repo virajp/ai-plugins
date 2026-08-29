@@ -91,16 +91,20 @@ Every pack and generation run declares a **kind**, and the kind — not the run 
 decides the output's structure and scope, so generated output is deterministic
 in shape while only content varies:
 
-| Kind              | vwf axis               | Shape                                                                                                                                                                                                                                                   |
-| ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language-bundle` | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `typescript` plugin)                             |
-| `database`        | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack` |
-| `cloud-provider`  | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus artifact/pipeline/health where the service's category is `compute` (archetype: the `gcp` plugin)                               |
+| Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                    |
+| --------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `typescript` plugin)                                                                              |
+| `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                  |
+| `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                           |
+| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus artifact/pipeline/health where the service's category is `compute` (archetype: the `gcp` plugin)                                                                                |
+| `repo-gate`           | repo                   | the `toolchain-gate` components that run over the whole repo, composed together. A **language-specific** linter or formatter appearing here is a gap — it belongs to that language's bundle                                                                                                              |
+| `ci-system`           | repo                   | vwf's delivery-pipeline contract + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. A second CI system in one bundle is a gap, not extra coverage                                                                                           |
+| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `flutter` plugin)                                                                                                                     |
+| `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them |
 
-`ci-system` and `capability-provider` are named but deliberately undefined until
-their merge waves. Kinds compose through vwf's capability vocabulary — a
-language bundle says "the datastore", never a database by name — so each stays
-independently re-syncable.
+All eight kinds are defined; no reservations are outstanding. Kinds compose
+through vwf's capability vocabulary — a language bundle says "the datastore",
+never a database by name — so each stays independently re-syncable.
 
 Each kind's structure **is a topic bar**: a closed list of topics the output
 must cover, one artifact per topic, lazy-loaded — a reference behind a lean

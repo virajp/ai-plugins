@@ -1,0 +1,15 @@
+name: OCI image · any container host
+summary: Build one standard OCI image, push it to any registry, run it on any
+  host that runs containers — portability bought by declining the managed
+  features one cloud would otherwise supply.
+version: 0.1.0
+type: deploy-target
+kind: deploy-target
+axis: deploy
+artifact: container-image
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      The project's own readiness endpoint, which the host's liveness and
+      readiness probes point at; this component fixes no task name

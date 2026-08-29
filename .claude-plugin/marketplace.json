@@ -110,7 +110,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "The developer-machine toolchain in one plugin — mise (the .config/ three-file MISE_ENV split, tool/env placement, the file-based task library, the CI node-gpg workaround) plus /devtools:scaffold, Doppler for **development** secrets, Docker/OCI, and the repo-level quality gates the stack templates name: dprint, ESLint, gitleaks, grype, pre-commit. Owns the provider-neutral container-generic deploy template, so it also implements the vwf stack-adapter contract. Production secrets are a cloud plugin's, never this one's.",
+      "description": "The developer-machine toolchain in one plugin — mise (the .config/ three-file MISE_ENV split, tool/env placement, the file-based task library, the CI node-gpg workaround) plus /devtools:scaffold, Doppler for **development** secrets, and the repo-level quality gates: dprint, ESLint, gitleaks, grype, pre-commit. Its stack adapter retired in Wave C and its Docker/OCI doctrine in Wave D — the deploy artifact is now stackgen's container-image pack and the local stack its harness contract. Production secrets are a cloud plugin's, never this one's.",
       "name": "devtools",
       "source": "./plugins/devtools",
       "strict": true,
@@ -120,14 +120,13 @@
         "tasks",
         "ci",
         "devtools",
-        "docker",
         "secrets",
         "lint",
         "format",
         "security",
         "skills"
       ],
-      "version": "1.0.2"
+      "version": "1.0.3"
     },
     {
       "author": {
@@ -255,7 +254,7 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "The principles-driven stack materializer — implements the vwf stack-adapter contract with a dispatch rule: a technology a shipped pack covers is copied from the pack; anything uncovered is generated (Context7 research → vwf's principles catalog → the stackgen-skill-reviewer gate). Both paths land directly in the repo's committed .claude/ tree — skills, agents, hooks and rules only, structured per a closed kind vocabulary, recorded in a lockfile — editable and plugin-independent for collaborators. Re-sync is explicit and diffed, never silent. Wave A landed the first packs — the four repo gates; the curated plugins remain the covered-stack path for everything else until the merge waves land.",
+      "description": "The principles-driven stack materializer — implements the vwf stack-adapter contract with a dispatch rule: a technology a shipped pack covers is copied from the pack; anything uncovered is generated (Context7 research → vwf's principles catalog → the stackgen-skill-reviewer gate). Both paths land directly in the repo's committed .claude/ tree — skills, agents, hooks and rules only, structured per a closed kind vocabulary, recorded in a lockfile — editable and plugin-independent for collaborators. Re-sync is explicit and diffed, never silent. Waves A–C landed 21 packs and 19 bundles across seven kinds; Wave D adds the eighth kind, deploy-target, whose container-image pack is the curated answer the container-generic bundle used to generate.",
       "name": "stackgen",
       "source": "./plugins/stackgen",
       "strict": true,
@@ -268,7 +267,7 @@
         "materializer",
         "vwf-stack-adapter"
       ],
-      "version": "0.12.0"
+      "version": "0.13.0"
     },
     {
       "author": {

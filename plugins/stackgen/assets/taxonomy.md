@@ -117,6 +117,12 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   `ci-system` component. Never two: a repo has one pipeline, and generating
   for a system the repo does not use is how a second, unmaintained pipeline
   appears.
+- A **Deploy-Bundle** is exactly one `deploy-target` component and nothing
+  else. It is the only bundle with no second half, because there is no
+  category above a provider-neutral target to write doctrine at — a target
+  that belongs to a cloud is a `cloud-service` inside a Cloud-Bundle
+  instead. What keeps the single component honest is its kind's scope
+  fence rather than a pairing.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
   the whole repository rather than to one toolchain in it — the only
   composition rooted at the `repo` axis. A gate meaningful for exactly one
@@ -135,3 +141,10 @@ The contracts are **capability-neutral by construction** — each states what
 *any* provider must satisfy without naming one, and names the vwf capability
 tokens it realizes. That is what lets two providers in one category be
 compared against the same clauses instead of against each other's marketing.
+
+One file there is **not** a capability contract, and is marked as such in
+its own opening line: `contracts/local-stack.md` states the mechanism
+behind vwf's `local_stack` **harness** capability. It earns the same
+directory for the same reason — it is doctrine above the instance that
+several components would otherwise each restate — but no component
+*chooses* it, so it names no provider and realizes no capability token.

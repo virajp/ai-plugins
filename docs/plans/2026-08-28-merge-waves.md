@@ -225,13 +225,21 @@ demanded, run against the thirteen plugins' **53** skills as they stood at
 
 | Outcome          | Count | Meaning                                                         |
 | ---------------- | ----- | --------------------------------------------------------------- |
-| **Migrated**     | 23    | Lives in a pack or in vwf; file confirmed present               |
+| **Migrated**     | 24    | Lives in a pack or in vwf; file confirmed present               |
 | **Retired**      | 18    | Stack adapters superseded by stackgen's two plus bundles        |
 | **Kept**         | 4     | `gcp` and `cloudflare` adapters — their templates are unbundled |
-| **Not migrated** | 8     | **Blocks its plugin's deletion**                                |
+| **Not migrated** | 7     | **Blocks its plugin's deletion**                                |
 
 **53 of 53 accounted for.** Nothing is unexplained, which is the property the
 census exists to establish.
+
+**Re-run 2026-08-29 after the `docker` fold**, and it still reconciles: 29
+skills remain outside `vwf` and `stackgen`, and 24 are gone — the 18 retired
+adapters, the 3 design imports absorbed into vwf, the 2 `-ux-gate` skills
+materialized into their packs, and `devtools/docker`. Of the 29 remaining, 4 are
+the kept `gcp`/`cloudflare` adapters, 7 block deletion, and 18 are migrated
+skills whose curated source still ships beside its pack. `docker` moves from
+*not migrated* to *migrated*, which is the only cell that changed.
 
 ### The eight that block deletion
 
@@ -242,9 +250,7 @@ census exists to establish.
   manager or a build orchestrator. `mise` is also a `/vwf:doctor` blocking
   mandate, so its doctrine disappearing would leave users the halt without the
   explanation.
-- `devtools/docker` — plausibly the `deploy-target/container-image` component
-  the `container-generic` bundle already references as `@generated`. Folding it
-  turns a generated ref into a curated pack.
+- ~~`devtools/docker`~~ — **resolved 2026-08-29**; see below.
 - `devtools/doppler` — development-time secret injection. vwf's capability
   vocabulary has **no `secrets` token**, so there is no capability for it to
   realize; minting one is vwf's move, not stackgen's.
@@ -254,6 +260,53 @@ census exists to establish.
 
 Each is a **destination question, not a fold** — which is why the census is
 worth running before deletions rather than after.
+
+### Resolved 2026-08-29 — `devtools/docker`, and the eighth kind
+
+Folding it required answering two things the item's one-line description did not
+anticipate.
+
+**It was two skills wearing one hat, and the fold split them.** Its own opening
+paragraph said so: containers do two unrelated jobs, and conflating them is the
+usual mistake. Only the deploy artifact is a `deploy-target`.
+
+| Half                                                               | Landed in                               | Because                                                           |
+| ------------------------------------------------------------------ | --------------------------------------- | ----------------------------------------------------------------- |
+| The deploy artifact — build file, ignore file, one digest promoted | `stacks/deploy-target/container-image/` | It is what a project pins on the deploy axis                      |
+| The local stack — Compose behind `wait-on` gates                   | `assets/contracts/local-stack.md`       | A repo needs one whether or not it pins a container deploy target |
+
+Putting the local stack inside the deploy pack would have made it conditional on
+a deploy choice it has nothing to do with — a product deploying to a managed
+cloud service still runs a local stack. The contract is the **first harness
+contract** in `contracts/`, whose five existing files are all *capability*
+contracts; it says so in its own opening line, and `taxonomy.md` records the
+distinction so the directory does not quietly become two things.
+
+**There was no kind a `deploy-target` pack could ride**, so this defines the
+**eighth**, per `kinds.md`'s own practice of defining a kind at the wave that
+needs it. It is the first with **no second half** — one component standing
+alone, because there is no category above a provider-neutral target to write
+doctrine at. Its discipline is a scope fence instead of a pairing: the pipeline
+is the `ci-system`'s, the managed flavour a `cloud-provider`'s, the local stack
+the harness contract's.
+
+Defining it exposed that **both** deploy bundles had been declaring
+`kind: language-bundle` as a placeholder. `container-generic`'s ref is now
+`deploy-target/container-image@0.1.0` rather than `@generated`; `npm-package`
+declares the right kind but keeps its `@generated` ref, since no `npm-registry`
+pack exists yet.
+
+**`devtools/docker` was deleted in the same commit** — the first pack whose
+source skill did not survive its landing. The no-skill-lost rule is satisfied
+because the pack and the contract together carry everything it said, which is
+the test the rule actually asks for, rather than the plugin outliving it.
+
+Two pieces of pre-existing residue were cleared in passing: the nine retired
+adapters' dead `plugins/*/stacks/` trees are still present for eight of them
+(`devtools`' was removed here, being the same artifact this pack curates), and
+`docs/plugins/devtools.md` and `docs/plugins/stackgen.md` both still described
+the Wave-C world. The stackgen kind table listed three kinds and called two of
+them undefined; it now lists all eight.
 
 - **Wave D — retirement, conditional.** Deletion still gated on the
   [no-skill-lost](../memory/decisions/2026-08-27-no-skill-lost-in-the-merge-waves.md)

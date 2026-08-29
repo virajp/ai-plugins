@@ -1,7 +1,7 @@
 ---
 name: Package registry · npm
 axis: deploy
-kind: language-bundle
+kind: deploy-target
 components:
 - deploy-target/npm-registry@generated
 artifact: npm-package

@@ -257,9 +257,9 @@ indistinguishable from a broken adapter. `object-storage@virajp-plugins`
 **[devtools](./docs/plugins/devtools.md)** — the developer-machine toolchain in
 one plugin: mise (the three-file `MISE_ENV` split, tool placement, the
 file-based task library) with a `/devtools:scaffold` skill, Doppler for
-**development** secrets, Docker/OCI and the provider-neutral `container-generic`
-deploy target, and the repo gates the stack templates name — dprint, ESLint,
-gitleaks, grype, pre-commit. A `vwf` dependency, because `/vwf:setup`
+**development** secrets, and the repo gates — dprint, ESLint, gitleaks, grype,
+pre-commit. Its stack adapter retired in Wave C and its Docker/OCI doctrine in
+Wave D, both to `stackgen`. A `vwf` dependency, because `/vwf:setup`
 orchestrates its scaffold skill. `devtools@virajp-plugins`
 
 **[design-tools](./docs/plugins/design-tools.md)** — **draining.** Its three
@@ -294,10 +294,12 @@ agents, hooks and rules only, shaped by a closed kind vocabulary whose per-kind
 lockfile per component — so the result is plain files your collaborators get
 with a `git pull` and no plugin install. Re-syncing against newer packs is an
 explicit, diffed decision — never a silent overwrite, and never a
-`settings.json` edit without separate consent. The first four packs landed with
-Wave A — the repo gates `dprint`, `gitleaks`, `grype` and `pre-commit`; for
-everything else the curated plugins above remain the covered-stack path, and
-stackgen's value today is the uncovered tail. `stackgen@virajp-plugins`
+`settings.json` edit without separate consent. Waves A–C landed 21 packs and 19
+bundles across seven kinds, and Wave D adds the eighth — `deploy-target`, whose
+`container-image` pack is the curated answer the provider-neutral container
+bundle used to generate. For what no pack covers, the curated plugins above
+remain the covered-stack path, and stackgen's value is the uncovered tail.
+`stackgen@virajp-plugins`
 
 **[claude-code](./docs/plugins/claude-code.md)** — doctrine for writing plugins
 against Claude Code itself, which until now lived in this repo's own `.claude/`

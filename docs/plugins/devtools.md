@@ -5,9 +5,9 @@ teaches an opinionated [mise](https://mise.jdx.dev) standard — the `.config/`
 three-file `MISE_ENV` split (`mise.toml` / `mise.dev.toml` / `mise.ci.toml`) and
 a mandatory file-based task library under `.config/mise/tasks/` — plus a
 `/devtools:scaffold` skill that lays both into a repo. Around that sit the tools
-the stack templates name: Doppler, Docker/OCI, dprint, ESLint, gitleaks, grype,
-and pre-commit. It also owns the one provider-neutral **deploy** template,
-`container-generic`.
+the repo gates: Doppler, dprint, ESLint, gitleaks, grype, and pre-commit. Its
+stack adapter and its Docker/OCI doctrine have both left for stackgen — see what
+used to live here.
 
 It is a **`vwf` dependency**, and that is load-bearing rather than tidiness:
 `/vwf:setup` orchestrates `/devtools:scaffold`, and a skill vwf cannot see fails
@@ -46,22 +46,19 @@ config and the whole task library is mise tasks. `doppler`, `dprint`, `eslint`,
 
 ## Skills
 
-Every skill except `scaffold` and the two stack adapters is **auto-applying**:
-it loads when you edit the file it governs, and never otherwise.
+Every skill except `scaffold` is **auto-applying**: it loads when you edit the
+file it governs, and never otherwise.
 
-| Skill                     | Governs                                                                 |
-| ------------------------- | ----------------------------------------------------------------------- |
-| `mise`                    | mise config + anything under `.config/mise/tasks/` — the standard below |
-| `scaffold`                | user- **and** model-invocable; lays the standard into a repo            |
-| `doppler`                 | **development** secret injection — never the production answer          |
-| `docker`                  | Dockerfiles, `.dockerignore`, compose files; the local stack            |
-| `dprint`                  | `dprint.json` — the repo's single formatter                             |
-| `eslint`                  | eslint config / `.config/linter.yaml` — the correctness gate            |
-| `gitleaks`                | `.config/gitleaks.toml` — the secret scanner                            |
-| `grype`                   | `.config/grype.yaml` — the dependency vulnerability scanner             |
-| `pre-commit`              | `.config/pre-commit-config.yaml` — the local gate                       |
-| `devtools-stack-menu`     | the vwf stack-adapter menu — one deploy template, `container-generic`   |
-| `devtools-stack-template` | the vwf stack-adapter payload for that template                         |
+| Skill        | Governs                                                                 |
+| ------------ | ----------------------------------------------------------------------- |
+| `mise`       | mise config + anything under `.config/mise/tasks/` — the standard below |
+| `scaffold`   | user- **and** model-invocable; lays the standard into a repo            |
+| `doppler`    | **development** secret injection — never the production answer          |
+| `dprint`     | `dprint.json` — the repo's single formatter                             |
+| `eslint`     | eslint config / `.config/linter.yaml` — the correctness gate            |
+| `gitleaks`   | `.config/gitleaks.toml` — the secret scanner                            |
+| `grype`      | `.config/grype.yaml` — the dependency vulnerability scanner             |
+| `pre-commit` | `.config/pre-commit-config.yaml` — the local gate                       |
 
 `dprint` and `eslint` own the **gate's shape** — one root config, plugins pinned
 by version, flat config only, zero formatting rules in the linter, an override
@@ -93,43 +90,35 @@ are `devtools`; production secrets belong to whichever cloud plugin the project
 deploys on. A product that needs Doppler at runtime has moved a dev tool into
 production.
 
-## Stack templates
+## What used to live here
 
-`devtools` owns exactly one vwf stack template, on the **deploy** axis:
+Two subjects left this plugin during the stackgen merge waves, and both are
+worth knowing about because the doc that described them was this one.
 
-| Slug                | Axis     | What it pins                                              |
-| ------------------- | -------- | --------------------------------------------------------- |
-| `container-generic` | `deploy` | An OCI image, any registry, any host that runs containers |
+**The stack adapter retired in Wave C.** `devtools` no longer ships a
+`devtools-stack-menu` / `devtools-stack-template` pair. Its one deploy template,
+`container-generic`, is a [stackgen](./stackgen.md) bundle now, and stackgen's
+own adapter answers for it.
 
-It is the option to pick when the product must not be tied to one cloud, and it
-lives here because Docker is developer tooling and the template names no
-provider. The image is built once and **promoted** between environments rather
-than rebuilt — which is what makes the tested artifact and the released artifact
-the same artifact. Configuration arrives as environment variables from the host,
-so the image carries nothing environment-specific and no provider-specific
-entrypoint or agent.
+**The Docker/OCI doctrine retired in Wave D**, and it split in two on the way
+out, because it had always been two subjects:
 
-A **managed** container host (Cloud Run, GKE) comes from the project's cloud
-plugin instead; this template stays deliberately silent on which host runs the
-image, and the menu says so on every answer rather than coming back quietly
-short.
+- **The deploy artifact** — one shared multi-stage build file per repo, the
+  ignore file as a correctness file, and one digest promoted between
+  environments rather than rebuilt — is stackgen's
+  `deploy-target/container-image` pack.
+- **The local stack** — Compose behind `wait-on` readiness gates, which is the
+  one harness capability whose *mechanism* vwf fixes — is stackgen's
+  `assets/contracts/local-stack.md`, a harness contract every component with a
+  backing service cites.
 
-There is no `container` capability plugin: a container is not a backing
-capability, it is how a deployable is packaged.
+They separated because a repo needs either, both or neither: a product deploying
+to a managed cloud service still runs a local stack, and one that deploys a
+container may need no local stack at all.
 
-### The local stack
-
-The `docker` skill's second subject is the other job containers do — the backing
-services `e2e_local` needs, run under Compose. This is the **one harness
-capability whose mechanism vwf fixes**: composed services behind `wait-on`
-readiness gates, because the acceptance verifier depends on a deterministic
-ready signal. An ad-hoc `sleep` is a finding, not a variant — long enough on a
-laptop is short enough on a loaded CI runner.
-
-Which services run in the stack is the **backing** axis's decision. This plugin
-owns the wiring; the [datastore](./datastore.md), [identity](./identity.md) or
-[orchestration](./orchestration.md) plugin owns what is wired. A product whose
-`e2e_local` needs no backing services needs no Compose file at all.
+There is still no `container` capability plugin, and no `secrets` plugin. A
+container is not a backing capability — it is how a deployable is packaged — and
+production secrets belong to whichever cloud plugin the project deploys on.
 
 ## The mise standard
 

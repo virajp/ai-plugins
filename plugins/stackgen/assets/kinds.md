@@ -527,6 +527,80 @@ researched and cited. Topic 12 is conditional and repeats per integration.
     API surface** — that is Context7's at use time, and it is the half that
     ages.
 
+## `deploy-target` — where a built artifact lands
+
+The output is a **Deploy-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): exactly one `deploy-target`
+component, standing alone. There is no second half — a target that belongs
+to a cloud is a `cloud-service` under `cloud-provider`, and this kind is
+what remains when the target belongs to no cloud: a package registry, or a
+container host that is deliberately any host.
+
+**One component, and that is the whole bundle.** The composition other
+kinds get from pairing doctrine with an instance is not available here,
+because there is no category above a provider-neutral target to write
+doctrine at. What keeps the component honest instead is the scope fence
+below: almost everything adjacent to a deploy target belongs to some other
+kind, and naming those neighbours is most of this kind's discipline.
+
+- **Axis**: `deploy`.
+- **Structure**: the **topic bar** below, hung per the kind-general rule —
+  a router skill per target, plus one paths-scoped doctrine skill or rule
+  per artifact-defining file the target owns (a container build file and
+  its ignore file; a registry manifest's publish fields). A target with no
+  such file ships the router alone.
+- **Scope**: what the artifact is, what must not be inside it, and how it
+  is promoted. **Never** which cloud runs it — that is `cloud-provider`.
+  **Never** the pipeline that drives the release — that is `ci-system`;
+  this kind states the task the pipeline calls, not the workflow. **Never**
+  the local stack, even where the same runtime provides it — that is the
+  harness contract (`assets/contracts/local-stack.md`), and conflating the
+  deploy artifact with the local stack is the specific mistake this fence
+  exists to prevent. **Never** the language's build commands.
+- **Facts & harness**: `health` where the target runs the product — the
+  readiness endpoint the host's probes point at. A registry target runs
+  nothing, so its `harness:` is `n/a`, and that `n/a` is an answer rather
+  than an omission.
+- **Invocation**: the router model-invocable, since a deploy target is
+  chosen rather than edited into. Artifact-file doctrine paths-scoped, so
+  it applies while the build file is being written.
+
+### The topic bar
+
+A closed list of six topics, one artifact per topic, each individually
+researched and cited. Topic 6 is conditional; a conditional that does not
+apply is recorded `n/a`, never silently absent.
+
+1. **Pick & trade** — what this target is for, what it costs, and the
+   conditions under which it stops being the answer. A provider-neutral
+   target's trade is usually portability bought with the managed features
+   it declines to use; say which ones.
+2. **The artifact** — what gets built, from what, and how many. Where a
+   repo builds several deployables, whether they share one build
+   definition is decided here, and the reasoning is drift: a base bump
+   applied to three of five services is a class of failure nothing catches
+   until one environment breaks.
+3. **Artifact hygiene** — what must not be inside the artifact, treated as
+   a correctness concern and not housekeeping. Host build state that
+   shadows the artifact's own, and credentials reaching a published layer,
+   are the two failures every target in this kind has a version of.
+4. **Promotion & release mechanics** — the same artifact promoted between
+   environments rather than rebuilt per environment, which is what makes
+   the tested artifact the released artifact; the registry it passes
+   through; and the release wrapped in the repo's own task so the target
+   stays swappable. vwf's delivery-pipeline contract is **cited here, not
+   restated** — the tag shape and the branch validation are the
+   `ci-system`'s to implement.
+5. **Configuration & secrets at run time** — how configuration reaches the
+   running artifact, and why none of it is baked in. Names, never values,
+   aligned with `environment.md`. A registry target answers this about the
+   consumer's environment rather than a host's.
+6. **Reachability & health** — the readiness endpoint the `health` harness
+   capability requires and what the host probes with it, plus keeping a
+   project that must not be publicly reachable off the public network at
+   the infrastructure layer rather than by application auth alone.
+   *(conditional — `n/a` for a target that runs nothing)*
+
 ## Reserved kinds (defined at their merge wave, not before)
 
 **None outstanding.** Both reservations have been redeemed —
@@ -547,7 +621,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all seven kinds the structural checklist **is the
+the kind's ruling. For all eight kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -566,4 +640,8 @@ one**: a second CI system in the same bundle is a gap, not extra coverage.
 For `app-framework` the composition is the SDK plus its language members, and
 two checks carry the kind: every language member declares a `role`, and an
 **API-surface listing under topic 12 is a gap** — that topic is wiring and
-platform configuration only.
+platform configuration only. For `deploy-target` the composition is the one
+component alone, and the check that carries the kind is the scope fence:
+local-stack mechanism, pipeline workflow syntax, or one cloud's deploy
+mechanics appearing here is a gap, because each belongs to a kind that
+already owns it.
