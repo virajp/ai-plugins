@@ -183,6 +183,39 @@ The gate is stack-specific (Flutter golden tests + `meetsGuideline`; Playwright
   templates. The 22 adapter skills retire here, not at Wave D, since stackgen's
   own two answer once the packs exist. The `-ux-gate` materialization lands
   here.
+
+### Why the 22 adapter skills cannot retire yet — found 2026-08-29
+
+Wave C assumed the adapter skills retire once packs exist, "since stackgen's own
+two answer once the packs exist". Packs now exist and **stackgen's two cannot
+answer in their place**, because they answer a different question.
+
+`stackgen-stack-menu` lists **components** — one entry per `pack.yaml`. A
+project pins a **bundle**, which `pack-format.md` defines as *"a recorded
+composition of component refs, never a directory"*. Nothing yet performs that
+composition, so nothing offers the user a bundle to pick.
+
+The gap is concrete. The curated `typescript` menu offers **twelve named
+compositions** — `typescript-effect-hono` for a service,
+`typescript-astro-react` for a site, `typescript-effect-cli` *and*
+`typescript-parseargs-cli` as two answers for `cli`, `pnpm-turbo` /
+`pnpm-workspace` / `bun` as three for the repo axis. Against that, the landed
+TypeScript bundle is **one** language component. Retiring the adapter today
+would replace twelve reviewed options with one, and the framework components
+those compositions name — Hono, Astro, Refine, Effect CLI, Pulumi, the Temporal
+worker — are not packed at all.
+
+**So retirement needs two things first**, and neither is a fold:
+
+1. The missing **framework components**, one pack each.
+2. A **composition step** — the menu offering bundles rather than components,
+   and the template skill resolving a pinned bundle into its component refs. The
+   kinds already say what composes with what; nothing yet does it.
+
+Until both land, the curated adapters stay, and a plugin whose adapter is still
+live cannot be deleted — which is the no-skill-lost rule doing its job rather
+than an oversight.
+
 - **Wave D — retirement, conditional.** Deletion still gated on the
   [no-skill-lost](../memory/decisions/2026-08-27-no-skill-lost-in-the-merge-waves.md)
   rule, with the before/after inventory counted against **53**, not 58. The
