@@ -1,0 +1,12 @@
+name: Lovable
+summary: Prompt-to-app at lovable.dev — a real project surface, but what it
+  returns is generated app code rather than a canvas, which makes the screens
+  import lossier.
+version: 0.1.0
+type: design-tool
+kind: design-tool
+axis: design
+# The bundle slug IS the projects.<name>.design token, so the pin and the
+# config key are one value rather than two that can disagree.
+# A design tool satisfies no harness capability: nothing is booted or probed.
+harness: n/a

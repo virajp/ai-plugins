@@ -1,7 +1,7 @@
 ---
 name: import-design-system
-description: Read the design system back from the project's design tool (Claude
-  Design, Lovable or Google Stitch) and return it as a vwf design-system
+description: Read the design system back from the project's design tool (whichever it
+  pins on the design axis) and return it as a vwf design-system
   payload. Invoked by /vwf:design-system as its design adapter — not a
   general-purpose skill.
 disable-model-invocation: false
@@ -33,7 +33,7 @@ reach and ask the user to choose — never guess.
 ## 1. Resolve the project's design tool
 
 **The tool is per project, not per product.** A product may author its website's
-visual language in Lovable and its app's on the Claude Design canvas, so resolve
+visual language with one tool and its app's with another, so resolve
 against the registry project vwf named — never against "the product".
 
 Read `projects.<project>.design` in `.config/vwf.yaml`. That is the only key —
@@ -46,31 +46,36 @@ Absent → **halt**, do not guess:
 
 ```text
 ERROR: no design tool configured for project <project>. Set
-projects.<project>.design in .config/vwf.yaml to one of: claude-design,
-lovable, stitch.
+projects.<project>.design in .config/vwf.yaml to one of the options the
+design-axis stack menu offers.
 ```
 
-## 2. Dispatch to that tool's reference
+## 2. Invoke the repo's own adapter, at a fixed name
 
-Read **only** the one file matching the resolved tool, then follow it. The other
-two are irrelevant to this run, and loading them costs context for nothing.
+**Do not look for a per-tool reference inside this plugin — there is none, by
+design.** vwf names no design tool, and the way it avoids naming one is that
+the project's stack materializes the resolved tool's adapter into the repo's
+own `.claude/skills/`, under a **fixed** name.
 
-Read `${CLAUDE_PLUGIN_ROOT}/assets/design-tools/<tool>.md`, where `<tool>` is
-that value verbatim. **The path is constructed from configuration; this skill
-names no tool.** If no such file exists the tool is unsupported — halt with the
-error below rather than improvising against an API you have no reference for.
+Invoke **`design-import-design-system`**, passing the inputs above. That name is fixed and is never
+built from the config value — a name assembled from configuration resolves to
+nothing silently when it is wrong, which is the failure this whole contract
+exists to prevent.
 
-**An unrecognised value halts.** Never fall back to a default tool and never
-return an empty payload — an empty result is indistinguishable from a design
-system that was never authored, which is exactly the silent failure this adapter
-exists to prevent:
+**If no such skill exists in the repo**, the project's `design:` pin has not
+been materialized. Halt with the error below rather than improvising against an
+API you have no reference for:
 
 ```text
-ERROR: design tool "<value>" is not supported. Supported: claude-design,
-lovable, stitch. Fix projects.<project>.design in .config/vwf.yaml, or write an
-adapter reference for this tool.
+ERROR: no design adapter materialized for project <project>. Its design pin is
+"<value>". Run the stack materializer for that pin so the repo's own
+design-import-design-system skill exists, then retry.
 ```
 
+**An empty result is not an answer.** Never fall back to another tool and never
+return an empty payload — an empty result is indistinguishable from a design
+that was never made, which is exactly the silent failure this adapter exists to
+prevent.
 ## Rules that hold for every tool
 
 - **Never invent a value.** A token the system does not define is `null` with a

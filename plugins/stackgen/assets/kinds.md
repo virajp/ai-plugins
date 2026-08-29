@@ -396,7 +396,11 @@ system does it.
 produces a pipeline nobody runs and nobody updates, which is worse than
 none — it is a green check that means nothing.
 
-- **Axis**: `repo`.
+- **Axis**: `cicd` — one of the two **tool axes**, where the bundle slug is
+  the `projects.<name>.cicd` token itself. It was `repo` until Wave D, which
+  is why the one CI pack that exists was never offered by any menu: nothing
+  on the repo axis could carry it, and a template no menu offers is invisible
+  rather than broken.
 - **Structure**: the **topic bar** below, hung per the kind-general rule —
   the neutral rules in a lean router skill, one reference per CI system,
   loaded only once the system is resolved. This is the shape the curated
@@ -601,6 +605,59 @@ apply is recorded `n/a`, never silently absent.
    the infrastructure layer rather than by application auth alone.
    *(conditional — `n/a` for a target that runs nothing)*
 
+## `design-tool` — the tool a project's screens are authored in
+
+The output is a **Design-Bundle** (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`):
+one `design-tool` component, standing alone.
+
+This kind exists because vwf **names no design tool** and must not. Its three
+import skills define the *payloads*; this kind supplies one tool's
+implementation of them, materialized into the repo's own `.claude/` under
+**fixed names** vwf invokes — the same seam that dissolved the `-ux-gate` name
+construction, and for the same reason: a name assembled from configuration
+resolves to nothing silently.
+
+- **Axis**: `design`. The bundle slug **is** the `projects.<name>.design`
+  token, so the pin and the config key are one value.
+- **Structure**: exactly three model-invocable skills, at the fixed names
+  `design-import-screens`, `design-import-design-system` and
+  `design-import-conversations`, plus this tool's MCP wiring where it has an
+  API. Three because vwf has three import surfaces and each returns a
+  different payload; fewer would make one of them silently unavailable.
+- **Scope**: how to read this tool's authored designs back, and how to reach
+  its API. **Never** what a design *means* — the diffing, the contract deltas
+  and every blueprint edit stay vwf's. **Never** the prompt side: design briefs
+  are files vwf writes into `docs/prompts/`, and no tool is involved in
+  producing them.
+- **Facts & harness**: `n/a` throughout. A design tool satisfies no harness
+  capability — nothing about it is booted, stood up or probed.
+- **Invocation**: all three skills **model-invocable, mandatorily**. A
+  user-only skill here is removed from the model's context, so vwf's import
+  would return nothing and be indistinguishable from a design nobody authored.
+  This is the single most important ruling in the kind.
+
+### The topic bar
+
+A closed list of five topics, one artifact per topic. Topic 5 is conditional.
+
+1. **Screens import** — reading a flow's designed screens back for one
+   platform: where pages live, how a screen code is recovered from a name, and
+   the rule that a code which cannot be recovered is returned null rather than
+   invented, because the code is the join key.
+2. **Design-system import** — reading the tokens, typography, spacing, motion
+   and component behaviours back as the design-system payload.
+3. **Conversations import** — reading the design review discussion back. This
+   is the one surface allowed to answer `harvested: n/a`, because a tool may
+   genuinely have no review channel; the other two must halt instead, since an
+   empty payload there reads as a design nobody made.
+4. **Reach & credentials** — how the tool's API is contacted, what
+   authentication it needs, and what must never be logged. Where the tool is
+   reached over MCP, this topic owns that wiring and the consent it lands
+   behind.
+5. **Naming contract** — the page and frame naming this tool needs so an
+   import can find anything, mirroring what `/vwf:screens prompt` commissions.
+   *(conditional — `n/a` for a tool with no canvas)*
+
 ## Reserved kinds (defined at their merge wave, not before)
 
 **None outstanding.** Both reservations have been redeemed —
@@ -621,7 +678,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all eight kinds the structural checklist **is the
+the kind's ruling. For all nine kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -644,4 +701,7 @@ platform configuration only. For `deploy-target` the composition is the one
 component alone, and the check that carries the kind is the scope fence:
 local-stack mechanism, pipeline workflow syntax, or one cloud's deploy
 mechanics appearing here is a gap, because each belongs to a kind that
-already owns it.
+already owns it. For `design-tool` the composition is the one component, and
+two checks carry the kind: all three import skills present (a missing one is
+silently unavailable to vwf, not a smaller feature), and every one of them
+model-invocable.

@@ -386,34 +386,27 @@ describe("root-relative references", () => {
 });
 
 describe("the design-adapter contract", () => {
-  const adapter = (files: Record<string, string>) => ({
-    "design-tools": {
-      manifest: {
-        name: "design-tools",
-        version: "1.0.0",
-        description: "x",
-        keywords: ["vwf-design-adapter"],
-      },
-      files,
+  // Wave D moved the three adapter skills out of a plugin and into a stackgen
+  // `design-tool` pack, where they are materialized into the repo's own
+  // `.claude/` under fixed names vwf invokes. The rule is unchanged; where it
+  // looks is not.
+  const pack = (files: Record<string, string>) => ({
+    stackgen: {
+      manifest: { name: "stackgen", version: "1.0.0", description: "x" },
+      files: { "stacks/design-tool/acme/pack.yaml": "name: Acme\n", ...files },
     },
   });
 
-  // Unprefixed since the adapter merged into vwf: the caller is
-  // `/vwf:import-screens`, not `/<plugin>:<plugin>-import-screens`.
-  const three = (extra: string) => ({
-    "skills/import-screens/SKILL.md": skill("import-screens", extra),
-    "skills/import-design-system/SKILL.md": skill(
-      "import-design-system",
-      extra,
-    ),
-    "skills/import-conversations/SKILL.md": skill(
-      "import-conversations",
-      extra,
-    ),
-  });
+  const three = (extra: string) =>
+    Object.fromEntries(
+      ["screens", "design-system", "conversations"].map(kind => [
+        `stacks/design-tool/acme/skills/design-import-${kind}/SKILL.md`,
+        skill(`design-import-${kind}`, extra),
+      ]),
+    );
 
   it("accepts all three skills at disable-model-invocation: false", () => {
-    const root = tree(adapter(three("disable-model-invocation: false\n")));
+    const root = tree(pack(three("disable-model-invocation: false\n")));
     expect(check(root)).toEqual([]);
   });
 
@@ -421,10 +414,12 @@ describe("the design-adapter contract", () => {
     const files = Object.fromEntries(
       Object
         .entries(three("disable-model-invocation: false\n"))
-        .filter(([path]) => !path.includes("import-conversations")),
+        .filter(([path]) => !path.includes("design-import-conversations")),
     );
-    expect(messages(check(tree(adapter(files))))).toEqual([
-      "design adapter is missing its \"import-conversations\" skill",
+    expect(messages(check(tree(pack(files))))).toEqual([
+      "design-tool pack is missing its \"design-import-conversations\" skill — "
+      + "vwf delegates to that exact name, and a missing one is silently "
+      + "unavailable rather than a smaller feature",
     ]);
   });
 
@@ -432,7 +427,7 @@ describe("the design-adapter contract", () => {
     // `true` removes the skill from the model's context entirely, so vwf's
     // delegation returns an empty payload rather than an error — which reads
     // exactly like a design nobody authored.
-    const root = tree(adapter(three("disable-model-invocation: true\n")));
+    const root = tree(pack(three("disable-model-invocation: true\n")));
     expect(messages(check(root))).toHaveLength(3);
     expect(messages(check(root))[0]).toContain(
       "is not `disable-model-invocation: false`",
@@ -444,12 +439,12 @@ describe("the design-adapter contract", () => {
     // invoke it, so a rule that only banned `true` would pass — but these three
     // are documented as user-runnable too, and only the explicit `false` means
     // both.
-    const root = tree(adapter(three("user-invocable: false\n")));
+    const root = tree(pack(three("user-invocable: false\n")));
     expect(messages(check(root))).toHaveLength(3);
   });
 
-  it("does not apply to a plugin without the keyword", () => {
-    const root = tree({ "design-tools": {} });
+  it("does not apply to a plugin shipping no design-tool pack", () => {
+    const root = tree({ stackgen: {} });
     expect(check(root)).toEqual([]);
   });
 });
@@ -475,16 +470,29 @@ describe("the technology-free vwf guard", () => {
     ]);
   });
 
-  it("flags a hardcoded design-tools MCP server", () => {
-    // Names no tool, so it covers a fourth design tool the day one is added —
-    // which the token list cannot.
+  it("flags vwf reaching a design tool's MCP server directly", () => {
+    // The old plugin-scoped prefix, which a machine upgrading from an earlier
+    // version can still be carrying in its prose.
     const root = tree(
       vwf({
-        "assets/feedback.md": "Call mcp__plugin_design-tools_get_page.\n",
+        "assets/feedback.md":
+          "Call mcp__plugin_design-tools_claude-design_get_page.\n",
       }),
     );
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("references a design-tools MCP server directly"),
+      expect.stringContaining("reaches the \"claude-design\" MCP server"),
+    ]);
+  });
+
+  it("flags the project-scoped MCP spelling too", () => {
+    // Servers land in the project's own `.mcp.json` now, which scopes them
+    // `mcp__<server>__` — matching only the retired plugin prefix would have
+    // quietly stopped catching anything.
+    const root = tree(
+      vwf({ "assets/feedback.md": "Call mcp__claude-design__get_page.\n" }),
+    );
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("reaches the \"claude-design\" MCP server"),
     ]);
   });
 

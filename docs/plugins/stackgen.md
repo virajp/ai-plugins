@@ -101,10 +101,14 @@ in shape while only content varies:
 | `ci-system`           | repo                   | vwf's delivery-pipeline contract + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. A second CI system in one bundle is a gap, not extra coverage                                                                                           |
 | `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `flutter` plugin)                                                                                                                     |
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them |
+| `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature         |
 
-All eight kinds are defined; no reservations are outstanding. Kinds compose
-through vwf's capability vocabulary — a language bundle says "the datastore",
-never a database by name — so each stays independently re-syncable.
+All nine kinds are defined; no reservations are outstanding. Two of the six axes
+— `design` and `cicd` — are **tool axes**, where the bundle slug is the token
+the project config already holds, so picking from the menu and writing the
+config key are one act. Kinds compose through vwf's capability vocabulary — a
+language bundle says "the datastore", never a database by name — so each stays
+independently re-syncable.
 
 Each kind's structure **is a topic bar**: a closed list of topics the output
 must cover, one artifact per topic, lazy-loaded — a reference behind a lean

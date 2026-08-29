@@ -6,11 +6,24 @@ plugin installed. There is no intermediate tree and no symlink wiring: what
 Claude Code discovers is what the repo owns.
 
 The output vocabulary is **closed to four artifact kinds** plus stackgen's
-own bookkeeping. MCP server configuration and LSP server configuration are
-**deliberately excluded** — stackgen never writes `.mcp.json`, and LSP
-servers are a plugin-manifest feature no project file can express (the need
-is carried as `language_facts` in the template payload, which `/vwf:doctor`
-reads).
+own bookkeeping, and one **tier-2 project file** — `.mcp.json`.
+
+LSP server configuration stays **excluded**: a language server is a
+plugin-manifest feature no project file can express, and the need is carried
+as `language_facts` in the template payload, which `/vwf:doctor` reads.
+
+**`.mcp.json` was excluded and is not any more**, decided at Wave D. The
+reasoning that changed: an MCP server is genuinely a project file — this
+toolkit's own installer already treats `.mcp.json` as one of the user's
+project files — and the alternative was a curated registry of servers, which
+fails on **scaling** before it fails on charter. A list can only ever hold
+what someone curated, and stackgen exists for the tail nobody curated. So a
+pack that needs a server declares it, and the materializer writes it into the
+project's `.mcp.json` **behind its own separate consent line** (tier 2 below,
+the same treatment `.claude/settings.json` gets). It **merges, never owns**:
+the server keys stackgen added are recorded in the lockfile, so sync and
+removal touch only those. A declined wiring leaves the skills landed and says
+the tool will be unreachable — never a silent partial landing.
 
 ```text
 .claude/
@@ -34,8 +47,8 @@ constraint bound to a glob is a rule. The kind definitions
 
 1. **Files in the tree above** land through the materializer's ordinary
    dry-run consent gate — every path listed, nothing written unapproved.
-2. **`.claude/settings.json` is NEVER modified without the user's explicit
-   consent, as its own separate line in the gate.** Hook *scripts* are files
+2. **`.claude/settings.json` and `.mcp.json` are NEVER modified without the
+   user's explicit consent, as their own separate lines in the gate.** Hook *scripts* are files
    (tier 1); the settings entry that wires a hook to its event is a
    settings.json edit (tier 2), presented separately and skippable — a
    declined wiring leaves the script landed but inert, and says so. When
@@ -61,6 +74,7 @@ entries:
     source: generated # or pack/<type>/<slug>@<version>
     hash: <content hash at landing>
 settings_keys: [] # exact settings.json keys stackgen added, with consent
+mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 ```
 
 Rules the lockfile enforces:
@@ -71,6 +85,6 @@ Rules the lockfile enforces:
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.
-- Removal (a future concern) removes exactly the listed entries and
-  `settings_keys`, nothing else — the same receipt invariant this repo's
+- Removal (a future concern) removes exactly the listed entries,
+  `settings_keys` and `mcp_servers`, nothing else — the same receipt invariant this repo's
   installer CLI lives by.

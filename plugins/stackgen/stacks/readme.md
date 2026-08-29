@@ -90,10 +90,33 @@ The `claude-code-plugin` bundle survives, trimmed to stack facts. It is what
 lets the authoring repo stay onboarded on vwf, and it is not a special case —
 every bundle here is a stack its author uses.
 
+**Wave D — `design-tool/`, kind `design-tool`:** `claude-design`, `lovable`,
+`stitch`. Each carries the three import skills at the **fixed names** vwf
+delegates to — `design-import-screens`, `design-import-design-system`,
+`design-import-conversations` — landed in the repo's own `.claude/`. That is the
+`ux-gate` seam reused rather than a second one invented: vwf now names no design
+tool anywhere, and the technology-free guard's allowlist got **smaller**, which
+is the intended direction whenever an exception stops feeling arguable.
+
+`claude-design` also declares an MCP server, which the materializer writes into
+the project's own `.mcp.json` behind its own consent line. That is the charter
+change Wave D made deliberately (`../assets/output-tree.md`): a curated registry
+of servers fails on **scaling** before it fails on charter, since a list can only
+hold what someone curated. LSP configuration stays excluded — it has no project
+file to live in.
+
+**The two tool axes, and the stranded pack that forced them.** `design:` and
+`cicd:` are per-project config keys outside the four stack axes, and the bundle
+menu was the only door a template could come through — so `ci-system/github-actions`
+landed in Wave C and **nothing could ever materialize it**. Not an error;
+invisible. The `design` and `cicd` axes close that door, and their bundle slug
+**is** the config token, so the menu pick and the config key are one value rather
+than two that can disagree.
+
 **Bundles — `bundles/`, the recorded compositions users actually pick.** All
-fifteen curated options survive the merge: the twelve TypeScript ones, the
+fifteen curated options survive the merge — the twelve TypeScript ones, the
 Flutter app, the provider-neutral container deploy and the Claude Code plugin
-template. Each names its components as refs, mixing shipped packs (copied
+template — joined by the four Wave D added on the two tool axes. Each names its components as refs, mixing shipped packs (copied
 verbatim) with `@generated` ones (researched on first fetch) — which is the
 dispatch rule working at bundle scale rather than a gap.
 

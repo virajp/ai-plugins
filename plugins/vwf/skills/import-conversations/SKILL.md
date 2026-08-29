@@ -1,7 +1,7 @@
 ---
 name: import-conversations
 description: Read the design review conversation back from a project's design
-  tool (Claude Design, Lovable or Google Stitch) and return it as a vwf
+  tool (whichever it pins on the design axis) and return it as a vwf
   conversations payload. Invoked by /vwf:feedback canvas as its design
   adapter — not a general-purpose skill.
 disable-model-invocation: false
@@ -50,28 +50,36 @@ Absent → **halt**, do not guess:
 
 ```text
 ERROR: no design tool configured for project <project>. Set
-projects.<project>.design in .config/vwf.yaml to one of: claude-design,
-lovable, stitch.
+projects.<project>.design in .config/vwf.yaml to one of the options the
+design-axis stack menu offers.
 ```
 
-## 2. Dispatch to that tool's reference
+## 2. Invoke the repo's own adapter, at a fixed name
 
-Read **only** the one file matching the resolved tool, then follow it. The other
-two are irrelevant to this run, and loading them costs context for nothing.
+**Do not look for a per-tool reference inside this plugin — there is none, by
+design.** vwf names no design tool, and the way it avoids naming one is that
+the project's stack materializes the resolved tool's adapter into the repo's
+own `.claude/skills/`, under a **fixed** name.
 
-Read `${CLAUDE_PLUGIN_ROOT}/assets/design-tools/<tool>.md`, where `<tool>` is
-that value verbatim. **The path is constructed from configuration; this skill
-names no tool.** If no such file exists the tool is unsupported — halt with the
-error below rather than improvising against an API you have no reference for.
+Invoke **`design-import-conversations`**, passing the inputs above. That name is fixed and is never
+built from the config value — a name assembled from configuration resolves to
+nothing silently when it is wrong, which is the failure this whole contract
+exists to prevent.
 
-**An unrecognised value halts.** Never fall back to a default tool:
+**If no such skill exists in the repo**, the project's `design:` pin has not
+been materialized. Halt with the error below rather than improvising against an
+API you have no reference for:
 
 ```text
-ERROR: design tool "<value>" is not supported. Supported: claude-design,
-lovable, stitch. Fix projects.<project>.design in .config/vwf.yaml, or write an
-adapter reference for this tool.
+ERROR: no design adapter materialized for project <project>. Its design pin is
+"<value>". Run the stack materializer for that pin so the repo's own
+design-import-conversations skill exists, then retry.
 ```
 
+**An empty result is not an answer.** Never fall back to another tool and never
+return an empty payload — an empty result is indistinguishable from a design
+that was never made, which is exactly the silent failure this adapter exists to
+prevent.
 ## `harvested: n/a` is an answer, not a failure
 
 Two of the three supported tools expose **no review-conversation surface at

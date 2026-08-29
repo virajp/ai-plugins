@@ -246,6 +246,11 @@ skills whose curated source still ships beside its pack. `docker` moves from
 repo's private tree — leaving **six** blockers. Both totals still reconcile
 against 53.
 
+**Re-run after `design-tools` was deleted.** Its skill count was already zero —
+the three import skills left in Wave C — so the census totals do not move. What
+changed is the marketplace: **13 entries**, and the design adapter's per-tool
+knowledge is stackgen's rather than vwf's.
+
 **Re-run once more after `devtools` was reprieved.** Nothing moved on disk, but
 three rows changed meaning: `mise`, `scaffold` and `doppler` are **kept**, not
 *not migrated*, because the plugin holding them is no longer scheduled for
@@ -315,10 +320,11 @@ them undefined; it now lists all eight.
   [no-skill-lost](../memory/decisions/2026-08-27-no-skill-lost-in-the-merge-waves.md)
   rule, with the before/after inventory counted against **53**, not 58. The
   marketplace floor is **three** entries (`vwf`, `stackgen`, `devtools`) plus
-  whatever `gcp` and `cloudflare` resolve to. Wave D now also owes the three
-  amendments under *What the decision costs* — the install-script kind, the
-  `.mcp.json` reopening, and the guard surviving the design move — since each is
-  a precondition for something Wave D deletes.
+  whatever `gcp` and `cloudflare` resolve to. `design-tools` is deleted; the
+  amendments that gated it are done. Wave D now also owes the three amendments
+  under *What the decision costs* — the install-script kind, the `.mcp.json`
+  reopening, and the guard surviving the design move — since each is a
+  precondition for something Wave D deletes.
 
 ### Resolved 2026-08-29 — `claude-code`, dissolved rather than folded
 
@@ -389,6 +395,76 @@ git, but it is an assumption, and `devtools` is where a user gets it.
 
 **The north star closes at three**, not two: `vwf` + `stackgen` + `devtools`.
 That supersedes the count in the 2026-08-17 decision, not its reasoning.
+
+### Resolved 2026-08-29 — the two amendments, and `design-tools` deleted
+
+Both amendments this plan owed are implemented, and the plugin they were
+preconditions for is gone. Viraj's framing set the shape:
+
+> vwf will have skills to let users create design prompts and import designs
+> from the tool of user's choice. Since vwf has to support any design tool,
+> stackgen will have the details of the tool — this will contain the mcp to
+> import, while the prompts will be files generated inside docs folder.
+
+**`.mcp.json` reopened.** A pack may declare an MCP server, and the materializer
+writes it into the **project's own** `.mcp.json` behind its own tier-2 consent
+line, merging rather than owning, with the added server keys recorded in the
+lockfile. The reasoning that carried it: a curated registry of servers fails on
+**scaling** before it fails on charter — a list holds only what someone curated,
+and stackgen exists for the tail nobody did. **LSP stays excluded**; it has no
+project file to live in.
+
+**The install-script kind was not needed.** The amendment offered it as one of
+two routes, and the other turned out to be enough: `.mcp.json` is an ordinary
+project file, so writing it needs a consent tier, not a new artifact type. The
+output vocabulary is still four kinds plus bookkeeping, now plus one tier-2
+project file. **Nothing unproven shipped** — the mechanism recorded as unproven
+was the generated install script, which no longer exists.
+
+**Amendment 3 was already resolved the other way, and is now resolved back.**
+The plan said keep the per-tool references on the stackgen side and declined to
+argue for vwf exceptions; Wave C landed them in vwf and gave the guard three.
+Wave D moves them to stackgen `design-tool` packs, so the allowlist gets
+**smaller**. That is the intended direction whenever an entry stops feeling
+arguable: move the naming out of vwf, never widen the pattern.
+
+**The seam is two hops of fixed names.** vwf calls its own three import skills;
+those delegate to three more fixed names in the repo's own `.claude/`, which the
+project's `design:` pin materializes. The `ux-gate` mechanism reused rather than
+a second one invented — and vwf now names **no** design tool anywhere.
+
+### The stranded pack, found while building this
+
+`ci-system/github-actions` landed in Wave C and **nothing could ever materialize
+it**. The menu lists `stacks/bundles/*.md`; no CI bundle existed, so the pack
+was unreachable — not an error, invisible, which is this repo's recurring
+failure shape.
+
+The cause generalizes: `design:` and `cicd:` are per-project config keys
+**outside the four stack axes**, and the bundle menu was the only door a
+template could come through. Wave D adds `design` and `cicd` as **tool axes**,
+whose bundle slug **is** the config token — so picking from the menu and writing
+the config key are one act rather than two that can disagree, and no
+`config_format` bump is needed because the values are tool tokens today and stay
+tool tokens.
+
+Four bundles landed: `claude-design`, `lovable`, `stitch` and the
+`github-actions` one that rescues the stranded pack.
+
+### Two checker rules repointed rather than left inert
+
+Both watched the deleted plugin, and a check that can never fire is
+indistinguishable from one that always passes:
+
+- **The design-adapter contract** keyed on a plugin keyworded
+  `vwf-design-adapter`. No plugin carries it now, so it walks the `design-tool`
+  packs instead — all three fixed skills present, all three model-invocable.
+- **The direct-MCP-reach guard** matched `mcp__plugin_design-tools_`, a prefix
+  only a plugin-declared server produces. Project-scoped servers are
+  `mcp__<server>__`, so matching the old spelling alone would have quietly
+  stopped catching anything. It now matches both, and suppresses the generic
+  tool-name finding when it fires — that finding's advice is "add to the
+  allowlist", which for a seam violation is exactly wrong.
 
 ## Verification
 

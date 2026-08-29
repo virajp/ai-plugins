@@ -57,6 +57,11 @@ The closed list. A component is exactly one of:
   no cloud: a package registry, a provider-neutral container host. A cloud's own
   compute service stays a `cloud-service`.
 - **`cdn`** — a content-delivery layer.
+- **`design-tool`** — the tool a project's screens and design system are
+  authored in. Selected by the project's `design:` pin rather than composed
+  into anything, which is why it is its own type: it sits beside a stack
+  rather than inside one, and two projects on the same stack routinely use
+  different ones.
 
 ## Categories
 
@@ -114,15 +119,24 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   which exist only at the SDK's native boundary. This is the one bundle whose
   root is not the thing its languages would suggest.
 - A **CI-Bundle** is vwf's delivery-pipeline contract plus exactly one
-  `ci-system` component. Never two: a repo has one pipeline, and generating
-  for a system the repo does not use is how a second, unmaintained pipeline
-  appears.
+  `ci-system` component, on the **`cicd`** axis. Never two: a repo has one
+  pipeline, and generating for a system the repo does not use is how a second,
+  unmaintained pipeline appears.
 - A **Deploy-Bundle** is exactly one `deploy-target` component and nothing
   else. It is the only bundle with no second half, because there is no
   category above a provider-neutral target to write doctrine at — a target
   that belongs to a cloud is a `cloud-service` inside a Cloud-Bundle
   instead. What keeps the single component honest is its kind's scope
   fence rather than a pairing.
+- A **Design-Bundle** is exactly one `design-tool` component, standing alone
+  like a Deploy-Bundle, on the **`design`** axis.
+
+Those last two share a property nothing else here has, and it is what makes the
+**tool axes** (`design`, `cicd`) cheap: **the bundle slug is the tool token the
+project config already holds**. Picking from the menu and writing
+`projects.<name>.design` are one act rather than two that can disagree. They
+exist because a template no menu can offer is not an error — it is invisible,
+which is how a CI-system pack shipped that nothing could ever materialize.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
   the whole repository rather than to one toolchain in it — the only
   composition rooted at the `repo` axis. A gate meaningful for exactly one

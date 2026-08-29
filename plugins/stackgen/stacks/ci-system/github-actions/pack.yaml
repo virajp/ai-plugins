@@ -6,7 +6,7 @@ version: 0.1.0
 type: ci-system
 capability: n/a
 kind: ci-system
-axis: repo
+axis: cicd
 # The pipeline satisfies no harness capability itself — it invokes the repo's
 # task names, which it must not invent.
 harness: n/a

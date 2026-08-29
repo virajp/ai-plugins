@@ -53,8 +53,8 @@ templates:
     summary: <one line>
 generate:
   pin: generated/<technology-slug>
-  axes: [ project, backing, deploy, repo ]
-  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework ] # the generatable kinds
+  axes: [ project, backing, deploy, repo, design, cicd ]
+  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework, deploy-target, design-tool ] # the generatable kinds
   summary: Generate principles-grounded skills and conventions for any stack
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```

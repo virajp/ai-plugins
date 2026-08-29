@@ -262,17 +262,6 @@ pre-commit. Its stack adapter retired in Wave C and its Docker/OCI doctrine in
 Wave D, both to `stackgen`. A `vwf` dependency, because `/vwf:setup`
 orchestrates its scaffold skill. `devtools@virajp-plugins`
 
-**[design-tools](./docs/plugins/design-tools.md)** — **draining.** Its three
-import skills are now vwf's own; what remains carries the Claude Design MCP
-server until stackgen can generate that wiring. Formerly: the design adapter vwf
-imports screens, design systems and design review conversations through. Three
-skills resolve the design tool **per project** — `claude-design`, `lovable` or
-`stitch` — so a product can design its website in one and its app in another.
-Only some tools have a review conversation at all; the ones that do not say so
-plainly rather than returning empty. Ships the Claude Design MCP server.
-Deliberately not a vwf dependency: an adapter is chosen, not inherited.
-`design-tools@virajp-plugins`
-
 **[cicd](./docs/plugins/cicd.md)** — one `/cicd:workflow` skill that resolves
 the repo's CI system from config and generates its delivery pipeline: every tool
 installed through mise, both multi-repo and monorepo layouts, conforming to

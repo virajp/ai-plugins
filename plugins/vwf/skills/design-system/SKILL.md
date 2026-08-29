@@ -97,16 +97,19 @@ adapter, not here. **Name the project you are importing for**: read the `design`
 value of every project declaring a screen platform; when they
 all agree, use that project and say which. When they disagree, ask which
 project's tool authors the product's one design system — that is a product
-decision, not something to pick silently. Then **verify the `design-tools`
-plugin is installed** (`claude plugin list`) before delegating. Three distinct
-halts — never collapsed into one, since each needs a different fix:
+decision, not something to pick silently. Then **verify the repo's own
+`design-import-design-system` skill exists** before delegating — that is what
+the project's `design:` pin materializes, and its absence is the one failure
+that otherwise reads as an empty design. Three distinct halts — never collapsed
+into one, since each needs a different fix:
 
-- **No `design` on any screen-platform project** → "No design tool configured. Set
-  `projects.<name>.design` in `.config/vwf.yaml` to one of `claude-design`,
-  `lovable`, `stitch`." A config still carrying a product-wide `design.tool` is
-  `config_format` 12 drift — nudge `/vwf:setup` rather than reading it.
-- **Plugin not installed** → "the `design-tools` plugin isn't installed. Install
-  it via `/plugin`, then re-run."
+- **No `design` on any screen-platform project** → "No design tool configured.
+  Set `projects.<name>.design` in `.config/vwf.yaml` to one of the options the
+  design-axis stack menu offers." A config still carrying a product-wide
+  `design.tool` is `config_format` 12 drift — nudge `/vwf:setup` rather than
+  reading it.
+- **Pin not materialized** → "the repo has no `design-import-design-system`
+  skill. Materialize the project's `design` pin, then re-run."
 - **Adapter returns nothing usable** → "`<tool>` returned no usable payload",
   with the parse error.
 

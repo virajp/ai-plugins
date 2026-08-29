@@ -12,7 +12,7 @@ This is the same shape as the design-adapter contract
 
 | vwf owns (abstract)                                                 | A stack plugin owns (concrete)                              |
 | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| The **four axes** (`project` / `backing` / `deploy` per project, `repo` per repo) | Which templates exist on each axis             |
+| The **six axes** (`project` / `backing` / `deploy` / `design` / `cicd` per project, `repo` per repo) | Which templates exist on each axis             |
 | The **template frontmatter contract** (`stack-vocabulary.md`)       | The templates themselves                                    |
 | The **platform** vocabulary a project template declares             | Which platforms it offers a template for                    |
 | Harness **capability names** (`dev`, `e2e_local`, `screenshots`, …) | What *satisfies* each one — the tool, the task, the command |
@@ -141,7 +141,7 @@ Returned by `-stack-menu`. One entry per template the plugin offers:
 plugin: <name>
 templates:
   - slug: <kebab> # unique within the plugin
-    axis: project | backing | deploy | repo
+    axis: project | backing | deploy | repo | design | cicd
     platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this template serves
     name: <display name> # what the menu shows
     summary: <one line> # why you would pick it
@@ -173,6 +173,34 @@ single-role pin had nothing to check.
 still keys them on a `stacks/project/<role>/` directory is on the pre-22
 contract.
 
+### The two tool axes — `design` and `cicd`
+
+Added after a stranded pack made the gap visible: a CI-system template existed
+that **no menu could offer**, because CI is chosen by a per-project config key
+rather than by a stack pin, and the menu is the only door a template can come
+through. A template nothing can offer is not an error — it is invisible, which
+is why it shipped unnoticed.
+
+These two axes close that door. They differ from the other four in one respect
+worth stating, because it is what keeps them cheap:
+
+**The slug *is* the config value.** `projects.<name>.design` and
+`projects.<name>.cicd` already hold a tool token — `claude-design`,
+`github-actions` — and a menu entry on these axes takes that same token as its
+slug. So there is exactly one value, written once, and no second spelling to
+drift against. `/vwf:doctor` reports a pin resolving to no menu entry the same
+way it reports any other unresolvable pin.
+
+Neither axis takes `platforms:`. `design` is required for a project declaring
+any **screen** platform and absent otherwise (the same condition the config key
+already states); `cicd` is required for a project the pipeline builds.
+
+**`design` is where the design adapter's per-tool knowledge now comes from.**
+vwf still names no tool: the adapter contract
+(`${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`) defines the payloads and the
+three fixed skill names, and the pinned template materializes the resolved
+tool's implementation of them into the repo's own `.claude/`.
+
 ## The template payload
 
 Returned by `-stack-template <slug>` once the user picks. Carries what
@@ -180,7 +208,7 @@ Returned by `-stack-template <slug>` once the user picks. Carries what
 
 ```yaml
 slug: <kebab>
-axis: project | backing | deploy | repo
+axis: project | backing | deploy | repo | design | cicd
 languages: [ <token> ] # open; the plugin owning the language defines its facts
 optional_languages: []
 frameworks: [] # open, lowercase-kebab

@@ -383,66 +383,69 @@ function checkAgentReferences(plugin: Plugin): Finding[] {
 }
 
 /**
- * The vwf design-adapter contract.
+ * The design-adapter contract, on the materialized side.
  *
- * vwf delegates to an adapter by *constructed* name — `<plugin>-import-screens`
- * and its two siblings — and every way of getting it wrong fails silently. A
- * missing skill imports nothing and reports no error; a skill carrying
- * `disable-model-invocation: true` is removed from the model's context
- * altogether, so it cannot be invoked programmatically and the import returns an
- * empty payload that reads exactly like a design nobody authored. Static
- * checking is the only place either is catchable.
+ * vwf calls three fixed skill names, which in turn delegate to three more fixed
+ * names in the repo's own `.claude/` — the ones a `design-tool` pack lands. Every
+ * way of getting that second hop wrong fails silently. A missing skill imports
+ * nothing and reports no error; a skill carrying `disable-model-invocation: true`
+ * is removed from the model's context altogether, so it cannot be invoked
+ * programmatically and the import returns an empty payload that reads exactly
+ * like a design nobody authored. Static checking is the only place either is
+ * catchable.
  *
- * The neutral `invocation: both` this used to assert is Claude's
- * `disable-model-invocation: false`. Asserting the literal absence of `true`
- * would also pass for `user-invocable: false` (the old `invocation: model`),
- * which is model-invocable but hides the skill from the user — and these three
- * are documented as user-runnable as well. So the check is for the explicit
- * `false`, which is the one spelling that means both.
+ * This used to key on a plugin keyworded `vwf-design-adapter`. Wave D deleted the
+ * last such plugin, which would have left this rule permanently inert — a check
+ * that can never fire is indistinguishable from one that always passes, and that
+ * is the class of defect this file exists to prevent. So it now walks the packs
+ * instead, where the three skills actually live.
+ *
+ * Asserting the literal absence of `true` would also pass for
+ * `user-invocable: false`, which is model-invocable but hides the skill from the
+ * user. So the check is for the explicit `false`, the one spelling meaning both.
  */
 function checkDesignAdapters(plugins: readonly Plugin[]): Finding[] {
   const findings: Finding[] = [];
 
-  for (const plugin of plugins) {
-    const keywords = plugin.manifest.keywords;
-    if (!Array.isArray(keywords) || !keywords.includes("vwf-design-adapter")) {
-      continue;
-    }
-    const skills = new Map(
-      plugin.skills.map(path => [skillName(path), path] as const),
-    );
+  const KINDS = [
+    "design-import-screens",
+    "design-import-design-system",
+    "design-import-conversations",
+  ] as const;
 
-    for (
-      const kind of [
-        "import-screens",
-        "import-design-system",
-        "import-conversations",
-      ]
-    ) {
-      // Since the design adapter merged into vwf the three names are no longer
-      // plugin-prefixed — vwf calls `/vwf:import-screens`, not
-      // `/<plugin>:<plugin>-import-screens`. The rule that matters is unchanged:
-      // these three must be model-invocable, or delegation returns an empty
-      // payload instead of an error.
-      const expected = kind;
-      const path = skills.get(expected);
-      if (path === undefined) {
-        findings.push({
-          scope: plugin.dir,
-          message: `design adapter is missing its "${expected}" skill`,
-        });
-        continue;
-      }
-      const front = frontmatterBlock(readText(join(plugin.root, path))) ?? "";
-      if (!/^disable-model-invocation:\s*false\s*$/m.test(front)) {
-        findings.push({
-          scope: plugin.dir,
-          message:
-            `${expected} is not \`disable-model-invocation: false\` — vwf `
-            + `delegates to it by name, and a skill the model cannot invoke `
-            + `returns an empty payload rather than an error, which is `
-            + `indistinguishable from a design nobody authored`,
-        });
+  for (const plugin of plugins) {
+    // Every design-tool pack, discovered from the file list rather than the
+    // filesystem — one entry per `stacks/design-tool/<tool>/pack.yaml`.
+    const tools = plugin
+      .files
+      .map(file => /^stacks\/design-tool\/([^/]+)\/pack\.yaml$/.exec(file.path))
+      .filter(match => match !== null)
+      .map(match => match[1]!);
+
+    for (const tool of tools) {
+      for (const kind of KINDS) {
+        const wanted = `stacks/design-tool/${tool}/skills/${kind}/SKILL.md`;
+        const file = plugin.files.find(entry => entry.path === wanted);
+        if (file === undefined) {
+          findings.push({
+            scope: `${plugin.dir}:stacks/design-tool/${tool}`,
+            message:
+              `design-tool pack is missing its "${kind}" skill — vwf delegates `
+              + `to that exact name, and a missing one is silently unavailable `
+              + `rather than a smaller feature`,
+          });
+          continue;
+        }
+        const front = frontmatterBlock(readText(file.absolute)) ?? "";
+        if (!/^disable-model-invocation:\s*false\s*$/m.test(front)) {
+          findings.push({
+            scope: `${plugin.dir}:stacks/design-tool/${tool}`,
+            message: `${kind} is not \`disable-model-invocation: false\` — vwf `
+              + `delegates to it by name, and a skill the model cannot invoke `
+              + `returns an empty payload rather than an error, which is `
+              + `indistinguishable from a design nobody authored`,
+          });
+        }
       }
     }
   }
@@ -580,19 +583,14 @@ const TOOL_NAME_EXCEPTIONS = new Set([
   // every occurrence sits in an "instead of" column whose row prescribes the
   // opposite.
   "assets/capability-vocabulary.md",
-  // The three design-adapter references, which arrived when `design-tools`
-  // merged into vwf. Each documents how to talk to ONE tool and is loaded only
-  // when a project's `design:` key already names that tool — so the mention is
-  // recognition of a choice the user made, never a recommendation, which is the
-  // same ground `skills/readme/SKILL.md` stands on.
+  // The three design-adapter references USED TO BE allowlisted here. They are
+  // gone: Wave D moved them to stackgen's `design-tool` packs, which materialize
+  // the resolved tool's adapter into the repo's own `.claude/` under three fixed
+  // skill names vwf invokes. vwf now names no design tool anywhere, so the
+  // exceptions that entry needed are retired rather than maintained.
   //
-  // Three entries and not nine: the nine per-skill references were consolidated
-  // to one per tool precisely so this allowlist stayed arguable. A fourth tool
-  // gets one entry; if that ever stops feeling arguable the fix is moving these
-  // out of vwf again, never widening the pattern.
-  "assets/design-tools/claude-design.md",
-  "assets/design-tools/lovable.md",
-  "assets/design-tools/stitch.md",
+  // That is the intended direction whenever an allowlist entry stops feeling
+  // arguable: move the naming out of vwf, never widen the pattern.
 ]);
 
 /** How far either side of a match still counts as the same enumeration. */
@@ -695,25 +693,41 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
     const body = stripFences(readText(file.absolute).toLowerCase());
 
     // vwf talks to NO design tool: it calls three fixed adapter skill names and
-    // the adapter resolves which tool answers. Reaching into the adapter
-    // plugin's own MCP server skips that entirely, and does it for exactly one
-    // tool — which is how `feedback canvas` came to work for `claude-design` and
-    // silently do nothing for the other two tokens the menu advertises.
+    // the adapter resolves which tool answers. Reaching a design tool's own MCP
+    // server skips that entirely, and does it for exactly one tool — which is
+    // how `feedback canvas` came to work for `claude-design` and silently do
+    // nothing for the other two tokens the menu advertises.
     //
-    // This catches the whole class where the token list cannot: it names no
-    // tool, so a fourth design tool is covered the day it is added.
-    if (body.includes("mcp__plugin_design-tools_")) {
+    // Generalized at Wave D. It used to match `mcp__plugin_design-tools_`, the
+    // prefix a plugin-declared server got. That plugin is gone and servers now
+    // land in the project's own `.mcp.json`, which scopes them `mcp__<server>__`
+    // — so matching the old prefix alone would have quietly stopped catching
+    // anything. Both spellings are matched: a repo upgrading from an earlier
+    // version can still carry the old one in its prose.
+    const designMcp = TOOL_TOKENS
+      .filter(token =>
+        body.includes(`mcp__plugin_design-tools_${token}`)
+        || new RegExp(`mcp__${token}__`).test(body)
+      );
+    if (designMcp.length > 0) {
       findings.push({
         scope: `vwf:${file.path}`,
-        message: `references a design-tools MCP server directly — vwf talks to `
-          + `no design tool, it calls the three fixed adapter skill names and `
-          + `lets the adapter resolve which tool answers `
-          + `(assets/design-adapter.md). Reaching one tool's server makes every `
-          + `other configured tool silently return nothing.`,
+        message: `reaches the ${designMcp.map(t => `"${t}"`).join(", ")} MCP `
+          + `server directly — vwf talks to no design tool, it calls the three `
+          + `fixed adapter skill names and lets the adapter resolve which tool `
+          + `answers (assets/design-adapter.md). Reaching one tool's server `
+          + `makes every other configured tool silently return nothing.`,
       });
     }
 
-    const hits = TOOL_TOKENS.filter(token => prescribes(body, token));
+    // A token already reported above is not reported again by the generic rule.
+    // Both would fire on the same line — an MCP tool name reads as prescription
+    // — and the generic message's advice ("add the path to TOOL_NAME_EXCEPTIONS")
+    // is exactly wrong here: an allowlist entry would bless the seam violation
+    // rather than fix it. The specific finding is the one that helps.
+    const hits = TOOL_TOKENS.filter(token =>
+      !designMcp.includes(token) && prescribes(body, token)
+    );
     if (hits.length > 0) {
       findings.push({
         scope: `vwf:${file.path}`,

@@ -96,14 +96,18 @@ provenance beside the code it governs.
 [`cicd`](./cicd.md) plugin implements it on whichever CI system a repo uses.
 Install it when you want pipelines generated — vwf works without it.
 
-**A design tool is not among them.** vwf is decoupled from any particular one:
-it delegates screen, design-system and review-conversation imports to three
-fixed skills in the **design-tools** plugin, which resolves the tool **per
-project** — so a product can design its website in Lovable and its app on the
-Claude Design canvas. Supported tools today are `claude-design`, `lovable` and
-`stitch`; adding one is a reference file in that plugin, not a vwf change.
-Export needs no adapter at all, since `/vwf:screens prompt` just writes design
-briefs as files.
+**A design tool is not among them.** vwf is decoupled from any particular one,
+and since Wave D it names none at all. It delegates screen, design-system and
+review-conversation imports to three of its own fixed skills, which in turn
+delegate to three more fixed names in **the repo's own `.claude/`** —
+`design-import-screens`, `design-import-design-system` and
+`design-import-conversations`. Those are what the project's `design:` pin
+materializes from a stack `design-tool` pack, resolved **per project**, so a
+product can design its website with one tool and its app with another.
+
+Adding a tool is a pack and a menu entry in the stack plugin, never a vwf
+change. Export needs no adapter at all, since `/vwf:screens prompt` just writes
+design briefs as files.
 
 ## Caveats
 
@@ -1821,8 +1825,8 @@ queries that library's documentation when a question is about a specific library
   plugin list.
 - [mempalace](./mempalace.md) — the memory layer behind `/vwf:handoff` and
   `/vwf:recall`: the daemon, the auto-save hooks, and what was vendored.
-- [design-tools](./design-tools.md) — the design adapter `/vwf:screens` and
-  `/vwf:design-system` import through.
+- [stackgen](./stackgen.md) — ships the `design-tool` packs `/vwf:screens` and
+  `/vwf:design-system` import through, materialized into the repo's `.claude/`.
 - [devtools](./devtools.md) — a vwf dependency; `/vwf:setup` orchestrates
   `/devtools:scaffold`.
 - [cicd](./cicd.md) — implements the delivery-pipeline contract vwf states.

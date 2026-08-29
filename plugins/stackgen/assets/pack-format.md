@@ -54,8 +54,8 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework | deploy-target # the bundle kind it composes into (assets/kinds.md)
-axis: project | backing | deploy | repo
+kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
+axis: project | backing | deploy | repo | design | cicd
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
   - token: <language token>
@@ -66,6 +66,7 @@ languages: # language and app-framework components only
       manifest: <the manifest file doctor checks deps against — or n/a>
 package_manager: <token> # package-manager components only
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
+mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
 ```
@@ -85,7 +86,7 @@ decides alone.
 
 ```yaml
 name: <display name>
-axis: project | backing | deploy | repo
+axis: project | backing | deploy | repo | design | cicd
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
@@ -114,7 +115,10 @@ A bundle is the composition rooted per kind
 `language` component + its `package-manager`, `framework` and
 `toolchain-gate` components; a Cloud-Bundle a `cloud-provider` + its
 `cloud-service`s; a Datastore-Bundle category doctrine + an instance
-component; a Deploy-Bundle one `deploy-target` component alone. No bundle directory exists anywhere: the materializer folds the
+component; a Deploy-Bundle one `deploy-target` component alone; a
+Design-Bundle one `design-tool` component alone, and a CI-Bundle one
+`ci-system` — the two **tool axes**, whose bundle slug is the tool token the
+project config already holds. No bundle directory exists anywhere: the materializer folds the
 resolved composition into **one** `.claude/stackgen/templates/<slug>.md` —
 the vwf payload as frontmatter, including the `components:` refs
 (`<type>/<slug>@<version>`, or `@generated`), with the components'

@@ -1,0 +1,11 @@
+name: Google Stitch
+summary: Prompt-to-UI at stitch.withgoogle.com — fast for screens, and honest
+  that it stores no design system at all.
+version: 0.1.0
+type: design-tool
+kind: design-tool
+axis: design
+# The bundle slug IS the projects.<name>.design token, so the pin and the
+# config key are one value rather than two that can disagree.
+# A design tool satisfies no harness capability: nothing is booted or probed.
+harness: n/a
