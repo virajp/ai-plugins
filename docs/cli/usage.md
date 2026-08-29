@@ -70,8 +70,8 @@ user profile. A name requested at both scopes installs once, at project scope.
 **Installing `vwf` pulls in `devtools` automatically** — Claude resolves plugin
 dependencies natively (2.1.143 and later), from the same marketplace, at the
 same scope. That is why `--all` is just `vwf`; every other plugin is installed
-by name because which language, cloud and capability plugins you want is a
-question about your product.
+by name because which language and cloud plugins you want is a question about
+your product.
 
 An already-installed plugin is reported as satisfied, never auto-updated — see
 [Upgrading](#upgrading). **No receipt is written at all** — not for a plugin

@@ -99,8 +99,8 @@ check.
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
 your user profile. Everything beyond `vwf` is installed by name, because which
-language, cloud and capability plugins you want is a question about your product
-rather than about the toolkit:
+language and cloud plugins you want is a question about your product rather than
+about the toolkit:
 
 ```sh
 pnpx @askviraj/ai-plugins --user typescript --user gcp

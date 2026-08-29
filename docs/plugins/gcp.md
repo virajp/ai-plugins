@@ -137,15 +137,13 @@ platform's store or update channel and pins `deploy_template: n/a`.
 ## Capability flavours
 
 `gcp` is where the **managed** flavour of a capability lives. The neutral
-contract for each one belongs to its capability plugin —
-[`datastore`](./datastore.md), [`identity`](./identity.md),
-[`observability`](./observability.md), [`orchestration`](./orchestration.md),
-[`object-storage`](./object-storage.md) — and the capability states the
-requirement while the provider states the mechanism, one level down from the
-stack-adapter contract itself.
+contract for each one is a [`stackgen`](./stackgen.md) asset under
+`assets/contracts/` — datastore, identity, observability, orchestration and
+object storage — and the capability states the requirement while the provider
+states the mechanism, one level down from the stack-adapter contract itself.
 
-`object-storage` is the case that makes the split visible: it ships no provider
-of its own, because every object store is a cloud's. Cloud Storage is the
+Object storage is the case that makes the split visible: it has no vendor-free
+provider bundle, because every object store is a cloud's. Cloud Storage is the
 flavour this plugin supplies.
 
 **Consumers follow the publisher.** If a project publishing a capability runs on

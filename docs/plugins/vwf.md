@@ -524,8 +524,8 @@ welded into one document, so picking `service` because you wanted Hono silently
 also bought you Firestore, Firebase Auth, Temporal and Cloud Run — none of it
 declared. Now a project template names no vendor and a backing template names no
 framework — and a backing template is now one capability rather than a vendor
-bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each from its own
-capability plugin, is a completely vendor-free path through vwf.
+bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each a stackgen
+bundle, is a completely vendor-free path through vwf.
 
 An operator back-office is `platforms: [service, webapp]` plus the
 `operator-rbac` capability, and picks the `typescript-hono-refine` template. A

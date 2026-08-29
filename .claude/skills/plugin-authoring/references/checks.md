@@ -8,7 +8,7 @@ format, and the one generated file that needs a freshness gate of its own.
 | Task                          | Does                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------ |
 | `plugins:check`               | validates the authored tree; non-zero on any finding                           |
-| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 15 plugin manifests     |
+| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 8 plugin manifests      |
 | `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                      |
 | `typescript:test`             | table-tests `plugins/typescript/hooks/npm-normalize.sh` through the system sed |
 | `pnpm vitest run`             | the `scripts/` and `cli/` suites                                               |
@@ -50,8 +50,10 @@ much smaller than the one it replaced: whole families of assertion became
 7. **Agent cross-references, both directions.** Every role-shaped `` `token` ``
    in a plugin's prose names a real agent of that plugin, and every declared
    agent is referenced at least once. Either direction alone misses a rename.
-8. **The vwf design-adapter contract.** All three import skills present in
-   `design-tools` and model-invocable — see stackgen's
+8. **The vwf design-adapter contract.** Every `design-tool` pack ships all three
+   `design-import-*` skills, model-invocable. The checker discovers packs from
+   `stacks/design-tool/<tool>/pack.yaml`, so adding a tool extends the rule
+   without touching it — see stackgen's
    [artifact doctrine](../../../../plugins/stackgen/assets/artifact-doctrine.md)
    §2 for why a user-only adapter skill is worse than a missing one.
 9. **The vwf stack-adapter contract.** Every plugin keyworded
@@ -85,8 +87,12 @@ domain of a config key vwf owns, rather than recommending one. Fenced blocks are
 stripped first, since a config example must show real values. The window is
 character-based because every real enumeration in the corpus wraps mid-list.
 
-`mcp__plugin_design-tools_` is banned outright in vwf prose: it names no tool,
-so it covers a fourth design tool the day one is added.
+The MCP-server rule was **generalized at Wave D**. It used to match only
+`mcp__plugin_design-tools_<token>`, the plugin-scoped prefix — but a design tool
+now lands in the project's own `.mcp.json`, which scopes its server
+`mcp__<token>__` instead, so matching the old prefix alone would have quietly
+stopped catching anything. Both spellings are banned in vwf prose, which covers
+a fourth design tool the day one is added.
 
 **Two design tokens are deliberately unbannable** and live in
 `ENUMERATION_PEERS` instead — `stitch` (an ordinary English word the screens

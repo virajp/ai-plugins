@@ -70,8 +70,8 @@ There is no `-ux-gate` skill: an access proxy owns no UI stack.
 
 **None.** Cloudflare's backing services — R2, D1, KV, Durable Objects, Queues —
 are all inside the parked scope, so this plugin realizes no capability on the
-`backing` axis today. Reach for [`gcp`](./gcp.md) or a capability plugin's own
-provider instead.
+`backing` axis today. Reach for [`gcp`](./gcp.md) or a vendor-free provider
+bundle from [`stackgen`](./stackgen.md) instead.
 
 This is stated rather than left blank on purpose; see the note at the top.
 
@@ -129,5 +129,6 @@ the same seam the identity contract already requires.
 - [gcp](./gcp.md) — the cloud plugin with a full backing and deploy catalogue;
   its `cloud-run` and `gke` templates each name a GCP-native private plane, and
   either composes with Zero Trust Access.
-- [identity](./identity.md) — the neutral identity contract, including the seam
-  that makes the local fake possible.
+- [stackgen](./stackgen.md) — the neutral identity contract lives there as
+  `assets/contracts/identity.md`, including the seam that makes the local fake
+  possible.

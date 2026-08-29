@@ -7,10 +7,10 @@ reads the imported contract instead of the canvas.
 
 The worked example is **Centwise**, a Flutter expense tracker for phones. One
 repo, one project, one platform — `mobile` — with Claude Design as the design
-tool, reached through the `design-tools` plugin. At the end Centwise has an
-imported design system, flow contracts whose screens were designed on the canvas
-and folded back, and one slice built and merged with its screens checked against
-those contracts by Flutter's own golden and accessibility tests.
+tool, materialized by `stackgen`'s `claude-design` pack. At the end Centwise has
+an imported design system, flow contracts whose screens were designed on the
+canvas and folded back, and one slice built and merged with its screens checked
+against those contracts by Flutter's own golden and accessibility tests.
 
 This is a **delta guide**. The spine it diverges from is
 [start a product from an empty repo](./single-repo.md), which walks setup
@@ -18,31 +18,33 @@ through verification for a product with no canvas in the loop; read it first.
 Everything below narrates only where Centwise's journey differs. Mechanics —
 flags, halt wording, config keys, payload shapes — stay in the
 [vwf plugin manual](../../plugins/vwf.md) and the
-[design-tools manual](../../plugins/design-tools.md).
+[stackgen manual](../../plugins/stackgen.md).
 
 ## The journey
 
 ### 1. Install the plugins
 
 Centwise swaps the spine's stack plugins for the one that owns Flutter, and
-keeps `design-tools` for the design imports.
+takes `stackgen` for both the stack bundles and the design imports.
 
 ```sh
 claude plugin install vwf@virajp-plugins \
-  flutter@virajp-plugins design-tools@virajp-plugins
+  flutter@virajp-plugins stackgen@virajp-plugins
 ```
 
-`flutter` supplies the project-axis template and — this matters at the end of
-the run — the UX gate that renders Flutter screens; `design-tools` is the design
-adapter, without which `/vwf:design-system` has nothing to import from. Neither
-is a vwf dependency, so neither arrives on its own. Scopes and upgrades:
-[the installer CLI](../../cli/usage.md#installing-plugins); the rest of this
-step is the spine's [Install the plugins](./single-repo.md#install-the-plugins).
+`flutter` supplies the Dart, Kotlin and Swift language servers and their
+doctrine; `stackgen` supplies the `dart-flutter` bundle, the `ux-gate` that
+renders Flutter screens — this matters at the end of the run — and the
+`claude-design` pack, without which `/vwf:design-system` has nothing to import
+from. Neither is a vwf dependency, so neither arrives on its own. Scopes and
+upgrades: [the installer CLI](../../cli/usage.md#installing-plugins); the rest
+of this step is the spine's
+[Install the plugins](./single-repo.md#install-the-plugins).
 
-Then connect the canvas. Claude Design is a remote MCP server the `design-tools`
-plugin declares; run `/mcp` and sign in once — see
-[the Claude Design MCP server](../../plugins/design-tools.md#the-claude-design-mcp-server).
-Lovable and Stitch bring their own surfaces and are connected differently.
+Then connect the canvas. Claude Design is a remote MCP server, and pinning the
+`claude-design` bundle wires it into the repo's own `.mcp.json` behind its own
+consent line; run `/mcp` and sign in once. Lovable and Stitch are packs of their
+own and bring different surfaces.
 
 ### 2. /vwf:setup and /vwf:product
 
@@ -68,15 +70,15 @@ the derive-and-correct shape. Two of Centwise's answers are the delta:
   flows the blueprint mandates, that screens land in `mobile.md` files, and
   which toolchain checks the built screens in step 9.
 - **Design tool** — `claude-design`, asked once per project that declares a
-  screen platform and recorded against that project. It is a tool token the
-  adapter recognises, not a plugin name, and a product with two UI projects can
-  answer it twice with two different tools:
-  [the tool is per project](../../plugins/design-tools.md#the-tool-is-per-project).
+  screen platform and recorded against that project. It is a bundle slug, and
+  the slug *is* the config token, so pinning it and writing the key are one act.
+  A product with two UI projects can answer it twice with two different tools:
+  [stackgen](../../plugins/stackgen.md).
 
-On the stack menu Centwise pins `dart-flutter` on the project axis — the one
-template the `flutter` plugin offers, serving mobile, tablet, desktop and webapp
-from one codebase ([stack templates](../../plugins/flutter.md#stack-templates)).
-The other axes work as in the spine's
+On the stack menu Centwise pins `dart-flutter` on the project axis — the
+stackgen bundle serving mobile, tablet, desktop and webapp from one codebase
+([stack templates](../../plugins/flutter.md#stack-templates)). The other axes
+work as in the spine's
 [stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time),
 and the twelve-foundation walk is unchanged from
 [the twelve foundations](./single-repo.md#the-twelve-foundations).
@@ -254,10 +256,10 @@ carry the pinned screen codes back. Those codes are the join key for the import
 diff; a tool whose output cannot recover them still imports, but reports the
 screens without codes rather than guessing, and you match them by hand.
 
-Support for a tool is a reference file inside `design-tools`, not a vwf change
+Support for a tool is a `design-tool` pack inside `stackgen`, not a vwf change
 and not a new plugin — so "my tool isn't listed" is a small contribution, not a
-fork. Tokens, what each reads, and how each authenticates:
-[design-tools](../../plugins/design-tools.md#the-tool-is-per-project).
+fork. Three ship today: `claude-design`, `lovable` and `stitch`. What each reads
+and how each authenticates: [stackgen](../../plugins/stackgen.md).
 
 ### Design first, or review the renders
 
@@ -319,9 +321,10 @@ are the ones this scenario adds, each explained where it is enforced.
   when its token is one no adapter supports, or when the adapter returns nothing
   usable — each with its own message, because they need different fixes.
   [`/vwf:design-system`](../../plugins/vwf.md#vwfdesign-system),
-  [the tool is per project](../../plugins/design-tools.md#the-tool-is-per-project)
-- **Design-system import halts when the `design-tools` plugin is not
-  installed**, since there is no adapter to delegate to and no offline authoring
+  [stackgen](../../plugins/stackgen.md)
+- **Design-system import halts when the design pack was never materialized**,
+  since `/vwf:import-design-system` has no `design-import-design-system` skill
+  in the repo's own `.claude/` to delegate to, and there is no offline authoring
   mode. [`/vwf:design-system`](../../plugins/vwf.md#vwfdesign-system)
 - **`/vwf:screens` halts without a design system**, in either mode — screens
   reference it. [`/vwf:screens`](../../plugins/vwf.md#vwfscreens)

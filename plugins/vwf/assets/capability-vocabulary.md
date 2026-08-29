@@ -89,8 +89,8 @@ Two consequences worth stating, because both are otherwise discovered late:
   publishes each shared capability, so `plan` and `execute` resolve the provider
   the same way every time rather than inferring it from whoever asks first.
 
-This rule is why a capability plugin holds the **contract** and a cloud plugin
-holds the **flavour**: the contract is what a consumer codes against, and it is
+This rule is why a capability's **contract** is held apart from its
+**flavour**, which is a cloud plugin's: the contract is what a consumer codes against, and it is
 identical whichever provider the publisher chose.
 
 ## Prose nouns — how blueprint docs name these

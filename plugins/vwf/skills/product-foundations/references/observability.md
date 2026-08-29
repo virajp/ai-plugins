@@ -2,9 +2,8 @@
 
 The default: **one vendor-neutral telemetry standard, all three signals,
 exported to a single sink** — one shared telemetry layer instrumenting every
-server-side project identically. Which standard and which sink is the
-observability capability plugin's answer, recorded as the cross-cutting
-`observability:` token.
+server-side project identically. Which standard and which sink the
+project's stack answers, recorded as the cross-cutting `observability:` token.
 
 ## Default contract
 

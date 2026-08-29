@@ -1,8 +1,8 @@
 # Object storage — the capability contract
 
 What **any** object store has to satisfy to serve a vwf product, stated without
-naming one. Unlike every other capability plugin, this one ships **no provider
-template of its own** — see below for why, because that absence is a decision
+naming one. Unlike every other capability contract, this one has **no
+vendor-free provider bundle** — see below for why, because that absence is a decision
 rather than a gap.
 
 Capability token realized here: `object-file-storage`. Blueprint prose calls it

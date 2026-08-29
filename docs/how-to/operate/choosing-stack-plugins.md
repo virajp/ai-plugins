@@ -3,10 +3,10 @@
 Installing `vwf` gets you the workflow and tells you nothing about your
 technology: vwf names no language, no framework and no cloud, so every concrete
 option you are ever offered comes from a plugin you installed by name. This
-guide is that decision — eleven plugins you choose, plus the workflow and its
-one hard dependency, which arrive together — and which subset a given product
-wants **before** it reaches `/vwf:architecture`, since the menu that command
-presents is exactly what the plugins you installed **and listed in the product's
+guide is that decision — six plugins you choose, plus the workflow and its one
+hard dependency, which arrive together — and which subset a given product wants
+**before** it reaches `/vwf:architecture`, since the menu that command presents
+is exactly what the plugins you installed **and listed in the product's
 `stacks:` roster** declare. At the end you have a plugin list you can hand to
 the installer, with a reason for each name on it.
 
@@ -73,10 +73,10 @@ plugin still has a deploy answer and a runnable local stack: it owns
 acceptance verifier's readiness gates depend on.
 
 **Two plugins are independent, installed by choice, and deliberately not vwf
-dependencies.** [`design-tools`](../../plugins/design-tools.md) is the adapter
-vwf imports screens, design systems and design-review conversations through,
-resolving the tool per project — an adapter is chosen rather than inherited, so
-vwf calls fixed skill names and never forces one tool on you.
+dependencies.** [`stackgen`](../../plugins/stackgen.md) materializes the design
+adapter vwf imports screens, design systems and design-review conversations
+through, resolving the tool per project — an adapter is chosen rather than
+inherited, so vwf calls fixed skill names and never forces one tool on you.
 [`cicd`](../../plugins/cicd.md) generates the delivery pipeline: vwf owns the
 contract a pipeline must satisfy and nothing in vwf delegates to this plugin, so
 it forces no install; add it when you want pipelines written for you.
@@ -102,49 +102,49 @@ list falls out of the same three questions: what language, what it stores, and
 whether it has screens. `devtools` is on every line and omitted from the table,
 since vwf brings it.
 
-| Product                                          | Shape                                                                   | Installed beyond `vwf`                    |
-| ------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------- |
-| [Relay](../greenfield/single-repo.md)            | One TS repo: API + web app, Postgres                                    | `typescript`, `datastore`, `design-tools` |
-| [Centwise](../greenfield/ui-with-design-tool.md) | One Flutter app, designed on a canvas                                   | `flutter`, `design-tools`                 |
-| [Hookline](../greenfield/api-only-service.md)    | One TS service, no UI                                                   | `typescript`, `datastore`                 |
-| [clockon](../greenfield/cli-product.md)          | One TS command-line tool                                                | `typescript`                              |
-| [Stallfront](../greenfield/multi-repo.md)        | E-commerce in four repos: a docs-only base plus storefront, API and IaC | `typescript`, `datastore`, `design-tools` |
+| Product                                          | Shape                                                                   | Installed beyond `vwf`   |
+| ------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------ |
+| [Relay](../greenfield/single-repo.md)            | One TS repo: API + web app, Postgres                                    | `typescript`, `stackgen` |
+| [Centwise](../greenfield/ui-with-design-tool.md) | One Flutter app, designed on a canvas                                   | `flutter`, `stackgen`    |
+| [Hookline](../greenfield/api-only-service.md)    | One TS service, no UI                                                   | `typescript`, `stackgen` |
+| [clockon](../greenfield/cli-product.md)          | One TS command-line tool                                                | `typescript`, `stackgen` |
+| [Stallfront](../greenfield/multi-repo.md)        | E-commerce in four repos: a docs-only base plus storefront, API and IaC | `typescript`, `stackgen` |
 
 Relay is the full case in miniature: `typescript` covers a project serving both
-an API and its own web app, `datastore` answers the backing axis with Postgres,
-and `design-tools` is what makes `/vwf:design-system` runnable at all — a
-declared screen platform makes the design system a foundation, and without an
-adapter there is nothing to import from. Centwise drops the datastore rather
-than the design tool: it is an on-device app whose project axis comes from
-`flutter`, and its screens still have to be imported and re-imported as they are
-designed.
+an API and its own web app, `stackgen`'s `postgres` bundle answers the backing
+axis, and its design pack is what makes `/vwf:design-system` runnable at all — a
+declared screen platform makes the design system a foundation, and without a
+materialized adapter there is nothing to import from. Centwise drops the
+datastore rather than the design tool: it is an on-device app whose language
+doctrine comes from `flutter`, and its screens still have to be imported and
+re-imported as they are designed.
 
 Hookline and clockon are the two subtractions. Hookline publishes an API and
 declares no screen platform, so no design tool is involved anywhere in its
-workflow — but it stores things, so `datastore` stays. clockon declares the
-terminal platform, which has no screens at all and never reaches a canvas, so
-the design system is not one of its foundations; it holds no state of its own
-either, which leaves `typescript` alone doing project, deploy and repo. A
-one-plugin product is a normal answer, not a sign something was missed.
+workflow — but it stores things, so the `postgres` bundle stays. clockon
+declares the terminal platform, which has no screens at all and never reaches a
+canvas, so the design system is not one of its foundations; it holds no state of
+its own either, which leaves its project, deploy and repo axes as the whole pin
+list. A two-plugin product is a normal answer, not a sign something was missed.
 
 Stallfront is the case that shows the roster is per product, not per repo: its
-install is Relay's exact three plugins, spread across a base repo and three
+install is Relay's exact two plugins, spread across a base repo and three
 members instead of one checkout. Splitting a product into repos changes where
 commands run, not which plugins it needs. A cloud plugin joins the list the
-moment Stallfront picks a host; until then `container-generic` from `devtools`
-is a real answer and not a placeholder.
+moment Stallfront picks a host; until then the `container-generic` bundle is a
+real answer and not a placeholder.
 
 ## Decision points
 
-### A capability plugin now, or later
+### A capability now, or later
 
-Install one when a project in your product actually needs the capability, not in
-anticipation. Adding it later is cheap: install the plugin, list it in the
-product's `stacks:` roster, and re-run `/vwf:architecture`, which asks only
-about genuine deltas rather than re-eliciting what is already confirmed. What is
-not cheap is discovering the gap at `/vwf:architecture` and pinning around it,
-because a project whose backing axis was answered without the plugin that owns
-its provider carries that pin into every plan and every run.
+Pin one when a project in your product actually needs the capability, not in
+anticipation. Adding it later is cheap: pin the bundle, list it in the product's
+`stacks:` roster, and re-run `/vwf:architecture`, which asks only about genuine
+deltas rather than re-eliciting what is already confirmed. What is not cheap is
+discovering the gap at `/vwf:architecture` and pinning around it, because a
+project whose backing axis was answered without the plugin that owns its
+provider carries that pin into every plan and every run.
 
 Two capabilities are worth deciding earlier than the rest. **Identity** is one,
 because whether accounts exist is a product decision that reaches the registry
