@@ -37,6 +37,9 @@ The closed list. A component is exactly one of:
 - **`capability-provider`** — the flavour half of a vwf capability that
   belongs to no cloud and is not a datastore: an identity issuer, a
   telemetry sink, a workflow engine. Its **category** says which.
+- **`ci-system`** — one continuous-integration system: where its workflows
+  live, how it is triggered, and how it installs a toolchain. One component
+  per system, never per workflow.
 - **`cdn`** — a content-delivery layer.
 
 ## Categories
@@ -88,6 +91,10 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
 - A **Capability-Bundle** is category-level doctrine — the neutral capability
   contract — plus one `capability-provider` component that realizes it, the
   same halves a Datastore-Bundle is built from.
+- A **CI-Bundle** is vwf's delivery-pipeline contract plus exactly one
+  `ci-system` component. Never two: a repo has one pipeline, and generating
+  for a system the repo does not use is how a second, unmaintained pipeline
+  appears.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
   the whole repository rather than to one toolchain in it — the only
   composition rooted at the `repo` axis. A gate meaningful for exactly one

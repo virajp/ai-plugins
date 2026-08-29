@@ -385,14 +385,77 @@ shape.
    one can run locally; a seam plus a fake where the provider is
    hosted-only, with the gap named.
 
+## `ci-system` — the repo's delivery pipeline
+
+The output is a **CI-Bundle** (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`):
+vwf's delivery-pipeline contract plus exactly **one** `ci-system` component.
+The contract states what a pipeline must do; the component states how one
+system does it.
+
+**Exactly one.** A repo has one pipeline. Generating for a second system
+produces a pipeline nobody runs and nobody updates, which is worse than
+none — it is a green check that means nothing.
+
+- **Axis**: `repo`.
+- **Structure**: the **topic bar** below, hung per the kind-general rule —
+  the neutral rules in a lean router skill, one reference per CI system,
+  loaded only once the system is resolved. This is the shape the curated
+  `cicd` plugin already ships, and adding a system is one reference file.
+- **Scope**: workflow layout, triggering, toolchain installation, and the
+  release contract. Never the language's build commands — those are the
+  language bundle's, reached through the repo's task library. Never the
+  cloud's deploy mechanics, which belong to `cloud-provider`.
+- **Facts & harness**: the pipeline satisfies no harness capability itself;
+  it **invokes** the repo's task names, so `harness:` is `n/a` and the task
+  names are what the component must not invent.
+- **Invocation**: the router model-invocable, since a pipeline is generated
+  on request rather than while editing a file. Its references load on
+  demand, one system only.
+
+### The topic bar
+
+A closed list of six topics, one artifact per topic, each individually
+researched and cited. Extracted from the curated `cicd` plugin — its neutral
+rules and its one implemented system.
+
+1. **Resolution & layout** — which system the repo uses (a recorded fact,
+   never detection and never a silent default), where its workflow files
+   live, and the monorepo-versus-multi-repo structures with the fan-out
+   strategies each supports.
+2. **Toolchain installation** — the rule that outranks the rest: **the
+   pipeline installs the repo's toolchain manager and nothing else.** No
+   per-language setup action, no system package installs, no global
+   installs. Everything a job needs is declared in the repo's toolchain
+   config, and *how* the manager itself is installed is this topic's
+   business.
+3. **The gate sequence** — what runs on every push and pull request, in what
+   order, and what fails the run. Cheap gates first, and the same task names
+   the developer runs locally.
+4. **Release triggering** — vwf's delivery-pipeline contract in this
+   system's vocabulary: the `<project>-<env>-v<semver>` tag shape, branch
+   validation before publish, and tested-before-release. Cited from the
+   contract, not restated.
+5. **Credentials in CI** — federated identity over stored long-lived
+   tokens wherever the system offers it, least-privilege scoping per
+   workflow, and what must never reach a log. A stored token that never
+   expires is the finding this topic exists to prevent.
+6. **Pinning & caching** — every third-party building block pinned to an
+   explicit version, and what is worth caching against what it costs to
+   restore. An unpinned action is remote code executing with the
+   pipeline's credentials.
+
 ## Reserved kinds (defined at their merge wave, not before)
 
-- **`ci-system`** — the `cicd` plugin's shape: neutral rules shared, one
-  reference per CI system. Arrives when `cicd` merges.
+**None outstanding.** Both reservations have been redeemed —
+`capability-provider` and `ci-system` are defined above, at Waves B and C
+respectively, which is what the reservation was for.
 
-Naming a kind here is deliberate minimalism: defining structures for kinds
-nothing generates yet would be speculation; naming them stops Wave B/C from
-inventing shapes ad hoc.
+The practice stands for whatever comes next: name a kind here when a wave is
+known to need it, and define its structure only when that wave lands.
+Defining structures for kinds nothing generates yet is speculation; naming
+them is what stops a later wave inventing a shape ad hoc — which is exactly
+what `repo-gate` had to be defined from scratch to fix, because nobody
+reserved it.
 
 ## What the reviewer checks per kind
 
@@ -401,7 +464,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all five kinds the structural checklist **is the
+the kind's ruling. For all six kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -415,4 +478,5 @@ kind: a **language-specific** linter or formatter appearing here is a gap,
 because it belongs to topic 10 of its language bundle. For
 `capability-provider` the composition is the instance component alone, and —
 as with `database` — citing rather than restating the contract is part of
-the bar.
+the bar. For `ci-system` the composition is one component and **exactly
+one**: a second CI system in the same bundle is a gap, not extra coverage.

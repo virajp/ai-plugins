@@ -17,6 +17,9 @@ Every landed pack's doctrine **still ships from its curated plugin too**. The
 copies here are the destination the no-skill-lost rule requires **before**
 that plugin can retire, not a replacement yet.
 
+**Wave C — `ci-system/`, kind `ci-system`:** `github-actions`. Exactly one CI
+system per repo, so this bundle never composes two.
+
 `object-storage` has no pack and will not get one: every object store is a
 cloud's, so its flavour arrives from `gcp` or `cloudflare`. Its contract sits
 in `../assets/contracts/` regardless, because the clauses are the same
