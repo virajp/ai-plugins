@@ -1,0 +1,11 @@
+name: ESLint
+summary: The correctness gate for TypeScript and JavaScript — flat config,
+  zero
+  formatting rules, overrides scoped by glob.
+version: 0.1.0
+type: toolchain-gate
+kind: language-bundle
+axis: repo
+# Topic 10 of the language-bundle bar. NOT a repo-gate: this linter is
+# meaningful only for one toolchain, so it belongs to its language's bundle.
+harness: n/a

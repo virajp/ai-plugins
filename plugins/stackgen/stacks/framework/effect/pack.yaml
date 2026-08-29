@@ -1,0 +1,10 @@
+name: Effect-TS
+summary: Effect as the composition and error model for a TypeScript codebase —
+  writing effects, running them, and testing them.
+version: 0.1.0
+type: framework
+category: meta-framework
+kind: language-bundle
+axis: project
+# Topic 2 of the language-bundle bar — one artifact per detected framework.
+harness: n/a

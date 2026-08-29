@@ -20,6 +20,23 @@ that plugin can retire, not a replacement yet.
 **Wave C — `ci-system/`, kind `ci-system`:** `github-actions`. Exactly one CI
 system per repo, so this bundle never composes two.
 
+**Wave C — the TypeScript Language-Bundle**, five components across four
+directories: `language/typescript`, `package-manager/pnpm`,
+`toolchain-gate/tsconfig` (topic 9), `toolchain-gate/eslint` (topic 10) and
+`framework/effect` (topic 2).
+
+Note `toolchain-gate` appears under **two** kinds, which is the seam working
+rather than a mistake: `dprint`/`gitleaks`/`grype`/`pre-commit` run over any
+repo and compose into `repo-gate`, while `eslint` and `tsconfig` are
+meaningful for exactly one toolchain and compose into its language bundle.
+
+**Deferred — `gcp` and `cloudflare`.** Their `cloud-provider` bar wants ~30
+and ~9 artifacts; the curated plugins supply three provider skills and four
+~80-line service templates. Folding them honestly needs per-topic research
+with citations, which is its own piece of work rather than a fold. Until then
+those two plugins stay the covered path for their clouds, and Wave D's census
+blocks on them by design.
+
 `object-storage` has no pack and will not get one: every object store is a
 cloud's, so its flavour arrives from `gcp` or `cloudflare`. Its contract sits
 in `../assets/contracts/` regardless, because the clauses are the same

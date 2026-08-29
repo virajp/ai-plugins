@@ -1,0 +1,24 @@
+name: TypeScript
+summary: The Node/TypeScript language baseline — standards, error semantics,
+  the async model, testing, build and run, config and observability wiring.
+version: 0.1.0
+type: language
+kind: language-bundle
+axis: project
+platforms: [ service, cli, webapp, site ]
+languages:
+  - token: typescript
+    facts:
+      lsp: >-
+        typescript-language-server, run through mise; stackgen ships no
+        language server itself
+      mise_tool: node
+      manifest: package.json
+  - token: javascript
+    facts:
+      lsp: >-
+        typescript-language-server, run through mise; the same server serves
+        both tokens
+      mise_tool: node
+      manifest: package.json
+harness: n/a

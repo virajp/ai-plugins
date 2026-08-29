@@ -1,0 +1,9 @@
+name: tsconfig
+summary: The TypeScript compiler configuration — a strict shared base,
+  per-project
+  configs, the path alias and the emit variant.
+version: 0.1.0
+type: toolchain-gate
+kind: language-bundle
+axis: project
+harness: n/a
