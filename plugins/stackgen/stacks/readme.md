@@ -48,6 +48,17 @@ repo's own `.claude/skills/`. vwf invokes that fixed name instead of building
 plugin name to build from, and a name assembled from configuration is one that
 can silently resolve to nothing.
 
+**Bundles — `bundles/`, the recorded compositions users actually pick.** All
+fifteen curated options survive the merge: the twelve TypeScript ones, the
+Flutter app, the provider-neutral container deploy and the Claude Code plugin
+template. Each names its components as refs, mixing shipped packs (copied
+verbatim) with `@generated` ones (researched on first fetch) — which is the
+dispatch rule working at bundle scale rather than a gap.
+
+A component answers *what is TypeScript*; a bundle answers *what is a
+TypeScript service*. The menu lists bundles only — offering bare components
+would ask a user to assemble a stack rather than choose one.
+
 **Deferred — `gcp` and `cloudflare`.** Their `cloud-provider` bar wants ~30
 and ~9 artifacts; the curated plugins supply three provider skills and four
 ~80-line service templates. Folding them honestly needs per-topic research

@@ -30,15 +30,21 @@ packs by copy, uncovered components by generation. Materialization is
    frontmatter with the body as `conventions:`. **Stop — never regenerate,
    never diff.** Drift against packs is `/stackgen:stackgen-sync`'s job, on
    the user's clock — and it acts per component.
-2. **A first pin? Resolve the composition.** The slug names the bundle root
-   — a shipped pack (`${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/pack.yaml`
-   exists), or `generated/<technology-slug>` when the root itself is
-   uncovered. Resolve the rest of the composition per the root's kind and
-   the component types that compose it
+2. **A first pin? Read the recorded composition.** The slug names a **bundle
+   file**, `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/<slug>.md`. Its frontmatter
+   already lists every component as a `<type>/<slug>@<version|generated>`
+   ref, and its body is the composition's own conventions — take both. The
+   composition is **recorded, not inferred**: a bundle is a reviewed
+   combination, and re-deriving it from whatever the repo happens to contain
+   would silently produce a different stack than the one the user picked.
+
+   **Only `generated/<technology-slug>` has no bundle file**, because nothing
+   curated it. There, and only there, infer the composition: resolve the root's
+   kind and the component types that compose it
    (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`,
-   `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): read the repo's manifests
-   and the config's `stack` block (`languages` / `frameworks` /
-   `dependencies`) and name every component as a `<type>/<slug>` ref.
+   `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`) by reading the repo's manifests
+   and the config's `stack` block, and name every component as a
+   `<type>/<slug>` ref.
 3. **Dispatch each component.** A component with a shipped pack
    (`stacks/<type>/<slug>/pack.yaml`) is a copy — read
    [the materializer](references/materializer.md). An uncovered component

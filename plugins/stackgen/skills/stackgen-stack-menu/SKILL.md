@@ -21,10 +21,16 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
 
 ## How to answer
 
-1. List `${CLAUDE_PLUGIN_ROOT}/stacks/*/*/pack.yaml`. Each is one **pack**: its
-   slug is its directory name, and `axis`, `kind`, `platforms`, `name` and
-   `summary` come from the file
-   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
+1. List `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/*.md`. **Each is one menu
+   entry** — a bundle is what a user picks, because a component answers "what
+   is this language" and a bundle answers "what is a service in it". Its slug
+   is the filename, and `name`, `axis`, `kind`, `platforms` and `artifact` come
+   from the frontmatter (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take
+   the `summary` from the body's opening sentence.
+
+   **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
+   the parts a bundle composes, not options — offering them would ask the user
+   to assemble a stack rather than choose one.
 2. Return the payload below. The `generate` block is present on **every**
    answer — it is the open entry, and it is what makes an empty pack list read
    as a decision rather than a fault.
@@ -53,9 +59,14 @@ generate:
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```
 
-**If `stacks/` holds no packs, return `templates: []`** with the same `note`
-and `generate` block. That is this plugin's honest state until the merge
-waves land packs.
+**If `stacks/bundles/` is empty, return `templates: []`** with the same `note`
+and `generate` block — the open entry is what makes an empty list read as a
+decision rather than a fault.
+
+**A bundle whose components are partly `@generated` is listed normally**, with
+no warning and no asterisk. Mixing copied and generated components is the
+dispatch rule working, and the lockfile records which was which; flagging it in
+the menu would present a routine outcome as a defect.
 
 ## Rules
 

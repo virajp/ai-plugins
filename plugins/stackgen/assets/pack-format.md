@@ -76,7 +76,38 @@ composition time** now: a bundle's `frameworks:` is its framework
 components' slugs, its `capabilities:` its components' `capability` tokens.
 A pack states only what its own component is.
 
-## Bundles — a composition, never a directory
+## Bundle files — the recorded composition
+
+A bundle is **one file**, `stacks/bundles/<slug>.md`: YAML frontmatter naming
+its component refs, and a body carrying the composition's own conventions —
+what this combination is for, and what it decides that no single component
+decides alone.
+
+```yaml
+name: <display name>
+axis: project | backing | deploy | repo
+kind: <bundle kind> # assets/kinds.md
+platforms: [ <platform> ] # project axis only
+artifact: <token> # deploy axis only
+components:
+  - <type>/<slug>@<version> # a shipped pack, copied verbatim
+  - <type>/<slug>@generated # no pack covers it — generated on first fetch
+```
+
+**This is what a user picks.** A component answers "what is TypeScript";
+a bundle answers "what is a TypeScript service" — and those are different
+questions, which is why a menu of components alone leaves nothing pickable.
+
+**A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
+copied and generated components freely: the covered ones land verbatim, the
+uncovered ones run the generation pipeline on first fetch, and the lockfile
+records which was which per component. That mixing is the dispatch rule
+working at bundle scale.
+
+**No bundle directory exists**, which is what keeps a bundle a composition
+rather than a fourth kind of artifact tree.
+
+## Bundles — how the kinds compose
 
 A bundle is the composition rooted per kind
 (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): a Language-Bundle is a

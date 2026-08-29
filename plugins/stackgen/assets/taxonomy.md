@@ -50,6 +50,12 @@ The closed list. A component is exactly one of:
 - **`ci-system`** — one continuous-integration system: where its workflows
   live, how it is triggered, and how it installs a toolchain. One component
   per system, never per workflow.
+- **`build-orchestrator`** — task and build orchestration across a workspace's
+  packages: caching, dependency-ordered runs. Distinct from the
+  `package-manager`, which installs and locks but does not schedule work.
+- **`deploy-target`** — where a built artifact lands when the target belongs to
+  no cloud: a package registry, a provider-neutral container host. A cloud's own
+  compute service stays a `cloud-service`.
 - **`cdn`** — a content-delivery layer.
 
 ## Categories
@@ -58,7 +64,7 @@ The finer cut, closed per type. A type absent here has no categories yet,
 and its components leave `category` unset.
 
 - **`framework`**: `webserver` / `orm` / `otel-sdk` / `testing` /
-  `meta-framework`
+  `meta-framework` / `ui-library` / `cli` / `iac` / `workflow-sdk`
 - **`cloud-service`**: `compute` / `sql` / `queue` / `object-storage` /
   `cdn`
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
