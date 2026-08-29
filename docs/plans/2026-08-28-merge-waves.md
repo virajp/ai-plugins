@@ -216,6 +216,45 @@ Until both land, the curated adapters stay, and a plugin whose adapter is still
 live cannot be deleted — which is the no-skill-lost rule doing its job rather
 than an oversight.
 
+## The skill census — run 2026-08-29
+
+The check
+[no-skill-lost](../memory/decisions/2026-08-27-no-skill-lost-in-the-merge-waves.md)
+demanded, run against the thirteen plugins' **53** skills as they stood at
+`65d2acd`. Every destination below was verified to exist on disk, not asserted.
+
+| Outcome          | Count | Meaning                                                         |
+| ---------------- | ----- | --------------------------------------------------------------- |
+| **Migrated**     | 23    | Lives in a pack or in vwf; file confirmed present               |
+| **Retired**      | 18    | Stack adapters superseded by stackgen's two plus bundles        |
+| **Kept**         | 4     | `gcp` and `cloudflare` adapters — their templates are unbundled |
+| **Not migrated** | 8     | **Blocks its plugin's deletion**                                |
+
+**53 of 53 accounted for.** Nothing is unexplained, which is the property the
+census exists to establish.
+
+### The eight that block deletion
+
+- `gcp/gcp-cost`, `gcp/gcp-iam`, `gcp/gcp-local-stack` — the deferred cloud
+  research. Known, and blocking by design rather than by oversight.
+- `devtools/mise`, `devtools/scaffold` — the toolchain manager and its
+  scaffolder. **No component type fits**: a task runner is not a gate, a package
+  manager or a build orchestrator. `mise` is also a `/vwf:doctor` blocking
+  mandate, so its doctrine disappearing would leave users the halt without the
+  explanation.
+- `devtools/docker` — plausibly the `deploy-target/container-image` component
+  the `container-generic` bundle already references as `@generated`. Folding it
+  turns a generated ref into a curated pack.
+- `devtools/doppler` — development-time secret injection. vwf's capability
+  vocabulary has **no `secrets` token**, so there is no capability for it to
+  realize; minting one is vwf's move, not stackgen's.
+- `claude-code/plugin-authoring` — host doctrine for writing Claude Code
+  plugins. Arguably the doctrine half of the `claude-code-plugin` bundle, whose
+  `language/markdown` ref is currently `@generated`.
+
+Each is a **destination question, not a fold** — which is why the census is
+worth running before deletions rather than after.
+
 - **Wave D — retirement, conditional.** Deletion still gated on the
   [no-skill-lost](../memory/decisions/2026-08-27-no-skill-lost-in-the-merge-waves.md)
   rule, with the before/after inventory counted against **53**, not 58. The
