@@ -54,11 +54,12 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo
 platforms: [ <platform> ] # language components only — the bundle root
-languages: # language components only
+languages: # language and app-framework components only
   - token: <language token>
+    role: primary | platform-edge # app-framework components only
     facts: # what /vwf:doctor verifies for this language
       lsp: <how a language server is provided — or n/a>
       mise_tool: <the mise tool name — or n/a>

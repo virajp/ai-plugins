@@ -24,7 +24,17 @@ The closed list. A component is exactly one of:
 - **`package-manager`** — how a language's dependencies are installed and
   locked; contributes the `repo`-axis facts.
 - **`framework`** — a library that imposes structure inside a language: a
-  webserver, an ORM, a testing framework, a meta-framework.
+  webserver, an ORM, a testing framework, a meta-framework. Note the
+  containment: a `framework` is **subordinate** to the `language` component
+  it composes with.
+- **`app-framework`** — the inversion of that containment: an SDK that owns
+  the manifest, the build and the project layout, and **decides which
+  languages appear**. Flutter is the case that forced this type — its
+  `pubspec.yaml` declares both the Dart and Flutter SDK constraints and
+  configures the *iOS* package manager, its build drives Gradle and Xcode
+  rather than the reverse, and its scaffolder takes the native language as a
+  flag. A type is warranted where the SDK is what a project pins and the
+  language is what the SDK brought.
 - **`toolchain-gate`** — a repo-level gate: formatter, linter, secret
   scanner, vulnerability scanner, hook runner.
 - **`cloud-provider`** — a provider itself: the account/IAM/billing and
@@ -54,6 +64,7 @@ and its components leave `category` unset.
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow`
+- **`app-framework`**: `cross-platform-ui` / `native-ui`
 
 A name appearing as both a type and a category is deliberate, not a
 collision: `kafka` is type `queue` (a standalone component); a provider's
@@ -91,6 +102,11 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
 - A **Capability-Bundle** is category-level doctrine — the neutral capability
   contract — plus one `capability-provider` component that realizes it, the
   same halves a Datastore-Bundle is built from.
+- An **App-Bundle** is rooted at an `app-framework` component, which carries
+  its languages **as members with a role** rather than composing into one of
+  them: one `primary` language and any number of `platform-edge` languages,
+  which exist only at the SDK's native boundary. This is the one bundle whose
+  root is not the thing its languages would suggest.
 - A **CI-Bundle** is vwf's delivery-pipeline contract plus exactly one
   `ci-system` component. Never two: a repo has one pipeline, and generating
   for a system the repo does not use is how a second, unmaintained pipeline

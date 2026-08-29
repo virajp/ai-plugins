@@ -444,6 +444,89 @@ rules and its one implemented system.
    restore. An unpinned action is remote code executing with the
    pipeline's credentials.
 
+## `app-framework` — the SDK that owns the build and brings its languages
+
+The output is an **App-Bundle** (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`):
+an `app-framework` component carrying its languages **as members with a
+role**, plus its `package-manager` and `toolchain-gate` components.
+
+**This is the one kind whose root is not a `language`, and the inversion is
+the reason it exists.** A `framework` composes *into* a language bundle;
+an `app-framework` owns the bundle and the language is what it brought.
+
+The test, verified against Flutter's own documentation:
+
+- **It owns the manifest**, and the manifest reaches into the native
+  toolchains — `pubspec.yaml` declares both the Dart and Flutter SDK
+  constraints and carries `flutter: config: enable-swift-package-manager`,
+  a Dart manifest configuring the iOS package manager.
+- **It owns the build.** Flutter's docs: *"Flutter relies on Dart's build
+  system and the Pub package manager … Gradle files inside the android
+  directory are only used when configuring platform-specific native
+  dependencies."*
+- **It decides which languages exist** — `flutter create --android-language
+  kotlin` makes the native language a flag to the SDK's scaffolder.
+- **Its language's own tooling is provisioned through it** — the Dart
+  language server is reached through the Flutter SDK, not beside it.
+
+Where all four hold, the SDK is the root. Where they do not, it is an
+ordinary `framework` and topic 2 of a language bundle.
+
+- **Axis**: `project`.
+- **Structure**: the **topic bar** below, hung per the kind-general rule —
+  a lean router skill per language member, references loading on demand.
+  The `primary` language's router is the entry point; a `platform-edge`
+  language gets its own, scoped to the boundary it serves.
+- **Scope**: the app's layout, composition, build and platform boundary.
+  Never the backend's, and never a datastore's or cloud's judgment — an app
+  reaches those through the capability vocabulary like anything else.
+- **Facts**: per language member, each carrying its own `role`. The
+  `primary` language's facts route through the SDK where the SDK provides
+  them; a `platform-edge` language has its own language server but **no
+  manifest of its own**, because its build files are subordinate to the
+  SDK's.
+- **Invocation**: routers paths-scoped to their language's file
+  extensions.
+
+### The topic bar
+
+A closed list of twelve topics, one artifact per topic, each individually
+researched and cited. Topic 12 is conditional and repeats per integration.
+
+1. **Pick & trade** — when this SDK is the answer, and when a native or web
+   stack is the better one.
+2. **Project layout & the generated boundary** — which directories the SDK
+   generates and owns versus which the product owns, and what must never be
+   edited or committed. Flutter's `.android/` is *"generated for testing
+   purposes and will be overwritten whenever you run `flutter pub get`"* —
+   the trap this topic exists for, and one no language bar would surface.
+3. **Standards & app architecture** — idioms, module split, the composition
+   root, and where business logic is not allowed to live.
+4. **State management** — the app's chosen approach and its boundaries.
+5. **UI composition & theming** — layout idioms, the design-system tokens
+   made real, animation, and the anti-patterns that cost frames.
+6. **Navigation & routing** — the route model, deep links, and the
+   back-stack behaviour each platform expects.
+7. **Data & networking** — serialization, the client seam, caching and
+   offline behaviour.
+8. **Platform interop** — the channel mechanism, its type-safe generator
+   where one exists, and the ruling that **edge languages appear only
+   here**. Flutter's own framing: it *"does not compile to Android Dalvik
+   bytecode or have direct bindings to iOS Objective-C"*, so it is hosted
+   inside a native component and reaches the platform through channels.
+9. **Build, flavors & signing** — per-platform build configuration,
+   environment flavours, entitlements and signing.
+10. **Testing & coverage** — the SDK's own test surfaces, including the
+    visual and accessibility gates its toolchain provides.
+11. **Performance & artifact size** — the SDK's performance model and what
+    grows the shipped artifact.
+12. **Integration wiring** *(conditional — one artifact per integration)* —
+    **setup order, platform configuration and anti-patterns only.** Manifest
+    entries, entitlements, permission declarations, emulator wiring: the
+    parts a per-package documentation lookup gives only piecemeal. **Never
+    API surface** — that is Context7's at use time, and it is the half that
+    ages.
+
 ## Reserved kinds (defined at their merge wave, not before)
 
 **None outstanding.** Both reservations have been redeemed —
@@ -464,7 +547,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all six kinds the structural checklist **is the
+the kind's ruling. For all seven kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -480,3 +563,7 @@ because it belongs to topic 10 of its language bundle. For
 as with `database` — citing rather than restating the contract is part of
 the bar. For `ci-system` the composition is one component and **exactly
 one**: a second CI system in the same bundle is a gap, not extra coverage.
+For `app-framework` the composition is the SDK plus its language members, and
+two checks carry the kind: every language member declares a `role`, and an
+**API-surface listing under topic 12 is a gap** — that topic is wiring and
+platform configuration only.
