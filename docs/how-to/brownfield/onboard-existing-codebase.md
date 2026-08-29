@@ -25,7 +25,7 @@ identical to starting from nothing, this guide links
 
 ```sh
 claude plugin install vwf@virajp-plugins \
-  typescript@virajp-plugins datastore@virajp-plugins design-tools@virajp-plugins
+  typescript@virajp-plugins stackgen@virajp-plugins
 ```
 
 The commands and scopes are the same as the greenfield run —
@@ -34,9 +34,9 @@ the ordering matters more here, because the repo already has languages in it. A
 language no installed stack plugin declares is recorded honestly by detection
 and then **blocks** the doctor run inside setup's own spine, which halts the
 onboard. Bookable is TypeScript throughout, so `typescript` covers both apps and
-the shared package; `datastore` supplies the backing axis for the API's
-Postgres; `design-tools` answers the design import that `apps/web` will make
-mandatory.
+the shared package; `stackgen` supplies the `postgres` bundle for the API's
+backing axis and the design-tool pack answering the import that `apps/web` will
+make mandatory.
 
 Restart Claude Code, then `cd` into the Bookable repo — on a clean working tree,
 since setup will ask what to do with a dirty one before it isolates a worktree.

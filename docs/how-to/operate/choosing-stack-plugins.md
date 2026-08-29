@@ -41,19 +41,18 @@ Kotlin and Swift language servers, and ships
 [one project-axis template](../../plugins/flutter.md#stack-templates) that
 serves `mobile`, `tablet`, `desktop` and `webapp` from a single codebase.
 
-**Capability plugins own the vendor-free half of the backing axis.** Each holds
-a neutral contract — what any provider must guarantee — plus, where one exists,
-the provider that belongs to no cloud: [`datastore`](../../plugins/datastore.md)
-ships Postgres, [`identity`](../../plugins/identity.md) ships any OIDC issuer,
-[`observability`](../../plugins/observability.md) ships the self-hosted
-OpenTelemetry → Grafana OTel-LGTM sink, and
-[`orchestration`](../../plugins/orchestration.md) ships Temporal.
-[`object-storage`](../../plugins/object-storage.md) is the one to know about
-before you install it: **it ships no provider by design**, because every object
-store belongs to a cloud. Installing it gets you the contract and a menu that
-says out loud that it has nothing to offer and which cloud plugin does — which
-is the point, since an unexplained empty menu is indistinguishable from an
-adapter that failed to load.
+**[`stackgen`](../../plugins/stackgen.md) owns the vendor-free half of the
+backing axis.** Each capability has a neutral contract — what any provider must
+guarantee — beside the provider that belongs to no cloud, and both ship as
+stackgen bundles: `postgres` for the datastore, `oidc` for identity, `otel-lgtm`
+for observability, `temporal` for orchestration. Object storage is the one to
+know about: **it has no vendor-free provider by design**, because every object
+store belongs to a cloud, so its contract states the requirement and names the
+cloud plugin that answers it rather than offering a bundle.
+
+These were five separate capability plugins until Wave C. The contracts moved to
+`stackgen`'s `assets/contracts/`, the providers became bundles, and the five
+plugins were removed.
 
 **Cloud plugins supply the managed flavours** on the backing and deploy axes.
 [`gcp`](../../plugins/gcp.md) brings Firebase and Cloud SQL as backing choices
@@ -147,11 +146,10 @@ not cheap is discovering the gap at `/vwf:architecture` and pinning around it,
 because a project whose backing axis was answered without the plugin that owns
 its provider carries that pin into every plan and every run.
 
-Two capabilities are worth deciding earlier than the rest.
-[`identity`](../../plugins/identity.md) is one, because whether accounts exist
-is a product decision that reaches the registry as a declared capability and
-then reaches the blueprint as mandated flows wherever the product has screens.
-[`observability`](../../plugins/observability.md) is the other, and for the
+Two capabilities are worth deciding earlier than the rest. **Identity** is one,
+because whether accounts exist is a product decision that reaches the registry
+as a declared capability and then reaches the blueprint as mandated flows
+wherever the product has screens. **Observability** is the other, and for the
 opposite reason: its contract is that your product emits OTLP and never a vendor
 SDK, so adopting it early costs nothing and retrofitting it means rewriting
 instrumentation that had a vendor baked in.
@@ -159,11 +157,11 @@ instrumentation that had a vendor baked in.
 ### A cloud plugin, or the provider-neutral default
 
 You do not need a cloud plugin to have a complete stack. `container-generic`
-from [`devtools`](../../plugins/devtools.md) answers the deploy axis with an OCI
-image on any registry and any host that runs containers, and
-[`datastore`](../../plugins/datastore.md)'s Postgres answers the backing axis
-with a provider that belongs to no cloud — a fully vendor-free path through the
-whole workflow, with a local stack that runs the same way on every machine.
+answers the deploy axis with an OCI image on any registry and any host that runs
+containers, and the `postgres` bundle answers the backing axis with a provider
+that belongs to no cloud — both from [`stackgen`](../../plugins/stackgen.md) — a
+fully vendor-free path through the whole workflow, with a local stack that runs
+the same way on every machine.
 
 Pick a cloud plugin when you want the managed flavour and the judgment that
 comes with it — what each service costs, which have local emulators, and when
@@ -172,11 +170,10 @@ one stops being the answer. The managed set itself is listed on its own page:
 deploy targets beside them. The axes stay independent, so this is not an
 all-or-nothing switch — one project can take a managed datastore while another
 stays on Postgres, and the deploy axis is answered per project too. Two things
-constrain the choice rather than the plugin: a capability that ships no provider
-of its own, like [`object-storage`](../../plugins/object-storage.md), leaves you
-with only the cloud plugin's answer, and
-[`cloudflare`](../../plugins/cloudflare.md)'s parked scope means it composes
-with a host rather than replacing one.
+constrain the choice rather than the plugin: a capability with no vendor-free
+provider, object storage being the one, leaves you with only the cloud plugin's
+answer, and [`cloudflare`](../../plugins/cloudflare.md)'s parked scope means it
+composes with a host rather than replacing one.
 
 ## See also
 

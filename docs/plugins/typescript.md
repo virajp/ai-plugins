@@ -57,20 +57,14 @@ context.
 | `pnpm`         | Workspace config: supply-chain safety (`minimumReleaseAge`, `trustPolicy`), build allowlists, overrides, peer-dependency rules, `.npmrc` — plus a monorepo reference for `packages` globs, catalogs and `requiredScripts`.                      | Auto-applies on `**/pnpm-workspace.yaml` and `**/.npmrc`                         |
 | `tsconfig`     | Config layout, single-package-first with a monorepo section: a strict shared `tsconfig.base.json`, per-project `tsconfig.json` with the `@/` path alias, a `tsconfig.build.json` emit variant, project references.                              | Auto-applies on `**/tsconfig.json` and `**/tsconfig.*.json`                      |
 
-Three more skills exist but never auto-apply — they are the plugin's interface
-to vwf, invoked by name rather than by a file edit:
+**The three vwf-facing skills are gone.** The `typescript-stack-menu` /
+`typescript-stack-template` pair retired in Wave C, and `typescript-ux-gate`
+with it. Every skill this plugin still ships auto-applies on a file edit.
 
-| Skill                       | What it returns                                                                                                                                                                                              |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `typescript-stack-menu`     | The twelve templates below, as a vwf menu payload — slug, axis, role, name, one-line summary. Nothing else; choosing is the user's job. Invoked by `/vwf:architecture` and `/vwf:setup`.                     |
-| `typescript-stack-template` | One template as a vwf template payload — axis fields, per-capability harness mechanisms, and the conventions `plan` and `execute` read. Invoked after the user picks from the menu.                          |
-| `typescript-ux-gate`        | The **UX gate for a web slice**: boots the project's own `dev` task, captures each changed screen in every reachable state, and runs a WCAG A/AA accessibility scan. Invoked by vwf's `execute-ux-reviewer`. |
-
-`typescript-ux-gate` renders and scans; it does **not** judge. Conformance
-against the design system stays the reviewer's call, so the two can never return
-disagreeing verdicts. It answers `rendered: n/a` with a reason — no `dev` task,
-no browser driver in the manifest, a server that would not boot — rather than
-claiming a pass, and vwf carries that reason to the final human gate.
+The UX gate did not disappear — it moved. Stackgen's `language/typescript` pack
+materializes it into the repo's own `.claude/` tree at the fixed name `ux-gate`,
+which is what vwf's `execute-ux-reviewer` invokes. That fixed name is the point:
+vwf constructs no skill name from the stack pin.
 
 The `typescript` skill's reference library covers **Vitest** testing (the shared
 config, `_testUtils`, v8 coverage, run wrappers) and the **build** pipeline (the
@@ -98,60 +92,18 @@ rules a TypeScript repo runs and how it runs them.
 
 ## Stack templates
 
-The plugin owns **twelve** vwf stack templates across three axes. vwf itself
-ships none — it states the axes and the platform vocabulary, and this plugin
-supplies the rows for TypeScript.
+**This plugin no longer ships any.** All twelve retired to
+[`stackgen`](./stackgen.md) in Wave C and are bundles there — eight on the
+project axis (`typescript-effect`, `typescript-effect-hono`,
+`typescript-hono-refine`, `typescript-astro-react`,
+`typescript-effect-temporal`, `typescript-effect-cli`,
+`typescript-parseargs-cli`, `typescript-pulumi`), `npm-package` on the deploy
+axis, and `pnpm-turbo`, `pnpm-workspace` and `bun` on the repo axis.
 
-Project axis. Each template declares the **platforms** it serves — a list since
-blueprint format 22, because one template routinely serves several, and the same
-platform may be served by more than one template:
-
-| Slug                         | Platforms           | Stack                                       |
-| ---------------------------- | ------------------- | ------------------------------------------- |
-| `typescript-effect`          | `packages`          | TypeScript · Effect                         |
-| `typescript-effect-hono`     | `service`           | TypeScript · Hono · Effect                  |
-| `typescript-hono-refine`     | `service`, `webapp` | TypeScript · Hono + Effect · React + Refine |
-| `typescript-astro-react`     | `site`              | TypeScript · Astro (SSR) · React            |
-| `typescript-effect-temporal` | `worker`            | TypeScript · Temporal · Effect              |
-| `typescript-effect-cli`      | `cli`               | TypeScript · Effect CLI                     |
-| `typescript-parseargs-cli`   | `cli`               | TypeScript · parseArgs CLI                  |
-| `typescript-pulumi`          | `iac`               | TypeScript · Pulumi                         |
-
-**`cli` has two templates, deliberately.** `typescript-effect-cli` is for a tree
-of subcommands with typed arguments, or a CLI that is one surface of an Effect
-codebase. `typescript-parseargs-cli` is `node:util`'s `parseArgs` and no
-framework, for a flat set of flags where a CLI framework would be the larger
-dependency. vwf presents both and the user picks; neither is a default.
-
-Deploy and repo axes:
-
-| Slug             | Axis     | What it pins                                                            |
-| ---------------- | -------- | ----------------------------------------------------------------------- |
-| `npm-package`    | `deploy` | The registry as the host — for a project users install, not one you run |
-| `pnpm-turbo`     | `repo`   | pnpm workspace + Turborepo                                              |
-| `pnpm-workspace` | `repo`   | pnpm workspace, task runner as the only orchestration                   |
-| `bun`            | `repo`   | bun as package manager, runtime, bundler and test runner                |
-
-**`repo` has two pnpm templates for the same reason `cli` has two project
-templates.** `pnpm-turbo` is for a workspace with enough members that
-Turborepo's cache and `dependsOn` graph pay for themselves; `pnpm-workspace` is
-for one where they do not, and the task runner is the whole orchestration layer.
-Neither is a default.
-
-`typescript-effect` is the **shared kernel**: every domain schema and every
-third-party integration lives in that package as an Effect service, so
-downstream projects depend on an interface rather than a vendor SDK. That
-placement rule is what the other project templates are written against.
-
-**No `backing` template is here.** A language plugin does not decide the
-datastore, the identity provider or the queue — those come from the
-[capability](./datastore.md) and cloud plugins, and compose with any of these.
-
-`typescript-pulumi` lives here rather than in an infrastructure plugin because
-`iac` is a *role* vwf already owns and Pulumi programs are TypeScript: they use
-the same type system, formatter, linter and test runner as everything else in
-the workspace. vwf requires an `iac` project to be its own repo, and the
-template scaffolds it that way.
+The judgment each carried travelled with it, including the two deliberate
+refusals to pick a default: `cli` has two answers because a subcommand tree and
+a flat set of flags are different problems, and `repo` has three. Stackgen's
+bundle menu is where `/vwf:architecture` presents them now.
 
 ## The npm-normalize hook
 

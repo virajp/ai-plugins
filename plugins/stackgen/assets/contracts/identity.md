@@ -55,8 +55,8 @@ route re-verifies regardless of what the client claims to have done.
 
 ## What this contract does not decide
 
-- **Which provider.** That is the user's pick from the menu — this contract's own
-  neutral template, or a managed flavour from the project's cloud plugin.
+- **Which provider.** That is the user's pick from the menu — the neutral `oidc`
+  bundle, or a managed flavour from the project's cloud plugin.
 - **The authorization model.** Who may do what is a blueprint contract, authored
   per product against its entities.
 - **The verification library.** That belongs to the project's language plugin.

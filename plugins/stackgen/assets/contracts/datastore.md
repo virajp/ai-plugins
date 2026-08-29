@@ -44,8 +44,8 @@ re-authorizes on the server side.
 
 ## What this contract does not decide
 
-- **Which provider.** That is the user's pick from the menu — this contract's own
-  self-hosted template, or a managed flavour from the project's cloud plugin.
+- **Which provider.** That is the user's pick from the menu — the self-hosted
+  `postgres` bundle, or a managed flavour from the project's cloud plugin.
 - **The data model.** Entities, relationships and lifecycle are blueprint
   contracts, authored per product.
 - **The client library or ORM.** That belongs to the project's language plugin.

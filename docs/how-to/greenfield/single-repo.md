@@ -27,15 +27,14 @@ claude plugin marketplace add virajp/ai-plugins   # once
 
 claude plugin install vwf@virajp-plugins \
   typescript@virajp-plugins \
-  datastore@virajp-plugins \
-  design-tools@virajp-plugins
+  stackgen@virajp-plugins
 ```
 
-`typescript` supplies the project-axis template Relay will pin, `datastore`
-supplies Postgres on the backing axis, and `design-tools` answers the design
-imports. vwf ships no stack templates of its own, so without `typescript` and
-`datastore` the stack menus come back short; without `design-tools` there is no
-adapter to answer an import, and `/vwf:design-system` cannot run at all. Scopes
+`typescript` supplies the language doctrine, and `stackgen` supplies every
+bundle Relay will pin — the project-axis template, Postgres on the backing axis,
+and the design-tool pack that answers the design imports. vwf ships no stack
+templates of its own, so without `stackgen` the stack menus come back short and,
+with no design pack materialized, `/vwf:design-system` cannot run at all. Scopes
 and upgrades: [the installer CLI](../../cli/usage.md#installing-plugins).
 
 **Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is
@@ -132,9 +131,9 @@ Relay's round of corrections:
 Then the stack menu, one round per axis, presenting the union of what the
 installed plugins offer. Relay pins `typescript-hono-refine` on the project axis
 (it is the template that serves `service` and `webapp` from one codebase),
-`postgres` on the backing axis from `datastore`, and `container-generic` on the
-deploy axis from `devtools`. The repo axis is answered once for the checkout
-rather than per project. What each axis means and why they never merge:
+`postgres` on the backing axis and `container-generic` on the deploy axis, both
+from `stackgen`. The repo axis is answered once for the checkout rather than per
+project. What each axis means and why they never merge:
 [stack templates](../../plugins/vwf.md#stack-templates).
 
 Last comes the product-foundations walk — twelve concerns, one accept / adapt /

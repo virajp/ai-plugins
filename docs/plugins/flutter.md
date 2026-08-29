@@ -61,46 +61,31 @@ http/json, concurrency, caching), testing, and build/tooling (flavors, app-size,
 coverage, the `build_runner` pipeline). The `swift` skill's references cover
 SwiftUI and Xcode. Each reference loads only when the routed topic is relevant.
 
-Three further skills are **invoked by vwf**, not by a file edit:
+**The three vwf-facing skills are gone.** The `flutter-stack-menu` /
+`flutter-stack-template` pair retired in Wave C, and `flutter-ux-gate` with it.
+Every skill this plugin still ships auto-applies on a file edit.
 
-| Skill                    | What it does                                                                                                                                                                       |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `flutter-stack-menu`     | Returns the Flutter stack templates this plugin offers, as a vwf menu payload. Invoked by `/vwf:architecture` and `/vwf:setup` when `flutter` is listed in the config's `stacks:`. |
-| `flutter-stack-template` | Returns one template (`dart-flutter`) as a vwf template payload — axis fields, per-capability harness mechanisms, and conventions. Invoked after the user picks it from the menu.  |
-| `flutter-ux-gate`        | The **UX gate for a Flutter slice**: runs the project's golden tests and `flutter_test`'s accessibility guidelines, headless. Invoked by vwf's `execute-ux-reviewer`.              |
-
-`flutter-ux-gate` runs the checks; it does **not** judge. Conformance against
-the design system stays the reviewer's call. A Flutter surface is checked as
-**tests** — never a simulator booted interactively — so the gate reports golden
-diffs plus failures of `meetsGuideline(textContrastGuideline)`,
-`androidTapTargetGuideline`, `iOSTapTargetGuideline` and
-`labeledTapTargetGuideline`, at the severity vwf applies to a WCAG A/AA
-violation. **A changed screen with no golden at all is a finding**, not a pass,
-and `rendered: n/a` with a reason is what it returns when the suite cannot run.
+The UX gate moved rather than disappeared: stackgen's `app-framework/flutter`
+pack materializes it into the repo's own `.claude/` tree at the fixed name
+`ux-gate`, which is what vwf's `execute-ux-reviewer` invokes. The gate's own
+rule travelled with it — a Flutter surface is checked as **tests**, never a
+simulator booted interactively, so a changed screen with no golden is a finding
+rather than a pass.
 
 ## Stack templates
 
-The plugin owns exactly **one** vwf stack template, on the `project` axis:
+**This plugin no longer ships one.** `dart-flutter` retired to
+[`stackgen`](./stackgen.md) in Wave C and is a bundle there; the app-framework
+pack carries the Dart, Kotlin and Swift judgment that went with it.
 
-| Slug           | Role       | Stack                                              |
-| -------------- | ---------- | -------------------------------------------------- |
-| `dart-flutter` | `frontend` | Dart · Flutter, with `kotlin` and `swift` optional |
-
-Kotlin and Swift are **optional languages** on that template — platform channels
-and native embedding — not offers of their own. Standalone Kotlin and Swift
-project templates are **not offered by any plugin**; the menu says so rather
-than inventing one.
-
-**Only the `frontend` role.** Flutter is the on-device app; a server, a static
-site or a shared package belongs to whichever plugin owns that stack. The
-template pins a **single-package** repo, its own workspace submodule, shipping
-through the app stores — mobile apps are never monorepos.
-
-Its harness answers `goldens` rather than `screenshots`: a Flutter app is a
-native `frontend`, so its UI evidence is golden/snapshot tests plus
-`flutter_test`'s accessibility assertions, never a browser driver. `health` and
-`local_stack` are the backing axis's, not this one's — an on-device app
-publishes no readiness endpoint.
+Two rulings survive the move and are worth keeping in view. Kotlin and Swift are
+**optional languages** on that bundle — platform channels and native embedding —
+never offers of their own, and standalone Kotlin or Swift project templates are
+offered by nothing. And Flutter is the on-device app only: a server, a static
+site or a shared package belongs to whichever stack owns it, the repo is
+**single-package** (mobile apps are never monorepos), and the harness answers
+`goldens` rather than `screenshots`, because a native surface has no browser
+driver.
 
 ## Language servers
 

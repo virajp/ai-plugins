@@ -217,41 +217,6 @@ reachable, whichever cloud hosts it. Workers, Pages, R2, D1, KV and the rest are
 not offered here and arrive under their own plan; the menu says so out loud
 rather than coming back quietly short. `cloudflare@virajp-plugins`
 
-### Capabilities
-
-A capability plugin holds the **neutral contract** — what your product must
-guarantee, regardless of who provides it — and, where one exists, the provider
-that belongs to no cloud. Managed flavours come from your cloud plugin. The
-capability states the requirement; the provider states the mechanism.
-
-**[datastore](./docs/plugins/datastore.md)** — the datastore contract: write
-versioning, atomic multi-record writes, server-authoritative time, the
-services-layer access rule, and a deterministic local stack. Ships **Postgres**.
-`datastore@virajp-plugins`
-
-**[identity](./docs/plugins/identity.md)** — the identity contract: verification
-per route, the *claims carry status, never roles* rule, revocation, and the
-operator plane. Ships any **OIDC** issuer. `identity@virajp-plugins`
-
-**[observability](./docs/plugins/observability.md)** — the telemetry contract:
-**your product emits OTLP and never a vendor SDK**, signals correlate,
-cardinality is a design decision, retention is chosen. Ships the self-hosted
-**OpenTelemetry → Grafana OTel-LGTM** sink; a managed backend is a destination,
-not an import. `observability@virajp-plugins`
-
-**[orchestration](./docs/plugins/orchestration.md)** — the contract for work
-that happens later: at-least-once delivery and the idempotency it forces,
-bounded retry, the poison path, work-in-flight visibility, and when a queue
-beats a bus beats a scheduler beats a workflow engine. Ships **Temporal**.
-`orchestration@virajp-plugins`
-
-**[object-storage](./docs/plugins/object-storage.md)** — **contract-only by
-design**: buckets, lifecycle as a bucket policy, signed access, prefix-scoped
-credentials, the never-proxy-bytes rule, egress cost. Every object store is some
-cloud's, so the flavour comes from `gcp` or `cloudflare` — and this plugin says
-that explicitly rather than returning an empty menu, which would be
-indistinguishable from a broken adapter. `object-storage@virajp-plugins`
-
 ### Tooling, design and delivery
 
 **[devtools](./docs/plugins/devtools.md)** — the developer-machine toolchain in

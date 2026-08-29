@@ -27,14 +27,14 @@ Same run as the spine's
 
 ```sh
 claude plugin install vwf@virajp-plugins \
-  typescript@virajp-plugins datastore@virajp-plugins
+  typescript@virajp-plugins stackgen@virajp-plugins
 ```
 
-`design-tools` is absent, and that is the first consequence of having no
+No design tool is pinned, and that is the first consequence of having no
 screens: the design adapter exists to answer imports from a canvas, and Hookline
 never reaches one. Everything else is unchanged — `typescript` supplies the
-project-axis template, `datastore` the backing axis. Scopes and upgrades:
-[the installer CLI](../../cli/usage.md#installing-plugins).
+language doctrine, and `stackgen` the project- and backing-axis bundles. Scopes
+and upgrades: [the installer CLI](../../cli/usage.md#installing-plugins).
 
 ### 2. /vwf:setup
 

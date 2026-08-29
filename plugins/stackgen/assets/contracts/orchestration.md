@@ -63,8 +63,8 @@ what keeps the unit suite free of a running broker.
 
 ## What this contract does not decide
 
-- **Which engine.** That is the user's pick from the menu — this contract's own
-  self-hosted engine, or a managed flavour from the project's cloud plugin.
+- **Which engine.** That is the user's pick from the menu — the self-hosted
+  `temporal` bundle, or a managed flavour from the project's cloud plugin.
 - **Which processes are asynchronous.** That is a blueprint contract, authored
   per product per flow.
 - **The client library.** That belongs to the project's language plugin.

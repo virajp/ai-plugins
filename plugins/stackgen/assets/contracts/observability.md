@@ -55,8 +55,8 @@ metric — it is a bill, and eventually a backend outage. Decide, and record:
 
 ## What this contract does not decide
 
-- **Which backend.** That is the user's pick from the menu — this contract's own
-  self-hosted sink, or a managed flavour from the project's cloud plugin.
+- **Which backend.** That is the user's pick from the menu — the self-hosted
+  `otel-lgtm` sink, or a managed flavour from the project's cloud plugin.
 - **What is worth alerting on.** Reliability targets are a product decision,
   elicited by the workflow's foundations pass.
 - **The instrumentation library.** That belongs to the project's language

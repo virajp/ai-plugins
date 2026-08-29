@@ -63,8 +63,8 @@ expiry and the constraints are decided in one place rather than per caller.
 
 ## What this contract does not decide
 
-- **Which store.** It comes from the project's cloud plugin; this contract has no
-  candidate to offer and does not pretend otherwise.
+- **Which store.** It comes from the project's cloud plugin; no bundle here has
+  a candidate to offer, and this contract does not pretend otherwise.
 - **What is stored.** Entities, retention and PII are blueprint contracts,
   authored per product.
 - **The client library.** That belongs to the project's language plugin.
