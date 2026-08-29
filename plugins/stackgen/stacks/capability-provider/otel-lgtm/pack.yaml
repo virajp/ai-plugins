@@ -1,0 +1,14 @@
+name: OpenTelemetry · Grafana OTel-LGTM
+summary: The telemetry sink that needs no cloud — the product exports OTLP and
+  an LGTM stack terminates it, run wherever the product runs.
+version: 0.1.0
+type: capability-provider
+category: telemetry
+capability: distributed-tracing
+kind: capability-provider
+axis: backing
+harness:
+  local_stack:
+    task: stack:up
+    mechanism: >-
+      Docker-composed OTel-LGTM behind a wait-on readiness gate — the same stack production runs

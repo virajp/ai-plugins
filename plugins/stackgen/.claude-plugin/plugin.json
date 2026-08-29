@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "stackgen",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "The principles-driven stack materializer — implements the vwf stack-adapter contract with a dispatch rule: a technology a shipped pack covers is copied from the pack; anything uncovered is generated (Context7 research → vwf's principles catalog → the stackgen-skill-reviewer gate). Both paths land directly in the repo's committed .claude/ tree — skills, agents, hooks and rules only, structured per a closed kind vocabulary, recorded in a lockfile — editable and plugin-independent for collaborators. Re-sync is explicit and diffed, never silent. Wave A landed the first packs — the four repo gates; the curated plugins remain the covered-stack path for everything else until the merge waves land.",
   "author": {
     "name": "Viraj Patel"

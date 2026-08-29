@@ -1,0 +1,14 @@
+name: PostgreSQL
+summary: The relational datastore that needs no cloud — open engine, managed
+  equivalent everywhere, no lock-in beyond SQL itself.
+version: 0.1.0
+type: datastore
+category: sql
+capability: relational-datastore
+kind: database
+axis: backing
+harness:
+  local_stack:
+    task: stack:up
+    mechanism: >-
+      Docker-composed Postgres on production's major version, behind a wait-on readiness gate
