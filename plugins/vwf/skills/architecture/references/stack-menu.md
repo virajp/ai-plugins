@@ -20,7 +20,7 @@ Elicit each as its **own** round (per `assets/elicitation.md` — one decision),
 and per §3a of that protocol **every question names the project it decides**.
 A stack round is the one kind that carries **no other (describe) option**: the
 axes are closed to what the installed plugins ship (see Recording it below).
-Since format 13 all three
+Since format 13 the three
 technology axes are per project, so "which datastore?" is never a question about
 the product — it is a question about `api`, or about `website`:
 
@@ -34,6 +34,10 @@ the product — it is a question about `api`, or about `website`:
   `deploy/npm-package` (whichever role carries it), an `iac` project `n/a`.
 - **repo** — once per repo, filtered to templates whose `topologies` include
   this repo's.
+- **design** — once per project, for **UI projects only** (a project declaring
+  a screen platform). A project with no screen platform is not asked.
+- **cicd** — once per project, for a project the pipeline builds. Ask once and
+  offer the same answer for the rest; in a monorepo they will all match.
 
 **Offer the previous project's answer as the default on the next.** Most
 products do run every project on one cloud, and re-asking from scratch per
@@ -41,17 +45,24 @@ project would be tedious for the common case — but the answer is recorded per
 project either way, so the moment one diverges the config can say so. Never
 collapse the recorded values back into a shared pin.
 
-## Two more per-project keys, elicited alongside the axes
+## The two tool axes record into their own keys
 
-- **`design`** — the design tool, for each **UI** project only (`site`,
-  a **screen platform**). A tool token — `claude-design`, `lovable`, `stitch`
-  — resolved inside the design adapter, never a plugin name
-  (`${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`). A product may design its
-  website in one tool and its app in another; ask per project.
-- **`cicd`** — the CI system that builds and releases the project
-  (`github-actions`, …). vwf owns the delivery-pipeline *contract* and never the
-  mechanism, so this value is read only by the `cicd` plugin. Ask once and offer
-  the same answer for every project; in a monorepo they will all match.
+`design` and `cicd` are ordinary axes at the menu — closed to what the installed
+plugins ship, no *other (describe)* option — but they record into
+`projects.<name>.design` and `projects.<name>.cicd` rather than into the
+`stack` block, because they are chosen independently of a project's stack: two
+projects on the same stack routinely use different design tools.
+
+**The slug is the value.** A menu entry on these axes takes as its slug the very
+token the config key holds, so recording the pick *is* writing the key. There is
+one value and no second spelling to drift against — which is the whole reason
+they are axes rather than free text.
+
+**Never name a tool here.** The options come from the menu; this file lists
+none, and vwf learns nothing about what any of them mean. `design` is read by
+the design adapter, whose contract is
+`${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`; `cicd` is read by whatever
+implements the delivery-pipeline contract vwf states and never implements.
 
 The axes are orthogonal by construction — a project template never names a
 vendor, a backing template never names a framework — so there is nothing to
