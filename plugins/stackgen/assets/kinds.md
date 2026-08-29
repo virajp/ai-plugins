@@ -323,13 +323,72 @@ the others rather than about a tool of its own. A repo with no hook runner
 records topic 5 `n/a` and loses the parity guarantee with it, which is worth
 saying out loud rather than discovering later.
 
+## `capability-provider` — the flavour half of a capability
+
+The output is a **Capability-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the category-level doctrine —
+the neutral capability contract under `assets/contracts/` — plus one
+**instance component** (`type: capability-provider`) that realizes it. Same
+two halves as `database`, for the capabilities that are neither a datastore
+nor one cloud's service: an identity issuer, a telemetry sink, a workflow
+engine.
+
+All six bar topics belong to the instance component. The contract is what
+the instance **cites, never restates** — that seam is what lets two
+providers in a category be judged against the same clauses.
+
+- **Axis**: `backing`.
+- **Structure**: the **topic bar** below, hung per the kind-general rule —
+  one artifact per topic behind a lean router skill.
+- **Scope**: when this provider is the answer, how it satisfies the
+  contract, and what it forces on the product that a neighbour would not.
+  It never reaches into the language bundle's layout, and it never restates
+  the contract it cites.
+- **Facts & harness**: the `local_stack` mechanism is fixed by vwf's harness
+  contract — a Docker-composed service behind a `wait-on` readiness gate —
+  so the kind emits that task plus whatever client tool and healthcheck the
+  provider needs. A hosted-only provider emits a seam plus a fake, and says
+  which.
+- **Invocation**: the router paths-scoped to the integration surface — the
+  middleware, the instrumentation setup, the worker definitions — with its
+  references loading on demand.
+
+### The topic bar
+
+A closed list of six topics, one artifact per topic, each individually
+researched and cited. Extracted from the curated archetypes — the `identity`,
+`observability` and `orchestration` plugins' contracts and their `oidc`,
+`otel-lgtm` and `temporal` templates, whose sections already agree on this
+shape.
+
+1. **Pick & trade** — when this provider is the answer, and when it stops
+   being one. The topic the curated templates omit, and the one a reader
+   choosing between two providers needs first.
+2. **Contract satisfaction** — clause by clause against the neutral
+   capability contract, citing the category doctrine per clause and never
+   restating it. A clause the provider cannot satisfy is stated as such:
+   an unsatisfied clause is a design constraint on the product, not a
+   defect to hide.
+3. **The constraint that bites** — the one property that reshapes how the
+   product is built around this provider. Determinism for a workflow
+   engine, cardinality for a telemetry sink, the revocation window for an
+   identity issuer. Every curated template has this section, which is the
+   evidence it is a topic rather than an aside.
+4. **Integration & access shape** — where the boundary between product and
+   provider sits, how the product reaches it, and credentials: env-injected
+   names-not-values catalogued in `environment.md`, identity-based auth
+   preferred so no secret exists, throwaway local-stack credentials.
+5. **Cost shape** — the billing model and the traps that turn a small
+   change into a large bill. Never dollar figures, which age badly and are
+   wrong per region anyway.
+6. **Local stack** — the real engine composed behind a `wait-on` gate where
+   one can run locally; a seam plus a fake where the provider is
+   hosted-only, with the gap named.
+
 ## Reserved kinds (defined at their merge wave, not before)
 
 - **`ci-system`** — the `cicd` plugin's shape: neutral rules shared, one
   reference per CI system. Arrives when `cicd` merges.
-- **`capability-provider`** — the flavour half of the capability plugins
-  (an identity issuer, a telemetry sink, a queue/workflow engine). Arrives
-  with Wave B.
 
 Naming a kind here is deliberate minimalism: defining structures for kinds
 nothing generates yet would be speculation; naming them stops Wave B/C from
@@ -342,7 +401,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all four kinds the structural checklist **is the
+the kind's ruling. For all five kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -353,4 +412,7 @@ extension by category — and the cite-not-restate seam between service
 topics and provider doctrine is part of the bar. For `repo-gate` the
 composition is the gate components together, and one check carries the
 kind: a **language-specific** linter or formatter appearing here is a gap,
-because it belongs to topic 10 of its language bundle.
+because it belongs to topic 10 of its language bundle. For
+`capability-provider` the composition is the instance component alone, and —
+as with `database` — citing rather than restating the contract is part of
+the bar.

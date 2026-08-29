@@ -34,6 +34,9 @@ The closed list. A component is exactly one of:
 - **`datastore`** — a datastore the product runs against, standing on its
   own rather than as one cloud's flavour.
 - **`queue`** — a standalone queue or event bus.
+- **`capability-provider`** — the flavour half of a vwf capability that
+  belongs to no cloud and is not a datastore: an identity issuer, a
+  telemetry sink, a workflow engine. Its **category** says which.
 - **`cdn`** — a content-delivery layer.
 
 ## Categories
@@ -47,6 +50,7 @@ and its components leave `category` unset.
   `cdn`
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
+- **`capability-provider`**: `identity` / `telemetry` / `workflow`
 
 A name appearing as both a type and a category is deliberate, not a
 collision: `kafka` is type `queue` (a standalone component); a provider's
@@ -81,6 +85,9 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   components.
 - A **Datastore-Bundle** is category-level doctrine + an instance
   component (a `datastore`, or a cloud's `cloud-service`/`sql`).
+- A **Capability-Bundle** is category-level doctrine — the neutral capability
+  contract — plus one `capability-provider` component that realizes it, the
+  same halves a Datastore-Bundle is built from.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
   the whole repository rather than to one toolchain in it — the only
   composition rooted at the `repo` axis. A gate meaningful for exactly one
@@ -90,7 +97,12 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
 
 ## Category-level doctrine
 
-Doctrine that belongs to a category rather than an instance — the
-sql-datastore contract, for one — is written **once**, as stackgen curated
-knowledge (arriving at Wave B). Instance components cite it and stay thin:
-the `postgres` pack carries what is Postgres's alone.
+Doctrine that belongs to a category rather than an instance is written
+**once**, as stackgen curated knowledge under
+`${CLAUDE_PLUGIN_ROOT}/assets/contracts/<area>.md`. Instance components cite
+it and stay thin: the `postgres` pack carries what is Postgres's alone.
+
+The contracts are **capability-neutral by construction** — each states what
+*any* provider must satisfy without naming one, and names the vwf capability
+tokens it realizes. That is what lets two providers in one category be
+compared against the same clauses instead of against each other's marketing.
