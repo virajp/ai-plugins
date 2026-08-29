@@ -106,10 +106,12 @@ Each kind's structure **is a topic bar**: a closed list of topics the output
 must cover, one artifact per topic, lazy-loaded — a reference behind a lean
 router skill, or a paths-scoped doctrine skill on the config file it governs. A
 conditional topic the detected stack makes inapplicable is stated `n/a` with
-why, never silently skipped. Each artifact is sized like the curated archetype's
-references — **60–130 dense lines of judgment**: shorter usually means the
-research was thin; longer usually means restated API reference material that
-belongs in Context7 at use time.
+why, never silently skipped. Each artifact is sized like its own kind's curated
+archetype, and the band is **per kind, measured rather than borrowed** — 50–85
+lines for a datastore topic, 70–110 for a repo gate, 80–125 for a cloud topic,
+60–140 for a language topic with framework references uncapped. Short of the
+band usually means the research was thin; over it usually means restated API
+reference material that belongs in Context7 at use time.
 
 The **composition** covers the bar, whichever components supply each topic: the
 language component owns standards, errors, async, testing, build and

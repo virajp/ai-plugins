@@ -116,10 +116,20 @@ in per-pair references.
 
 ### Depth
 
-Each artifact is sized like the curated archetype's references — the
-`typescript` plugin's router-skill references: **60–130 dense lines of
-judgment**. Shorter usually means the research stopped early; longer
-usually means API surface crept in.
+**Measured 2026-08-29 against both curated language archetypes**, because
+the band this section used to state (60–130) described neither. The
+`typescript` router references run **57–230**; `flutter`'s run **119–360**.
+The spread is not noise — it tracks the topic's shape:
+
+- **Topic-shaped artifacts** (standards, testing, build & run, manifest
+  discipline) — **60–140 dense lines**.
+- **Framework references** (topic 2) — **sized by the framework's surface,
+  not capped**; the archetypes run 119–360 and a deep framework legitimately
+  needs it.
+
+Below the floor usually means the research stopped early. Above the top of a
+topic-shaped artifact usually means API surface crept in — which is the
+smell the number exists for, not a limit to enforce.
 
 ## `database` — a datastore the product runs against
 
@@ -173,8 +183,12 @@ researched and cited. Extracted from the curated archetype — the
 
 ### Depth
 
-The `language-bundle` band applies unchanged: each topic's artifact is
-**60–130 dense lines of judgment**.
+**Measured 2026-08-29** against the curated archetypes — `datastore`'s
+contract and `postgres` template, and `gcp`'s `cloud-sql` and `firebase`
+templates: **50–85 dense lines** per topic's artifact. A datastore topic is
+naturally tighter than a language one, and the `language-bundle` band this
+section used to borrow was ~50% too high at the ceiling. A 70-line datastore
+artifact is at depth, not thin.
 
 ## `cloud-provider` — where the product runs and what it uses there
 
@@ -251,8 +265,10 @@ component in the bundle:
 
 ### Depth
 
-The `language-bundle` band applies unchanged: each topic's artifact is
-**60–130 dense lines of judgment**.
+**Measured 2026-08-29** against the curated `gcp` archetype — its
+`gcp-cost`, `gcp-iam` and `gcp-local-stack` doctrine skills and its
+`cloud-run`/`gke` deploy templates: **80–125 dense lines** per topic's
+artifact. This is the one kind the old borrowed band described accurately.
 
 ## `repo-gate` — the gates that run over the whole repo
 
@@ -324,9 +340,10 @@ saying out loud rather than discovering later.
 
 ### Depth
 
-The `language-bundle` band applies unchanged: each topic's artifact is
-**60–130 dense lines of judgment**. The curated archetype's five gate skills
-sit at 73–90 lines, which is the band's evidence.
+**Measured** against the curated `devtools` gate skills, which sit at
+**73–90 lines**: the band is **70–110 dense lines** per topic's artifact. A
+gate's doctrine is one screen of judgment about one config file, which is
+why this is the tightest band of the four.
 
 ## Reserved kinds (defined at their merge wave, not before)
 
