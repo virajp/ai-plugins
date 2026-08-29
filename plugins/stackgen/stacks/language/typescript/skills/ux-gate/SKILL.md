@@ -1,8 +1,8 @@
 ---
-name: typescript-ux-gate
+name: ux-gate
 description: Render a web UI slice's changed screens and run an accessibility
   scan, returning findings in vwf's UX-gate vocabulary. Invoked by vwf's
-  `execute-ux-reviewer` for a project whose stack this plugin owns — not a
+  UX-review stage for a project whose stack this plugin owns — not a
   general-purpose skill.
 disable-model-invocation: false
 model: sonnet
@@ -11,7 +11,7 @@ effort: medium
 
 # typescript-ux-gate
 
-vwf's `execute-ux-reviewer` knows a UI slice must have its screens rendered and
+vwf's UX-review stage knows a UI slice must have its screens rendered and
 scanned. It does not know how. This skill is the how, for a web project built on
 this plugin's stack.
 
@@ -60,3 +60,11 @@ driver in the manifest, a server that would not boot — each is a `reason`, and
 vwf carries it to the final human gate rather than downgrading the slice to a
 code-only review. Reporting `ok` when nothing rendered is the one failure mode
 this skill exists to prevent.
+
+---
+
+**This skill is materialized into the repo's own `.claude/skills/ux-gate/`.**
+vwf invokes it by that fixed name rather than constructing
+`<plugin>-ux-gate` from a stack pin — there is no plugin name to construct
+from once stacks are packs, and a name built from configuration is a name
+that can silently resolve to nothing.

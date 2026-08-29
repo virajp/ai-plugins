@@ -41,6 +41,13 @@ other 115 being API surface that Context7 serves current at use time. What was
 kept is setup order, platform configuration (manifest entries, entitlements,
 permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
 
+**The UX gate is materialized, not delegated.** The two curated `-ux-gate`
+skills moved into their packs as an unprefixed `ux-gate`, landed into the
+repo's own `.claude/skills/`. vwf invokes that fixed name instead of building
+`<plugin>-ux-gate` from the stack pin — once stacks are packs there is no
+plugin name to build from, and a name assembled from configuration is one that
+can silently resolve to nothing.
+
 **Deferred — `gcp` and `cloudflare`.** Their `cloud-provider` bar wants ~30
 and ~9 artifacts; the curated plugins supply three provider skills and four
 ~80-line service templates. Folding them honestly needs per-topic research

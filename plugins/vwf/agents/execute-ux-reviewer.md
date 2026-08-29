@@ -30,10 +30,11 @@ registry entry for the project (role, platforms and stack), the project wing, an
 ## What to do
 
 1. **Render — delegate, never improvise.** You do not know how to render
-   anything, and that is deliberate: the mechanism belongs to whichever plugin
-   owns the project's stack. Resolve that plugin from the project's `stack`
-   block and invoke its **`<plugin>-ux-gate`** skill, per the stack-adapter
-   contract (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), passing the slice, the
+   anything, and that is deliberate: the mechanism belongs to whichever pack
+   owns the project's stack, which materialized it into this repo. Invoke the
+   repo's own **`ux-gate`** skill — a fixed name in `.claude/skills/`, never a
+   name built from the stack pin — per the stack-adapter contract
+   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), passing the slice, the
    changed screens, the design-system path and the flow's Screens contract.
 
    It renders however its ecosystem does and runs that ecosystem's
@@ -46,7 +47,7 @@ registry entry for the project (role, platforms and stack), the project wing, an
    ```
 
    **Read whatever artifacts it reports** and judge them yourself — the gate
-   renders, you decide. If the plugin ships no `-ux-gate`, or it returns
+   renders, you decide. If the repo has no `ux-gate` skill, or it returns
    `rendered: n/a`, fall back to the code-level pass below and carry the reason
    forward verbatim. Never substitute a tool of your own choosing.
 2. **Judge against the contracts.** For each screen and state:

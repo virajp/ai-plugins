@@ -1,7 +1,7 @@
 ---
-name: flutter-ux-gate
+name: ux-gate
 description: Run a Flutter UI slice's visual and accessibility checks, returning
-  findings in vwf's UX-gate vocabulary. Invoked by vwf's `execute-ux-reviewer`
+  findings in vwf's UX-gate vocabulary. Invoked by vwf's UX-review stage
   for a project whose stack this plugin owns — not a general-purpose skill.
 disable-model-invocation: false
 model: sonnet
@@ -10,7 +10,7 @@ effort: medium
 
 # flutter-ux-gate
 
-vwf's `execute-ux-reviewer` knows a UI slice must have its screens rendered and
+vwf's UX-review stage knows a UI slice must have its screens rendered and
 scanned. It does not know how. This skill is the how, for a Flutter project.
 
 > **`invocation` must stay `both`.** A `user` skill is removed from the model's
@@ -64,3 +64,11 @@ suite that would not run, a toolchain that is absent — each is a `reason`, and
 vwf carries it to the final human gate rather than downgrading the slice to a
 code-only review. Reporting `ok` when nothing ran is the one failure mode this
 skill exists to prevent.
+
+---
+
+**This skill is materialized into the repo's own `.claude/skills/ux-gate/`.**
+vwf invokes it by that fixed name rather than constructing
+`<plugin>-ux-gate` from a stack pin — there is no plugin name to construct
+from once stacks are packs, and a name built from configuration is a name
+that can silently resolve to nothing.

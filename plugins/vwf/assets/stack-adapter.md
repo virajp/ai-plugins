@@ -95,7 +95,7 @@ vwf invokes skills on each configured plugin, at **exactly** these names:
 | ------------------------------------------ | ------ | --------------------------- |
 | `/<plugin>:<plugin>-stack-menu`            | data   | a **menu payload**          |
 | `/<plugin>:<plugin>-stack-template <slug>` | data   | a **template payload**      |
-| `/<plugin>:<plugin>-ux-gate <slice>`       | action | **UX findings** (UI stacks) |
+| the repo's own `ux-gate` skill             | action | **UX findings** (UI stacks) |
 
 So `stacks: [ gcp ]` resolves to `/gcp:gcp-stack-menu`. vwf constructs every
 name from the configured value — nothing is looked up or guessed.
@@ -269,9 +269,18 @@ side of the contract is three rules:
 ## The UX gate
 
 `execute-ux-reviewer` no longer knows how to render anything. For a UI slice it
-delegates to `-ux-gate` on the plugin owning that project's stack, passing the
-slice, the changed screens, the design-system path and the flow's Screens
-contract. The plugin renders however its ecosystem does — a browser driver, a
+invokes the repo's **own** `ux-gate` skill — a fixed name in the repo's
+`.claude/skills/`, materialized there by whichever pack owns the project's
+stack — passing the slice, the changed screens, the design-system path and the
+flow's Screens contract.
+
+**The name is fixed, and that is the point.** vwf used to construct
+`<plugin>-ux-gate` from the stack pin, which stops working the moment stacks are
+packs rather than plugins: there is no plugin name left to build from. A name
+assembled from configuration is a name that can silently resolve to nothing, and
+a UX gate that resolves to nothing looks exactly like a slice with no findings.
+A fixed repo-local name either exists or does not, and its absence is
+checkable. The plugin renders however its ecosystem does — a browser driver, a
 snapshot test suite, a simulator — runs its accessibility equivalent, and
 returns findings in vwf's vocabulary:
 
@@ -285,8 +294,10 @@ vwf's rule is unchanged and stays vwf's: `rendered: n/a` on any UI slice is a
 gap that reaches the final human gate, never a silent downgrade to a code-only
 review. What counts as "rendered" is the plugin's call.
 
-**A stack plugin with no UI stack ships no `-ux-gate` skill**, and vwf never
-calls it — a project with no UI surface has no screens.
+**A pack with no UI surface materializes no `ux-gate`**, and vwf finds none —
+a project with no screens has nothing to render. That absence is the same
+`rendered: n/a` path as a gate that declined, and carries the same rule: it
+reaches the final human gate rather than downgrading silently.
 
 ## Writing a stack plugin
 
@@ -296,7 +307,9 @@ calls it — a project with no UI surface has no screens.
    `skills/<name>-stack-template/SKILL.md`, both
    **`disable-model-invocation: false`**. A user-only skill cannot be invoked by
    vwf and the failure is silent.
-3. `skills/<name>-ux-gate/SKILL.md` only if the plugin owns a UI stack.
+3. A UI-owning pack materializes `skills/ux-gate/SKILL.md` into the repo's
+   `.claude/` — an unprefixed, fixed name, because vwf invokes it there rather
+   than through the plugin.
 4. `stacks/<axis>/<slug>.md` — the templates themselves, in the plugin's own
    tree. Their shape is the plugin's business; only the payload is contracted.
 
