@@ -30,6 +30,17 @@ rather than a mistake: `dprint`/`gitleaks`/`grype`/`pre-commit` run over any
 repo and compose into `repo-gate`, while `eslint` and `tsconfig` are
 meaningful for exactly one toolchain and compose into its language bundle.
 
+**Wave C — `app-framework/flutter`**, kind `app-framework`, with
+`package-manager/pub` and `toolchain-gate/analysis-options`. The one bundle
+whose root is not a language: Flutter owns the manifest and the build, so Dart
+is a `primary` member and Kotlin and Swift are `platform-edge` members with
+their own boundary-scoped skills.
+
+Its integration references are **wiring only** — 45 files kept from 160, the
+other 115 being API surface that Context7 serves current at use time. What was
+kept is setup order, platform configuration (manifest entries, entitlements,
+permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
+
 **Deferred — `gcp` and `cloudflare`.** Their `cloud-provider` bar wants ~30
 and ~9 artifacts; the curated plugins supply three provider skills and four
 ~80-line service templates. Folding them honestly needs per-topic research

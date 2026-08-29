@@ -1,0 +1,9 @@
+name: analysis_options
+summary: The Dart analyzer and lint configuration for a Flutter app.
+version: 0.1.0
+type: toolchain-gate
+kind: app-framework
+axis: project
+# Topic-level gate for the app bundle, not a repo gate: it is meaningful for
+# exactly one toolchain.
+harness: n/a

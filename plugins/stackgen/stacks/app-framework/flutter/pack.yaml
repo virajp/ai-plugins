@@ -1,0 +1,41 @@
+name: Flutter
+summary: The cross-platform app SDK that owns the manifest, the build and the
+  project layout — one codebase across mobile, tablet, desktop and web.
+version: 0.1.0
+type: app-framework
+category: cross-platform-ui
+kind: app-framework
+axis: project
+platforms: [ mobile, tablet, desktop, webapp ]
+languages:
+  - token: dart
+    role: primary
+    facts:
+      lsp: >-
+        dart language-server, provisioned through the Flutter SDK rather than
+        beside it
+      mise_tool: flutter
+      manifest: pubspec.yaml
+  - token: kotlin
+    role: platform-edge
+    facts:
+      lsp: kotlin-lsp
+      mise_tool: kotlin
+      manifest: >-
+        n/a — the Android Gradle files are subordinate to pubspec.yaml and
+        configure native dependencies only
+  - token: swift
+    role: platform-edge
+    facts:
+      lsp: sourcekit-lsp
+      mise_tool: >-
+        n/a — provided by Xcode, which the Flutter build drives
+      manifest: >-
+        n/a — the iOS project is subordinate to pubspec.yaml, which even
+        toggles the Swift package manager
+harness:
+  screenshots:
+    task: test:golden
+    mechanism: >-
+      Flutter golden tests plus flutter_test's meetsGuideline accessibility
+      assertions — the SDK's own visual and a11y gate
