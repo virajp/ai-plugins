@@ -1,5 +1,5 @@
 ---
-name: design-tools-import-conversations
+name: import-conversations
 description: Read the design review conversation back from a project's design
   tool (Claude Design, Lovable or Google Stitch) and return it as a vwf
   conversations payload. Invoked by /vwf:feedback canvas as its design
@@ -9,7 +9,7 @@ model: sonnet
 effort: high
 ---
 
-# import-conversations — the vwf design adapter
+# import-conversations — the design adapter
 
 Return what the user **said while designing** as a **vwf conversations
 payload**. You read from whichever design tool the named project uses and
@@ -22,8 +22,7 @@ blueprint doc — those are vwf's, and `/vwf:feedback` does them.
 > nothing.
 
 The payload shape is defined by the vwf adapter contract; read it before
-returning anything: `${CLAUDE_PLUGIN_ROOT}/../vwf/assets/design-adapter.md` (or
-the installed vwf plugin's `assets/design-adapter.md`).
+returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 
 ## Inputs
 
@@ -60,11 +59,10 @@ lovable, stitch.
 Read **only** the one file matching the resolved tool, then follow it. The other
 two are irrelevant to this run, and loading them costs context for nothing.
 
-| Tool            | Read                                                                                                    |
-| --------------- | --------------------------------------------------------------------------------------------------------- |
-| `claude-design` | [claude-design](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-conversations/references/claude-design.md) |
-| `lovable`       | [lovable](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-conversations/references/lovable.md)             |
-| `stitch`        | [stitch](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-conversations/references/stitch.md)               |
+Read `${CLAUDE_PLUGIN_ROOT}/assets/design-tools/<tool>.md`, where `<tool>` is
+that value verbatim. **The path is constructed from configuration; this skill
+names no tool.** If no such file exists the tool is unsupported — halt with the
+error below rather than improvising against an API you have no reference for.
 
 **An unrecognised value halts.** Never fall back to a default tool:
 

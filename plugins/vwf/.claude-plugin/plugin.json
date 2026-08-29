@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "vwf",
   "version": "19.2.0",
-  "description": "Highly opinionated Product → Blueprint → Plan → Execute workflow for solo developers or small teams — enforced workspace structure with a selectable stack-template menu checked by /vwf:doctor, a flow-first blueprint (entities as data contracts, OpenAPI + JSON-Schema artifacts) with whole-product coherence review, chained dependency plans, an autonomous execute with review/security/acceptance/UX subagents behind one final merge gate that stamps blueprint implementation state, post-deploy verify with production release freezing + API backward-compat enforcement, feedback intake, and mempalace-backed memory.",
+  "description": "Highly opinionated Product \u2192 Blueprint \u2192 Plan \u2192 Execute workflow for solo developers or small teams \u2014 enforced workspace structure with a selectable stack-template menu checked by /vwf:doctor, a flow-first blueprint (entities as data contracts, OpenAPI + JSON-Schema artifacts) with whole-product coherence review, chained dependency plans, an autonomous execute with review/security/acceptance/UX subagents behind one final merge gate that stamps blueprint implementation state, post-deploy verify with production release freezing + API backward-compat enforcement, feedback intake, and mempalace-backed memory.",
   "author": {
     "name": "Viraj Patel"
   },
@@ -23,7 +23,8 @@
     "design-system",
     "onboarding",
     "tdd",
-    "git-workflow"
+    "git-workflow",
+    "vwf-design-adapter"
   ],
   "dependencies": [
     {

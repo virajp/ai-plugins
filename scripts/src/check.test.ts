@@ -398,17 +398,16 @@ describe("the design-adapter contract", () => {
     },
   });
 
+  // Unprefixed since the adapter merged into vwf: the caller is
+  // `/vwf:import-screens`, not `/<plugin>:<plugin>-import-screens`.
   const three = (extra: string) => ({
-    "skills/design-tools-import-screens/SKILL.md": skill(
-      "design-tools-import-screens",
+    "skills/import-screens/SKILL.md": skill("import-screens", extra),
+    "skills/import-design-system/SKILL.md": skill(
+      "import-design-system",
       extra,
     ),
-    "skills/design-tools-import-design-system/SKILL.md": skill(
-      "design-tools-import-design-system",
-      extra,
-    ),
-    "skills/design-tools-import-conversations/SKILL.md": skill(
-      "design-tools-import-conversations",
+    "skills/import-conversations/SKILL.md": skill(
+      "import-conversations",
       extra,
     ),
   });
@@ -425,7 +424,7 @@ describe("the design-adapter contract", () => {
         .filter(([path]) => !path.includes("import-conversations")),
     );
     expect(messages(check(tree(adapter(files))))).toEqual([
-      "design adapter is missing its \"design-tools-import-conversations\" skill",
+      "design adapter is missing its \"import-conversations\" skill",
     ]);
   });
 

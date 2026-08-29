@@ -43,7 +43,7 @@ adapter's business, resolved per project:
    — a project with no `design` key, or one naming a token no adapter supports,
    is its own distinct halt. Never collapse the two.
 3. **Delegate, one call per project:**
-   `/design-tools:design-tools-import-conversations <project>`. One call per
+   `/vwf:import-conversations <project>`. One call per
    project because the tool is per project since `config_format` 13 — a product
    may design its website in one tool and its app in another, and a single call
    could only resolve one of them.

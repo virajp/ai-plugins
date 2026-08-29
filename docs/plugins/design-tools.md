@@ -1,5 +1,21 @@
 # design-tools
 
+> **Draining, 2026-08-29.** The three design-adapter skills documented below are
+> now **vwf's own** — `/vwf:import-screens`, `/vwf:import-design-system` and
+> `/vwf:import-conversations` — invoked only when a project declares a `design:`
+> tool. The nine per-skill tool references were consolidated into three, one per
+> tool, at `vwf/assets/design-tools/<tool>.md`, and vwf **constructs** that path
+> from configuration rather than naming any tool itself.
+>
+> What remains under `plugins/design-tools/` is a manifest carrying the Claude
+> Design MCP server, and nothing else. An MCP server is a plugin-manifest
+> feature no repo file can express, so it cannot be materialized; the plugin
+> retires once stackgen can generate that wiring on demand. See
+> [the merge-waves plan](../plans/2026-08-28-merge-waves.md).
+>
+> The rest of this document describes the adapter as it was, and is kept as the
+> record of the shape that moved.
+
 The `design-tools` plugin is **vwf's design adapter**. vwf itself talks to no
 design tool: it calls three fixed skills and this plugin decides which tool
 answers. It is one plugin covering three tools — Claude Design, Lovable and

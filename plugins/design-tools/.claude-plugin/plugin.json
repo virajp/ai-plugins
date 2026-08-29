@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "design-tools",
   "version": "0.2.0",
-  "description": "The vwf design adapter — two skills (import-screens, import-design-system) that resolve the design tool per project and speak Claude Design, Lovable or Google Stitch. Ships the Claude Design MCP server (https://api.anthropic.com/v1/design/mcp).",
+  "description": "Carrier for the Claude Design MCP server only. Its three design-adapter skills merged into vwf; this manifest survives solely because an MCP server is a plugin-manifest feature no repo file can express, and it retires once stackgen can generate that wiring on demand.",
   "author": {
     "name": "Viraj Patel"
   },
@@ -12,8 +12,7 @@
     "mockups",
     "claude-design",
     "lovable",
-    "stitch",
-    "vwf-design-adapter"
+    "stitch"
   ],
   "mcpServers": {
     "claude-design": {

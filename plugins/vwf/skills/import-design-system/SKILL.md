@@ -1,5 +1,5 @@
 ---
-name: design-tools-import-design-system
+name: import-design-system
 description: Read the design system back from the project's design tool (Claude
   Design, Lovable or Google Stitch) and return it as a vwf design-system
   payload. Invoked by /vwf:design-system as its design adapter — not a
@@ -9,7 +9,7 @@ model: sonnet
 effort: high
 ---
 
-# import-design-system — the vwf design adapter
+# import-design-system — the design adapter
 
 Return the product's design system as a **vwf design-system payload**. You read
 from whichever design tool the project uses and normalize; you never write a
@@ -21,8 +21,7 @@ blueprint doc, and you never decide what the design system *should* be.
 > nothing.
 
 The payload shape is defined by the vwf adapter contract; read it before
-returning anything: `${CLAUDE_PLUGIN_ROOT}/../vwf/assets/design-adapter.md` (or
-the installed vwf plugin's `assets/design-adapter.md`).
+returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 
 ## Inputs
 
@@ -56,11 +55,10 @@ lovable, stitch.
 Read **only** the one file matching the resolved tool, then follow it. The other
 two are irrelevant to this run, and loading them costs context for nothing.
 
-| Tool            | Read                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------- |
-| `claude-design` | [claude-design](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-design-system/references/claude-design.md) |
-| `lovable`       | [lovable](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-design-system/references/lovable.md)             |
-| `stitch`        | [stitch](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-design-system/references/stitch.md)               |
+Read `${CLAUDE_PLUGIN_ROOT}/assets/design-tools/<tool>.md`, where `<tool>` is
+that value verbatim. **The path is constructed from configuration; this skill
+names no tool.** If no such file exists the tool is unsupported — halt with the
+error below rather than improvising against an API you have no reference for.
 
 **An unrecognised value halts.** Never fall back to a default tool and never
 return an empty payload — an empty result is indistinguishable from a design

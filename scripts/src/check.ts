@@ -419,7 +419,12 @@ function checkDesignAdapters(plugins: readonly Plugin[]): Finding[] {
         "import-conversations",
       ]
     ) {
-      const expected = `${plugin.dir}-${kind}`;
+      // Since the design adapter merged into vwf the three names are no longer
+      // plugin-prefixed — vwf calls `/vwf:import-screens`, not
+      // `/<plugin>:<plugin>-import-screens`. The rule that matters is unchanged:
+      // these three must be model-invocable, or delegation returns an empty
+      // payload instead of an error.
+      const expected = kind;
       const path = skills.get(expected);
       if (path === undefined) {
         findings.push({
@@ -575,6 +580,19 @@ const TOOL_NAME_EXCEPTIONS = new Set([
   // every occurrence sits in an "instead of" column whose row prescribes the
   // opposite.
   "assets/capability-vocabulary.md",
+  // The three design-adapter references, which arrived when `design-tools`
+  // merged into vwf. Each documents how to talk to ONE tool and is loaded only
+  // when a project's `design:` key already names that tool — so the mention is
+  // recognition of a choice the user made, never a recommendation, which is the
+  // same ground `skills/readme/SKILL.md` stands on.
+  //
+  // Three entries and not nine: the nine per-skill references were consolidated
+  // to one per tool precisely so this allowlist stayed arguable. A fourth tool
+  // gets one entry; if that ever stops feeling arguable the fix is moving these
+  // out of vwf again, never widening the pattern.
+  "assets/design-tools/claude-design.md",
+  "assets/design-tools/lovable.md",
+  "assets/design-tools/stitch.md",
 ]);
 
 /** How far either side of a match still counts as the same enumeration. */

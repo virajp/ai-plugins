@@ -1,5 +1,5 @@
 ---
-name: design-tools-import-screens
+name: import-screens
 description: Read a flow's designed screens back from the project's design tool
   (Claude Design, Lovable or Google Stitch) and return them as a vwf screens
   payload. Invoked by /vwf:screens import as its design adapter — not a
@@ -10,7 +10,7 @@ model: sonnet
 effort: high
 ---
 
-# import-screens — the vwf design adapter
+# import-screens — the design adapter
 
 Return one flow's designed screens, for one platform, as a **vwf screens
 payload**. You read from whichever design tool the project uses and normalize;
@@ -23,8 +23,7 @@ doc.
 > nothing.
 
 The payload shape is defined by the vwf adapter contract; read it before
-returning anything: `${CLAUDE_PLUGIN_ROOT}/../vwf/assets/design-adapter.md` (or
-the installed vwf plugin's `assets/design-adapter.md`).
+returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 
 ## Inputs
 
@@ -58,11 +57,10 @@ lovable, stitch.
 Read **only** the one file matching the resolved tool, then follow it. The other
 two are irrelevant to this run, and loading them costs context for nothing.
 
-| Tool            | Read                                                                                                |
-| --------------- | ----------------------------------------------------------------------------------------------------- |
-| `claude-design` | [claude-design](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-screens/references/claude-design.md) |
-| `lovable`       | [lovable](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-screens/references/lovable.md)             |
-| `stitch`        | [stitch](${CLAUDE_PLUGIN_ROOT}/skills/design-tools-import-screens/references/stitch.md)               |
+Read `${CLAUDE_PLUGIN_ROOT}/assets/design-tools/<tool>.md`, where `<tool>` is
+that value verbatim. **The path is constructed from configuration; this skill
+names no tool.** If no such file exists the tool is unsupported — halt with the
+error below rather than improvising against an API you have no reference for.
 
 **An unrecognised value halts.** Never fall back to a default tool and never
 return an empty payload — an empty result is indistinguishable from a design

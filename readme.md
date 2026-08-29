@@ -262,7 +262,9 @@ deploy target, and the repo gates the stack templates name — dprint, ESLint,
 gitleaks, grype, pre-commit. A `vwf` dependency, because `/vwf:setup`
 orchestrates its scaffold skill. `devtools@virajp-plugins`
 
-**[design-tools](./docs/plugins/design-tools.md)** — the design adapter vwf
+**[design-tools](./docs/plugins/design-tools.md)** — **draining.** Its three
+import skills are now vwf's own; what remains carries the Claude Design MCP
+server until stackgen can generate that wiring. Formerly: the design adapter vwf
 imports screens, design systems and design review conversations through. Three
 skills resolve the design tool **per project** — `claude-design`, `lovable` or
 `stitch` — so a product can design its website in one and its app in another.

@@ -24,9 +24,9 @@ vwf calls **three fixed skill names**, always:
 
 | Skill                                                       | Returns                     |
 | ------------------------------------------------------------- | --------------------------- |
-| `/design-tools:design-tools-import-screens <flow> <platform>` | a **screens payload**       |
-| `/design-tools:design-tools-import-design-system`             | a **design-system payload** |
-| `/design-tools:design-tools-import-conversations <project>`   | a **conversations payload** |
+| `/vwf:import-screens <flow> <platform>` | a **screens payload**       |
+| `/vwf:import-design-system`             | a **design-system payload** |
+| `/vwf:import-conversations <project>`   | a **conversations payload** |
 
 **vwf never constructs a skill name from configuration.** It knows these three
 names and nothing else. *Which* design tool answers is resolved **inside** the
@@ -97,7 +97,7 @@ never quietly return an empty result.
 
 ## Payload 1 — screens
 
-Returned by `/design-tools:design-tools-import-screens <flow> <platform>`. Shapes
+Returned by `/vwf:import-screens <flow> <platform>`. Shapes
 match the flow platform template, so `/vwf:screens import` can diff it
 directly against the Screens contract.
 
@@ -129,7 +129,7 @@ codes.
 
 ## Payload 2 — design system
 
-Returned by `/design-tools:design-tools-import-design-system`. Shapes match the
+Returned by `/vwf:import-design-system`. Shapes match the
 design-system template's sections, so `/vwf:design-system` can write the doc
 from it.
 
@@ -176,7 +176,7 @@ a derived one is a snapshot of one moment.
 
 ## Payload 3 — conversations
 
-Returned by `/design-tools:design-tools-import-conversations <project>`, one call
+Returned by `/vwf:import-conversations <project>`, one call
 per registry project. Feeds `/vwf:feedback canvas`, which classifies and routes
 each remark through its normal pipeline.
 
@@ -243,7 +243,7 @@ A new design tool is a **reference file inside the `design-tools` plugin**, not
 a new plugin and not a new vwf code path:
 
 1. Add a reference under **each of the three** import skills —
-   `skills/design-tools-import-screens/references/<tool>.md`,
+   `assets/design-tools/<tool>.md`,
    `…-import-design-system/references/<tool>.md` and
    `…-import-conversations/references/<tool>.md` — each stating how to read that
    tool and how to fill the payload. A tool with no review surface still gets the
