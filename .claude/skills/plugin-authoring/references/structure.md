@@ -97,13 +97,21 @@ re-enable it directly, or toggle the parent off and on.
 A marketplace is one `marketplace.json` holding a header and one entry per
 plugin, each with a `source`. Two traps ride on it, both silent when wrong:
 
-- **Sources resolve against the marketplace root**, not the repo root. A path
-  spelled from the repo root can exist and still resolve nowhere the tool looks,
-  so every install fails while the manifest reads fine. This is not a class a
-  validator catches — the path exists, just not from that base.
 - **Every entry must state its own `version`.** Omitting it does not leave the
   version unset: the tool falls back through a chain that resolves by accident,
   and the plugin lists as `0.0.0` with nothing failing.
+- **A `git-subdir` source with no `ref` silently tracks the default branch.**
+  The same accidental resolution in a second place, and the reason this repo's
+  generator throws rather than emit one — a ref-less entry *works*, it just
+  ships whatever landed last.
+
+This repo uses the `git-subdir` form, pinned per plugin to a `<name>-v<version>`
+tag, so a merge is not a release. The relative form (`./plugins/<name>`) carries
+a third trap and is worth knowing even though nothing here uses it now:
+**sources resolve against the marketplace root**, not the repo root — a path
+spelled from the repo root can exist and still resolve nowhere the tool looks,
+so every install fails while the manifest reads fine. No validator catches it;
+the path exists, just not from that base.
 
 **Generating the marketplace from the plugin manifests is worth the machinery**
 — it makes it impossible for a plugin to be unregistered, orphaned, or to

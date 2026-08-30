@@ -31,7 +31,11 @@ else
 fi
 
 VERSION="$(node -p "require('./package.json').version")"
-TAG="v${VERSION}"
+# Namespaced: every tag in this repo says what it releases. Plugins tag as
+# `<name>-v<version>` and the marketplace manifest pins each entry to one, so a
+# bare `v*` tag family would collide — GitHub's tag globs match any character
+# but `/`, which made `v*` match `vwf-v19.9.0`.
+TAG="installer-v${VERSION}"
 
 # 4. Commit the bump and create an annotated tag. One file: package.json is the
 #    only place the version lives, and `release.yml` asserts the tag matches it.
@@ -60,8 +64,9 @@ if ! gh auth status >/dev/null 2>&1; then
   exit 1
 fi
 
-# The tag push (v*) triggers release.yml, which publishes to npm via OIDC trusted
-# publishing. (A branch push triggers nothing — release.yml is tags-only.)
+# The tag push (installer-v*) triggers release.yml, which publishes to npm via
+# OIDC trusted publishing. (A branch push triggers nothing — release.yml is
+# tags-only, and plugin tags no longer match its filter.)
 print_header "Pushing ${TAG} ..."
 git push origin HEAD
 git push origin "${TAG}"

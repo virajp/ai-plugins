@@ -84,7 +84,7 @@ pnpx @askviraj/ai-plugins --all
 ```
 
 That is a thin wrapper over Claude Code's own two commands, which work just as
-well directly — the marketplace is this repo's `main` either way:
+well directly — the marketplace manifest is this repo's `main` either way:
 
 ```sh
 # Register this repo as a plugin marketplace, once
@@ -112,8 +112,13 @@ claude plugin install typescript@virajp-plugins gcp@virajp-plugins
 ```
 
 Upgrading is `claude plugin marketplace update` followed by
-`claude plugin update <name>` — the marketplace is served from this repo's
-`main`, which every push validates in CI.
+`claude plugin update <name>`. Both steps are needed: the first re-reads the
+manifest on `main` and picks up its new tag pins, the second fetches them. Skip
+it and `plugin update` re-reads the pins you already have and finds nothing.
+
+Each plugin is served from its own `<name>-v<version>` git tag rather than from
+`main`, so plugins release independently — an upgrade moves only the ones whose
+tag actually changed, and work merged but not yet tagged never reaches you.
 
 **The statusline used to ship here and no longer does** — it has moved to
 [`claude-status`](https://claude-status.virajp.dev), which is also where the

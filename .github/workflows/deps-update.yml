@@ -69,7 +69,10 @@ jobs:
           git add pnpm-lock.yaml package.json
           mise x -- git commit -m "ops(deps): monthly dependency refresh"
           mise run i:release --ci # clean tree now → i:test, patch bump, commit, tag (no push/watch)
-          tag="v$(node -p "require('./package.json').version")"
+          # Must match the tag i:release just created, and release.yml's
+          # `installer-v*` filter. Plugin releases use `<name>-v<version>` and
+          # never come through here.
+          tag="installer-v$(node -p "require('./package.json').version")"
           git push origin HEAD:main
           git push origin "$tag"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

@@ -14,9 +14,13 @@ name: Plugins
 # gate in particular has no other home: the manifest is generated *and*
 # committed, so a plugin manifest edited without a regenerate is invisible to
 # every other check.
+#
+# Runs on `develop` as well as `main`, because develop is where the work lands
+# now — every check here has to be green before a release branch merge, not
+# after it.
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request: {}
   workflow_dispatch: {}
 
@@ -50,6 +54,32 @@ jobs:
 
       - name: Static validation of plugins/
         run: mise run plugins:check
+
+      # Release-branch only. Every entry's `source.ref` is derived from that
+      # plugin's manifest version, so bumping a version renames the ref before
+      # the tag exists — which is the normal, correct state on `develop` and a
+      # broken marketplace on `main`: Claude resolves the ref at install time,
+      # so a ref with no tag is an install that fails for every user.
+      #
+      # Deliberately not part of `plugins:marketplace --check`. That check is a
+      # pure function of the 7 manifests and must stay offline and
+      # fresh-clone-safe; this one asks the remote a question.
+      - name: Every marketplace ref names a tag that exists
+        if: github.ref == 'refs/heads/main'
+        run: |
+          missing=0
+          while read -r ref; do
+            if git ls-remote --exit-code --tags origin "refs/tags/$ref" >/dev/null 2>&1; then
+              echo "  ok      $ref"
+            else
+              echo "::error::marketplace.json pins $ref, which is not a tag in this repo"
+              missing=1
+            fi
+          done < <(node -p "require('./.claude-plugin/marketplace.json').plugins.map(p => p.source.ref).join('\n')")
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::main names unreleased tags. Run 'mise run plugins:release' and push the tags."
+            exit 1
+          fi
 
       - name: Tooling and installer tests
         run: pnpm vitest run

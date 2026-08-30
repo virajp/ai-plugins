@@ -27,9 +27,11 @@ claude plugin install vwf@virajp-plugins
 ```
 
 The marketplace is **this repo on GitHub**. `.claude-plugin/marketplace.json` at
-the repo root lists all 7 plugins, each with a `source` of `./plugins/<name>` —
-resolved against the marketplace root, which is why that manifest sits at the
-root rather than inside `plugins/`.
+the repo root lists all 7 plugins, each with a `git-subdir` `source` naming this
+repo, that plugin's subdirectory, and a `<name>-v<version>` tag. The manifest
+sits at the root because that is where Claude looks when the repo is added; the
+sources themselves are absolute, so each plugin is fetched at its own tag rather
+than read out of whatever branch the marketplace resolved to.
 
 Where it lands is Claude's business, not this repo's, and the shape has changed
 before. What is worth knowing:

@@ -59,9 +59,10 @@ claude plugin marketplace add virajp/ai-plugins
 claude plugin install vwf@virajp-plugins
 ```
 
-Either route works; the marketplace is this repo's `main` in both. The CLI never
-edits Claude's settings itself — Claude's commands own that bookkeeping — so it
-needs `claude` on `PATH`, and there is nothing it can do without one.
+Either route works; the marketplace manifest is this repo's `main` in both. The
+CLI never edits Claude's settings itself — Claude's commands own that
+bookkeeping — so it needs `claude` on `PATH`, and there is nothing it can do
+without one.
 
 `--project` keeps a plugin to one repo (recorded in the repo's
 `.claude/settings.json`, resolved from the directory you run in) instead of your
@@ -88,8 +89,11 @@ claude plugin marketplace update virajp-plugins
 claude plugin update vwf
 ```
 
-The marketplace is this repo's `main`, which CI validates on every push, so
-there is no separately published artifact to fall behind.
+Both steps are needed. The first re-reads the manifest on `main`, which CI
+validates on every push; the second fetches whatever tags that manifest now
+pins. Each plugin is pinned to its own `<name>-v<version>` tag, so an upgrade
+moves only the plugins whose tag changed — and there is no separately published
+artifact to fall behind.
 
 ## Nothing is gated at install time
 

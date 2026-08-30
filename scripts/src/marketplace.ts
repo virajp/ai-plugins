@@ -3,12 +3,25 @@
  * Generates `.claude-plugin/marketplace.json` from the 13 plugin manifests.
  *
  * The manifest lives at the **repo root**, not under `plugins/`: it is what
- * Claude Code reads when the marketplace is added from this repo, and every
- * `source` inside it is root-relative. It is also **committed**, so what a user
- * installs is inspectable and diffable in review — which is exactly why this
- * needs a `--check` mode. A generated-and-committed file has no other staleness
- * guarantee; `--check` is the successor to the retired `plugins:render-clean`,
- * narrowed to the one file that is still generated.
+ * Claude Code reads when the marketplace is added from this repo. It is also
+ * **committed**, so what a user installs is inspectable and diffable in review —
+ * which is exactly why this needs a `--check` mode. A generated-and-committed
+ * file has no other staleness guarantee; `--check` is the successor to the
+ * retired `plugins:render-clean`, narrowed to the one file that is still
+ * generated.
+ *
+ * Every `source` is a `git-subdir` fetch pinned to a per-plugin tag rather than
+ * a `./plugins/<name>` path. A relative source resolves against the marketplace
+ * root, so it served whatever the default branch held and no change could be
+ * kept back from users; a pinned ref makes a release an explicit act, which is
+ * what lets unreleased work live on `develop`. See `ref()` for the tag grammar.
+ *
+ * The projection stays a pure function of the 7 plugin manifests: the ref is
+ * *derived* from each manifest's `version`, so no git call and no network are
+ * needed to generate or to `--check`. That is why `sha` is not emitted, unlike
+ * the official marketplace — resolving a tag to a commit is exactly the
+ * impurity this avoids. The cost is that a ref can name a tag that does not
+ * exist yet, which `plugins.yml` asserts against on the release branch.
  *
  * The projection is one-directional and lossy on purpose. `mcpServers` and
  * `lspServers` live in the plugin manifest and are deliberately NOT copied
@@ -70,6 +83,47 @@ const HEADER = {
 const CATEGORY = "development";
 const STRICT = true;
 
+/**
+ * The repository every entry is fetched from.
+ *
+ * `git-subdir` sparse-clones one `path` at one `ref` (`--filter=tree:0`), so an
+ * entry names the whole fetch rather than a location inside whatever checkout
+ * Claude happens to have. That is the point: a `./plugins/<name>` source
+ * resolves against the marketplace root, which means it always served the
+ * default branch and there was no way to hold a plugin back from a release.
+ */
+const REPO_URL = "https://github.com/virajp/ai-plugins.git";
+
+/**
+ * The git tag one plugin release is pinned to.
+ *
+ * Namespaced by plugin name so each plugin releases on its own cadence — an
+ * entry's `ref` moves only when that plugin's version bumps, leaving the other
+ * six entries byte-identical, so `claude plugin update` sees a change for one
+ * plugin alone.
+ *
+ * The namespace is also what keeps these clear of the installer CLI's tags.
+ * GitHub's tag globs match any character but `/`, so a `v*` filter would match
+ * `vwf-v19.9.0` — which is why `release.yml` now filters `installer-v*` and
+ * every tag in this repo carries a prefix saying what it releases.
+ */
+function ref(plugin: Plugin): string {
+  const version = plugin.manifest.version;
+  if (typeof version !== "string" || version === "") {
+    // `checkManifest` already rejects this, so reaching it means the generator
+    // ran on an unchecked tree. Failing here rather than emitting a
+    // ref-less entry is deliberate: `git-subdir` treats a missing `ref` as the
+    // default branch, so the bad manifest would produce a *working* entry that
+    // silently tracks main — the exact accidental-resolution trap the version
+    // field already carries.
+    throw new Error(
+      `${plugin.dir}: plugin.json declares no version, so there is no tag to `
+        + `pin to. Run 'mise run plugins:check'.`,
+    );
+  }
+  return `${plugin.dir}-v${version}`;
+}
+
 export function buildManifest(plugins: readonly Plugin[]): string {
   return json({ ...HEADER, plugins: plugins.map(entry) });
 }
@@ -93,7 +147,12 @@ function entry(plugin: Plugin): Record<string, unknown> {
   }
   // The directory, not the manifest name — the path is what has to resolve.
   // `check.ts` asserts the two agree, so this is not a place to prefer one.
-  out["source"] = `./plugins/${plugin.dir}`;
+  out["source"] = {
+    source: "git-subdir",
+    url: REPO_URL,
+    path: `plugins/${plugin.dir}`,
+    ref: ref(plugin),
+  };
   out["strict"] = STRICT;
   if (Array.isArray(m.keywords) && m.keywords.length > 0) {
     out["tags"] = m.keywords;

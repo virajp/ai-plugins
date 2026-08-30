@@ -25,11 +25,12 @@ would break every documented invocation.
 **This CLI does three things**: installs plugins, wires graphify, and removes
 what the toolkit put on a machine. The plugin path (`install.ts`) is a **thin
 wrapper** — it drives `claude plugin marketplace add virajp/ai-plugins` +
-`claude plugin install`, served from this repo's `main`, and never edits
-Claude's settings itself. What stays deliberately cut is everything thicker than
-that: the copied payload, the adapters, the `requires:` gate, and any receipt
-for a plugin install — Claude's settings are the record, and `--uninstall` reads
-them live.
+`claude plugin install`, reading the manifest on this repo's `main` (which pins
+each plugin to its own `<name>-v<version>` tag), and never edits Claude's
+settings itself. What stays deliberately cut is everything thicker than that:
+the copied payload, the adapters, the `requires:` gate, and any receipt for a
+plugin install — Claude's settings are the record, and `--uninstall` reads them
+live.
 
 The status bar was once the fourth thing. It lives in `claude-status` now
 (`brew install virajp/tap/claude-status`), and that package is where anyone

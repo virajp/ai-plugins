@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#MISE description="Tag every plugin whose marketplace ref has no tag yet, and push"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--dry-run" help="report what would be tagged and pushed; change nothing"
+
+# Materializes the tags `.claude-plugin/marketplace.json` already names.
+#
+# Each entry's `source.ref` is DERIVED from that plugin's manifest version
+# (`<name>-v<version>`), so bumping a version is what declares a release — this
+# task only creates the tag that ref points at. A plugin whose version did not
+# move already has its tag and is skipped, which is what makes releases
+# per-plugin: shipping vwf leaves the other six entries byte-identical, so
+# `claude plugin update` sees a change for vwf alone.
+#
+# Ordering matters and is the reason this is a task rather than a paragraph in a
+# doc. The manifest on the release branch may name a tag that does not exist
+# yet — that is the normal state on `develop`, where unreleased work lives — and
+# a user whose Claude resolves such a ref gets a fetch failure. So the tag is
+# created and pushed only from the release branch, after the merge, once the
+# committed manifest is proven fresh.
+#
+# This does NOT touch package.json or the installer's tags. That release is
+# `mise run i:release`, whose tags are namespaced `installer-v*`.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+DRY_RUN="${usage_dry_run:-false}"
+RELEASE_BRANCH="main"
+
+# 1. A tag names a commit, so the tree must be clean — otherwise the tag points
+#    at content that is not what was tested.
+if [[ -n "$(git status --porcelain)" ]]; then
+  print_error "Working tree is not clean. Commit or stash your changes first."
+  exit 1
+fi
+
+# 2. Only from the release branch. Users read the marketplace manifest from the
+#    default branch, so a tag cut anywhere else would publish content that
+#    branch never carried — the branch model's whole point.
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
+  print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Merge to ${RELEASE_BRANCH} first — a plugin tag off it publishes content users' marketplace never lists."
+  exit 1
+fi
+
+# 3. The committed manifest must be what the plugin manifests generate. Without
+#    this the refs tagged below are the STALE ones, so a version bump would ship
+#    under the previous release's tag.
+mise run plugins:marketplace --check
+
+# 4. Every ref the manifest names, in entry order.
+mapfile -t REFS < <(node -p "
+  require('./.claude-plugin/marketplace.json')
+    .plugins.map(p => p.source.ref).join('\n')
+")
+
+# 5. Fetch tags so 'already exists' means the remote's answer, not this
+#    checkout's. A tag present locally but never pushed is still unreleased.
+git fetch --tags --quiet origin
+
+TO_TAG=()
+for ref in "${REFS[@]}"; do
+  if ! git rev-parse -q --verify "refs/tags/${ref}" >/dev/null; then
+    TO_TAG+=("${ref}")
+    continue
+  fi
+
+  # The tag exists. It must point HERE — a tag that resolves elsewhere means the
+  # version was reused for different content, and users who already resolved it
+  # would keep the old bundle forever. Re-pointing it is not this task's call.
+  tagged="$(git rev-list -n 1 "refs/tags/${ref}")"
+  if [[ "${tagged}" != "$(git rev-parse HEAD)" ]]; then
+    print_warn "${ref} already exists at ${tagged:0:8}, not HEAD — bump that plugin's version instead of reusing the tag."
+  fi
+done
+
+if [[ "${#TO_TAG[@]}" -eq 0 ]]; then
+  print_success "Every plugin ref already has its tag — nothing to release."
+  exit 0
+fi
+
+print_header "Releasing ${#TO_TAG[@]} plugin(s):"
+printf '  %s\n' "${TO_TAG[@]}"
+
+if [[ "${DRY_RUN}" == "true" ]]; then
+  print_warn "--dry-run — no tags created, nothing pushed."
+  exit 0
+fi
+
+# 6. Annotated tags, then one push. Pushed together so a partial release is not
+#    a state anyone has to reason about.
+for ref in "${TO_TAG[@]}"; do
+  git tag -a "${ref}" -m "${ref}"
+done
+
+print_header "Pushing ${#TO_TAG[@]} tag(s) ..."
+git push origin "${TO_TAG[@]}"
+
+print_success "Released: ${TO_TAG[*]}"
+print_normal "Users pick these up with 'claude plugin marketplace update virajp-plugins' then 'claude plugin update <name>'."

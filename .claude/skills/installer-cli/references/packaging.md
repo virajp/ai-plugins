@@ -85,6 +85,11 @@ already delivers.
 The plugins go the other way entirely:
 `claude plugin marketplace add virajp/ai-plugins` reads this repo's `main`
 directly. The committed-tree-validated-by-CI guarantee survives with a new
-channel — what users install is `main`, and `plugins.yml` validates `main` on
-every push. The residual risk is the window between a bad merge and the red
-build, which is the same risk any git-served marketplace carries.
+channel — the manifest users read is `main`, and `plugins.yml` validates `main`
+on every push.
+
+The bad-merge window that used to ride along with that is closed: each entry's
+`source` is a `git-subdir` pinned to a `<name>-v<version>` tag, so what a merge
+changes is the *pin*, and the content users get moves only when
+`mise run plugins:release` cuts the tag. Work can now land on `develop` and sit
+on `main` without reaching anyone.

@@ -1,9 +1,17 @@
 name: Release
 
 # Publishes @askviraj/ai-plugins to npm. Triggered two ways:
-#   1. a pushed version tag (v*)   — the normal manual release path
+#   1. a pushed `installer-v*` tag — the normal manual release path
 #   2. workflow_dispatch           — manual re-publish, and how deps-update.yml
 #                                    publishes its monthly release (`--ref <tag>`)
+#
+# The tag family is namespaced because this repo also tags plugin releases as
+# `<name>-v<version>`, one per plugin, which the marketplace manifest pins each
+# entry to. GitHub's tag globs match any character except `/`, so the former
+# `v*` filter matched `vwf-v19.9.0` and fired this workflow on every vwf
+# release — failing closed at the version check below, but failing every time.
+# Narrowing the filter is safe against the npm constraint: the Trusted Publisher
+# binds to this file's NAME, not to which tags reach it.
 # Auth is OIDC "trusted publishing" (no stored token) — npm verifies this repo +
 # workflow's GitHub identity and adds provenance automatically. npm allows only
 # ONE Trusted Publisher per package, and it validates the ENTRY-POINT workflow's
@@ -11,11 +19,12 @@ name: Release
 # is therefore unusable: when deps-update.yml called this workflow, npm saw
 # `deps-update.yml`, matched nothing, and failed with ENEEDAUTH. One-time setup:
 # on npmjs.com add this repo + `release.yml` as the package's Trusted Publisher.
-# To release manually: bump the version, then push a matching tag (e.g. v1.2.0).
+# To release manually: bump the version, then push a matching tag — or just run
+# `mise run i:release`, which does both.
 on:
   push:
     tags:
-      - "v*"
+      - "installer-v*"
   workflow_dispatch: {}
 
 # id-token: write is required for OIDC trusted publishing.
@@ -53,10 +62,13 @@ jobs:
       - name: Verify the tag matches package.json version
         if: github.ref_type == 'tag'
         run: |
-          tag="${GITHUB_REF_NAME#v}"
+          # Strip the whole namespace, not a bare `v`: `${...#v}` on
+          # `installer-v6.0.0` removes nothing (the tag starts with `i`), so the
+          # comparison would silently never match.
+          tag="${GITHUB_REF_NAME#installer-v}"
           pkg="$(node -p "require('./package.json').version")"
           if [ "$tag" != "$pkg" ]; then
-            echo "::error::tag v$tag does not match package.json version $pkg"
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg"
             exit 1
           fi
           echo "Releasing @askviraj/ai-plugins@$pkg"

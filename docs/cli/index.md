@@ -49,8 +49,10 @@ claude plugin marketplace update virajp-plugins
 claude plugin update vwf
 ```
 
-The marketplace is served from this repo's `main`, and every push to `main` is
-validated in CI, so there is no separately published artifact to lag behind.
+The manifest is served from this repo's `main`, and every push to `main` is
+validated in CI; each plugin's content comes from the `<name>-v<version>` tag
+that manifest pins it to. So there is no separately published artifact to lag
+behind, and a merge to `main` is not itself a release.
 
 There is **no `--upgrade` flag**, and its absence is deliberate. It only ever
 replayed a receipt to do what re-running the install already did — and plugin

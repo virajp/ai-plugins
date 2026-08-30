@@ -56,9 +56,44 @@ describe("the generated marketplace manifest", () => {
     expect(parsed["repository"]).toBeUndefined();
   });
 
-  it("points every source at the plugin directory", () => {
+  it("fetches every plugin by git-subdir at a per-plugin tag", () => {
+    // Not `./plugins/<name>`: a relative source resolves against the
+    // marketplace root, so it always served the default branch and nothing
+    // could be held back from a release. The pinned ref is what makes
+    // releasing an act rather than a merge.
     for (const entry of parsed.plugins) {
-      expect(entry["source"]).toBe(`./plugins/${entry["name"] as string}`);
+      const name = entry["name"] as string;
+      expect(entry["source"], name).toEqual({
+        source: "git-subdir",
+        url: "https://github.com/virajp/ai-plugins.git",
+        path: `plugins/${name}`,
+        ref: expect.any(String) as unknown,
+      });
+    }
+  });
+
+  it("derives each ref from the manifest version, so the generator stays pure", () => {
+    // The whole reason no `sha` is emitted: resolving a tag to a commit would
+    // need git, and `--check` has to work offline and in a fresh clone.
+    for (const plugin of plugins) {
+      const entry = parsed.plugins.find(e => e["name"] === plugin.dir);
+      const source = entry?.["source"] as { ref?: string; };
+      expect(source.ref, plugin.dir).toBe(
+        `${plugin.dir}-v${plugin.manifest.version as string}`,
+      );
+    }
+  });
+
+  it("gives every ref a namespace, so none can match the installer's tags", () => {
+    // GitHub tag globs match any character but `/`, so `release.yml`'s old
+    // `v*` filter matched `vwf-v19.9.0` and fired the npm publish on a plugin
+    // release. Both tag families are prefixed now; this is what keeps them so.
+    for (const entry of parsed.plugins) {
+      const ref = (entry["source"] as { ref: string; }).ref;
+      expect(ref, entry["name"] as string).toMatch(
+        /^[a-z][a-z0-9-]*-v\d+\.\d+\.\d+/,
+      );
+      expect(ref.startsWith("installer-v"), ref).toBe(false);
     }
   });
 
