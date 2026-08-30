@@ -50,6 +50,20 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
+      # `main` is merge-only: work lands on `develop` and reaches `main` by a
+      # merge, which is what makes a release a deliberate act rather than a
+      # push. This is the local half of that; the GitHub `protected-branches`
+      # ruleset is the remote half, and blocks only force-push and deletion.
+      #
+      # It does NOT block merges. Git runs `pre-merge-commit` for a merge that
+      # commits on its own, and only `pre-commit` (this stage) for an ordinary
+      # commit — so `git merge develop` on `main` passes. A merge that stops on
+      # a CONFLICT is the exception: resolving it ends in a real `git commit`,
+      # which this blocks. Finish that merge from `develop` instead.
+      - id: no-commit-to-branch
+        name: No direct commits to main
+        args: [ "--branch", "main" ]
+        stages: [ pre-commit ]
       - id: check-shebang-scripts-are-executable
         name: Check that scripts with shebangs are executable
         stages: [ pre-commit ]

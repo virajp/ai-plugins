@@ -59,22 +59,42 @@ a tag"*, the merge landed and the tags did not. Run `plugins:release`.
 Releasing via CI is preferred over the local `i:publish`, so every version keeps
 the strongest npm trust level (trusted publisher).
 
-### 1. Cut the tag
+### 1. Bump on develop, merge to main
+
+`main` is merge-only — the `no-commit-to-branch` hook blocks a commit there — so
+`i:release` neither bumps nor commits. It is the same shape as
+`plugins:release`: tag what has already landed.
 
 ```sh
-mise run i:release              # patch; --minor / --major to choose the bump
+# on develop
+mise run i:version              # patch; --minor / --major to choose the bump
+git add package.json && mise x -- git commit -m "ops: bump installer to X.Y.Z"
+# merge develop → main
 ```
 
-It requires a clean tree, runs `i:test`, bumps `package.json`, commits
-`ops: release installer-vX.Y.Z`, creates the annotated tag, then — interactively
-— pushes the commit and tag and watches the `release.yml` run with
+### 2. Cut the tag
+
+```sh
+# on main
+mise run i:release
+```
+
+It requires a clean tree **and `main`**, refuses if `installer-vX.Y.Z` already
+exists (which means `package.json` was never bumped for this release), runs
+`i:test`, creates the annotated tag, then — interactively — pushes **`main`
+first and the tag second** and watches the `release.yml` run with
 `gh run watch --exit-status`, so the task only succeeds if the publish pipeline
 does. It needs `gh` installed and authenticated.
 
-`--ci` stops after the tag, with no push and no watch. `deps-update.yml` passes
-it and does its own push and dispatch. Do not pass it by hand.
+The push order is load-bearing: `release.yml` checks the tagged commit is
+reachable from `origin/main`, so a tag arriving before the branch fails that
+gate. `plugins:release` pushes tags alone because no plugin tag is checked for
+reachability.
 
-### 2. Cut the GitHub Release
+`--ci` stops after the tag, with no push and no watch. `deps-update.yml` passes
+it, having done its own bump, commit and merge first. Do not pass it by hand.
+
+### 3. Cut the GitHub Release
 
 Every `installer-vX.Y.Z` tag carries one — the tag is the npm-publish trigger,
 the Release is the human-readable record beside it. The mapping is **1:1**, so a

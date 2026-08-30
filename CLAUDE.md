@@ -901,6 +901,21 @@ environment-specific tools in the matching env file.
 `claude plugin marketplace add virajp/ai-plugins` against the repo's **default
 branch**, so `main` stays the default and PRs target `develop`.
 
+**`main` is merge-only, enforced in two places.** Locally, pre-commit's
+`no-commit-to-branch` blocks a commit on `main` — it does *not* block merges,
+since git runs `pre-merge-commit` for those and only that hook type is
+uninstalled here; the exception is a merge that stops on a **conflict**, whose
+resolution ends in a real commit. Remotely, the `protected-branches` ruleset
+blocks force-push and deletion on both branches, and `release-tags` does the
+same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
+`plugins:release`, `i:release` and `deps-update.yml` all still push directly.
+
+That is why **neither release task commits**: `i:release` and `plugins:release`
+both tag what has already landed on `main`, and the version bump is an ordinary
+`develop` commit (`i:version` for the installer, the plugin manifest by hand). A
+release task that commits has to be trusted to commit the right thing; one that
+only tags can be checked against what is already reviewed.
+
 The branch alone would not hold anything back, though, because a merge to `main`
 is what publishes. What decouples the two is that **every plugin is pinned to
 its own tag** in the marketplace manifest, so shipping is a deliberate act:
@@ -975,14 +990,15 @@ loads the working tree for that session, no install and no cache.
   The local `i:publish` task mirrors the gates + `npm publish`.
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
   (bounded by the cooldown below); if anything changed, `osv-scanner` gates on
-  any known-vulnerable package, then it cuts a **patch release**
-  (`mise run i:release --ci` → tests + bump + commit + tag, no push/watch) and
-  pushes the refresh + bump + tag to `main`. It then **delegates the npm publish
-  by dispatching `release.yml` on the new tag**
-  (`gh workflow run release.yml
-  --ref <tag>`, using the built-in
-  `GITHUB_TOKEN` and the job's `actions: write` grant) rather than publishing
-  inline.
+  any known-vulnerable package, then it cuts a **patch release** — committing
+  the refresh and the `i:version` bump to **`develop`**, merging to `main`, then
+  tagging with `mise run i:release --ci` (tests + tag, no push/watch) and
+  pushing. It takes the same merge-only route a human does, because `i:release`
+  no longer bumps or commits. It then **delegates the npm publish by dispatching
+  `release.yml` on the new tag** (`gh workflow run release.yml
+  --ref <tag>`,
+  using the built-in `GITHUB_TOKEN` and the job's `actions: write` grant) rather
+  than publishing inline.
 
   **Why a dispatch and not `workflow_call`.** npm allows only **one Trusted
   Publisher per package**, and it validates the **entry-point** workflow's
@@ -1021,10 +1037,13 @@ Two rituals now, for the two things this repo ships.
 tag *is* the release, and users move on
 `claude plugin marketplace update virajp-plugins`.
 
-**The installer**: `mise run i:release` (`--minor`/`--major` to choose the
-bump), then a GitHub Release for the tag — every `installer-vX.Y.Z` tag carries
-one, so a missing Release means a missed step. Prefer releasing via CI over the
-local `i:publish`, so every version keeps the strongest npm trust level.
+**The installer**: `mise run i:version` on `develop` (`--minor`/`--major` to
+choose the bump), commit, merge to `main`, then `mise run i:release` there — it
+tags, pushes `main` before the tag (`release.yml` checks reachability), and
+watches the publish. Then a GitHub Release for the tag: every `installer-vX.Y.Z`
+tag carries one, so a missing Release means a missed step. Prefer releasing via
+CI over the local `i:publish`, so every version keeps the strongest npm trust
+level.
 
 **Ask the user before running either.**
 

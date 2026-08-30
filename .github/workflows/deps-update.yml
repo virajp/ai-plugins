@@ -2,8 +2,9 @@ name: Monthly dependency update & release
 
 # Once a month: refresh pnpm dependencies (bounded by the minimumReleaseAge
 # cooldown in pnpm-workspace.yaml), security-scan them, cut a patch release, and
-# publish to npm. The refreshed lockfile + version bump are committed to main and
-# tagged. If nothing changed, it does nothing.
+# publish to npm. The refreshed lockfile and version bump are committed to
+# `develop` and merged to `main`, which is then tagged. If nothing changed, it
+# does nothing.
 #
 # Publishing is delegated to release.yml by DISPATCHING it (not an inline
 # `npm publish`, and not `workflow_call`): npm allows only ONE Trusted Publisher
@@ -34,7 +35,14 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      # `develop`, not the default branch: main is merge-only, so this workflow
+      # takes the same route a human does — land on develop, merge to main.
+      # fetch-depth: 0 because that merge needs main's history; a shallow clone
+      # cannot fast-forward it.
       - uses: actions/checkout@v7
+        with:
+          ref: develop
+          fetch-depth: 0
 
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
@@ -60,20 +68,41 @@ jobs:
         if: steps.changed.outputs.changed == 'true'
         run: osv-scanner scan source --lockfile=pnpm-lock.yaml
 
-      - name: Cut a patch release (tests, version bump, commit, tag)
+      # The refresh and the bump are ordinary develop commits; main receives them
+      # by merge. `i:release` no longer bumps or commits — it tags what main
+      # already carries — so the bump is `i:version` here, exactly as a human
+      # would run it.
+      - name: Cut a patch release (commit on develop, merge to main, tag)
         id: release
         if: steps.changed.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add pnpm-lock.yaml package.json
           mise x -- git commit -m "ops(deps): monthly dependency refresh"
-          mise run i:release --ci # clean tree now → i:test, patch bump, commit, tag (no push/watch)
+
+          mise run i:version
+          version="$(node -p "require('./package.json').version")"
+          git add package.json
+          mise x -- git commit -m "ops: bump installer to ${version}"
+          git push origin develop
+
+          # Merge rather than force main to develop: if main ever carries a
+          # commit develop does not, a fast-forward push would fail here while a
+          # merge resolves it. A conflict fails the run, which is correct.
+          git fetch origin main
+          git checkout -B main origin/main
+          git merge --no-edit develop
+          git push origin main
+
+          # Tag only — i:release verifies the branch, runs i:test and stops
+          # before pushing, because this job owns the push and the dispatch.
+          mise run i:release --ci
           # Must match the tag i:release just created, and release.yml's
           # `installer-v*` filter. Plugin releases use `<name>-v<version>` and
           # never come through here.
-          tag="installer-v$(node -p "require('./package.json').version")"
-          git push origin HEAD:main
+          tag="installer-v${version}"
           git push origin "$tag"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
