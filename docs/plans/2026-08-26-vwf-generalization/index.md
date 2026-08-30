@@ -4,7 +4,7 @@
 Stage 1 are walked with the user.**
 
 This is the fresh plan the WS1 section of
-[2026-08-24-vwf-rewire-and-onboarding.md](../2026-08-24-vwf-rewire-and-onboarding.md)
+[2026-08-24-vwf-rewire-and-onboarding.md](../archived/2026-08-24-vwf-rewire-and-onboarding.md)
 said to write. That document is **evidence, not instructions** — it says so
 itself — so this plan restates the gaps against the tree as it stands today and
 corrects two premises that did not survive verification.
