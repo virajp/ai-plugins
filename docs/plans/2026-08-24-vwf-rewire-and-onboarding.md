@@ -202,9 +202,10 @@ Both predate this plan and neither is its business:
 
 - `docs/plans/2026-08-23-statusline-cleanup/` and old WS1–WS3 are archived via
   `/vwf:archive` (user-invoked; it is not model-invocable).
-- `docs/plans/plugin-support/index.md` is corrected or retired — it currently
-  reads "WS4 in progress" and says the marketplace is built from "14 plugin
-  manifests" where there are 15.
+- `docs/plans/plugin-support/index.md` is corrected or retired — DONE
+  2026-08-30: retired to `docs/plans/archived/plugin-support/`. It read "WS4 in
+  progress" and claimed the marketplace was built from "14 plugin manifests";
+  there are now 7.
 
 ## Definition of done
 

@@ -1,10 +1,12 @@
 # Plan: the merge waves, re-derived from stackgen's charter
 
-**Status: draft, 2026-08-28. Not approved. Nothing moves.** The residue question
-the first draft was blocked on is **answered** (see *Decided 2026-08-28*); the
-waves themselves still need their individual go-aheads. This supersedes Phase 5
-of [2026-08-19-stackgen.md](./2026-08-19-stackgen.md), whose Wave A does not
-survive the charter that plan's own post-execution revision produced.
+**Status: in progress, 2026-08-30. Waves A–D have landed** — 23 packs and 25
+bundles across nine kinds, plus today's `secrets-manager` category and the
+dissolution of the `cicd` plugin, the first whole plugin retired rather than a
+skill. The remaining waves — `devtools`, `typescript`, `flutter`, `gcp` and
+`cloudflare` — still need their individual go-aheads. This supersedes Phase 5 of
+[2026-08-19-stackgen.md](./archived/2026-08-19-stackgen.md), whose Wave A does
+not survive the charter that plan's own post-execution revision produced.
 
 ## Why the old Phase 5 fails
 

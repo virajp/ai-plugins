@@ -29,7 +29,7 @@ Two things are explicitly **out**:
 
 - **Authoring backing templates — at all.** Hardened from "beyond the minimum"
   to a flat prohibition on 2026-08-26, when the boundary against
-  [the stackgen plan](../2026-08-19-stackgen.md) was settled
+  [the stackgen plan](../archived/2026-08-19-stackgen.md) was settled
   (`docs/memory/decisions/2026-08-26-generalization-vs-stackgen-wave-c-boundary.md`).
   A template written here is a file **Wave C** would convert to a pack, and
   "author the minimum" is what a gate wanting a pin talks you out of mid-sweep.
