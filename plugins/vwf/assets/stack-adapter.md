@@ -52,7 +52,7 @@ them is the mistake this section exists to prevent.
 
 ```yaml
 # .config/vwf.yaml
-stacks: [ typescript, gcp, cloudflare, datastore ] # ADAPTER PLUGIN NAMES, verbatim
+stacks: [ stackgen, gcp, cloudflare ] # ADAPTER PLUGIN NAMES, verbatim
 ```
 
 An ordered list of plugin names. Every name must be an installed plugin —
