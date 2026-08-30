@@ -47,8 +47,9 @@ Grouping the 53 **by shape** rather than by destination is what exposed the real
 hole: 22 stack-adapter pairs (retired, superseded by stackgen's own two), 25
 doctrine skills (become packs — the easy bulk), and **6 runtime seams** that
 fail stackgen's charter test, because nothing about them materializes into a
-repo. Plus five manifest-only machinery items. See
-[the re-derived waves](../../plans/2026-08-28-merge-waves.md).
+repo. Plus five manifest-only machinery items. Recorded in the 2026-08-28
+re-plan, which was deleted 2026-08-30 once Waves A–D had landed and the
+remaining retirements were called off — git holds its text.
 
 The residue looked like it broke the two-plugin north star: four LSP
 declarations, the `claude-design` MCP server, and the design-import seam that
