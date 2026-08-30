@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+#MISE description="Configure the Flutter SDK and fetch packages"
+#MISE hide=true
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Fills the `setup:deps:install` slot.
+#
+# Flutter is the case where SDK configuration and package installation are one
+# step rather than two: `flutter pub get` resolves against whichever platforms
+# the SDK has enabled, so configuring after fetching would leave the fetch
+# describing a different app than the one that builds. The old standalone
+# `setup:flutter` was a separate task for something that could never usefully
+# run apart from this one.
+
+print_header "Configuring Flutter ..."
+flutter config --disable-analytics
+flutter config --enable-web
+flutter config --enable-ios
+flutter config --enable-android
+dart --disable-analytics
+
+if [ "$MISE_ENV" = "dev" ]; then
+  print_header "Accepting Android licenses ..."
+  yes | flutter doctor --android-licenses || true
+fi
+
+print_header "Fetching Flutter packages ..."
+flutter pub get

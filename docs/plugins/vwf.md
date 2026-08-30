@@ -18,7 +18,7 @@ product's whole walk through the workflow, the journey-shaped guides are in
 # Once
 claude plugin marketplace add virajp/ai-plugins
 
-# Installs vwf and its one dependency, devtools
+# Installs vwf and its two dependencies, devtools and stackgen
 claude plugin install vwf@virajp-plugins
 ```
 
@@ -78,11 +78,18 @@ Nothing else about memory needs installing. The two mempalace skills are
 auto-save hooks are reimplemented here, so memory arrives with the plugin rather
 than depending on anything being reachable at install time.
 
-`vwf` also depends on one plugin — `devtools` — resolved from the same
-`virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
-when you enable `vwf` (requires Claude Code ≥ 2.1.143). `devtools` is a
-dependency rather than an optional extra because `/vwf:setup` orchestrates
-`/devtools:scaffold`, and a skill vwf cannot see fails silently.
+`vwf` also depends on two plugins — `devtools` and `stackgen` — resolved from
+the same `virajp-plugins` marketplace. Claude Code **auto-installs and
+auto-enables** them when you enable `vwf` (requires Claude Code ≥ 2.1.143).
+
+`devtools` is a dependency rather than an optional extra because `/vwf:setup`
+orchestrates `/devtools:scaffold`, and a skill vwf cannot see fails silently.
+
+`stackgen` is one because vwf's stack menu is the union of what the installed
+stack plugins declare, and the four axes carry no *other (describe)* option — so
+with no stack plugin present, `/vwf:architecture` asks a question you cannot
+answer. Having it installed costs nothing if you are not ready to choose a
+stack: stackgen acts only when an axis is pinned.
 
 The Markdown/documentation skills and the Context7 docs server used to be two
 more dependencies. They are **part of `vwf` now**: `documentation-standards` and
@@ -1825,8 +1832,10 @@ queries that library's documentation when a question is about a specific library
   plugin list.
 - [mempalace](./mempalace.md) — the memory layer behind `/vwf:handoff` and
   `/vwf:recall`: the daemon, the auto-save hooks, and what was vendored.
-- [stackgen](./stackgen.md) — ships the `design-tool` packs `/vwf:screens` and
-  `/vwf:design-system` import through, materialized into the repo's `.claude/`.
+- [stackgen](./stackgen.md) — a vwf dependency: the stack plugin that answers
+  `/vwf:architecture`'s menu, and the source of the `design-tool` packs
+  `/vwf:screens` and `/vwf:design-system` import through, materialized into the
+  repo's `.claude/`.
 - [devtools](./devtools.md) — a vwf dependency; `/vwf:setup` orchestrates
   `/devtools:scaffold`.
 - [cicd](./cicd.md) — implements the delivery-pipeline contract vwf states.

@@ -6,7 +6,7 @@
 #USAGE flag "--fix" help="apply fixes"
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 cd "${MISE_PROJECT_ROOT}"
 

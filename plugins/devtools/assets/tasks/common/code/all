@@ -6,7 +6,7 @@
 #USAGE flag "--fix" help="apply fixes"
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 [[ "${usage_debug:-false}" == "true" ]] && DEBUG_FLAG="--debug" || DEBUG_FLAG=""
 [[ "${usage_fix:-false}" == "true" ]] && FIX_FLAG="--fix" || FIX_FLAG=""

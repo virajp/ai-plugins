@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-#MISE description="Security scan (grype + gitleaks)"
+
+#MISE description="Security scan the repo"
+#MISE dir="{{ config_root }}"
+#PLACEHOLDER
 
 #USAGE flag "--debug" help="emit debug logs"
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
 
-[[ "${usage_debug:-false}" == "true" ]] && GRYPE_FLAGS="-vv" || GRYPE_FLAGS=""
-[[ "${usage_debug:-false}" == "true" ]] && LEAK_FLAGS="--verbose" || LEAK_FLAGS=""
+# Scanning is mandatory; the scanners are a choice. This file used to hardcode
+# a dependency scanner and a secret scanner, which meant every repo scaffolded
+# from the template inherited two tools it never picked — and a repo that picked
+# differently had to delete the task rather than fill it.
+#
+# The slot is the contract: before a change lands, this repo's dependencies are
+# checked for known vulnerabilities and its tree for committed secrets. Which
+# scanners do that comes from the pinned repo-gate components.
 
-# Use repo configs when present, else tool defaults
-GRYPE_CFG=""; [[ -f "${MISE_PROJECT_ROOT}/.config/grype.yaml" ]]   && GRYPE_CFG="--config ${MISE_PROJECT_ROOT}/.config/grype.yaml"
-LEAK_CFG="";  [[ -f "${MISE_PROJECT_ROOT}/.config/gitleaks.toml" ]] && LEAK_CFG="--config ${MISE_PROJECT_ROOT}/.config/gitleaks.toml"
-
-print_header "Scanning dependencies with grype ..."
-grype . --name "$(basename "${MISE_PROJECT_ROOT}")" ${GRYPE_CFG} ${GRYPE_FLAGS}
-
-print_header "Scanning for secrets with gitleaks ..."
-gitleaks dir "${PWD}" ${LEAK_CFG} --redact 50 ${LEAK_FLAGS}
-
-print_header "Scanning done"
+placeholder_notice "code:sec" "no security scanners are pinned for this repo"

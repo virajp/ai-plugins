@@ -6,7 +6,7 @@ description: Opinionated mise configuration — the .config/ three-file split
   (mise.toml / mise.dev.toml / mise.ci.toml) selected by MISE_ENV, the shared
   settings block, runtime-vs-dev-vs-ci tool placement, the env-value split,
   the CI node-gpg workaround, and the mandatory file-based task library
-  (init,_scripts/_helpers, code/*, setup/*). Auto-applies when editing any
+  (init, _scripts/helpers, code/*, setup/*, worktree/init). Auto-applies when editing any
   mise config or task file.
 license: MIT
 user-invocable: false
@@ -104,4 +104,4 @@ Read the reference for the full spec before writing or editing a task file:
 
 | Topic                                      | When to read                                                                                               |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| [Task library](references/task-library.md) | Task-file anatomy, the `_scripts/_helpers` shared library, and the per-stack `code/*` + `setup/*` task sets |
+| [Task library](references/task-library.md) | Task-file anatomy, the `_scripts/helpers` shared library, and the per-stack `code/*` + `setup/*` task sets |

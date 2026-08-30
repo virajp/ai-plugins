@@ -74,7 +74,7 @@ delegating read-heavy work buys, and the rest of the fit questions — is in
 ## Install
 
 One command, which registers the marketplace and installs the workflow —
-`devtools`, its one dependency, comes with it:
+`devtools` and `stackgen`, its two dependencies, come with it:
 
 ```sh
 pnpx @askviraj/ai-plugins --all
@@ -163,8 +163,8 @@ Paste one of these, adjusting the plugin name:
   (`disable-model-invocation: true`). If your tool has no equivalent, that
   restriction is lost — the skill still works, but it may fire when you did not
   ask.
-- **Per-plugin dependencies are yours to follow.** `vwf` depends on `devtools`;
-  nothing outside Claude Code will resolve that for you.
+- **Per-plugin dependencies are yours to follow.** `vwf` depends on `devtools`
+  and `stackgen`; nothing outside Claude Code will resolve that for you.
 
 ## The plugins
 
@@ -252,8 +252,11 @@ explicit, diffed decision — never a silent overwrite, and never a
 bundles across seven kinds, and Wave D adds the eighth — `deploy-target`, whose
 `container-image` pack is the curated answer the provider-neutral container
 bundle used to generate. For what no pack covers, the curated plugins above
-remain the covered-stack path, and stackgen's value is the uncovered tail.
-`stackgen@virajp-plugins`
+remain the covered-stack path, and stackgen's value is the uncovered tail. A
+`vwf` dependency, because vwf's stack menu is the union of what the installed
+stack plugins offer — with none present it comes back empty, and the axes carry
+no free-text escape. Having it installed commits you to nothing; it acts only
+once an axis is pinned. `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
@@ -319,7 +322,7 @@ machine.
 Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
-# Install the default set (vwf, plus devtools as its dependency), and wire graphify
+# Install the default set (vwf, plus devtools and stackgen as its dependencies), and wire graphify
 pnpx @askviraj/ai-plugins --all
 
 # See exactly what a run would do, without writing anything

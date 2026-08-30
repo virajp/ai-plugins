@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+#MISE description="List git worktrees across this repo and every submodule"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# git only, so it belongs to every repo whatever the stack. It exists because
+# the worktree discipline makes it easy to accumulate branches you have stopped
+# thinking about — this is the one command that shows all of them at once,
+# including the ones inside submodules, which `git worktree list` will not.
+
+# Ahead/behind against the repo's own default branch, read from origin/HEAD.
+default_branch() {
+  local ref
+  ref="$(git -C "$1" symbolic-ref -q refs/remotes/origin/HEAD 2>/dev/null || true)"
+  if [ -n "$ref" ]; then
+    echo "${ref##*/}"
+  else
+    echo "main"
+  fi
+}
+
+report() {
+  local repo="$1" label="$2"
+  local base worktrees
+  base="$(default_branch "$repo")"
+
+  worktrees="$(git -C "$repo" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2}')"
+  [ -n "$worktrees" ] || return 0
+
+  print_header "${label}  (base: ${base})"
+
+  while read -r wt; do
+    [ -n "$wt" ] || continue
+    local branch counts ahead behind
+    branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+
+    if git -C "$wt" rev-parse --verify --quiet "origin/${base}" >/dev/null 2>&1; then
+      counts="$(git -C "$wt" rev-list --left-right --count "origin/${base}...HEAD" 2>/dev/null || echo '0	0')"
+      behind="$(echo "$counts" | awk '{print $1}')"
+      ahead="$(echo "$counts" | awk '{print $2}')"
+      print_yellow "  ${branch}  +${ahead}/-${behind}  ${wt}"
+    else
+      print_yellow "  ${branch}  (no origin/${base})  ${wt}"
+    fi
+  done <<< "$worktrees"
+
+  print_newline
+}
+
+report "${MISE_PROJECT_ROOT}" "$(basename "${MISE_PROJECT_ROOT}")"
+
+while read -r submodule; do
+  [ -n "$submodule" ] || continue
+  report "${MISE_PROJECT_ROOT}/${submodule}" "${submodule}"
+done < <(git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true)

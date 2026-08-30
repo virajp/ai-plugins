@@ -2,8 +2,8 @@
 name: scaffold
 description: Scaffold the mise three-file split (mise.toml / mise.dev.toml /
   mise.ci.toml)
-  plus the mandatory task library (init, _scripts/_helpers, code/*, setup/*)
-  into a repo's .config/, detecting the language runtime.
+  plus the mandatory task library (init, _scripts/helpers, code/*, setup/*,
+  worktree/init) into a repo's .config/, detecting the language runtime.
 argument-hint: "[target-dir]"
 model: sonnet
 effort: high
@@ -56,15 +56,27 @@ that needs it.
 ## 3. Copy the mandatory task library
 
 Don't hand-write task files — **copy the shipped templates** from this plugin's
-`assets/tasks/`. They lay down `_scripts/_helpers`,
-`code/{format,lint,sec,all,
-precommit,git-config}`, and
-`setup/{all,mise,precommit,…}` already wired to the `#MISE`/`#USAGE` +
-`_helpers` contract. The layout is **common + one stack overlay**: `common/` is
-identical everywhere (`_helpers`, the `code/*` quality gates, `setup/mise`,
-`setup/precommit`); `node/`, `flutter/`, `python/` hold the stack-divergent
-`code/format`, `code/lint`, the install sub-tasks, **and `setup/all`** — the
-entrypoint that names those install tasks directly.
+`assets/tasks/`. They lay down `_scripts/{helpers,placeholder}`,
+`code/{format,lint,sec,all,precommit,git-config,worktrees}`,
+`setup/{all,ai,mise,precommit,secrets,deps/*}` and `worktree/init`, already
+wired to the `#MISE`/`#USAGE` + `helpers` contract.
+
+The layout is **common + one stack overlay**. `common/` is identical everywhere
+and holds the whole contract — including `setup/all`, the entrypoint, which
+names **no** stack tool: it calls `setup:deps:all`, whose one required slot is
+`setup:deps:install`. `node/`, `flutter/` and `python/` hold the stack-divergent
+`code/format`, `code/lint`, and their own `setup/deps/*` — `install` always,
+plus whichever of `upgrade` / `outdated` / `audit` / `cleanup` that package
+manager actually has.
+
+**Some of `common/` ships unfilled.** `code/lint`, `code/sec`, `setup/secrets`
+and `setup/deps/install` are **slots**: the task name is the contract, the
+mechanism comes from whichever stack the repo pins. Each carries a
+`#PLACEHOLDER` marker,
+sources `_scripts/placeholder`, prints what is unconfigured across the whole
+repo, and **exits 0** — so `code:all` and `setup:all` run end to end in a repo
+that has chosen nothing yet. A slot stops being one by being overwritten, never
+by being edited in place.
 
 Set `STACK` to the runtime detected in step 1 (`node` | `flutter` | `python`),
 then:
@@ -83,14 +95,17 @@ Then adapt only what the detection in step 1 found:
 
 - **TS monorepo** — uncomment the `code:check` line in `common/code/all` so the
   aggregator runs a typecheck (e.g. `turbo check`) before format/lint/sec.
-- **Node linter** — the shipped `node/code/lint` and `node/setup/all` run
+- **Node linter** — the shipped `node/code/lint` and `node/setup/deps/install` run
   `pnpm dlx @askviraj/linter`, the author's personal default. Flag this to the
   user and offer to swap in the repo's own linter (e.g. `eslint`, `biome`) if
   one is already configured.
-- **Prerequisite configs** — the tasks expect `dprint.json`,
-  `.config/pre-commit-config.yaml`, and (optionally) `.config/grype.yaml` /
-  `.config/gitleaks.toml` at the repo root. `code:sec` already no-ops the
-  `--config` flag when those files are absent; note any the repo still needs.
+- **Prerequisite configs** — the tasks expect `dprint.json` and
+  `.config/pre-commit-config.yaml` at the repo root. `common/code/format`
+  already no-ops when `dprint.json` is absent; note any the repo still needs.
+- **Do not fill a slot by hand.** `code/lint`, `code/sec`, `setup/secrets` and
+  `setup/deps/install` stay as shipped unless the overlay replaced them. A repo that
+  has picked no stack is *supposed* to see the placeholder output; writing a
+  tool into it here is the guess the slot exists to prevent.
 - Leave the `[ "$MISE_ENV" != "dev" ]` guards intact — they keep local-only side
   effects (emulators, docker) out of CI.
 

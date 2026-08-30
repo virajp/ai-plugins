@@ -187,17 +187,40 @@ Every repo ships the same mandatory set. The contract — helpers,
 `#MISE`/`#USAGE` headers, flags — is identical across stacks; only the commands
 inside `code/*` and `setup/*` change with the tech stack.
 
-- **`code/*` — quality gates.** `code/format`, `code/lint`, `code/sec` (grype +
-  gitleaks), `code/precommit`, `code/git-config`, and the `code/all` aggregator
-  (`format` → `lint` → `sec`). `code:all` is the one-command gate; `precommit`
-  and `git-config` are wired into the pre-commit hooks and `setup`, not into
-  `code:all`. `code:sec` (and so `code:all`) invokes grype and gitleaks, which
-  live in `mise.dev.toml` — run it under the dev toolchain (`MISE_ENV=dev`).
+- **`code/*` — quality gates.** `code/format`, `code/lint`, `code/sec`,
+  `code/precommit`, `code/git-config`, `code/worktrees`, and the `code/all`
+  aggregator (`format` → `lint` → `sec`). `code:all` is the one-command gate;
+  `precommit` and `git-config` are wired into the pre-commit hooks and `setup`,
+  not into `code:all`. A stack's `code:sec` fill typically needs scanners from
+  `mise.dev.toml` — run it under the dev toolchain (`MISE_ENV=dev`).
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
-  clone and to re-sync. It directly invokes every setup sub-task (`setup:mise`,
-  the stack's install steps, `setup:precommit`) and stays idempotent. `--clean`
-  wipes deps and caches first.
-- **`_scripts/_helpers`.** The `_scripts/` directory is underscore-prefixed, so
+  clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
+  `setup:deps:all`, `setup:external:update` (only if that exists),
+  `setup:precommit` and `setup:ai` in order, and stays idempotent. `--clean`
+  wipes deps and caches first; `--all` recurses into every git submodule. Alias
+  it as `setup` (and `setup-all` where there are submodules).
+- **`setup/deps/*` — the package manager, and only that.** `install` (the one
+  required slot — install from the lockfile) plus whichever of `upgrade`,
+  `outdated`, `audit` and `cleanup` that manager actually has; `setup:deps:all`
+  runs `install` and probes for the rest. **The task path carries no tool name**
+  — `setup:pnpm:*`, `setup:uv:*` and `setup:app:*` are gone, so the contract
+  reads the same on every stack.
+- **`setup/external/*` — services, and optional.** Emulators, containers, local
+  queues, under `update` / `pull` / `check` / `start` / `stop` / `restart`. A
+  repo that runs against none has **no such folder** — not a placeholder, just
+  absent — and `setup:all` probes by name so that absence is silent. Only
+  `update` is wired into setup: it pulls and builds, and starts nothing.
+- **`worktree/init`.** The lighter sibling of `setup:all` for a fresh worktree —
+  submodules, mise, `setup:deps:install`. vwf's git-workflow probes for it by
+  name before falling back to `setup:all`.
+- **Four tasks ship as slots.** `code/lint`, `code/sec`, `setup/secrets` and
+  `setup/deps/install` carry a `#PLACEHOLDER` marker: the task name is the
+  contract, the mechanism comes from whichever stack the repo pins. Running one
+  prints every unconfigured task in the repo and **exits 0**, so `code:all` and
+  `setup:all` work end to end before any stack is chosen. `code/format` is the
+  exception that has a real default — dprint over the repo's markdown — because
+  every repo has markdown from the first commit.
+- **`_scripts/helpers`.** The `_scripts/` directory is underscore-prefixed, so
   mise treats it as **not a task**. It holds the shared shell library (colors
   plus `print_header` / `print_warn` / `print_error` / `line_sep`) that every
   task sources as its first real line for uniform output.
@@ -229,11 +252,15 @@ author's personal default. Scaffold flags this and offers to swap in the repo's
 own linter (e.g. `eslint`, `biome`) instead.
 
 The templates live as a **common base plus one stack overlay**. `common/` is
-identical everywhere — `_scripts/_helpers`, the `code/*` quality gates,
-`setup/mise`, and `setup/precommit`. The `node/`, `flutter/`, or `python/`
-overlay supplies the stack-divergent `code/format`, `code/lint`, the install
-sub-tasks, and `setup/all` (the entrypoint that names those install tasks). The
-overlay is copied on top of `common/`, merging into `code/` and `setup/`.
+identical everywhere and holds the whole contract —
+`_scripts/{helpers,
+placeholder}`, the `code/*` quality gates, `worktree/init`,
+and `setup/{all,ai,mise,precommit,secrets,deps/*}`. Note that `setup/all` is
+**common**, not per-stack: it names no tool, only the tasks it calls in order.
+The `node/`, `flutter/`, or `python/` overlay supplies the stack-divergent
+`code/format`, `code/lint`, and its own `setup/deps/*`, of which
+`setup/deps/install` is — the one required slot. The overlay is copied on top of
+`common/`, merging into `code/` and `setup/`.
 
 The skill is **model-invocable as well as user-invocable**, because `/vwf:setup`
 orchestrates it. Flipping it to user-only would break setup silently rather than

@@ -9,7 +9,7 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   print_header "Running pre-commit on all files ..."
-  pre-commit run --config .config/pre-commit-config.yaml --all-files || true
+  pre-commit run --config .config/pre-commit-config.yaml --all-files
 else
   print_header "Running pre-commit on changed files (staged & unstaged) ..."
 
@@ -21,6 +21,6 @@ else
     print_header "No changed files found to scan."
   else
     # 2. Pass the array of filenames directly to pre-commit
-    pre-commit run --config .config/pre-commit-config.yaml --files "${changed_files[@]}" || true
+    pre-commit run --config .config/pre-commit-config.yaml --files "${changed_files[@]}"
   fi
 fi
