@@ -126,10 +126,24 @@ stopping at the first that applies. Every new worktree ends at **2c** and **2d**
 Work from the **repository root**.
 
 1. `code:precommit` — auto-fix lint/format, re-stage. Guard it with the same
-   `have_task` check Step 2d uses; **skip silently** when the task is absent:
+   `have_task` check Step 2d uses; **skip silently** when the task is absent.
+
+   **Run it twice.** The task fails when a hook fails, and a hook that *fixed*
+   a file fails by design — that is how pre-commit reports "I changed something,
+   look again". So the first pass is allowed to fail and the second is not: if
+   the repeat still fails, a hook found something it cannot fix and that is a
+   real stop, not a fixup. Re-stage between the two.
+
    ```bash
-   have_task code:precommit && mise x -- mise run code:precommit
+   have_task code:precommit || exit 0
+   mise x -- mise run code:precommit || true   # pass 1: may fix, may fail
+   git add -u                                  # re-stage what it fixed
+   mise x -- mise run code:precommit           # pass 2: must be clean
    ```
+
+   The `|| true` belongs **here, on the first pass only** — never inside the
+   task. A task that swallows its own failures can never gate anything; a caller
+   that ignores one failure it expects, once, still can.
 2. `git status` → `git add <files>` (never `git add -A`)
 3. `git diff --cached` — review staged changes
 4. Read `.config/git-conventional-commits.yaml` for authoritative types and

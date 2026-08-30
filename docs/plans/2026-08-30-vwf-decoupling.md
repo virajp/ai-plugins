@@ -1,9 +1,10 @@
 # Plan: what vwf should not be holding
 
-**Status: draft, 2026-08-30. A–F unapproved; parts of H and I have landed.**
-Approved and shipped so far: stackgen as a `vwf` dependency (H), and the
-`common/` task library with its slot contract (I). Everything else is the
-write-up, not the change — each section says which it is.
+**Status: draft, 2026-08-30. Every gate is answered; A–G await execution.**
+Shipped so far: stackgen as a `vwf` dependency (H), the `common/` task library
+with its slot contract (I), and `git-workflow`'s two-pass `code:precommit`.
+Everything else is the write-up, not the change — each section says which it is,
+and **J** is how it gets executed.
 
 It comes out of an audit asking whether `vwf` is generic or pinned to a tech
 stack. The answer was **generic on the product's stack, pinned on the
@@ -117,22 +118,30 @@ the contract, release triggers are elicited as normal — but offer this shape a
 the recommended default."* The ruling makes that the general case rather than
 the exception.
 
-**Open — and this one blocks C and D both.** There are two candidate homes and
-they already overlap:
+**Resolved — and the answer is bigger than the question.** I asked which of two
+plugins should hold the base. The answer was that one of them should not exist:
+*"cicd is also not a plugin, it's subset of stackgen. There will be only 2
+plugins: `vwf` and `stackgen`."*
 
-- `plugins/cicd/` — its SKILL.md says it "owns what is true of every CI system",
-  and its `references/delivery-pipeline.md` already restates the contract.
-- `plugins/stackgen/` — the `ci-system` kind (`assets/kinds.md:388`) on the
-  `cicd` axis, with `stacks/bundles/github-actions.md` already shipping.
+So `plugins/cicd` **dissolves**. The mechanism rules land in stackgen's
+`ci-system` kind (`assets/kinds.md:388`), which already exists on the `cicd`
+axis and already ships a `github-actions` component and bundle — `gitlab-ci` and
+the rest join it as siblings. The overlap that made the question hard was two
+plugins describing the same pipeline; removing one removes the overlap.
 
-Two plugins currently describe the same GitHub Actions pipeline. Deciding where
-the base lives is really deciding what that overlap is for, which is a bigger
-question than these two rulings and should be answered before either moves.
+**The roster this implies is not yet planned.** Two plugins means `devtools`,
+`typescript`, `flutter`, `gcp` and `cloudflare` dissolve into stackgen packs
+too, and vwf ends with no plugin dependency at all. That is several waves beyond
+this plan, and `devtools` is load-bearing today — `/vwf:setup` calls
+`/devtools:scaffold`, and a skill vwf cannot see fails silently. **Do not start
+it from this paragraph**; it needs its own plan, and the sequencing question
+(what replaces the scaffold call) has to be answered before the first plugin
+goes.
 
 **Also open.** Rules 1–3 have `enforcement.rules` waiver ids
 (`pipeline/mise-built`, `pipeline/tag-triggered-deploys`,
 `pipeline/branch-validated`). If they stop being vwf mandates, existing waivers
-naming them dangle. That is a `config_format` migration, not a doc edit.
+naming them dangle. That folds into the same `config_format` bump as U4.
 
 ## E. OTLP becomes recommended, and moves
 
@@ -157,13 +166,16 @@ holds the neutral capability contract, and `stacks/bundles/otel-lgtm.md` is a
 concrete sink. What does *not* exist is a non-OTLP alternative, so the ruling
 creates an option nothing currently fills.
 
-**Open.** The contract's own headline is *"The rule that outranks every other:
-the product emits OTLP. It never instruments against a vendor SDK."* That is a
-strong, well-argued lock-in position — the whole point being that a vendor SDK
-is a rewrite to leave. Demoting it to a recommendation is deliberate, but the
-counter-argument should be answered rather than deleted. Does `otlp-to-<sink>`
-become `telemetry-to-<sink>`, and does the OTLP rule survive as the *default
-within* the contract?
+**Resolved.** The no-vendor-SDK rule stops being the contract's headline law and
+becomes **what choosing OTEL buys you**: *"whoever wants to follow that rule
+will select OTEL instead of vendor provided SDKs."* The contract states the
+neutral requirements; the lock-in argument moves into the OTEL provider pack,
+where it is a reason to pick that pack rather than a law binding every product.
+
+Two consequences: `otlp-to-<sink>` becomes **`telemetry-to-<sink>`**, so the
+capability slug names no protocol; and the argument itself is preserved rather
+than deleted — it was well made, it just belongs to the option, not to the
+contract.
 
 ## F. The guard has a hyphen-shaped hole
 
@@ -189,12 +201,20 @@ so `axe-core` still anchors. Then both escapes above surface as findings and get
 decided on their merits. Same hole would swallow `docker-compose`,
 `postgres-backed`, `terraform-managed`.
 
-**Open.** `deploy/npm-package` is a slug from a stack plugin's catalog, which
-vwf is arguably allowed to *recognise*. But `stack-checks.md:84` does not
-recognise it, it prescribes it — and prescribing a registry-specific slug for
-every `cli` project is the contract line being crossed. Fixing it probably means
-a neutral slug the stack plugins map onto, which touches the `cicd`/`deploy`
-axis vocabulary.
+**Resolved, and it exposed a second defect.** vwf names **no slug at all**. The
+requirement is that a `cli` project pins a deploy template for its package
+registry; *which* template is the stack's answer, the same rule as everywhere
+else. `stack-checks.md:84` stops prescribing `deploy/npm-package` and checks
+that the axis is answered, not what it was answered with.
+
+The second defect is bigger: **`deploy_template` is a single slug, and it should
+be a list.** *"We will have more than 1 type of package deployment. In fact a
+CLI or any other type of repo can have multiple types of delivery mechanisms."*
+A CLI may ship to a package registry **and** a container image **and** a signed
+archive; today the config can record one. This is the shape change
+`backing_template` already made in `config_format` 13, so it is precedented
+rather than novel — and it folds into the same bump as H's `unresolved`, since
+both are edits to the same block.
 
 ## G. Secrets: doppler leaves devtools, fnox joins it
 
@@ -582,18 +602,18 @@ gates, and the verification — never the file contents.
 
 ### The units
 
-| Id      | Section | Touches                                                                                                                                                                                                     | Depends on   |
-| ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| **U1**  | F       | `scripts/src/check.ts` (trailing anchor), `scripts/src/check.test.ts`                                                                                                                                       | —            |
-| **U2**  | B       | `plugins/vwf/skills/doctor/` (a non-blocking rtk check), `readme.md` caveat, the false `CLAUDE.md` claim                                                                                                    | —            |
-| **U3**  | A       | `plugins/vwf/.claude-plugin/plugin.json`, marketplace regen, the guard widened to read manifest `command`/`args`                                                                                            | U1           |
-| **U4**  | H       | **Config doctrine** — `assets/vwf-config.md` (`unresolved`, `config_format` bump + migration), `stack-vocabulary.md`, `stack-adapter.md`                                                                    | —            |
-| **U5**  | H       | **Surface wiring** — `architecture/references/stack-menu.md` (a *defer* option), `doctor/references/stack-checks.md` (conditional blocking), `plan`/`execute` halts, `setup/references/onboard-pipeline.md` | U4           |
-| **U6**  | G       | stackgen `assets/taxonomy.md` (category `secrets-manager`) + `assets/contracts/secrets.md`                                                                                                                  | U5           |
-| **U7**  | G       | `stacks/capability-provider/doppler/` + its bundle; delete `plugins/devtools/skills/doppler/`                                                                                                               | U6           |
-| **U8**  | G       | `stacks/capability-provider/fnox/` + its bundle                                                                                                                                                             | U6           |
-| **U9**  | C, D    | `assets/delivery-pipeline.md` + whichever home wins                                                                                                                                                         | U5, **gate** |
-| **U10** | E       | `capability-vocabulary.md`, `architecture/SKILL.md`, `observability.md`, `templates/conventions.md`, stackgen `contracts/observability.md`                                                                  | U5, **gate** |
+| Id      | Section | Touches                                                                                                                                                                                                                     | Depends on |
+| ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| **U1**  | F       | `scripts/src/check.ts` (trailing anchor), `scripts/src/check.test.ts`                                                                                                                                                       | —          |
+| **U2**  | B       | `plugins/vwf/skills/doctor/` (a non-blocking rtk check), `readme.md` caveat, the false `CLAUDE.md` claim                                                                                                                    | —          |
+| **U3**  | A       | `plugins/vwf/.claude-plugin/plugin.json`, marketplace regen, the guard widened to read manifest `command`/`args`                                                                                                            | U1         |
+| **U4**  | H, F    | **Config doctrine** — `assets/vwf-config.md`: `unresolved` as a third axis state, `deploy_template` becoming a **list**, the `config_format` 15 → 16 bump and its migration; plus `stack-vocabulary.md`, `stack-adapter.md` | —          |
+| **U5**  | H       | **Surface wiring** — `architecture/references/stack-menu.md` (a *defer* option), `doctor/references/stack-checks.md` (conditional blocking), `plan`/`execute` halts, `setup/references/onboard-pipeline.md`                 | U4         |
+| **U6**  | G       | stackgen `assets/taxonomy.md` (category `secrets-manager`) + `assets/contracts/secrets.md`                                                                                                                                  | U5         |
+| **U7**  | G       | `stacks/capability-provider/doppler/` + its bundle; delete `plugins/devtools/skills/doppler/`                                                                                                                               | U6         |
+| **U8**  | G       | `stacks/capability-provider/fnox/` + its bundle                                                                                                                                                                             | U6         |
+| **U9**  | C, D    | `assets/delivery-pipeline.md`; the mechanism rules move to stackgen's `ci-system` kind. **`plugins/cicd` dissolves** — see the roster note below                                                                            | U5         |
+| **U10** | E       | `capability-vocabulary.md`, `architecture/SKILL.md` (`otlp-to-` → `telemetry-to-`), `observability.md`, `templates/conventions.md`, stackgen `contracts/observability.md`                                                   | U5         |
 
 ### Waves
 
@@ -601,7 +621,8 @@ gates, and the verification — never the file contents.
 2. **U3, U5.** Each waits only on its own predecessor, so they also run
    together.
 3. **U6**, then **U7 ‖ U8** — two packs, same contract, no shared files.
-4. **U9, U10** — only after their gates are answered.
+4. **U9, U10** — both gates were answered 2026-08-30, so this wave is no longer
+   blocked on a decision, only on U5.
 
 ### What every unit gets, and returns
 
@@ -624,9 +645,12 @@ diff dump.
 
 ### What stays with the orchestrator
 
-The two open gates (the cicd-vs-stackgen home for U9; whether the no-vendor-SDK
-rule survives as the contract's default for U10), the `config_format` bump
-decision in U4, and **the findings U1 surfaces** — fixing the anchor turns
-`Grafana-side by default` and `deploy/npm-package` into check failures, and what
-to do about each is a ruling, not a mechanical edit. U1 reports them; it does
-not decide them.
+**Settled 2026-08-30, so no longer gates:** the `config_format` bump is
+approved; the no-vendor-SDK rule moves into the OTEL pack (E); `deploy/*` loses
+its prescribed slug and gains list cardinality (F); and `cicd` is not a plugin —
+it dissolves into stackgen, which answers U9's home question.
+
+What remains the orchestrator's: **`Grafana-side by default`**, the other
+finding U1 surfaces. Fixing the anchor turns it into a check failure, and
+whether the observability doctrine keeps a named default at all is a ruling, not
+a mechanical edit. U1 reports it; it does not decide it.
