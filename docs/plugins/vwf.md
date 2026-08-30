@@ -102,9 +102,11 @@ Karpathy coding guidelines were a third, and are now a **vendored** skill —
 dependency it was silently absent for most installs, and vendoring puts the
 provenance beside the code it governs.
 
-**`cicd` is not among them.** vwf states the delivery-pipeline *contract*; the
-[`cicd`](./cicd.md) plugin implements it on whichever CI system a repo uses.
-Install it when you want pipelines generated — vwf works without it.
+**No CI plugin is among them.** vwf states the delivery-pipeline *contract* —
+what a deploy must guarantee, never how it is spelled — and the CI system pinned
+on a project's `cicd` axis implements it. Since the `cicd` plugin dissolved,
+that system arrives as a [`stackgen`](./stackgen.md) `ci-system` bundle, which
+installs with vwf as its dependency.
 
 **A design tool is not among them.** vwf is decoupled from any particular one,
 and since Wave D it names none at all. It delegates screen, design-system and
@@ -647,11 +649,12 @@ idempotency keys on every mutating operation, one error envelope, cursor
 pagination, retry-only-idempotent with backoff + jitter, tolerant-reader event
 consumers, **stateless processes** (every service/worker safe at N replicas),
 **graceful shutdown** (acknowledged work never lost to a termination),
-structured logs with no PII (logs/traces/metrics via OpenTelemetry), and integer
-minor units for money. A deviation lives in **two places, always**: stated on
-the doc it applies to and waived under `enforcement.rules`
-(`baseline/<rule>[/<unit>]`) — the blueprint reviewers flag either half missing,
-and the execute reviewers enforce the rules against the code itself.
+structured logs with no PII (logs/traces/metrics through one vendor-neutral
+telemetry pipeline), and integer minor units for money. A deviation lives in
+**two places, always**: stated on the doc it applies to and waived under
+`enforcement.rules` (`baseline/<rule>[/<unit>]`) — the blueprint reviewers flag
+either half missing, and the execute reviewers enforce the rules against the
+code itself.
 
 Beside the baseline sits the **principles catalog** (`assets/principles/` —
 thirteen entries: KISS, YAGNI, DRY and its limits, the five SOLID principles,
@@ -667,19 +670,21 @@ generates stack skills for a technology no curated pack covers.
 
 Alongside it sits the **delivery-pipeline contract**
 (`conventions.md#pipeline`): three canonical environments — `development` (the
-developer's machine, any branch, never deployed), `staging` (testers only, built
-from `develop` only), `production` (customers, built from `main` only) — with
-`dev`/`test`/`prod`-style synonyms treated as drift, and deploys that are
-**tag-triggered only** (`<project>-stage-v<x.y.z>` → staging,
-`<project>-prod-v<x.y.z>` → production, one project per tag; a multi-repo member
-uses the repo name) with **branch validation** in the workflow (a prod tag on a
-feature branch can never deploy) and **no deploy step before the tagged
-project's and its dependents' tests pass in the same run**. A staging deploy is
-never a release — production releases are recorded only by `/vwf:verify`. The
-[`cicd`](./cicd.md) plugin — independent, not a vwf dependency — generates
-release pipelines conforming to this contract on whichever CI system the repo
-uses: everything common (tag parsing, branch validation, the test gate) written
-once, and the deploy factored no further than the repo's own variation demands.
+developer's machine, any branch, never deployed), `staging` (testers only) and
+`production` (customers) — with `dev`/`test`/`prod`-style synonyms treated as
+drift. Each deployed environment releases from **exactly one branch**; which
+branch is the product's to choose and record there, `develop` and `main` being
+the default pair. A deploy is **deliberate** — an explicit act naming one
+project and one environment, never a side effect of a branch push, and
+re-validated by the pipeline rather than trusted from its trigger — the pipeline
+**proves the commit is reachable** from that environment's branch, and **no
+deploy step runs before the released project's and its dependents' tests pass in
+the same run**. A staging deploy is never a release; production releases are
+recorded only by `/vwf:verify`. The contract names no mechanism on purpose: the
+tag grammar `<project>-<env>-v<semver>`, the trigger globs and the reachability
+check are the recommended default, owned by the CI system pinned on the
+project's `cicd` axis — [`stackgen`](./stackgen.md)'s
+`contracts/release-trigger.md` and its `ci-system` pack.
 
 The **operator back-office** deserves a note. Since format 19 it is not its own
 role: it is `platforms: [service, webapp]` plus the `operator-rbac` capability —
@@ -1873,10 +1878,10 @@ queries that library's documentation when a question is about a specific library
 - [stackgen](./stackgen.md) — a vwf dependency: the stack plugin that answers
   `/vwf:architecture`'s menu, and the source of the `design-tool` packs
   `/vwf:screens` and `/vwf:design-system` import through, materialized into the
-  repo's `.claude/`.
+  repo's `.claude/`. Its `ci-system` kind implements the delivery-pipeline
+  contract vwf states.
 - [devtools](./devtools.md) — a vwf dependency; `/vwf:setup` orchestrates
   `/devtools:scaffold`.
-- [cicd](./cicd.md) — implements the delivery-pipeline contract vwf states.
 - [typescript](./typescript.md) and [flutter](./flutter.md) — the language
   plugins that ship the stack templates `/vwf:architecture` offers.
 - [`claude-status`](https://claude-status.virajp.dev) — the statusline, and the

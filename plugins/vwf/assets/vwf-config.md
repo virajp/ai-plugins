@@ -187,7 +187,7 @@ at answering the question, never at installing something.
 | `linkage` / `members` | `setup` (elicited; each member's facts detected)                                                                                         | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) |
 | `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                                                 |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
-| `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the `cicd` plugin (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
+| `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
 | `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                             |
@@ -402,9 +402,9 @@ earlier than 65/90/80), never loosen.
      **confirm with the user**, and write the confirmed token to every project.
      More than one signal, or none, is a question — never a guess. This is the
      only step here that needs input, and it is also the last place repo
-     detection is legitimate: from `13` on the `cicd` plugin reads the key and
-     asks when it is absent, rather than sniffing the repo behind the user's
-     back.
+     detection is legitimate: from `13` on the pinned CI system reads the key
+     and asks when it is absent, rather than sniffing the repo behind the
+     user's back.
 
   Report any project left without a required axis — that is a real finding
   `/vwf:doctor` will raise on the next run, not noise.

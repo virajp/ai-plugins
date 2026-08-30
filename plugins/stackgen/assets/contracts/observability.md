@@ -9,21 +9,33 @@ Capability tokens realized here: `distributed-tracing`, and the transport half
 of `audit-log`. Blueprint prose calls all of this **telemetry** — never the
 product name.
 
-## The rule that outranks every other
+## The requirement that outranks every other
 
-**The product emits OTLP. It never instruments against a vendor SDK.**
+**Leaving the backend must not be a rewrite.**
 
-This is what makes the backend replaceable, and it is the one decision that
-cannot be undone cheaply: instrumentation is spread across every service, so a
-vendor SDK is a rewrite to leave, while an OTLP exporter is a URL to change. A
-managed backend therefore appears in a vwf product **only as an OTLP
-destination** — never as an import.
+Instrumentation is spread across every service, so this is the one decision that
+cannot be undone cheaply. Whatever the product instruments against, the cost of
+changing sink has to stay proportional to the change — configuration, not a pass
+over every handler in the codebase.
+
+**A vendor-neutral telemetry standard satisfies this by construction, which is
+why it is the recommended answer rather than the only permitted one.** Emit a
+neutral wire format and the backend is a destination, not an import: the
+exporter becomes a URL to change. That guarantee is **what choosing such a
+provider pack buys** — the argument for it belongs to the pack, not to this
+contract; `otel-lgtm`'s *pick & trade* reference is where it is made.
+
+A product may instead instrument against a backend's own SDK. Nothing here
+forbids it, and this contract does not pretend the trade is free: that product
+has spent the replaceability this requirement exists to protect, and the
+`observability:` selection is where it says so.
 
 ## What a backend must be able to do
 
-1. **Accept OTLP** for traces, metrics and logs, over the transport the runtime
-   can actually reach — an egress-restricted environment is a design constraint,
-   not a networking detail.
+1. **Accept all three signals** — traces, metrics and logs — in the wire format
+   the product emits, over the transport the runtime can actually reach. An
+   egress-restricted environment is a design constraint, not a networking
+   detail.
 2. **Correlate the three signals.** A trace id present on the span, the metric
    exemplar and the log line is what turns three dashboards into one
    investigation. A backend that cannot join them is a backend that answers
@@ -59,5 +71,6 @@ metric — it is a bill, and eventually a backend outage. Decide, and record:
   `otel-lgtm` sink, or a managed flavour from the project's cloud plugin.
 - **What is worth alerting on.** Reliability targets are a product decision,
   elicited by the workflow's foundations pass.
-- **The instrumentation library.** That belongs to the project's language
-  plugin; this contract only insists the wire format is OTLP.
+- **The instrumentation library, or the wire format it speaks.** Both belong to
+  the project's language plugin and the sink it is pointed at; this contract
+  only insists that changing sink stays a configuration change.

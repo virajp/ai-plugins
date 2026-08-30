@@ -1,6 +1,6 @@
 ---
 name: github-actions
-version: 0.1.0
+version: 0.2.0
 category: development
 description: Generate and maintain this repo's delivery pipeline on GitHub
   Actions — workflow layout for monorepo and multi-repo, toolchain installation

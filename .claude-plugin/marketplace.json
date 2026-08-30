@@ -13,28 +13,6 @@
         "name": "Viraj Patel"
       },
       "category": "development",
-      "description": "Generate a repo's delivery pipeline for whichever CI system it uses — one /cicd:workflow skill that resolves the tool from config and reads that tool's reference. Tools always install through mise; multi-repo and monorepo layouts are both supported.",
-      "name": "cicd",
-      "source": "./plugins/cicd",
-      "strict": true,
-      "tags": [
-        "cicd",
-        "ci",
-        "cd",
-        "pipeline",
-        "mise",
-        "workflow",
-        "monorepo",
-        "multi-repo",
-        "skills"
-      ],
-      "version": "1.1.0"
-    },
-    {
-      "author": {
-        "name": "Viraj Patel"
-      },
-      "category": "development",
       "description": "Cloudflare stack plugin for vwf — **scope is deliberately parked**. It currently covers **Zero Trust Access** only: putting a project that must not be publicly reachable behind an identity-aware proxy on its own hostname, independent of which cloud actually hosts it. Workers, Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are **not** offered yet and arrive under their own dedicated plan — so the menu says what it does not cover rather than coming back quietly short. Implements the vwf stack-adapter contract.",
       "name": "cloudflare",
       "source": "./plugins/cloudflare",
@@ -137,7 +115,7 @@
         "materializer",
         "vwf-stack-adapter"
       ],
-      "version": "0.17.0"
+      "version": "0.18.0"
     },
     {
       "author": {
@@ -204,7 +182,7 @@
         "git-workflow",
         "vwf-design-adapter"
       ],
-      "version": "19.8.0"
+      "version": "19.9.0"
     }
   ]
 }

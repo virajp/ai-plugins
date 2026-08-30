@@ -78,7 +78,7 @@ to the relevant anchors rather than repeating.
      multi-write, server time, soft delete, boundary validation,
      business/technical separation incl. attached resources, idempotency keys,
      error envelope, cursor pagination, retry discipline, tolerant reader,
-     stateless processes, graceful shutdown, structured logs no-PII via OTel,
+     stateless processes, graceful shutdown, structured logs no-PII,
      integer money) as canonical contract lines, each with its baseline/<rule>
      id. Omit any rule a product-wide enforcement.rules waiver covers. Docs and
      cycles follow these by default; only exceptions are documented — on the
@@ -92,8 +92,8 @@ to the relevant anchors rather than repeating.
      deploys — <project>-stage-v<x.y.z> → staging from develop,
      <project>-prod-v<x.y.z> → production from main, branch-validated —
      staging-is-not-a-release, and tested-before-release), each with its
-     pipeline/<rule> id. The cicd plugin generates conforming
-     workflows from this anchor. -->
+     pipeline/<rule> id. The CI system pinned on the project's cicd axis
+     generates conforming workflows from this anchor. -->
 
 ## Shared patterns {#patterns}
 

@@ -15,13 +15,30 @@ cite live once, in `../assets/contracts/`.
 
 Most landed packs' doctrine **still ships from its curated plugin too**. Those
 copies are the destination the no-skill-lost rule requires **before** that
-plugin can retire, not a replacement yet. Two exceptions so far, both deleting
-their source skill in the same commit that landed the pack, because the pack
-plus a contract together carry everything it said: Wave D's `container-image`
-(with `contracts/local-stack.md`), and `doppler` (with `contracts/secrets.md`).
+plugin can retire, not a replacement yet. Three exceptions so far, each
+deleting its source in the same commit, because the pack plus a contract
+together carry everything that source said: Wave D's `container-image` (with
+`contracts/local-stack.md`), `doppler` (with `contracts/secrets.md`), and
+`github-actions` (with `contracts/release-trigger.md`) — the third being the
+first to retire not a skill but a **whole plugin**, `cicd` having been exactly
+one kind wearing a manifest.
 
 **Wave C — `ci-system/`, kind `ci-system`:** `github-actions`. Exactly one CI
-system per repo, so this bundle never composes two.
+system per repo, so this bundle never composes two. Its neutral contract is
+`../assets/contracts/release-trigger.md`, landed later with the `cicd`
+dissolution: it holds the recommended release-trigger mechanism — tag grammar,
+branch mapping, release task names, how far a deploy path may be split — that
+vwf's delivery-pipeline rules deliberately stopped mandating. Like
+`local-stack.md` it is a **kind** contract rather than a capability one, and it
+is what makes a second CI system one component rather than a second copy of the
+release shape.
+
+**`cicd` dissolved in the same landing** — the third plugin to go, and the
+first to go whole rather than by skill: the kind *was* the plugin. Its neutral
+rules, its resolution discipline and its one implemented system are the pack
+and the contract above; what did not come across is its worked YAML, by the
+same rule every pack follows — a pack carries judgment, and the vendor's own
+syntax comes from Context7 at use time.
 
 **Wave C — the TypeScript Language-Bundle**, five components across four
 directories: `language/typescript`, `package-manager/pnpm`,

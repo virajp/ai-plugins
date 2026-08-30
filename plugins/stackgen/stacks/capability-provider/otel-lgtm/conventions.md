@@ -5,9 +5,10 @@ and metrics behind one query surface, run wherever the product runs. The trade
 against a managed backend is that you operate it: retention is disk you
 provision, and an unbounded label is your outage rather than your invoice.
 
-**The product emits OTLP and never a vendor SDK.** This is the observability
-contract's rule that outranks the rest, and it is what makes the sink
-replaceable.
+**The product emits OTLP and never a vendor SDK.** This is what picking this
+pack buys — the observability contract requires only that leaving the backend
+not be a rewrite, and a neutral wire format is how this pack delivers it. It is
+what makes the sink replaceable.
 
 **Exporters point at a collector, never at storage directly.** That indirection
 is the whole design: routing, batching, redaction and sampling are the

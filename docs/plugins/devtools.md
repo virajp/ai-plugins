@@ -263,7 +263,7 @@ noisily.
 - [../../readme.md](../../readme.md) — the marketplace overview and the full
   plugin list.
 - [vwf plugin](./vwf.md) — the workflow that depends on this one.
-- [cicd plugin](./cicd.md) — the pipelines that assume mise provides the
-  toolchain.
+- [stackgen plugin](./stackgen.md) — its `ci-system` kind writes the pipelines
+  that assume mise provides the toolchain.
 - [typescript plugin](./typescript.md) — the language side of the lint/format
   gate.

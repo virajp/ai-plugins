@@ -19,8 +19,10 @@ omitted when it has only a flat `mise.toml`.
 action is remote code executing with the pipeline's credentials.
 
 **Releases are tag-triggered** on `<project>-<env>-v<semver>`, validated against
-the branch before publishing, and tested before released — vwf's contract, cited
-rather than restated.
+the branch before publishing, and tested before released. The grammar, the
+branch mapping and the release task names are the release-trigger contract's
+(`assets/contracts/release-trigger.md`), which serves vwf's delivery-pipeline
+rules; both are cited rather than restated.
 
 **Prefer federated identity to stored tokens.** A stored long-lived credential
 is the finding most worth preventing here.

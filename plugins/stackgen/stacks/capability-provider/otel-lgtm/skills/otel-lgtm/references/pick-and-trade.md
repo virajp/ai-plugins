@@ -43,8 +43,16 @@ keep making.
 
 ## What the choice does not commit you to
 
-**It does not commit the product to anything.** That is the point of the
-observability contract's OTLP rule: the product exports OTLP and never a vendor
-SDK, so the sink is a destination, not an import. Moving from a self-hosted LGTM
-stack to a managed backend later is a collector configuration change, not a code
-change — provided nobody ever imported a vendor SDK "just for this one metric".
+**It does not commit the product to anything.** That is the point, and it is
+this pack's argument rather than a law vwf imposes: the product exports OTLP and
+never a vendor SDK, so the sink is a destination, not an import. Moving from a
+self-hosted LGTM stack to a managed backend later is a collector configuration
+change, not a code change — provided nobody ever imported a vendor SDK "just for
+this one metric".
+
+**Which is the reason to pick it.** The observability contract requires only
+that leaving the backend never be a rewrite; it does not name a protocol, and a
+product is free to instrument against a backend's own SDK instead. Choosing this
+pack is choosing to spend nothing to keep that exit open. A product that would
+rather have the vendor's own integrations is making a real trade, not breaking a
+rule — it is simply paying for the exit later, across every service.

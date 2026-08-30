@@ -123,10 +123,12 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   them: one `primary` language and any number of `platform-edge` languages,
   which exist only at the SDK's native boundary. This is the one bundle whose
   root is not the thing its languages would suggest.
-- A **CI-Bundle** is vwf's delivery-pipeline contract plus exactly one
-  `ci-system` component, on the **`cicd`** axis. Never two: a repo has one
-  pipeline, and generating for a system the repo does not use is how a second,
-  unmaintained pipeline appears.
+- A **CI-Bundle** is the release-trigger contract plus exactly one
+  `ci-system` component, on the **`cicd`** axis. The contract is the
+  mechanism half vwf's delivery-pipeline rules deliberately leave open, so
+  it sits where a capability contract sits in every other pairing. Never
+  two components: a repo has one pipeline, and generating for a system the
+  repo does not use is how a second, unmaintained pipeline appears.
 - A **Deploy-Bundle** is exactly one `deploy-target` component and nothing
   else. It is the only bundle with no second half, because there is no
   category above a provider-neutral target to write doctrine at — a target
@@ -162,9 +164,12 @@ tokens it realizes, or that its category has none yet (`contracts/secrets.md`
 is the first of those). That is what lets two providers in one category be
 compared against the same clauses instead of against each other's marketing.
 
-One file there is **not** a capability contract, and is marked as such in
-its own opening line: `contracts/local-stack.md` states the mechanism
-behind vwf's `local_stack` **harness** capability. It earns the same
-directory for the same reason — it is doctrine above the instance that
-several components would otherwise each restate — but no component
-*chooses* it, so it names no provider and realizes no capability token.
+Two files there are **not** capability contracts, and each is marked as such
+in its own opening line. `contracts/local-stack.md` states the mechanism
+behind vwf's `local_stack` **harness** capability;
+`contracts/release-trigger.md` states the mechanism behind the `ci-system`
+**kind**, which vwf's delivery-pipeline rules leave open on purpose. Both
+earn the same directory for the same reason — doctrine above the instance
+that several components would otherwise each restate — but neither is
+*chosen* by a component, so neither names a provider or realizes a
+capability token.

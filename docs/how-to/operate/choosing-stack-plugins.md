@@ -3,7 +3,7 @@
 Installing `vwf` gets you the workflow and tells you nothing about your
 technology: vwf names no language, no framework and no cloud, so every concrete
 option you are ever offered comes from a plugin you installed by name. This
-guide is that decision — six plugins you choose, plus the workflow and its one
+guide is that decision — five plugins you choose, plus the workflow and its one
 hard dependency, which arrive together — and which subset a given product wants
 **before** it reaches `/vwf:architecture`, since the menu that command presents
 is exactly what the plugins you installed **and listed in the product's
@@ -71,15 +71,6 @@ worth knowing what it contributes, because it is why a product with no cloud
 plugin still has a deploy answer and a runnable local stack: it owns
 `container-generic`, the provider-neutral OCI target, and the Compose wiring the
 acceptance verifier's readiness gates depend on.
-
-**Two plugins are independent, installed by choice, and deliberately not vwf
-dependencies.** [`stackgen`](../../plugins/stackgen.md) materializes the design
-adapter vwf imports screens, design systems and design-review conversations
-through, resolving the tool per project — an adapter is chosen rather than
-inherited, so vwf calls fixed skill names and never forces one tool on you.
-[`cicd`](../../plugins/cicd.md) generates the delivery pipeline: vwf owns the
-contract a pipeline must satisfy and nothing in vwf delegates to this plugin, so
-it forces no install; add it when you want pipelines written for you.
 
 ## The closed menu
 
@@ -150,9 +141,10 @@ Two capabilities are worth deciding earlier than the rest. **Identity** is one,
 because whether accounts exist is a product decision that reaches the registry
 as a declared capability and then reaches the blueprint as mandated flows
 wherever the product has screens. **Observability** is the other, and for the
-opposite reason: its contract is that your product emits OTLP and never a vendor
-SDK, so adopting it early costs nothing and retrofitting it means rewriting
-instrumentation that had a vendor baked in.
+opposite reason: its contract requires only that leaving the backend never be a
+rewrite, and the pack that satisfies that by construction — a vendor-neutral
+wire format — costs nothing to adopt early, while retrofitting it means
+rewriting instrumentation that had a vendor baked in.
 
 ### A cloud plugin, or the provider-neutral default
 

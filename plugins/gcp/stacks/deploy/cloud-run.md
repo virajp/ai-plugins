@@ -33,10 +33,10 @@ Image → Artifact Registry → Cloud Run, released behind mise `release:*` task
 the same command runs locally and in CI. Keeping the release behind a task is
 what keeps the target swappable: the workflow calls the task, not `gcloud`.
 
-Deploys obey **vwf's delivery-pipeline contract** — tag-triggered only, shaped
-`<project>-<env>-v<semver>`, branch-validated, and gated on the tagged project's
-tests plus its dependents'. CI itself belongs to the `cicd` plugin;
-Cloud Build is deliberately not part of this stack, so there is exactly one
+Deploys obey **vwf's delivery-pipeline contract** — deliberate rather than
+branch-pushed, branch-validated, and gated on the released project's tests plus
+its dependents'; the recommended trigger is a `<project>-<env>-v<semver>` tag. CI itself belongs to the CI system pinned on the
+project's `cicd` axis; Cloud Build is deliberately not part of this stack, so there is exactly one
 place a pipeline is defined.
 
 ## The three settings that decide cost and behavior

@@ -201,8 +201,9 @@ it**.
   are reference-shaped, not paths-scoped: there is no file glob that
   means "thinking about the cloud".
 - **Scope**: the judgment an SDK reference cannot give. Never the deploy
-  mechanics vwf's delivery-pipeline contract owns, never a vendor SDK in
-  product code (the observability rule: OTLP out, sinks not SDKs).
+  mechanics vwf's delivery-pipeline contract owns. Where a pack's own rule
+  keeps vendor SDKs out of product code, say so as what that pack buys —
+  the observability contract requires replaceability, not a protocol.
 - **Facts**: provider CLI presence, the auth/project check doctor can run,
   emulator availability per service used.
 - **Invocation**: everything model-invocable; nothing paths-scoped.
@@ -388,9 +389,13 @@ shape.
 ## `ci-system` — the repo's delivery pipeline
 
 The output is a **CI-Bundle** (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`):
-vwf's delivery-pipeline contract plus exactly **one** `ci-system` component.
-The contract states what a pipeline must do; the component states how one
-system does it.
+the release-trigger contract
+(`${CLAUDE_PLUGIN_ROOT}/assets/contracts/release-trigger.md`) plus exactly
+**one** `ci-system` component. vwf's delivery-pipeline rules state what a
+deploy must guarantee and name no mechanism; the contract is the recommended
+mechanism, above any one system; the component is how that system spells it.
+**All three layers, and none of them duplicated** — the reason vwf holds no
+CI syntax is the same reason the component holds no tag grammar.
 
 **Exactly one.** A repo has one pipeline. Generating for a second system
 produces a pipeline nobody runs and nobody updates, which is worse than
@@ -403,8 +408,8 @@ none — it is a green check that means nothing.
   rather than broken.
 - **Structure**: the **topic bar** below, hung per the kind-general rule —
   the neutral rules in a lean router skill, one reference per CI system,
-  loaded only once the system is resolved. This is the shape the curated
-  `cicd` plugin already ships, and adding a system is one reference file.
+  loaded only once the system is resolved. This is the shape the retired
+  `cicd` plugin shipped, and adding a system is one reference file.
 - **Scope**: workflow layout, triggering, toolchain installation, and the
   release contract. Never the language's build commands — those are the
   language bundle's, reached through the repo's task library. Never the
@@ -419,8 +424,9 @@ none — it is a green check that means nothing.
 ### The topic bar
 
 A closed list of six topics, one artifact per topic, each individually
-researched and cited. Extracted from the curated `cicd` plugin — its neutral
-rules and its one implemented system.
+researched and cited. Extracted from the `cicd` plugin — its neutral rules
+and its one implemented system — which then **dissolved**, this kind being
+the whole of what it was.
 
 1. **Resolution & layout** — which system the repo uses (a recorded fact,
    never detection and never a silent default), where its workflow files

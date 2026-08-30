@@ -27,7 +27,7 @@ claude plugin install vwf@virajp-plugins
 ```
 
 The marketplace is **this repo on GitHub**. `.claude-plugin/marketplace.json` at
-the repo root lists all 8 plugins, each with a `source` of `./plugins/<name>` —
+the repo root lists all 7 plugins, each with a `source` of `./plugins/<name>` —
 resolved against the marketplace root, which is why that manifest sits at the
 root rather than inside `plugins/`.
 

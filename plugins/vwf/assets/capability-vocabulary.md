@@ -50,9 +50,11 @@ neighbouring kind:
 - **`cms-content` is `B`, alone among Web rendering.** `ssr`/`ssg`/`seo` are
   rendering strategies the project template settles; a CMS is a service holding
   content the product does not own.
-- **`distributed-tracing` is `B`.** The product emits OTLP and a sink receives
-  it — the sink is a backing service, even though the instrumentation is the
-  product's own code.
+- **`distributed-tracing` is `B`.** The product emits telemetry and a sink
+  receives it — the sink is a backing service, even though the instrumentation
+  is the product's own code. Which wire protocol carries it is the backing
+  template's answer, never vwf's, which is why the slug is
+  `telemetry-to-<sink>`.
 
 **Only `B` tokens are pinnable.** Asking which template provides `rate-limiting`
 or `ssr` is a category error, and the check below relies on that.

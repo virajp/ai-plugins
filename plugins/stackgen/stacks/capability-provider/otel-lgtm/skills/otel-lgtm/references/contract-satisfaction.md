@@ -5,10 +5,12 @@ Clause by clause against the neutral observability contract
 
 ## The product emits OTLP, never a vendor SDK
 
-Satisfied by construction — OTLP is the native protocol here, so there is no
-temptation to import anything else. This is the contract's rule that outranks
-every other, and self-hosting is the configuration where it is easiest to keep:
-there is no vendor SDK on offer.
+**This is the pack's own rule, not the contract's.** The contract asks only that
+leaving the backend never be a rewrite; emitting OTLP is how *this* pack answers
+that, and it is the guarantee picking this pack buys. Satisfied by construction
+— OTLP is the native protocol here, so there is no temptation to import anything
+else, and self-hosting is the configuration where it is easiest to keep: there
+is no vendor SDK on offer.
 
 The failure to watch for is a **library** that ships its own vendor exporter.
 Its telemetry should be bridged into OTLP, not exported alongside it, or the

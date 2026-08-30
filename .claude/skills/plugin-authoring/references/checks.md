@@ -8,7 +8,7 @@ format, and the one generated file that needs a freshness gate of its own.
 | Task                          | Does                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------ |
 | `plugins:check`               | validates the authored tree; non-zero on any finding                           |
-| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 8 plugin manifests      |
+| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 7 plugin manifests      |
 | `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                      |
 | `typescript:test`             | table-tests `plugins/typescript/hooks/npm-normalize.sh` through the system sed |
 | `pnpm vitest run`             | the `scripts/` and `cli/` suites                                               |

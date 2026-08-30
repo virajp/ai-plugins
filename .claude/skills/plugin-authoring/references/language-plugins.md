@@ -109,7 +109,8 @@ knows what is in scope versus aspirational:
 
 Deliberately out of scope, whatever the tier: formatter/linter/scanner binaries
 and repo gates (devtools'), toolchain installation (mise's), secrets management
-(a stackgen `secrets-manager` pack's), CI mechanics (`cicd`'s).
+(a stackgen `secrets-manager` pack's), CI mechanics (a stackgen `ci-system`
+pack's).
 
 ## Deferred checks
 

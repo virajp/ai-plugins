@@ -130,7 +130,8 @@ is **not** answered, and is the degradation above rather than this finding: the
 key is present and names the gap out loud, which is the whole difference. A
 project declaring a **screen platform** additionally needs `design`,
 without which the design adapter halts at import time; every project needs
-`cicd`, without which `/cicd:workflow` has to ask on every run. Report each as
+`cicd`, without which no CI system is pinned and the pipeline generator has
+to ask on every run. Report each as
 drift naming the project and the axis, and nudge `/vwf:architecture` — never
 guess a value, and never copy one project's answer onto another, which is
 exactly the product-wide assumption format 13 removed. A config still carrying a

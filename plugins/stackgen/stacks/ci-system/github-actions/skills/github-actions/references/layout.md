@@ -11,6 +11,32 @@ evidence produces a second pipeline beside the real one.
 Where the fact is absent, ask. An unanswered question is cheaper than a wrong
 pipeline.
 
+## Read the repo before writing to it
+
+Three things are read, not assumed:
+
+- **The layout.** Whether this is one project or a workspace of several, and
+  which packages a workspace holds — from the workspace manifest the repo's
+  package manager keeps, never from a directory listing. **List what you found
+  and have it confirmed**, because a package silently omitted is a package
+  silently never validated.
+- **The toolchain config**, including whether the repo defines a CI variant of
+  it (see [toolchain installation](toolchain.md)) and which task names exist.
+  Those task names become the step commands, so **a repo with no toolchain
+  config is a stop, not a fallback** — scaffold one first. A pipeline whose
+  steps invent commands is a pipeline nobody can run locally.
+- **The workflows already there.** Never clobber one: pick a non-colliding
+  name and say which existing files you left alone. A repo mid-migration is
+  exactly the case where an overwrite destroys the thing being migrated from.
+
+## What the user must still be told
+
+The pipeline depends on things outside it, and they fail at run time rather
+than at write time. Report them: every tool the steps need must be declared in
+the repo's toolchain config; every task name the steps call must exist; and
+every secret, federated-identity binding or registry the workflow references
+must be configured in the CI system's own settings.
+
 ## Where workflows live
 
 `.github/workflows/*.yml`, at the **repository** root — not at a project root

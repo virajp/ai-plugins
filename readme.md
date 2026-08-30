@@ -24,7 +24,7 @@ until you approve. The whole manual, command by command, is
 starting fresh, adopting vwf in a codebase that already works, and running a
 live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 
-Around it the marketplace ships **seven more plugins** — languages, clouds,
+Around it the marketplace ships **six more plugins** — languages, clouds,
 tooling and generation. That is the point of the split: vwf owns the workflow
 and names no technology at all, so every concrete choice lives in a plugin you
 install only if your product uses it. They install through Claude Code's own
@@ -232,14 +232,6 @@ C, its Docker/OCI doctrine in Wave D and its Doppler doctrine alongside
 stackgen's `secrets-manager` packs, all three to `stackgen`, which leaves it
 holding no secrets doctrine at all. A `vwf` dependency, because `/vwf:setup`
 orchestrates its scaffold skill. `devtools@virajp-plugins`
-
-**[cicd](./docs/plugins/cicd.md)** — one `/cicd:workflow` skill that resolves
-the repo's CI system from config and generates its delivery pipeline: every tool
-installed through mise, both multi-repo and monorepo layouts, conforming to
-vwf's tag-triggered, branch-validated, tested-before-release contract. GitHub
-Actions is the one implementation today; adding a CI system is a single
-reference file. Independent — vwf states the contract, this implements it.
-`cicd@virajp-plugins`
 
 **[stackgen](./docs/plugins/stackgen.md)** — the principles-driven stack
 materializer. A stack is a composition of **components** — the language, its

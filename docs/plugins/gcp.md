@@ -118,12 +118,14 @@ carries a larger operational surface and a per-cluster cost floor that, below a
 certain scale, exceeds the entire Cloud Run bill for the same workload; take it
 deliberately, and take Autopilot unless you need node-level control.
 
-Both templates obey **vwf's delivery-pipeline contract** — tag-triggered only,
-`<project>-<env>-v<semver>`, branch-validated, tests gated — and both keep the
-release behind a mise `release:*` task, which is what keeps the target
-swappable. Writing the pipeline itself belongs to the [`cicd`](./cicd.md)
-plugin; Cloud Build is deliberately not part of either stack, so there is
-exactly one place a pipeline is defined.
+Both templates obey **vwf's delivery-pipeline contract** — a deliberate deploy,
+branch-validated, tests gated — and both keep the release behind a mise
+`release:*` task, which is what keeps the target swappable. Writing the pipeline
+itself belongs to the CI system pinned on the project's `cicd` axis, whose
+recommended trigger — the `<project>-<env>-v<semver>` tag — is
+[`stackgen`](./stackgen.md)'s `contracts/release-trigger.md`; Cloud Build is
+deliberately not part of either stack, so there is exactly one place a pipeline
+is defined.
 
 Each template also names its **private plane** — internal-only ingress plus IAP
 for `cloud-run`, a private cluster behind an internal load balancer for `gke` —
@@ -158,7 +160,7 @@ GCP, a project consuming it uses GCP's flavour even when its own cloud differs.
   contract it implements.
 - [cloudflare](./cloudflare.md) — the other cloud plugin, parked at Zero Trust
   Access.
-- [cicd](./cicd.md) — writes the delivery pipeline these deploy templates
-  describe.
+- [stackgen](./stackgen.md) — its `ci-system` kind writes the delivery pipeline
+  these deploy templates describe.
 - [devtools](./devtools.md) — Docker and the provider-neutral
   `container-generic` deploy template.

@@ -33,9 +33,10 @@ Image → Artifact Registry → cluster, applied behind mise `release:*` tasks.
 Manifests are versioned in the repo and rendered per environment; the release
 task applies them, so the same command runs locally and in CI.
 
-Deploys obey **vwf's delivery-pipeline contract** — tag-triggered only, shaped
-`<project>-<env>-v<semver>`, branch-validated, tests gated. CI belongs to the
-`cicd` plugin.
+Deploys obey **vwf's delivery-pipeline contract** — deliberate rather than
+branch-pushed, branch-validated, tests gated; the recommended trigger is a
+`<project>-<env>-v<semver>` tag. CI belongs to the
+CI system pinned on the project's `cicd` axis.
 
 Cloud Deploy is available for progressive rollouts across environments; it earns
 its complexity only once promotion between several environments is a routine

@@ -240,7 +240,7 @@ concern **not applicable** to omit it from the doc entirely.
 | --------------- | ---------------------------------- |
 | `auth`          | `<issuer>-id-token`         |
 | `errors`        | `coded-envelope`            |
-| `observability` | `otlp-to-<sink>`            |
+| `observability` | `telemetry-to-<sink>`       |
 | `config`        | `<manager>-secrets`         |
 | `testing`       | `emulator-backed`           |
 | `integrations`  | `[<service>, <service>]`    |

@@ -2,7 +2,7 @@ name: GitHub Actions
 summary: The delivery pipeline on GitHub Actions — workflow layout, toolchain
   installation through mise, the gate sequence, and vwf's tag-triggered release
   contract.
-version: 0.1.0
+version: 0.2.0
 type: ci-system
 capability: n/a
 kind: ci-system

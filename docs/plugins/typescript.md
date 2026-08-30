@@ -171,4 +171,5 @@ under Cursor, OpenCode or Codex means porting the manifest yourself, per the
   UX-gate skills.
 - [devtools plugin](./devtools.md) — mise, the task library, and the repo-level
   `dprint`/`eslint` gates this plugin's `lint-format` skill runs.
-- [cicd plugin](./cicd.md) — the delivery pipeline that runs those gates.
+- [stackgen plugin](./stackgen.md) — its `ci-system` kind writes the delivery
+  pipeline that runs those gates.
