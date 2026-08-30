@@ -522,6 +522,69 @@ describe("the technology-free vwf guard", () => {
     });
     expect(check(root)).toEqual([]);
   });
+
+  // The manifest half. The guard globbed `.md` only, which is exactly how
+  // `"command": "pnpm"` sat in vwf's context7 entry unseen — a manifest is not
+  // prose, so nothing read it.
+  const manifest = (context7: Record<string, unknown>) => ({
+    vwf: {
+      manifest: {
+        name: "vwf",
+        version: "1.0.0",
+        description: "the vwf plugin",
+        mcpServers: { context7 },
+      },
+    },
+  });
+
+  it("flags a hardcoded runner in an MCP server invocation", () => {
+    const root = tree(manifest({
+      command: "pnpm",
+      args: ["dlx", "@upstash/context7-mcp"],
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("hardcodes \"pnpm\""),
+    ]);
+  });
+
+  it("accepts a runner behind a ${VAR:-default} expansion", () => {
+    // The recommendation survives — pnpm is still what runs by default. What
+    // changed is that a bun user can displace it, instead of getting a dead
+    // server with no stated prerequisite.
+    const root = tree(manifest({
+      command: "sh",
+      args: ["-c", "${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp"],
+    }));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("still flags a token outside the expansion", () => {
+    // Overridable in name only: the expansion is there, but the runner it
+    // selects is not the part that was hardcoded.
+    const root = tree(manifest({
+      command: "sh",
+      args: ["-c", "bun x ${CONTEXT7_ARGS:-@upstash/context7-mcp}"],
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("hardcodes \"bun\""),
+    ]);
+  });
+
+  it("ignores an http server, which has no runner to hardcode", () => {
+    const root = tree({
+      vwf: {
+        manifest: {
+          name: "vwf",
+          version: "1.0.0",
+          description: "the vwf plugin",
+          mcpServers: {
+            mempalace: { type: "http", url: "http://127.0.0.1:8765/mcp" },
+          },
+        },
+      },
+    });
+    expect(check(root)).toEqual([]);
+  });
 });
 
 describe("prescription vs enumeration", () => {
@@ -585,6 +648,39 @@ describe("prescription vs enumeration", () => {
     // The unanchored form this list started as matched `hono` inside "honor"
     // and "honored" across a dozen files.
     expect(prescribes("we honor the contract, as honored elsewhere", "hono"))
+      .toBe(false);
+  });
+
+  it("flags a banned token used as the head of a compound", () => {
+    // The trailing anchor used to exclude `-`, so a banned token heading a
+    // hyphenated compound never matched. Both of these shipped in vwf.
+    expect(
+      prescribes("alerting/dashboards: grafana-side by default", "grafana"),
+    )
+      .toBe(true);
+    expect(prescribes("a `cli` platform pins deploy/npm-package", "npm"))
+      .toBe(true);
+    expect(prescribes("bring it up with docker-compose", "docker")).toBe(true);
+    expect(prescribes("a postgres-backed store", "postgres")).toBe(true);
+    expect(prescribes("terraform-managed infrastructure", "terraform"))
+      .toBe(true);
+  });
+
+  it("still refuses a token sitting at the tail of a compound", () => {
+    // The leading anchor keeps `-` on purpose: matching a tail would make
+    // `pnpm-workspace` a hit for `npm`, and split `axe-core` down the hyphen.
+    expect(prescribes("see pnpm-workspace.yaml", "npm")).toBe(false);
+  });
+
+  it("matches a hyphenated token whose own hyphen is internal", () => {
+    expect(prescribes("the axe-core scan", "axe-core")).toBe(true);
+    expect(prescribes("an axe-core-driven scan", "axe-core")).toBe(true);
+  });
+
+  it("counts a peer named as the head of a compound", () => {
+    // The anchor is shared with the enumeration scan, so widening it widens
+    // what counts as evidence too.
+    expect(prescribes("`claude-design`, lovable-style tools", "claude-design"))
       .toBe(false);
   });
 });

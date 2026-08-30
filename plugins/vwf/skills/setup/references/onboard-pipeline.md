@@ -22,7 +22,11 @@ In order:
 
 1. **Tooling.** If the mise config is missing, invoke
    `/devtools:scaffold`. If it fails, report the error and offer
-   to continue without it, leaving the mise config to the user.
+   to continue without it, leaving the mise config to the user. **This step
+   defers rather than skips** — see
+   [Tooling defers rather than halting](#tooling-defers-rather-than-halting)
+   below; on a blank repo there is no stack to provision against yet, which is
+   the normal case here rather than a fault.
 2. **Docs scaffold.** Create `docs/blueprint/` and `docs/plans/` with
    `docs/plans/archived/`. Nothing inside `docs/blueprint/` is authored here —
    an empty tree is the honest state of a product nobody has described yet, and
@@ -46,6 +50,28 @@ Return `product.name`, `memory.wing`, and both stamps. Write **no** `topology`,
 key describing projects that do not exist yet is not a default, it is a claim
 the repo cannot support. Their absence is the **structure-pending** state, which
 `/vwf:doctor` reads as early rather than as drift.
+
+## Tooling defers rather than halting
+
+The tooling step — the mise config, the task library, harness provisioning — is
+the one part of setup that needs a stack to act against, and setup runs before
+`/vwf:architecture` has chosen one. It therefore **defers**: it never halts the
+run, and it never continues silently either.
+
+Whatever it could not provision is **recorded and named, with its unlock**: what
+was skipped, and what would let it happen — an axis to pin via
+`/vwf:architecture`, or a stack plugin to install. On a blank repo that is
+usually everything stack-shaped, which is the honest state of a repo nobody has
+described a product for yet. Anything it *can* do without a stack — the generic
+mise config, the task library skeleton — it still does.
+
+**setup never writes `unresolved`.** That value arrives only from an
+`/vwf:architecture` run, which offered the axis and had it deferred
+(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"); setup
+writing it would claim a question was asked and postponed when it was never
+asked. An axis setup could not settle is left **absent** — the same
+structure-pending state as every other key it declines to invent — and named in
+what it could not provision.
 
 ## Code — detect, then confirm
 
@@ -91,7 +117,10 @@ with the evidence that produced it — and let the user correct it. Two things a
 **never** assumed: a **screen platform**, because it makes the design system
 mandatory, and a `packages` project's role, because the same package consumed
 from two sides is a judgment call. A platform no installed plugin ships a
-template for is a halt, not a free-text pin — the menu is the whole vocabulary.
+template for is **never** a free-text pin — the menu is the whole vocabulary.
+It is no longer a halt either: leave that project's axis unrecorded, name what
+would supply it, and let `/vwf:architecture` settle it, per
+[Tooling defers rather than halting](#tooling-defers-rather-than-halting).
 
 ### Multi-repo takes two more questions, in order
 

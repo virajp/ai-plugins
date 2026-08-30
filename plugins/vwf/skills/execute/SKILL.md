@@ -305,9 +305,15 @@ silently if mempalace is unavailable.
    `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` — deduped by slug, **once
    for the whole run**, here rather than per step. The config block names the
    templates; the prose is what the code is actually written to, and every stage
-   below that touches code is passed it. A failed fetch halts: the preflight
-   already proved each pin resolves, so a failure now is the plugin being
-   unreachable, and code written to conventions nobody read is the thing this
+   below that touches code is passed it. **Two different halts live here.** An
+   axis reading `unresolved` halts at that asset's step 1, before any fetch —
+   the axis was deferred, so there is no prose to resolve; name the project and
+   the axis and point at `/vwf:architecture`. A failed fetch halts for the
+   opposite reason: the preflight already proved each pin resolves, so a failure
+   now is the plugin being unreachable. Report them distinguishably — a question
+   nobody answered is not a plugin that broke — and note that `/vwf:doctor` will
+   not have caught the first, since it reports deferral as a degradation by
+   design. Either way, code written to conventions nobody read is the thing this
    whole gate exists to prevent.
 4. **Dependency order.** Read the plan's "Delta — ordered steps", build the
    dependency order, and record the sequence you will execute. **Open the run

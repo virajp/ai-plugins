@@ -52,26 +52,43 @@ then verifies the repo against those facts instead of against a language
 plugin, and `n/a` in a fact is an answer, not an absence. The escape changes
 nothing about the closed menu: the facts entered the config through a
 consent-gated materialization, not through free text. A token with **neither**
-a claiming plugin **nor** materialized facts stays `unknown`, and unknown stays
-**blocking**.
+a claiming plugin **nor** materialized facts stays `unknown`.
+
+**Unknown is blocking, but only once the project has a stack.** Since
+`config_format` 16 a project's `template` may read `unresolved` — deferred, not
+yet chosen (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis
+states"). A project in that state records `languages: []` and there is no token
+to be unknown; if it carries tokens anyway, an unclaimed one is a **degradation**
+rather than a blocking finding, because the plugin that would claim it is
+exactly what has not been chosen yet. The moment the project axis is pinned, the
+rule reverts: unknown is **blocking**, and `setup` and `execute` halt on it. The
+severity follows the pin, never the calendar.
 
 ## The four axes
 
 A stack is **composed from four independent templates**, not one monolith. Each
 axis answers a different question, and a project's `.config/vwf.yaml` `stack`
-block pins one of each:
+block answers each one:
 
-| Axis        | Scope       | Owns                                                    |
-| ----------- | ----------- | ------------------------------------------------------- |
-| **project** | per project | Language, framework, source layout, testing             |
-| **backing** | per project | Datastore, identity, queue, storage, the local stack    |
-| **deploy**  | per project | Build artifact, release pipeline, hosting, environments |
-| **repo**    | per repo    | Package manager, task runner, lint/format, workspace    |
+| Axis        | Scope       | Cardinality           | Owns                                                    |
+| ----------- | ----------- | --------------------- | ------------------------------------------------------- |
+| **project** | per project | one                   | Language, framework, source layout, testing             |
+| **backing** | per project | a list (one per capability) | Datastore, identity, queue, storage, the local stack |
+| **deploy**  | per project | a list (one per delivery mechanism, since `config_format` 16) | Build artifact, release pipeline, hosting, environments |
+| **repo**    | per repo    | one                   | Package manager, task runner, lint/format, workspace    |
 
 The templates themselves live in the **stack plugins**, never in vwf
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Since config_format 13 the
 first three are pinned **per project** — a product may run its site on one cloud
 and its API on another.
+
+**An axis may also be unanswered.** Since `config_format` 16 any of the four may
+read `unresolved` — deferred rather than decided
+(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). The
+axes stay independent under deferral too: one may be pinned while the other
+three are not, and nothing infers one from another. Deferral costs the doc
+surfaces nothing and costs `plan` and `execute` everything — they have no
+`conventions:` prose to read, so they halt.
 
 The split exists because these vary **independently**: one service framework
 runs against any datastore, on any host. Folding them into one document is what
@@ -170,13 +187,23 @@ There is no "recommended" or "default" marker on any template. vwf ships a menu:
 `/vwf:architecture` presents every template for a project's `role` and the user
 picks. There is **no free-text escape hatch** — no *other (describe)* option, and
 `template: custom` is not a value the config accepts (retired in
-`config_format` 14). A role for which no installed plugin ships a fitting
-template is a **halt**, naming the two ways forward: install the stack plugin
-that has one, or write it (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`,
-"Writing a stack plugin").
+`config_format` 14). An axis for which no installed plugin ships a fitting
+template has **three ways forward, never a free-text pin**: install the stack
+plugin that has one, write it
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "Writing a stack plugin"), or
+**defer the axis** — record `unresolved` and carry on defining the product
+(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). Before
+`config_format` 16 only the first two existed, so an empty menu was a halt; the
+third is what makes it a postponement instead.
 
 That refusal is the point. A `custom` pin recorded a stack vwf had no template
 for — so no `conventions` prose for `plan` and `execute` to read, and no
 `harness` block for `/vwf:doctor` to check — and the pipeline ran on with those
 inputs missing and said nothing. Closing it makes the menu the whole vocabulary,
 and makes adding to it a plugin rather than a config value.
+
+**`unresolved` is not `custom` returning.** `custom` asserted a stack, and the
+pipeline then ran against inputs that did not exist while saying nothing — that
+is what made it dangerous. `unresolved` asserts the opposite: that no stack has
+been chosen, which is why `plan` and `execute` refuse rather than proceed. One
+was a silent hole in a closed menu; the other is the hole named out loud.

@@ -42,8 +42,9 @@ project's stack answers, recorded as the cross-cutting `observability:` token.
   compensated — name them in the owning flow doc, beside its Acceptance block)
   and **entity states** (counts by lifecycle state — name them in the owning
   entity doc, beside its Lifecycle table).
-- Alerting/dashboards: Grafana-side by default (not in-repo); elicit only if the
-  product wants dashboards-as-code.
+- Alerting/dashboards: driven from the observability backing service by default,
+  not from the application (so nothing in-repo); elicit only if the product
+  wants dashboards-as-code.
 
 ## Blueprint expansion
 

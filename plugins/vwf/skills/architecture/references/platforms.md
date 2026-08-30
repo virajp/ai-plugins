@@ -76,7 +76,8 @@ have. Ask which it is rather than defaulting; an installer is the clear
 `system` case, a `git`-like tool the clear `frontend` one.
 
 **Nothing downstream keys on that choice.** Every gate reads the platform
-token, not the role: Terminal UX, the screens/mockups exemption, the
-`deploy/npm-package` pin, and blueprint coverage — which excepts `cli`
+token, not the role: Terminal UX, the screens/mockups exemption, the fact that
+a `cli` platform pins a deploy template for its package registry — which one is
+the stack plugin's answer — and blueprint coverage, which excepts `cli`
 alongside `plugin` precisely so the role cannot silently change it. Picking the
 wrong role misdescribes the project; it does not misconfigure it.

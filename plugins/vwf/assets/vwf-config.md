@@ -26,14 +26,17 @@ declares, `template: custom` is retired, and anything outside that is a blocking
 **format 15** a multi-repo product no longer has to be a submodule parent: the
 `members:` list names each repo, where to clone it from, and which registry
 projects live in it, and `linkage:` records whether they are wired as submodules
-or are plain siblings. Since **blueprint-format 6** this file replaces the old
-stamp at `docs/blueprint/.vwf.yml`.
+or are plain siblings. Since **format 16** an axis has a third state,
+`unresolved` — *not answered yet* — which is what lets a product be **defined**
+before a stack is chosen, and the deploy axis is a **list**, because a project
+may ship through more than one delivery mechanism. Since **blueprint-format 6**
+this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 15)
+## Schema (config_format 16)
 
 ```yaml
-config_format: 15 # this file's own schema version — setup migrates it
-blueprint_format: 22 # the docs/blueprint format stamp
+config_format: 16 # this file's own schema version — setup migrates it
+blueprint_format: 23 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -58,22 +61,24 @@ members: # MULTI-REPO ONLY (format 15). One entry per member repo; the BASE repo
 
 repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in multi-repo topology the base and each member carry their own
   stack:
-    template: repo/<slug> # a repo-axis template an INSTALLED stack plugin ships. No `custom` — that value was retired in format 14; nothing on the menu means a halt, not a free-text pin
+    template: repo/<slug> # a repo-axis template an INSTALLED stack plugin ships, or `unresolved` (format 16 — deferred, see The three axis states). No `custom` — that value was retired in format 14; nothing on the menu means a halt, not a free-text pin
     package_manager: <tool> # only where the language has one; the repo template names the permitted values
     tools: [] # open, lowercase-kebab — whatever the repo template names
 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
-      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin. NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+webapp), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
+      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+webapp), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
       backing_template: [
         <slug>,
-      ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not)
-      deploy_template: <slug> # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). Keyed on PLATFORM since format 15: a project whose platforms are all SCREEN platforms other than `site`/`webapp` — `mobile`, `tablet`, `desktop`, `auto` — sets `n/a`, since it ships through a store rather than to a deploy target. A `cli` platform sets `deploy/npm-package` — a package registry IS its target. An `iac` platform sets `n/a`: it IS the deploy path
+      ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not). `unresolved` — the bare scalar, never an element — when the axis is deferred
+      deploy_template: [
+        <slug>,
+      ] # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). A LIST since format 16, the same shape change `backing_template` made in 13: one slug per DELIVERY MECHANISM the project ships through, because a project routinely has more than one — a `cli` may publish to a package registry AND a container image AND a signed archive, and format 15 could record exactly one. Keyed on PLATFORM: a project whose platforms are all SCREEN platforms other than `site`/`webapp` — `mobile`, `tablet`, `desktop`, `auto` — records `[]`, since it ships through a store rather than to a deploy target, as does an `iac` platform, which IS the deploy path. A `cli` platform pins a deploy template for its package registry — WHICH one is the stack plugin's answer and vwf names NO slug here, on this axis or any other. `unresolved` when deferred
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing managers
       languages: [
         <token>,
-      ] # CLOSED vocabulary — the union of what the INSTALLED stack plugins declare (assets/stack-vocabulary.md); vwf holds no table of its own. At least one; drives doctor's LSP + toolchain checks. A token no plugin declares is doctor's BLOCKING `unknown` finding, never a recorded-and-ignored value
+      ] # CLOSED vocabulary — the union of what the INSTALLED stack plugins declare (assets/stack-vocabulary.md); vwf holds no table of its own. At least one, EXCEPT while `template` reads `unresolved` — a project whose language nobody has chosen yet records `[]`, and that is the one legal empty. Drives doctor's LSP + toolchain checks. A token no plugin declares is doctor's `unknown` finding — BLOCKING once this project's `template` is pinned, a degradation while it reads `unresolved` (assets/stack-vocabulary.md) — never a recorded-and-ignored value
       frameworks: [] # open, lowercase-kebab; 0..n. What the code is written against
       dependencies: [] # open, lowercase-kebab; the few that characterize the stack
       note: <one
@@ -123,6 +128,56 @@ memory:
 docs_sync:
   include: [] # extra human docs in the docs-sync scope (README/CLAUDE.md are always in)
 ```
+
+## The three axis states
+
+Every stack axis — `projects.<name>.stack.template`, `backing_template`,
+`deploy_template`, and `repo.stack.template` — is in exactly one of **three**
+states since format 16. Until then there were two, and the missing one is what
+forced a user with no stack plugin installed to answer an unanswerable question:
+
+| State                          | Spelling                                    | Means                                                   |
+| ------------------------------ | ------------------------------------------- | ------------------------------------------------------- |
+| **pinned**                     | a slug (scalar axes) / a non-empty list      | the axis is answered                                    |
+| **decided: none**              | `[]` on the two list axes                    | this axis genuinely does not apply to this project      |
+| **deferred**                   | `unresolved`                                 | not asked yet, or asked and postponed                   |
+
+`unresolved` is the **bare scalar on every axis, including the list ones** —
+`deploy_template: unresolved`, never `[ unresolved ]`. An element of a list is a
+slug; deferral is a property of the axis, not of one mechanism within it. A list
+axis therefore never mixes the two.
+
+**`[]` and `unresolved` are opposites, not neighbours.** `[]` is a decision — *we
+looked, and this project ships through nothing / talks to no backing service* —
+and it is complete. `unresolved` is the absence of a decision. Collapsing them
+would make an unanswered axis indistinguishable from a finished one, which is
+precisely the state format 16 exists to make visible. The scalar axes
+(`template`, `repo.stack.template`) have no `[]`: every project has a project
+axis and every repo a repo axis, so their only two states are pinned and
+deferred.
+
+**`unresolved` only ever arrives from an `/vwf:architecture` run**, which offers
+deferral alongside the menu entries and says what would unlock the axis. No
+migration writes it, and nothing infers it from an absent key — an absent `stack`
+block is still drift, exactly as before, because absence records nothing about
+whether anyone was asked.
+
+**Where it is tolerated, and where it is not.** Defining the product runs to
+completion with every axis deferred; building it does not.
+
+| Surface                                        | On an `unresolved` axis                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------ |
+| `product`, `architecture`, `blueprint`, `design-system`, and every doc surface | unaffected — none of them reads a stack                       |
+| `doctor`                                       | a **degradation**, reported every run; the checks that depend on that axis report `not checked — no stack resolved`, never a blocking finding |
+| `setup`                                        | records what it could not provision and names the unlock; never halts on it     |
+| `plan`, `execute`                              | **halt**, naming the axis and the project and pointing at `/vwf:architecture`   |
+
+The halt at `plan`/`execute` is not a policy choice — it falls out of
+**Resolving the conventions** (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`):
+both resolve every pin's `conventions:` prose before they size or write anything,
+and an unresolved axis has no prose to resolve. Code sized against conventions
+nobody read is the failure the closed menu exists to prevent, so the halt points
+at answering the question, never at installing something.
 
 ## Semantics — who reads/writes what
 
@@ -174,9 +229,9 @@ earlier than 65/90/80), never loosen.
   `/vwf:product`, then `/vwf:architecture`*) and
   the format check stays silent, since nothing is behind. **No key records
   this** — the state is exactly the absence of the registry, and a key asserting
-  it would be a second place to disagree with the filesystem. `config_format`
-  therefore stays **15**: recognising a state that was always reachable adds
-  nothing to this schema.
+  it would be a second place to disagree with the filesystem. That state
+  therefore carries **no `config_format` bump of its own**: recognising a state
+  that was always reachable adds nothing to this schema.
 - `config_format` versions this file's own schema; bump it (with a migration
   note here) when a key's shape changes.
 - **`1 → 2` migration** (performed by `/vwf:setup`): rename
@@ -330,8 +385,10 @@ earlier than 65/90/80), never loosen.
      never used; propose that, do not assume it.
   2. **`deploy`** → `projects.<name>.stack.deploy_template`, unchanged in shape.
      Same override rule, and the existing `n/a` conventions carry over verbatim:
-     a `frontend` on a screen platform stays `n/a`, a `cli` frontend stays
-     `deploy/npm-package`. Then drop the top-level `deploy:` block.
+     a `frontend` on a screen platform stays `n/a`, and a `cli` frontend keeps
+     whatever package-registry template it had pinned. Then drop the top-level
+     `deploy:` block. (The shape changed later, in `15 → 16`, which turns this
+     key into a list.)
   3. **`design.tool`** → `projects.<name>.design`, for every **UI** project only
      (`role` `site`, `fullstack` or `frontend` in `registry.yaml`) — a project
      with no surfaces never had a design tool and must not acquire one. Then
@@ -435,6 +492,36 @@ earlier than 65/90/80), never loosen.
   Bump `config_format` to `15` and `blueprint_format` to `22` together. Readers
   treat a `polyrepo` topology, a `project/<role>/<slug>` pin, or a `multi-repo`
   product with no `members:` as `14` drift.
+
+- **`15 → 16` migration** (performed by `/vwf:setup`): **an axis gains a third
+  state, and the deploy axis gains cardinality.** Two changes, one of them
+  purely mechanical and the other adding nothing to any existing repo:
+
+  1. **`deploy_template` becomes a list**, the same shape change
+     `backing_template` made in `13` and for the same reason: a project ships
+     through more than one delivery mechanism, and format 15 could record one.
+     Wrap each existing slug as a one-element list (`deploy/<slug>` →
+     `[ deploy/<slug> ]`) and rewrite each `n/a` as **`[]`**, which is what
+     "decided: none" is spelled on a list axis. Both steps are mechanical and
+     need no input. Then, **for every project, ask whether anything is missing** —
+     this is the only step here with a question in it, and it is an offer rather
+     than a gate: a `cli` publishing to a package registry may also ship a
+     container image or a signed archive, and until now it could not say so. A
+     user who adds nothing is left byte-equivalent to where they started.
+  2. **`unresolved` is new on all four axes**, and **no repo migrates into it**.
+     Every existing config has every axis answered, so there is nothing to
+     convert; the value only ever arrives later, from an `/vwf:architecture` run
+     that offers deferral. This step exists to state that absence of change is
+     correct, not to leave the reader looking for the edit.
+
+  Nothing else moves. `n/a` survives on the keys that are not stack axes —
+  `projects.<name>.harness.health`, and the harness capability entries — where it
+  has always meant "declared: no such surface" and still does.
+
+  `blueprint_format` is **untouched** and stays **23**: nothing under
+  `docs/blueprint/` changes, which is the second config bump to ship without a
+  paired blueprint bump, after `14`. Readers treat a scalar `deploy_template`, or
+  a `deploy_template: n/a`, as `15` drift.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

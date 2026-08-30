@@ -15,7 +15,7 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**22**) and `config_format` (**15**) are **drift
+`blueprint_format` (**23**) and `config_format` (**16**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
@@ -53,6 +53,8 @@ must go through the rule below. Every other row is mechanical.
 | `<type>/<slug>`, `console/<slug>` | `project/<slug>` (it passed through `project/fullstack/<slug>`) | template-path | |
 | `project/<role>/<slug>` | `project/<slug>` | template-path | |
 | `template: custom` | retired — repin from the stack plugin's menu | template-path | yes |
+| a scalar `deploy_template` | a list: `[ <slug> ]` | template-path | |
+| `deploy_template: n/a` | `[]` — "decided: none" on a list axis | template-path | |
 | `docs/specs/` | `docs/blueprint/` | file-location | |
 | `docs/blueprint/.vwf.yml` | `.config/vwf.yaml` | file-location | |
 | `docs/blueprint/<entity>.md`, or `<entity>/` at the blueprint root | `entities/<entity>/index.md` + `schema.yaml` | file-location | |

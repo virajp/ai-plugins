@@ -106,10 +106,10 @@ So after installing, run:
 
 Doctor blocks on a missing **`mise`** or **`graphify`**, and both `/vwf:setup`
 and `/vwf:execute` halt on either. It is not a complete substitute for the
-retired gate: a missing language server is an ordinary finding, and `pnpm` and
-`rtk` are not checked — `rtk`'s hook is guarded so its absence only degrades,
-while a missing `pnpm` surfaces as the context7 MCP server failing to start.
-Install all five.
+retired gate: a missing language server is an ordinary finding, a missing `rtk`
+is reported as a **degradation** rather than a block — its hook is guarded, so
+the run is correct and merely costs more — and `pnpm` is not checked at all,
+surfacing only as the context7 MCP server failing to start. Install all five.
 
 ## The statusline has moved
 

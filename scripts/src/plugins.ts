@@ -50,6 +50,13 @@ export interface Manifest {
    */
   readonly keywords?: unknown;
   readonly dependencies?: unknown;
+  /**
+   * Read only by the technology-free guard, which needs a manifest's
+   * `command`/`args` as well as its prose: `"command": "pnpm"` sat in vwf's
+   * context7 entry for months because the guard globbed `.md` files and a
+   * manifest is not one.
+   */
+  readonly mcpServers?: unknown;
 }
 
 export interface PluginFile {

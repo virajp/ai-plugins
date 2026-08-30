@@ -140,6 +140,14 @@ conventions, and when there is no template there are no conventions — the plan
 would read as ordinary while resting on nothing
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
 
+**An `unresolved` axis halts too, and doctor is not what catches it** — doctor
+reports deferral as a degradation, deliberately, since defining a product with
+no stack chosen is a supported state. The halt belongs to the step below and
+fires there, before any adapter is called: see *Resolving the conventions* in
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, step 1. Report it
+**distinguishably from a failed fetch** — one is a question nobody answered and
+points at `/vwf:architecture`, the other is a plugin that broke.
+
 Three things about its placement and scope, each deliberate:
 
 - **Here, not in §1.** The scope is the *chain's* projects, not the requested
@@ -160,7 +168,8 @@ editing this file.
 **Resolve the stack conventions.** With the gate clean, fetch the `conventions:`
 prose for every template the chain's projects pin, per *Resolving the
 conventions* in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` — deduped by
-slug, **once for the whole chain**, before §3. The config block names the
+slug, **once for the whole chain**, before §3. Its step 1 is where an
+`unresolved` axis halts, ahead of any fetch. The config block names the
 templates; only the plugin holds what they say, and the *how* questions this
 command settles — where a file goes, what a test looks like, which existing
 shape to extend — are answered by that prose. Sizing steps without it is

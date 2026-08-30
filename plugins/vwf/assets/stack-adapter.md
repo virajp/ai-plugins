@@ -70,12 +70,17 @@ projects:
     stack:
       template: project/site/<slug>
       backing_template: [ <slug>, <slug> ]
-      deploy_template: <slug>
+      deploy_template: [ <slug> ]
   api:
     stack:
       template: project/service/<slug>
       backing_template: [ <slug> ]
-      deploy_template: <slug>
+      deploy_template: [ <slug>, <slug> ] # a project may ship through several
+  cli:
+    stack:
+      template: unresolved # deferred — see below
+      backing_template: []
+      deploy_template: unresolved
 ```
 
 Since **config_format 13** the `backing` and `deploy` axes are per project, not
@@ -83,6 +88,19 @@ product-wide. That is what lets one product run its site on one cloud and its
 API on another while both draw from the same installed plugins: the roster is
 shared, the selections are not. A product-wide `backing:` or `deploy:` block is
 `12` drift.
+
+Since **config_format 16** `deploy_template` is a **list**, matching
+`backing_template`: a project ships through as many delivery mechanisms as it has
+— a package registry, a container image, a signed archive — and a scalar could
+record one. Adapters that emit a deploy payload are unaffected; the cardinality
+is the *config's*, and each slug is still fetched on its own.
+
+Since **config_format 16** any axis may also read **`unresolved`** — deferred,
+not decided (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis
+states"). It is the bare scalar even on the list axes, and it is never something
+an adapter returns: it records that vwf did not ask, or that the user postponed
+the answer. **No adapter is invoked for an unresolved axis**, so a stack plugin
+never sees the value and needs no handling for it.
 
 The `repo` axis stays per repo (`repo.stack.template`) — it describes the
 checkout, not a project.
@@ -235,8 +253,15 @@ steps against that prose and `/vwf:execute` writes code to it, so both resolve
 it the same way:
 
 1. **Collect the pins** for every project in scope — `template`, each
-   `backing_template` entry, `deploy_template`, and the repo's
-   `repo.stack.template`. Skip `n/a`; it is an answer, not a pin.
+   `backing_template` entry, each `deploy_template` entry (a list since
+   `config_format` 16), and the repo's `repo.stack.template`. Skip `n/a` and an
+   empty list; both are answers, not pins.
+
+   **An `unresolved` axis halts here, before any fetch.** It is the one state
+   that is neither a pin nor an answer, so there is no prose to resolve and no
+   honest way to proceed — report the project and the axis, point at
+   `/vwf:architecture`, and stop. Distinguish it from the failure below when
+   reporting: this one is a question nobody answered, not a plugin that broke.
 2. **Dedupe by (plugin, slug) and fetch each once**, calling
    `/<plugin>:<plugin>-stack-template <slug>`. A monorepo whose projects share a
    repo template fetches it once, not once per project.
@@ -280,8 +305,10 @@ side of the contract is three rules:
   `plan`'s and `execute`'s conventions resolution behaves exactly as
   *Resolving the conventions* states, with no research, network, or write on
   their clock. Materialization itself happens once, interactively, when the
-  pin is first made; a pin whose materialization was declined is unresolved,
-  and the fetch says so rather than generating silently.
+  pin is first made; a pin whose materialization was declined is
+  **unmaterialized**, and the fetch says so rather than generating silently.
+  That is not the `unresolved` axis state above and must not be recorded as one:
+  the axis *was* answered, and what is missing is the artifact, not the decision.
 - **The menu may carry one open entry.** A materializing adapter's menu may
   offer *generate for an uncovered technology* (pinned as
   `generated/<technology-slug>`) alongside its curated entries. That entry is

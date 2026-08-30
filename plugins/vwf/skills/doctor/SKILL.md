@@ -56,9 +56,12 @@ halt on a blocking finding they were never told about.
   marketplace is reported as *unavailable* with no suggested command; only a
   language that *has* a plugin and isn't installed is a *missing* finding.
   Both presuppose an installed plugin **declares** the language. One that no
-  plugin declares at all is *unknown*, and unknown is **blocking** — vwf's stack
-  menu is closed to what the installed plugins define
-  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
+  plugin declares at all is *unknown*, and unknown is **blocking once that
+  project's `template` is pinned** — vwf's stack menu is closed to what the
+  installed plugins define
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). While the project axis
+  reads `unresolved` it is a **degradation** instead: the plugin that would
+  claim the token is exactly what has not been chosen yet.
 - **Never halt.** Doctor always finishes and reports, even when everything is
   broken — a mandate is expressed as a **blocking finding**, never as doctor
   stopping early. Callers decide what a finding means: `setup`, `plan` and
@@ -132,17 +135,18 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the four stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the four stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
 ### 9. Report & persist
 
 One table, findings first, grouped by kind — **blocking** (something *mandatory*
-is absent or misplaced, or the stack is one no installed plugin defines: mise,
+is absent or misplaced, or the stack is one no installed plugin defines:
 the graphify CLI, a graph missing from a locally-present checkout, an `iac`
 project inside another repo whose extraction the user has **not** declined on
-the record, an **unknown** language, a `custom` template pin, a
+the record, `mise` and an **unknown** language — the last two **conditionally**,
+once a stack axis is pinned (§5, §3) — a `custom` template pin, a
 project whose template does not cover every platform it declares, a broken
 membership link (§1), a misplaced / duplicated /
 missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
@@ -150,11 +154,14 @@ missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 install — including a **`B`**-kind capability a project declares that none of
 its `backing_template` pins provides, which is never blocking; §5),
 **unavailable** (nothing shipped here to install), **unknown**
-(no installed plugin declares it — always blocking, listed separately so the
-remedy reads as *install or write the plugin*, never *install this one*),
-**degraded** (something optional is absent and a
-fallback is carrying the work — **or** a mandate the user declined on the
-record: a declined graph build, and an `iac` extraction declined under
+(no installed plugin declares it — blocking once the axis is pinned, listed
+separately so the remedy reads as *install or write the plugin*, never *install
+this one*), **degraded** (something optional is absent and a
+fallback is carrying the work, or the run simply costs more — a missing `rtk`,
+whose guarded hook no-ops (§5) — **or** a decision the user has not yet made or
+has declined on the record: an axis reading `unresolved`, whose dependent checks
+report `not checked — no stack resolved` (§§3–5), a declined graph build, and an
+`iac` extraction declined under
 `enforcement:`, each reported every run and never escalating back to blocking).
 Mark anything the §1 recall already carried as
 **known**, so a repeat run reads as a diff rather than a re-accusation. State

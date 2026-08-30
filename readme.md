@@ -24,12 +24,11 @@ until you approve. The whole manual, command by command, is
 starting fresh, adopting vwf in a codebase that already works, and running a
 live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 
-Around it the marketplace ships **fourteen more plugins** — languages, clouds,
-capabilities, tooling, design and generation. That is the point of the split:
-vwf owns the workflow and names no technology at all, so every concrete choice
-lives in a plugin you install only if your product uses it. They install through
-Claude Code's own plugin commands, straight from this repo — or through one
-small CLI,
+Around it the marketplace ships **seven more plugins** — languages, clouds,
+tooling and generation. That is the point of the split: vwf owns the workflow
+and names no technology at all, so every concrete choice lives in a plugin you
+install only if your product uses it. They install through Claude Code's own
+plugin commands, straight from this repo — or through one small CLI,
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins),
 which sequences those same commands and wires up graphify.
 
@@ -56,13 +55,17 @@ blocker rather than a preference. Know this before you install.
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
 - **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `pnpm`
-  and `rtk`. **Nothing checks this at install time**, and `/vwf:doctor` does not
-  cover all five: it blocks on a missing `mise` or `graphify` (and `/vwf:setup`
-  and `/vwf:execute` halt on either), reports a missing language server as an
-  ordinary finding, and says nothing about `pnpm` or `rtk` — `rtk`'s hook is
-  guarded so its absence only degrades, and `uv` matters as graphify's runtime
-  rather than on its own. Run `/vwf:doctor` first regardless, but install all
-  five rather than relying on it to tell you.
+  and `rtk`. `pnpm` is only the **default** Context7 runner; `CONTEXT7_RUNNER`
+  overrides it, so a bun or npm user needs no pnpm — see
+  [docs/plugins/vwf.md](./docs/plugins/vwf.md). **Nothing checks this at install
+  time**, and `/vwf:doctor` does not cover all five: it blocks on a missing
+  `graphify`, and on a missing `mise` once any stack axis is pinned (and
+  `/vwf:setup` and `/vwf:execute` halt on either), reports a missing language
+  server as an ordinary finding, reports a missing `rtk` as a **degradation** —
+  its hook is guarded, so the run is correct and merely costs more — and says
+  nothing at all about the Context7 runner, while `uv` matters as graphify's
+  runtime rather than on its own. Run `/vwf:doctor` first regardless, but
+  install all five rather than relying on it to tell you.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -255,8 +258,10 @@ bundle used to generate. For what no pack covers, the curated plugins above
 remain the covered-stack path, and stackgen's value is the uncovered tail. A
 `vwf` dependency, because vwf's stack menu is the union of what the installed
 stack plugins offer — with none present it comes back empty, and the axes carry
-no free-text escape. Having it installed commits you to nothing; it acts only
-once an axis is pinned. `stackgen@virajp-plugins`
+no free-text escape. You can defer an axis and keep defining the product, but
+`/vwf:plan` and `/vwf:execute` halt until it is answered. Having it installed
+commits you to nothing; it acts only once an axis is pinned.
+`stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
@@ -371,7 +376,7 @@ maintainers. 🙏
 - **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the
   plugins and hooks depend on.
 - **[pnpm](https://pnpm.io/)** — the default package manager the normalizing
-  hook and the Context7 server rely on.
+  hook rewrites to, and the default runner behind the Context7 server.
 - **[typescript-language-server](https://github.com/typescript-language-server/typescript-language-server)**,
   the **[Dart SDK](https://dart.dev/)**,
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and

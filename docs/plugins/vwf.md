@@ -46,20 +46,23 @@ them at install time, and the table below gives the command for each.
 | --------------- | ------------ | ----------------------------------------------- | ------------------------------------- |
 | mise            | **required** | task runner + resolves the toolchain            | `brew install mise`                   |
 | graphify        | **required** | knowledge graph the commands rely on            | `mise use -g pipx:graphifyy@latest`   |
-| node + pnpm     | **required** | launches vwf's Context7 MCP server (`pnpm dlx`) | `mise use -g node@latest pnpm@latest` |
+| node + pnpm     | **required** | runs vwf's Context7 MCP server (default runner) | `mise use -g node@latest pnpm@latest` |
 | Claude Code CLI | **required** | hosts the commands                              | `mise use -g claude-code@latest`      |
 | uv              | **required** | graphify's Python runtime                       | `mise use -g uv@latest`               |
-| rtk             | **required** | the token-saving `rtk hook claude` Bash hook    | `brew install --formulae rtk`         |
+| rtk             | recommended  | the token-saving `rtk hook claude` Bash hook    | `brew install --formulae rtk`         |
 
 **Nothing checks these at install time.** `claude plugin install vwf` succeeds
 regardless, so the first thing to run afterwards is **`/vwf:doctor`** — it
-reports a missing one as a **blocking** finding, and both `/vwf:setup` and
-`/vwf:execute` halt on one. An earlier installer refused the install outright
-and printed the command to fix each; that gate did not come back when the
+reports a missing required one as a **blocking** finding, and both `/vwf:setup`
+and `/vwf:execute` halt on one — with one condition on `mise` since
+`config_format` 16: with no stack axis pinned anywhere and no harness capability
+claimed there is nothing for it to resolve, so its absence degrades rather than
+blocks until one is. An earlier installer refused the install outright and
+printed the command to fix each; that gate did not come back when the
 installer's plugin flags did, so the failure now arrives at first use rather
-than at install. `rtk` is the one whose behaviour is softer still — the hook
-entry is guarded, so a `vwf` without `rtk` degrades (with a `/vwf:doctor`
-warning) instead of blocking every Bash call.
+than at install. `rtk` is the exception — the hook entry is guarded, so a `vwf`
+without `rtk` still runs correctly and merely costs more, and `/vwf:doctor`
+reports it as a **degradation** every run rather than blocking.
 
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
@@ -161,9 +164,10 @@ adopting it.
 - **External prerequisites, checked at run time rather than install time.**
   `mise`, `graphify`, `uv`, `pnpm` and `rtk` must be on your `PATH`. Nothing
   refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on a
-  missing `mise` or `graphify`, and the other three fail later in their own
-  ways. Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
-  [Prerequisites](#prerequisites).
+  missing `graphify` — and on `mise` once a stack is pinned — `/vwf:doctor`
+  reports a missing `rtk` as a **degradation**, and `uv` and `pnpm` fail later
+  in their own ways. Dependency auto-install/enable needs Claude Code ≥ 2.1.143.
+  See [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
   to both `mempalace` (an **HTTP daemon you run** —
   `mempalace-mcp --transport http`) and a markdown tree under `docs/memory/`.
@@ -477,14 +481,20 @@ actual option lives in a **stack plugin** at
 `<plugin>/stacks/project/<role>/<slug>.md`, which vwf reaches through two fixed
 adapter skill names. `/vwf:architecture` presents the union across your
 installed plugins as a menu — one round per project. The menu is the **whole**
-answer: there is no *other (describe)* option, so a role nothing on it fits
-halts rather than recording a free-text pin (see below). Each project carries
-exactly one role, so it picks exactly one template and there is nothing to
-merge. Install no stack plugin and the menu is empty: vwf says so and points at
-what to install, rather than coming back quietly short.
+answer: there is no *other (describe)* option, so an axis nothing on it fits is
+never recorded as a free-text pin (see below). Each project carries exactly one
+role, so it picks exactly one project template and there is nothing to merge.
+Install no stack plugin and the menu is empty — since `config_format` **16**
+that is a postponement rather than a dead end: vwf names the three ways forward
+(install the plugin that has one, write it, or **defer the axis** as
+`unresolved`) rather than coming back quietly short.
 
-A stack is composed from **four independent axes** — you pick one of each, and
-they never merge because they never overlap:
+A stack is composed from **four independent axes** — you answer each one, and
+they never merge because they never overlap. `project` and `repo` take a single
+template; `backing` and `deploy` take a **list**, one entry per capability and
+one per delivery mechanism (`deploy_template` became a list in `config_format`
+**16**, because a project routinely publishes to a package registry *and* ships
+a container image):
 
 | Axis        | Scope       | Ships today                                                                                                                                                                                                                                                                                |
 | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -499,6 +509,21 @@ else again — and design its app in one tool while its website is designed in
 another (`design`, likewise per project). Two more per-project keys sit beside
 them: `design` (the design tool) and `cicd` (the CI system). Only `repo` stays
 per repo; it describes the checkout, not a project.
+
+**An axis can also be left unanswered.** Since `config_format` **16** any of the
+four may read `unresolved` — deferred, not decided — which is the line between
+*defining* a product and *building* one. `/vwf:product`, `/vwf:architecture`,
+`/vwf:blueprint`, `/vwf:design-system` and every other doc surface run to
+completion with no stack chosen at all; `/vwf:doctor` reports the deferral as a
+**degradation** every run and its stack-dependent checks report
+`not checked — no stack resolved`; and `/vwf:plan` and `/vwf:execute` **halt**,
+naming the axis and pointing at `/vwf:architecture`, because both size their
+work against the pinned templates' conventions and an unresolved axis has none.
+`unresolved` is not `template: custom` returning: `custom` asserted a stack that
+did not exist and let the pipeline run on silently, while `unresolved` says out
+loud that nobody has chosen — which is exactly why plan and execute refuse. `[]`
+on the two list axes is its opposite: a decision that this project ships through
+nothing, or talks to no backing service.
 
 Project-axis templates:
 
@@ -537,8 +562,10 @@ bundle, is a completely vendor-free path through vwf.
 An operator back-office is `platforms: [service, webapp]` plus the
 `operator-rbac` capability, and picks the `typescript-hono-refine` template. A
 project shipping through a store rather than to a deploy target (`mobile`,
-`tablet`, `desktop`, `auto`) has no deploy axis. A `cli` project does have one:
-it ships through a package registry, so it pins `npm-package`.
+`tablet`, `desktop`, `auto`) records `[]` on the deploy axis, as does an `iac`
+project — it *is* the deploy path. A `cli` project pins one, because a package
+registry is its target; **which** template that is is the stack plugin's answer,
+and vwf names no slug on this axis or any other.
 
 **`iac` is the one platform vwf constrains structurally.** A project declaring
 `iac` must live in **its own repo** — independent, or a member of the product's
@@ -578,13 +605,17 @@ structural work that your config never mentions.
 
 A language no installed plugin claims is reported as *unknown*, and since
 `config_format` **14** that is a **blocking** finding: `/vwf:setup` and
-`/vwf:execute` both halt on it. There is likewise no *other (describe)* option
-and no `template: custom` — an axis nothing on the menu fits is a halt naming
-the two ways forward, not a free-text pin. vwf is an opinionated workflow that
-plans against a template's conventions, builds against its harness and gates a
-UI slice on its UX contract; a stack no plugin defines supplies none of those,
-so a run against it would lose every guarantee *while reporting itself healthy*.
-Many stacks are supported — every one of them defined by a plugin.
+`/vwf:execute` both halt on it. Since **16** the severity follows the pin: while
+the project's `template` reads `unresolved` an unclaimed token is only a
+**degradation** — the plugin that would claim it is exactly what has not been
+chosen yet — and such a project legally records `languages: []`. The moment the
+axis is pinned, unknown is blocking again. There is likewise no *other
+(describe)* option and no `template: custom` — an axis nothing on the menu fits
+has three ways forward, none of them a free-text pin. vwf is an opinionated
+workflow that plans against a template's conventions, builds against its harness
+and gates a UI slice on its UX contract; a stack no plugin defines supplies none
+of those, so a run against it would lose every guarantee *while reporting itself
+healthy*. Many stacks are supported — every one of them defined by a plugin.
 
 The one second door is the **materialized escape**: a materializing adapter (the
 [`stackgen`](./stackgen.md) plugin) can land a template directly in the repo's
@@ -748,19 +779,24 @@ Whichever path runs, it detects your topology (repo, monorepo, or multi-repo +
 linkage; project roles and platforms; stacks) and confirms it with you via MCQ,
 then produces a **dry-run plan** of every doc to scaffold or reconcile. On a
 new/empty repo it applies the workspace structure as the default and elicits
-each project's stack from the [template menu](#stack-templates). It also writes
-the product's **one** `mempalace.yaml`, at the repo root — one wing, the seven
-rooms vwf's memory protocol uses, and a secret denylist behind `.gitignore` —
-mining the whole tree including submodules, and consolidating away any config it
-finds in `.config/` or a submodule root (mining reads the config only from the
-directory it is pointed at, so a stray one is silently inert rather than merely
-wrong). Nothing is written until you approve; it works in a worktree, never
-deletes, and **never moves a source file** — a layout that differs from its
-topology's grouping, and an `iac` project sitting in another project's repo,
-both end the run as written recommendations rather than as moves. It scaffolds
-tooling through `/devtools:scaffold`, merges a vwf section into your
-`CLAUDE.md`, writes a `.graphifyignore` at the repo root (the vwf-standard
-excludes, plus any committed-but-not-code trees it detects — see
+each project's stack from the [template menu](#stack-templates) — a platform no
+installed plugin has a template for leaves that axis unrecorded for
+`/vwf:architecture` to settle rather than halting the run, and the tooling step
+defers the same way, recording what it could not provision without a stack
+alongside the unlock for each. `setup` never writes `unresolved` itself; that
+value only ever comes from an `/vwf:architecture` run that offered the axis. It
+also writes the product's **one** `mempalace.yaml`, at the repo root — one wing,
+the seven rooms vwf's memory protocol uses, and a secret denylist behind
+`.gitignore` — mining the whole tree including submodules, and consolidating
+away any config it finds in `.config/` or a submodule root (mining reads the
+config only from the directory it is pointed at, so a stray one is silently
+inert rather than merely wrong). Nothing is written until you approve; it works
+in a worktree, never deletes, and **never moves a source file** — a layout that
+differs from its topology's grouping, and an `iac` project sitting in another
+project's repo, both end the run as written recommendations rather than as
+moves. It scaffolds tooling through `/devtools:scaffold`, merges a vwf section
+into your `CLAUDE.md`, writes a `.graphifyignore` at the repo root (the
+vwf-standard excludes, plus any committed-but-not-code trees it detects — see
 [Code intelligence](#code-intelligence)), bootstraps `environment.md` from the
 repo's existing env-var and secret usage (names only), detects the repo's
 verification-harness capabilities (dev server, E2E, staging mode), and stamps
@@ -811,10 +847,10 @@ Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
 by presenting the [stack templates](#stack-templates) for its type as a menu
 (one round per project, and the menu is the whole vocabulary — nothing fitting
-is a halt, not a free-text pin; the answer lands as a structured block in
-`.config/vwf.yaml`), walks the **product-foundations checklist** (see
-[vwf skills](#vwf-skills) — one accept/adapt/skip question per foundation,
-recorded as cross-cutting tokens), and writes **both**
+leaves three ways forward, none of them a free-text pin; the answer lands as a
+structured block in `.config/vwf.yaml`), walks the **product-foundations
+checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
+foundation, recorded as cross-cutting tokens), and writes **both**
 `docs/blueprint/registry.yaml` — the machine-readable registry every other
 command depends on — and `docs/blueprint/architecture.md`, its prose view with a
 system-shape mermaid diagram kept in sync with it. Re-run it any time the
@@ -1133,29 +1169,31 @@ failing test that defines "done".
 
 Four guardrails keep a plan from building on a gap — which is what lets
 `execute` run autonomously: it **halts unless the blueprint coverage stamp reads
-complete**; it **halts on a stack no installed plugin defines** — once the chain
-is resolved it runs `/vwf:doctor` scoped to the chain's projects and stops on
-any blocking finding, because a plan's steps are sized against the selected
-templates' conventions and an undefined stack has none (it does *not* ask about
-a missing LSP server the way `execute` does — planning compiles nothing); it
-resolves the slice's **dependency chain** — every flow or entity the slice
-stands on whose `implementation:` stamp isn't `complete` becomes **its own
-plan**, planned dependency-first behind its own gate and linked by
-`covers:`/`requires:` frontmatter (a genuine dependency cycle collapses into one
-plan; if the code already conforms, `plan` offers to heal the stamp instead) —
-so no plan swallows its dependencies and `execute` can enforce the order; and it
-**routes blueprint gaps back to the blueprint** — a *what* question the diff
-exposes (a behaviour, contract, or acceptance criterion the blueprint never
-pinned down) is never settled inside the plan or parked as a risk, but fixed via
-`/vwf:blueprint` first, then the diff re-derived. Only *how* questions are
-decided at plan time, so an approved plan carries no open decisions for execute
-to trip on. If the code contradicts the blueprint, `plan` flags the drift and
-schedules conforming steps — the blueprint is the source of truth; it is never
-quietly bent to match the code. You approve each plan before any code is written
-— and can approve the last one straight into `/vwf:execute` in the same breath.
-One soft nudge at that gate: a flow slice whose screens have no current visual
-render (`design.flows_rendered`) gets a note offering `/vwf:mockups` — or a
-pending `/vwf:screens import` — first. Advisory only, never a halt.
+complete**; it **halts on a stack no installed plugin defines, and on one nobody
+has chosen yet** — once the chain is resolved it runs `/vwf:doctor` scoped to
+the chain's projects and stops on any blocking finding, and it stops outright on
+an axis reading `unresolved`, naming it and pointing at `/vwf:architecture`,
+because a plan's steps are sized against the selected templates' conventions and
+an undefined or unchosen stack has none (it does *not* ask about a missing LSP
+server the way `execute` does — planning compiles nothing); it resolves the
+slice's **dependency chain** — every flow or entity the slice stands on whose
+`implementation:` stamp isn't `complete` becomes **its own plan**, planned
+dependency-first behind its own gate and linked by `covers:`/`requires:`
+frontmatter (a genuine dependency cycle collapses into one plan; if the code
+already conforms, `plan` offers to heal the stamp instead) — so no plan swallows
+its dependencies and `execute` can enforce the order; and it **routes blueprint
+gaps back to the blueprint** — a *what* question the diff exposes (a behaviour,
+contract, or acceptance criterion the blueprint never pinned down) is never
+settled inside the plan or parked as a risk, but fixed via `/vwf:blueprint`
+first, then the diff re-derived. Only *how* questions are decided at plan time,
+so an approved plan carries no open decisions for execute to trip on. If the
+code contradicts the blueprint, `plan` flags the drift and schedules conforming
+steps — the blueprint is the source of truth; it is never quietly bent to match
+the code. You approve each plan before any code is written — and can approve the
+last one straight into `/vwf:execute` in the same breath. One soft nudge at that
+gate: a flow slice whose screens have no current visual render
+(`design.flows_rendered`) gets a note offering `/vwf:mockups` — or a pending
+`/vwf:screens import` — first. Advisory only, never a halt.
 
 ### /vwf:execute
 
@@ -1805,19 +1843,23 @@ and code examples for libraries, frameworks, and SDKs on demand, so Claude looks
 up current library docs instead of relying on training knowledge. It used to be
 its own plugin and a vwf dependency; vwf now declares the server itself.
 
-It runs over stdio, launched via `pnpm dlx @upstash/context7-mcp` — always the
-latest published server, which is why `pnpm` is one of the binaries
-`/vwf:doctor` blocks on. The manifest passes a `CONTEXT7_API_KEY` env var
-through (defaulting to empty), so exporting one authenticates past Upstash's
-anonymous rate limits:
+It runs over stdio through `sh -c`, launched via
+`${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp` — the dependency is vwf's,
+the runner is yours. `pnpm dlx` is the default and the recommendation (always
+the latest published server); export `CONTEXT7_RUNNER` to run it with `bunx`,
+`npx -y`, `deno run -A npm:` or an absolute path to a globally installed binary.
+Nothing checks the runner, so a wrong one surfaces as a dead MCP server rather
+than as a missing prerequisite. The manifest also passes a `CONTEXT7_API_KEY`
+env var through (defaulting to empty), so exporting one authenticates past
+Upstash's anonymous rate limits:
 
 ```yaml
 context7:
   transport: stdio
-  command: pnpm
+  command: sh
   args:
-    - dlx
-    - "@upstash/context7-mcp"
+    - -c
+    - "${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp"
   env:
     CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}
 ```

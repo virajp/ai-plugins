@@ -37,6 +37,7 @@ import {
 } from "./plugins.ts";
 import type {
   Dependency,
+  Manifest,
   Plugin,
   PluginFile,
 } from "./plugins.ts";
@@ -617,8 +618,20 @@ function stripFences(body: string): string {
   return body.replace(/^```[\s\S]*?^```/gm, "");
 }
 
+/**
+ * The two sides are deliberately asymmetric.
+ *
+ * Leading keeps `-`, so a token is not matched as the *tail* of a longer
+ * compound: `axe-core` must not be found inside some other hyphenated name, and
+ * `npm` must not be found inside `pnpm-workspace`.
+ *
+ * Trailing drops it, because a banned token used as the *head* of a compound is
+ * still the banned token doing the prescribing. `Grafana-side by default` and
+ * `deploy/npm-package` both escaped the symmetric form — as would
+ * `docker-compose`, `postgres-backed` and `terraform-managed`.
+ */
 const anchored = (token: string) =>
-  new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9-]|$)`, "g");
+  new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9]|$)`, "g");
 
 /**
  * Does this document *prescribe* the token, rather than enumerate it?
@@ -652,6 +665,72 @@ export function prescribes(body: string, token: string): boolean {
 }
 
 /**
+ * A `${VAR}` or `${VAR:-default}` expansion, which Claude Code performs in an
+ * MCP server's `command`, `args`, `env`, `url` and `headers`.
+ */
+const EXPANSION_RE = /\$\{[^}]*\}/g;
+
+/**
+ * Every stdio invocation vwf's manifest declares, as one string per server.
+ *
+ * `type: http` servers have no `command` and contribute nothing — vwf's
+ * mempalace entry is a URL to a daemon the user runs, so there is no runner in
+ * it to hardcode.
+ */
+function invocations(manifest: Manifest): string[] {
+  const servers = manifest.mcpServers;
+  if (typeof servers !== "object" || servers === null) {
+    return [];
+  }
+  return Object.values(servers as Record<string, unknown>).flatMap(server => {
+    if (typeof server !== "object" || server === null) {
+      return [];
+    }
+    const { command, args } = server as { command?: unknown; args?: unknown; };
+    if (typeof command !== "string") {
+      return [];
+    }
+    const argv = asArray(args).filter(a => typeof a === "string");
+    return [[command, ...argv].join(" ")];
+  });
+}
+
+/**
+ * The manifest half of the technology-free guard: a runner vwf picked *for* the
+ * user.
+ *
+ * The prose rule cannot be reused verbatim here, and the difference is the whole
+ * point. A manifest has to name something executable — `sh` is a tool name too —
+ * so the bar is not "names no tool" but **"the name is overridable"**. vwf's
+ * context7 entry declared `"command": "pnpm"`, which a bun user cannot satisfy
+ * and which fails as a dead MCP server rather than as a missing prerequisite;
+ * the same entry written as `${CONTEXT7_RUNNER:-pnpm dlx}` keeps pnpm as the
+ * recommendation while letting `bunx`, `npx -y` or an absolute path answer.
+ *
+ * So expansions are elided before the token scan. A token surviving that is one
+ * no environment variable can displace, which is the actual defect.
+ */
+function checkManifestRunners(vwf: Plugin): Finding[] {
+  const findings: Finding[] = [];
+  for (const invocation of invocations(vwf.manifest)) {
+    const fixed = invocation.toLowerCase().replaceAll(EXPANSION_RE, " ");
+    const hits = TOOL_TOKENS.filter(token => anchored(token).test(fixed));
+    if (hits.length > 0) {
+      findings.push({
+        scope: "vwf:.claude-plugin/plugin.json",
+        message: `hardcodes ${hits.map(h => `"${h}"`).join(", ")} in the `
+          + `"${invocation}" MCP server invocation — the dependency is vwf's, `
+          + `the runner is the user's. Put it behind a \${VAR:-default} `
+          + `expansion so the recommendation stays and another runner still `
+          + `works; a fixed one fails as a dead server, not as a missing `
+          + `prerequisite.`,
+      });
+    }
+  }
+  return findings;
+}
+
+/**
  * The regression guard: vwf ships no stack template and names no tool.
  *
  * `assets/stack-adapter.md` has stated this since it was written and nothing
@@ -669,6 +748,8 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
   if (vwf === undefined) {
     return findings;
   }
+
+  findings.push(...checkManifestRunners(vwf));
 
   for (const file of vwf.files) {
     if (file.path.startsWith("stacks/")) {

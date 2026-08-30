@@ -87,12 +87,29 @@ domain of a config key vwf owns, rather than recommending one. Fenced blocks are
 stripped first, since a config example must show real values. The window is
 character-based because every real enumeration in the corpus wraps mid-list.
 
+The anchors are **asymmetric on purpose**: a banned token heading a hyphenated
+compound is a hit (`grafana-side`, `npm-package`, `docker-compose`), one sitting
+at the tail is not (`pnpm-workspace` is not an `npm` mention). The symmetric
+form this started as let every compound head through — two escapes shipped in
+vwf before it was tightened.
+
 The MCP-server rule was **generalized at Wave D**. It used to match only
 `mcp__plugin_design-tools_<token>`, the plugin-scoped prefix — but a design tool
 now lands in the project's own `.mcp.json`, which scopes its server
 `mcp__<token>__` instead, so matching the old prefix alone would have quietly
 stopped catching anything. Both spellings are banned in vwf prose, which covers
 a fourth design tool the day one is added.
+
+**The manifest half is a different bar, on purpose.** The guard also reads vwf's
+`mcpServers` `command`/`args` as one string per stdio server (an `http` server
+has no runner in it to hardcode). A manifest has to name something executable —
+`sh` is a tool name too — so the bar is not "names no tool" but **"the name is
+overridable"**: `${VAR}` and `${VAR:-default}` expansions are elided before the
+token scan, so a runner behind one passes and a fixed one is a finding. It was
+added after `"command": "pnpm"` sat unnoticed in the context7 entry, which a bun
+user cannot satisfy and which fails as a dead MCP server rather than as a
+missing prerequisite; `${CONTEXT7_RUNNER:-pnpm dlx}` keeps pnpm as the
+recommendation while letting another runner answer.
 
 **Two design tokens are deliberately unbannable** and live in
 `ENUMERATION_PEERS` instead — `stitch` (an ordinary English word the screens
