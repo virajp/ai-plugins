@@ -1,10 +1,10 @@
 # Plan: what vwf should not be holding
 
-**Status: draft, 2026-08-30. Every gate is answered; A–G await execution.**
-Shipped so far: stackgen as a `vwf` dependency (H), the `common/` task library
-with its slot contract (I), and `git-workflow`'s two-pass `code:precommit`.
-Everything else is the write-up, not the change — each section says which it is,
-and **J** is how it gets executed.
+**Status: complete, 2026-08-30.** Every section landed. H (stackgen as a `vwf`
+dependency), I (the `common/` task library and its slot contract) and
+`git-workflow`'s two-pass `code:precommit` shipped first; J's ten units then
+executed A–G across three commits — `2d79393` (A, B, F, H), `3baaaef` (G) and
+`8dcbbc8` (C, D, E).
 
 It comes out of an audit asking whether `vwf` is generic or pinned to a tech
 stack. The answer was **generic on the product's stack, pinned on the
