@@ -6,7 +6,7 @@ Mirrors the mempalace drawer (wing `ai-plugins`, room `gaps`); both stores
 written together, per `plugins/vwf/assets/memory.md`.
 
 Found at the start of WS2 (Stage 3 of
-[the generalization plan](../../plans/2026-08-26-vwf-generalization/index.md)),
+[the generalization plan](../../plans/archived/2026-08-26-vwf-generalization/index.md)),
 while about to run `/vwf:architecture` against this repo for the first time.
 
 ## Corrected 2026-08-26, same day

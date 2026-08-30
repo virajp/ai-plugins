@@ -1,10 +1,34 @@
 # Plan: generalize vwf — the three menu gaps, decided before they are built
 
-**Status: draft, 2026-08-26. Not approved. No step runs until the decisions in
-Stage 1 are walked with the user.**
+**Status: COMPLETE, archived 2026-08-30.** Stage 1 was walked and settled the
+same day it was written, Stage 2 landed with it in vwf 19.1.0 (`623b04d`), and
+Stage 4 archived the stale design doc (`eb27140`). Stage 3 handed off cleanly:
+the registry exists (`fe21190`), and the sweep it starts is tracked by the
+coverage stamp in `.config/vwf.yaml`, not by this document.
+
+**What landed, against what was recommended:**
+
+| Decision | Outcome                                                                                                                                                                                                                                       |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1c       | **Option 1**, as recommended — `cli` joins the `system` role. No schema bump, no migration                                                                                                                                                    |
+| 1c tail  | A fifth decision the plan did not find: the coverage exemption was phrased **by role**, so 1c would have silently swept every CLI project out of blueprint coverage. `cli` is now excepted alongside `plugin`; coverage preserved, not lifted |
+| 1b       | **`module`**, as a stated row. No `command` token                                                                                                                                                                                             |
+| 1a.1     | Landed — a `B`/`F`/`P` kind per token, plus the must-classify rule. Nothing minted, per the boundary ruling                                                                                                                                   |
+| 1a.2     | Landed — `doctor/references/stack-checks.md` §5 reports a `B`-kind capability no pinned template provides, as a **non-blocking** finding                                                                                                      |
+| 1a.3     | Deferred, as bound                                                                                                                                                                                                                            |
+
+Recorded in `docs/memory/decisions/2026-08-26-vwf-generalization-stage-1.md`,
+which is authoritative for the reasoning — including the two blast-radius
+estimates below that were wrong in both directions.
+
+**One section is now void as evidence.** The Stage 1a coverage table maps
+capability tokens against "the six backing templates that ship". vwf ships
+**no** stack templates any more — `assets/stacks/` is gone, and what each axis
+offers lives in a stack plugin. The table is the reasoning 1a.1 was decided
+from, not a description of any tree that exists.
 
 This is the fresh plan the WS1 section of
-[2026-08-24-vwf-rewire-and-onboarding.md](../archived/2026-08-24-vwf-rewire-and-onboarding.md)
+[2026-08-24-vwf-rewire-and-onboarding.md](../2026-08-24-vwf-rewire-and-onboarding.md)
 said to write. That document is **evidence, not instructions** — it says so
 itself — so this plan restates the gaps against the tree as it stands today and
 corrects two premises that did not survive verification.
@@ -29,7 +53,7 @@ Two things are explicitly **out**:
 
 - **Authoring backing templates — at all.** Hardened from "beyond the minimum"
   to a flat prohibition on 2026-08-26, when the boundary against
-  [the stackgen plan](../archived/2026-08-19-stackgen.md) was settled
+  [the stackgen plan](../2026-08-19-stackgen.md) was settled
   (`docs/memory/decisions/2026-08-26-generalization-vs-stackgen-wave-c-boundary.md`).
   A template written here is a file **Wave C** would convert to a pack, and
   "author the minimum" is what a gate wanting a pin talks you out of mid-sweep.

@@ -42,7 +42,7 @@ own.
 ## The overlap worth knowing
 
 Its capability-vocabulary half **collides with decision 1a** of
-[the generalization plan](../../plans/2026-08-26-vwf-generalization/index.md),
+[the generalization plan](../../plans/archived/2026-08-26-vwf-generalization/index.md),
 which asks whether the capability vocabulary needs splitting by kind (a token
 naming a backing service, versus a product-foundations concern, versus a
 project-axis fact). That decision is being taken *now*, well before the merge

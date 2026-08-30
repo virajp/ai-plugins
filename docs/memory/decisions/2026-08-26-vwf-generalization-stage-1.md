@@ -1,8 +1,9 @@
 # Decisions — generalization Stage 1: the three menu gaps, settled
 
 **Date** 2026-08-26 · **Branch** `main` (worked in place, per the plan's
-constraint) · **Plan** `docs/plans/2026-08-26-vwf-generalization/index.md` Stage
-1 · **Ships in** vwf 19.1.0
+constraint) · **Plan**
+`docs/plans/archived/2026-08-26-vwf-generalization/index.md` Stage 1 · **Ships
+in** vwf 19.1.0
 
 Mirrors the mempalace drawer (wing `ai-plugins`, room `decisions`); both stores
 written together, per `plugins/vwf/assets/memory.md`. The boundary against the

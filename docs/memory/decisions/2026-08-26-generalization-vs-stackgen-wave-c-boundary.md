@@ -1,7 +1,7 @@
 # Decisions — where the generalization plan stops and stackgen's Wave C starts
 
 **Date** 2026-08-26 · **Branch** `main` (worked in place, per the WS4 decision)
-· **Plans** `docs/plans/2026-08-26-vwf-generalization/index.md` and
+· **Plans** `docs/plans/archived/2026-08-26-vwf-generalization/index.md` and
 `docs/plans/2026-08-19-stackgen.md`
 
 Mirrors the mempalace drawer (wing `ai-plugins`, room `decisions`); both stores
