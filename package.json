@@ -1,6 +1,6 @@
 {
   "name": "@askviraj/ai-plugins",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Installs the virajp-plugins plugins for Claude Code and wires up graphify. The plugins install through Claude Code's own marketplace commands",
   "keywords": [
     "claude",
