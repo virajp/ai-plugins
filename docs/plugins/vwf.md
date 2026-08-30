@@ -477,17 +477,17 @@ deleting them.
 
 The stack is **not** enforced — and **vwf itself ships no stack templates at
 all**. It defines the axes, the `role` vocabulary and the template shape; every
-actual option lives in a **stack plugin** at
-`<plugin>/stacks/project/<role>/<slug>.md`, which vwf reaches through two fixed
-adapter skill names. `/vwf:architecture` presents the union across your
-installed plugins as a menu — one round per project. The menu is the **whole**
-answer: there is no *other (describe)* option, so an axis nothing on it fits is
-never recorded as a free-text pin (see below). Each project carries exactly one
-role, so it picks exactly one project template and there is nothing to merge.
-Install no stack plugin and the menu is empty — since `config_format` **16**
-that is a postponement rather than a dead end: vwf names the three ways forward
-(install the plugin that has one, write it, or **defer the axis** as
-`unresolved`) rather than coming back quietly short.
+actual option lives in a **stack plugin**, under whatever layout that plugin
+keeps — vwf never reads one by path, only through two fixed adapter skill names.
+`/vwf:architecture` presents the union across your installed plugins as a menu —
+one round per project. The menu is the **whole** answer: there is no *other
+(describe)* option, so an axis nothing on it fits is never recorded as a
+free-text pin (see below). Each project carries exactly one role, so it picks
+exactly one project template and there is nothing to merge. Install no stack
+plugin and the menu is empty — since `config_format` **16** that is a
+postponement rather than a dead end: vwf names the three ways forward (install
+the plugin that has one, write it, or **defer the axis** as `unresolved`) rather
+than coming back quietly short.
 
 A stack is composed from **four independent axes** — you answer each one, and
 they never merge because they never overlap. `project` and `repo` take a single
@@ -496,12 +496,19 @@ one per delivery mechanism (`deploy_template` became a list in `config_format`
 **16**, because a project routinely publishes to a package registry *and* ships
 a container image):
 
-| Axis        | Scope       | Ships today                                                                                                                                                                                                                                                                                |
-| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **project** | per project | one or more per role — see below                                                                                                                                                                                                                                                           |
-| **backing** | per project | none from vwf — a **capability** plugin ships each one: `postgres` (`datastore`) · `oidc` (`identity`) · `otel-lgtm` (`observability`) · `temporal` (`orchestration`); `object-storage` is contract-only. A **cloud** plugin ships its managed set — `firebase` and `cloud-sql` from `gcp` |
-| **deploy**  | per project | `npm-package` (published, not deployed — the CLI/library target) from `typescript` · `container-generic` from `devtools`, the provider-neutral OCI target · `cloud-run` and `gke` from `gcp` · `zero-trust-access` from `cloudflare`, the private plane that composes with any host        |
-| **repo**    | per repo    | `pnpm-turbo` (pnpm · Turborepo) · `bun` (bun workspaces)                                                                                                                                                                                                                                   |
+| Axis        | Scope       | Takes                                                                                      |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------ |
+| **project** | per project | one template, filtered by the platforms the project declares — see below                   |
+| **backing** | per project | a list — one entry per capability the project talks to (datastore, identity, telemetry, …) |
+| **deploy**  | per project | a list — one entry per delivery mechanism the project ships through                        |
+| **repo**    | per repo    | one template describing the checkout — its package manager and workspace layout            |
+
+**No slug appears in that table on purpose.** The roster is not vwf's to state:
+the menu is the union of what your **installed** stack plugins declare, so it
+changes with what you install, and `/vwf:architecture` is what enumerates it for
+your repo. Today [stackgen](./stackgen.md) carries the general-purpose set
+across all four axes, [gcp](./gcp.md) its managed backing and deploy services,
+and [cloudflare](./cloudflare.md) its Zero Trust deploy target.
 
 Since `config_format` **13** the first three are pinned **per project**, so a
 product can host its site on Cloudflare, its API on GCP and its worker somewhere
@@ -525,30 +532,19 @@ loud that nobody has chosen — which is exactly why plan and execute refuse. `[
 on the two list axes is its opposite: a decision that this project ships through
 nothing, or talks to no backing service.
 
-Project-axis templates:
+**Project-axis templates.** A template declares **which platforms it serves**,
+and that list is what the menu filters on. One template routinely covers
+several: an app framework can build four surfaces from one codebase, and a
+full-stack template serves an API and its own UI — what the retired `fullstack`
+role meant. **Your pin must cover every platform your project declares**, which
+`/vwf:doctor` checks. Which templates exist, and what each is made of, is the
+stack plugin's answer — [stackgen](./stackgen.md) states the set it ships.
 
-| Platforms served                     | Template ships today         | Stack                                          |
-| ------------------------------------ | ---------------------------- | ---------------------------------------------- |
-| `packages`                           | `typescript-effect`          | TypeScript · Effect-TS                         |
-| `service`                            | `typescript-effect-hono`     | TypeScript · Hono · Effect-TS                  |
-| `worker`                             | `typescript-effect-temporal` | TypeScript · Temporal · Effect-TS              |
-| `site`                               | `typescript-astro-react`     | TypeScript · Astro (SSR) · React               |
-| `service` + `webapp`                 | `typescript-hono-refine`     | TypeScript · Hono + Effect-TS · React + Refine |
-| `mobile` `tablet` `desktop` `webapp` | `dart-flutter`               | Dart · Flutter — from the `flutter` plugin     |
-| `cli`                                | `typescript-effect-cli`      | TypeScript · @effect/cli                       |
-| `iac`                                | `typescript-pulumi`          | TypeScript · Pulumi — always its own repo      |
-
-A template declares **which platforms it serves**, and the list is what the menu
-filters on. One template routinely covers several: Flutter builds four surfaces
-from one codebase, and the Hono + Refine template serves an API and its own UI —
-what the retired `fullstack` role meant. **Your pin must cover every platform
-your project declares**, which `/vwf:doctor` checks.
-
-**Templates ship in the plugin that owns the technology, not in vwf.** Every
-`typescript-*` row above, plus the `npm-package` deploy target and both `repo`
-choices, comes from the **[typescript](./typescript.md)** plugin — so a product
-whose `stacks:` lists `typescript` gets that whole menu, and one that does not
-never sees it.
+**Templates ship in a stack plugin, never in vwf.** vwf has no `stacks/` tree at
+all: it owns the four axes, the platform vocabulary a template declares against,
+and the two adapter skill names it reaches a plugin through. So a product gets
+whichever menu its installed plugins add up to, and one that installs nothing
+sees an empty one.
 
 **Why the split matters.** The same Hono + Effect service runs against Firebase
 or Postgres, on Cloud Run or any container host. Before format 19 all three were
@@ -560,12 +556,12 @@ bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each a stackgen
 bundle, is a completely vendor-free path through vwf.
 
 An operator back-office is `platforms: [service, webapp]` plus the
-`operator-rbac` capability, and picks the `typescript-hono-refine` template. A
-project shipping through a store rather than to a deploy target (`mobile`,
-`tablet`, `desktop`, `auto`) records `[]` on the deploy axis, as does an `iac`
-project — it *is* the deploy path. A `cli` project pins one, because a package
-registry is its target; **which** template that is is the stack plugin's answer,
-and vwf names no slug on this axis or any other.
+`operator-rbac` capability, and picks whichever project template serves both of
+those platforms at once. A project shipping through a store rather than to a
+deploy target (`mobile`, `tablet`, `desktop`, `auto`) records `[]` on the deploy
+axis, as does an `iac` project — it *is* the deploy path. A `cli` project pins
+one, because a package registry is its target; **which** template that is is the
+stack plugin's answer, and vwf names no slug on this axis or any other.
 
 **`iac` is the one platform vwf constrains structurally.** A project declaring
 `iac` must live in **its own repo** — independent, or a member of the product's

@@ -5,9 +5,9 @@ teaches an opinionated [mise](https://mise.jdx.dev) standard — the `.config/`
 three-file `MISE_ENV` split (`mise.toml` / `mise.dev.toml` / `mise.ci.toml`) and
 a mandatory file-based task library under `.config/mise/tasks/` — plus a
 `/devtools:scaffold` skill that lays both into a repo. Around that sit the tools
-the repo gates: Doppler, dprint, ESLint, gitleaks, grype, and pre-commit. Its
-stack adapter and its Docker/OCI doctrine have both left for stackgen — see what
-used to live here.
+the repo gates: dprint, ESLint, gitleaks, grype, and pre-commit. Its stack
+adapter, its Docker/OCI doctrine and its Doppler doctrine have all three left
+for stackgen — see what used to live here.
 
 It is a **`vwf` dependency**, and that is load-bearing rather than tidiness:
 `/vwf:setup` orchestrates `/devtools:scaffold`, and a skill vwf cannot see fails
@@ -40,9 +40,9 @@ surfaces instead as a `/vwf:doctor` **blocking** finding, and `/vwf:setup` and
 your machine is missing.
 
 `mise` is the one tool this plugin cannot work without — `scaffold` writes mise
-config and the whole task library is mise tasks. `doppler`, `dprint`, `eslint`,
-`gitleaks`, `grype` and `pre-commit` are all documented here and executed by
-**your** repo, never by this plugin — that has not changed.
+config and the whole task library is mise tasks. `dprint`, `eslint`, `gitleaks`,
+`grype` and `pre-commit` are all documented here and executed by **your** repo,
+never by this plugin — that has not changed.
 
 ## Skills
 
@@ -53,7 +53,6 @@ file it governs, and never otherwise.
 | ------------ | ----------------------------------------------------------------------- |
 | `mise`       | mise config + anything under `.config/mise/tasks/` — the standard below |
 | `scaffold`   | user- **and** model-invocable; lays the standard into a repo            |
-| `doppler`    | **development** secret injection — never the production answer          |
 | `dprint`     | `dprint.json` — the repo's single formatter                             |
 | `eslint`     | eslint config / `.config/linter.yaml` — the correctness gate            |
 | `gitleaks`   | `.config/gitleaks.toml` — the secret scanner                            |
@@ -67,33 +66,10 @@ runs is the language plugin's: for TypeScript that is
 [`typescript:lint-format`](./typescript.md#skills), which governs the same files
 from the other side.
 
-### Secrets: development only
-
-**Doppler is a development tool.** Secrets reach a process as environment
-variables and are never read from a committed file — that rule holds in every
-environment, and it is the injector that changes: Doppler locally, the CI
-system's secret store in CI, the cloud plugin's secret manager in production
-(`gcp` → Secret Manager, `cloudflare` → Workers secrets).
-
-Wrap the **mise task**, never the application binary:
-
-```sh
-doppler run -- mise run dev
-```
-
-That is what makes the same task run with and without Doppler — CI calls
-`mise run dev` directly under its own injected environment, and the task is
-identical either way.
-
-There is deliberately **no `secrets` plugin** in this marketplace. Dev secrets
-are `devtools`; production secrets belong to whichever cloud plugin the project
-deploys on. A product that needs Doppler at runtime has moved a dev tool into
-production.
-
 ## What used to live here
 
-Two subjects left this plugin during the stackgen merge waves, and both are
-worth knowing about because the doc that described them was this one.
+Three subjects left this plugin during the stackgen merge waves, and all three
+are worth knowing about because the doc that described them was this one.
 
 **The stack adapter retired in Wave C.** `devtools` no longer ships a
 `devtools-stack-menu` / `devtools-stack-template` pair. Its one deploy template,
@@ -116,9 +92,25 @@ They separated because a repo needs either, both or neither: a product deploying
 to a managed cloud service still runs a local stack, and one that deploys a
 container may need no local stack at all.
 
+**The Doppler doctrine left with the `secrets-manager` packs.** Secrets are a
+component on the **backing** axis now, picked like any other. The neutral rules
+— a secret reaches a process as an environment variable injected at the process
+boundary, never read by the application from a file — are stackgen's
+`assets/contracts/secrets.md`, and each provider pack says clause by clause how
+it satisfies them. `doppler` is one of those packs, scoped to `development` and
+saying so as a **named gap** on the contract's first two clauses rather than by
+omission: staging and production take their secrets from the platform that runs
+them — the cloud provider's secret manager, the CI system's own store. `fnox` is
+the other, and it is what makes this a choice rather than a single answer:
+local-first, the secrets encrypted into a committed `fnox.toml` or referenced
+into your own cloud, all three environments served, and onboarding an age public
+key plus a re-encrypt. The cost on that side is that offboarding is a
+**rotation** of every value rather than a revoke — re-keying changes what the
+next commit holds, never what an earlier one already published.
+
 There is still no `container` capability plugin, and no `secrets` plugin. A
 container is not a backing capability — it is how a deployable is packaged — and
-production secrets belong to whichever cloud plugin the project deploys on.
+secrets are a stackgen category on the backing axis, not a plugin of their own.
 
 ## The mise standard
 

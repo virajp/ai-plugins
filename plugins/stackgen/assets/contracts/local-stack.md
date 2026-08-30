@@ -1,8 +1,8 @@
 # The local stack — the harness contract
 
-**This is a harness contract, not a capability contract.** Its five
-neighbours in this directory each state what any provider of one vwf
-*capability* must satisfy. This one states the mechanism behind one vwf
+**This is a harness contract, not a capability contract.** Its six
+neighbours in this directory each state what any provider of one capability
+*category* must satisfy. This one states the mechanism behind one vwf
 *harness capability* — `local_stack` — which no component chooses and every
 component with a backing service inherits. It is written here for the same
 reason they are: it is doctrine that belongs above the instance, and

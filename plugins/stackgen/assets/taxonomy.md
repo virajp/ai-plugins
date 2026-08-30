@@ -46,7 +46,8 @@ The closed list. A component is exactly one of:
 - **`queue`** — a standalone queue or event bus.
 - **`capability-provider`** — the flavour half of a vwf capability that
   belongs to no cloud and is not a datastore: an identity issuer, a
-  telemetry sink, a workflow engine. Its **category** says which.
+  telemetry sink, a workflow engine, a secrets manager. Its **category**
+  says which.
 - **`ci-system`** — one continuous-integration system: where its workflows
   live, how it is triggered, and how it installs a toolchain. One component
   per system, never per workflow.
@@ -74,7 +75,8 @@ and its components leave `category` unset.
   `cdn`
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
-- **`capability-provider`**: `identity` / `telemetry` / `workflow`
+- **`capability-provider`**: `identity` / `telemetry` / `workflow` /
+  `secrets-manager`
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
 
 A name appearing as both a type and a category is deliberate, not a
@@ -94,10 +96,13 @@ what `relational-datastore` means. A component's `capability` field names
 the vwf token it realizes: a `datastore`/`sql` component realizes
 `relational-datastore`; a `queue` component `message-queue` or `pub-sub`.
 
-Some categories have **no capability token today** — `cdn` is one. That is
-a known vwf-side gap, not a taxonomy error: the component leaves
-`capability` unset, and nothing here mints a token to fill the hole —
-minting capabilities is vwf's move.
+Some categories have **no capability token today** — `cdn` and
+`secrets-manager` are the two. That is a known vwf-side gap, not a taxonomy
+error: the component leaves `capability` unset, and nothing here mints a
+token to fill the hole — minting capabilities is vwf's move. It is also why
+a category can exist here before vwf has decided whether every product must
+have one: the taxonomy classifies what a component *is*, never whether it is
+required.
 
 ## Bundles — how types compose
 
@@ -153,7 +158,8 @@ it and stay thin: the `postgres` pack carries what is Postgres's alone.
 
 The contracts are **capability-neutral by construction** — each states what
 *any* provider must satisfy without naming one, and names the vwf capability
-tokens it realizes. That is what lets two providers in one category be
+tokens it realizes, or that its category has none yet (`contracts/secrets.md`
+is the first of those). That is what lets two providers in one category be
 compared against the same clauses instead of against each other's marketing.
 
 One file there is **not** a capability contract, and is marked as such in

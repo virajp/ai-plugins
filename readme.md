@@ -171,7 +171,7 @@ Paste one of these, adjusting the plugin name:
 
 ## The plugins
 
-Fourteen plugins, each with its own guide. Install the workflow, then whichever
+Eight plugins, each with its own guide. Install the workflow, then whichever
 ones match the product you are building. The name in code at the end of each
 entry is what you pass to `claude plugin install`.
 
@@ -194,17 +194,19 @@ exist. `vwf@virajp-plugins`
 **[typescript](./docs/plugins/typescript.md)** — the TypeScript language plugin,
 covering TypeScript and JavaScript. A `typescript` router skill plus an `effect`
 one for Effect-TS, and opinionated standards for `package.json`, pnpm, tsconfig
-and the lint/format gate. It bundles the TypeScript language server, the
-npm→pnpm/bun normalizing hook, and every TypeScript stack template vwf can offer
-— service, service+webapp, site, worker, CLI, IaC and shared packages, plus the
-npm-package and repo-level choices. `typescript@virajp-plugins`
+and the lint/format gate. It bundles the TypeScript language server and the
+npm→pnpm/bun normalizing hook. Its stack adapter retired in Wave C — the
+TypeScript stack templates are `stackgen` bundles now, so this plugin offers no
+menu. `typescript@virajp-plugins`
 
 **[flutter](./docs/plugins/flutter.md)** — Flutter and Dart done to one
 standard: `dart` and `swift` router skills plus `kotlin`, `pubspec`,
 `analysis-options` and internationalization, with Dart, Kotlin and SourceKit
-(Swift) language servers bundled. It owns the `dart-flutter` stack template for
-a `frontend` project. `--project flutter` from the app's own repo, or
-`flutter@virajp-plugins` if you build them often enough for it to be a habit.
+(Swift) language servers bundled. Its stack adapter retired in Wave C — the
+Flutter stack template is a `stackgen` bundle now, and the app-framework pack
+carries the Dart, Kotlin and Swift judgment that goes with it.
+`--project flutter` from the app's own repo, or `flutter@virajp-plugins` if you
+build them often enough for it to be a habit.
 
 ### Clouds
 
@@ -224,10 +226,11 @@ rather than coming back quietly short. `cloudflare@virajp-plugins`
 
 **[devtools](./docs/plugins/devtools.md)** — the developer-machine toolchain in
 one plugin: mise (the three-file `MISE_ENV` split, tool placement, the
-file-based task library) with a `/devtools:scaffold` skill, Doppler for
-**development** secrets, and the repo gates — dprint, ESLint, gitleaks, grype,
-pre-commit. Its stack adapter retired in Wave C and its Docker/OCI doctrine in
-Wave D, both to `stackgen`. A `vwf` dependency, because `/vwf:setup`
+file-based task library) with a `/devtools:scaffold` skill, and the repo gates —
+dprint, ESLint, gitleaks, grype, pre-commit. Its stack adapter retired in Wave
+C, its Docker/OCI doctrine in Wave D and its Doppler doctrine alongside
+stackgen's `secrets-manager` packs, all three to `stackgen`, which leaves it
+holding no secrets doctrine at all. A `vwf` dependency, because `/vwf:setup`
 orchestrates its scaffold skill. `devtools@virajp-plugins`
 
 **[cicd](./docs/plugins/cicd.md)** — one `/cicd:workflow` skill that resolves
@@ -251,12 +254,12 @@ agents, hooks and rules only, shaped by a closed kind vocabulary whose per-kind
 lockfile per component — so the result is plain files your collaborators get
 with a `git pull` and no plugin install. Re-syncing against newer packs is an
 explicit, diffed decision — never a silent overwrite, and never a
-`settings.json` edit without separate consent. Waves A–C landed 21 packs and 19
-bundles across seven kinds, and Wave D adds the eighth — `deploy-target`, whose
-`container-image` pack is the curated answer the provider-neutral container
-bundle used to generate. For what no pack covers, the curated plugins above
-remain the covered-stack path, and stackgen's value is the uncovered tail. A
-`vwf` dependency, because vwf's stack menu is the union of what the installed
+`settings.json` edit without separate consent. Waves A–D landed 23 packs and 25
+bundles across all nine kinds, the newest being a `secrets-manager` pair on the
+backing axis — where a secret lives, and what onboarding a teammate costs, made
+a pick rather than a house rule. For what no pack covers, the curated plugins
+above remain the covered-stack path, and stackgen's value is the uncovered tail.
+A `vwf` dependency, because vwf's stack menu is the union of what the installed
 stack plugins offer — with none present it comes back empty, and the axes carry
 no free-text escape. You can defer an axis and keep defining the product, but
 `/vwf:plan` and `/vwf:execute` halt until it is answered. Having it installed

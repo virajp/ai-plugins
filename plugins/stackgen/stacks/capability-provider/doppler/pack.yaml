@@ -1,0 +1,16 @@
+name: Doppler
+summary: A vendor holds the secrets and the CLI injects them at the process
+  boundary — onboarding is an org invite, and no key is ever distributed.
+version: 0.1.0
+type: capability-provider
+category: secrets-manager
+# `capability` is deliberately unset: `secrets-manager` realizes no vwf
+# capability token today (../../../assets/taxonomy.md), and nothing here mints
+# one — minting capabilities is vwf's move.
+kind: capability-provider
+axis: backing
+harness:
+  local_stack:
+    task: n/a
+    mechanism: >-
+      Hosted-only — there is no engine to compose. The injector wraps the repo's own task, so every task runs identically without it; the seam is a plain process environment, which is what CI already supplies

@@ -15,9 +15,10 @@ cite live once, in `../assets/contracts/`.
 
 Most landed packs' doctrine **still ships from its curated plugin too**. Those
 copies are the destination the no-skill-lost rule requires **before** that
-plugin can retire, not a replacement yet. Wave D's `container-image` is the
-first exception: its source skill was deleted in the same commit, because the
-pack plus the harness contract together carry everything it said.
+plugin can retire, not a replacement yet. Two exceptions so far, both deleting
+their source skill in the same commit that landed the pack, because the pack
+plus a contract together carry everything it said: Wave D's `container-image`
+(with `contracts/local-stack.md`), and `doppler` (with `contracts/secrets.md`).
 
 **Wave C — `ci-system/`, kind `ci-system`:** `github-actions`. Exactly one CI
 system per repo, so this bundle never composes two.
@@ -105,6 +106,27 @@ of servers fails on **scaling** before it fails on charter, since a list can onl
 hold what someone curated. LSP configuration stays excluded — it has no project
 file to live in.
 
+**Secrets — `capability-provider/`, category `secrets-manager`:** `doppler` and
+`fnox`, the second pair to land in a category rather than one instance, and the
+first landing where the choice between them is the whole point. Their neutral
+contract is `../assets/contracts/secrets.md`, whose clauses both are judged
+against; the axis that separates them is **where the secret lives and what
+onboarding a teammate costs**, and the contract deliberately declines to rank
+them.
+
+Two things are worth knowing here rather than discovering later. The contract
+carries an **encrypt-into-git allowance** under four conditions, and only `fnox`
+engages it — a pack storing nothing in the repository emits no scanner allowlist
+and claims no exemption, so a committed plaintext secrets file stays a finding
+whichever pack is pinned. And `doppler`'s scope is **`development` only**, which
+its contract-satisfaction topic states as a **named gap** on clauses 1 and 2
+rather than omitting them: deployed environments take their secrets from the
+platform that runs them. That is the contract's "a clause a tool cannot satisfy
+is stated as such" rule doing what it exists for.
+
+`devtools` loses its `doppler` skill in the same landing — the second pack to
+retire its source skill on arrival.
+
 **The two tool axes, and the stranded pack that forced them.** `design:` and
 `cicd:` are per-project config keys outside the four stack axes, and the bundle
 menu was the only door a template could come through — so `ci-system/github-actions`
@@ -116,7 +138,8 @@ than two that can disagree.
 **Bundles — `bundles/`, the recorded compositions users actually pick.** All
 fifteen curated options survive the merge — the twelve TypeScript ones, the
 Flutter app, the provider-neutral container deploy and the Claude Code plugin
-template — joined by the four Wave D added on the two tool axes. Each names its components as refs, mixing shipped packs (copied
+template — joined by the four Wave D added on the two tool axes and the
+`secrets-manager` pair above. Each names its components as refs, mixing shipped packs (copied
 verbatim) with `@generated` ones (researched on first fetch) — which is the
 dispatch rule working at bundle scale rather than a gap.
 

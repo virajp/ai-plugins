@@ -331,7 +331,7 @@ the neutral capability contract under `assets/contracts/` — plus one
 **instance component** (`type: capability-provider`) that realizes it. Same
 two halves as `database`, for the capabilities that are neither a datastore
 nor one cloud's service: an identity issuer, a telemetry sink, a workflow
-engine.
+engine, a secrets manager.
 
 All six bar topics belong to the instance component. The contract is what
 the instance **cites, never restates** — that seam is what lets two

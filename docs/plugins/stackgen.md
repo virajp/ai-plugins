@@ -45,11 +45,12 @@ category-level doctrine + an instance component.
 The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 (`capability-vocabulary.md`); the finer **category taxonomy is stackgen's**. vwf
 never learns what an ORM is; stackgen never redefines a capability — the `cdn`
-category's capability token is deliberately unset until vwf defines one.
-Categories make components substitutable answers to one blueprint capability,
-which is what lets stack menus become category-filtered queries instead of
-per-plugin lists. Category-level doctrine is written once as curated knowledge;
-instance components cite it and stay thin.
+and `secrets-manager` categories' capability tokens are deliberately unset until
+vwf defines them, because a category classifies what a component *is*, never
+whether a product must have one. Categories make components substitutable
+answers to one blueprint capability, which is what lets stack menus become
+category-filtered queries instead of per-plugin lists. Category-level doctrine
+is written once as curated knowledge; instance components cite it and stay thin.
 
 ## The dispatch rule
 
@@ -75,15 +76,20 @@ Mixed compositions are the ordinary case — a covered language beside an
 uncovered framework copies the language's packs and generates only the
 framework's artifact — so a later re-sync can act on one component alone.
 
-**Wave A landed the first four packs** — `dprint`, `gitleaks`, `grype` and
-`pre-commit`, the `repo-gate` kind's components. Their doctrine still ships from
-`devtools` as well: a pack is the destination the no-skill-lost rule requires
-*before* a curated plugin can retire, not a replacement the moment it lands.
+**Waves A–D landed 23 packs and 25 bundles across all nine kinds**, starting
+with `dprint`, `gitleaks`, `grype` and `pre-commit` — the `repo-gate` kind's
+components. Most of that doctrine still ships from its curated plugin as well: a
+pack is the destination the no-skill-lost rule requires *before* a curated
+plugin can retire, not a replacement the moment it lands. Two packs are the
+exceptions, each deleting its source skill in the same commit that landed it,
+because the pack plus a neutral contract carry everything it said —
+`deploy-target/container-image` with `assets/contracts/local-stack.md`, and
+`capability-provider/doppler` with `assets/contracts/secrets.md`.
 
-Everything else waits for its wave, so the menu still leans on the open
-`generate` entry and the curated plugins remain the covered-stack path for every
-language, cloud and capability. stackgen's value today is the uncovered tail —
-the stack you use that nobody wrote a plugin for.
+What no pack covers still waits for its wave, so the menu keeps the open
+`generate` entry and the curated plugins remain the covered-stack path for the
+languages, clouds and capabilities they own. stackgen's value today is the
+uncovered tail — the stack you use that nobody wrote a plugin for.
 
 ## Kinds — what can be generated, and its shape
 
@@ -160,6 +166,15 @@ the file set is a dry-run plan you approve, and **`.claude/settings.json` is
 never modified without your explicit, separate consent** — a hook script can
 land while its wiring is declined (it stays inert, and the plan says so). Hook
 *scripts* come only from curated packs; generation never emits an executable.
+
+**A pack may need repo files the materializer cannot write.** The boundary is
+`.claude/` plus `.mcp.json`, so a pack whose correctness depends on a repo-wide
+edit — a scanner allowlist, a `.gitignore` block, a pre-commit entry, a mining
+exclude — carries that edit as a literal block in the reference that owns it,
+and ships a gate that fails the first commit naming whichever block is missing.
+`capability-provider/fnox` is the first: three of the four conditions the
+secrets contract's encrypt-into-git allowance sets sit outside the boundary, and
+its `fnox-ciphertext-guard.sh` is the first hook script any pack ships.
 
 The **lockfile** is the ownership boundary: `.claude/` also holds your own
 hand-written skills, so sync diffs only what the lockfile lists — anything else

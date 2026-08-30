@@ -69,8 +69,9 @@ package's single Trusted Publisher; a mismatch surfaces only at publish time as
 Nothing here needs a production credential. The test suites run fully offline —
 GitHub and registry calls are stubbed rather than issued — so a contributor with
 no `GITHUB_API_TOKEN` and no npm account can run every gate. Secrets for
-development, where a future project needs them, are injected by Doppler per the
-`devtools:doppler` doctrine and never read from a committed file.
+development, where a future project needs them, are injected at the process
+boundary by whichever secrets manager the project pins on the backing axis, and
+never read from a committed file.
 
 ## Rotation
 

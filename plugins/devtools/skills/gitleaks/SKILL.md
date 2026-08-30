@@ -42,8 +42,9 @@ This is the part that gets handled backwards. When gitleaks finds a real secret:
 
 1. **Rotate it first.** It is compromised from the moment it was committed —
    pushed or not, a local clone is a copy.
-2. **Then** remove it from the code and route it through the injector (see the
-   `doppler` skill: secrets reach a process as environment variables).
+2. **Then** remove it from the code and route it through the injector — whatever
+   the project's secrets manager is, the secret reaches the process as an
+   environment variable and is never read from a committed file.
 3. Rewriting history is optional and usually not worth it. It does not
    un-compromise a rotated credential, and it breaks every existing clone.
 
@@ -68,6 +69,7 @@ when the rule is genuinely wrong for this repo, and say why in a comment.
 
 ## Where this stops
 
-Which secrets a product has and where they come from is the `doppler` skill (dev)
-and the cloud plugin's secret manager (production). This skill covers detection
+Which secrets a product has and where they come from belongs to the project's
+chosen secrets manager — a stack pick on the backing axis — and to the cloud
+plugin's secret manager for deployed environments. This skill covers detection
 only.

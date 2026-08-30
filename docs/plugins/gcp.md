@@ -138,9 +138,10 @@ platform's store or update channel and pins `deploy_template: n/a`.
 
 `gcp` is where the **managed** flavour of a capability lives. The neutral
 contract for each one is a [`stackgen`](./stackgen.md) asset under
-`assets/contracts/` — datastore, identity, observability, orchestration and
-object storage — and the capability states the requirement while the provider
-states the mechanism, one level down from the stack-adapter contract itself.
+`assets/contracts/` — datastore, identity, observability, orchestration, object
+storage and secrets — and the capability states the requirement while the
+provider states the mechanism, one level down from the stack-adapter contract
+itself.
 
 Object storage is the case that makes the split visible: it has no vendor-free
 provider bundle, because every object store is a cloud's. Cloud Storage is the

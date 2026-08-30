@@ -108,8 +108,8 @@ knows what is in scope versus aspirational:
   offering one does it as an `mcpServers:` entry.
 
 Deliberately out of scope, whatever the tier: formatter/linter/scanner binaries
-and repo gates (devtools'), toolchain installation (mise's), development secrets
-(doppler's), CI mechanics (`cicd`'s).
+and repo gates (devtools'), toolchain installation (mise's), secrets management
+(a stackgen `secrets-manager` pack's), CI mechanics (`cicd`'s).
 
 ## Deferred checks
 

@@ -14,7 +14,8 @@ a feature flag default, a bucket name, a log level.
 
 A secret is injected at run time by whatever the host provides. It is never
 baked into a layer, never a build argument, and never a file committed
-beside the build definition.
+beside the build definition. The neutral clauses are
+`assets/contracts/secrets.md`; this is the container half of them.
 
 Build arguments deserve the explicit warning: they are visible in the image
 metadata, so a secret passed as one is a published secret even if no layer
