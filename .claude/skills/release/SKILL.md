@@ -25,7 +25,17 @@ changed.
 The namespaces must both stay prefixed. GitHub's tag globs match any character
 except `/`, so a bare `v*` family matched `vwf-v19.9.0` and fired the npm
 publish on a plugin release — which is why `release.yml` filters `installer-v*`.
-The pre-2026-08-30 `v3.1.0`–`v6.0.0` tags are history; nothing fires on them.
+The 54 pre-2026-08-30 `v1.2.1`–`v6.0.0` tags are history; nothing fires on them,
+and they are deliberately left unprotected.
+
+**Adding a third tag family means widening the ruleset.** GitHub's
+`release-tags` ruleset blocks deletion and re-pointing for `refs/tags/*-v*`,
+which covers both families above and every plugin ref the generator can emit — a
+test pins their shape to `/^[a-z][a-z0-9-]*-v\d+\.\d+\.\d+/`. A family without
+`-v` in the name (`nightly-2026-09`, say) simply falls outside the pattern and
+gets **no** protection, silently: nothing fails, it is just unguarded. Either
+give the new family a `-v` or widen `conditions.ref_name.include` to `["~ALL"]`
+on ruleset `21871515`.
 
 ## Releasing plugins
 
