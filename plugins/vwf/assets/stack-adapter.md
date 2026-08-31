@@ -115,7 +115,7 @@ vwf invokes skills on each configured plugin, at **exactly** these names:
 | `/<plugin>:<plugin>-stack-template <slug>` | data   | a **template payload**      |
 | the repo's own `ux-gate` skill             | action | **UX findings** (UI stacks) |
 
-So `stacks: [ gcp ]` resolves to `/gcp:gcp-stack-menu`. vwf constructs every
+So `stacks: [ stackgen ]` resolves to `/stackgen:stackgen-stack-menu`. vwf constructs every
 name from the configured value — nothing is looked up or guessed.
 
 **The catalog handover.** Every `-stack-template` invocation passes the

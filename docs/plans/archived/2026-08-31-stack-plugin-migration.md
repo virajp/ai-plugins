@@ -1,6 +1,12 @@
 # Plan: migrating the four stack plugins into stackgen
 
-**Status: awaiting approval. Nothing here has been executed.**
+**Status: complete, 2026-08-31.** All eleven units landed in `3c99cbe9`, merged
+as `4ca4f8e7`. The two audits (U3, U4) found typescript carried at full fidelity
+except pnpm's supply-chain half, and flutter contract-lossy only narrowly — 88%
+of its gap was integration API surface Context7 supplies at use time, so U6
+backfilled the architectural constraints and the dangling references, not the
+prose. U1 minted `document` alongside `access`, which this plan did not
+anticipate: Firestore needed it.
 
 This migrates `typescript`, `flutter`, `gcp` and `cloudflare` into stackgen
 packs and retires them as plugins, taking the marketplace from **7 plugins to

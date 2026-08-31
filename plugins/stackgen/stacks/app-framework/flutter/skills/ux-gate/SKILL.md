@@ -2,13 +2,13 @@
 name: ux-gate
 description: Run a Flutter UI slice's visual and accessibility checks, returning
   findings in vwf's UX-gate vocabulary. Invoked by vwf's UX-review stage
-  for a project whose stack this plugin owns — not a general-purpose skill.
+  for a project whose stack this pack owns — not a general-purpose skill.
 disable-model-invocation: false
 model: sonnet
 effort: medium
 ---
 
-# flutter-ux-gate
+# ux-gate
 
 vwf's UX-review stage knows a UI slice must have its screens rendered and
 scanned. It does not know how. This skill is the how, for a Flutter project.

@@ -2,18 +2,18 @@
 name: ux-gate
 description: Render a web UI slice's changed screens and run an accessibility
   scan, returning findings in vwf's UX-gate vocabulary. Invoked by vwf's
-  UX-review stage for a project whose stack this plugin owns — not a
+  UX-review stage for a project whose stack this pack owns — not a
   general-purpose skill.
 disable-model-invocation: false
 model: sonnet
 effort: medium
 ---
 
-# typescript-ux-gate
+# ux-gate
 
 vwf's UX-review stage knows a UI slice must have its screens rendered and
 scanned. It does not know how. This skill is the how, for a web project built on
-this plugin's stack.
+this pack's stack.
 
 > **`invocation` must stay `both`.** A `user` skill is removed from the model's
 > context entirely and cannot be invoked by vwf — and the failure is silent, not
