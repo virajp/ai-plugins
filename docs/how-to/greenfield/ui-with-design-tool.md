@@ -24,19 +24,17 @@ flags, halt wording, config keys, payload shapes — stay in the
 
 ### 1. Install the plugins
 
-Centwise swaps the spine's stack plugins for the one that owns Flutter, and
-takes `stackgen` for both the stack bundles and the design imports.
+Centwise's install is the spine's exactly — what differs is which bundles it
+pins afterwards.
 
 ```sh
-claude plugin install vwf@virajp-plugins \
-  flutter@virajp-plugins stackgen@virajp-plugins
+claude plugin install vwf@virajp-plugins
 ```
 
-`flutter` supplies the Dart, Kotlin and Swift language servers and their
-doctrine; `stackgen` supplies the `dart-flutter` bundle, the `ux-gate` that
-renders Flutter screens — this matters at the end of the run — and the
-`claude-design` pack, without which `/vwf:design-system` has nothing to import
-from. Neither is a vwf dependency, so neither arrives on its own. Scopes and
+`stackgen` supplies the `dart-flutter` bundle — its Dart, Kotlin and Swift
+doctrine, and the language servers it declares — plus the `ux-gate` that renders
+Flutter screens, which matters at the end of the run, and the `claude-design`
+pack, without which `/vwf:design-system` has nothing to import from. Scopes and
 upgrades: [the installer CLI](../../cli/usage.md#installing-plugins); the rest
 of this step is the spine's
 [Install the plugins](./single-repo.md#install-the-plugins).
@@ -77,8 +75,8 @@ the derive-and-correct shape. Two of Centwise's answers are the delta:
 
 On the stack menu Centwise pins `dart-flutter` on the project axis — the
 stackgen bundle serving mobile, tablet, desktop and webapp from one codebase
-([stack templates](../../plugins/flutter.md#stack-templates)). The other axes
-work as in the spine's
+([stack templates](../../plugins/vwf.md#stack-templates)). The other axes work
+as in the spine's
 [stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time),
 and the twelve-foundation walk is unchanged from
 [the twelve foundations](./single-repo.md#the-twelve-foundations).
@@ -214,14 +212,14 @@ closed the deferred screens and the sweep re-stamps coverage complete.
 
 The delta is the UX gate at the end of the run. vwf's UX reviewer does not know
 how to render anything — deliberately — so it delegates rendering and the
-accessibility scan to the UX gate of whichever plugin owns the project's stack,
-then judges what comes back against `design-system.md` and the flow's Screens
-contract. For Centwise that is the `flutter` plugin's gate, which runs the
-project's golden tests headlessly and Flutter's own accessibility guideline
-assertions — contrast, tap-target size, labelled targets — rather than driving a
-browser. A browser-platform project gets the same two gates from its own stack
-plugin by a different mechanism; the rule that survives every stack is that a
-changed screen with no visual check is reported, not passed.
+accessibility scan to the repo's own `ux-gate` skill, then judges what comes
+back against `design-system.md` and the flow's Screens contract. For Centwise
+that gate came from the `dart-flutter` bundle: it runs the project's golden
+tests headlessly and Flutter's own accessibility guideline assertions —
+contrast, tap-target size, labelled targets — rather than driving a browser. A
+browser-platform project gets the same two gates from whichever bundle
+materialized its stack, by a different mechanism; the rule that survives every
+stack is that a changed screen with no visual check is reported, not passed.
 
 Two consequences at the merge gate
 ([the execute merge gate](./single-repo.md#the-execute-merge-gate)): a changed

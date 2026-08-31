@@ -15,7 +15,7 @@
 | Storing the ID token long-term                                     | Tokens expire in 1 hour                                                 | Call `getIdToken()` (not `getIdToken(true)`) before each backend request; the SDK auto-refreshes |
 | Forgetting to revoke Apple token on account deletion               | App Store rejection                                                     | Call `revokeTokenWithAuthorizationCode` before `user.delete()`                                   |
 | Missing `FirebaseAuthMultiFactorException` catch                   | MFA users get a crash instead of a prompt                               | Add a dedicated catch block above `FirebaseAuthException`                                        |
-| Importing `cloud_firestore` in services/controllers                | Couples UI/business logic to the data store                             | Go through repository static methods (see Firestore via Repository)                              |
+| Importing `cloud_firestore` in services/controllers                | Couples UI/business logic to the data store                             | Go through repository static methods (see [Firestore via the repository layer](#firestore-via-the-repository-layer)) |
 
 ---
 
@@ -99,27 +99,21 @@ Authenticate users in your Flutter app with Firebase Auth — sign-in flows, use
 profiles, auth state streams, MFA, and the app's MyAuthService / MyUserService
 wrappers.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                                    | When to read                                                          |
-| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| Setup                                             | Adding the dependency and initializing Firebase                       |
-| Auth State                                   | Use streams to reactively respond to sign-in/sign-out without polling |
-| Email & Password                         | Building email/password registration and sign-in                      |
-| Google Sign-In                           | Implementing Google Sign-In authentication                            |
-| Apple Sign-In                             | Required for iOS/macOS apps offering social sign-in (App Store rule)  |
-| OAuth Providers                         | Integrating third-party OAuth providers like GitHub or Microsoft      |
-| Phone Authentication               | Implementing phone-number verification and SMS-based sign-in          |
-| Anonymous Authentication       | Enabling guest flows with anonymous authentication                    |
-| User Management                         | Managing user profiles, emails, passwords, and account deletion       |
-| Provider Linking                       | Allow one account to sign in with multiple providers                  |
-| Multi-Factor Authentication | Enrolling two-factor authentication with phone or TOTP                |
-| Error Handling                           | Always catch FirebaseAuthException                                    |
-| App Service Wrappers               | Using the app's MyAuthService and MyUserService wrappers              |
-| Emulator                                       | Wiring the Auth emulator for local development                        |
-| Firestore via Repository       | Accessing Firestore through the repository layer                      |
-| Anti-Patterns                             | Avoiding common Firebase Auth mistakes                                |
-| Examples                                       | Complete code examples for common auth scenarios                      |
+| Section                                                             | When to read                                        |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| [Anti-Patterns](#anti-patterns)                                     | Avoiding common Firebase Auth mistakes              |
+| [Emulator](#emulator)                                               | Wiring the Auth emulator for local development      |
+| [Error Handling](#error-handling)                                   | Always catch FirebaseAuthException                  |
+| [Setup](#setup)                                                     | Adding the dependency and initializing Firebase     |
+| [App service wrappers](#app-service-wrappers)                       | Where auth calls are allowed to originate           |
+| [Firestore via the repository layer](#firestore-via-the-repository-layer) | Where `cloud_firestore` is allowed to be imported |
+
+Which providers exist, and how each sign-in call is spelled — email/password,
+Google, Apple, OAuth, phone, anonymous, provider linking, MFA, user
+management — is API surface. Fetch it from Context7 at use time; what this
+reference carries is the wiring and the layering rules around it.
 
 ## Setup
 
@@ -145,6 +139,62 @@ final auth = FirebaseAuth.instance;
 
 // Secondary Firebase app (e.g. dev/prod split)
 final auth = FirebaseAuth.instanceFor(app: Firebase.app('dev'));
+```
+
+---
+
+## App service wrappers
+
+**Controllers and widgets never call `FirebaseAuth.instance` directly.** Auth
+operations go through `MyAuthService` (a `GetxService`); user data goes through
+`MyUserService`. The wrapper is what keeps the SDK at one seam — swapping a
+provider, adding App Check headers or stubbing auth in a test all become one
+edit instead of a search across the widget tree.
+
+```dart
+// Auth operations
+final User? user = await MyAuthService.get.signInWithGoogle();
+await MyAuthService.get.signOut();
+final bool isSignedIn = MyAuthService.get.isSignedIn;
+
+// User data
+if (MyUserService.get.isSignedIn.value) {
+  final MyUser user = MyUserService.get.user;
+}
+final String? token = await MyUserService.get.getTokenId();
+```
+
+---
+
+## Firestore via the repository layer
+
+**Never import `cloud_firestore` in a service or a controller.** Firestore
+access is a repository's job — static methods, no state — for the same reason
+HTTP access is (see [Standards & architecture](../standards-and-architecture.md)).
+The repository catches, wraps the failure in `MyException`, logs it through
+`Logger`, and returns `null` or `false`; it does not let a Firestore exception
+escape into a controller.
+
+```dart
+// In a repository
+static Future<MyRide?> fetchRide(final String rideId) async {
+  try {
+    final DocumentSnapshot<Map<String, dynamic>> doc = await FirebaseFirestore.instance
+        .collection('rides')
+        .doc(rideId)
+        .get();
+    if (!doc.exists || doc.data() == null) return null;
+    return MyRide.fromJson(doc.data()!);
+  } catch (error, stackTrace) {
+    Logger.error(MyException(
+      code: ExceptionCodes.unexpectedException,
+      exception: error,
+      stackTrace: stackTrace,
+      ctx: {'rideId': rideId, 'caller': 'MyRideRepo.fetchRide'},
+    ));
+    return null;
+  }
+}
 ```
 
 ---

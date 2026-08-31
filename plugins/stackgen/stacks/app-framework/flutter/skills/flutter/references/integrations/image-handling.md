@@ -23,20 +23,16 @@ bytes, and compression.
 
 Covers: `image_picker`, `image_cropper`
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                       | When to read                                            |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Setup                               | Adding packages and platform camera/gallery permissions |
-| Pick Images                   | Picking a single image from the gallery                 |
-| Pick Video                     | Picking a video from the gallery                        |
-| Pick Multiple Images | Picking several images at once                          |
-| Camera Photos               | Capturing a photo with the device camera                |
-| Image Cropper               | Cropping or enforcing an aspect ratio on a picked image |
-| Read Image Bytes         | Converting an XFile to bytes or File for upload         |
-| Compress / Resize         | Shrinking or compressing images before upload           |
-| Anti-Patterns               | Avoiding common image-picking mistakes                  |
-| Examples                         | Full pick-crop-upload profile photo flow                |
+| Section                         | When to read                                            |
+| ------------------------------- | ------------------------------------------------------- |
+| [Anti-Patterns](#anti-patterns) | Avoiding common image-picking mistakes                  |
+| [Setup](#setup)                 | Adding packages and platform camera/gallery permissions |
+
+Picking (single, multiple, video, camera), cropping, reading bytes and
+compressing are API surface. Fetch them from Context7 at use time; the platform
+permission declarations below are what a per-package lookup will not give you.
 
 ## Setup
 

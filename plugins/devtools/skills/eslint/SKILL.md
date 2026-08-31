@@ -73,5 +73,5 @@ rather than loosening the rule.
 ## Where this stops
 
 Which rules a language should enable, and the language's own idioms, belong to
-the language plugin (`typescript:lint-format` for TS/JS). This skill covers the
-gate's shape, its config format, and how overrides are scoped.
+the language's own skill (the `typescript` skill for TS/JS). This skill covers
+the gate's shape, its config format, and how overrides are scoped.

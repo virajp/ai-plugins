@@ -5,7 +5,7 @@
  *
  * Run rather than read: the script is POSIX sh with BSD-portable tooling, and
  * the portability guarantee is only worth anything if the system shell is what
- * executes it. Same reasoning as `typescript:test` for the npm-normalize hook.
+ * executes it. Same reasoning as `plugins:npm-normalize-test` for that hook.
  *
  * It lives here because `vitest.config.mts` collects only
  * `cli/src/**\/*.test.ts` — beside the script it would never run.

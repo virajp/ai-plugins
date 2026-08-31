@@ -5,13 +5,13 @@ format, and the one generated file that needs a freshness gate of its own.
 
 ## The two tasks
 
-| Task                          | Does                                                                           |
-| ----------------------------- | ------------------------------------------------------------------------------ |
-| `plugins:check`               | validates the authored tree; non-zero on any finding                           |
-| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 7 plugin manifests      |
-| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                      |
-| `typescript:test`             | table-tests `plugins/typescript/hooks/npm-normalize.sh` through the system sed |
-| `pnpm vitest run`             | the `scripts/` and `cli/` suites                                               |
+| Task                          | Does                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `plugins:check`               | validates the authored tree; non-zero on any finding                      |
+| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 3 plugin manifests |
+| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                 |
+| `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed     |
+| `pnpm vitest run`             | the `scripts/` and `cli/` suites                                          |
 
 Both `plugins:check` and the `--check` mode run in pre-commit and in
 `plugins.yml`, in that order: **freshness before validity**, so a stale manifest
@@ -56,13 +56,23 @@ much smaller than the one it replaced: whole families of assertion became
    without touching it — see stackgen's
    [artifact doctrine](../../../../plugins/stackgen/assets/artifact-doctrine.md)
    §2 for why a user-only adapter skill is worse than a missing one.
-9. **The vwf stack-adapter contract.** Every plugin keyworded
-   `vwf-stack-adapter` ships `<plugin>-stack-menu` and
-   `<plugin>-stack-template`, both model-invocable. Same failure as rule 8 on
-   the other constructed name: vwf never reads an adapter name from config, so a
-   skill the model cannot see yields an **empty menu** rather than an error —
-   and because the stack menu is closed, that silently removes every option the
-   plugin was the only source of.
+9. **The vwf stack-adapter contract, in both directions.** Every plugin
+   keyworded `vwf-stack-adapter` ships `<plugin>-stack-menu` and
+   `<plugin>-stack-template`, both model-invocable — **and** every plugin
+   shipping either of those skills declares the keyword. Same failure as rule 8
+   on the other constructed name: vwf never reads an adapter name from config,
+   so a skill the model cannot see yields an **empty menu** rather than an error
+   — and because the stack menu is closed, that silently removes every option
+   the plugin was the only source of.
+
+   The converse direction is what keeps the rule alive. With `stackgen` the only
+   adapter left, deleting that one keyword would have switched the whole rule
+   off while `check()` still passed green. Now: drop the keyword and the skills
+   still fire it; drop a skill and the keyword still fires it. Only removing the
+   keyword *and* both skills clears it, which is a deliberate, visible
+   retirement rather than an accident. It is the same
+   two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
+   cross-references.
 10. **The technology-free vwf guard.** Below.
 
 ### The plugin-root trap (rule 6)
@@ -78,7 +88,7 @@ render trees and no per-target check caught it, for months. The fix is to name
 the contract and rely on the caller having it — vwf is what fetches those
 conventions, and vwf owns the file.
 
-### The technology-free guard (rule 9)
+### The technology-free guard (rule 10)
 
 `TOOL_TOKENS` bans vwf prose from naming a concrete technology, **but only where
 the mention prescribes**. An occurrence is exempt when another token of the same

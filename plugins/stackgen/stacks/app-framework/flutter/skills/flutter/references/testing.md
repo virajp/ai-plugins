@@ -6,7 +6,8 @@ Tests live under `test/` and **mirror `lib/`** — `lib/components/button.dart` 
 `test/components/my_button_test.dart`. Each file is `void main()` with a
 top-level `group('<Subject>', …)`. Cover **every new service, controller, and
 product widget**; the general style rules (final params, single quotes, return
-types) apply to test code too — see the **dart** skill.
+types) apply to test code too — see
+[Standards & architecture](standards-and-architecture.md).
 
 ## The GetX harness (`test/helpers/`)
 
@@ -45,7 +46,8 @@ Mocks are **mockito nice mocks**, declared once in
 void main() {}
 ```
 
-Add a `MockSpec<MyNewService>()` then regenerate (see the **build** reference):
+Add a `MockSpec<MyNewService>()` then regenerate (see
+[Build, flavors & signing](build-flavors-signing.md)):
 
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs

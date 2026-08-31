@@ -195,7 +195,8 @@ citation: a service topic **cites the provider doctrine, never restates
 it**.
 
 - **Axis**: `backing` + `deploy` (a `compute` service is a deploy
-  target; the rest are backing).
+  target, as is anything else that fronts the deployment; the rest are
+  backing).
 - **Structure**: the **topic bar** below, hung per the kind-general rule
   — one artifact per topic behind a lean router skill. Judgment skills
   are reference-shaped, not paths-scoped: there is no file glob that

@@ -54,7 +54,7 @@ product's journey diverges, so read the spine first and keep it open alongside.
   — a sweep, a long elicitation or an unattended run is going to outlast this
   context window. Capturing it so a fresh session continues rather than rebuilds
   it.
-- **[Decide which plugins your product needs](./operate/choosing-stack-plugins.md)**
-  — vwf names no technology, so every concrete option comes from a plugin you
-  installed by name. Which subset to install **before** `/vwf:architecture`,
-  with a reason for each name on the list.
+- **[Decide which stack your product pins](./operate/choosing-your-stack.md)** —
+  vwf names no technology, so every concrete option comes from a `stackgen`
+  bundle. Which bundle answers each of the four axes, decided **before**
+  `/vwf:architecture`, with a reason for each pin.

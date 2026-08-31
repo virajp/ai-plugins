@@ -28,6 +28,7 @@ matching your task — one, not all of them.
 | Building screens, theming, animation | [UI composition & theming](references/ui-composition.md) |
 | Routes, deep links, the back stack | [Navigation & routing](references/navigation.md) |
 | Serialization, HTTP, caching | [Data & networking](references/data-and-networking.md) |
+| Isolates, offloading CPU work, async UI | [Concurrency & isolates](references/concurrency.md) |
 | Reaching a platform API | [Platform interop](references/platform-interop.md) |
 | Build config, flavors, signing | [Build, flavors & signing](references/build-flavors-signing.md) |
 | Writing or running tests | [Testing & coverage](references/testing.md) |

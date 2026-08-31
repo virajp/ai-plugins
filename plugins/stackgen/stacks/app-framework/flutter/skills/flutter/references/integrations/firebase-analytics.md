@@ -59,22 +59,17 @@ Track user events and screen views in your Flutter app with Firebase Analytics �
 custom events, predefined event taxonomy, user properties, screen tracking, and
 consent gating.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                     | When to read                                              |
-| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Setup                         | Adding the dependency and initializing Analytics          |
-| Instance                   | Accessing the FirebaseAnalytics instance                  |
-| Logging Events       | Logging a custom event with parameters                    |
-| Predefined Events | Tracking standard events like purchases, logins, searches |
-| Screen Tracking     | Tracking screen views across app navigation               |
-| User Properties     | Segmenting users with persistent user properties          |
-| User ID                     | Linking analytics to your app's user identifier           |
-| Session Control     | Customizing the session timeout duration                  |
-| Consent & GDPR         | Gating data collection on user consent (GDPR)             |
-| Debugging                 | Debugging events in real time during development          |
-| Anti-Patterns         | Avoiding common Analytics mistakes                        |
-| Examples                   | Analytics GetX service wrapper example                    |
+| Section                         | When to read                                     |
+| ------------------------------- | ------------------------------------------------ |
+| [Anti-Patterns](#anti-patterns) | Avoiding common Analytics mistakes               |
+| [Consent & GDPR](#consent--gdpr) | Gating data collection on user consent (GDPR)   |
+| [Setup](#setup)                 | Adding the dependency and initializing Analytics |
+
+The event and property API — logging custom events, the predefined event
+taxonomy, screen tracking, user properties, user ID, session control and the
+debug view — is API surface. Fetch it from Context7 at use time.
 
 ## Setup
 

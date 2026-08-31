@@ -2,9 +2,12 @@
 
 ## Build: How It Stitches Together
 
-This skill connects the **dart**, **pubspec**, and **internationalization**
-skills. A Flutter app has several generators whose output is committed and must
-stay in sync with source; this is the order they run and how they relate.
+This reference connects
+[Standards & architecture](standards-and-architecture.md), the `pubspec.yaml`
+manifest (see [Project layout](project-layout.md)) and
+[Internationalization](internationalization.md). A Flutter app has several
+generators whose output is committed and must stay in sync with source; this is
+the order they run and how they relate.
 
 ## The generators
 
@@ -54,8 +57,9 @@ set — `prefer_single_quotes`, `always_use_package_imports`,
 `always_declare_return_types`, `require_trailing_commas`,
 `prefer_final_parameters`, `type_annotate_public_apis`, and many more. The
 `formatter` block pins `page_width: 120` and `trailing_commas: automate`. A
-clean `flutter analyze` is the merge gate; the **dart** skill's style rules are
-these lints made concrete.
+clean `flutter analyze` is the merge gate; the style rules in
+[Standards & architecture](standards-and-architecture.md) are these lints made
+concrete.
 
 ## dependency_validator
 
@@ -93,10 +97,9 @@ traces.
 ## Native features
 
 For platform capabilities Flutter/Dart can't reach, the app drops to native via
-platform channels — see the **swift** (iOS) and **kotlin** (Android) skills. The
-Dart side defines the `MethodChannel`; each native side registers a handler. The
-`swift-lsp` and `kotlin-lsp` language servers (this plugin's dependencies) give
-those files real diagnostics.
+platform channels — see the `flutter-ios` (Swift) and `flutter-android` (Kotlin)
+skills. The Dart side defines the `MethodChannel`; each native side registers a
+handler.
 
 ## Checklist when builds break
 
@@ -403,6 +406,48 @@ flutter build appbundle --flavor prod -t lib/main_prod.dart --release
 # Build iOS (Xcode archive)
 flutter build ipa --flavor prod -t lib/main_prod.dart --release
 ```
+
+---
+
+## Editor launch configuration
+
+A flavor needs **both** halves — the entry point and the `--flavor` argument —
+and an editor that supplies only one produces a build that looks right and reads
+the wrong config. Commit one launch entry per flavor so nobody assembles the
+pair by hand.
+
+### VS Code — `.vscode/launch.json`
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DEV",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "program": "lib/main_dev.dart",
+      "args": ["--flavor", "dev"]
+    },
+    {
+      "name": "PROD",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "program": "lib/main_prod.dart",
+      "args": ["--flavor", "prod"]
+    }
+  ]
+}
+```
+
+### Android Studio — run configurations
+
+**Run/Debug Configurations** → add a Flutter configuration per flavor:
+
+- **Dart entrypoint:** `lib/main_dev.dart`
+- **Additional run args:** `--flavor dev`
 
 ---
 

@@ -1,0 +1,21 @@
+name: GKE Autopilot · Artifact Registry
+summary: Managed Kubernetes, for products that have outgrown per-service
+  autoscaling or need workloads a request-scoped platform cannot host — taken
+  deliberately, for a larger operational surface and a per-cluster cost floor.
+version: 0.1.0
+type: cloud-service
+category: compute
+kind: cloud-provider
+axis: deploy
+artifact: container-image
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      The project's own readiness endpoint, which the readiness and liveness
+      probes point at separately; this component fixes no task name
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — the container runs directly against the backing bundle's local
+      services. A local cluster reproduces manifests, not application behaviour

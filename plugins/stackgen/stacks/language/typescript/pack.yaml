@@ -10,15 +10,37 @@ languages:
   - token: typescript
     facts:
       lsp: >-
-        typescript-language-server, run through mise; stackgen ships no
-        language server itself
+        typescript-language-server, run through mise; declared by this pack as
+        `typescript-lsp` and provisioned via the generated local plugin
       mise_tool: node
       manifest: package.json
   - token: javascript
     facts:
       lsp: >-
-        typescript-language-server, run through mise; the same server serves
-        both tokens
+        typescript-language-server, run through mise; the same `typescript-lsp`
+        server serves both tokens
       mise_tool: node
       manifest: package.json
+lsp_servers:
+  typescript-lsp:
+    command: mise
+    args:
+      - x
+      - --
+      - pnpm
+      - --package=typescript
+      - --package=typescript-language-server
+      - dlx
+      - typescript-language-server
+      - --stdio
+    extensionToLanguage:
+      ".ts": typescript
+      ".cts": typescript
+      ".mts": typescript
+      ".js": javascript
+      ".cjs": javascript
+      ".mjs": javascript
+      ".tsx": typescriptreact
+      ".jsx": javascriptreact
+    startupTimeout: 60000
 harness: n/a

@@ -122,7 +122,9 @@ let rideId = args["rideId"] as? String ?? ""
 
 Model native failures as a `LocalizedError` enum and map each case to a **stable
 `FlutterError` code** the Dart side switches on — the codes are part of the
-channel contract, so keep them in sync with the **dart** skill's handlers.
+channel contract, so keep them in sync with the Dart handlers — see the
+`flutter` skill's
+[platform interop](../../flutter/references/platform-interop.md).
 
 ```swift
 enum CarExtensionError: LocalizedError {
@@ -200,5 +202,6 @@ channel:
 - Keep parity with the Dart `MethodChannel`: method names and channel string
   must match exactly on both sides.
 - The Dart side defines the same channel and invokes/handles the mirror methods
-  — see the **dart** skill and its **build** reference. `sourcekit-lsp` (this
-  plugin's dependency) provides diagnostics for these files.
+  — see the `flutter` skill's
+  [platform interop](../../flutter/references/platform-interop.md) and
+  [build, flavors & signing](../../flutter/references/build-flavors-signing.md).

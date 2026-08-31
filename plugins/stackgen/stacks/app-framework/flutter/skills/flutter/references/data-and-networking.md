@@ -63,8 +63,9 @@ on failure — they log with `MyException` but never rethrow.
 
 For a handful of models, hand-write the immutable `Equatable` entity with a
 `fromJson` factory and `toJson` method (see the entity pattern in
-**standards**). For many or deeply nested models, use `json_serializable`
-codegen — see the **json-serializable** reference.
+[Standards & architecture](standards-and-architecture.md#entity-pattern)). For
+many or deeply nested models, use `json_serializable` codegen — see
+[json_serializable](integrations/json-serializable.md).
 
 ```dart
 class MyRide extends Equatable {
@@ -101,7 +102,8 @@ static Future<List<MyRide>> fetchAll() async {
 }
 ```
 
-See the **concurrency** reference for when to move work off the main isolate.
+See [Concurrency & isolates](concurrency.md) for when to move work off the main
+isolate.
 
 ## Caching & Offline-First
 

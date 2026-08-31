@@ -1,5 +1,5 @@
 ---
-name: lint-format
+name: eslint
 version: 0.1.0
 category: development
 description: The house lint/format gate — @askviraj/linter (ESLint, bundled)

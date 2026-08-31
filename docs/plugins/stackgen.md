@@ -2,11 +2,11 @@
 
 The principles-driven stack materializer. stackgen implements vwf's
 stack-adapter contract with one core rule — **the dispatch rule** — and one
-output shape — **generated artifacts landing directly in the repo's committed
-`.claude/` tree**. It makes a product *executable* on stacks nobody curated, by
-generating project-level skills, agents, hooks-wiring and rules from vwf's
-principles catalog and current documentation, behind a reviewer gate and your
-consent.
+output shape — **artifacts landing directly in the repo's committed `.claude/`
+tree**, with two narrow targets beside it for the two things no repo file can
+express. It makes a product *executable* on stacks nobody curated, by generating
+project-level skills, agents, hooks-wiring and rules from vwf's principles
+catalog and current documentation, behind a reviewer gate and your consent.
 
 Configure, not conjure: stackgen wires and documents existing tools — it never
 implements a server, and it never invents a tool the ecosystem does not have.
@@ -23,7 +23,7 @@ in practice you list it in the product's roster:
 
 ```yaml
 # .config/vwf.yaml
-stacks: [ stackgen ] # alongside any curated stack plugins
+stacks: [ stackgen ] # the only stack plugin there is
 ```
 
 ## Components and bundles
@@ -44,13 +44,14 @@ category-level doctrine + an instance component.
 
 The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 (`capability-vocabulary.md`); the finer **category taxonomy is stackgen's**. vwf
-never learns what an ORM is; stackgen never redefines a capability — the `cdn`
-and `secrets-manager` categories' capability tokens are deliberately unset until
-vwf defines them, because a category classifies what a component *is*, never
-whether a product must have one. Categories make components substitutable
-answers to one blueprint capability, which is what lets stack menus become
-category-filtered queries instead of per-plugin lists. Category-level doctrine
-is written once as curated knowledge; instance components cite it and stay thin.
+never learns what an ORM is; stackgen never redefines a capability — the `cdn`,
+`secrets-manager` and `access` categories' capability tokens are deliberately
+unset until vwf defines them, because a category classifies what a component
+*is*, never whether a product must have one. Categories make components
+substitutable answers to one blueprint capability, which is what lets stack
+menus become category-filtered queries instead of per-plugin lists.
+Category-level doctrine is written once as curated knowledge; instance
+components cite it and stay thin.
 
 ## The dispatch rule
 
@@ -76,23 +77,26 @@ Mixed compositions are the ordinary case — a covered language beside an
 uncovered framework copies the language's packs and generates only the
 framework's artifact — so a later re-sync can act on one component alone.
 
-**Waves A–D landed 23 packs and 25 bundles across all nine kinds**, starting
-with `dprint`, `gitleaks`, `grype` and `pre-commit` — the `repo-gate` kind's
-components. Most of that doctrine still ships from its curated plugin as well: a
-pack is the destination the no-skill-lost rule requires *before* a curated
-plugin can retire, not a replacement the moment it lands. Three packs are the
-exceptions, each deleting its source in the same commit, because the pack plus a
-neutral contract carry everything that source said —
-`deploy-target/container-image` with `assets/contracts/local-stack.md`,
+**33 packs and 31 bundles now ship, across all nine kinds**, starting with
+`dprint`, `gitleaks`, `grype` and `pre-commit` — the `repo-gate` kind's
+components — and closing with `cloud-provider`, the last kind that had been
+defined but never authored against, which the `cloudflare` and `gcp` packs
+filled. Along the way three packs each deleted a curated *skill* in the same
+commit, because the pack plus a neutral contract carry everything that source
+said — `deploy-target/container-image` with `assets/contracts/local-stack.md`,
 `capability-provider/doppler` with `assets/contracts/secrets.md`, and
 `ci-system/github-actions` with `assets/contracts/release-trigger.md`. The third
-is the first to retire not a skill but a **whole plugin**: `cicd` was exactly
+was the first to retire not a skill but a **whole plugin**: `cicd` was exactly
 one kind wearing a manifest.
 
-What no pack covers still waits for its wave, so the menu keeps the open
-`generate` entry and the curated plugins remain the covered-stack path for the
-languages, clouds and capabilities they own. stackgen's value today is the
-uncovered tail — the stack you use that nobody wrote a plugin for.
+The retirement wave then took the four that were left — `typescript`, `flutter`,
+`gcp` and `cloudflare` — each once its doctrine had landed as packs. That
+ordering is the no-skill-lost rule: a pack is the destination that must exist
+*before* a plugin retires, never a replacement the moment it lands.
+
+**stackgen is now the only stack plugin.** Its packs are the covered path, and
+the menu keeps its open `generate` entry for the rest — the stack you use that
+nobody wrote a pack for.
 
 ## Kinds — what can be generated, and its shape
 
@@ -102,13 +106,13 @@ in shape while only content varies:
 
 | Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `typescript` plugin)                                                                                                                                                                                               |
+| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `language/typescript` bundle)                                                                                                                                                                                      |
 | `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                   |
 | `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                            |
-| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus artifact/pipeline/health where the service's category is `compute` (archetype: the `gcp` plugin)                                                                                                                                                                                                 |
+| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus artifact/pipeline/health where the service's category is `compute` (archetype: the `cloud-provider/gcp` bundle)                                                                                                                                                                                  |
 | `repo-gate`           | repo                   | the `toolchain-gate` components that run over the whole repo, composed together. A **language-specific** linter or formatter appearing here is a gap — it belongs to that language's bundle                                                                                                                                                                                                                               |
 | `ci-system`           | cicd                   | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage |
-| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `flutter` plugin)                                                                                                                                                                                                                                      |
+| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `app-framework/flutter` bundle)                                                                                                                                                                                                                        |
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                  |
 | `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature                                                                                                                          |
 
@@ -147,12 +151,33 @@ with real options — never fake consensus. Dependencies get no reference — a 
 in manifest doctrine at most; frameworks are written against, dependencies are
 looked up at use time.
 
-## The output — `.claude/`, directly
+## The output — `.claude/` first, and two targets beside it
 
 The output vocabulary is **closed**: skills, agents, hooks (config + scripts),
-and rules. **No MCP configuration, no LSP configuration** — LSP servers are a
-plugin-manifest feature no project file can express, so the need travels as
-`language_facts` in the template payload, which `/vwf:doctor` verifies.
+and rules, all landing in the repo's own `.claude/` tree. Two things cannot be
+`.claude/` files, and each is a separate target with its own consent line rather
+than something that rides the landing:
+
+- **An MCP server** goes into the project's own `.mcp.json`. It is genuinely a
+  project file — collaborators should get it — and the alternative, a curated
+  registry of servers, fails on scaling before it fails on charter: a list holds
+  only what someone curated, and stackgen exists for the tail nobody did.
+- **A language server** cannot be expressed by any project file at all —
+  `lspServers` is a plugin-manifest feature — so the one way to provide one is
+  to *be* a plugin. stackgen writes a small local plugin at the fixed path
+  `~/.claude/plugins/local/stackgen-lsp/`, holding the union of what every repo
+  you have materialized from contributed, and **prints the two registration
+  commands rather than running them**.
+
+The need still travels as `language_facts` in the template payload for
+`/vwf:doctor` to verify; the local plugin is what actually provides the server.
+Its scope is `user`, so **your collaborators get none of it** — a teammate's
+language server is their machine's business, the same line your editor already
+draws, and what user scope buys is one registration serving every repo instead
+of a per-repo obligation nobody maintains. What makes that safe is the
+`extensionToLanguage` map every generated declaration must carry: a repo with no
+matching files never starts the server, and a declaration without a map is
+forbidden outright.
 
 ```text
 .claude/
@@ -164,20 +189,36 @@ plugin-manifest feature no project file can express, so the need travels as
 ```
 
 **Repo-owned means:** committed, editable by the project, and working for every
-collaborator with no plugin installed. Two consent tiers guard every landing:
-the file set is a dry-run plan you approve, and **`.claude/settings.json` is
-never modified without your explicit, separate consent** — a hook script can
-land while its wiring is declined (it stays inert, and the plan says so). Hook
-*scripts* come only from curated packs; generation never emits an executable.
+collaborator with no plugin installed. **Three consent tiers** guard a landing:
+
+1. The `.claude/` file set is a dry-run plan you approve — every path listed,
+   nothing written unapproved.
+2. **`.claude/settings.json` and `.mcp.json` are never modified without your
+   explicit, separate consent**, each as its own line in the gate. A hook script
+   can land while its wiring is declined (it stays inert, and the plan says so);
+   a declined MCP wiring leaves the skills landed and says the tool will be
+   unreachable.
+3. **The local plugin gets a larger gate still** — writing outside the repo and
+   registering with a user-scoped tool is a bigger act than editing a project
+   file — split into two separately declinable items: the manifest write, and
+   the registration. Declining the registration leaves a valid plugin directory
+   nobody has installed, and prints the two commands for later.
+
+Every target **merges, never owns**: the keys stackgen added are recorded in the
+lockfile, so sync and removal touch only those, and removal of the local plugin
+is **by subtraction** — another repo's contributions to the union stay, and the
+directory and its registration go only when the last key does. Hook *scripts*
+come only from curated packs; generation never emits an executable.
 
 **A pack may need repo files the materializer cannot write.** The boundary is
-`.claude/` plus `.mcp.json`, so a pack whose correctness depends on a repo-wide
-edit — a scanner allowlist, a `.gitignore` block, a pre-commit entry, a mining
-exclude — carries that edit as a literal block in the reference that owns it,
-and ships a gate that fails the first commit naming whichever block is missing.
-`capability-provider/fnox` is the first: three of the four conditions the
-secrets contract's encrypt-into-git allowance sets sit outside the boundary, and
-its `fnox-ciphertext-guard.sh` is the first hook script any pack ships.
+`.claude/` plus `.mcp.json` plus the local plugin, so a pack whose correctness
+depends on a repo-wide edit — a scanner allowlist, a `.gitignore` block, a
+pre-commit entry, a mining exclude — carries that edit as a literal block in the
+reference that owns it, and ships a gate that fails the first commit naming
+whichever block is missing. `capability-provider/fnox` is the first: three of
+the four conditions the secrets contract's encrypt-into-git allowance sets sit
+outside the boundary, and its `fnox-ciphertext-guard.sh` is the first hook
+script any pack ships.
 
 The **lockfile** is the ownership boundary: `.claude/` also holds your own
 hand-written skills, so sync diffs only what the lockfile lists — anything else

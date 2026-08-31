@@ -55,7 +55,7 @@ type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
 kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
-axis: project | backing | deploy | repo | design | cicd
+axis: project | backing | deploy | repo | design | cicd # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
   - token: <language token>
@@ -66,10 +66,23 @@ languages: # language and app-framework components only
       manifest: <the manifest file doctor checks deps against — or n/a>
 package_manager: <token> # package-manager components only
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
+private_plane: <mechanism> # deploy-side components — how a non-public project is kept off the internet (vwf's stack-vocabulary key)
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
+user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, tier 3
+lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
 ```
+
+**Servers are three sibling keys, never one key with a scope field.**
+`mcp_servers:` is project-scoped and lands in the repo's own `.mcp.json`;
+`user_mcp_servers:` and `lsp_servers:` are user-scoped and land in the
+generated local plugin's manifest. Three keys make "a server belongs in
+exactly one place" structural — landing in both would mean writing the name
+twice, and a name appearing under both `mcp_servers:` and
+`user_mcp_servers:` halts the run. This changes no artifact: the landed set
+is still closed to skills, agents, hooks and rules, and these are payload
+the materializer writes elsewhere.
 
 The bundle-level lists the previous format carried per pack — `frameworks`,
 `dependencies`, `optional_languages`, `capabilities` — are **derived at

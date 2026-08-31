@@ -1,26 +1,24 @@
 # Xcode — the iOS host project
 
-## Xcode Expert Skill
-
 Xcode workflows for the iOS-native side of a Flutter app — build settings and
 xcconfig, schemes and configurations, code signing and provisioning, simctl
 simulator control, LLDB and SwiftUI/memory debugging, Instruments profiling,
 resolving project.pbxproj conflicts, and the xcodebuild CLI.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                     | When to read                                            |
-| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Project Structure             | iOS project/folder layout and synchronized groups       |
-| Build Settings                   | Configuring build settings and xcconfig overrides       |
-| Schemes & Configurations | Setting up schemes, configurations, and launch args     |
-| Code Signing                       | Resolving code-signing and provisioning errors          |
-| Simulators                           | Controlling simulators via simctl                       |
-| Debugging                             | LLDB, view hierarchy, memory, and Instruments debugging |
-| Common Build Errors         | Diagnosing common build and signing failures            |
-| project.pbxproj                 | Resolving project.pbxproj merge conflicts               |
-| xcodebuild CLI                   | Building, testing, and archiving from the command line  |
-| iOS Project Specifics     | This repo's iOS target and SPM conventions              |
+| Section                                                 | When to read                                            |
+| ------------------------------------------------------- | ------------------------------------------------------- |
+| [Project Structure](#project-structure)                 | iOS project/folder layout and synchronized groups       |
+| [project.pbxproj](#projectpbxproj)                      | Resolving project.pbxproj merge conflicts               |
+| [Schemes & Configurations](#schemes--configurations)    | Setting up schemes, configurations, and launch args     |
+| [Build Settings](#build-settings)                       | Configuring build settings and xcconfig overrides       |
+| [Code Signing](#code-signing)                           | Resolving code-signing and provisioning errors          |
+| [Simulators](#simulators)                               | Controlling simulators via simctl                       |
+| [Debugging](#debugging)                                 | LLDB, view hierarchy, memory, and Instruments debugging |
+| [xcodebuild CLI](#xcodebuild-cli)                       | Building, testing, and archiving from the command line  |
+| [Common Build Errors](#common-build-errors)             | Diagnosing common build and signing failures            |
+| [iOS Project Specifics](#ios-project-specifics)         | The iOS target and SPM conventions                      |
 
 ## Project Structure
 

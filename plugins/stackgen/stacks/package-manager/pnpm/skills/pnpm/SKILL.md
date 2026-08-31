@@ -22,7 +22,12 @@ task.
 | Doing | Read |
 | --- | --- |
 | Editing a package.json — scripts, exports, deps | [Manifest discipline](references/manifest-discipline.md) |
-| Workspace layout, catalogs, linking, supply chain | [Workspace & supply chain](references/workspace.md) |
+| Supply chain, build allowlists, overrides, peers, .npmrc | [Supply chain & settings](references/supply-chain.md) |
+| Workspace layout, catalogs, linking | [Workspace](references/workspace.md) |
+
+`pnpm-workspace.yaml` is pnpm's settings file for **any** repo shape — a
+single-package repo keeps it for the supply-chain half and omits only the
+workspace-layout half.
 
 **The rule that does not wait for a reference:** one package manager, one
 lockfile, committed, and CI installs frozen.

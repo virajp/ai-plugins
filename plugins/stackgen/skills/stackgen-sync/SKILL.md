@@ -3,7 +3,9 @@ name: stackgen-sync
 description: Diff the repo's materialized .claude/ entries against the
   current component packs (and offer regeneration per generated component),
   presenting the delta for consent — the explicit re-sync that makes drift
-  visible without ever overwriting silently. Run after upgrading stackgen,
+  visible without ever overwriting silently. Also diffs the generated local
+  plugin on this machine, where the lockfile records one. Run after
+  upgrading stackgen,
   or any time you want to see how far the repo's copies have drifted.
 disable-model-invocation: true
 ---
@@ -25,7 +27,9 @@ user's clock.
    "nothing materialized" and stop. The lockfile is the whole inventory:
    a path in `.claude/` it does not list is the repo's own and is invisible
    to this skill. Partition entries by **component** (every landing carries
-   its component ref) and by source: pack-sourced vs `generated`.
+   its component ref) and by source: pack-sourced vs `generated`. Read the
+   `settings_keys`, `mcp_servers` and `local_plugin` blocks too — those
+   name state outside `.claude/`, and each diffs on its own terms below.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
@@ -47,19 +51,54 @@ user's clock.
    is an offer, not a default, and taking one component never forces
    another.
 
-4. **Present the delta for consent.** One consolidated dry-run plan,
+4. **Diff the local plugin, if the lockfile has one.** No `local_plugin`
+   block → skip this step entirely; this repo has never written to the
+   machine and a sync must not start. Otherwise read
+   `~/.claude/plugins/local/stackgen-lsp/.claude-plugin/plugin.json` and
+   compare, **key by key and only for the keys this repo claims** under
+   `local_plugin.lsp_servers` / `local_plugin.mcp_servers`
+   (`${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/local-plugin.md`
+   is the procedure — the merge classification, the version bump and the
+   removal path):
+
+   - a claimed key whose declaration the current pack has changed —
+     **offer** the update;
+   - a claimed key the manifest no longer holds — report it; the user
+     removed it by hand and re-adding it uninvited is exactly the silent
+     write this skill exists to prevent;
+   - a claimed key whose component is no longer in the composition —
+     offer **removal by subtraction**, which drops that key alone and
+     touches no other repo's;
+   - a key the manifest holds that this repo does not claim — invisible
+     here, always. It is another repo's, or the user's.
+
+   Everything in this step is **outside the repo and outside the commit**;
+   only the `local_plugin` block moves with the lockfile.
+
+5. **Present the delta for consent.** One consolidated dry-run plan,
    grouped **per component**: every file that would change, with its
    three-state classification. **Repo edits are never overwritten by
    default** — a *repo edited* file is taken only if the user picks it
    explicitly, and the default selection covers only *pack moved* files.
-   Any change to entries under the lockfile's `settings_keys` is a
-   `.claude/settings.json` edit and gets its own consent line —
-   **settings.json is never modified without explicit consent**. Nothing
-   selected → done, nothing written.
+   Three things get their **own** consent lines rather than riding the
+   file plan, and each is separately declinable:
 
-5. **Apply and commit.** Write only what was selected, update the changed
-   components' lockfile hashes, and commit as one commit via the repo's
-   git workflow.
+   - any change to entries under `settings_keys` — a
+     `.claude/settings.json` edit, and **settings.json is never modified
+     without explicit consent**;
+   - any change to entries under the top-level `mcp_servers` — a
+     `.mcp.json` edit, on the same terms;
+   - anything from step 4 — the **tier-3** line, which says plainly that
+     it writes to this machine outside the repo, and where a
+     registration or de-registration is involved **prints the `claude`
+     commands and asks; it never runs them unprompted**.
+
+   Nothing selected → done, nothing written.
+
+6. **Apply and commit.** Write only what was selected, update the changed
+   components' lockfile hashes and the `local_plugin` block, and commit as
+   one commit via the repo's git workflow. The local plugin's own files
+   are on the machine, not in the commit.
 
 ## Rules
 
@@ -69,5 +108,11 @@ user's clock.
   framework component alone; the language baseline beside it is untouched
   unless its own pack moved.
 - **The lockfile is the boundary**: entries stackgen did not materialize
-  are never touched, and nothing is ever deleted — a retired pack's copies
-  stay until the user removes them.
+  are never touched, and nothing in the repo is ever deleted — a retired
+  pack's copies stay until the user removes them.
+- **The local plugin is the one thing subtracted rather than left.** It is
+  the machine's shared file, not a repo copy, so a stale key there is
+  another repo's problem rather than a note the user can ignore. Removal
+  drops only the keys this repo's lockfile claims; the directory and the
+  registration go only when subtracting leaves no servers at all, and only
+  after the user confirms the two printed commands.

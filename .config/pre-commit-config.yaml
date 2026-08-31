@@ -17,12 +17,12 @@ repos:
 
   - repo: local
     hooks:
-      - id: typescript-hook-test
-        name: typescript npm→pnpm hook tests
-        entry: mise x -- mise run typescript:test
+      - id: npm-normalize-hook-test
+        name: npm→pnpm/bun hook tests
+        entry: mise x -- mise run plugins:npm-normalize-test
         language: system
         pass_filenames: false
-        files: ^plugins/typescript/hooks/
+        files: ^plugins/stackgen/stacks/package-manager/pnpm/hooks/
         stages: [ pre-commit ]
       - id: plugins-check
         name: Static validation of the authored plugins/ tree
@@ -111,8 +111,8 @@ repos:
         #
         # Two kinds: the vwf blueprint templates and example bundle (ignored in
         # linter.yaml, because OKF frontmatter reads as a second H1), and the hook
-        # scripts, which are shell — `typescript:test` is what actually tests those,
-        # through the system sed.
+        # scripts, which are shell — `plugins:npm-normalize-test` is what actually
+        # tests those, through the system sed.
         exclude: ^plugins/vwf/assets/(templates|examples)/|\.sh$
         language: system
         stages: [ pre-commit ]

@@ -24,24 +24,18 @@ polylines, camera control, and keeping the screen awake.
 
 Covers: `google_maps_flutter`, `geolocator`, `wakelock_plus`
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                          | When to read                                                      |
-| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Setup                               | Adding the packages, API keys, and platform permissions           |
-| Location Permissions | Always check and request permissions before calling location APIs |
-| Current Position         | Getting the user's location once (one-shot fix)                   |
-| Position Stream           | Continuously tracking location as the user moves                  |
-| Google Maps Widget     | Rendering the map widget and its options                          |
-| Map Controller             | Moving the camera or fitting route bounds programmatically        |
-| Markers                           | Placing pins or custom marker icons on the map                    |
-| Polylines (Routes)       | Drawing a route line connecting points on the map                 |
-| Circles & Polygons       | Drawing a radius circle or geo-fenced area                        |
-| Camera Control             | Panning, zooming, or tilting the map camera                       |
-| Custom Map Style         | Applying a custom (e.g., dark) map theme                          |
-| Wakelock (Screen On)   | During active navigation keep the screen awake                    |
-| Anti-Patterns               | Avoiding common maps and location mistakes                        |
-| Examples                         | Full navigation-tracking controller and map widget                |
+| Section                         | When to read                                            |
+| ------------------------------- | ------------------------------------------------------- |
+| [Anti-Patterns](#anti-patterns) | Avoiding common maps and location mistakes              |
+| [Setup](#setup)                 | Adding the packages, API keys, and platform permissions |
+
+Reading a position once or as a stream, the map widget and its controller,
+markers, polylines, circles, camera control, custom styling and the wakelock are
+API surface. Fetch them from Context7 at use time. **Always check and request
+location permission before any location call** — that is a platform contract,
+not a package detail, and the declarations it needs are below.
 
 ## Setup
 

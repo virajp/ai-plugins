@@ -84,7 +84,7 @@ shaders, and `Clip.antiAliasWithSaveLayer`.
 3. **Red in the UI graph** → open the DevTools Timeline/CPU profiler, enable
    **Track widget rebuilds** to find over-broad rebuilds, and move heavy
    computation (JSON parsing, image/crypto work) to an isolate via `compute()`
-   (see the concurrency reference).
+   (see [Concurrency & isolates](concurrency.md)).
 4. **Red in the raster graph** → toggle **checkerboardOffscreenLayers** to
    expose `saveLayer` calls and apply the table above; check for uncached image
    decoding; use **Slow Animations** (5x) in the inspector to watch a janky

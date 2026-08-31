@@ -24,11 +24,14 @@ until you approve. The whole manual, command by command, is
 starting fresh, adopting vwf in a codebase that already works, and running a
 live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 
-Around it the marketplace ships **six more plugins** — languages, clouds,
-tooling and generation. That is the point of the split: vwf owns the workflow
-and names no technology at all, so every concrete choice lives in a plugin you
-install only if your product uses it. They install through Claude Code's own
-plugin commands, straight from this repo — or through one small CLI,
+Around it the marketplace ships **two more plugins** — `devtools` for the
+developer machine's toolchain, and `stackgen`, which materializes whatever stack
+you pin. Both are vwf dependencies, so installing the workflow brings them. That
+is the point of the split: vwf owns the workflow and names no technology at all,
+and every concrete choice — the language, the framework, the cloud — arrives as
+a `stackgen` pack landed in your own repo rather than as a plugin each
+collaborator has to install. They install through Claude Code's own plugin
+commands, straight from this repo — or through one small CLI,
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins),
 which sequences those same commands and wires up graphify.
 
@@ -101,14 +104,14 @@ check.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
-your user profile. Everything beyond `vwf` is installed by name, because which
-language and cloud plugins you want is a question about your product rather than
-about the toolkit:
+your user profile. Installing `vwf` is normally all you need, since `devtools`
+and `stackgen` follow it as dependencies at the same scope — but either can be
+installed on its own by name:
 
 ```sh
-pnpx @askviraj/ai-plugins --user typescript --user gcp
+pnpx @askviraj/ai-plugins --project stackgen
 # or
-claude plugin install typescript@virajp-plugins gcp@virajp-plugins
+claude plugin install --scope project stackgen@virajp-plugins
 ```
 
 Upgrading is `claude plugin marketplace update` followed by
@@ -176,9 +179,9 @@ Paste one of these, adjusting the plugin name:
 
 ## The plugins
 
-Eight plugins, each with its own guide. Install the workflow, then whichever
-ones match the product you are building. The name in code at the end of each
-entry is what you pass to `claude plugin install`.
+Three plugins, each with its own guide. Installing the workflow brings the other
+two, which are its dependencies. The name in code at the end of each entry is
+what you pass to `claude plugin install`.
 
 ### The workflow
 
@@ -193,39 +196,6 @@ knowledge-graph layer, session handoff and recall, the
 Markdown and Context7 docs surfaces it absorbed. It names **no** technology — no
 language, no framework, no cloud — which is what lets the rest of this list
 exist. `vwf@virajp-plugins`
-
-### Languages
-
-**[typescript](./docs/plugins/typescript.md)** — the TypeScript language plugin,
-covering TypeScript and JavaScript. A `typescript` router skill plus an `effect`
-one for Effect-TS, and opinionated standards for `package.json`, pnpm, tsconfig
-and the lint/format gate. It bundles the TypeScript language server and the
-npm→pnpm/bun normalizing hook. Its stack adapter retired in Wave C — the
-TypeScript stack templates are `stackgen` bundles now, so this plugin offers no
-menu. `typescript@virajp-plugins`
-
-**[flutter](./docs/plugins/flutter.md)** — Flutter and Dart done to one
-standard: `dart` and `swift` router skills plus `kotlin`, `pubspec`,
-`analysis-options` and internationalization, with Dart, Kotlin and SourceKit
-(Swift) language servers bundled. Its stack adapter retired in Wave C — the
-Flutter stack template is a `stackgen` bundle now, and the app-framework pack
-carries the Dart, Kotlin and Swift judgment that goes with it.
-`--project flutter` from the app's own repo, or `flutter@virajp-plugins` if you
-build them often enough for it to be a habit.
-
-### Clouds
-
-**[gcp](./docs/plugins/gcp.md)** — Google Cloud, as the judgment an SDK
-reference cannot give you: which service to pick, when it stops being the
-answer, how each one bills, which have local emulators, and what least-privilege
-IAM looks like. It supplies Firebase and Cloud SQL as backing choices and Cloud
-Run and GKE as deploy targets. `gcp@virajp-plugins`
-
-**[cloudflare](./docs/plugins/cloudflare.md)** — **deliberately parked at Zero
-Trust Access**: a private plane in front of a project that must not be publicly
-reachable, whichever cloud hosts it. Workers, Pages, R2, D1, KV and the rest are
-not offered here and arrive under their own plan; the menu says so out loud
-rather than coming back quietly short. `cloudflare@virajp-plugins`
 
 ### Tooling, design and delivery
 
@@ -245,22 +215,32 @@ its own: a component a shipped **pack** covers is copied verbatim; an uncovered
 one is **generated** — researched via Context7 topic by topic, instantiated
 against vwf's principles catalog, gated by a reviewer agent and your explicit
 consent, so a covered language never regenerates because its framework is new.
-Both paths land directly in the repo's committed `.claude/` tree — skills,
-agents, hooks and rules only, shaped by a closed kind vocabulary whose per-kind
-**topic bar** fixes what the output must cover and how deep, recorded in a
-lockfile per component — so the result is plain files your collaborators get
-with a `git pull` and no plugin install. Re-syncing against newer packs is an
-explicit, diffed decision — never a silent overwrite, and never a
-`settings.json` edit without separate consent. Waves A–D landed 23 packs and 25
-bundles across all nine kinds, the newest being a `secrets-manager` pair on the
-backing axis — where a secret lives, and what onboarding a teammate costs, made
-a pick rather than a house rule. For what no pack covers, the curated plugins
-above remain the covered-stack path, and stackgen's value is the uncovered tail.
-A `vwf` dependency, because vwf's stack menu is the union of what the installed
-stack plugins offer — with none present it comes back empty, and the axes carry
-no free-text escape. You can defer an axis and keep defining the product, but
-`/vwf:plan` and `/vwf:execute` halt until it is answered. Having it installed
-commits you to nothing; it acts only once an axis is pinned.
+Both paths land mostly in the repo's committed `.claude/` tree — skills, agents,
+hooks and rules only, shaped by a closed kind vocabulary whose per-kind **topic
+bar** fixes what the output must cover and how deep, recorded in a lockfile per
+component — so most of the result is plain files your collaborators get with a
+`git pull` and no plugin install. Two things cannot be repo files, and each
+carries its own consent line rather than riding the landing: an MCP server goes
+into the project's `.mcp.json`, and a **language server** is a plugin-manifest
+feature no project file can express at all, so stackgen writes one small local
+plugin on your machine — at the fixed path
+`~/.claude/plugins/local/stackgen-lsp/`, holding the union across the repos you
+have materialized from — and **prints the two registration commands for you to
+run rather than running them itself**. That one is user-scoped and your
+collaborators get none of it, which is the same line your editor already draws;
+what makes it safe is that every generated server declaration carries an
+extension map, so it never starts in a repo with no matching files. Re-syncing
+against newer packs is an explicit, diffed decision — never a silent overwrite,
+never a `settings.json` edit without separate consent, and removal is by
+subtraction, dropping only the keys your repo's lockfile recorded. 33 packs and
+31 bundles ship across all nine kinds, the newest closing `cloud-provider` — the
+one kind that had been defined but never authored against. stackgen is now the
+only stack plugin: its packs are the covered path, its generator the uncovered
+tail. A `vwf` dependency, because vwf's stack menu is the union of what the
+installed stack plugins offer — with none present it comes back empty, and the
+axes carry no free-text escape. You can defer an axis and keep defining the
+product, but `/vwf:plan` and `/vwf:execute` halt until it is answered. Having it
+installed commits you to nothing; it acts only once an axis is pinned.
 `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
@@ -270,8 +250,8 @@ guidelines — is now a
 installs with it.
 
 ```sh
-claude plugin install vwf@virajp-plugins typescript@virajp-plugins
-claude plugin install --scope project flutter@virajp-plugins
+claude plugin install vwf@virajp-plugins
+claude plugin install --scope project stackgen@virajp-plugins
 ```
 
 ## Statusline
@@ -381,7 +361,7 @@ maintainers. 🙏
   the **[Dart SDK](https://dart.dev/)**,
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and
   **[SourceKit-LSP](https://github.com/swiftlang/sourcekit-lsp)** — the engines
-  behind the language-server plugins.
+  behind the language servers `stackgen`'s packs declare.
 - **[rtk](https://github.com/rtk-ai/rtk) (Rust Token Killer)** — the
   token-saving proxy `vwf`'s Bash hook shells out to (installed via
   `brew install --formulae rtk`).

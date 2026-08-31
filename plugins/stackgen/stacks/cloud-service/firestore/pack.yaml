@@ -1,0 +1,16 @@
+name: Firestore
+summary: The document datastore with a first-class offline emulator and a
+  governed client-direct path — the fastest way to a working product where the
+  data model is document-shaped.
+version: 0.1.0
+type: cloud-service
+category: document
+capability: document-datastore
+kind: cloud-provider
+axis: backing
+harness:
+  local_stack:
+    task: stack:up
+    mechanism: >-
+      The Firebase Emulator Suite, started by one task behind its own readiness
+      signal — no Docker, and not wrapped in a compose file to look conventional

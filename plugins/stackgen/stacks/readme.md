@@ -13,15 +13,17 @@ shape `../assets/pack-format.md` defines (`<type>/<slug>/pack.yaml` + prose
 `otel-lgtm` (telemetry), `temporal` (workflow). The neutral contracts they
 cite live once, in `../assets/contracts/`.
 
-Most landed packs' doctrine **still ships from its curated plugin too**. Those
-copies are the destination the no-skill-lost rule requires **before** that
-plugin can retire, not a replacement yet. Three exceptions so far, each
-deleting its source in the same commit, because the pack plus a contract
-together carry everything that source said: Wave D's `container-image` (with
-`contracts/local-stack.md`), `doppler` (with `contracts/secrets.md`), and
-`github-actions` (with `contracts/release-trigger.md`) — the third being the
-first to retire not a skill but a **whole plugin**, `cicd` having been exactly
-one kind wearing a manifest.
+Most packs' doctrine **also shipped from a curated plugin** while that plugin
+still existed. That copy is the destination the no-skill-lost rule requires
+**before** a retirement, never a replacement on landing — and the backstop is
+now spent: every curated stack plugin has retired, so for every pack here the
+pack is the only home. Three packs went straight there, deleting their source
+in the same commit because the pack plus a contract together carry everything
+that source said: Wave D's `container-image` (with `contracts/local-stack.md`),
+`doppler` (with `contracts/secrets.md`), and `github-actions` (with
+`contracts/release-trigger.md`) — the third being the first to retire not a
+skill but a **whole plugin**, `cicd` having been exactly one kind wearing a
+manifest.
 
 **Wave C — `ci-system/`, kind `ci-system`:** `github-actions`. Exactly one CI
 system per repo, so this bundle never composes two. Its neutral contract is
@@ -120,8 +122,9 @@ is the intended direction whenever an exception stops feeling arguable.
 the project's own `.mcp.json` behind its own consent line. That is the charter
 change Wave D made deliberately (`../assets/output-tree.md`): a curated registry
 of servers fails on **scaling** before it fails on charter, since a list can only
-hold what someone curated. LSP configuration stays excluded — it has no project
-file to live in.
+hold what someone curated. LSP configuration stays out of the repo — no
+project file can express one — and reaches the developer's machine through
+the generated local plugin instead, the third output target Wave E added.
 
 **Secrets — `capability-provider/`, category `secrets-manager`:** `doppler` and
 `fnox`, the second pair to land in a category rather than one instance, and the
@@ -152,42 +155,54 @@ invisible. The `design` and `cicd` axes close that door, and their bundle slug
 **is** the config token, so the menu pick and the config key are one value rather
 than two that can disagree.
 
-**Bundles — `bundles/`, the recorded compositions users actually pick.** All
-fifteen curated options survive the merge — the twelve TypeScript ones, the
-Flutter app, the provider-neutral container deploy and the Claude Code plugin
-template — joined by the four Wave D added on the two tool axes and the
-`secrets-manager` pair above. Each names its components as refs, mixing shipped packs (copied
-verbatim) with `@generated` ones (researched on first fetch) — which is the
-dispatch rule working at bundle scale rather than a gap.
+**Bundles — `bundles/`, the recorded compositions users actually pick.** Every
+curated option survives the merge — the twelve TypeScript ones, the Flutter app,
+the provider-neutral container deploy and the Claude Code plugin template, the
+four Wave D added on the two tool axes, the `secrets-manager` pair above, and
+the five Wave E added for the two clouds. Each names its components as refs,
+mixing shipped packs (copied verbatim) with `@generated` ones (researched on
+first fetch) — which is the dispatch rule working at bundle scale rather than a
+gap.
 
 A component answers *what is TypeScript*; a bundle answers *what is a
 TypeScript service*. The menu lists bundles only — offering bare components
 would ask a user to assemble a stack rather than choose one.
 
-**Nine stack adapters retired here** — `typescript`, `flutter`, `devtools`,
-`claude-code` (since dissolved entirely), `datastore`, `identity`,
-`observability`, `orchestration` and `object-storage` no longer ship a
-`-stack-menu` / `-stack-template` pair,
-because every template they offered is a bundle above. The retirement test was
-mechanical rather than a judgement: an adapter retires only when **every** slug
-it offered has a bundle. `gcp` and `cloudflare` fail that test and keep theirs.
+**Wave E — `cloud-provider/` and `cloud-service/`**, kind `cloud-provider`, the
+ninth kind and the last one that had been defined but never authored against.
+`cloud-provider` carries the account, IAM, billing and emulator judgment that
+spans a provider's services — `gcp` and `cloudflare` — and `cloud-service`
+carries one component per service: `cloud-run`, `cloud-sql`, `firestore`,
+`firebase-auth`, `firebase-messaging`, `firebase-storage`, `gke` and
+`zero-trust-access`. Wave D deferred this deliberately, because folding the two
+clouds honestly needed per-topic research with citations rather than a fold of
+their four ~80-line service templates.
 
-**Deferred — `gcp` and `cloudflare`.** Their `cloud-provider` bar wants ~30
-and ~9 artifacts; the curated plugins supply three provider skills and four
-~80-line service templates. Folding them honestly needs per-topic research
-with citations, which is its own piece of work rather than a fold. Until then
-those two plugins stay the covered path for their clouds, and Wave D's census
-blocks on them by design.
+Two `cloud-service` categories were minted for it (`../assets/taxonomy.md`):
+`document`, for Firestore, and `access`, for Zero Trust Access, which is none of
+compute/sql/queue/object-storage/cdn. `access` leaves `capability` unset and
+stays that way — minting a capability token is vwf's move, never the taxonomy's.
 
-`object-storage` has no pack and will not get one: every object store is a
-cloud's, so its flavour arrives from `gcp` or `cloudflare`. Its contract sits
-in `../assets/contracts/` regardless, because the clauses are the same
-whoever provides it.
+**Every stack adapter has now retired**, and `stackgen` is the only plugin left
+shipping a `-stack-menu` / `-stack-template` pair. The retirement test stayed
+mechanical rather than a judgement — an adapter retires only when **every** slug
+it offered has a bundle — and `gcp` and `cloudflare`, which failed it at Wave D,
+pass it here; `typescript` and `flutter` retired in the same wave on the same
+test. The checker's stack-adapter rule gained an **inverse direction** alongside
+this, since with one adapter left, deleting its keyword would otherwise have
+switched the whole rule off while the checker still passed.
+
+`object-storage` still gets no pack of its own, and will not: every object store
+is a cloud's, so its flavour arrives from `cloud-service/firebase-storage` or
+whichever provider's equivalent lands next. Its contract sits in
+`../assets/contracts/` regardless, because the clauses are the same whoever
+provides it.
 
 `eslint` is deliberately absent: it is JS/TS-only, so it is topic 10 of the
 TypeScript language bundle rather than a repo gate. See the `repo-gate` seam
 in `../assets/kinds.md`.
 
-Everything else remains the curated plugins' until its wave lands, and
-stackgen's standing value is the uncovered tail:
+**33 packs and 31 bundles, across all nine kinds.** No curated plugin stands
+behind any of them any more, so the covered path is exactly this tree, and
+stackgen's standing value beyond it is the uncovered tail:
 `generated/<technology-slug>`.

@@ -13,13 +13,15 @@ languages:
     facts:
       lsp: >-
         dart language-server, provisioned through the Flutter SDK rather than
-        beside it
+        beside it; declared by this pack as `dart-lsp`
       mise_tool: flutter
       manifest: pubspec.yaml
   - token: kotlin
     role: platform-edge
     facts:
-      lsp: kotlin-lsp
+      lsp: >-
+        kotlin-lsp, declared by this pack and provisioned via the generated
+        local plugin
       mise_tool: kotlin
       manifest: >-
         n/a — the Android Gradle files are subordinate to pubspec.yaml and
@@ -27,12 +29,34 @@ languages:
   - token: swift
     role: platform-edge
     facts:
-      lsp: sourcekit-lsp
+      lsp: >-
+        sourcekit-lsp, declared by this pack and provisioned via the generated
+        local plugin
       mise_tool: >-
         n/a — provided by Xcode, which the Flutter build drives
       manifest: >-
         n/a — the iOS project is subordinate to pubspec.yaml, which even
         toggles the Swift package manager
+lsp_servers:
+  dart-lsp:
+    command: mise
+    args: [ x, flutter@latest, --, dart, language-server, --protocol=lsp ]
+    extensionToLanguage:
+      ".dart": dart
+    startupTimeout: 60000
+  kotlin-lsp:
+    command: mise
+    args: [ x, kotlin@latest, --, kotlin-lsp, --stdio ]
+    extensionToLanguage:
+      ".kt": kotlin
+      ".kts": kotlin
+    startupTimeout: 60000
+  sourcekit-lsp:
+    command: mise
+    args: [ x, --, sourcekit-lsp ]
+    extensionToLanguage:
+      ".swift": swift
+    startupTimeout: 1000
 harness:
   screenshots:
     task: test:golden

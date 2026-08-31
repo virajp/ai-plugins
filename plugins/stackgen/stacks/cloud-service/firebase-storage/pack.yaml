@@ -1,0 +1,17 @@
+name: Cloud Storage for Firebase
+summary: The provider's object store with a client-direct path in front of it
+  —
+  the same buckets a server reaches, plus a security-rules layer that lets
+  clients upload and download without a service in the middle.
+version: 0.1.0
+type: cloud-service
+category: object-storage
+capability: object-file-storage
+kind: cloud-provider
+axis: backing
+harness:
+  local_stack:
+    task: stack:up
+    mechanism: >-
+      The Firebase Emulator Suite's storage emulator, part of the same suite
+      start; lifecycle rules and storage classes are not simulated

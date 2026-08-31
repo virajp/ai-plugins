@@ -65,23 +65,19 @@ Messaging (FCM) — permissions, FCM tokens, foreground/background/terminated
 message handling, tap routing, topics, local notifications, and Android/iOS
 configuration.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                                     | When to read                                                 |
-| ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Setup                                         | Adding the dependencies and initializing FCM                 |
-| Permissions                             | Requesting notification permission on iOS and Android 13+    |
-| FCM Token                                 | Getting and storing the device token for your backend        |
-| Message Types                         | Choosing the right handler for a message type                |
-| Foreground Messages             | Displaying notifications while the app is in foreground      |
-| Background Messages             | Handling messages when the app is backgrounded or terminated |
-| Notification Tap Handling | Routing to a screen when a notification is tapped            |
-| Topics                                       | Broadcasting messages to groups of devices via topics        |
-| Local Notifications             | Customizing notification appearance with local notifications |
-| Android Configuration         | Configuring notification channels and icons on Android       |
-| iOS Configuration                 | Enabling push notifications and APNs keys on iOS             |
-| Anti-Patterns                         | Avoiding common FCM implementation mistakes                  |
-| Examples                                   | Production-ready messaging service implementation            |
+| Section                                             | When to read                                              |
+| --------------------------------------------------- | --------------------------------------------------------- |
+| [Android Configuration](#android-configuration)     | Notification channels and icons on Android                |
+| [Anti-Patterns](#anti-patterns)                     | Avoiding common FCM implementation mistakes               |
+| [iOS Configuration](#ios-configuration)             | Push capability, APNs keys and background modes on iOS    |
+| [Permissions](#permissions)                         | Requesting notification permission on iOS and Android 13+ |
+| [Setup](#setup)                                     | Adding the dependencies and initializing FCM              |
+
+The token, message-type and handler API — foreground, background and terminated
+handling, tap routing, topic subscription and local-notification presentation —
+is API surface. Fetch it from Context7 at use time.
 
 ## iOS Configuration
 

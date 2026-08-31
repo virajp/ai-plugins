@@ -1,0 +1,15 @@
+name: Firebase Cloud Messaging
+summary: The provider's push transport to mobile and web clients — free at the
+  service, best-effort by design, and the one service in this bundle with no
+  emulator for delivery.
+version: 0.1.0
+type: cloud-service
+capability: push-notifications
+kind: cloud-provider
+axis: backing
+harness:
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — nothing local delivers to a device. Keep sending behind a seam and
+      assert the constructed payload instead

@@ -86,10 +86,15 @@ the composition's single consent gate and landing. Generation is
    tool, the manifest; `n/a` where honest), the `harness` entries it
    satisfies, the conventions prose, and the artifacts its slice defines —
    skills, agents, rules, within the output vocabulary. **Never an
-   executable** (hook scripts are pack-only), never MCP or LSP
-   configuration — where wiring is genuinely needed, what is generated is
-   the **installer**, per `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md`
-   §5, never a held registry.
+   executable** (hook scripts are pack-only), and **no artifact ever
+   contains MCP or LSP configuration** — where wiring is genuinely needed
+   the component *declares* it, as `mcp_servers:` / `user_mcp_servers:` /
+   `lsp_servers:` in its pack shape, and the materializer lands each
+   behind its own consent line
+   ([the materializer](materializer.md), [the local plugin](local-plugin.md));
+   generation never writes a config file or a manifest itself, and
+   stackgen holds no registry of servers, per
+   `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md` §5.
 5. **The reviewer gate.** Dispatch the `stackgen-skill-reviewer` agent per
    generated component — stateless: it gets the catalog paths, the
    declared kind and the component's classification, the detected stack,

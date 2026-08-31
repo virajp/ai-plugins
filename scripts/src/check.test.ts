@@ -449,6 +449,89 @@ describe("the design-adapter contract", () => {
   });
 });
 
+describe("the stack-adapter contract", () => {
+  // Wave E retired `typescript`, `flutter`, `gcp` and `cloudflare`, which left
+  // `stackgen` the only plugin carrying the keyword. A rule selected by a
+  // keyword over a one-element set is one manifest edit away from being off, so
+  // it is pinned in both directions here.
+  const adapter = (files: Record<string, string>) => ({
+    stackgen: {
+      manifest: {
+        name: "stackgen",
+        version: "1.0.0",
+        description: "x",
+        keywords: ["vwf-stack-adapter"],
+      },
+      files,
+    },
+  });
+
+  const both = (extra: string) =>
+    Object.fromEntries(
+      ["stack-menu", "stack-template"].map(kind => [
+        `skills/stackgen-${kind}/SKILL.md`,
+        skill(`stackgen-${kind}`, extra),
+      ]),
+    );
+
+  it("accepts both skills at disable-model-invocation: false", () => {
+    expect(check(tree(adapter(both("disable-model-invocation: false\n")))))
+      .toEqual([]);
+  });
+
+  it("flags a missing adapter skill", () => {
+    const files = Object.fromEntries(
+      Object
+        .entries(both("disable-model-invocation: false\n"))
+        .filter(([path]) => !path.includes("stack-template")),
+    );
+    expect(messages(check(tree(adapter(files))))).toEqual([
+      "stack adapter is missing its \"stackgen-stack-template\" skill",
+    ]);
+  });
+
+  it("flags a skill the model cannot invoke", () => {
+    // vwf reaches these by constructed name, so `true` yields an empty menu
+    // rather than an error — indistinguishable from a plugin offering nothing.
+    const found = messages(check(tree(adapter(
+      both("disable-model-invocation: true\n"),
+    ))));
+    expect(found).toHaveLength(2);
+    expect(found[0]).toContain("is not `disable-model-invocation: false`");
+  });
+
+  it("flags a skill that is model-invocable but hidden from the user", () => {
+    // Both are documented as user-runnable, so only the explicit `false` means
+    // both — banning `true` alone would wrongly pass this.
+    expect(messages(check(tree(adapter(both("user-invocable: false\n"))))))
+      .toHaveLength(2);
+  });
+
+  it("flags an adapter skill on a plugin that dropped the keyword", () => {
+    // The direction that closes the hazard: the keyword is what selects a
+    // plugin into the rule, so dropping it would otherwise disable the check
+    // and leave the half-retired adapter unmentioned.
+    const root = tree({
+      stackgen: {
+        manifest: { name: "stackgen", version: "1.0.0", description: "x" },
+        files: both("disable-model-invocation: false\n"),
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      "ships \"stackgen-stack-menu\" and \"stackgen-stack-template\" but does "
+      + "not declare the `vwf-stack-adapter` keyword — the keyword is what "
+      + "selects a plugin into this contract, so dropping it disables the very "
+      + "check that would have caught the adapter being half-retired",
+    ]);
+  });
+
+  it("does not apply to a plugin that retired its adapter outright", () => {
+    // Keyword and both skills gone together is a deliberate retirement — which
+    // is exactly what `gcp` and `cloudflare` did — and stays clean.
+    expect(check(tree({ stackgen: {} }))).toEqual([]);
+  });
+});
+
 describe("the technology-free vwf guard", () => {
   const vwf = (files: Record<string, string>) => ({ vwf: { files } });
 

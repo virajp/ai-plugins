@@ -105,14 +105,14 @@ is for services only, never controllers. Never call `Get.to()` / `Get.back()` /
 
 For services/controllers/pages in depth, reactive workers (`ever`/`once`/
 `debounce`/`interval`), route Bindings, `SmartManagement`, route parameters,
-context-free overlays, and the DI anti-patterns, see the **getx** reference.
+context-free overlays, and the DI anti-patterns, see [GetX](integrations/getx.md).
 
 ## Widgets
 
 - Always the project `My`-prefixed wrappers, never Flutter defaults:
   `MyScaffold`, `MyText`, `MyButton`, `MyTextField`, `MyIconButton`.
 - Never hardcode user-facing strings — `MyText(L10n.of(context).welcomeMessage)`
-  (see the **internationalization** skill).
+  (see [Internationalization](internationalization.md)).
 - Colors/platform via the `My` accessors: `MyColors.get.primary(context)`,
   `MyPlatform.get.isIOS`.
 - Never store `BuildContext` in fields or globals — pass it as a parameter and
@@ -130,8 +130,9 @@ context-free overlays, and the DI anti-patterns, see the **getx** reference.
   failures with `MyException` and return `null` / `false`.
 
 For the full `MyApiResponse` contract, path/query encoding, large-list
-`compute()` offloading, and model `fromJson`/`toJson` codegen, see the
-**http-and-json** and **json-serializable** references.
+`compute()` offloading, and model `fromJson`/`toJson` codegen, see
+[Data & networking](data-and-networking.md) and
+[json_serializable](integrations/json-serializable.md).
 
 ## Concurrency
 
@@ -142,7 +143,7 @@ Keep I/O-bound work on `async`/`await` (no isolate), and offload CPU-bound work
 or static functions passing only sendable values.
 
 For one-off vs long-lived isolates, the `Isolate.spawn` `ReceivePort`/`SendPort`
-handshake, and lifecycle cleanup, see the **concurrency** reference.
+handshake, and lifecycle cleanup, see [Concurrency & isolates](concurrency.md).
 
 ## Errors & logging
 
@@ -165,7 +166,8 @@ handshake, and lifecycle cleanup, see the **concurrency** reference.
   `putMockService<T>(mock)`, `pumpWithGetX(tester, child: …)`, and `resetGetX`
   in `tearDown`.
 - Mocks are mockito `@GenerateNiceMocks` — add a `MockSpec<MyNewService>()` then
-  regenerate via `build_runner` (see the **build** reference).
+  regenerate via `build_runner` (see
+  [Build, flavors & signing](build-flavors-signing.md)).
 - Repositories are static — test them by mocking the network layer (`MyApi`).
 
 ## Architecting Flutter Applications
@@ -208,8 +210,10 @@ talks to services and repositories, a repository talks to `MyApi`.
   `Get.putAsync(..., permanent: true)` and expose a static `get` accessor.
 - **Repositories** are **static methods**: no state, no DI, pure data access.
   They call `MyApi.to`, branch on `statusCode` (never `try`/`catch` around the
-  call), log failures with `MyException`, and return `null` / `false`. See the
-  **http-and-json** reference.
+  call), log failures with `MyException`, and return `null` / `false`. See
+  [Data & networking](data-and-networking.md); for a Firestore-backed
+  repository, see
+  [Firebase Auth](integrations/firebase-auth.md#firestore-via-the-repository-layer).
 
 Whether you need a distinct logic layer is conditional: a standard CRUD screen
 lets its controller call repositories directly; only reach for a separate
@@ -218,14 +222,14 @@ service to orchestrate across multiple repositories or hold cross-screen data.
 ## Adding a feature
 
 1. **Entity** — an immutable `Equatable` with `fromJson`/`toJson` (see the
-   entity pattern in **standards**).
+   [entity pattern](#entity-pattern)).
 2. **Repository** — static methods over `MyApi.to` returning the entity or
    `null`.
 3. **Service** — only if the data is app-wide; otherwise skip.
 4. **Controller** — screen UI state (`.obs` flags, the list) plus commands.
 5. **Page** — a `GetView` binding to the controller through `Obx`/`GetBuilder`.
 6. **Tests** — unit-test the controller and service; test repositories by
-   mocking `MyApi` (see the **testing** reference).
+   mocking `MyApi` (see [Testing & coverage](testing.md)).
 
 ## Example
 
@@ -285,5 +289,7 @@ class ProfilePage extends GetView<ProfileController> {
 }
 ```
 
-For binding a controller to a route, see the **getx** reference; for the entity
-and repository contracts, see **standards** and **http-and-json**.
+For binding a controller to a route, see
+[GetX](integrations/getx.md#bindings); for the entity and repository contracts,
+see the [entity pattern](#entity-pattern) and
+[Data & networking](data-and-networking.md).
