@@ -39,7 +39,15 @@ to a repo, and every write it makes is consent-gated and committed once.
      source and content hash. The per-component record is what lets sync
      act on one component alone.
 
-   **Never in the set**: `.mcp.json`, any LSP configuration, CLAUDE.md.
+   **Never in the set**: any LSP configuration, CLAUDE.md.
+
+   **`.mcp.json` is not in the set either, but for a different reason**: it
+   is a **tier-2** target (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`),
+   so a component's `mcp_servers:` entries are presented at their own
+   consent line in step 3 rather than landing with the files. LSP config
+   and CLAUDE.md are out of scope outright — the first is a plugin-manifest
+   feature no project file can express (the need travels as `language_facts`
+   in the payload instead), the second is vwf's.
 
 2. **Collision check, against the lockfile.** Any target path that exists
    but is **not** in `.claude/stackgen/lock.yaml` is the repo's own — a
@@ -62,6 +70,18 @@ to a repo, and every write it makes is consent-gated and committed once.
    settings.json (never rewrites it) and records the added keys under the
    lockfile's `settings_keys`.
 
+   **MCP wiring is its own consent line too**, on the same terms. A
+   component that needs a server declares it as `mcp_servers:` in its
+   `pack.yaml` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — the
+   `design-tool` packs are the case that needs it — and those entries are
+   written into the **project's `.mcp.json`**, never a plugin manifest.
+   Present the exact server keys as a separate, individually skippable
+   item. A consented edit **merges, never owns**: only the keys stackgen
+   added are written, and they are recorded under the lockfile's
+   `mcp_servers` so sync and removal touch nothing else. Declined leaves
+   the component's skills landed and says the tool will be unreachable —
+   never a silent partial landing.
+
 4. **Write and commit.** On approval: write the set, update the lockfile,
    then commit as **one commit** via the repo's git workflow (the vwf
    git-workflow skill when present; plain `git add <paths>` + a conventional
@@ -81,6 +101,10 @@ to a repo, and every write it makes is consent-gated and committed once.
   diff and the user takes it.
 - **The lockfile is the ownership boundary** — sync diffs against it, and
   paths outside it are invisible to every stackgen write path.
-- **Nothing lands outside `.claude/`**, and inside it nothing lands outside
-  the output vocabulary. Wiring machinery beyond hooks — MCP servers, LSP
-  servers — is deliberately out of scope, whatever the source ships.
+- **Nothing lands outside `.claude/` except `.mcp.json`**, and inside
+  `.claude/` nothing lands outside the output vocabulary. `.mcp.json` is the
+  one project file stackgen may reach, and only behind its own tier-2
+  consent line. **LSP server configuration stays out of scope**, whatever
+  the source ships: it is a plugin-manifest feature no project file can
+  express, so the need is carried as `language_facts` in the payload for
+  `/vwf:doctor` to read.
