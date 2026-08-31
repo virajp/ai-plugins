@@ -99,7 +99,7 @@ scrollable widget.
 
 A concrete `children:` list is fine for a handful of static items, as above —
 for long or data-driven lists use `ListView.builder` so only visible items are
-built (see the performance reference).
+built (see [Performance & size](performance.md)).
 
 ## Theming & Adaptive Design
 
@@ -198,7 +198,15 @@ Row(
 )
 ```
 
-## Core Concepts
+## Animation — core concepts
+
+Animation here is **`flutter_animate`**, not the framework's own implicit
+widgets. `.animate()` and every effect chained off it are that package's
+extension, so nothing below compiles until it is a declared dependency. Setup,
+the effect catalog with its `begin`/`end` defaults, `AnimateList` staggering and
+the scroll/notifier adapters are in
+[`flutter_animate`](integrations/flutter-animate.md); what follows is the
+composition judgment that applies once it is wired.
 
 ### The `.animate()` extension
 

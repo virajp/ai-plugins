@@ -25,6 +25,13 @@ suites live.
 never names one — the datastore, queue, identity or telemetry component
 says what belongs in the file, and this says how the file behaves.
 
+**A first-party emulator suite is not a container runtime.** Where a cloud
+ships one that stands in for its own managed services, it satisfies
+`local_stack` as it is — wrapping it in a compose file so it looks
+conventional buys nothing. What does not relax is the gate below: the suite
+comes up behind a deterministic readiness signal on its own endpoints,
+never a fixed sleep.
+
 ## What every stack satisfies
 
 - **Every service declares a healthcheck.** Without one the barrier below

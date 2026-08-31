@@ -9,7 +9,7 @@ machine.
 pnpx @askviraj/ai-plugins --all
 
 # Install plugins by name, at either scope
-pnpx @askviraj/ai-plugins --user vwf --user typescript
+pnpx @askviraj/ai-plugins --user vwf --user stackgen
 pnpx @askviraj/ai-plugins --project vwf
 
 # See what a run would do, without writing anything

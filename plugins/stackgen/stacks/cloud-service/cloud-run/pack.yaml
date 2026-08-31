@@ -1,0 +1,21 @@
+name: Cloud Run · Artifact Registry
+summary: Serverless containers — scale to zero, no cluster to operate, one
+  service per deployable project. The default compute target here, and the right
+  answer until a workload genuinely does not fit it.
+version: 0.1.0
+type: cloud-service
+category: compute
+kind: cloud-provider
+axis: deploy
+artifact: container-image
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      The project's own readiness endpoint, which the platform's startup and
+      liveness probes point at; this component fixes no task name
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — the container runs directly against the backing bundle's local
+      services. You are testing your process, not the platform

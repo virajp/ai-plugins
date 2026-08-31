@@ -85,6 +85,6 @@ hand-fix that differs from what `fmt` would produce fails again on the next run.
 
 ## Where this stops
 
-Language-specific lint rules and the TypeScript lint gate are the language
-plugin's (`typescript:lint-format`). This skill covers the formatter and its
-config alone.
+Language-specific lint rules and the TypeScript lint gate belong to the
+language's own skill (the `typescript` skill for TS/JS). This skill covers
+the formatter and its config alone.

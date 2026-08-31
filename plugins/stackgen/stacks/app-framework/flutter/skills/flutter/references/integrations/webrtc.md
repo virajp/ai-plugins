@@ -26,22 +26,19 @@ signaling over WebSockets, the full offer/answer call flow, full-mesh group
 calls, iOS audio_session routing, mute/speaker/camera toggles, and ICE
 reconnection.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                               | When to read                                                          |
-| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Setup                                               | Dependencies, Android/iOS permissions, background audio modes         |
-| Core Concepts                               | WebRTC does NOT define signaling                                      |
-| Media (Audio / Video)                   | getUserMedia constraints, tracks, device enumeration                  |
-| RTCPeerConnection                       | ICE/TURN config and connection event handlers                         |
-| Signaling                                       | WebRTC requires exchanging two things out-of-band                     |
-| Full Call Flow                             | End-to-end offer/answer caller and callee code                        |
-| Group Calls (Mesh)                       | For a group intercom (all participants in a session), use a full-mesh |
-| Audio Session Integration       | iOS audio routing, Bluetooth, echo cancellation via audio_session     |
-| Mute / Speaker / Camera Toggle | Toggling mic, speakerphone, camera; replacing tracks                  |
-| Reconnection                                 | ICE can fail transiently                                              |
-| Anti-Patterns                               | Common WebRTC pitfalls and their fixes                                |
-| Examples                                         | Full GetX mesh intercom service and UI                                |
+| Section                         | When to read                                                  |
+| ------------------------------- | ------------------------------------------------------------- |
+| [Anti-Patterns](#anti-patterns) | Common WebRTC pitfalls and their fixes                        |
+| [Setup](#setup)                 | Dependencies, Android/iOS permissions, background audio modes |
+
+`getUserMedia`, `RTCPeerConnection`, the offer/answer exchange, track
+replacement and ICE restart are API surface. Fetch them from Context7 at use
+time. One architectural fact does not come from any SDK: **WebRTC defines no
+signaling.** Exchanging the session descriptions and ICE candidates is your
+transport's job, and a full-mesh group call means every participant holds a peer
+connection to every other — which is what caps the practical group size.
 
 ## Setup
 

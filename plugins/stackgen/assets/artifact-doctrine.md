@@ -171,11 +171,37 @@ What the generated wiring must respect:
   documents concurrent writers, and a lockless read-modify-write file beside
   the store counts as the store for this purpose.
 - **An LSP declaration must not start a server in a repo with no matching
-  files.** The declaration is keyed by language id with `extensions`; a wiring
-  that starts unconditionally costs every session in every repo.
+  files.** Every generated `lspServers` entry **must** carry an
+  `extensionToLanguage` map. This is a hard rule, not a preference: the map is
+  the only guard, so a declaration without one starts unconditionally in every
+  session in every repo — and since the generated declaration is user-scoped
+  (below), that is every repo on the machine. An entry with no map is invalid
+  output; the reviewer fails it.
 - **A generated installer writes the user's own project files.** `.mcp.json` is
   an ordinary repo file and is a permitted target under the tier-2 consent
   model; it is still a separate, skippable consent line.
+
+### The local-plugin form
+
+`lspServers` exists only in a plugin manifest, so the installer pattern above
+takes one further form: stackgen **generates a plugin** at the fixed path
+`~/.claude/plugins/local/stackgen-lsp/` — a `.claude-plugin/plugin.json`
+carrying `lspServers` and `mcpServers` as a union across the user's stacks,
+beside a single-plugin `marketplace.json` — and prints the two `claude plugin`
+commands that register it at **user** scope. The full contract, the consent
+tier and the lockfile key are
+`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`.
+
+Three rules bind the generated manifest:
+
+- **The path and the plugin name are fixed**, never assembled from the stack
+  pin — §3 applies to a plugin name exactly as it does to a skill name.
+- **Every `lspServers` entry carries `extensionToLanguage`**, per the rule
+  above. User scope is safe only because of it.
+- **A server belongs in exactly one place.** Project-scoped servers go to the
+  repo's `.mcp.json`; user-scoped ones go to this manifest. Declaring the same
+  server in both gives the store two writers, which the concurrency rule above
+  already forbids.
 
 ## 6. Rules
 
@@ -187,9 +213,11 @@ with references instead.
 
 Beyond its per-kind structural checklist, the `stackgen-skill-reviewer` fails
 an artifact for any of: frontmatter that does not parse strictly; an invocation
-state contradicting its kind's ruling; a skill name assembled from
-configuration; a hook verdict shape that does not match its event; and a
-`settings.json` or `.mcp.json` edit not behind its own consent line.
+state contradicting its kind's ruling; a skill or plugin name assembled from
+configuration; a hook verdict shape that does not match its event; a
+`settings.json` or `.mcp.json` edit not behind its own consent line; an
+`lspServers` entry with no `extensionToLanguage` map; and a local-plugin write
+or registration not behind its own tier-3 consent line.
 
 Every one of these is silent at run time. That is the whole reason they are
 checked here.

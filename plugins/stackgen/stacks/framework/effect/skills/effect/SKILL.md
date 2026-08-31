@@ -11,6 +11,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/*.ts"
   - "**/*.tsx"
+  - "**/*.mts"
+  - "**/*.cts"
 ---
 
 # Effect-TS

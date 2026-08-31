@@ -62,9 +62,8 @@ file it governs, and never otherwise.
 `dprint` and `eslint` own the **gate's shape** — one root config, plugins pinned
 by version, flat config only, zero formatting rules in the linter, an override
 scoped by `files` glob rather than disabled globally. Which rules a *language*
-runs is the language plugin's: for TypeScript that is
-[`typescript:lint-format`](./typescript.md#skills), which governs the same files
-from the other side.
+runs is its language pack's: for TypeScript that is stackgen's
+`language/typescript` bundle, which governs the same files from the other side.
 
 ## What used to live here
 
@@ -265,5 +264,3 @@ noisily.
 - [vwf plugin](./vwf.md) — the workflow that depends on this one.
 - [stackgen plugin](./stackgen.md) — its `ci-system` kind writes the pipelines
   that assume mise provides the toolchain.
-- [typescript plugin](./typescript.md) — the language side of the lint/format
-  gate.

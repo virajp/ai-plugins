@@ -508,9 +508,9 @@ a container image):
 **No slug appears in that table on purpose.** The roster is not vwf's to state:
 the menu is the union of what your **installed** stack plugins declare, so it
 changes with what you install, and `/vwf:architecture` is what enumerates it for
-your repo. Today [stackgen](./stackgen.md) carries the general-purpose set
-across all four axes, [gcp](./gcp.md) its managed backing and deploy services,
-and [cloudflare](./cloudflare.md) its Zero Trust deploy target.
+your repo. Today [stackgen](./stackgen.md) is the only stack plugin, and it
+carries all four axes — the general-purpose set, the managed backing and deploy
+services of each cloud it packs, and a generator for whatever no pack covers.
 
 Since `config_format` **13** the first three are pinned **per project**, so a
 product can host its site on Cloudflare, its API on GCP and its worker somewhere
@@ -1882,7 +1882,5 @@ queries that library's documentation when a question is about a specific library
   contract vwf states.
 - [devtools](./devtools.md) — a vwf dependency; `/vwf:setup` orchestrates
   `/devtools:scaffold`.
-- [typescript](./typescript.md) and [flutter](./flutter.md) — the language
-  plugins that ship the stack templates `/vwf:architecture` offers.
 - [`claude-status`](https://claude-status.virajp.dev) — the statusline, and the
   caps hook that pauses a long `/vwf:execute` run. macOS on Apple silicon only.

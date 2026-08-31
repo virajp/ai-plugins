@@ -22,22 +22,20 @@ Implements in-app subscriptions and purchases in a Flutter app using RevenueCat
 (purchases_flutter) — initialization, user identification, offerings,
 purchase/restore flows, entitlement checks, and pre-built paywalls.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                               | When to read                                                      |
-| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Setup                                           | Adding the package, store products, and API keys                  |
-| Initialization                         | Initialize once, as early as possible — before any purchase calls |
-| Identify User                           | Linking purchases to your own user ID after sign-in               |
-| Fetch Offerings                       | Fetching available packages and prices for a paywall              |
-| Purchase a Package                 | Running a purchase and handling cancel/pending errors             |
-| Check Entitlements                 | Checking whether a user has active access (e.g., Pro)             |
-| Restore Purchases                   | Required by App Store guidelines — must be accessible from the UI |
-| Customer Info Updates           | Reacting to real-time renewals or cancellations                   |
-| Paywalls (RevenueCat UI)       | Presenting pre-built RevenueCat UI paywalls                       |
-| Subscription Status Helper | A reusable service exposing the current subscription tier         |
-| Anti-Patterns                           | Avoiding common subscription and entitlement mistakes             |
-| Examples                                     | Full subscription service, paywall, and feature-gating            |
+| Section                           | When to read                                                      |
+| --------------------------------- | ----------------------------------------------------------------- |
+| [Anti-Patterns](#anti-patterns)   | Avoiding common subscription and entitlement mistakes             |
+| [Initialization](#initialization) | Initialize once, as early as possible — before any purchase calls |
+| [Setup](#setup)                   | Adding the package, store products, and API keys                  |
+
+Identifying the user, fetching offerings, running a purchase, checking
+entitlements, restoring, observing customer-info updates and presenting the
+pre-built paywall are API surface. Fetch them from Context7 at use time. Two
+store rules survive here because no SDK lookup states them: **restore purchases
+must be reachable from the UI** (App Store guideline), and the API keys are
+per-platform and public.
 
 ## Initialization
 

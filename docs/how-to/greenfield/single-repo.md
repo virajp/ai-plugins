@@ -19,23 +19,22 @@ decisions; when it names a command, the manual section is the link.
 
 ### Install the plugins
 
-Relay needs more than the workflow. `vwf` brings `devtools` with it; the stack
-plugins that supply Relay's menu options are named explicitly.
+One install brings everything Relay needs.
 
 ```sh
 claude plugin marketplace add virajp/ai-plugins   # once
 
-claude plugin install vwf@virajp-plugins \
-  typescript@virajp-plugins \
-  stackgen@virajp-plugins
+claude plugin install vwf@virajp-plugins
 ```
 
-`typescript` supplies the language doctrine, and `stackgen` supplies every
-bundle Relay will pin — the project-axis template, Postgres on the backing axis,
-and the design-tool pack that answers the design imports. vwf ships no stack
-templates of its own, so without `stackgen` the stack menus come back short and,
-with no design pack materialized, `/vwf:design-system` cannot run at all. Scopes
-and upgrades: [the installer CLI](../../cli/usage.md#installing-plugins).
+One name is the whole list: `devtools` and `stackgen` are vwf dependencies and
+arrive with it at the same scope. `stackgen` is what supplies every bundle Relay
+will pin — the project-axis template with its TypeScript language doctrine,
+Postgres on the backing axis, and the design-tool pack that answers the design
+imports. vwf ships no stack templates of its own, so without `stackgen` the
+stack menus come back empty and, with no design pack materialized,
+`/vwf:design-system` cannot run at all. Scopes and upgrades:
+[the installer CLI](../../cli/usage.md#installing-plugins).
 
 **Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is
 what tells you whether the binaries vwf shells out to are actually on your
@@ -129,11 +128,11 @@ Relay's round of corrections:
   mandate.
 
 Then the stack menu, one round per axis, presenting the union of what the
-installed plugins offer. Relay pins `typescript-hono-refine` on the project axis
-(it is the template that serves `service` and `webapp` from one codebase),
-`postgres` on the backing axis and `container-generic` on the deploy axis, both
-from `stackgen`. The repo axis is answered once for the checkout rather than per
-project. What each axis means and why they never merge:
+installed stack plugins offer. Relay pins `typescript-hono-refine` on the
+project axis (it is the template that serves `service` and `webapp` from one
+codebase), `postgres` on the backing axis and `container-generic` on the deploy
+axis, both from `stackgen`. The repo axis is answered once for the checkout
+rather than per project. What each axis means and why they never merge:
 [stack templates](../../plugins/vwf.md#stack-templates).
 
 Last comes the product-foundations walk — twelve concerns, one accept / adapt /

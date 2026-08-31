@@ -22,24 +22,18 @@ build_runner — basic models, field customization, nested objects, collections,
 enums, defaults, null safety, custom converters, Equatable integration, and
 migrating manual fromMap/toMap.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                                | When to read                                             |
-| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Setup                                     | Adding the json_annotation and build_runner dependencies |
-| Basic Model                         | Annotating a plain model with fromJson/toJson            |
-| Running Code Generation | Running build_runner to generate .g.dart files           |
-| Field Customization         | Renaming a JSON key or excluding a field                 |
-| Nested Objects                   | Serializing a model containing other models              |
-| Collections                         | Serializing lists or maps of objects                     |
-| Enums                                     | Serializing enum fields with custom or unknown values    |
-| Default Values                   | Supplying a fallback when a JSON key is absent           |
-| Null Safety Patterns       | Handling nullable versus absent fields safely            |
-| Custom Converters             | Serializing unsupported types like DateTime or LatLng    |
-| Equatable Integration     | Combining JsonSerializable with Equatable and copyWith   |
-| Migrating fromMap/toMap | Replacing manual fromMap/toMap with generated code       |
-| Anti-Patterns                     | Avoiding common json_serializable mistakes               |
-| Examples                               | Full build.yaml config and an all-patterns entity        |
+| Section                         | When to read                                             |
+| ------------------------------- | -------------------------------------------------------- |
+| [Anti-Patterns](#anti-patterns) | Avoiding common json_serializable mistakes               |
+| [Setup](#setup)                 | Adding the json_annotation and build_runner dependencies |
+
+The annotation vocabulary — field customization, nested objects, collections,
+enums, defaults, null-safety patterns, custom converters and Equatable
+integration — is API surface. Fetch it from Context7 at use time. Where the
+generator sits in the build order is in
+[Build, flavors & signing](../build-flavors-signing.md).
 
 ## Setup
 

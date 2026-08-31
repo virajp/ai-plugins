@@ -60,7 +60,11 @@ edits. You never write files.
    concrete datastore is a gap — the capability vocabulary is the seam),
    each skill's invocation mode matches the kind's ruling, and nothing
    outside the output vocabulary (no executables from generation, no MCP or
-   LSP configuration) appears at all.
+   LSP configuration) appears at all. **The generated local plugin is not
+   an artifact** — `lsp_servers:`, `user_mcp_servers:` and `mcp_servers:`
+   are payload fields the materializer lands behind their own consent
+   lines, so their absence from the artifact set is correct and never a
+   gap; what they must satisfy is check 9.
 8. **Coverage.** For a kind whose topic bar is settled in `assets/kinds.md`
    (today: `language-bundle`, `database`, `cloud-provider`, `repo-gate`,
    `capability-provider`, `ci-system`, `app-framework` and `deploy-target`),
@@ -82,10 +86,13 @@ edits. You never write files.
 9. **Artifact validity.** Independently of what the artifact *covers*, it
    must be a valid artifact at all, per `assets/artifact-doctrine.md`. Fail
    it for any of: frontmatter that does not parse as strict YAML; an
-   invocation state contradicting its kind's ruling; a skill name assembled
-   from configuration rather than fixed at materialization; a hook verdict
-   shape that does not match its event; or a `settings.json` / `.mcp.json`
-   edit not behind its own consent line. **Every one of these fails
+   invocation state contradicting its kind's ruling; a skill **or plugin**
+   name assembled from configuration rather than fixed at materialization;
+   a hook verdict shape that does not match its event; a `settings.json` /
+   `.mcp.json` edit not behind its own consent line; an `lspServers` entry
+   with no `extensionToLanguage` map; one server name declared both
+   project-scoped and user-scoped; or a local-plugin write or registration
+   not behind its own tier-3 consent line. **Every one of these fails
    silently at run time**, which is why they are checked here and nowhere
    downstream — a landed artifact that never fires looks exactly like one
    that fired and had nothing to say.

@@ -71,8 +71,8 @@ and its components leave `category` unset.
 
 - **`framework`**: `webserver` / `orm` / `otel-sdk` / `testing` /
   `meta-framework` / `ui-library` / `cli` / `iac` / `workflow-sdk`
-- **`cloud-service`**: `compute` / `sql` / `queue` / `object-storage` /
-  `cdn`
+- **`cloud-service`**: `compute` / `sql` / `document` / `queue` /
+  `object-storage` / `cdn` / `access`
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
@@ -96,13 +96,13 @@ what `relational-datastore` means. A component's `capability` field names
 the vwf token it realizes: a `datastore`/`sql` component realizes
 `relational-datastore`; a `queue` component `message-queue` or `pub-sub`.
 
-Some categories have **no capability token today** — `cdn` and
-`secrets-manager` are the two. That is a known vwf-side gap, not a taxonomy
-error: the component leaves `capability` unset, and nothing here mints a
-token to fill the hole — minting capabilities is vwf's move. It is also why
-a category can exist here before vwf has decided whether every product must
-have one: the taxonomy classifies what a component *is*, never whether it is
-required.
+Some categories have **no capability token today** — `cdn`,
+`secrets-manager` and `access` are the three. That is a known vwf-side
+gap, not a taxonomy error: the component leaves `capability` unset, and
+nothing here mints a token to fill the hole — minting capabilities is
+vwf's move. It is also why a category can exist here before vwf has
+decided whether every product must have one: the taxonomy classifies what
+a component *is*, never whether it is required.
 
 ## Bundles — how types compose
 

@@ -22,19 +22,19 @@ Mechanics — flags, halt conditions, config keys, file formats — live in the
 
 ### 1. Install the plugins
 
-Same run as the spine's
-[Install the plugins](./single-repo.md#install-the-plugins), minus one name:
+Identical to the spine's
+[Install the plugins](./single-repo.md#install-the-plugins):
 
 ```sh
-claude plugin install vwf@virajp-plugins \
-  typescript@virajp-plugins stackgen@virajp-plugins
+claude plugin install vwf@virajp-plugins
 ```
 
-No design tool is pinned, and that is the first consequence of having no
-screens: the design adapter exists to answer imports from a canvas, and Hookline
-never reaches one. Everything else is unchanged — `typescript` supplies the
-language doctrine, and `stackgen` the project- and backing-axis bundles. Scopes
-and upgrades: [the installer CLI](../../cli/usage.md#installing-plugins).
+What is shorter is the **pin** list, not the install. No design tool is pinned,
+and that is the first consequence of having no screens: the design adapter
+exists to answer imports from a canvas, and Hookline never reaches one.
+Everything else is unchanged — `stackgen` supplies the project- and backing-axis
+bundles, language doctrine included. Scopes and upgrades:
+[the installer CLI](../../cli/usage.md#installing-plugins).
 
 ### 2. /vwf:setup
 

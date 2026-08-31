@@ -41,7 +41,7 @@ Within a controller, choose how the UI observes state:
   single-page state.
 
 For the reactive operators, workers (`ever`/`debounce`/`interval`), and the
-controller lifecycle, see the **getx** reference.
+controller lifecycle, see [GetX](integrations/getx.md).
 
 ## Example
 
@@ -84,7 +84,8 @@ class CartScreen extends GetView<CartController> {
 ```
 
 The repository (`CartRepo`) is a static, stateless method that goes through
-`MyApi.to` and returns `false` on failure — see the **http-and-json** reference.
+`MyApi.to` and returns `false` on failure — see
+[Data & networking](data-and-networking.md).
 Ephemeral state stays in `setState`:
 
 ```dart

@@ -1,0 +1,18 @@
+name: Google Cloud
+summary: The provider-wide judgment every Google Cloud service inherits — how
+  the
+  meter runs, how a workload gets an identity without a key, which services have
+  emulators, and what a private plane looks like here.
+version: 0.1.0
+type: cloud-provider
+kind: cloud-provider
+# No `axis:` — a cloud-provider component composes into Cloud-Bundles on BOTH the
+# backing and the deploy axis (assets/kinds.md), and the bundle declares which.
+# Its cloud-service components carry the scalar: `compute` is deploy, the rest backing.
+harness:
+  local_stack:
+    task: n/a
+    mechanism: >-
+      Per service, not per provider — the emulator map in this component's
+      local-development-map reference says which services have one; each
+      cloud-service component states its own

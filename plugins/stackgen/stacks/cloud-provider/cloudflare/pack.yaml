@@ -1,0 +1,10 @@
+name: Cloudflare
+summary: The provider-wide judgment behind Cloudflare's private plane — the
+  account and role model, seat-shaped billing, and why an origin reachable
+  without the proxy makes the whole arrangement decorative.
+version: 0.1.0
+type: cloud-provider
+kind: cloud-provider
+# No `axis:` — a cloud-provider component composes into Cloud-Bundles on BOTH the
+# backing and the deploy axis (assets/kinds.md), and the bundle declares which.
+# Its cloud-service components carry the scalar: `compute` is deploy, the rest backing.

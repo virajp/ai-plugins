@@ -86,8 +86,8 @@ jobs:
 
       # The BSD-sed portability guarantee. Runs on GNU sed here, which is the
       # point: the script has to work under both.
-      - name: typescript hook tests
-        run: mise run typescript:test
+      - name: npm-normalize hook tests
+        run: mise run plugins:npm-normalize-test
 
       # Nothing in this repo emits, so `tsc` is only ever a checker — and one
       # `--noEmit` per project, because there are no project references to walk.

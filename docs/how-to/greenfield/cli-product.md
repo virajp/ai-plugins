@@ -22,19 +22,19 @@ Mechanics stay in the [vwf plugin manual](../../plugins/vwf.md).
 
 ### 1. Install the plugins
 
-clockon's install list is genuinely shorter than the spine's, not merely
-different:
+clockon's **pin** list is genuinely shorter than the spine's, not merely
+different; the install is the same one name:
 
 ```sh
-claude plugin install vwf@virajp-plugins typescript@virajp-plugins
+claude plugin install vwf@virajp-plugins
 ```
 
 `stackgen` supplies both axes clockon pins — `typescript-effect-cli` on the
-project axis and `npm-package` on the deploy axis — while `typescript` supplies
-the language doctrine. There is no backing bundle because clockon talks to no
-backing service; it writes to a per-user file on the machine it runs on. And no
-design tool is pinned, which is the first consequence of `cli` and is unpacked
-at [`/vwf:design-system`](#4-vwfdesign-system) below. Scopes, the post-install
+project axis and `npm-package` on the deploy axis — language doctrine included.
+There is no backing bundle because clockon talks to no backing service; it
+writes to a per-user file on the machine it runs on. And no design tool is
+pinned, which is the first consequence of `cli` and is unpacked at
+[`/vwf:design-system`](#4-vwfdesign-system) below. Scopes, the post-install
 `/vwf:doctor` run and the memory daemon are unchanged:
 [the spine's install step](./single-repo.md#install-the-plugins).
 
@@ -243,6 +243,6 @@ Each is a genuine stop, and each is explained where it is enforced.
 - **Execute halts on a plan whose prerequisites have not landed.**
   [`/vwf:execute`](../../plugins/vwf.md#vwfexecute)
 - **A stack axis with nothing fitting on the menu halts** rather than recording
-  a free-text pin, which is what makes getting `typescript` onto clockon's menu
-  a prerequisite rather than a convenience —
+  a free-text pin, which is what makes having `stackgen` installed before
+  `/vwf:architecture` a prerequisite rather than a convenience —
   [stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time)

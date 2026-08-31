@@ -4,27 +4,29 @@
 
 ## webview_flutter
 
-Embedding and controlling web content in a Flutter app with webview_flutter —
-the controller/widget split, loading URLs/HTML/assets/files, running JavaScript
-and Dart↔JS channels, the navigation delegate, cookie management, scroll
-control, and Android/iOS platform-specific configuration.
+Embedding and controlling web content in a Flutter app — the controller/widget
+split, loading content, Dart↔JS channels, the navigation delegate, cookies,
+scroll control and per-platform configuration.
 
 Supported platforms: **Android** (API 24+), **iOS** (13.0+), **macOS** (10.15+).
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                                      | When to read                                                              |
-| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Setup                                                     | Add dependencies to pubspec.yaml                                          |
-| Basic Usage                                         | The package has two components that always work together                  |
-| Loading Content                                 | Loading URLs, POST bodies, HTML strings, assets, files                    |
-| JavaScript                                           | Running JS, return values, Dart↔JS channels, console/dialogs              |
-| Navigation Delegate                         | Progress, page events, blocking navigation, errors, back/forward          |
-| Cookie Management                             | Pre-load cookies before calling loadRequest, otherwise they won't be sent |
-| Scroll Control                                   | Programmatic scroll, position tracking, hiding scrollbars                 |
-| Platform-Specific Configuration | Android/iOS controller tweaks: debugging, media, gestures                 |
-| Anti-Patterns & Migration Notes   | v3→v4 deprecated API and common mistakes                                  |
-| Examples                                               | Loading bar, nav bar, JS callbacks, cookie session, transparent bg        |
+| Section                                                             | When to read                                              |
+| ------------------------------------------------------------------- | --------------------------------------------------------- |
+| [Platform-Specific Configuration](#platform-specific-configuration) | Android/iOS controller tweaks: debugging, media, gestures |
+| [Setup](#setup)                                                     | Which of the three packages you actually need             |
+
+The controller and widget API — loading URLs, POST bodies, HTML, assets and
+files; running JavaScript and registering Dart↔JS channels; the navigation
+delegate; cookies; scroll control — is API surface. Fetch it from Context7 at
+use time, and note that v3→v4 deprecated a large part of it, so pin the version
+before trusting an answer.
+
+Two facts do not come from an SDK lookup. **The controller and the widget always
+travel together** — a `WebViewWidget` renders a `WebViewController`, and neither
+is useful alone. And **cookies must be pre-loaded before `loadRequest`**, or the
+first request goes out without them.
 
 ## Platform-Specific Configuration
 

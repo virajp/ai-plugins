@@ -1,0 +1,15 @@
+name: Firebase Auth · Identity Platform
+summary: The provider's managed identity issuer — one service under two names,
+  the second being the same product at organization scale. Federated sign-in,
+  verifiable ID tokens, and an emulator that stubs the provider handshake.
+version: 0.1.0
+type: cloud-service
+capability: third-party-auth
+kind: cloud-provider
+axis: backing
+harness:
+  local_stack:
+    task: stack:up
+    mechanism: >-
+      The Firebase Emulator Suite's auth emulator, part of the same suite start;
+      no real provider handshake, so federated flows are stubbed

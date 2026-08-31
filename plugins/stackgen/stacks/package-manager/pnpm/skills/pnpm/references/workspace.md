@@ -1,8 +1,9 @@
 # pnpm in a monorepo
 
-The **workspace-only** half of `pnpm-workspace.yaml`. Everything in the skill
-itself — supply-chain safety, build allowlists, `overrides`, peer-dependency
-rules, `.npmrc` — applies to a monorepo too and is not repeated here.
+The **workspace-only** half of `pnpm-workspace.yaml`. The other half —
+supply-chain safety, build allowlists, `overrides`, peer-dependency rules,
+`.npmrc` — applies to a monorepo too and lives in
+[references/supply-chain.md](supply-chain.md); it is not repeated here.
 
 ## Workspace layout & linking
 

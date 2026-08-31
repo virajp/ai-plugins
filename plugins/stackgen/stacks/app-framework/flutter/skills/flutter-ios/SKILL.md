@@ -20,20 +20,14 @@ paths:
 The single entry point for the iOS-native side of a Flutter app. Each topic
 lives in its own reference file — **read the one matching your task**.
 
-| Topic                                                                         | When to read                                                                                                                                                                     |
-| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Swift standards | The always-on baseline: MethodChannel handlers from AppDelegate, main-thread dispatch, FlutterError codes, optionals, typed errors, concurrency (@MainActor / actors / Sendable) |
-| SwiftUI           | Swift language fundamentals and SwiftUI patterns for native views                                                                                                                |
-| Xcode         | Xcode project structure, build settings, schemes, signing, simulators, and xcodebuild                                                                                            |
-
-For the Dart/Flutter side, see the **dart** skill; for the Android-native side,
-see **kotlin**.
-
 | Doing | Read |
 | --- | --- |
-| Swift language standards | [Standards](references/standards.md) |
-| SwiftUI at the native edge | [SwiftUI](references/swiftui.md) |
-| Xcode project, schemes, debugging | [Xcode](references/xcode.md) |
+| The always-on Swift baseline: `MethodChannel` handlers from `AppDelegate`, main-thread dispatch, `FlutterError` codes, optionals, typed errors, concurrency (`@MainActor` / actors / `Sendable`) | [Standards](references/standards.md) |
+| Swift language fundamentals and SwiftUI patterns for native views | [SwiftUI](references/swiftui.md) |
+| Xcode project structure, build settings, schemes, signing, simulators, `xcodebuild` | [Xcode](references/xcode.md) |
+
+For the Dart/Flutter side, see the `flutter` skill; for the Android-native side,
+see `flutter-android`.
 
 ---
 

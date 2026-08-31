@@ -52,11 +52,11 @@ them is the mistake this section exists to prevent.
 
 ```yaml
 # .config/vwf.yaml
-stacks: [ stackgen, gcp, cloudflare ] # ADAPTER PLUGIN NAMES, verbatim
+stacks: [ stackgen ] # ADAPTER PLUGIN NAMES, verbatim
 ```
 
 An ordered list of plugin names. Every name must be an installed plugin —
-`stacks: [ gcp ]` means the `gcp` plugin must be installed. Order is the menu
+`stacks: [ stackgen ]` means the `stackgen` plugin must be installed. Order is the menu
 order; it carries no precedence, because the axes do not overlap. A **dependent**
 plugin does not need its dependency listed: a plugin declaring another in its own
 manifest is installed with it. List what the product chose, not the closure.

@@ -21,21 +21,20 @@ identical to starting from nothing, this guide links
 
 ## The journey
 
-### 1. Install the plugin that owns each language first
+### 1. Install first, so every language the repo holds has an answer
 
 ```sh
-claude plugin install vwf@virajp-plugins \
-  typescript@virajp-plugins stackgen@virajp-plugins
+claude plugin install vwf@virajp-plugins
 ```
 
 The commands and scopes are the same as the greenfield run —
 [install the plugins](../greenfield/single-repo.md#install-the-plugins) — but
 the ordering matters more here, because the repo already has languages in it. A
-language no installed stack plugin declares is recorded honestly by detection
-and then **blocks** the doctor run inside setup's own spine, which halts the
-onboard. Bookable is TypeScript throughout, so `typescript` covers both apps and
-the shared package; `stackgen` supplies the `postgres` bundle for the API's
-backing axis and the design-tool pack answering the import that `apps/web` will
+language nothing on the menu declares is recorded honestly by detection and then
+**blocks** the doctor run inside setup's own spine, which halts the onboard.
+Bookable is TypeScript throughout, so stackgen's `language/typescript` bundle
+covers both apps and the shared package, its `postgres` bundle answers the API's
+backing axis, and its design-tool pack answers the import that `apps/web` will
 make mandatory.
 
 Restart Claude Code, then `cd` into the Bookable repo — on a clean working tree,

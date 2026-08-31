@@ -21,22 +21,17 @@ Monitor and report crashes in your Flutter app with Firebase Crashlytics —
 fatal/non-fatal errors, custom keys and logs, user identifiers, Flutter and
 isolate error handlers, and debug/release collection control.
 
-Topics are split into separate files — read the one matching your task.
+Sections in this file:
 
-| Topic                                                                                                               | When to read                                                                    |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Setup                                 | Adding the dependency and configuring Crashlytics                               |
-| Initialization               | Hook Crashlytics into Flutter's error handling in main()                        |
-| Fatal Crashes                 | Crashlytics auto-captures unhandled Dart and native crashes                     |
-| Non-Fatal Errors           | Use for caught exceptions that don't crash the app but signal a problem         |
-| Custom Keys                     | Attaching key-value metadata to crash reports                                   |
-| Custom Logs                     | Breadcrumb-style logs that appear in the crash report alongside the stack trace |
-| User Identifier             | Associating crash reports with a signed-in user                                 |
-| Flutter Error Handler | Handle non-fatal widget-build errors in debug vs release differently            |
-| Isolate Errors               | Errors thrown in Isolate.run or compute are caught differently                  |
-| Collection Control       | Controlling crash collection in debug vs release                                |
-| Anti-Patterns                 | Avoiding common Crashlytics mistakes                                            |
-| Examples                           | Complete working Crashlytics implementation                                     |
+| Section                           | When to read                                             |
+| --------------------------------- | -------------------------------------------------------- |
+| [Anti-Patterns](#anti-patterns)   | Avoiding common Crashlytics mistakes                     |
+| [Initialization](#initialization) | Hooking Crashlytics into Flutter's error handling        |
+| [Setup](#setup)                   | Adding the dependency and the Android Gradle plugin      |
+
+Recording non-fatal errors, custom keys and logs, the user identifier, isolate
+error capture and collection control are API surface. Fetch them from Context7
+at use time.
 
 ## Initialization
 

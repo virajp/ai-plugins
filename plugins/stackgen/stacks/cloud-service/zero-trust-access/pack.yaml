@@ -1,0 +1,35 @@
+name: Cloudflare Zero Trust Access
+summary: An identity-aware proxy in front of a project that must not be
+  publicly reachable — an operator plane invisible to the internet rather
+  than merely authenticated, whichever cloud actually hosts it.
+version: 0.1.0
+type: cloud-service
+category: access
+# `capability` is deliberately unset: `access` realizes no vwf capability
+# token today (../../../assets/taxonomy.md), and nothing here mints one —
+# minting capabilities is vwf's move.
+kind: cloud-provider
+axis: deploy
+artifact: n/a
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A probe reaching the proxy measures the proxy. Either the readiness
+      path carries a Bypass policy, or the probe presents a service token;
+      decide which and record it, because the silent version is a green
+      dashboard in front of a dead service
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A pre-production environment behind the proxy needs a service token
+      the run presents, injected like any other secret and catalogued by
+      name in environment.md; without it the suite fails at the login page
+      and reports it as an application error
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — the private plane does not exist locally and must not be
+      simulated. Local runs reach the project directly and inject the
+      identity assertion as a fake through the seam the project already
+      verifies in production

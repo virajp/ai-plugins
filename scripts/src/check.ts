@@ -468,20 +468,48 @@ function checkDesignAdapters(plugins: readonly Plugin[]): Finding[] {
  * so the assertion is again the explicit `disable-model-invocation: false`
  * rather than the mere absence of `true` — `user-invocable: false` would be
  * model-invocable but hidden from the user, and would wrongly pass.
+ *
+ * It is checked in **both directions**, for the same reason the agent
+ * cross-reference rule is. The keyword is what selects a plugin into this rule,
+ * so a diff that drops the keyword also turns the rule off — silently, and
+ * while leaving the half-built adapter in place. Since the Wave E retirement
+ * exactly one plugin carries the keyword, which makes that one edit enough to
+ * disable the rule outright. So the inverse also holds: a plugin shipping
+ * either adapter skill must claim the keyword. Only deleting the keyword *and*
+ * both skills clears the rule, and that is a deliberate, visible retirement of
+ * the adapter rather than an accident.
  */
+const STACK_ADAPTER_KINDS = ["stack-menu", "stack-template"] as const;
+
 function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
   const findings: Finding[] = [];
 
   for (const plugin of plugins) {
-    const keywords = plugin.manifest.keywords;
-    if (!Array.isArray(keywords) || !keywords.includes("vwf-stack-adapter")) {
-      continue;
-    }
     const skills = new Map(
       plugin.skills.map(path => [skillName(path), path] as const),
     );
+    const keywords = plugin.manifest.keywords;
+    if (!Array.isArray(keywords) || !keywords.includes("vwf-stack-adapter")) {
+      const shipped = STACK_ADAPTER_KINDS
+        .filter(kind => skills.has(`${plugin.dir}-${kind}`));
+      if (shipped.length > 0) {
+        findings.push({
+          scope: plugin.dir,
+          message: `ships ${
+            shipped
+              .map(kind => `"${plugin.dir}-${kind}"`)
+              .join(" and ")
+          } `
+            + `but does not declare the \`vwf-stack-adapter\` keyword — the `
+            + `keyword is what selects a plugin into this contract, so dropping `
+            + `it disables the very check that would have caught the adapter `
+            + `being half-retired`,
+        });
+      }
+      continue;
+    }
 
-    for (const kind of ["stack-menu", "stack-template"]) {
+    for (const kind of STACK_ADAPTER_KINDS) {
       const expected = `${plugin.dir}-${kind}`;
       const path = skills.get(expected);
       if (path === undefined) {
