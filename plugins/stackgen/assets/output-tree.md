@@ -1,13 +1,14 @@
 # The Generated Output
 
-Everything stackgen materializes lands **directly in the repo's `.claude/`
-tree** — committed, repo-owned, and working for every collaborator with no
-plugin installed. There is no intermediate tree and no symlink wiring: what
-Claude Code discovers is what the repo owns.
+Every artifact stackgen materializes lands **directly in the repo's
+`.claude/` tree** — committed, repo-owned, and working for every collaborator
+with no plugin installed. There is no intermediate tree and no symlink
+wiring: what Claude Code discovers is what the repo owns.
 
 The output vocabulary is **closed to four artifact kinds** plus stackgen's
-own bookkeeping, one **tier-2 project file** — `.mcp.json` — and one
-**tier-3 target outside the repo entirely**: a generated local plugin on the
+own bookkeeping, one **tier-2 project file** — `.mcp.json` — a **fourth
+target**, the repo config files a pack declares (below), and one **tier-3
+target outside the repo entirely**: a generated local plugin on the
 developer's machine (below).
 
 LSP server configuration stays **excluded from the repo**: a language server
@@ -97,11 +98,64 @@ materialized into it, so a landing adds its keys and leaves the rest;
 removal removes exactly the keys this repo's lockfile recorded, and takes
 the directory and the registration down only when the last key goes.
 
+## The fourth target — repo config files
+
+`.claude/`, `.mcp.json` and the local plugin are the three targets above, and
+a repo's own configuration is none of them. A toolchain manager's config and
+its file-based task library are repo files a component genuinely owns, so a
+pack declares them in a **`config/` tree that mirrors the repo root**
+(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
+
+```text
+stacks/<type>/<slug>/
+└── config/              # tree mirrors the repo root
+```
+
+`config/.config/mise/tasks/code/format` lands at
+`<repo>/.config/mise/tasks/code/format`, the same way `skills/` mirrors
+`.claude/skills/`. The rules mirror the ones the other targets already have:
+
+- **It merges, never owns.** Only the paths this repo's lockfile recorded are
+  touched by sync or removal; a landing set colliding with an unlisted path is
+  a conflict for the user, not a write.
+- **Recorded in the lockfile per file**, with the **component** that supplied
+  it — the same grain sync acts at everywhere else, and what makes a tree two
+  components both write auditable.
+- **Its own consent line**, the same tier `.claude/settings.json` and
+  `.mcp.json` get (tier 2 below). A declined config write leaves the skills
+  landed and says the tasks will be absent — never a silent partial landing.
+- **Mode is preserved.** `.config/mise/tasks/**` must land executable (755) or
+  `mise run <task>` fails as an *unknown task* rather than as a permission
+  error. `plugins:check` asserts the bit on the authored packs, because an
+  invisible exec bit has cleared every other gate in this repo before.
+
+**Composition order, since more than one component may write one tree.**
+`toolchain-manager`, then `package-manager` / `language`, then `app-framework`
+— a later component's file wins, and the lockfile records per file which
+component supplied the version that landed.
+
+**Precedent, and its limit.** The `capability-provider/fnox` and
+`package-manager/pnpm` packs already ship hook scripts copied into a target
+repo, so packs already write outside `.claude/`. This generalizes that from
+`hooks/` to a declared tree, the same move `.mcp.json` got at Wave D, and for
+the same reason: the alternative is that the one thing which writes a repo's
+config lives in a plugin that exists for no other reason.
+
+**Deliberately not extended to gate configs, and this fence is the charter.**
+Nothing here writes `dprint.json`, `.config/pre-commit-config.yaml`,
+`package.json` or a CI workflow. A gate pack **names** its config file as a
+prerequisite the repo still needs; it does not own it. That is new capability
+rather than preserved capability, and it is a separate call — stated here
+rather than only in the plan that opened the tier, because a charter
+reopening ratchets: each file the tier absorbs makes the argument for the
+next one easier.
+
 ## The three consent tiers
 
 1. **Files in the tree above** land through the materializer's ordinary
    dry-run consent gate — every path listed, nothing written unapproved.
-2. **`.claude/settings.json` and `.mcp.json` are NEVER modified without the
+2. **`.claude/settings.json`, `.mcp.json` and a pack's `config/` tree are
+   NEVER modified without the
    user's explicit consent, as their own separate lines in the gate.** Hook *scripts* are files
    (tier 1); the settings entry that wires a hook to its event is a
    settings.json edit (tier 2), presented separately and skippable — a
@@ -138,6 +192,12 @@ entries:
     component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
     source: generated # or pack/<type>/<slug>@<version>
     hash: <content hash at landing>
+  - path: .config/mise/tasks/code/format # a `config/` tier file — outside .claude/
+    slug: generated/mise
+    component: toolchain-manager/mise # which component's version won, per file
+    source: pack/toolchain-manager/mise@1.0.0
+    hash: <content hash at landing>
+    mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 local_plugin: # the generated local plugin — absent when none was written

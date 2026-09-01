@@ -37,6 +37,18 @@ The closed list. A component is exactly one of:
   language is what the SDK brought.
 - **`toolchain-gate`** — a repo-level gate: formatter, linter, secret
   scanner, vulnerability scanner, hook runner.
+- **`toolchain-manager`** — the repo's developer toolchain manager, doing
+  three jobs: it **pins** the tool versions the repo runs on, **holds** the
+  environment values those tools and tasks read, and **runs** the repo's
+  tasks. Distinct from the `toolchain-gate`, which *is* one gate — a
+  manager gates nothing and runs the gates instead. Distinct from the
+  `build-orchestrator`, which schedules work across a workspace's packages
+  with caching and dependency ordering; a manager is a flat task namespace,
+  and an orchestrator typically runs beneath it. Distinct from the
+  `package-manager`, which installs and locks a *language's dependencies*
+  rather than tools. A component that does only one of the three jobs — a
+  pinner that runs nothing, a task runner that pins nothing — records the
+  others `n/a`; contributes the `repo`-axis facts.
 - **`cloud-provider`** — a provider itself: the account/IAM/billing and
   emulator judgment that spans its services.
 - **`cloud-service`** — one service of one provider: a compute target, a
@@ -145,11 +157,17 @@ project config already holds**. Picking from the menu and writing
 exist because a template no menu can offer is not an error — it is invisible,
 which is how a CI-system pack shipped that nothing could ever materialize.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
-  the whole repository rather than to one toolchain in it — the only
-  composition rooted at the `repo` axis. A gate meaningful for exactly one
+  the whole repository rather than to one toolchain in it — one of the two
+  compositions rooted at the `repo` axis. A gate meaningful for exactly one
   toolchain is **not** here: it belongs to that language's bundle, which is
   what keeps a polyglot repo from materializing the same scanner once per
   language.
+- A **Toolchain-Manager-Bundle** is exactly one `toolchain-manager`
+  component, also on the **`repo`** axis. Like a Deploy-Bundle it has no
+  second half — there is no category above the manager to write doctrine at
+  — and like a CI-Bundle it is **exactly one**: a repo with two task
+  runners has two vocabularies for the same commands, and only one of them
+  is the one anything else invokes.
 
 ## Category-level doctrine
 

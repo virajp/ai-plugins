@@ -24,9 +24,11 @@ stacks/<type>/<slug>/
 ├── skills/<name>/…      # optional: skills to copy into .claude/skills/
 ├── agents/<name>.md     # optional: subagents to copy into .claude/agents/
 ├── rules/<name>.md      # optional: rules to copy into .claude/rules/
-└── hooks/               # optional: hook scripts + their settings entries
-    ├── <name>.sh        #   the script, copied into .claude/hooks/
-    └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
+├── hooks/               # optional: hook scripts + their settings entries
+│   ├── <name>.sh        #   the script, copied into .claude/hooks/
+│   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
+└── config/              # optional: repo config files — tree mirrors the repo root
+    └── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
 ```
 
 `<type>` is a component type from
@@ -40,6 +42,17 @@ curated and tested here; generation never emits an executable — a generated
 "hook" is at most a recommendation in the conventions prose. The
 `hooks.yaml` entries land in `.claude/settings.json` only behind the
 materializer's separate settings-consent line.
+
+**`config/` is a target, not a fifth artifact kind.** It mirrors the repo
+root rather than `.claude/`, so `config/.config/mise/tasks/code/format` lands
+at `<repo>/.config/mise/tasks/code/format`, behind its own consent line, and
+merging never owning — the rules, the per-file lockfile record, the
+composition order when two components write one tree, and the fence that
+keeps `dprint.json` and `.config/pre-commit-config.yaml` out of it are
+`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. **Mode is preserved**:
+anything under `config/.config/mise/tasks/**` must be authored executable
+(755), which `plugins:check` asserts, because mise runs a task file directly
+and reports a non-executable one as an unknown task.
 
 ## `pack.yaml`
 
