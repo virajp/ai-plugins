@@ -1,4 +1,7 @@
-import { readFileSync } from "node:fs";
+import {
+  readFileSync,
+  readlinkSync,
+} from "node:fs";
 import { join } from "node:path";
 import {
   describe,
@@ -7,6 +10,9 @@ import {
 } from "vitest";
 import {
   buildManifest,
+  DEV_MANIFEST_PATH,
+  DEV_MARKETPLACE_DIR,
+  DEV_PLUGINS_LINK,
   MANIFEST_PATH,
 } from "./marketplace.ts";
 import { readPlugins } from "./plugins.ts";
@@ -15,6 +21,12 @@ const repoRoot = join(import.meta.dirname, "..", "..");
 const plugins = readPlugins(join(repoRoot, "plugins"));
 const generated = buildManifest(plugins);
 const parsed = JSON.parse(generated) as {
+  plugins: Record<string, unknown>[];
+  [key: string]: unknown;
+};
+
+const generatedDev = buildManifest(plugins, "dev");
+const parsedDev = JSON.parse(generatedDev) as {
   plugins: Record<string, unknown>[];
   [key: string]: unknown;
 };
@@ -148,11 +160,83 @@ describe("the generated marketplace manifest", () => {
     }
   });
 
+  it("defaults to the published projection", () => {
+    // The default matters: every existing caller passes no mode, and a default
+    // that flipped would publish local paths to users.
+    expect(buildManifest(plugins)).toBe(buildManifest(plugins, "published"));
+  });
+
   it("emits two-space JSON with a trailing newline", () => {
     // What dprint leaves this file as. Emitting anything else means the file is
     // reformatted on the next commit and `--check` fails on a file nobody
     // edited.
     expect(generated.endsWith("}\n")).toBe(true);
     expect(generated).toContain("\n  \"name\": \"virajp-plugins\"");
+  });
+});
+
+describe("the local authoring manifest", () => {
+  it("is byte-identical to the committed file", () => {
+    expect(generatedDev).toBe(
+      readFileSync(join(repoRoot, DEV_MANIFEST_PATH), "utf8"),
+    );
+  });
+
+  it("resolves through the committed symlink", () => {
+    // Every dev `source` is `./plugins/<name>`, which resolves against the
+    // marketplace root. Without this link that is a path to nothing, and Claude
+    // reports it as a plugin that simply is not there rather than as an error.
+    expect(
+      readlinkSync(join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK)),
+    )
+      .toBe("../plugins");
+  });
+
+  it("differs from the published manifest in `source` and nothing else", () => {
+    // The one assertion that keeps this a second *view* rather than a second
+    // source of truth. Strip `source` from both and they must be equal — so a
+    // field added to one projection and forgotten in the other fails here.
+    const strip = (entries: Record<string, unknown>[]) =>
+      entries.map(({ source: _source, ...rest }) => rest);
+
+    expect(strip(parsedDev.plugins)).toEqual(strip(parsed.plugins));
+  });
+
+  it("names every plugin by a repo-relative path, never a tag or an absolute one", () => {
+    // Probed against the real CLI: an absolute path, a `{source: "directory"}`
+    // or `{source: "local"}` object, and a parent-relative `../plugins/<name>`
+    // are each rejected with `source: Invalid input`. A repo-relative path that
+    // stays inside the marketplace root is the only form Claude accepts.
+    for (const entry of parsedDev.plugins) {
+      const source = entry["source"];
+      expect(source, entry["name"] as string).toBe(
+        `./${DEV_PLUGINS_LINK}/${entry["name"] as string}`,
+      );
+      expect(typeof source).toBe("string");
+      expect(source as string).not.toContain("..");
+      expect((source as string).startsWith("/")).toBe(false);
+    }
+  });
+
+  it("declares the same marketplace name as the published one", () => {
+    // Load-bearing. A plugin's `dependencies` edge names its marketplace by
+    // name, so vwf installed from a differently-named dev marketplace would
+    // send its `stackgen` edge back to the tagged marketplace and fail on a tag
+    // that does not exist yet. Verified by real install: same name resolves the
+    // dependency, and `+ 1 dependency: stackgen` is what proves it.
+    expect(parsedDev["name"]).toBe(parsed["name"]);
+  });
+
+  it("says in its description that it is never published", () => {
+    // The only place it can be said: the manifest is strict JSON with a
+    // `$schema`, so there is no comment, and `name` is pinned by the rule above.
+    expect(parsedDev["description"]).toMatch(/LOCAL AUTHORING ONLY/);
+    expect(parsedDev["description"]).not.toBe(parsed["description"]);
+  });
+
+  it("is not the file users read", () => {
+    // Cheap guard against the two paths ever being conflated in a refactor.
+    expect(DEV_MANIFEST_PATH).not.toBe(MANIFEST_PATH);
+    expect(DEV_MANIFEST_PATH.startsWith(DEV_MARKETPLACE_DIR)).toBe(true);
   });
 });

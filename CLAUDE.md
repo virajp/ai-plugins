@@ -75,6 +75,7 @@ auto-apply the moment you edit the tree they govern; `release` is `/release`.
 | [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest      |
 | [`.claude/docs/installer-cli.md`][cli]     | the `@askviraj/ai-plugins` shape a maintainer needs — flags, receipts, the source map         |
 | [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the two tag families, the workflows, the rituals     |
+| [`.claude/docs/dev-marketplace.md`][dev]   | running the plugins you are editing — setup, the refresh loop, and why `update` is not it     |
 | [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, the docs tree it maintains, its dependencies        |
 | [`.claude/skills/plugin-authoring/`][auth] | the eleven checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
 | [`.claude/skills/installer-cli/`][icli]    | the receipt kinds, the interactive uninstall, the packaging traps                             |
@@ -84,6 +85,7 @@ auto-apply the moment you edit the tree they govern; `release` is `/release`.
 [plug]: .claude/docs/plugins.md
 [cli]: .claude/docs/installer-cli.md
 [ci]: .claude/docs/ci-and-releases.md
+[dev]: .claude/docs/dev-marketplace.md
 [vwf]: .claude/skills/vwf-plugin/SKILL.md
 [auth]: .claude/skills/plugin-authoring/SKILL.md
 [icli]: .claude/skills/installer-cli/SKILL.md
@@ -103,6 +105,7 @@ plugins/<plugin>/          the authored source, and the installed shape
   skills/ agents/ hooks/ assets/ stacks/ vendor/
   ↓  scripts/src/marketplace.ts
 .claude-plugin/marketplace.json    generated at the repo root, committed
+.dev-marketplace/                  generated too — the authoring machine's
 
 cli/src/**                 installer source (TypeScript)
   ↓  tsup
@@ -110,10 +113,26 @@ bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
 ```
 
-**One file is generated**: the marketplace manifest, a projection of the 2
-plugin manifests. Note the two neighbours that read confusingly:
-`.claude-plugin/` is that generated manifest, while `.claude/` is this repo's
-own skills, docs, agents and worktrees. Neither is `plugins/`.
+**Two files are generated**, both projections of the same 2 plugin manifests and
+differing in exactly one field per entry — `source`:
+
+| File                                               | Is                                                                                                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.claude-plugin/marketplace.json`                  | **published** — what users read from `main`. `git-subdir` at a per-plugin tag, so a merge ships nothing until `plugins:release` cuts it                |
+| `.dev-marketplace/.claude-plugin/marketplace.json` | **local authoring only**, never published. Repo-relative sources through the `.dev-marketplace/plugins` symlink, so this machine runs the working tree |
+
+The dev marketplace is what lets the toolkit be **used before it is published**
+— without it, the author runs the last release and a plugin edited today reaches
+nobody, including them. Both declare the **same marketplace `name`**, which is
+load-bearing: a plugin's `dependencies` edge names its marketplace by name, so
+vwf installed from a differently-named one would send its `stackgen` edge back
+to the tagged marketplace and fail on a tag that does not exist yet. A machine
+registers one or the other, never both. Setup and the refresh loop are
+[`.claude/docs/dev-marketplace.md`](.claude/docs/dev-marketplace.md).
+
+Note the three neighbours that read confusingly: `.claude-plugin/` is the
+published manifest, `.dev-marketplace/` is the local one, and `.claude/` is this
+repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 
 The template layer and the four render trees this replaced, and the receipts the
 installer no longer writes, are in [`repo-shape.md`][repo].
@@ -123,8 +142,10 @@ installer no longer writes, are in [`repo-shape.md`][repo].
 Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
 which is the installer's and whose trigger surface must stay untouched):
 
-- **`plugins:marketplace`** — generates `.claude-plugin/marketplace.json` from
-  the 2 plugin manifests; **`--check`** fails if the committed file differs.
+- **`plugins:marketplace`** — generates **both** marketplace manifests from the
+  2 plugin manifests, plus the `.dev-marketplace/plugins` symlink they resolve
+  through; **`--check`** fails if either committed file, or the symlink,
+  differs.
 - **`plugins:check`** — validates the authored tree, eleven rules.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
@@ -136,9 +157,14 @@ in [`repo-shape.md`][repo].
 
 ### Traps worth knowing
 
-- **The generated marketplace manifest is committed; `bin/` and the per-package
-  `dist/` are gitignored.** The manifest is meant to be diffed in review; a
-  bundle diff is noise.
+- **Both generated marketplace manifests are committed; `bin/` and the
+  per-package `dist/` are gitignored.** A manifest is meant to be diffed in
+  review; a bundle diff is noise. The dev manifest is committed because it is
+  machine-independent — relative paths only — so a fresh clone is one
+  `marketplace add` from working.
+- **`claude plugin marketplace add` needs a path that looks like one.**
+  `add .dev-marketplace` is rejected with *"Invalid marketplace source format"*;
+  `add ./.dev-marketplace` works. The leading `./` is not optional.
 - `CLAUDE.md` and `readme.md` **are** dprint-formatted, so widening one table
   cell re-pads every row. `plugins/**/*.md` is **not** formatted — match the
   surrounding fold width by hand.

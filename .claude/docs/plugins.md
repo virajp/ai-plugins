@@ -57,6 +57,16 @@ One file, `.claude-plugin/marketplace.json`, at the repo **root** — generated 
 `plugins:marketplace` from the 2 plugin manifests. Root rather than under
 `plugins/`, because that is where Claude looks when this repo is added.
 
+There is a **second** manifest,
+`.dev-marketplace/.claude-plugin/marketplace.json`, generated in the same run
+from the same 2 manifests. It is the authoring machine's and is never published;
+everything below describes the published one unless it says otherwise. The two
+differ in exactly one field per entry — `source` — and the dev form is a
+repo-relative `./plugins/<name>` reaching the authored tree through the
+`.dev-marketplace/plugins` symlink. Why that shape is forced, and the loop for
+using it, are [`repo-shape.md`](repo-shape.md) and
+[`dev-marketplace.md`](dev-marketplace.md).
+
 Every `source` is a **`git-subdir` fetch pinned to a per-plugin tag**, not the
 `./plugins/<name>` path form it used to be:
 

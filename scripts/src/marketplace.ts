@@ -1,22 +1,45 @@
 #!/usr/bin/env node
 /**
- * Generates `.claude-plugin/marketplace.json` from the 13 plugin manifests.
+ * Generates the marketplace manifests from the plugin manifests.
  *
- * The manifest lives at the **repo root**, not under `plugins/`: it is what
- * Claude Code reads when the marketplace is added from this repo. It is also
- * **committed**, so what a user installs is inspectable and diffable in review —
+ * There are **two**, both projections of the same plugin manifests, differing in
+ * exactly one field per entry — `source`:
+ *
+ * - `.claude-plugin/marketplace.json` — **published**. Every `source` is a
+ *   `git-subdir` fetch pinned to a per-plugin tag. This is what users read from
+ *   `main`.
+ * - `.dev-marketplace/.claude-plugin/marketplace.json` — **local authoring
+ *   only**, never published. Every `source` is a repo-relative path reaching the
+ *   authored tree through the `.dev-marketplace/plugins` symlink, so the
+ *   authoring machine runs the working tree rather than the last release.
+ *
+ * Both are written and checked together on purpose. A `--dev` flag was the
+ * planned shape and is one more thing to forget; a dev manifest that goes stale
+ * fails as a plugin quietly serving yesterday's tree, which is the failure this
+ * whole file exists to prevent.
+ *
+ * **Both declare the same marketplace `name`.** That is load-bearing rather than
+ * sloppy: a plugin's `dependencies` edge names its marketplace by name, so vwf
+ * installed from a differently-named dev marketplace would send its `stackgen`
+ * edge back to the tagged one and fail on a tag that does not exist yet. The
+ * consequence is that a machine registers one or the other, never both.
+ *
+ * The published manifest lives at the **repo root**, not under `plugins/`: it is
+ * what Claude Code reads when the marketplace is added from this repo. Both are
+ * **committed**, so what gets installed is inspectable and diffable in review —
  * which is exactly why this needs a `--check` mode. A generated-and-committed
  * file has no other staleness guarantee; `--check` is the successor to the
- * retired `plugins:render-clean`, narrowed to the one file that is still
- * generated.
+ * retired `plugins:render-clean`, narrowed to the files still generated.
  *
- * Every `source` is a `git-subdir` fetch pinned to a per-plugin tag rather than
- * a `./plugins/<name>` path. A relative source resolves against the marketplace
- * root, so it served whatever the default branch held and no change could be
- * kept back from users; a pinned ref makes a release an explicit act, which is
- * what lets unreleased work live on `develop`. See `ref()` for the tag grammar.
+ * **The published projection pins a tag; the dev one deliberately does not.** A
+ * relative source resolves against the marketplace root, so it serves whatever
+ * is *there* rather than a pinned ref. For the published manifest that was the
+ * bug — nothing could be held back from users — and the pinned ref is what makes
+ * a release an act rather than a merge. For `.dev-marketplace/`, which no user
+ * registers, serving whatever is there is the entire point. See `ref()` for the
+ * tag grammar and `source()` for the fork.
  *
- * The projection stays a pure function of the 7 plugin manifests: the ref is
+ * The projection stays a pure function of the plugin manifests: the ref is
  * *derived* from each manifest's `version`, so no git call and no network are
  * needed to generate or to `--check`. That is why `sha` is not emitted, unlike
  * the official marketplace — resolving a tag to a commit is exactly the
@@ -29,19 +52,59 @@
  * marketplace is a copy that can drift.
  *
  * Usage:
- *   node scripts/src/marketplace.ts            write the manifest
- *   node scripts/src/marketplace.ts --check    fail if the committed file differs
+ *   node scripts/src/marketplace.ts            write both manifests
+ *   node scripts/src/marketplace.ts --check    fail if either committed file differs
  */
 import {
+  mkdirSync,
   readFileSync,
+  readlinkSync,
+  rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import {
+  dirname,
+  join,
+} from "node:path";
 import { readPlugins } from "./plugins.ts";
 import type { Plugin } from "./plugins.ts";
 
-/** Where the generated manifest lands, relative to the repo root. */
+/** Where the published manifest lands, relative to the repo root. */
 export const MANIFEST_PATH = ".claude-plugin/marketplace.json";
+
+/** The local authoring marketplace's root, relative to the repo root. */
+export const DEV_MARKETPLACE_DIR = ".dev-marketplace";
+
+/** Where the local authoring manifest lands, relative to the repo root. */
+export const DEV_MANIFEST_PATH =
+  `${DEV_MARKETPLACE_DIR}/.claude-plugin/marketplace.json`;
+
+/**
+ * The symlink a dev `source` resolves through, relative to `DEV_MARKETPLACE_DIR`.
+ *
+ * It has to exist because Claude rejects every other way of naming a local
+ * tree: an absolute path, a `{source: "directory"|"local", path}` object, and a
+ * parent-relative `../plugins/<name>` are all `source: Invalid input`. A
+ * repo-relative path that stays inside the marketplace root is the only accepted
+ * form, so the tree has to be reachable from inside `.dev-marketplace/`.
+ */
+export const DEV_PLUGINS_LINK = "plugins";
+
+/**
+ * Which projection to emit.
+ *
+ * The only things it varies are each entry's `source` and the header's
+ * `description`. Anything else that diverged would make the dev manifest a
+ * second source of truth rather than a second view of one.
+ */
+export type Mode = "published" | "dev";
+
+/** Every manifest this generator owns, in write order. */
+export const MANIFESTS: readonly { mode: Mode; path: string; }[] = [
+  { mode: "published", path: MANIFEST_PATH },
+  { mode: "dev", path: DEV_MANIFEST_PATH },
+];
 
 /**
  * The marketplace header.
@@ -71,6 +134,18 @@ const HEADER = {
   name: "virajp-plugins",
   owner: { name: "Viraj Patel" },
 } as const;
+
+/**
+ * The one header field the dev projection overrides.
+ *
+ * `description` is the only place this can be said. The manifest is strict JSON
+ * with a `$schema`, so there is no comment, and `name` is pinned by the
+ * dependency-resolution rule above. Anyone who opens the file, or lists the
+ * marketplace after adding it, reads this line.
+ */
+const DEV_DESCRIPTION =
+  "LOCAL AUTHORING ONLY — serves this working tree, never published. "
+  + "Users read .claude-plugin/marketplace.json from main instead.";
 
 /**
  * Per-entry values every plugin shares.
@@ -124,11 +199,41 @@ function ref(plugin: Plugin): string {
   return `${plugin.dir}-v${version}`;
 }
 
-export function buildManifest(plugins: readonly Plugin[]): string {
-  return json({ ...HEADER, plugins: plugins.map(entry) });
+export function buildManifest(
+  plugins: readonly Plugin[],
+  mode: Mode = "published",
+): string {
+  const header = mode === "dev"
+    ? { ...HEADER, description: DEV_DESCRIPTION }
+    : HEADER;
+  return json({ ...header, plugins: plugins.map(p => entry(p, mode)) });
 }
 
-function entry(plugin: Plugin): Record<string, unknown> {
+/**
+ * How one entry names the bytes to install.
+ *
+ * `git-subdir` sparse-clones one `path` at one `ref`, so a published entry
+ * names the whole fetch rather than a location inside whatever checkout Claude
+ * happens to have — which is what lets a release be an act rather than a merge.
+ *
+ * The dev form is the thing that mode deliberately gave up: a repo-relative
+ * path resolves against the marketplace root, so it always serves whatever is
+ * *there* rather than a pinned ref. For a published manifest that is the bug;
+ * for `.dev-marketplace/`, which no user ever registers, it is the entire point.
+ */
+function source(plugin: Plugin, mode: Mode): unknown {
+  if (mode === "dev") {
+    return `./${DEV_PLUGINS_LINK}/${plugin.dir}`;
+  }
+  return {
+    source: "git-subdir",
+    url: REPO_URL,
+    path: `plugins/${plugin.dir}`,
+    ref: ref(plugin),
+  };
+}
+
+function entry(plugin: Plugin, mode: Mode): Record<string, unknown> {
   const m = plugin.manifest;
   const out: Record<string, unknown> = { name: m.name };
 
@@ -147,12 +252,7 @@ function entry(plugin: Plugin): Record<string, unknown> {
   }
   // The directory, not the manifest name — the path is what has to resolve.
   // `check.ts` asserts the two agree, so this is not a place to prefer one.
-  out["source"] = {
-    source: "git-subdir",
-    url: REPO_URL,
-    path: `plugins/${plugin.dir}`,
-    ref: ref(plugin),
-  };
+  out["source"] = source(plugin, mode);
   out["strict"] = STRICT;
   if (Array.isArray(m.keywords) && m.keywords.length > 0) {
     out["tags"] = m.keywords;
@@ -194,26 +294,78 @@ function json(value: unknown): string {
 
 if (import.meta.main) {
   const repoRoot = join(import.meta.dirname, "..", "..");
-  const target = join(repoRoot, MANIFEST_PATH);
-  const generated = buildManifest(readPlugins(join(repoRoot, "plugins")));
+  const plugins = readPlugins(join(repoRoot, "plugins"));
+  const check = process.argv.includes("--check");
 
-  if (process.argv.includes("--check")) {
-    const committed = readFileSync(target, "utf8");
-    if (committed !== generated) {
-      console.error(
-        `${MANIFEST_PATH} is not what the plugin manifests generate.\n`,
-      );
-      console.error(firstDifference(committed, generated));
-      console.error(
-        `\nRe-run 'mise run plugins:marketplace' and stage the result.`,
-      );
-      process.exit(1);
+  for (const { mode, path } of MANIFESTS) {
+    const target = join(repoRoot, path);
+    const generated = buildManifest(plugins, mode);
+
+    if (check) {
+      const committed = readFileSync(target, "utf8");
+      if (committed !== generated) {
+        console.error(`${path} is not what the plugin manifests generate.\n`);
+        console.error(firstDifference(committed, generated));
+        console.error(
+          `\nRe-run 'mise run plugins:marketplace' and stage the result.`,
+        );
+        process.exit(1);
+      }
+      console.log(`${path} is up to date.`);
     }
-    console.log(`${MANIFEST_PATH} is up to date.`);
+    else {
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, generated);
+      console.log(`wrote ${path}`);
+    }
+  }
+
+  if (check) {
+    checkDevLink(repoRoot);
   }
   else {
-    writeFileSync(target, generated);
-    console.log(`wrote ${MANIFEST_PATH}`);
+    writeDevLink(repoRoot);
+  }
+}
+
+/**
+ * The symlink every dev `source` resolves through.
+ *
+ * Committed, so a fresh clone already has it — this only repairs a tree where
+ * it went missing, which on a checkout without symlink support means it landed
+ * as a text file instead. That failure is silent at install time: the source
+ * resolves to nothing and the plugin simply is not there.
+ */
+function writeDevLink(repoRoot: string): void {
+  const link = join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK);
+  if (devLinkIsGood(link)) {
+    return;
+  }
+  rmSync(link, { force: true, recursive: true });
+  symlinkSync("../plugins", link, "dir");
+  console.log(
+    `linked ${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_LINK} -> ../plugins`,
+  );
+}
+
+function checkDevLink(repoRoot: string): void {
+  const rel = `${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_LINK}`;
+  if (!devLinkIsGood(join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK))) {
+    console.error(
+      `${rel} is not a symlink to ../plugins, so every dev source resolves to `
+        + `nothing.\n\nRe-run 'mise run plugins:marketplace' and stage the result.`,
+    );
+    process.exit(1);
+  }
+  console.log(`${rel} is up to date.`);
+}
+
+function devLinkIsGood(link: string): boolean {
+  try {
+    return readlinkSync(link) === "../plugins";
+  }
+  catch {
+    return false;
   }
 }
 
