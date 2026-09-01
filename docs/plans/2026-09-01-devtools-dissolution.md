@@ -1,8 +1,8 @@
 # Plan: dissolving `devtools` into `stackgen`
 
 **Status: approved 2026-09-01, not started.** Every design decision below is
-settled. Execution runs **end to end** and stops only for the four gates named
-in §I — never to re-ask something this document already answers.
+settled. Execution runs **end to end** and stops only for the orchestrator gates
+named in §I — never to re-ask something this document already answers.
 
 This retires `devtools` as a plugin and lands everything it ships inside
 `stackgen`, taking the marketplace from **3 plugins to 2** (`vwf`, `stackgen`)
