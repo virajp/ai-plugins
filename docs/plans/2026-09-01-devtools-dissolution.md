@@ -574,13 +574,10 @@ failure mode here, and it passes every gate this repo has.
   `.claude/skills/`. This proves §D actually replaces what devtools gave
   unconditionally, and it cannot be inferred from any diff. It is the plan's
   largest risk (§K) and the one gate that must not be delegated.
-- **The version bumps and the release.** Per `CLAUDE.md`, `plugins:release` and
-  `i:release` are never run without asking. The bumps are the orchestrator's per
-  the shared-file rule; the release is the user's.
-- **The worktree and every commit.** Units write files; the orchestrator lands
-  them through `/vwf:git-workflow`. No unit commits, so a failed wave is
-  discarded by throwing away uncommitted work rather than by reverting five
-  agents' separate commits.
+- **The merge to `develop`, and the release.** The merge is the run's one
+  landing gate and needs consent. `plugins:release` and `i:release` are never
+  run without asking either, per `CLAUDE.md`; the version bumps themselves are
+  the orchestrator's, per the shared-file rule.
 - **Any `UNRESOLVED:` in a report.** By construction: a unit that could resolve
   it would not have raised it.
 
@@ -596,6 +593,12 @@ wave to wave without checking in, and specifically does **not** pause to:
   order — all are stated here
 - report progress between waves, beyond running the wave gate
 - ask whether to continue after a green gate
+- **ask before committing.** Commits inside the plan's worktree are free and
+  need no consent. The orchestrator commits after **every green wave gate**, so
+  a wave that fails rolls back to the last green wave instead of discarding the
+  whole run. Units still never commit — five agents' separate commits is the
+  collision being avoided, not the commit itself. Consent is owed once, at the
+  merge to `develop`.
 
 A failing wave gate is not a question either: fix it, or raise it as the
 orchestrator's own `UNRESOLVED:` and stop once, with the specific ruling needed
