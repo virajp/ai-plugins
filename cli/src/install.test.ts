@@ -140,11 +140,11 @@ describe("resolveRequest", () => {
 
 describe("planInstall", () => {
   it("registers the marketplace first on a fresh machine, then installs", () => {
-    const steps = planInstall(request({ user: ["vwf", "devtools"] }), options);
+    const steps = planInstall(request({ user: ["vwf", "stackgen"] }), options);
 
     expect(steps.map(s => s.id)).toEqual([
       "marketplace",
-      "plugin:user:devtools",
+      "plugin:user:stackgen",
       "plugin:user:vwf",
     ]);
     expect(steps[0]?.args).toEqual([
@@ -270,7 +270,7 @@ describe("executeInstall", () => {
         : { status: 0, stdout: "", stderr: "" };
 
     const outcomes = executeInstall(
-      planInstall(request({ user: ["vwf", "devtools"] }), options),
+      planInstall(request({ user: ["vwf", "stackgen"] }), options),
       options,
     );
 
@@ -284,12 +284,12 @@ describe("executeInstall", () => {
   it("keeps plugin failures independent of each other", () => {
     writeUserSettings({ extraKnownMarketplaces: { "virajp-plugins": {} } });
     respond = (_command, args) =>
-      args[2] === "devtools@virajp-plugins"
+      args[2] === "stackgen@virajp-plugins"
         ? { status: 1, stdout: "", stderr: "unknown plugin" }
         : { status: 0, stdout: "", stderr: "" };
 
     const outcomes = executeInstall(
-      planInstall(request({ user: ["devtools", "vwf"] }), options),
+      planInstall(request({ user: ["stackgen", "vwf"] }), options),
       options,
     );
 

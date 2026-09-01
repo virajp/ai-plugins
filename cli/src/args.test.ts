@@ -24,10 +24,10 @@ describe("parse", () => {
 
   it("keeps every occurrence of a repeated flag", () => {
     // The citty regression this parser exists to prevent: its ArgType had no
-    // array kind, so `--user vwf --user devtools` installed only `devtools`
+    // array kind, so `--user vwf --user stackgen` installed only `stackgen`
     // and said nothing about the name it dropped.
-    expect(parse(["--user", "vwf", "--user", "devtools"]).user)
-      .toEqual(["vwf", "devtools"]);
+    expect(parse(["--user", "vwf", "--user", "stackgen"]).user)
+      .toEqual(["vwf", "stackgen"]);
     expect(parse(["--project", "vwf", "--project", "typescript"]).project)
       .toEqual(["vwf", "typescript"]);
   });

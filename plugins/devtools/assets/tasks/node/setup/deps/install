@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Install dependencies from the lockfile"
-#MISE hide=true
-
-set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
-
-print_header "Installing node modules ..."
-pnpm install --aggregate-output --child-concurrency 10 --network-concurrency 10 --recursive

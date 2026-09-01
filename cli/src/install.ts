@@ -44,7 +44,7 @@ import type { Outcome } from "./report.ts";
 export const MARKETPLACE_SOURCE = "virajp/ai-plugins";
 
 /**
- * What `--all` installs. Only `vwf`: its dependencies (`devtools`) arrive
+ * What `--all` installs. Only `vwf`: its dependency (`stackgen`) arrives
  * through Claude's own dependency resolution (≥ 2.1.143), which is where that
  * belongs — the old `defaultInstall` list lived in a file this repo deleted.
  */
