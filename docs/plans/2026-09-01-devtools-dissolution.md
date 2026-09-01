@@ -1,6 +1,8 @@
 # Plan: dissolving `devtools` into `stackgen`
 
-**Status: proposed, 2026-09-01.** Awaiting approval.
+**Status: approved 2026-09-01, not started.** Every design decision below is
+settled. Execution runs **end to end** and stops only for the four gates named
+in §I — never to re-ask something this document already answers.
 
 This retires `devtools` as a plugin and lands everything it ships inside
 `stackgen`, taking the marketplace from **3 plugins to 2** (`vwf`, `stackgen`)
@@ -581,6 +583,23 @@ failure mode here, and it passes every gate this repo has.
   agents' separate commits.
 - **Any `UNRESOLVED:` in a report.** By construction: a unit that could resolve
   it would not have raised it.
+
+### What does *not* stop the run
+
+The plan is approved and every design decision in §§B–F is settled. The run goes
+wave to wave without checking in, and specifically does **not** pause to:
+
+- re-ask any of the four rulings, or re-open
+  `docs/memory/decisions/2026-08-29-devtools-survives-the-waves.md` — §H answers
+  it argument by argument
+- confirm a unit's file scope, a bundle slug, a topic name, or the composition
+  order — all are stated here
+- report progress between waves, beyond running the wave gate
+- ask whether to continue after a green gate
+
+A failing wave gate is not a question either: fix it, or raise it as the
+orchestrator's own `UNRESOLVED:` and stop once, with the specific ruling needed
+— never a general "how should I proceed?".
 
 ---
 
