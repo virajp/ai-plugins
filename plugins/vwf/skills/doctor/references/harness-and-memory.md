@@ -52,8 +52,10 @@ check:
   is a credential indexed into a store agents read back into context, deleting
   the source file does not remove the drawer, and it is unobservable from
   outside. Check only that the **patterns are present** — doctor never scans
-  file contents for credentials; that belongs to a dedicated secret scanner, and
-  the `devtools` plugin already ships that doctrine.
+  file contents for credentials; that belongs to a dedicated secret scanner,
+  whose doctrine the unconditional `repo-gates` bundle materializes into the
+  repo's own `.claude/` — present in the checkout itself rather than
+  conditional on a plugin being installed.
 - **The wing matches `memory.wing`** in `.config/vwf.yaml` (or `product.name`
   when the key is absent) — in **every** config, when there is more than one. A
   file naming a different wing is the highest-value drift finding here: writes

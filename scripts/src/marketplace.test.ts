@@ -129,7 +129,6 @@ describe("the generated marketplace manifest", () => {
     const vwf = parsed.plugins.find(e => e["name"] === "vwf");
     expect(vwf?.["repository"]).toBe("https://github.com/virajp/ai-plugins");
     expect(vwf?.["dependencies"]).toEqual([
-      { marketplace: "virajp-plugins", name: "devtools" },
       { marketplace: "virajp-plugins", name: "stackgen" },
     ]);
 

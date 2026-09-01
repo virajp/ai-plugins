@@ -225,9 +225,11 @@ moved.
 
 **Neither `/vwf:setup` nor `/vwf:doctor` scans for actual secrets.** They check
 only that the patterns are *configured*. Detecting credentials in a repo is a
-dedicated scanner's job, and the `devtools` plugin already ships that doctrine —
-two tools scanning for credentials under different rules produces a false sense
-of coverage, not more of it.
+dedicated scanner's job, and the unconditional `repo-gates` bundle materializes
+that doctrine into the repo's own `.claude/`, where it is present in the
+checkout itself rather than conditional on a plugin being installed — two tools
+scanning for credentials under different rules produces a false sense of
+coverage, not more of it.
 
 ## Recall — before work
 
