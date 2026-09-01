@@ -59,6 +59,18 @@ its tag and is skipped, so its entry stays byte-identical and
 dirty tree, or against a stale manifest — a tag cut anywhere else would publish
 content `main` never carried.
 
+**The cost of that discipline, and what pays it.** Between the bump and the tag,
+the manifest names a ref that does not exist — normal on `develop`, and harmless
+for users, who resolve against `main`. It is *not* harmless for anyone who
+registered the marketplace from a local checkout of `develop`: their manifest is
+live, so a plugin update fetches a missing tag and a plugin deleted from the
+manifest disappears from their machine on the merge. That is what
+`.dev-marketplace/` exists for — the authoring machine registers **it** instead,
+gets repo-relative sources with no tags in the picture at all, and this section
+stops applying to it. Nothing here changes: the tags, the release task and what
+users get are exactly as described. See
+[`dev-marketplace.md`](dev-marketplace.md).
+
 **Two tag families, both namespaced**, and the namespacing is load-bearing
 rather than tidiness:
 

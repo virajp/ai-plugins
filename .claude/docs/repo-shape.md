@@ -10,15 +10,48 @@ Plugins are **authored natively for Claude Code**, once, and installed by
 Claude's own plugin commands. What you edit is exactly what a user gets. The
 tree diagram is [`CLAUDE.md`](../../CLAUDE.md)'s and is not repeated here.
 
-**One file is generated**: the marketplace manifest, a projection of the 2
-plugin manifests. It lives at the repo **root**, not under `plugins/`, because
-that is where Claude looks when this repo is added as a marketplace. It is
-committed so what users install is inspectable and diffable, and
-`plugins:marketplace --check` asserts it matches a fresh generation.
+**Two files are generated**, both projections of the same 2 plugin manifests and
+differing in exactly one field per entry — `source`. Both are committed so what
+gets installed is inspectable and diffable, and `plugins:marketplace --check`
+asserts each matches a fresh generation.
 
-Note the two neighbours that read confusingly: `.claude-plugin/` is that
-generated manifest, while `.claude/` is this repo's own skills, docs, agents and
-worktrees. Neither is `plugins/`.
+`.claude-plugin/marketplace.json` is the **published** one, and it lives at the
+repo **root** because that is where Claude looks when this repo is added as a
+marketplace. Every `source` is a `git-subdir` fetch pinned to a per-plugin tag,
+which is what lets unreleased work sit on `develop`.
+
+`.dev-marketplace/.claude-plugin/marketplace.json` is **local authoring only**
+and is never published. Every `source` is a repo-relative `./plugins/<name>`,
+resolved through the committed `.dev-marketplace/plugins` symlink, so the
+authoring machine runs the working tree rather than the last release. It exists
+because this repo ships a workflow plugin whose author could not otherwise run
+the unreleased version of it.
+
+Three things make that design forced rather than chosen, each probed against the
+real `claude` CLI:
+
+- **The symlink is the only way in.** An absolute path, a
+  `{"source": "directory"|"local", "path": …}` object and a parent-relative
+  `../plugins/<name>` are each rejected with `source: Invalid input`. A
+  repo-relative path that stays inside the marketplace root is the one accepted
+  form, so the authored tree has to be reachable from within
+  `.dev-marketplace/`.
+- **Both manifests carry the same marketplace `name`.** A plugin's
+  `dependencies` edge names its marketplace by name, so vwf installed from a
+  differently-named dev marketplace would send its `stackgen` edge back to the
+  tagged marketplace and fail on a tag that does not exist yet. The consequence
+  — one registered at a time, never both — is a feature, not a limitation.
+- **A `ref: develop` variant also works** and needs no symlink, but it serves
+  *pushed* develop. The failure being fixed is "I cannot run what I just
+  changed", so the working-tree form won. It stays the fallback if the symlink
+  ever costs more than it does today.
+
+Note the three neighbours that read confusingly: `.claude-plugin/` is the
+published manifest, `.dev-marketplace/` is the local one, and `.claude/` is this
+repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
+
+Setup and the refresh loop — including why it is uninstall-then-install rather
+than `claude plugin update` — are [`dev-marketplace.md`](dev-marketplace.md).
 
 > **Authoring one:** the eleven checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
@@ -69,15 +102,19 @@ Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
 which is the installer's and whose trigger surface must stay untouched — npm
 allows one Trusted Publisher and validates the entry-point filename):
 
-- **`plugins:marketplace`** — generates `.claude-plugin/marketplace.json` from
-  the 3 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
+- **`plugins:marketplace`** — generates **both** marketplace manifests from the
+  2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
   `tags` and supplying what no manifest holds: the marketplace header, and the
-  per-entry `category`, `strict` and `source`. **`--check`** regenerates in
-  memory and fails if the committed file differs. That mode is the only guard on
-  a file that is generated **and** committed — a manifest edited without a
-  regenerate is invisible to every other check, and the committed manifest keeps
-  advertising the old version. It is what `plugins:render-clean` narrowed down
-  to.
+  per-entry `category`, `strict` and `source`. It also writes the
+  `.dev-marketplace/plugins` symlink the dev sources resolve through.
+  **`--check`** regenerates both in memory and fails if either committed file
+  differs, or if the symlink is missing or points elsewhere. That mode is the
+  only guard on a file that is generated **and** committed — a manifest edited
+  without a regenerate is invisible to every other check, and the committed
+  manifest keeps advertising the old version. It is what `plugins:render-clean`
+  narrowed down to. **There is no `--dev` flag**: both are written together
+  because a flag is one more thing to forget, and a stale dev manifest fails as
+  a plugin quietly serving yesterday's tree.
 - **`plugins:check`** — validates the authored tree. Ten rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **strict-YAML frontmatter**; relative links under

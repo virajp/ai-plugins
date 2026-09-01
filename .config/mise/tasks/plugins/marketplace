@@ -1,18 +1,43 @@
 #!/usr/bin/env bash
-#MISE description="Generate .claude-plugin/marketplace.json from the plugin manifests (--check to assert freshness)"
+#MISE description="Generate both marketplace manifests from the plugin manifests (--check to assert freshness)"
 #MISE dir="{{ config_root }}"
 
-# Projects the 13 plugins/<name>/.claude-plugin/plugin.json manifests into the
-# marketplace manifest Claude Code reads when this repo is added as a
-# marketplace. It lives at the repo ROOT, not under plugins/, because every
-# `source` inside it is root-relative and would resolve nowhere from anywhere
-# else.
+# Projects the plugins/<name>/.claude-plugin/plugin.json manifests into the two
+# marketplace manifests Claude Code reads.
 #
-# The output is committed on purpose: what a user installs is then inspectable
-# and diffable in review. That is also the only reason `--check` has to exist — a
+#   .claude-plugin/marketplace.json                 PUBLISHED — what users read
+#                                                   from main. Sources are
+#                                                   git-subdir at a per-plugin
+#                                                   tag, so a merge ships
+#                                                   nothing until the tag is cut.
+#   .dev-marketplace/.claude-plugin/marketplace.json
+#                                                   LOCAL AUTHORING ONLY — never
+#                                                   published. Sources are
+#                                                   repo-relative paths through
+#                                                   the .dev-marketplace/plugins
+#                                                   symlink, so this machine runs
+#                                                   the working tree rather than
+#                                                   the last release.
+#
+# The published one lives at the repo ROOT because every `source` inside it is
+# root-relative and would resolve nowhere from anywhere else. The dev one needs
+# its own directory for the same reason, plus the symlink — Claude rejects an
+# absolute path, a {source: "directory"|"local", path} object, and a
+# parent-relative ../plugins/<name>, so a repo-relative path that stays inside
+# the marketplace root is the only accepted way to name a local tree.
+#
+# Both are written together rather than behind a --dev flag: a flag is one more
+# thing to forget, and a stale dev manifest fails as a plugin quietly serving
+# yesterday's tree.
+#
+# Both outputs are committed on purpose: what a user installs is then
+# inspectable and diffable in review, and the dev manifest is machine-
+# independent (relative paths only), so a fresh clone is one `marketplace add`
+# from working. That is also the only reason `--check` has to exist — a
 # generated-and-committed file has no other staleness guarantee, so this mode is
-# the successor to the retired `plugins:render-clean`, narrowed to the one file
-# still generated now that nothing renders.
+# the successor to the retired `plugins:render-clean`. `--check` covers the
+# symlink too, since a symlink that landed as a text file resolves to nothing
+# and reports as a plugin that is simply absent.
 #
 # Run with no build step: node strips the TypeScript types directly. That needs
 # node >= 22.6, which .config/mise.toml already pins.
