@@ -1,6 +1,7 @@
 ---
 name: stackgen-sync
-description: Diff the repo's materialized .claude/ entries against the
+description: Diff the repo's materialized entries — the .claude/ tree and
+  the repo config files a component landed — against the
   current component packs (and offer regeneration per generated component),
   presenting the delta for consent — the explicit re-sync that makes drift
   visible without ever overwriting silently. Also diffs the generated local
@@ -25,11 +26,17 @@ user's clock.
 1. **Inventory, from the lockfile.** Read `.claude/stackgen/lock.yaml`
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). No lockfile → report
    "nothing materialized" and stop. The lockfile is the whole inventory:
-   a path in `.claude/` it does not list is the repo's own and is invisible
-   to this skill. Partition entries by **component** (every landing carries
-   its component ref) and by source: pack-sourced vs `generated`. Read the
+   a path it does not list is the repo's own and is invisible to this
+   skill. Partition entries by **component** (every landing carries its
+   component ref) and by source: pack-sourced vs `generated`. Read the
    `settings_keys`, `mcp_servers` and `local_plugin` blocks too — those
    name state outside `.claude/`, and each diffs on its own terms below.
+
+   **Entries are not all under `.claude/`.** A component may have landed
+   repo config files from its `config/` tree — `.config/mise/tasks/…` and
+   the like — and those are ordinary lockfile entries carrying a `path`, a
+   `component`, a `hash` and a `mode`. Inventory them with the rest; they
+   differ only in where they sit and in the consent line they take.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
@@ -41,6 +48,19 @@ user's clock.
    longer matches its landing hash — whether or not the pack also moved).
    A pack that no longer exists in this stackgen version is reported, never
    deleted.
+
+   A component's `config/` files diff on **exactly these terms** — same
+   three states, same hashes, same per-component grain — with two things
+   to carry through. **Mode is part of the file**: a
+   `.config/mise/tasks/**` entry recorded `755` and now sitting 644 is a
+   drift worth reporting, because mise reports a non-executable task file
+   as an *unknown task* rather than as a permission error, and
+   `mise run init` is the restore. And where two components write into
+   one tree, re-derive in composition order — `toolchain-manager`, then
+   `package-manager` / `language`, then `app-framework`, later wins — and
+   diff each file against the component the lockfile says supplied it. A
+   file whose supplying component **changed** is a real delta, reported
+   as such: it means precedence moved, not that the pack did.
 
 3. **Offer regeneration per generated component.** A `generated` component
    has no pack to diff against; offer to re-run the generator for that
@@ -88,6 +108,12 @@ user's clock.
      without explicit consent**;
    - any change to entries under the top-level `mcp_servers` — a
      `.mcp.json` edit, on the same terms;
+   - any change to a `config/`-tier entry — a write **outside
+     `.claude/`**, into files the repo's collaborators own and read, so it
+     is its own **tier-2** line listing every path, on the same
+     merges-never-owns terms: only the paths this lockfile records are
+     updated or removed, and a declined line leaves the `.claude/` side
+     landed and says the tasks stay as they are;
    - anything from step 4 — the **tier-3** line, which says plainly that
      it writes to this machine outside the repo, and where a
      registration or de-registration is involved **prints the `claude`
@@ -107,9 +133,15 @@ user's clock.
 - **The component is the grain.** A framework's major bump regenerates that
   framework component alone; the language baseline beside it is untouched
   unless its own pack moved.
-- **The lockfile is the boundary**: entries stackgen did not materialize
-  are never touched, and nothing in the repo is ever deleted — a retired
-  pack's copies stay until the user removes them.
+- **The lockfile is the boundary**, and it is the boundary **outside**
+  `.claude/` too: a `.config/` file stackgen did not materialize is the
+  repo's own and is never diffed, updated or removed, however exactly its
+  path matches something a pack ships. Nothing in the repo is ever
+  deleted without a line the user picked — a retired pack's copies stay
+  until the user removes them.
+- **Mode travels with a `config/` file.** Write back the recorded mode
+  when a task file is taken; a `.config/mise/tasks/**` file restored 644
+  is a task that has disappeared as far as mise is concerned.
 - **The local plugin is the one thing subtracted rather than left.** It is
   the machine's shared file, not a repo copy, so a stale key there is
   another repo's problem rather than a note the user can ignore. Removal
