@@ -1,9 +1,28 @@
 # Plan: a develop-tracking marketplace for the authoring machine
 
-**Status: draft, 2026-09-01 — awaiting approval.** Every host behaviour this
+**Status: complete, 2026-09-01.** Landed in `a743c233`. Every host behaviour it
 depends on was probed against the real `claude` CLI in a throwaway
-`CLAUDE_CONFIG_DIR`; the results are §B and they are what the design is built
-on, not assumptions.
+`CLAUDE_CONFIG_DIR`; the results are §B and they are what the design was built
+on, not assumptions. The end-to-end proof is the same: adding
+`.dev-marketplace/` and installing vwf yields **vwf 19.9.1 + stackgen 0.19.0,
+both enabled**, with the dependency resolved automatically.
+
+**Three deviations, each measured rather than argued.**
+
+1. **No `--dev` flag** (§E item 1–2). Both manifests are written and checked
+   together. A flag is one more thing to forget, and a stale dev manifest fails
+   as a plugin quietly serving yesterday's tree.
+2. **No dprint exclude** (D5). dprint does **not** follow the symlink — it picks
+   up the dev manifest alone, which is correct and wanted. `gitleaks` is clean
+   and `code:count` reports an identical 8,014 lines with the link present and
+   parked, so §H's double-walk risk is closed empirically across all three
+   tools. D4's reading of `plugins:check` held.
+3. **The guide is `.claude/docs/dev-marketplace.md`, not `docs/how-to/`** (§E
+   item 5). That index is strictly user-facing product journeys; a
+   maintainer-only guide does not belong in it.
+
+§G still holds in full: users see nothing until `main` and `plugins:release`,
+and the edit-does-not-reach gap is documented rather than closed.
 
 This gives the authoring machine a marketplace that serves **`develop`'s
 plugins**, so the toolkit can be used before it is published, without weakening
