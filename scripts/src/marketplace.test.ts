@@ -1,4 +1,5 @@
 import {
+  existsSync,
   readFileSync,
   readlinkSync,
 } from "node:fs";
@@ -176,13 +177,19 @@ describe("the generated marketplace manifest", () => {
 });
 
 describe("the local authoring manifest", () => {
-  it("is byte-identical to the committed file", () => {
+  // `.dev-marketplace/` is gitignored, so in CI and in a fresh clone it is
+  // legitimately absent — these two assertions apply only on a machine that has
+  // generated it. Everything after them is about the projection itself and runs
+  // everywhere, which is the half that actually needs pinning.
+  const onDisk = existsSync(join(repoRoot, DEV_MANIFEST_PATH));
+
+  it.skipIf(!onDisk)("is byte-identical to the file on disk", () => {
     expect(generatedDev).toBe(
       readFileSync(join(repoRoot, DEV_MANIFEST_PATH), "utf8"),
     );
   });
 
-  it("resolves through the committed symlink", () => {
+  it.skipIf(!onDisk)("resolves through its symlink", () => {
     // Every dev `source` is `./plugins/<name>`, which resolves against the
     // marketplace root. Without this link that is a path to nothing, and Claude
     // reports it as a plugin that simply is not there rather than as an error.

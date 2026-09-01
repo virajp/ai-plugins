@@ -30,14 +30,18 @@
 # thing to forget, and a stale dev manifest fails as a plugin quietly serving
 # yesterday's tree.
 #
-# Both outputs are committed on purpose: what a user installs is then
-# inspectable and diffable in review, and the dev manifest is machine-
-# independent (relative paths only), so a fresh clone is one `marketplace add`
-# from working. That is also the only reason `--check` has to exist — a
-# generated-and-committed file has no other staleness guarantee, so this mode is
-# the successor to the retired `plugins:render-clean`. `--check` covers the
-# symlink too, since a symlink that landed as a text file resolves to nothing
-# and reports as a plugin that is simply absent.
+# The published output is committed on purpose: what a user installs is then
+# inspectable and diffable in review. That is also the only reason `--check` has
+# to exist — a generated-and-committed file has no other staleness guarantee, so
+# this mode is the successor to the retired `plugins:render-clean`.
+#
+# .dev-marketplace/ is GITIGNORED. It is one machine's local state, and a second
+# committed file declaring the marketplace name `virajp-plugins` is a footgun on
+# the branch users read. So `--check` reports an absent dev manifest as not
+# applicable — the normal state in CI and in a fresh clone — and fails only on
+# one that exists and is stale, or whose symlink is missing or points elsewhere.
+# A symlink that landed as a text file resolves to nothing and reports as a
+# plugin that is simply absent, which is why it is checked at all.
 #
 # Run with no build step: node strips the TypeScript types directly. That needs
 # node >= 22.6, which .config/mise.toml already pins.
