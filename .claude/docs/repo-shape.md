@@ -126,23 +126,25 @@ allows one Trusted Publisher and validates the entry-point filename):
   is no `--dev` flag**: both are written together because a flag is one more
   thing to forget, and a stale dev manifest fails as a plugin quietly serving
   yesterday's tree.
-- **`plugins:check`** — validates the authored tree. Ten rules: manifest
+- **`plugins:check`** — validates the authored tree. Eleven rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
-  and executable; **strict-YAML frontmatter**; relative links under
-  `assets/examples/**`; **root-relative reference resolution** (every such
-  reference resolves inside the plugin that wrote it); **agent cross-reference
-  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
-  own prose names a real agent, and every declared agent is referenced at least
-  once — the two directions cover each other on a rename); the vwf
-  design-adapter contract (all **three** import skills present and
-  model-invocable); the vwf **stack-adapter** contract (both
-  `<plugin>-stack-menu` and `<plugin>-stack-template` present and
-  model-invocable on every plugin keyworded `vwf-stack-adapter`, **and** the
-  keyword declared by every plugin shipping either skill — the same
-  two-directions-cover-each-other idiom, since `stackgen` is now the only
-  adapter left and dropping that one keyword would otherwise have turned the
-  rule off entirely while `check()` still passed); and the **technology-free
-  vwf** guard.
+  and executable; **pack task files executable** (every file a stackgen pack
+  ships under `config/.config/mise/tasks/**` carries its exec bit, because mise
+  reports a 644 task as an *unknown* one rather than a permission error);
+  **strict-YAML frontmatter**; relative links under `assets/examples/**`;
+  **root-relative reference resolution** (every such reference resolves inside
+  the plugin that wrote it); **agent cross-reference resolution** in both
+  directions (every role-shaped `` `token` `` in a plugin's own prose names a
+  real agent, and every declared agent is referenced at least once — the two
+  directions cover each other on a rename); the vwf design-adapter contract (all
+  **three** import skills present and model-invocable); the vwf
+  **stack-adapter** contract (both `<plugin>-stack-menu` and
+  `<plugin>-stack-template` present and model-invocable on every plugin
+  keyworded `vwf-stack-adapter`, **and** the keyword declared by every plugin
+  shipping either skill — the same two-directions-cover-each-other idiom, since
+  `stackgen` is now the only adapter left and dropping that one keyword would
+  otherwise have turned the rule off entirely while `check()` still passed); and
+  the **technology-free vwf** guard.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is

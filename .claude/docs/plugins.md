@@ -84,7 +84,7 @@ below. A relative source resolves against the marketplace root, so it always
 served whatever the default branch held and no change could be kept back.
 
 **The ref is derived, not authored**: `<name>-v<version>`, read off each
-manifest's `version`. So the generator stays a pure function of the 3 manifests
+manifest's `version`. So the generator stays a pure function of the 2 manifests
 — no git, no network, `--check` works offline and in a fresh clone. That purity
 is why no `sha` is emitted alongside the ref, unlike the official marketplace;
 resolving a tag to a commit is exactly the impurity avoided. The cost is that a
