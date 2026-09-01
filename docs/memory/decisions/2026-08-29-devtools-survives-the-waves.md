@@ -3,7 +3,7 @@
 > **SUPERSEDED 2026-09-01 — the opposite shipped.** `devtools` was dissolved
 > into `stackgen` and deleted; the north star closed at **two**. The plan that
 > reversed this is
-> [`docs/plans/2026-09-01-devtools-dissolution.md`](../../plans/2026-09-01-devtools-dissolution.md),
+> [`docs/plans/archived/2026-09-01-devtools-dissolution.md`](../../plans/archived/2026-09-01-devtools-dissolution.md),
 > whose §H answers the reasoning below argument by argument.
 >
 > **The body is left exactly as written.** A superseded decision is evidence,

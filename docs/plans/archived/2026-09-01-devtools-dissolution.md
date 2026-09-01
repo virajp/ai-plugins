@@ -1,8 +1,27 @@
 # Plan: dissolving `devtools` into `stackgen`
 
-**Status: approved 2026-09-01, not started.** Every design decision below is
-settled. Execution runs **end to end** and stops only for the orchestrator gates
-named in §I — never to re-ask something this document already answers.
+**Status: complete, 2026-09-01.** All eleven units landed across five commits —
+`b1e5e86d` (U1, U2), `cbc15e8b` (U4–U8), `d4872335` (U9), `a55e92aa` (U10),
+`4cbc8c70` (U11) — merged as `cb66ca84`. Two things the plan did not anticipate.
+U5's `kind:` fix on the three repo-axis bundles needed a **name**, so
+`workspace` was minted alongside `toolchain-manager` — the category
+`repo.stack.template` had always been and never had a word for; the
+marketplace's eleven kinds are ten plus that. And §C's doctrine turned out not
+to be enough on its own: `materializer.md` still asserted the `.claude/`-only
+boundary in the negative, so an unplanned U12 (`d9d8c859`) taught the landing
+procedure the tier — the landing set, the composition order and the mode.
+
+**All three orchestrator gates are discharged.** U3's audit found the four
+duplicate gates lossless and `eslint` the one real merge, as predicted. Gate 4,
+the materialization smoke test, ran on a scratch repo on 2026-09-01 and
+**passed**: both bundles resolve at their fixed slugs, all five component refs
+resolve, the four gate skills plus the manager land in `.claude/skills/`, 17
+task files land 755, mise itself resolves all 18 task names, and `code:all`
+exits 0 against a repo that has chosen nothing. The negative control confirms
+the risk was real — a task file at 644 vanishes from `mise tasks` entirely.
+Consent for the merge to `develop` was given; the two tags are **not** cut,
+which is the normal state on `develop` and is what `mise run plugins:release`
+does off `main`.
 
 This retires `devtools` as a plugin and lands everything it ships inside
 `stackgen`, taking the marketplace from **3 plugins to 2** (`vwf`, `stackgen`)
