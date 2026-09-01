@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+#MISE description="Initialise a fresh git worktree (lighter than setup:all)"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# vwf's git-workflow probes for this task by name before falling back to
+# `setup:all`, so the name is part of a contract that already ships — a repo
+# without it silently takes the slower path.
+#
+# The difference from `setup:all` is scope, not depth: a fresh worktree shares
+# the machine's tools and the repo's history, so it needs its submodules checked
+# out and its dependencies installed, and nothing else. No secret setup, no
+# plugin reconciliation, no upgrades.
+
+line_sep "="
+print_header "Checking out submodules ..."
+git -C "${MISE_PROJECT_ROOT}" submodule update --init --recursive
+
+line_sep "="
+print_header "Reshimming mise ..."
+mise reshim
+mise install
+
+line_sep "="
+mise run setup:deps:install
+
+line_sep "="
+print_header "Worktree ready!"

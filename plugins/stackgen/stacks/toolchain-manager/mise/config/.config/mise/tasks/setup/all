@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+#MISE description="Set up or upgrade everything this repo needs on your machine"
+#MISE depends=["init"]
+
+#USAGE flag "--all" help="Also set up every git submodule"
+#USAGE flag "--clean" help="Remove caches and installed dependencies before installing"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The entry point a human runs. Alias it in [shell_alias]:
+#   setup     = "mise run setup:all"
+#   setup-all = "mise run setup:all --all"      # when the repo has submodules
+#
+# This file is the ORCHESTRATOR and names no tool. Every step is a task the
+# stack overlay fills; a step with no fill announces itself and the run
+# continues. Keep it that way — a tool named here is a tool every repo
+# scaffolded from this template inherits whether or not it chose it.
+
+have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
+
+CLEAN_FLAG=""
+[[ "${usage_clean:-false}" == "true" ]] && CLEAN_FLAG="--clean"
+
+line_sep "="
+mise run setup:mise
+
+line_sep "="
+mise run setup:secrets
+
+line_sep "="
+mise run setup:deps:all ${CLEAN_FLAG}
+
+# External dependencies — emulators, containers, local queues — are OPTIONAL.
+# A repo that needs none has no `setup/external/` at all, so this is a probe
+# rather than a slot: absence is silent, not a placeholder telling the user to
+# go configure something they do not want.
+#
+# Only `update` is wired. It pulls and builds; it does not start anything.
+# Booting services is a deliberate act (`setup:external:start`), not a side
+# effect of refreshing your toolchain.
+if have_task setup:external:update; then
+  line_sep "="
+  mise run setup:external:update
+fi
+
+line_sep "="
+mise run setup:precommit
+
+line_sep "="
+mise run setup:ai
+
+# Submodules are set up only on request: the common case is working in one
+# repo, and recursing by default turns every setup into the slowest one.
+if [[ "${usage_all:-false}" == "true" ]]; then
+  while read -r submodule; do
+    [ -n "$submodule" ] || continue
+    line_sep "="
+    print_header "Setting up ${submodule} ..."
+    line_sep "="
+    mise run --cd "${MISE_PROJECT_ROOT}/${submodule}" setup:all ${CLEAN_FLAG}
+  done < <(git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true)
+fi
+
+line_sep "="
+print_header "Setup complete!"

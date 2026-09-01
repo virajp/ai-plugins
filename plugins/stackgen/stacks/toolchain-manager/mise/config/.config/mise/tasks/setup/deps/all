@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+#MISE description="Install this repo's package-manager dependencies"
+#MISE hide=true
+
+#USAGE flag "--clean" help="Delete installed dependencies and caches before installing"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `setup:deps:*` is the LANGUAGE PACKAGE MANAGER's surface, and nothing else.
+# Services a product runs against — emulators, containers, local queues — are
+# `setup:external:*`, a sibling. Keeping them apart is what lets a repo have one
+# and not the other, which is the common case in both directions.
+#
+# The verbs, and which are required:
+#
+#   install    REQUIRED. Every package manager has one. Ships as a slot.
+#   upgrade    optional — move the lockfile forward (`uv lock --upgrade`)
+#   outdated   optional — report what has moved on
+#   audit      optional — report known vulnerabilities in the tree
+#   cleanup    optional — delete installed deps, lockfiles and caches
+#
+# Only `install` is called unconditionally; the rest are probed by name. An
+# overlay that has no `upgrade` is not unconfigured — its package manager simply
+# does not separate installing from upgrading, and a placeholder there would
+# report a gap that does not exist.
+
+have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
+
+if [[ "${usage_clean:-false}" == "true" ]] && have_task setup:deps:cleanup; then
+  line_sep "-"
+  mise run setup:deps:cleanup
+fi
+
+line_sep "-"
+mise run setup:deps:install
+
+if have_task setup:deps:outdated; then
+  line_sep "-"
+  mise run setup:deps:outdated
+fi
+
+if have_task setup:deps:audit; then
+  line_sep "-"
+  mise run setup:deps:audit
+fi

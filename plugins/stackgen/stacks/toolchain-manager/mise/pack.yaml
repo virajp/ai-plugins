@@ -1,0 +1,15 @@
+name: mise
+summary: The repo's toolchain manager — the .config/ three-file split selected
+  by MISE_ENV, and the file-based task library everything else invokes.
+version: 0.1.0
+type: toolchain-manager
+kind: toolchain-manager
+axis: repo
+# All five topics of the toolchain-manager bar (assets/kinds.md): tool pinning
+# & the config split, environment values, the task library contract, the
+# mandatory task set, and bootstrap & CI parity.
+#
+# A toolchain manager satisfies no vwf harness capability — it is what the
+# harness tasks are run BY. What it contributes is the repo-axis fact that the
+# task names exist at all.
+harness: n/a

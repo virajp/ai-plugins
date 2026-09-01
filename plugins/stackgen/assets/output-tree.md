@@ -195,7 +195,7 @@ entries:
   - path: .config/mise/tasks/code/format # a `config/` tier file — outside .claude/
     slug: generated/mise
     component: toolchain-manager/mise # which component's version won, per file
-    source: pack/toolchain-manager/mise@1.0.0
+    source: pack/toolchain-manager/mise@0.1.0
     hash: <content hash at landing>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`

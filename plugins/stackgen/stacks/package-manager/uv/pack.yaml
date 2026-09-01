@@ -1,0 +1,11 @@
+name: uv
+summary: Dependency resolution, locking, virtualenv management and process
+  running for Python — one tool where the ecosystem historically had four.
+version: 0.1.0
+type: package-manager
+package_manager: uv
+kind: language-bundle
+axis: repo
+# Authored ahead of its bundle: no `language/python` component and no python
+# bundle exist yet, so nothing can compose this pack. See conventions.md.
+harness: n/a

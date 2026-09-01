@@ -157,7 +157,7 @@ project config already holds**. Picking from the menu and writing
 exist because a template no menu can offer is not an error — it is invisible,
 which is how a CI-system pack shipped that nothing could ever materialize.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
-  the whole repository rather than to one toolchain in it — one of the two
+  the whole repository rather than to one toolchain in it — one of the three
   compositions rooted at the `repo` axis. A gate meaningful for exactly one
   toolchain is **not** here: it belongs to that language's bundle, which is
   what keeps a polyglot repo from materializing the same scanner once per
@@ -168,6 +168,16 @@ which is how a CI-system pack shipped that nothing could ever materialize.
   — and like a CI-Bundle it is **exactly one**: a repo with two task
   runners has two vocabularies for the same commands, and only one of them
   is the one anything else invokes.
+- A **Workspace-Bundle** is the `package-manager` component that installs
+  and locks the repo's members plus a `build-orchestrator` component where
+  the repo has one — the third composition on the **`repo`** axis, and the
+  only one of the three a user picks: `repo.stack.template` is what selects
+  it, while the other two are `unconditional:` baselines. A single-package
+  repo pins none, which is the edge rather than a gap. The
+  `package-manager` component appears in two kinds' compositions the way
+  `toolchain-gate` does — it carries `language-bundle` topics 7–8 there and
+  the multi-member half here, so its own `kind:` naming `language-bundle`
+  is the seam working rather than a mis-declared pack.
 
 ## Category-level doctrine
 

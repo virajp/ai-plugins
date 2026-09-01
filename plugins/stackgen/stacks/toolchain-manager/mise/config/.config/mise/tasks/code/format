@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+#MISE description="Format the repo's files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The default fill, not a placeholder: every repo has markdown in it from the
+# first commit, so formatting is the one quality gate that works before any
+# stack exists. A stack overlay overwrites this file with one that also formats
+# its own sources — and keeps formatting the markdown, which does not stop
+# mattering once code arrives.
+
+eval "files=(${usage_files:-})"
+
+if [ ! -f "${MISE_PROJECT_ROOT}/dprint.json" ]; then
+  print_warn "No dprint.json — skipping formatting."
+  print_yellow "Add one to format this repo's markdown; see the dprint skill."
+  exit 0
+fi
+
+[[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="debug" || LOG_LEVEL="warn"
+[[ "${usage_fix:-false}" == "true" ]] && ACTION="fmt" || ACTION="check"
+
+print_header "Formatting files ..."
+
+dprint "${ACTION}" \
+  --config "${MISE_PROJECT_ROOT}/dprint.json" \
+  --allow-no-files \
+  --log-level "${LOG_LEVEL}" \
+  "${files[@]}"
+
+print_header "Formatting done"

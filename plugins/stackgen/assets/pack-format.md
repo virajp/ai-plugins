@@ -67,7 +67,7 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo | design | cicd # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
@@ -116,6 +116,7 @@ axis: project | backing | deploy | repo | design | cicd
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
+unconditional: true # omitted by every bundle a user picks — see below
 components:
   - <type>/<slug>@<version> # a shipped pack, copied verbatim
   - <type>/<slug>@generated # no pack covers it — generated on first fetch
@@ -124,6 +125,16 @@ components:
 **This is what a user picks.** A component answers "what is TypeScript";
 a bundle answers "what is a TypeScript service" — and those are different
 questions, which is why a menu of components alone leaves nothing pickable.
+
+**Except where `unconditional: true`.** That key marks the repo baseline —
+a slot with exactly one pack, where a one-entry menu would be theatre and
+where a repo that has picked no stack still needs the thing. It has two
+readers: `stackgen-stack-menu` **excludes** such a bundle from the payload
+it returns, and `/vwf:setup` fetches it by **fixed slug**, never a slug
+constructed from configuration. Two bundles carry it today, because a
+bundle declares one `kind` and these are two: `repo-gates` (`repo-gate`)
+and `mise` (`toolchain-manager`). Nothing about them is recorded in
+`.config/vwf.yaml` — nothing was chosen — only in `lock.yaml`.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the

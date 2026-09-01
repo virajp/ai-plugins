@@ -1,0 +1,14 @@
+name: Ruff
+summary: The lint and format gate for Python — one tool for both halves, run
+  through the project's uv environment rather than a global install.
+version: 0.1.0
+type: toolchain-gate
+kind: language-bundle
+axis: repo
+# Topic 10 of the language-bundle bar, the same placement `eslint` has and for
+# the same reason. NOT a repo-gate: a linter meaningful for exactly one
+# toolchain belongs to that toolchain's bundle.
+#
+# Authored ahead of its bundle: no `language/python` component and no python
+# bundle exist yet, so nothing can compose this pack. See conventions.md.
+harness: n/a

@@ -1,7 +1,7 @@
 ---
 name: bun · workspaces
 axis: repo
-kind: language-bundle
+kind: workspace
 components:
 - package-manager/bun@generated
 ---
