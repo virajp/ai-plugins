@@ -27,13 +27,13 @@ claude plugin marketplace add virajp/ai-plugins   # once
 claude plugin install vwf@virajp-plugins
 ```
 
-One name is the whole list: `devtools` and `stackgen` are vwf dependencies and
-arrive with it at the same scope. `stackgen` is what supplies every bundle Relay
-will pin — the project-axis template with its TypeScript language doctrine,
-Postgres on the backing axis, and the design-tool pack that answers the design
-imports. vwf ships no stack templates of its own, so without `stackgen` the
-stack menus come back empty and, with no design pack materialized,
-`/vwf:design-system` cannot run at all. Scopes and upgrades:
+One name is the whole list: `stackgen` is a vwf dependency and arrives with it
+at the same scope. `stackgen` is what supplies every bundle Relay will pin — the
+project-axis template with its TypeScript language doctrine, Postgres on the
+backing axis, and the design-tool pack that answers the design imports. vwf
+ships no stack templates of its own, so without `stackgen` the stack menus come
+back empty and, with no design pack materialized, `/vwf:design-system` cannot
+run at all. Scopes and upgrades:
 [the installer CLI](../../cli/usage.md#installing-plugins).
 
 **Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is

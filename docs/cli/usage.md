@@ -5,7 +5,7 @@ commands), wires up **graphify**, and **removes** what this toolkit put on your
 machine.
 
 ```sh
-# Install the default plugin set (vwf; devtools arrives as its dependency)
+# Install the default plugin set (vwf; stackgen arrives as its dependency)
 pnpx @askviraj/ai-plugins --all
 
 # Install plugins by name, at either scope
@@ -68,11 +68,9 @@ without one.
 `.claude/settings.json`, resolved from the directory you run in) instead of your
 user profile. A name requested at both scopes installs once, at project scope.
 
-**Installing `vwf` pulls in `devtools` automatically** — Claude resolves plugin
+**Installing `vwf` pulls in `stackgen` automatically** — Claude resolves plugin
 dependencies natively (2.1.143 and later), from the same marketplace, at the
-same scope. That is why `--all` is just `vwf`; every other plugin is installed
-by name because which language and cloud plugins you want is a question about
-your product.
+same scope. That is why `--all` is just `vwf`.
 
 An already-installed plugin is reported as satisfied, never auto-updated — see
 [Upgrading](#upgrading). **No receipt is written at all** — not for a plugin
@@ -94,6 +92,17 @@ validates on every push; the second fetches whatever tags that manifest now
 pins. Each plugin is pinned to its own `<name>-v<version>` tag, so an upgrade
 moves only the plugins whose tag changed — and there is no separately published
 artifact to fall behind.
+
+**One upgrade needs a manual step: removing `devtools`.** That plugin dissolved
+into `stackgen`, so `vwf` stopped declaring it — but dropping a dependency only
+stops it being *installed*, never uninstalls it. On a machine that already had
+it, `devtools-v1.5.0` still resolves and its seven skills keep loading, now
+shadowing the stackgen packs the same doctrine moved into with a stale duplicate
+of each. Neither the CLI nor `claude plugin prune` will do this for you:
+
+```sh
+claude plugin uninstall devtools
+```
 
 ## Nothing is gated at install time
 

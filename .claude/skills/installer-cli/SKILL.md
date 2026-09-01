@@ -139,7 +139,7 @@ found. Do not reason about that map as if it gated the reader.
 
 | Flag               | Notes                                                                                                                      |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `--all`            | install `DEFAULT_INSTALL` (`vwf`) at user scope; `devtools` arrives via Claude's dependency resolution                     |
+| `--all`            | install `DEFAULT_INSTALL` (`vwf`) at user scope; `stackgen` arrives via Claude's dependency resolution                     |
 | `--user <name>`    | install a plugin at user scope; **repeatable** (`multiple: true`)                                                          |
 | `--project <name>` | install a plugin at project scope; repeatable. Project wins a name requested at both scopes                                |
 | `--uninstall`      | enumerate → deselect → remove. Interactive; no TTY refuses once there is something to remove                               |
@@ -157,8 +157,8 @@ where Claude was off `PATH`. Every remaining install *is* a `claude` invocation,
 so there is no case left where forcing means anything.
 
 **The parser is `node:util`'s `parseArgs`, in `args.ts`, and repeatability is
-why.** It was `citty` until `--user vwf --user devtools` was found to install
-only `devtools`: citty's `ArgType` has no array kind, so a repeated flag cannot
+why.** It was `citty` until a repeated `--user` was found to install only the
+last name given: citty's `ArgType` has no array kind, so a repeated flag cannot
 be expressed and the last occurrence silently wins. `--user` and `--project` are
 repeatable again via `multiple: true`, and `args.test.ts` carries the
 both-survive regression test. `parseArgs` also **removed** a runtime dependency

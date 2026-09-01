@@ -1,39 +1,42 @@
 # vwf's dependencies, and the vendored code
 
-Why vwf depends on exactly two plugins, what the retired dependencies became,
-and why the memory layer and the Karpathy guidelines are vendored rather than
+Why vwf depends on exactly one plugin, what the retired dependencies became, and
+why the memory layer and the Karpathy guidelines are vendored rather than
 depended on.
 
 ## Dependencies
 
-`vwf` depends on two plugins — `devtools` and `stackgen` — **both resolved from
-the `virajp-plugins` marketplace itself**, so installing `vwf` needs no other
-marketplace registered. Both are authored here.
+`vwf` depends on one plugin — `stackgen` — **resolved from the `virajp-plugins`
+marketplace itself**, so installing `vwf` needs no other marketplace registered.
+It is authored here.
 
 **`stackgen` is a dependency because without it the stack menu is empty.** The
 four stack axes are closed to what the installed stack plugins declare, and
 since `config_format` 14 there is no *other (describe)* escape. Since 16 that is
 no longer a dead end — the user can defer the axis as `unresolved` and keep
 defining the product — but deferral only moves the wall: `plan` and `execute`
-halt on an unresolved axis, so with no stack plugin installed nothing can be
-built. `devtools`'s adapter retired in Wave C, which left vwf shipping with no
-answer to its own menu. stackgen is the general-purpose stack plugin, so it is
-the one that closes it. **Installing is not using**: stackgen acts only when an
-axis is pinned, so a user adopting vwf first and choosing a stack later pays
-nothing for having it present.
+halt on an unresolved axis, so with no stack plugin installed nothing can be The
+`devtools` plugin's adapter retired in Wave C, which left vwf shipping with no
+answer to its own menu, and `devtools` itself has since dissolved into stackgen.
+stackgen is the general-purpose stack plugin, so it is the one that closes it.
+**Installing is not using**: stackgen acts only when an axis is pinned, so a
+user adopting vwf first and choosing a stack later pays nothing for having it
+present.
 
 `mempalace` and `andrej-karpathy-skills` used to be on that list and are gone as
 plugins: vwf **vendored** their skills. That is the one place third-party code
 is vendored into this repo, and it buys something a dependency could not — see
 The memory layer and The vendored guidelines below.
 
-**`devtools` is load-bearing, not tidiness.** `/vwf:setup` orchestrates
-`/devtools:scaffold`, and a skill vwf cannot see fails **silently** — it looks
-exactly like a skill that ran and returned nothing. Note that `mise`
-legitimately appears in two different keys with two different meanings: the
-**plugin** `devtools` ships its doctrine skill (`dependencies:`), while the
-**binary** `mise` is a mandate `/vwf:doctor` blocks on once a stack axis is
-pinned.
+**stackgen is load-bearing at `setup` too, not only at `architecture`.**
+`/vwf:setup` materializes two **unconditional** bundles through the stack
+adapter, by the fixed slugs `mise` and `repo-gates` — the toolchain manager and
+the repo gates the `devtools` plugin used to scaffold. Fixed rather than
+constructed, because a name assembled from configuration can silently resolve to
+nothing, which is the same failure a skill vwf cannot see already has. Note that
+`mise` legitimately appears in two different meanings: the **bundle** slug
+stackgen materializes, and the **binary** `mise`, which is a mandate
+`/vwf:doctor` blocks on once a stack axis is pinned.
 
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded

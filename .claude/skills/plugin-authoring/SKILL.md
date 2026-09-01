@@ -35,7 +35,7 @@ a user installs. There is no template layer, no render step, and no per-target
 variant.
 
 One file is generated: **`.claude-plugin/marketplace.json`** at the repo root, a
-projection of the 13 per-plugin manifests. Never edit it by hand.
+projection of the 2 per-plugin manifests. Never edit it by hand.
 
 ## The one rule
 

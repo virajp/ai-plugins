@@ -296,9 +296,9 @@ bundle, each with its own allowlist.
 ### The topic bar
 
 A closed list of five topics, one artifact per topic, each individually
-researched and cited. Extracted from the curated archetype — the `devtools`
-plugin's five repo gates. A gate the repo has no surface for is recorded
-`n/a`, never silently absent.
+researched and cited. Extracted from the curated archetype — the five repo
+gates of the `devtools` plugin, which has since dissolved into this one. A
+gate the repo has no surface for is recorded `n/a`, never silently absent.
 
 1. **Format authority** — one formatter for the repo, one root config,
    plugins pinned by version, generated trees excluded, and the escape
@@ -378,9 +378,10 @@ other.
 ### The topic bar
 
 A closed list of five topics, one artifact per topic, each individually
-researched and cited. Extracted from the curated archetype — the `devtools`
-plugin's toolchain-manager skill and its two references. A topic the manager
-has no surface for is recorded `n/a`, never silently absent.
+researched and cited. Extracted from the curated archetype — the mise skill
+and its two references from the `devtools` plugin, which has since dissolved
+into this one. A topic the manager has no surface for is recorded `n/a`,
+never silently absent.
 
 1. **Tool pinning & the config split** — which config layer holds which
    tool (the runtime the product needs, the development-only tools, the
