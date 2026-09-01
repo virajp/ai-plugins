@@ -20,10 +20,19 @@ ready for that conversation and nothing more.
 
 In order:
 
-1. **Tooling.** If the mise config is missing, invoke
-   `/devtools:scaffold`. If it fails, report the error and offer
-   to continue without it, leaving the mise config to the user. **This step
-   defers rather than skips** — see
+1. **Tooling.** Materialize the two `unconditional: true` repo bundles — the
+   toolchain manager and the repo gates — by fetching each with
+   `/<plugin>:<plugin>-stack-template <slug>` per
+   `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, at the **fixed slugs**
+   `mise` and `repo-gates`. Fixed, never constructed: a name assembled from
+   configuration is one that can silently resolve to nothing, which is the
+   rule the `ux-gate` and design-adapter seams already follow. Neither bundle
+   needs a project axis or any stack knowledge, so both land on a blank repo,
+   and neither is recorded in `.config/vwf.yaml` — nothing was chosen, so
+   there is no choice to record; the landing goes in the materializer's own
+   lockfile. Materialization is consent-gated, and a **declined** write is a
+   deferral exactly like a failed fetch. **This step defers rather than
+   skips** — see
    [Tooling defers rather than halting](#tooling-defers-rather-than-halting)
    below; on a blank repo there is no stack to provision against yet, which is
    the normal case here rather than a fault.
@@ -53,17 +62,21 @@ the repo cannot support. Their absence is the **structure-pending** state, which
 
 ## Tooling defers rather than halting
 
-The tooling step — the mise config, the task library, harness provisioning — is
-the one part of setup that needs a stack to act against, and setup runs before
-`/vwf:architecture` has chosen one. It therefore **defers**: it never halts the
-run, and it never continues silently either.
+The tooling step — the repo baseline, the task library, harness provisioning —
+is the part of setup that can need a stack to act against, and setup runs
+before `/vwf:architecture` has chosen one. It therefore **defers**: it never
+halts the run, and it never continues silently either.
 
 Whatever it could not provision is **recorded and named, with its unlock**: what
 was skipped, and what would let it happen — an axis to pin via
-`/vwf:architecture`, or a stack plugin to install. On a blank repo that is
-usually everything stack-shaped, which is the honest state of a repo nobody has
-described a product for yet. Anything it *can* do without a stack — the generic
-mise config, the task library skeleton — it still does.
+`/vwf:architecture`, a stack plugin to install, or a **declined
+materialization** to re-run, whose unlock is `/vwf:setup` again with the config
+write consented. A declined consent is a deferral on exactly those terms: named
+with its unlock, never a halt and never a silent skip. On a blank repo the
+deferred set is usually everything stack-shaped, which is the honest state of a
+repo nobody has described a product for yet. Anything it *can* do without a
+stack — the two unconditional repo bundles, `mise` and `repo-gates` — it still
+does.
 
 **setup never writes `unresolved`.** That value arrives only from an
 `/vwf:architecture` run, which offered the axis and had it deferred

@@ -69,16 +69,16 @@ CLI.
 when you need more than the summary here. The `.claude/skills/` rows also
 auto-apply the moment you edit the tree they govern; `release` is `/release`.
 
-| Read                                       | For                                                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                |
-| [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest   |
-| [`.claude/docs/installer-cli.md`][cli]     | the `@askviraj/ai-plugins` shape a maintainer needs — flags, receipts, the source map      |
-| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the two tag families, the workflows, the rituals  |
-| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, the docs tree it maintains, its dependencies     |
-| [`.claude/skills/plugin-authoring/`][auth] | the ten checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
-| [`.claude/skills/installer-cli/`][icli]    | the receipt kinds, the interactive uninstall, the packaging traps                          |
-| [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible       |
+| Read                                       | For                                                                                           |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                   |
+| [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest      |
+| [`.claude/docs/installer-cli.md`][cli]     | the `@askviraj/ai-plugins` shape a maintainer needs — flags, receipts, the source map         |
+| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the two tag families, the workflows, the rituals     |
+| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, the docs tree it maintains, its dependencies        |
+| [`.claude/skills/plugin-authoring/`][auth] | the eleven checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
+| [`.claude/skills/installer-cli/`][icli]    | the receipt kinds, the interactive uninstall, the packaging traps                             |
+| [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible          |
 
 [repo]: .claude/docs/repo-shape.md
 [plug]: .claude/docs/plugins.md
@@ -110,7 +110,7 @@ bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
 ```
 
-**One file is generated**: the marketplace manifest, a projection of the 3
+**One file is generated**: the marketplace manifest, a projection of the 2
 plugin manifests. Note the two neighbours that read confusingly:
 `.claude-plugin/` is that generated manifest, while `.claude/` is this repo's
 own skills, docs, agents and worktrees. Neither is `plugins/`.
@@ -124,8 +124,8 @@ Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
 which is the installer's and whose trigger surface must stay untouched):
 
 - **`plugins:marketplace`** — generates `.claude-plugin/marketplace.json` from
-  the 3 plugin manifests; **`--check`** fails if the committed file differs.
-- **`plugins:check`** — validates the authored tree, ten rules.
+  the 2 plugin manifests; **`--check`** fails if the committed file differs.
+- **`plugins:check`** — validates the authored tree, eleven rules.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
 - **`vitest run`** — the `scripts/` and `cli/` suites.
@@ -148,14 +148,13 @@ in [`repo-shape.md`][repo].
 
 ## Plugins
 
-Three plugins ship. Each row's linked doc is authoritative; the cells are an
+Two plugins ship. Each row's linked doc is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                             |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. → [`vwf-plugin`][vwf] |
-| `devtools` | The developer-machine toolchain — the mise skill, `/devtools:scaffold`, and the repo-level gates (`dprint`, `eslint`, `gitleaks`, `grype`, `pre-commit`). A vwf dep. → [`plugins.md`][plug]                    |
-| `stackgen` | The principles-driven stack materializer — 33 packs and 31 bundles across nine kinds for the covered path, a Context7-researched generator for the uncovered tail. A vwf dep. → [`plugins.md`][plug]           |
+| Plugin     | Is                                                                                                                                                                                                                                                                                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. → [`vwf-plugin`][vwf]                                                                            |
+| `stackgen` | The principles-driven stack materializer — 36 packs and 32 bundles across eleven kinds for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager and gates since `devtools` dissolved into it. A vwf dep. → [`plugins.md`][plug] |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine: the
@@ -169,9 +168,10 @@ and the shared doctrine in `assets/`. It ships **no** stack templates and names
 no technology; what each axis offers comes from a stack plugin behind the
 stack-adapter contract.
 
-It depends on exactly two plugins, `devtools` and `stackgen`, both resolved from
-this marketplace. `mempalace` and `andrej-karpathy-skills` are **vendored**
-rather than depended on; `markdown` and `context7` were **absorbed**.
+It depends on exactly one plugin, `stackgen`, resolved from this marketplace.
+`devtools` was the other until it dissolved into stackgen. `mempalace` and
+`andrej-karpathy-skills` are **vendored** rather than depended on; `markdown`
+and `context7` were **absorbed**.
 
 The workflow runs `setup` → `product` → `architecture` → `design-system` →
 `blueprint` → `plan` → `execute`, with `verify` and `feedback` closing the loop.
@@ -297,7 +297,7 @@ not correctness, and `prefixSkillNames` is gone.
 
 ```sh
 # The wrapper: registers the marketplace and installs in one run
-pnpx @askviraj/ai-plugins --all                      # vwf (+ devtools, stackgen) at user scope
+pnpx @askviraj/ai-plugins --all                      # vwf (+ stackgen) at user scope
 pnpx @askviraj/ai-plugins --project <plugin-name>    # into this repo
 
 # Or Claude's own commands directly — the same thing, unsequenced
@@ -305,15 +305,19 @@ claude plugin marketplace add --scope user virajp/ai-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 
-Available plugin names: `vwf`, `devtools`, `stackgen`. Every one of them is
-authored here — no name on this list is re-listed from another repo. (The
-statusline is not among them and is not a plugin — it is a separate package,
+Available plugin names: `vwf`, `stackgen`. Every one of them is authored here —
+no name on this list is re-listed from another repo. (The statusline is not
+among them and is not a plugin — it is a separate package,
 `brew install virajp/tap/claude-status`.)
 
-Installing `vwf` pulls in its dependencies (`devtools`, `stackgen`)
-automatically from the same `virajp-plugins` marketplace — no other marketplace
-needs to be registered. `mempalace` is not a name here at all — its memory layer
-ships inside `vwf`. The reasoning is
+Installing `vwf` pulls in its dependency (`stackgen`) automatically from the
+same `virajp-plugins` marketplace — no other marketplace needs to be registered.
+`mempalace` is not a name here at all — its memory layer ships inside `vwf`, and
+`devtools` is not one either — its toolchain and gate doctrine ships inside
+`stackgen`. **A machine that installed `devtools` before it dissolved must
+uninstall it by hand** (`claude plugin uninstall devtools`): an update simply
+stops listing it as a dependency, leaving it enabled and its stale skills
+shadowing the stackgen packs they moved into. The reasoning is
 [`dependencies.md`](.claude/skills/vwf-plugin/references/dependencies.md).
 
 Upgrading is `claude plugin marketplace update virajp-plugins` then

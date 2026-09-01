@@ -23,3 +23,7 @@ dprint itself cannot format.
 
 **Wired as one task name**, and CI runs that same task. See the hook-runner
 component for the parity rule this depends on.
+
+**The repo formatter runs first in `code:format`**, ahead of any language- or
+package-manager-specific formatting step that component wires into the same
+task.

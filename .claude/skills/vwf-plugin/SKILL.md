@@ -22,12 +22,12 @@ The references below are an index of which file owns what, not a second copy of
 their contents — a prose copy of the skill table drifted twice in one session
 before it was cut.
 
-| Read                         | For                                                                                                      |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
-| [`skills-and-agents.md`][sa] | the `/vwf:` workflow skills and their gates, the subagents, the auto-applying doctrine skills            |
-| [`assets.md`][as]            | `assets/` — which file owns which doctrine — plus `hooks/` and `vendor/`                                 |
-| [`docs-tree.md`][dt]         | the `docs/blueprint/` tree vwf writes, the OKF profile, and the two format stamps                        |
-| [`dependencies.md`][de]      | why `devtools` and `stackgen`, what the retired dependencies became, the memory layer, the vendored code |
+| Read                         | For                                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| [`skills-and-agents.md`][sa] | the `/vwf:` workflow skills and their gates, the subagents, the auto-applying doctrine skills |
+| [`assets.md`][as]            | `assets/` — which file owns which doctrine — plus `hooks/` and `vendor/`                      |
+| [`docs-tree.md`][dt]         | the `docs/blueprint/` tree vwf writes, the OKF profile, and the two format stamps             |
+| [`dependencies.md`][de]      | why `stackgen`, what the retired dependencies became, the memory layer, the vendored code     |
 
 [sa]: references/skills-and-agents.md
 [as]: references/assets.md
@@ -35,31 +35,31 @@ before it was cut.
 [de]: references/dependencies.md
 
 Adding a skill and picking its invocation mode is in
-[`CLAUDE.md`](../../../CLAUDE.md); the ten checker rules and the authoring traps
-are the sibling `plugin-authoring` skill.
+[`CLAUDE.md`](../../../CLAUDE.md); the eleven checker rules and the authoring
+traps are the sibling `plugin-authoring` skill.
 
 **Foundations & ordering.** The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 with `verify` (post-deploy) and `feedback` (production intake) closing the loop
 back into `product`/`blueprint`/`plan`. `setup` is the Phase-0 bootstrapper — it
 onboards a repo (detect-or-ask topology via MCQ, consent-gated reconciliation
-into the `docs/blueprint/` format, `/devtools:scaffold` for the mise config, the
-CLAUDE.md vwf section, the memory tree and `mempalace.yaml`, the
-`environment.md` bootstrap) and is **re-runnable**: re-running *is* the resume
-mechanism, since Step 0 re-resolves the mode from what is on disk and a
-conforming repo resolves to `current`. **It runs none of the foundations** — it
-ends by printing the chain and offering to start `/vwf:product`, because each of
-those commands resolves its own mode and reports what it did, which a gate
-inside setup could only guess at on their behalf. `product.md` (the Phase −1
-outcome contract, type `vwf-product`, gated by the `product-reviewer`) and
-`architecture` (the registry) are both unconditionally required before
-`blueprint` — every **flow's** Purpose must `Serves:`-link a product goal anchor
-(entities trace to goals transitively via their `Used by:` flow links), which
-the `blueprint-reviewer` verifies and the minimalism check traces to.
-`design-system` is a second foundation, **required once the registry has a UI
-project** (some project declares a **screen platform**): `blueprint` halts on a
-flow with a Screens surface if `docs/blueprint/design-system.md` is missing.
-`environment.md` (the per-project env-var/secret catalog, type
+into the `docs/blueprint/` format, the `mise` and `repo-gates` bundles through
+the stack adapter, the CLAUDE.md vwf section, the memory tree and
+`mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
+re-running *is* the resume mechanism, since Step 0 re-resolves the mode from
+what is on disk and a conforming repo resolves to `current`. **It runs none of
+the foundations** — it ends by printing the chain and offering to start
+`/vwf:product`, because each of those commands resolves its own mode and reports
+what it did, which a gate inside setup could only guess at on their behalf.
+`product.md` (the Phase −1 outcome contract, type `vwf-product`, gated by the
+`product-reviewer`) and `architecture` (the registry) are both unconditionally
+required before `blueprint` — every **flow's** Purpose must `Serves:`-link a
+product goal anchor (entities trace to goals transitively via their `Used by:`
+flow links), which the `blueprint-reviewer` verifies and the minimalism check
+traces to. `design-system` is a second foundation, **required once the registry
+has a UI project** (some project declares a **screen platform**): `blueprint`
+halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
+missing. `environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and

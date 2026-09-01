@@ -27,7 +27,7 @@ claude plugin install vwf@virajp-plugins
 ```
 
 The marketplace is **this repo on GitHub**. `.claude-plugin/marketplace.json` at
-the repo root lists all 7 plugins, each with a `git-subdir` `source` naming this
+the repo root lists both plugins, each with a `git-subdir` `source` naming this
 repo, that plugin's subdirectory, and a `<name>-v<version>` tag. The manifest
 sits at the root because that is where Claude looks when the repo is added; the
 sources themselves are absolute, so each plugin is fetched at its own tag rather
@@ -39,8 +39,11 @@ before. What is worth knowing:
 - **Scope is yours to pick.** `--scope project` on either command keeps the
   registration or the install to one repo; without it, both are user-level.
 - **Dependencies install themselves.** `claude plugin install vwf` pulls in
-  `devtools` from the same marketplace at the same scope. An uninstall leaves a
-  dependency behind, which is what `claude plugin prune` is for.
+  `stackgen` from the same marketplace at the same scope. An uninstall leaves a
+  dependency behind, which is what `claude plugin prune` is for. So does
+  *dropping* one: `devtools` left vwf's dependency list when it dissolved into
+  `stackgen`, and an already-installed copy stays enabled until you run
+  `claude plugin uninstall devtools` yourself.
 - **Upgrading is two commands**, and the first is easy to forget:
   `claude plugin marketplace update virajp-plugins` refreshes the catalog, then
   `claude plugin update <name>` takes the new version. Restart the agent

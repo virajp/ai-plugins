@@ -18,7 +18,7 @@ product's whole walk through the workflow, the journey-shaped guides are in
 # Once
 claude plugin marketplace add virajp/ai-plugins
 
-# Installs vwf and its two dependencies, devtools and stackgen
+# Installs vwf and its one dependency, stackgen
 claude plugin install vwf@virajp-plugins
 ```
 
@@ -81,18 +81,18 @@ Nothing else about memory needs installing. The two mempalace skills are
 auto-save hooks are reimplemented here, so memory arrives with the plugin rather
 than depending on anything being reachable at install time.
 
-`vwf` also depends on two plugins — `devtools` and `stackgen` — resolved from
-the same `virajp-plugins` marketplace. Claude Code **auto-installs and
-auto-enables** them when you enable `vwf` (requires Claude Code ≥ 2.1.143).
+`vwf` also depends on one plugin — `stackgen` — resolved from the same
+`virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
+when you enable `vwf` (requires Claude Code ≥ 2.1.143). `devtools` was a second
+dependency until it dissolved into `stackgen`; if your machine still has it,
+`claude plugin uninstall devtools` — an upgrade stops listing it but leaves it
+enabled, shadowing the stackgen packs its skills moved into.
 
-`devtools` is a dependency rather than an optional extra because `/vwf:setup`
-orchestrates `/devtools:scaffold`, and a skill vwf cannot see fails silently.
-
-`stackgen` is one because vwf's stack menu is the union of what the installed
-stack plugins declare, and the four axes carry no *other (describe)* option — so
-with no stack plugin present, `/vwf:architecture` asks a question you cannot
-answer. Having it installed costs nothing if you are not ready to choose a
-stack: stackgen acts only when an axis is pinned.
+`stackgen` is a dependency because vwf's stack menu is the union of what the
+installed stack plugins declare, and the four axes carry no *other (describe)*
+option — so with no stack plugin present, `/vwf:architecture` asks a question
+you cannot answer. Having it installed costs nothing if you are not ready to
+choose a stack: stackgen acts only when an axis is pinned.
 
 The Markdown/documentation skills and the Context7 docs server used to be two
 more dependencies. They are **part of `vwf` now**: `documentation-standards` and
@@ -795,9 +795,11 @@ inert rather than merely wrong). Nothing is written until you approve; it works
 in a worktree, never deletes, and **never moves a source file** — a layout that
 differs from its topology's grouping, and an `iac` project sitting in another
 project's repo, both end the run as written recommendations rather than as
-moves. It scaffolds tooling through `/devtools:scaffold`, merges a vwf section
-into your `CLAUDE.md`, writes a `.graphifyignore` at the repo root (the
-vwf-standard excludes, plus any committed-but-not-code trees it detects — see
+moves. It materializes the repo's toolchain manager and gates through the stack
+adapter — the `mise` and `repo-gates` bundles, fetched by fixed slug rather than
+offered as a menu pick — merges a vwf section into your `CLAUDE.md`, writes a
+`.graphifyignore` at the repo root (the vwf-standard excludes, plus any
+committed-but-not-code trees it detects — see
 [Code intelligence](#code-intelligence)), bootstraps `environment.md` from the
 repo's existing env-var and secret usage (names only), detects the repo's
 verification-harness capabilities (dev server, E2E, staging mode), and stamps
@@ -1880,7 +1882,5 @@ queries that library's documentation when a question is about a specific library
   `/vwf:screens` and `/vwf:design-system` import through, materialized into the
   repo's `.claude/`. Its `ci-system` kind implements the delivery-pipeline
   contract vwf states.
-- [devtools](./devtools.md) — a vwf dependency; `/vwf:setup` orchestrates
-  `/devtools:scaffold`.
 - [`claude-status`](https://claude-status.virajp.dev) — the statusline, and the
   caps hook that pauses a long `/vwf:execute` run. macOS on Apple silicon only.

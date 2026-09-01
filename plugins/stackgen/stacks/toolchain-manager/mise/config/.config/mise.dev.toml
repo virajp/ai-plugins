@@ -1,0 +1,37 @@
+# The developer laptop — loaded when MISE_ENV=dev.
+#
+# Everything a human needs locally but a pipeline does not. Developers export
+# MISE_ENV=dev in their shell so this layer loads automatically; a task that
+# guards a local-only side effect does it with [ "$MISE_ENV" != "dev" ] rather
+# than assuming a variant is loaded.
+
+[settings]
+env_shell_expand     = true
+status.missing_tools = "always"
+
+[tools]
+# Development tools only — never the runtime, which mise.toml already pins.
+# These are what the shipped task library actually shells out to: code:format
+# runs dprint, setup:precommit runs pre-commit, and a code:sec fill reaches for
+# the scanners. Because they live here, the aggregate gate needs the dev
+# toolchain loaded — `MISE_ENV=dev mise run code:all`.
+dprint     = { version = "latest" }
+gitleaks   = { version = "latest" }
+grype      = { version = "latest" }
+pre-commit = { version = "latest" }
+taplo      = { version = "latest" }
+
+[shell_alias]
+# The bootstrap entry point, for the humans who run it.
+setup     = "mise run setup:all"
+setup-all = "mise run setup:all --all" # when the repo has submodules
+
+[env]
+PRE_COMMIT_HOME = "$HOME/.cache/pre-commit"
+
+# The DEVELOPMENT values of anything the app reads at runtime — verbose
+# logging, local hosts, emulator endpoints, test credentials. The variable
+# NAMES must match what mise.ci.toml overrides, so dev and production differ in
+# value and never in vocabulary.
+LOG_LEVEL   = "trace"
+RUNTIME_ENV = "development"

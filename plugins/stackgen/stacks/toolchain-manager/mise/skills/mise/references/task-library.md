@@ -10,10 +10,11 @@ Every repo ships the same mandatory set. The **contract** — helpers, headers,
 flags — is identical across stacks; only the commands *inside* `code/*` and
 `setup/*` change with the tech stack.
 
-These tasks ship as ready-made templates with this plugin under `assets/tasks/`
-(a shared `common/` set plus a `node/`, `flutter/`, or `python/` overlay).
-**`/devtools:scaffold` copies them in** — author from those, not from scratch. The
-snippets below show the shape; the templates are the source of truth.
+The `common/` set ships as this component's `config/` payload and is copied in,
+already wired to the contract below; the stack-divergent files arrive with the
+language and package-manager components, which materialize **after** this one
+and overwrite at the same paths. **Author from what landed, not from scratch** —
+the snippets below show the shape, the landed files are the source of truth.
 
 ## Task-file anatomy
 
@@ -40,6 +41,9 @@ print_header "Doing the thing ..."
   `[ "$MISE_ENV" != "dev" ]` so the identical task is a no-op in CI.
 - Every task file is **bash** (`#!/usr/bin/env bash`) — the whole library is
   bash-only so it runs on CI runners that lack zsh.
+- Every task file must land **executable (755)**. mise runs the file directly,
+  so one without its exec bit fails as an *unknown task* rather than as a
+  permission error. `mise run init` is what restores the bit.
 
 ## `_scripts/helpers` — sourced by every task
 
@@ -101,13 +105,13 @@ The same set everywhere; the **commands inside differ by stack**.
 
 | Task              | Does                                                | Stack-specific bits                                                                  |
 | ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `code/format`     | format (`--fix`) or check formatting                | **common ships a real default** — dprint over the repo's markdown. Node adds `sort-package-json`; Flutter adds `dart format lib/` |
-| `code/lint`       | lint (`--fix` applies fixes)                        | **slot** — common ships a placeholder. Flutter adds `dart analyze --fatal-infos` + `dependency_validator`                        |
-| `code/sec`        | dependency + secret scan                            | **slot** — the scanners come from the pinned repo-gate components                                                                |
-| `code/precommit`  | run pre-commit on changed files (`--all` for all)   | identical. **Fails when a hook fails** — the caller decides whether to ignore it                                                  |
-| `code/git-config` | reject forbidden local git config (`--fix` removes) | identical — identity & gpg keys must stay global, never local                                                                    |
-| `code/worktrees`  | list worktrees across the repo and its submodules   | identical — git only                                                                                                             |
-| `code/all`        | aggregator: `format` → `lint` → `sec`               | compiled stacks (TS monorepo) prepend a typecheck, e.g. `code:check` → `turbo check`                                             |
+| `code/format`     | format (`--fix`) or check formatting                | **common ships a real default** — dprint over the repo's markdown. A Node overlay adds `sort-package-json`; a Flutter one adds `dart format lib/` |
+| `code/lint`       | lint (`--fix` applies fixes)                        | **slot** — common ships a placeholder. A Flutter overlay adds `dart analyze --fatal-infos` + `dependency_validator`                              |
+| `code/sec`        | dependency + secret scan                            | **slot** — the scanners come from the pinned repo-gate components                                                                                |
+| `code/precommit`  | run pre-commit on changed files (`--all` for all)   | identical. **Fails when a hook fails** — the caller decides whether to ignore it                                                                  |
+| `code/git-config` | reject forbidden local git config (`--fix` removes) | identical — identity & gpg keys must stay global, never local                                                                                    |
+| `code/worktrees`  | list worktrees across the repo and its submodules   | identical — git only                                                                                                                             |
+| `code/all`        | aggregator: `format` → `lint` → `sec`               | compiled stacks (a TS monorepo) prepend a typecheck, e.g. `code:check` → `turbo check`                                                          |
 
 `code:all` is the one-command gate. `precommit` and `git-config` are wired into
 the pre-commit hooks and `setup` — not into `code:all`.
@@ -125,8 +129,8 @@ dev toolchain to be loaded (`MISE_ENV=dev`).
 ## Slots and their placeholders
 
 Four common tasks ship **unfilled**: `code/lint`, `code/sec`, `setup/secrets`
-and `setup/deps/install`. The task name is the contract; the mechanism belongs to
-whichever stack the repo pins.
+and `setup/deps/install`. The task name is the contract; the mechanism belongs
+to whichever stack the repo pins.
 
 Each carries a `#PLACEHOLDER` marker, sources `_scripts/placeholder`, and calls
 `placeholder_notice`. That prints the reason, then greps the repo's own task
@@ -139,7 +143,9 @@ formatted and gated from day one, and the unfilled slots announce themselves
 rather than halting the aggregator that called them.
 
 A slot stops being one by being **overwritten** — the overlay ships its own file
-at the same path, marker and all gone. Nothing edits a placeholder in place.
+at the same path, marker and all gone. Nothing edits a placeholder in place, and
+nothing fills one by hand: a repo that has picked no stack is *supposed* to see
+the placeholder output.
 
 ## `setup/*` — bootstrap & upgrade
 
@@ -165,6 +171,10 @@ setup     = "mise run setup:all"
 setup-all = "mise run setup:all --all"   # when the repo has submodules
 ```
 
+**Keep it idempotent: re-running `setup:all` must converge, never error.** It is
+the re-sync command as much as the bootstrap one, so a step that only works on a
+clean machine is a step that breaks the second run.
+
 ### `setup/deps/*` — the package manager, and only that
 
 Two sibling surfaces, kept apart because a repo routinely has one and not the
@@ -175,14 +185,14 @@ other in both directions:
 
 `deps/` is a folder rather than a file because a package manager has verbs:
 
-| Task                 | Required | Is                                                              |
-| -------------------- | -------- | --------------------------------------------------------------- |
-| `setup:deps:all`     | yes      | the aggregator `setup:all` calls                                |
-| `setup:deps:install` | yes      | **the slot** — install from the lockfile                        |
-| `setup:deps:upgrade` | no       | move the lockfile forward                                       |
-| `setup:deps:outdated` | no      | report what has moved on                                        |
-| `setup:deps:audit`   | no       | report known vulnerabilities in the tree                        |
-| `setup:deps:cleanup` | no       | delete installed deps, lockfiles and caches (`--clean` runs it) |
+| Task                  | Required | Is                                                              |
+| --------------------- | -------- | --------------------------------------------------------------- |
+| `setup:deps:all`      | yes      | the aggregator `setup:all` calls                                |
+| `setup:deps:install`  | yes      | **the slot** — install from the lockfile                        |
+| `setup:deps:upgrade`  | no       | move the lockfile forward                                       |
+| `setup:deps:outdated` | no       | report what has moved on                                        |
+| `setup:deps:audit`    | no       | report known vulnerabilities in the tree                        |
+| `setup:deps:cleanup`  | no       | delete installed deps, lockfiles and caches (`--clean` runs it) |
 
 **The task path carries no tool name.** `setup:pnpm:*`, `setup:uv:*` and
 `setup:app:*` are gone — the overlay fills `setup:deps:install` and the contract
@@ -192,19 +202,10 @@ polyglot monorepo already gets one library per project, via
 
 **Only `install` is required, and only it ships as a slot.** The others are
 probed by name. That distinction matters: an overlay with no `upgrade` is not
-unconfigured — pnpm simply does not separate installing from upgrading — and a
-placeholder there would report a gap that does not exist. A slot means *the
-tool is unchosen*; absence means *this manager has no such verb*.
-
-- **Node**'s fill: `install` (`pnpm install --recursive`), `outdated`, `audit`,
-  `cleanup` (dist/`node_modules`/lockfiles/tsbuildinfo + store prune). No
-  `upgrade` — nothing in the Node overlay moves a lockfile forward.
-- **Python**'s: `install` (`uv sync --all-extras`), `upgrade`
-  (`uv lock --upgrade` + re-sync), `outdated`, `cleanup` (`.venv` + cache
-  prune). The only overlay that distinguishes install from upgrade.
-- **Flutter**'s: `install` (SDK config **and** `flutter pub get` — one task,
-  because `pub get` resolves against whichever platforms the SDK has enabled),
-  `outdated`, `cleanup`.
+unconfigured — some package managers simply do not separate installing from
+upgrading — and a placeholder there would report a gap that does not exist. A
+slot means *the tool is unchosen*; **absence means this manager has no such
+verb**.
 
 ### `setup/external/*` — optional, and absent when unwanted
 
@@ -222,12 +223,13 @@ Booting services is a deliberate act (`setup:external:start`), not a side effect
 of refreshing your toolchain. Guard the lifecycle tasks with
 `[ "$MISE_ENV" != "dev" ]` so CI skips them.
 
-`worktree:init` is the lighter sibling — submodules, mise, `setup:deps:install`,
-and nothing else. Note it calls `install` directly rather than `deps:all`: a
-fresh worktree shares the machine's tools and the running services, so it needs
-its own dependencies and no service refresh, no secret setup, no plugin
-reconciliation and no upgrades. **vwf's git-workflow probes for it by name**
-before falling back to `setup:all`, so a repo without it silently takes the
-slower path.
+## `worktree/init` — the lighter sibling
 
-Keep it idempotent: re-running `setup:all` must converge, never error.
+`worktree:init` does submodules, mise, `setup:deps:install`, and nothing else.
+Note it calls `install` directly rather than `deps:all`: a fresh worktree shares
+the machine's tools and the running services, so it needs its own dependencies
+and no service refresh, no secret setup, no plugin reconciliation and no
+upgrades.
+
+**vwf's git-workflow probes for it by name** before falling back to `setup:all`,
+so a repo without it silently takes the slower path.

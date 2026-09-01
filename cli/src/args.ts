@@ -4,12 +4,12 @@
  * **`node:util`'s `parseArgs` replaced `citty`, and the reason was a bug rather
  * than a preference.** citty's `ArgType` is `boolean | string | enum |
  * positional` — no array kind — so a repeated flag is not expressible in it at
- * all and the last occurrence silently wins. `--user vwf --user devtools`
- * installed only `devtools` and said nothing about the name it dropped.
+ * all and the last occurrence silently wins. `--user vwf --user stackgen`
+ * installed only `stackgen` and said nothing about the name it dropped.
  *
  * **`--user` and `--project` are repeatable again**, and `multiple: true` is
  * the sanctioned mechanism — the array kind citty could not express, which is
- * how `--user vwf --user devtools` once installed only `devtools` and said
+ * how `--user vwf --user stackgen` once installed only `stackgen` and said
  * nothing about the name it dropped. `parseArgs` stays regardless: it is the
  * platform, it costs no dependency, and it works on this package's
  * `engines.node` floor (verified on 18.20.8).
@@ -169,7 +169,7 @@ export function renderUsage(): string {
     "    claude plugin marketplace add virajp/ai-plugins",
     "    claude plugin install vwf@virajp-plugins",
     "",
-    "  Installing vwf pulls in devtools. Upgrade with",
+    "  Installing vwf pulls in stackgen. Upgrade with",
     "  `claude plugin marketplace update virajp-plugins` then",
     "  `claude plugin update <name>`.",
     "",

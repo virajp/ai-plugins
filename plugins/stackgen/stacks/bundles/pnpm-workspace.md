@@ -1,7 +1,7 @@
 ---
 name: pnpm · workspace
 axis: repo
-kind: language-bundle
+kind: workspace
 components:
 - package-manager/pnpm@0.1.0
 ---

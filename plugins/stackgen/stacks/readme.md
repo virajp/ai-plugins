@@ -71,8 +71,9 @@ plugin name to build from, and a name assembled from configuration is one that
 can silently resolve to nothing.
 
 **Wave D — `deploy-target/container-image`**, kind `deploy-target`, the
-eighth kind. Folded from `devtools`' Docker/OCI doctrine, and the fold split
-it in two, because that skill was two skills wearing one hat:
+eighth kind. Folded from the Docker/OCI doctrine of the `devtools` plugin
+(since dissolved into this one), and the fold split it in two, because that
+skill was two skills wearing one hat:
 
 - **The deploy artifact** — the build file, its ignore file, and promoting
   one digest rather than rebuilding per environment — is this pack, and it
@@ -144,8 +145,9 @@ rather than omitting them: deployed environments take their secrets from the
 platform that runs them. That is the contract's "a clause a tool cannot satisfy
 is stated as such" rule doing what it exists for.
 
-`devtools` loses its `doppler` skill in the same landing — the second pack to
-retire its source skill on arrival.
+The `devtools` plugin lost its `doppler` skill in the same landing — the
+second pack to retire its source skill on arrival. That plugin has since
+dissolved into this one entirely; nothing named `devtools` ships any more.
 
 **The two tool axes, and the stranded pack that forced them.** `design:` and
 `cicd:` are per-project config keys outside the four stack axes, and the bundle
@@ -202,7 +204,7 @@ provides it.
 TypeScript language bundle rather than a repo gate. See the `repo-gate` seam
 in `../assets/kinds.md`.
 
-**33 packs and 31 bundles, across all nine kinds.** No curated plugin stands
-behind any of them any more, so the covered path is exactly this tree, and
-stackgen's standing value beyond it is the uncovered tail:
+**36 packs and 32 bundles, across all eleven kinds.** No curated plugin
+stands behind any of them any more, so the covered path is exactly this tree,
+and stackgen's standing value beyond it is the uncovered tail:
 `generated/<technology-slug>`.

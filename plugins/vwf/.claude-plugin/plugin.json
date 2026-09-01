@@ -29,10 +29,6 @@
   "dependencies": [
     {
       "marketplace": "virajp-plugins",
-      "name": "devtools"
-    },
-    {
-      "marketplace": "virajp-plugins",
       "name": "stackgen"
     }
   ],

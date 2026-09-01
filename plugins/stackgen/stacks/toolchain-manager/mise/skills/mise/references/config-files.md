@@ -5,6 +5,10 @@ writing or editing `mise.toml`, `mise.dev.toml` or `mise.ci.toml`. The rules
 that decide **which** file a tool, setting or env value belongs in — and the
 Node gpg rule — stay in the skill itself and are not repeated here.
 
+These three files ship as this component's `config/` payload, so a materialized
+repo already has them. This reference is what you author against when a repo
+needs one the payload did not cover, or when you are editing one that landed.
+
 ## `mise.toml` — the common base
 
 ```toml
@@ -25,6 +29,8 @@ python.compile      = false
 python.uv_venv_auto = "create|source"
 
 [env]
+# Only what is identical in every environment.
+DISABLE_TELEMETRY = 1
 
 [tools]
 # Language RUNTIME only — the minimum to run/build the project anywhere
@@ -54,14 +60,16 @@ pre-commit = { version = "latest" }
 taplo      = { version = "latest" }
 
 [shell_alias]
-npx   = "pnpm dlx"
-setup = "mise run setup:all"
+setup     = "mise run setup:all"
+setup-all = "mise run setup:all --all"   # when the repo has submodules
 
 [env]
-NEXT_TELEMETRY_DISABLED = 1
-NODE_NO_WARNINGS        = 1
-PRE_COMMIT_HOME         = "$HOME/.cache/pre-commit"
-_.path                  = { path = "node_modules/.bin", tools = true }
+PRE_COMMIT_HOME = "$HOME/.cache/pre-commit"
+
+# Node-only, when the runtime is Node:
+# NEXT_TELEMETRY_DISABLED = 1
+# NODE_NO_WARNINGS        = 1
+# _.path                  = { path = "node_modules/.bin", tools = true }
 
 # Local/dev values for anything the app reads at runtime
 LOG_LEVEL   = "trace"

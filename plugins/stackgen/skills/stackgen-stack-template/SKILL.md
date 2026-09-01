@@ -67,8 +67,8 @@ Return **only** this, filled from `.claude/stackgen/templates/<slug>.md`:
 
 ```yaml
 slug: <the requested slug>
-axis: project | backing | deploy | repo
-kind: language-bundle | database | cloud-provider | repo-gate | capability-provider | ci-system | app-framework # assets/kinds.md
+axis: project | backing | deploy | repo | design | cicd
+kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool # assets/kinds.md
 components: # the bundle's composition — the per-component dispatch record
   - <type>/<slug>@<pack version> # pack-sourced
   - <type>/<slug>@generated # generated
@@ -108,6 +108,16 @@ check real.
   each component ships the structural slice its type owns within it
   (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`) — the run never invents a
   structure.
+- **A landing is not confined to `.claude/`.** A component may also declare
+  repo config files in a `config/` tree that mirrors the **repo root** —
+  `config/.config/mise/tasks/code/format` lands at
+  `<repo>/.config/mise/tasks/code/format`. It is a **target, not a fifth
+  artifact kind**: copied verbatim, gated on its own tier-2 consent line,
+  merging rather than owning, recorded per file in the lockfile with the
+  component that supplied it, and executable where mise requires it. The
+  procedure is the materializer; what a pack may put there — and the fence
+  that keeps `dprint.json` and `.config/pre-commit-config.yaml` out — is
+  `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`.
 - **The target repo is the current one by default.** In a multi-repo
   product the caller may name a member repo; each repo gets its own
   independent copies and its own lockfile — never one repo's copies pasted

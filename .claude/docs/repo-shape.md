@@ -10,7 +10,7 @@ Plugins are **authored natively for Claude Code**, once, and installed by
 Claude's own plugin commands. What you edit is exactly what a user gets. The
 tree diagram is [`CLAUDE.md`](../../CLAUDE.md)'s and is not repeated here.
 
-**One file is generated**: the marketplace manifest, a projection of the 3
+**One file is generated**: the marketplace manifest, a projection of the 2
 plugin manifests. It lives at the repo **root**, not under `plugins/`, because
 that is where Claude looks when this repo is added as a marketplace. It is
 committed so what users install is inspectable and diffable, and
@@ -20,7 +20,7 @@ Note the two neighbours that read confusingly: `.claude-plugin/` is that
 generated manifest, while `.claude/` is this repo's own skills, docs, agents and
 worktrees. Neither is `plugins/`.
 
-> **Authoring one:** the ten checker rules, the invocation frontmatter, the
+> **Authoring one:** the eleven checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.

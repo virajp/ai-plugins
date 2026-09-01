@@ -179,12 +179,12 @@ describe("installedPlugins", () => {
       installedPlugins({
         enabledPlugins: {
           "vwf@virajp-plugins": true,
-          "devtools@virajp-plugins": true,
+          "stackgen@virajp-plugins": true,
           "something@someone-else": true,
         },
       }),
     )
-      .toEqual(["devtools", "vwf"]);
+      .toEqual(["stackgen", "vwf"]);
   });
 
   it("reads an absent or oddly-shaped settings file as nothing", () => {
@@ -213,7 +213,7 @@ describe("enumerate", () => {
     mkdirSync(join(repo, "graphify-out"), { recursive: true });
     writeFileSync(join(repo, ".graphifyignore"), "docs/memory/\n");
     writeProjectSettings({
-      enabledPlugins: { "devtools@virajp-plugins": true },
+      enabledPlugins: { "stackgen@virajp-plugins": true },
     });
     mkdirSync(join(repo, ".git", "hooks"), { recursive: true });
     writeFileSync(
@@ -225,7 +225,7 @@ describe("enumerate", () => {
 
     insideRepo();
     expect(ids(enumerate(options))).toEqual([
-      "plugin:project:devtools",
+      "plugin:project:stackgen",
       "graphify-hook",
       "graph",
       "graphifyignore",
@@ -371,14 +371,14 @@ describe("removeItem", () => {
   it("runs a project-scope uninstall from the working directory", () => {
     insideRepo();
     writeProjectSettings({
-      enabledPlugins: { "devtools@virajp-plugins": true },
+      enabledPlugins: { "stackgen@virajp-plugins": true },
     });
 
     removeItem(enumerate(options)[0] as Item, options);
 
     expect(tools().at(-1)).toEqual({
       command: "claude",
-      args: ["plugin", "uninstall", "devtools", "--scope", "project"],
+      args: ["plugin", "uninstall", "stackgen", "--scope", "project"],
       cwd: repo,
     });
   });

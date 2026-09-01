@@ -97,7 +97,8 @@ recorded `n/a`, never silently absent.
 8. **Package manager & workspace** — lockfile discipline, supply-chain
    posture including the ecosystem's own audit tooling (the
    `cargo audit`/`deny` class); repo-generic scanners stay repo-gate
-   territory, never here. *(workspace half conditional)*
+   territory, never here. *(workspace half conditional — `n/a` where the
+   repo pins a `workspace` bundle, which is the kind that takes it)*
 9. **Compiler/toolchain config** — toolchain pinning, profiles, lint
    tables.
 10. **Lint & format gate** — wired as tasks.
@@ -262,8 +263,10 @@ component in the bundle:
 The output is a **Repo-Gate-Bundle**
 (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the `toolchain-gate`
 components that apply to a repository as a whole rather than to one
-toolchain inside it. It is the only kind rooted at the `repo` axis, and the
-only one a polyglot repo materializes **once** rather than per language.
+toolchain inside it. It is one of the three kinds rooted at the `repo` axis
+— `toolchain-manager` and `workspace` are the others — and like
+`toolchain-manager` a polyglot repo materializes this one **once** rather
+than per language.
 
 **The seam with `language-bundle` topics 9–10, which is the whole reason
 this kind exists.** A gate whose config is meaningful only for one toolchain
@@ -293,9 +296,9 @@ bundle, each with its own allowlist.
 ### The topic bar
 
 A closed list of five topics, one artifact per topic, each individually
-researched and cited. Extracted from the curated archetype — the `devtools`
-plugin's five repo gates. A gate the repo has no surface for is recorded
-`n/a`, never silently absent.
+researched and cited. Extracted from the curated archetype — the five repo
+gates of the `devtools` plugin, which has since dissolved into this one. A
+gate the repo has no surface for is recorded `n/a`, never silently absent.
 
 1. **Format authority** — one formatter for the repo, one root config,
    plugins pinned by version, generated trees excluded, and the escape
@@ -316,6 +319,10 @@ plugin's five repo gates. A gate the repo has no surface for is recorded
    same task names run in CI, cheap gates ordered before expensive ones,
    and the exclusion set stated **once** rather than drifting per gate.
    This topic is what makes the gates a bundle rather than unrelated tools.
+   It owns only the claim that each gate *is* reachable at a name; what the
+   task library is and what the names are belongs to `toolchain-manager`
+   topic 4 below, and this sentence exists in both places so the two cannot
+   drift.
 
 The bar maps onto components one-to-one for topics 1–4 — one
 `toolchain-gate` component each. **Topic 5 belongs to the hook-runner
@@ -324,6 +331,183 @@ and CI are made to run the same command; it is the one topic that is about
 the others rather than about a tool of its own. A repo with no hook runner
 records topic 5 `n/a` and loses the parity guarantee with it, which is worth
 saying out loud rather than discovering later.
+
+## `toolchain-manager` — the repo's tool pins, environment and task library
+
+The output is a **Toolchain-Manager-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): exactly one
+`toolchain-manager` component, standing alone. It is the second of the three
+kinds rooted at the `repo` axis, and like `repo-gate` a polyglot repo
+materializes it **once** — the manager is what makes several toolchains one
+command surface.
+
+**Three jobs, one component.** It pins the repo's tools, holds the
+environment values they read, and runs the repo's tasks. Alternatives split
+those differently — a pinner that runs nothing, a task runner that pins
+nothing, an env loader that does neither — so the bar is wide enough for a
+combiner and a splitter both, and a component with no surface for a topic
+records it `n/a`, never silently absent.
+
+**The seam with `repo-gate` topic 5, stated in both places on purpose.**
+That topic asserts each gate *is* reachable as one task name and that CI
+runs the same names. Topic 4 below owns **what the task library is and what
+the names are**. A gate says "I am reachable at the security task name"; the
+manager ships that task and the contract every task in the library follows.
+Written once, the two drift the moment only one of them knows about the
+other.
+
+- **Axis**: `repo`.
+- **Structure**: the **topic bar** below, hung per the kind-general rule —
+  a lean router skill plus on-demand `references/` for the
+  reference-shaped topics, which is the shape the curated archetype
+  already has.
+- **Scope**: which layer pins what, what the tasks are called, and how the
+  same tasks run in the pipeline. Never what a gate *checks* — that is
+  `repo-gate`'s. Never the CI system's workflow syntax — that is
+  `ci-system`'s, which installs this manager and then calls its task names.
+  Never a language's build commands, which the tasks wrap rather than
+  define.
+- **Facts & harness**: `harness:` is `n/a` throughout — a toolchain manager
+  satisfies no vwf harness capability; it is what the harness tasks are run
+  *by*. What it contributes is the `repo`-axis fact that the task names
+  exist at all.
+- **Invocation**: paths-scoped to the manager's config files and its task
+  tree, and **not** user-invocable — doctrine the model applies while
+  editing a config or a task file, never a command someone runs.
+
+### The topic bar
+
+A closed list of five topics, one artifact per topic, each individually
+researched and cited. Extracted from the curated archetype — the mise skill
+and its two references from the `devtools` plugin, which has since dissolved
+into this one. A topic the manager has no surface for is recorded `n/a`,
+never silently absent.
+
+1. **Tool pinning & the config split** — which config layer holds which
+   tool (the runtime the product needs, the development-only tools, the
+   CI-only ones), how the active layer is selected, and the rule that
+   nothing is duplicated across layers: a tool pinned twice is a version
+   that can disagree with itself, and the disagreement surfaces on someone
+   else's machine.
+2. **Environment values** — variable names shared across layers with the
+   *values* split per layer, so development and production override the
+   same names rather than each inventing their own. Names here, values
+   never, aligned with `environment.md`.
+3. **The task library contract** — file-based tasks over inline ones, the
+   directory-to-name mapping that makes a task's path its name, the header
+   metadata each task file declares, the shared helpers library the tasks
+   source rather than each restating, and the discipline for a slot the
+   consuming repo must fill in — marked, so an unfilled slot is visible
+   rather than silently a task that does nothing.
+4. **The mandatory task set** — the task names every repo ships regardless
+   of language, which is the vocabulary the rest of the toolkit invokes:
+   the gate-running names and the bootstrap names. A name here is a
+   contract, not a convention — renaming one breaks every caller that never
+   read this file.
+5. **Bootstrap & CI parity** — how a fresh checkout and a fresh worktree
+   reach a working toolchain, how the pipeline runs the *identical* task
+   names, how the layer is selected there, and the per-runtime workarounds
+   a CI runner needs that a laptop does not.
+
+## `workspace` — the repo's members and what crosses between them
+
+The output is a **Workspace-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the `package-manager`
+component that installs and locks the repo's members, plus a
+`build-orchestrator` component where the repo has one. It is the third kind
+rooted at the `repo` axis, and the only one of the three a user **picks**:
+`repo.stack.template` in `.config/vwf.yaml` is the elicited
+workspace-and-package-manager pin, and the bundles of this kind are what it
+selects from. The other two repo-axis kinds are `unconditional:` baselines
+nobody chooses.
+
+**A single-package repo pins nothing here**, and that is the kind's edge
+rather than a gap. Flutter's own bundle says it out loud — mobile apps are
+never monorepos. Where no workspace bundle is pinned, everything below is
+carried by `language-bundle` topic 8 alone.
+
+**The seam with `language-bundle` topic 8, which is why that topic's
+workspace half is marked conditional.** Lockfile discipline, registry
+pinning, the release-age cooldown, the postinstall allowlist and the
+ecosystem's own audit tooling are **per-ecosystem** and stay topic 8: a
+single-package repo needs every one of them and pins no workspace. What this
+kind takes is only the **multi-member** half — who the members are, how work
+crosses them, and what they inherit. Where a `workspace` bundle is pinned,
+topic 8's workspace half is `n/a`, because it is this kind.
+
+A `package-manager` component therefore appears in two kinds' compositions,
+the way `toolchain-gate` does. Its `kind:` names `language-bundle`, where it
+carries topics 7–8; this kind composes the same component for the half a
+workspace adds. That is the seam working, not a mis-declared pack.
+
+- **Axis**: `repo`.
+- **Structure**: the **topic bar** below — **no router skill**, as with
+  `repo-gate`: one paths-scoped doctrine skill per config file the workspace
+  owns (the workspace manifest, the orchestrator config), plus topic 1 as a
+  model-invocable reference beside them. Reference-shaped because there is
+  no file glob that means "choosing a workspace shape", and five short
+  topics do not earn a router.
+- **Scope**: who the members are, how work crosses them, and what they
+  inherit. Never a member's own internal layout — that is the language
+  bundle's. Never the task library, which is `toolchain-manager`'s: an
+  orchestrator runs *beneath* the manager, and this kind states which
+  orchestrator exists, never what the repo's task names are. Never what a
+  gate checks. Never the built artifact, which is the deploy axis's even
+  when every member shares one build file.
+- **Facts & harness**: `harness:` is `n/a` — a workspace satisfies no vwf
+  harness capability. What it contributes is the `repo`-axis facts of the
+  package-manager token and the manifest and lockfile names, which is what
+  `/vwf:setup` detects the repo's manager by.
+- **Invocation**: the config doctrine paths-scoped to the workspace manifest
+  and the orchestrator config, and **not** user-invocable. Topic 1's
+  reference model-invocable.
+
+### The topic bar
+
+A closed list of five topics, one artifact per topic, each individually
+researched and cited. Extracted from the three curated workspace bundles —
+`pnpm-workspace`, `pnpm-turbo` and `bun` — whose bodies already agree on
+this shape. A topic the ecosystem has no surface for is recorded `n/a`,
+never silently absent.
+
+1. **Pick & trade** — what this workspace shape buys and what it costs, and
+   the conditions under which it stops being the answer. This is the topic
+   the three curated bundles spend their opening paragraphs on, because
+   picking between a workspace with an orchestrator and one without is the
+   whole decision `repo.stack.template` records.
+2. **Membership & layout** — which directories are members and how
+   membership is declared: named explicitly, or globbed by a convention. A
+   repo with three members naming all three is a different posture from one
+   that globs `packages/*`, and the difference is what happens to a
+   directory someone adds. This topic also names the committed **lockfile**,
+   which is what identifies the package manager where the manifest key does
+   not — the reason `/vwf:setup` detects by lockfile rather than by
+   `workspaces`.
+3. **Cross-member orchestration** — whether a `build-orchestrator` exists at
+   all, and the consequence either way. With one: the task graph, the
+   dependency edges and what is cached against what a stale cache costs.
+   Without one: the ruling that a member whose build depends on another's
+   output states that ordering **in the task itself**, because nothing is
+   computing it. "No orchestrator" is a decision with consequences, never an
+   absence, and a bundle that leaves it unstated has made it by accident.
+4. **The internal dependency graph** — how one member depends on another:
+   the workspace protocol or path reference, whether a member consumes its
+   neighbour's **source** or its **build output**, and the internal path
+   alias. Whichever answer, it is the one that decides whether a change in
+   one member is visible in another without a build.
+5. **Root-inherited configuration** — the rule that a repo-wide config is
+   declared **once** at the root and inherited by members rather than
+   restated per member, and the mechanism the ecosystem inherits it by
+   (an `extends` key, a symlink, a path). Only the inheritance is this
+   kind's: what the config *says* belongs to the kind that owns the tool —
+   the compiler config to `language-bundle` topic 9, the formatter's to
+   `repo-gate` topic 1.
+
+The bar maps onto components as follows: topics 1, 2, 4 and 5 belong to the
+**`package-manager`** component. **Topic 3 belongs to the
+`build-orchestrator` component** where the bundle has one, and to the
+`package-manager` component where it does not — the one topic whose owner
+depends on the answer, which is what makes stating it mandatory.
 
 ## `capability-provider` — the flavour half of a capability
 
@@ -678,6 +862,15 @@ them is what stops a later wave inventing a shape ad hoc — which is exactly
 what `repo-gate` had to be defined from scratch to fix, because nobody
 reserved it.
 
+`workspace` is the second of those, and its failure mode was worse than
+`repo-gate`'s: the category was already load-bearing — `repo.stack.template`
+had been selecting from its three bundles all along — but because no kind
+existed, all three declared `kind: language-bundle` as a placeholder and
+nothing said otherwise. An unminted kind is not an error anywhere; it is a
+field holding a plausible wrong value. The same placeholder hid on the two
+deploy bundles until Wave D, which makes three, and the lesson is the one
+above: mint the kind when the thing exists, not when a generator needs it.
+
 ## What the reviewer checks per kind
 
 Beyond catalog fidelity and citations, the `stackgen-skill-reviewer`
@@ -685,7 +878,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all nine kinds the structural checklist **is the
+the kind's ruling. For all eleven kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -697,6 +890,18 @@ topics and provider doctrine is part of the bar. For `repo-gate` the
 composition is the gate components together, and one check carries the
 kind: a **language-specific** linter or formatter appearing here is a gap,
 because it belongs to topic 10 of its language bundle. For
+`toolchain-manager` the composition is the one component alone, and two
+checks carry the kind: a task name asserted by a `repo-gate` output that the
+task library does not ship is a gap on this side of the seam, and a router
+skill that is user-invocable is a gap, because this kind's doctrine applies
+while a config is edited rather than on request. For `workspace` the
+composition is the `package-manager` component plus a `build-orchestrator`
+where the bundle has one, and two checks carry the kind: **topic 3 left
+unstated is a gap**, because "no orchestrator" is an answer this kind
+requires out loud rather than an absence a reader may infer, and
+per-ecosystem supply-chain or audit-tooling doctrine appearing here is a gap,
+because it belongs to `language-bundle` topic 8 whether or not the repo is a
+workspace. For
 `capability-provider` the composition is the instance component alone, and —
 as with `database` — citing rather than restating the contract is part of
 the bar. For `ci-system` the composition is one component and **exactly

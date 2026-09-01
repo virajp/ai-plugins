@@ -22,11 +22,20 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
 ## How to answer
 
 1. List `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/*.md`. **Each is one menu
-   entry** — a bundle is what a user picks, because a component answers "what
-   is this language" and a bundle answers "what is a service in it". Its slug
-   is the filename, and `name`, `axis`, `kind`, `platforms` and `artifact` come
-   from the frontmatter (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take
-   the `summary` from the body's opening sentence.
+   entry, except those whose frontmatter says `unconditional: true`** — a
+   bundle is what a user picks, because a component answers "what is this
+   language" and a bundle answers "what is a service in it". Its slug is the
+   filename, and `name`, `axis`, `kind`, `platforms` and `artifact` come from
+   the frontmatter (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take the
+   `summary` from the body's opening sentence.
+
+   **Skip every `unconditional: true` bundle.** Those are the repo baseline —
+   one pack per slot, where a one-entry menu is theatre and where a repo that
+   has picked no stack still needs the thing. `/vwf:setup` materializes them
+   by **fixed slug** — `repo-gates` and `mise` — never a slug constructed
+   from configuration, and never through this menu. Listing one here would
+   offer a choice that is not one, and would let a user decline a baseline
+   nothing else can supply.
 
    **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
    the parts a bundle composes, not options — offering them would ask the user
@@ -59,8 +68,27 @@ generate:
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```
 
-**If `stacks/bundles/` is empty, return `templates: []`** with the same `note`
-and `generate` block — the open entry is what makes an empty list read as a
+**`kinds:` omits `toolchain-manager` and `workspace` deliberately**, and the
+omission is a recorded decision rather than an oversight — an unstated gap
+here reads as one either way, which is why it is written down. Neither is
+generatable **today**:
+
+- **`toolchain-manager`** — making the task runner genuinely pickable is
+  explicitly deferred. vwf still names `mise run` directly rather than
+  reaching a task through the manager the repo pinned, so there is no
+  uncovered tail to generate into: a generated manager would be a second
+  vocabulary nothing calls.
+- **`workspace`** — newly minted. Generating one is untested capability, not
+  preserved capability, and the open entry is a promise about the former
+  only. Its three curated bundles cover the pnpm and bun shapes; an uncovered
+  workspace ecosystem is a bundle to author, not a run to offer.
+
+Both are `kinds.md` kinds regardless, and both may be added here once the
+condition above stops holding.
+
+**If no pickable bundle remains** — `stacks/bundles/` is empty, or every file
+in it is `unconditional: true` — **return `templates: []`** with the same
+`note` and `generate` block — the open entry is what makes an empty list read as a
 decision rather than a fault.
 
 **A bundle whose components are partly `@generated` is listed normally**, with

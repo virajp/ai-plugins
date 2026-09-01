@@ -1,5 +1,15 @@
 # Decision — `devtools` survives; the north star closes at three
 
+> **SUPERSEDED 2026-09-01 — the opposite shipped.** `devtools` was dissolved
+> into `stackgen` and deleted; the north star closed at **two**. The plan that
+> reversed this is
+> [`docs/plans/2026-09-01-devtools-dissolution.md`](../../plans/2026-09-01-devtools-dissolution.md),
+> whose §H answers the reasoning below argument by argument.
+>
+> **The body is left exactly as written.** A superseded decision is evidence,
+> and this one is the strongest case against what was done — read it before
+> reopening the question.
+
 **Date** 2026-08-29 · **Branch** `main` (main checkout, deliberately not a
 worktree) · **Supersedes** the plugin *count* in
 [`2026-08-17-north-star-two-plugins.md`](./2026-08-17-north-star-two-plugins.md),

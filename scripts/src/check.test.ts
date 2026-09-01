@@ -235,6 +235,37 @@ describe("hook scripts", () => {
   });
 });
 
+describe("pack config task modes", () => {
+  const task =
+    "stacks/toolchain-manager/mise/config/.config/mise/tasks/code/format";
+
+  it("accepts an executable task, and ignores the rest of the pack", () => {
+    // The `config/` tier mirrors the repo root, so a pack ships plenty there
+    // that is not a task and has no reason to be executable.
+    const root = tree({
+      alpha: {
+        files: {
+          [task]: "#!/usr/bin/env bash\n",
+          "stacks/toolchain-manager/mise/config/dprint.json": "{}\n",
+        },
+        executable: [task],
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a task file that is not executable", () => {
+    // mise runs a file-based task directly: without the bit it reports an
+    // unknown task, which reads as a pack that never shipped one.
+    const root = tree({
+      alpha: { files: { [task]: "#!/usr/bin/env bash\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      `mise task file is not executable: ${task}`,
+    ]);
+  });
+});
+
 describe("frontmatter", () => {
   it("flags frontmatter a strict YAML parser rejects", () => {
     // Claude's parser is lenient and accepts this; a strict host drops the whole

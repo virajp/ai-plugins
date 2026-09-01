@@ -35,9 +35,42 @@ to a repo, and every write it makes is consent-gated and committed once.
      source.
    - `.claude/hooks/<name>.sh` — **pack-sourced scripts only**; generation
      never emits an executable.
+   - **The repo config files a component declares** — each component's
+     `config/` tree (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`)
+     mirrors the **repo root**, not `.claude/`, so
+     `config/.config/mise/tasks/code/format` lands at
+     `<repo>/.config/mise/tasks/code/format`, exactly the way `skills/`
+     mirrors `.claude/skills/`. It is a **target, not a fifth artifact
+     kind**: copied verbatim like every other pack file, but a **tier-2**
+     one, so it is presented at its own consent line in step 3 rather
+     than riding the file plan
+     (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`).
    - The lockfile update — every path above, with its component ref,
-     source and content hash. The per-component record is what lets sync
-     act on one component alone.
+     source and content hash, plus the **mode** for a `config/` file. The
+     per-component record is what lets sync act on one component alone,
+     and per file it is what makes `config/` precedence auditable: it
+     names which component supplied the version that actually landed.
+
+   **Composition order, and why a bug in it is silent.** More than one
+   component may write into one `config/` tree — `.config/mise/tasks/` is
+   the first destination that happens for. Compose in the order
+   `toolchain-manager`, then `package-manager` / `language`, then
+   `app-framework`; a **later component's file wins**, and the lockfile
+   records per file which one that was. Get it backwards and nothing
+   errors: a stale baseline `code/format` shadowing a language's would
+   simply format less, in a repo where the task still exists and still
+   exits zero.
+
+   **The fence: stackgen writes only what a pack declares in `config/`.**
+   Landing a config tree does not make stackgen the owner of a repo's
+   configuration. It does not acquire the right to write `dprint.json`,
+   `.config/pre-commit-config.yaml`, `package.json` or a CI workflow — a
+   gate component **names** its config file as a prerequisite the repo
+   still needs, and stops there
+   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Charters ratchet:
+   each file the tier absorbs makes the argument for the next one easier,
+   which is why the fence is restated here, where an implementer meets
+   it, and not only where it was decided.
 
    **Never in the set**: CLAUDE.md — that one is vwf's, out of scope
    outright.
@@ -58,6 +91,13 @@ to a repo, and every write it makes is consent-gated and committed once.
    but is **not** in `.claude/stackgen/lock.yaml` is the repo's own — a
    conflict listed for the user to resolve, never a write. Anything not in
    the lockfile is not stackgen's to touch.
+
+   **A `config/` target is checked by exactly this rule, not a softer
+   one.** A repo that already has `.config/mise/tasks/code/format` and no
+   lockfile entry for it wrote that file itself; it is a conflict, and
+   overwriting it would be the one silent write this whole design exists
+   to prevent. The tier **merges, never owns**: only paths this repo's
+   lockfile recorded are ever rewritten or removed.
 
 3. **The dry-run consent gate.** Present the full landing set as a plan —
    every path, created or conflicting, and (for generation) the reviewer's
@@ -104,6 +144,17 @@ to a repo, and every write it makes is consent-gated and committed once.
    the component's skills landed and says the tool will be unreachable —
    never a silent partial landing.
 
+   **The `config/` tree is its own consent line too**, the same tier
+   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). It writes outside
+   `.claude/`, into paths the repo's collaborators own and read, so it is
+   presented as a separate, individually skippable item listing **every
+   target path** — not folded into the file plan above. State the decline
+   outcome in the plan, in these terms: **the skills stay landed and the
+   tasks are simply absent** — a repo with the gate doctrine in
+   `.claude/skills/` and no `mise run code:all` behind it. Say that at
+   the gate, because the failure it prevents is a user discovering it a
+   week later as a missing task.
+
 4. **The local plugin — its own gate, and a larger one.** A component that
    declares an `lsp_servers:` entry, or a `user_mcp_servers:` one, is
    served by the generated local plugin at
@@ -147,6 +198,17 @@ to a repo, and every write it makes is consent-gated and committed once.
    commit otherwise — never `git add -A`). The commit is what makes the
    output repo-owned: collaborators pull files, not a plugin obligation.
 
+   **Preserve the mode when writing a `config/` file, and record it.**
+   Everything under `.config/mise/tasks/**` lands **executable (755)**.
+   The reason is not self-evident and the failure does not read as a
+   permission problem: mise runs a task file **directly**, so a file that
+   lands 644 is reported as an **unknown task** — `mise run code:format`
+   claims the task does not exist while the file sits right there. The
+   restore is `mise run init`, which is what re-marks the task library
+   executable; say so rather than leaving a user to chmod by hand. The
+   mode goes into the file's lockfile entry, so sync writes it back the
+   same way.
+
    The local plugin is written and registered here too, but it is **outside
    the repo and outside the commit** — only its `local_plugin` lockfile
    block is committed, which is what makes removal able to find it.
@@ -164,15 +226,20 @@ to a repo, and every write it makes is consent-gated and committed once.
   diff and the user takes it.
 - **The lockfile is the ownership boundary** — sync diffs against it, and
   paths outside it are invisible to every stackgen write path.
-- **Three targets, and nothing else.** Inside the repo, nothing lands
-  outside `.claude/` except `.mcp.json` — the one project file stackgen may
-  reach, and only behind its own tier-2 consent line — and inside `.claude/`
-  nothing lands outside the output vocabulary. Outside the repo, the **only**
-  path stackgen may write is
+- **Four targets, and nothing else.** Inside `.claude/`, nothing lands
+  outside the output vocabulary. Outside `.claude/` but inside the repo,
+  there are exactly two: `.mcp.json`, and the repo config files a
+  component declares in its `config/` tree — both tier 2, each behind its
+  own consent line, and both **merging, never owning**, so only what the
+  lockfile records is ever rewritten or removed. Outside the repo, the
+  **only** path stackgen may write is
   `~/.claude/plugins/local/stackgen-lsp/.claude-plugin/`, behind the tier-3
   gate. **LSP server configuration never lands in the repo** whatever the
   source ships; it goes to the local plugin, and the need still travels as
   `language_facts` in the payload for `/vwf:doctor` to read.
+- **The `config/` tier is what a pack declares, and no more.** It is not
+  a licence to write the repo's gate configs, manifests or CI workflows
+  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`).
 - **The local plugin is the machine's, not the repo's.** It is user-scoped
   and uncommitted, so it is never assumed present: nothing the repo owns may
   depend on it having been registered.

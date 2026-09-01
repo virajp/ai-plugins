@@ -93,7 +93,7 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
 - **Version reporting.** Check that `claude plugin list` reports each plugin's
   manifest version and not `0.0.0` — an omitted entry version does not leave it
   unset, it resolves by accident through a fallback chain.
-- **The dependency edge.** Installing `vwf` must pull `devtools` automatically,
+- **The dependency edge.** Installing `vwf` must pull `stackgen` automatically,
   from this same marketplace, at the same scope. That is Claude's own native
   behaviour (≥ 2.1.143) and it is the thing that replaced the retired `--all`.
 - **MCP and LSP declarations** ride in the plugin manifest. Confirm they appear

@@ -24,14 +24,14 @@ until you approve. The whole manual, command by command, is
 starting fresh, adopting vwf in a codebase that already works, and running a
 live product — are in **[docs/how-to](./docs/how-to/index.md)**.
 
-Around it the marketplace ships **two more plugins** — `devtools` for the
-developer machine's toolchain, and `stackgen`, which materializes whatever stack
-you pin. Both are vwf dependencies, so installing the workflow brings them. That
-is the point of the split: vwf owns the workflow and names no technology at all,
-and every concrete choice — the language, the framework, the cloud — arrives as
-a `stackgen` pack landed in your own repo rather than as a plugin each
-collaborator has to install. They install through Claude Code's own plugin
-commands, straight from this repo — or through one small CLI,
+Around it the marketplace ships **one more plugin** — `stackgen`, which
+materializes whatever stack you pin, right down to the repo's toolchain manager
+and its gates. It is a vwf dependency, so installing the workflow brings it.
+That is the point of the split: vwf owns the workflow and names no technology at
+all, and every concrete choice — the language, the framework, the cloud, the
+task runner — arrives as a `stackgen` pack landed in your own repo rather than
+as a plugin each collaborator has to install. They install through Claude Code's
+own plugin commands, straight from this repo — or through one small CLI,
 [`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins),
 which sequences those same commands and wires up graphify.
 
@@ -80,7 +80,7 @@ delegating read-heavy work buys, and the rest of the fit questions — is in
 ## Install
 
 One command, which registers the marketplace and installs the workflow —
-`devtools` and `stackgen`, its two dependencies, come with it:
+`stackgen`, its one dependency, comes with it:
 
 ```sh
 pnpx @askviraj/ai-plugins --all
@@ -104,9 +104,9 @@ check.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
-your user profile. Installing `vwf` is normally all you need, since `devtools`
-and `stackgen` follow it as dependencies at the same scope — but either can be
-installed on its own by name:
+your user profile. Installing `vwf` is normally all you need, since `stackgen`
+follows it as a dependency at the same scope — but it can be installed on its
+own by name:
 
 ```sh
 pnpx @askviraj/ai-plugins --project stackgen
@@ -122,6 +122,17 @@ it and `plugin update` re-reads the pins you already have and finds nothing.
 Each plugin is served from its own `<name>-v<version>` git tag rather than from
 `main`, so plugins release independently — an upgrade moves only the ones whose
 tag actually changed, and work merged but not yet tagged never reaches you.
+
+**If you installed `devtools`, uninstall it by hand after upgrading.** That
+plugin has dissolved into `stackgen`, and `vwf` no longer lists it as a
+dependency — but an upgrade only stops *listing* it. The plugin stays installed
+and enabled, its `devtools-v1.5.0` tag still resolves, and its seven skills keep
+loading, now shadowing the stackgen packs the same doctrine moved into with a
+stale duplicate of each. Nothing detects that. One command settles it:
+
+```sh
+claude plugin uninstall devtools
+```
 
 **The statusline used to ship here and no longer does** — it has moved to
 [`claude-status`](https://claude-status.virajp.dev), which is also where the
@@ -174,14 +185,14 @@ Paste one of these, adjusting the plugin name:
   (`disable-model-invocation: true`). If your tool has no equivalent, that
   restriction is lost — the skill still works, but it may fire when you did not
   ask.
-- **Per-plugin dependencies are yours to follow.** `vwf` depends on `devtools`
-  and `stackgen`; nothing outside Claude Code will resolve that for you.
+- **Per-plugin dependencies are yours to follow.** `vwf` depends on `stackgen`;
+  nothing outside Claude Code will resolve that for you.
 
 ## The plugins
 
-Three plugins, each with its own guide. Installing the workflow brings the other
-two, which are its dependencies. The name in code at the end of each entry is
-what you pass to `claude plugin install`.
+Two plugins, each with its own guide. Installing the workflow brings the other,
+which is its dependency. The name in code at the end of each entry is what you
+pass to `claude plugin install`.
 
 ### The workflow
 
@@ -198,15 +209,6 @@ language, no framework, no cloud — which is what lets the rest of this list
 exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
-
-**[devtools](./docs/plugins/devtools.md)** — the developer-machine toolchain in
-one plugin: mise (the three-file `MISE_ENV` split, tool placement, the
-file-based task library) with a `/devtools:scaffold` skill, and the repo gates —
-dprint, ESLint, gitleaks, grype, pre-commit. Its stack adapter retired in Wave
-C, its Docker/OCI doctrine in Wave D and its Doppler doctrine alongside
-stackgen's `secrets-manager` packs, all three to `stackgen`, which leaves it
-holding no secrets doctrine at all. A `vwf` dependency, because `/vwf:setup`
-orchestrates its scaffold skill. `devtools@virajp-plugins`
 
 **[stackgen](./docs/plugins/stackgen.md)** — the principles-driven stack
 materializer. A stack is a composition of **components** — the language, its
@@ -232,16 +234,20 @@ what makes it safe is that every generated server declaration carries an
 extension map, so it never starts in a repo with no matching files. Re-syncing
 against newer packs is an explicit, diffed decision — never a silent overwrite,
 never a `settings.json` edit without separate consent, and removal is by
-subtraction, dropping only the keys your repo's lockfile recorded. 33 packs and
-31 bundles ship across all nine kinds, the newest closing `cloud-provider` — the
-one kind that had been defined but never authored against. stackgen is now the
-only stack plugin: its packs are the covered path, its generator the uncovered
-tail. A `vwf` dependency, because vwf's stack menu is the union of what the
-installed stack plugins offer — with none present it comes back empty, and the
-axes carry no free-text escape. You can defer an axis and keep defining the
-product, but `/vwf:plan` and `/vwf:execute` halt until it is answered. Having it
-installed commits you to nothing; it acts only once an axis is pinned.
-`stackgen@virajp-plugins`
+subtraction, dropping only the keys your repo's lockfile recorded. A pack may
+also declare **repo config files** it owns — the mise config and the file-based
+task library everything else runs through — on the same merges-never-owns terms
+and behind their own consent line; gate configs like `dprint.json` are
+deliberately outside that fence, named as prerequisites rather than written. 36
+packs and 32 bundles ship across all eleven kinds, the newest two being the
+`toolchain-manager` and `workspace` kinds that arrived when the `devtools`
+plugin dissolved into stackgen. stackgen is now the only stack plugin: its packs
+are the covered path, its generator the uncovered tail. A `vwf` dependency,
+because vwf's stack menu is the union of what the installed stack plugins offer
+— with none present it comes back empty, and the axes carry no free-text escape.
+You can defer an axis and keep defining the product, but `/vwf:plan` and
+`/vwf:execute` halt until it is answered. Having it installed commits you to
+nothing; it acts only once an axis is pinned. `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
@@ -307,7 +313,7 @@ machine.
 Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
-# Install the default set (vwf, plus devtools and stackgen as its dependencies), and wire graphify
+# Install the default set (vwf, plus stackgen as its dependency), and wire graphify
 pnpx @askviraj/ai-plugins --all
 
 # See exactly what a run would do, without writing anything

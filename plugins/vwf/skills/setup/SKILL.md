@@ -52,9 +52,10 @@ Read the one the step needs, not all of them.
   whether to commit, stash, or proceed before creating it.
 - **Never move source.** setup writes and moves documentation only. Layout
   drift is a written recommendation — see Recommendations, never moves.
-- **Don't duplicate tools.** `/devtools:scaffold` for mise config. **Never
-  write a README by hand** — `/vwf:readme` owns it, and setup only names
-  it in the chain.
+- **Don't duplicate tools.** The mise config and the repo gates are
+  materialized by the stack adapter, fetched by the fixed slugs `mise` and
+  `repo-gates` — setup never writes either by hand. **Never write a README by
+  hand** either — `/vwf:readme` owns it, and setup only names it in the chain.
 - **Idempotent.** A migrate run reconciles only what drifted; a conforming tree
   yields an empty plan, and Step 0 routes it to `current` before that.
 
