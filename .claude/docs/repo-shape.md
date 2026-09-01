@@ -11,21 +11,30 @@ Claude's own plugin commands. What you edit is exactly what a user gets. The
 tree diagram is [`CLAUDE.md`](../../CLAUDE.md)'s and is not repeated here.
 
 **Two files are generated**, both projections of the same 2 plugin manifests and
-differing in exactly one field per entry — `source`. Both are committed so what
-gets installed is inspectable and diffable, and `plugins:marketplace --check`
-asserts each matches a fresh generation.
+differing in exactly one field per entry — `source`. Only the **published** one
+is committed, so what users install is inspectable and diffable;
+`plugins:marketplace --check` asserts it matches a fresh generation.
 
 `.claude-plugin/marketplace.json` is the **published** one, and it lives at the
 repo **root** because that is where Claude looks when this repo is added as a
 marketplace. Every `source` is a `git-subdir` fetch pinned to a per-plugin tag,
 which is what lets unreleased work sit on `develop`.
 
-`.dev-marketplace/.claude-plugin/marketplace.json` is **local authoring only**
-and is never published. Every `source` is a repo-relative `./plugins/<name>`,
-resolved through the committed `.dev-marketplace/plugins` symlink, so the
-authoring machine runs the working tree rather than the last release. It exists
-because this repo ships a workflow plugin whose author could not otherwise run
-the unreleased version of it.
+`.dev-marketplace/.claude-plugin/marketplace.json` is **local authoring only**,
+**gitignored**, and never published. Every `source` is a repo-relative
+`./plugins/<name>`, resolved through the `.dev-marketplace/plugins` symlink the
+same run creates, so the authoring machine runs the working tree rather than the
+last release. It exists because this repo ships a workflow plugin whose author
+could not otherwise run the unreleased version of it.
+
+**It is gitignored rather than committed**, which was the reverse of the plan's
+D1. Committing it would buy a fresh clone one command, at the price of a second
+file in the tree declaring the marketplace name `virajp-plugins` on the branch
+users read — a footgun that outweighs the convenience, since regenerating is
+`mise run plugins:marketplace`. The consequence is that `--check` has to tell
+**absent** (normal in CI and in a fresh clone) apart from **present but stale**
+(a real bug on a machine that uses it), which is what `MANIFESTS`'s `tracked`
+flag is for.
 
 Three things make that design forced rather than chosen, each probed against the
 real `claude` CLI:
@@ -107,14 +116,16 @@ allows one Trusted Publisher and validates the entry-point filename):
   `tags` and supplying what no manifest holds: the marketplace header, and the
   per-entry `category`, `strict` and `source`. It also writes the
   `.dev-marketplace/plugins` symlink the dev sources resolve through.
-  **`--check`** regenerates both in memory and fails if either committed file
-  differs, or if the symlink is missing or points elsewhere. That mode is the
-  only guard on a file that is generated **and** committed — a manifest edited
-  without a regenerate is invisible to every other check, and the committed
-  manifest keeps advertising the old version. It is what `plugins:render-clean`
-  narrowed down to. **There is no `--dev` flag**: both are written together
-  because a flag is one more thing to forget, and a stale dev manifest fails as
-  a plugin quietly serving yesterday's tree.
+  **`--check`** regenerates both in memory and fails if the committed published
+  file differs, or if a dev manifest that **exists** is stale or its symlink is
+  wrong. An absent `.dev-marketplace/` is reported as not applicable, since it
+  is gitignored and CI never has one. That mode is the only guard on a file that
+  is generated **and** committed — a manifest edited without a regenerate is
+  invisible to every other check, and the committed manifest keeps advertising
+  the old version. It is what `plugins:render-clean` narrowed down to. **There
+  is no `--dev` flag**: both are written together because a flag is one more
+  thing to forget, and a stale dev manifest fails as a plugin quietly serving
+  yesterday's tree.
 - **`plugins:check`** — validates the authored tree. Ten rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **strict-YAML frontmatter**; relative links under

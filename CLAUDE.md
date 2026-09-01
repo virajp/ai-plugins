@@ -105,7 +105,7 @@ plugins/<plugin>/          the authored source, and the installed shape
   skills/ agents/ hooks/ assets/ stacks/ vendor/
   ↓  scripts/src/marketplace.ts
 .claude-plugin/marketplace.json    generated at the repo root, committed
-.dev-marketplace/                  generated too — the authoring machine's
+.dev-marketplace/                  generated too — the authoring machine's, gitignored
 
 cli/src/**                 installer source (TypeScript)
   ↓  tsup
@@ -116,10 +116,10 @@ scripts/src/**             repo tooling: the generator and the checker
 **Two files are generated**, both projections of the same 2 plugin manifests and
 differing in exactly one field per entry — `source`:
 
-| File                                               | Is                                                                                                                                                     |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.claude-plugin/marketplace.json`                  | **published** — what users read from `main`. `git-subdir` at a per-plugin tag, so a merge ships nothing until `plugins:release` cuts it                |
-| `.dev-marketplace/.claude-plugin/marketplace.json` | **local authoring only**, never published. Repo-relative sources through the `.dev-marketplace/plugins` symlink, so this machine runs the working tree |
+| File                                               | Is                                                                                                                                                                    |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude-plugin/marketplace.json`                  | **published** — what users read from `main`. `git-subdir` at a per-plugin tag, so a merge ships nothing until `plugins:release` cuts it                               |
+| `.dev-marketplace/.claude-plugin/marketplace.json` | **local authoring only**, gitignored and never published. Repo-relative sources through the `.dev-marketplace/plugins` symlink, so this machine runs the working tree |
 
 The dev marketplace is what lets the toolkit be **used before it is published**
 — without it, the author runs the last release and a plugin edited today reaches
@@ -157,11 +157,13 @@ in [`repo-shape.md`][repo].
 
 ### Traps worth knowing
 
-- **Both generated marketplace manifests are committed; `bin/` and the
-  per-package `dist/` are gitignored.** A manifest is meant to be diffed in
-  review; a bundle diff is noise. The dev manifest is committed because it is
-  machine-independent — relative paths only — so a fresh clone is one
-  `marketplace add` from working.
+- **Only the published manifest is committed.** `.dev-marketplace/`, `bin/` and
+  the per-package `dist/` are gitignored. The published manifest is meant to be
+  diffed in review; a bundle diff is noise, and a second committed file
+  declaring the marketplace name `virajp-plugins` is a footgun on the branch
+  users read. So `plugins:marketplace --check` reports an **absent** dev
+  manifest as not applicable — the normal state in CI and in a fresh clone — and
+  a **present but stale** one as a failure.
 - **`claude plugin marketplace add` needs a path that looks like one.**
   `add .dev-marketplace` is rejected with *"Invalid marketplace source format"*;
   `add ./.dev-marketplace` works. The leading `./` is not optional.

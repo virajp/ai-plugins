@@ -87,9 +87,11 @@ directory and is unaffected by which mode you are in.
   be reachable from *inside* `.dev-marketplace/`. `plugins:marketplace --check`
   asserts the link, because a checkout that wrote it as a text file resolves to
   nothing and reports as a plugin that is simply absent.
-- **The dev manifest is committed and checked.** Edit a plugin manifest without
-  re-running `plugins:marketplace` and the gate fails, same as for the published
-  one.
+- **The dev manifest is gitignored, and checked only once it exists.** Edit a
+  plugin manifest without re-running `plugins:marketplace` and the gate fails on
+  your machine — but CI, which never generates one, reports it as not
+  applicable. So a fresh clone needs `mise run plugins:marketplace` before the
+  `marketplace add` above, and that is the one setup step you cannot skip.
 - **Nothing here changes what users get.** The published manifest, its tags and
   `plugins:release` are untouched; the dissolution or any other work still
   reaches users only by merging to `main` and cutting the tag.

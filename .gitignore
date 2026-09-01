@@ -60,3 +60,12 @@ docs/memory/runs/
 # prompt route. That is a personal choice rather than the project's, and this repo
 # ships nothing Cursor-specific any more.
 .cursor/
+
+# The authoring machine's develop-tracking marketplace, written by
+# `mise run plugins:marketplace` alongside the published manifest. One machine's
+# local state: it exists so the author can run the working tree rather than the
+# last release. Untracked because a second file in the tree declaring the
+# marketplace name `virajp-plugins` is a footgun on the branch users read, and
+# because regenerating it is one command. `--check` reports it absent rather
+# than failing — see `.claude/docs/dev-marketplace.md`.
+.dev-marketplace/

@@ -9,14 +9,17 @@
  *   `git-subdir` fetch pinned to a per-plugin tag. This is what users read from
  *   `main`.
  * - `.dev-marketplace/.claude-plugin/marketplace.json` — **local authoring
- *   only**, never published. Every `source` is a repo-relative path reaching the
- *   authored tree through the `.dev-marketplace/plugins` symlink, so the
- *   authoring machine runs the working tree rather than the last release.
+ *   only**, never published and **gitignored**. Every `source` is a
+ *   repo-relative path reaching the authored tree through the
+ *   `.dev-marketplace/plugins` symlink, so the authoring machine runs the
+ *   working tree rather than the last release.
  *
  * Both are written and checked together on purpose. A `--dev` flag was the
  * planned shape and is one more thing to forget; a dev manifest that goes stale
  * fails as a plugin quietly serving yesterday's tree, which is the failure this
- * whole file exists to prevent.
+ * whole file exists to prevent. Only the published one is *committed*, so
+ * `--check` treats an absent dev manifest as not applicable and a present-but-
+ * stale one as a failure — see `MANIFESTS`.
  *
  * **Both declare the same marketplace `name`.** That is load-bearing rather than
  * sloppy: a plugin's `dependencies` edge names its marketplace by name, so vwf
@@ -25,11 +28,11 @@
  * consequence is that a machine registers one or the other, never both.
  *
  * The published manifest lives at the **repo root**, not under `plugins/`: it is
- * what Claude Code reads when the marketplace is added from this repo. Both are
- * **committed**, so what gets installed is inspectable and diffable in review —
+ * what Claude Code reads when the marketplace is added from this repo. It is
+ * **committed**, so what users install is inspectable and diffable in review —
  * which is exactly why this needs a `--check` mode. A generated-and-committed
  * file has no other staleness guarantee; `--check` is the successor to the
- * retired `plugins:render-clean`, narrowed to the files still generated.
+ * retired `plugins:render-clean`.
  *
  * **The published projection pins a tag; the dev one deliberately does not.** A
  * relative source resolves against the marketplace root, so it serves whatever
@@ -56,6 +59,7 @@
  *   node scripts/src/marketplace.ts --check    fail if either committed file differs
  */
 import {
+  existsSync,
   mkdirSync,
   readFileSync,
   readlinkSync,
@@ -100,10 +104,25 @@ export const DEV_PLUGINS_LINK = "plugins";
  */
 export type Mode = "published" | "dev";
 
-/** Every manifest this generator owns, in write order. */
-export const MANIFESTS: readonly { mode: Mode; path: string; }[] = [
-  { mode: "published", path: MANIFEST_PATH },
-  { mode: "dev", path: DEV_MANIFEST_PATH },
+/**
+ * Every manifest this generator owns, in write order.
+ *
+ * `tracked` is what `--check` keys off. The published manifest is committed, so
+ * a divergence is a staleness bug and must fail. `.dev-marketplace/` is
+ * **gitignored** — it is the authoring machine's, generated locally, and a
+ * second committed file declaring the marketplace name `virajp-plugins` is a
+ * footgun on the published branch. So on a fresh clone, and in CI, the dev
+ * manifest is legitimately absent: `--check` reports it as not applicable
+ * rather than failing. Present but stale is still a failure, because that is a
+ * real bug on a machine that uses it.
+ */
+export const MANIFESTS: readonly {
+  mode: Mode;
+  path: string;
+  tracked: boolean;
+}[] = [
+  { mode: "published", path: MANIFEST_PATH, tracked: true },
+  { mode: "dev", path: DEV_MANIFEST_PATH, tracked: false },
 ];
 
 /**
@@ -297,11 +316,15 @@ if (import.meta.main) {
   const plugins = readPlugins(join(repoRoot, "plugins"));
   const check = process.argv.includes("--check");
 
-  for (const { mode, path } of MANIFESTS) {
+  for (const { mode, path, tracked } of MANIFESTS) {
     const target = join(repoRoot, path);
     const generated = buildManifest(plugins, mode);
 
     if (check) {
+      if (!tracked && !existsSync(target)) {
+        console.log(`${path} is absent — not generated on this machine.`);
+        continue;
+      }
       const committed = readFileSync(target, "utf8");
       if (committed !== generated) {
         console.error(`${path} is not what the plugin manifests generate.\n`);
@@ -329,12 +352,23 @@ if (import.meta.main) {
 }
 
 /**
+ * Whether this machine has generated the dev marketplace at all.
+ *
+ * `.dev-marketplace/` is gitignored, so "absent" is the normal state in CI and
+ * in a fresh clone — not a fault. Only a *partial* tree is, which is what the
+ * link check below distinguishes.
+ */
+function devMarketplaceExists(repoRoot: string): boolean {
+  return existsSync(join(repoRoot, DEV_MANIFEST_PATH));
+}
+
+/**
  * The symlink every dev `source` resolves through.
  *
- * Committed, so a fresh clone already has it — this only repairs a tree where
- * it went missing, which on a checkout without symlink support means it landed
- * as a text file instead. That failure is silent at install time: the source
- * resolves to nothing and the plugin simply is not there.
+ * Gitignored along with the rest of `.dev-marketplace/`, so this is what
+ * creates it on a fresh clone as well as what repairs a tree where it went
+ * missing. Its absence is silent at install time: the source resolves to
+ * nothing and the plugin simply is not there.
  */
 function writeDevLink(repoRoot: string): void {
   const link = join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK);
@@ -350,6 +384,10 @@ function writeDevLink(repoRoot: string): void {
 
 function checkDevLink(repoRoot: string): void {
   const rel = `${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_LINK}`;
+  if (!devMarketplaceExists(repoRoot)) {
+    console.log(`${rel} is absent — not generated on this machine.`);
+    return;
+  }
   if (!devLinkIsGood(join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK))) {
     console.error(
       `${rel} is not a symlink to ../plugins, so every dev source resolves to `
