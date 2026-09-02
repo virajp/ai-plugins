@@ -78,7 +78,7 @@ Mixed compositions are the ordinary case — a covered language beside an
 uncovered framework copies the language's packs and generates only the
 framework's artifact — so a later re-sync can act on one component alone.
 
-**36 packs and 32 bundles now ship, across all eleven kinds**, starting with
+**38 packs and 32 bundles now ship, across all eleven kinds**, starting with
 `dprint`, `gitleaks`, `grype` and `pre-commit` — the `repo-gate` kind's
 components — and closing with `cloud-provider`, the last kind that had been
 defined but never authored against, which the `cloudflare` and `gcp` packs

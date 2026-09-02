@@ -1,0 +1,24 @@
+name: Markdown
+summary: Markdown as a project's own language — the case where prose with
+  frontmatter is the deliverable rather than documentation beside one, and the
+  toolchain is the repo axis's rather than the language's.
+version: 0.1.0
+type: language
+kind: language-bundle
+axis: project
+platforms: [ plugin ]
+languages:
+  - token: markdown
+    facts:
+      lsp: >-
+        n/a — no language server is provisioned for markdown here. Editors
+        supply their own; nothing this pack lands depends on one, and wiring a
+        server the ecosystem does not agree on would be conjuring rather than
+        configuring
+      mise_tool: >-
+        n/a — markdown has no toolchain to install. What formats and lints it is
+        the repo axis's concern, not the language's
+      manifest: >-
+        n/a — markdown declares no dependencies, so there is no manifest for
+        doctor to check a dependency list against
+harness: n/a
