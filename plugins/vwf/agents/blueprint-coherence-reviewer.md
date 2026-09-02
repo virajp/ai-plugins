@@ -47,6 +47,14 @@ each other lives in `bundle`, so no cross-flow gap is lost to sharding.
 - [ ] Every goal anchor in the passed list is `Serves:`-linked by at least one
       flow.
 - [ ] Every flow's `Serves:` anchors exist in the passed list.
+- [ ] **Goal instrumentation**: every goal's `Measured via:` (read
+      `product.md` under the blueprint root) resolves — a
+      `counter <flow-slug>.<outcome>` form resolves to that counter declared
+      beside the owning flow's Acceptance block, a `counter <entity>.<state>`
+      form to the owning entity doc beside its Lifecycle table; a goal counter
+      no doc declares is a gap. `store-metric` and `external` forms are exempt
+      from resolution but are listed **info-level** in the return, so the
+      operator sees every goal the system itself cannot measure in one place.
 
 **2. Per flow, walked end-to-end**
 
@@ -149,6 +157,17 @@ GAPS:
 2. HARD: <apis/<project>.openapi.yaml — <endpoint/field>> — breaking vs released <project>@<version> without a major-version bump
 ```
 
+**Goal-instrumentation info lines.** When the goal-instrumentation check finds
+goals measured via `store-metric` or `external`, append them after the verdict
+(after `NO GAPS` or the `GAPS:` list) — they are information, never gaps, and
+never turn `NO GAPS` into `GAPS:`:
+
+```text
+INFO — goals not system-measured:
+- <goal-anchor> — <store-metric|external> <detail>
+```
+
 Your entire reply is read verbatim into the orchestrator's context window.
-Output **only** `NO GAPS` or the `GAPS:` list — never echo docs, the checklist,
-your reasoning, or any praise, summary, or fix. One terse line per gap.
+Output **only** `NO GAPS` or the `GAPS:` list (plus the INFO block above when
+it applies) — never echo docs, the checklist, your reasoning, or any praise,
+summary, or fix. One terse line per gap.

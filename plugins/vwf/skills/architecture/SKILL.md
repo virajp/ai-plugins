@@ -264,6 +264,15 @@ production-blocking exception rather than a silent skip. On an update run,
 walk only foundations not yet decided — never re-litigate a recorded
 selection.
 
+**Metrics cross-check.** After the walk, when `docs/blueprint/product.md`
+exists, check its goals' `Measured via:` lines against the observability
+decision: a product that deferred observability (`observability:
+deferred-preprod`) or adapted it away from metrics while any goal writes a
+`counter` Measured-via form is a **flagged contradiction** — the counter has
+nothing to emit it. Surface it and have the user resolve it explicitly: accept
+the observability foundation, or change the goal's measurement source
+(`store-metric` / `external`) via `/vwf:product`. Never record both silently.
+
 Capture each decision as a single short token or list. Record only the decision,
 not the full blueprint — `blueprint` expands it into
 `docs/blueprint/conventions.md` (foundations per their skill references).

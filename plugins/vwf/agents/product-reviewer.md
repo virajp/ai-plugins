@@ -30,6 +30,10 @@ re-elicit the missing decisions with the user.
       `{#goal-<slug>}` anchor, an outcome, a **measurable** metric (a number, a
       target value, a horizon), and where it is measured. "Users are happy" or a
       metric with no target is a gap.
+- [ ] **Measured-via forms**: every goal's `Measured via:` uses exactly one of
+      the four structured forms — `counter <flow-slug>.<outcome>`,
+      `counter <entity>.<state>`, `store-metric <one-line intent>`, or
+      `external <source>`. Free text outside these forms is a gap.
 - [ ] **Slice priority**: a non-empty ordered list; every row names a slice, a
       served goal (matching a real goal anchor), and a one-line why. A rank
       whose "serves goal" names no existing goal is a gap.

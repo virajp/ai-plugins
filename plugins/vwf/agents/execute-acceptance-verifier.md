@@ -66,6 +66,12 @@ staging-capable test).
    vocabulary (e.g. `n/a — e2e_local missing: no test:e2e task`,
    `local_stack missing: no readiness signal`), and let the orchestrator's gate
    decide.
+5. **Assert declared counters** — when the flow doc declares business counters
+   beside its Acceptance block **and** the harness exposes metrics (a metrics
+   endpoint or reader), assert each declared counter increments during the E2E
+   run; a declared counter that does not move is a FAIL. When the harness
+   exposes no metrics, report `COUNTERS: n/a — metrics not exposed` instead —
+   never a failure.
 
 ## Memory (mempalace)
 
@@ -90,12 +96,14 @@ recall tag. Output **only** the block below:
 ```text
 ACCEPTANCE:   # one line per criterion, or the single line "n/a — <what's missing>"
 - [PASS|FAIL|NOT-COVERED] <flow> — <criterion, terse> (test: <file> or "none")
+COUNTERS: ok   # or "n/a — metrics not exposed", "n/a — none declared", or one "- <counter> — did not increment" line each
 SPEC/PLAN GAPS: none   # untestable/ambiguous criteria: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
 RECALL: <slice>/acceptance/<round>   # mempalace tag for the detail (omit if not filed)
 GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
-Any FAIL or NOT-COVERED forces `VERDICT: changes-required`. `n/a` is neither
+Any FAIL or NOT-COVERED forces `VERDICT: changes-required`; a declared counter
+that did not increment counts as a FAIL. `n/a` is neither
 approve nor changes-required — the orchestrator's gate decides. Nothing before
 or after the block.

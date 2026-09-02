@@ -37,7 +37,18 @@ status: draft # draft | reviewed | stable
 
 - Outcome: <the user/business outcome, one line>
 - Metric: <what is measured> — target <value> within <horizon>
-- Measured via: <analytics event / store metric / support volume / ...>
+- Measured via: <one of the four forms below>
+
+<!-- `Measured via:` takes exactly one of the four structured forms:
+
+       counter <flow-slug>.<outcome>     # flow completed/failed/compensated
+       counter <entity>.<state>          # lifecycle-state count
+       store-metric <one-line intent>    # derived from stored data
+       external <source>                 # support volume, app-store, revenue tool
+
+     A `counter` form must also be declared in the owning doc — the flow form
+     beside that flow's Acceptance block, the entity form beside its Lifecycle
+     table — or the coherence reviewer flags the goal as unmeasurable. -->
 
 ## Tiers & entitlements
 
