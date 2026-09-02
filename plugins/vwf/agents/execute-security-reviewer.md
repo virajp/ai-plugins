@@ -26,10 +26,12 @@ high-severity issues.
    `ENGINE: unavailable — manual dimensions
    only` to your return block.
 2. **Add the stack/capability-aware dimension.** Read the architecture
-   registry's declared `capabilities` and `stack`, then identify attack surfaces
-   specific to them (e.g. auth/RBAC for `custom-claims-rbac`,
-   injection/authorization for datastores, signed-URL handling for file storage,
-   webhook signing for integrations, entitlement bypass for payments).
+   registry's declared `capabilities`, `threat_notes`, and `stack`, then
+   identify attack surfaces specific to them (e.g. auth/RBAC for
+   `custom-claims-rbac`, injection/authorization for datastores, signed-URL
+   handling for file storage, webhook signing for integrations, entitlement
+   bypass for payments); each `threat_notes` line names a seeded abuse to
+   check explicitly.
    Threat-model the diff against those surfaces. When the registry declares a
    `packages` common project or a project carrying the `operator-rbac`
    capability (and no `enforcement.rules` waiver in `.config/vwf.yaml` covers

@@ -258,14 +258,16 @@ concern **not applicable** to omit it from the doc entirely.
 **Foundations checklist.** Then walk the **product-foundations** skill's
 checklist — users & operators, observability, audit logs, change logs,
 background processes, data retention & PII, notifications, runtime settings,
-rate limiting, reliability targets, DR & backup. For each **elective**
+rate limiting, reliability targets, DR & backup, cost guardrails, incident
+response. For each **elective**
 foundation: present its default contract in one line and ask via MCQ —
 **accept the default / adapt it / not applicable** — recording the selection
 as its cross-cutting token (e.g. `audit: privileged-destructive`,
 `notifications: [push, email]`, `background:
 durable-worker-ephemeral-service`); a skip simply omits the token (no
 `enforcement:` entry). For each **core** foundation (users & operators,
-observability, reliability targets, DR & backup) the MCQ instead offers
+observability, reliability targets, DR & backup, incident response) the MCQ
+instead offers
 **accept the default / adapt it / defer — not production-bound** — a core
 foundation has no "not applicable"; a deferral records a registry token
 `<foundation>: deferred-preprod`, never an omission. These are elicited

@@ -90,6 +90,7 @@ must go through the rule below. Every other row is mechanical.
 | a registry `capabilities` block with no trust-boundary abuse notes | one worst-plausible-abuse line per trust boundary (external caller, webhook, file upload) — elicited | doc-section | yes |
 | a `conventions.md#reliability` carrying SLOs only | plus expected user count and aggregate request rate at a stated horizon — elicited on first touch | doc-section | yes |
 | `conventions.md#baseline` ending at rule 15 | rule 16, `baseline/expand-contract` | doc-section | |
+| released-API snapshots only under `apis/released/` | plus per-entity `schema.yaml` snapshots in `apis/released/entities/` — written by the next production `/vwf:verify`, nothing to migrate | doc-section | |
 | `conventions.md#pipeline` ending at rule 5 | rules 6–8 — `pipeline/load-proven`, `pipeline/rollback-path`, `pipeline/dependency-audit` | doc-section | |
 | no `conventions.md#incidents` section | the alert-conditions table (condition → destination → runbook), once the incident foundation is accepted | doc-section | |
 | an entity's `Actors & Actions` section | retired — actors are the owning flow's Trigger & Actors | retirement | |

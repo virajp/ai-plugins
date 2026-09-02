@@ -31,8 +31,8 @@ You receive:
 - **Elicited prose** — system overview, project interconnects,
   hosting/deployment details confirmed by the user.
 - **Per-project registry rows** — name, role, path, capabilities, depends_on,
-  doc_unit, and platforms for every project. There is no `stack`
-  row; it is not a registry field.
+  doc_unit, platforms, and any trust-boundary `threat_notes` for every project.
+  There is no `stack` row; it is not a registry field.
 - **Cross-cutting decisions** — one-line selections for system-wide concerns
   (auth, errors, observability, config, testing, integrations, data-retention,
   and any others present).
