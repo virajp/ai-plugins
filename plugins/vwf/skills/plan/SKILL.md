@@ -301,6 +301,13 @@ Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, following
 and `requires:` in particular), the chain position, TDD-ordered steps, and the
 verbatim acceptance-criteria transcription.
 
+**Dark exposure.** A plan doc may declare `exposure: dark` for its slice — the
+slice ships behind a **release flag** in the runtime-settings document (per the
+runtime-settings foundation: same schema/cache/audit path, no new
+infrastructure). Declaring it injects the flag key into the plan — **name,
+owner, removal date** — and an explicit **flag-removal step**, so the flag's
+retirement is planned work, never silently accumulated debt.
+
 **Into the repo whose code this plan changes.** In a `repo` or `monorepo`
 topology that is the one checkout and the rule costs nothing. In `multi-repo` it
 is the member holding the chain element's project — resolve it from `members:`

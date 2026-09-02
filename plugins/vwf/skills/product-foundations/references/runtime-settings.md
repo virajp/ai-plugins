@@ -25,6 +25,11 @@ env vars. Cross-cutting token: `runtime_settings: cached-settings-doc`.
   document with the same schema/cache/audit path — no separate flag
   infrastructure until a product genuinely needs percentage rollouts or per-user
   targeting (that need is elicited, not assumed).
+- **Release flags**: a slice may ship **dark** behind a settings-document flag —
+  the same schema/cache/audit path as any other key, no new infrastructure. A
+  release flag decouples deploy from exposure, so it is temporary by contract:
+  it carries an **owner** and a **removal date**, and a flag past its removal
+  date is a review finding, never silently accumulated debt.
 
 ## Elicit per product
 

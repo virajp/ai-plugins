@@ -82,6 +82,14 @@ literally named `production`).
    and scored) belong to the CI system pinned on the project's `cicd` axis;
    waivable via the standard `pipeline/…` doc-note + `enforcement.rules` waiver
    pair, like any other pipeline rule.
+7. **`pipeline/rollback-path`** — every production deploy has a **stated
+   rollback**: the previous release tag remains deployable, and a release
+   containing a stored-schema change is N-1 compatible per
+   `baseline/expand-contract` (expand and contract land in separate releases),
+   so rolling back never corrupts data. The release act records its rollback
+   target; a release that genuinely cannot roll back (an irreversible step)
+   says so in the release record — irreversibility becomes a visible chosen
+   state, never the silent default.
 
 ## How the surfaces apply it
 
@@ -104,4 +112,5 @@ literally named `production`).
   threshold, so the load run exists before the release it gates.
 - **The execute reviewers** treat a pipeline file that violates the seeded
   `#pipeline` lines (a branch-push deploy, a per-language toolchain install, a
-  missing branch validation) as a finding like any conventions violation.
+  missing branch validation, no rollback provision) as a finding like any
+  conventions violation.

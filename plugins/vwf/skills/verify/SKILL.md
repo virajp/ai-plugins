@@ -129,6 +129,16 @@ just automated feedback):
 - **NOT-COVERED / no harness** → a testing gap; file to room `gaps` and offer a
   plan step next cycle.
 
+**Production failures: name the rollback first.** When this run targeted the
+release environment and a probe or criterion failed, the **first offered
+remedy** is "roll back to `<previous tag>`" — the previous release the release
+record names (the latest prior `apis/released/` snapshot, per
+`pipeline/rollback-path` in
+`${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`) — then fix-forward via the
+routes above. This command **names** the rollback; it never executes a deploy —
+deployment is yours. A release record naming no rollback target (an
+irreversible release) leaves only the fix-forward routes; say so.
+
 ### 5. Release (production only)
 
 Runs only when this run targeted the **release environment** (§1) **and** both

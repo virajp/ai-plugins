@@ -49,6 +49,9 @@ and the codebase patterns. You do not approve code with unverified assumptions.
      rule: a shared data schema defined outside that package, or a third-party
      SDK — a cloud, maps or payment client — imported directly instead of
      through the common package's wrappers, is a finding.
+   - **Release-flag debt** — a release flag (a dark-launch settings key per the
+     runtime-settings foundation, carrying an owner and a removal date) past
+     its removal date is a finding — flag debt never accumulates silently.
    - **Test quality** — tests actually exercise the behaviour, not just
      coverage.
    - **Naming consistency** — with the surrounding code and the docs.
