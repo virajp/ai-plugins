@@ -22,10 +22,11 @@ which is what lets unreleased work sit on `develop`.
 
 `.dev-marketplace/.claude-plugin/marketplace.json` is **local authoring only**,
 **gitignored**, and never published. Every `source` is a repo-relative
-`./plugins/<name>`, resolved through the `.dev-marketplace/plugins` symlink the
-same run creates, so the authoring machine runs the working tree rather than the
-last release. It exists because this repo ships a workflow plugin whose author
-could not otherwise run the unreleased version of it.
+`./plugins/<name>`, resolved into the `.dev-marketplace/plugins/` staging
+directory the same run creates and `plugins:local` fills with `X.Y.Z+N` copies,
+so the authoring machine runs the working tree rather than the last release. It
+exists because this repo ships a workflow plugin whose author could not
+otherwise run the unreleased version of it.
 
 **It is gitignored rather than committed**, which was the reverse of the plan's
 D1. Committing it would buy a fresh clone one command, at the price of a second
@@ -39,28 +40,31 @@ flag is for.
 Three things make that design forced rather than chosen, each probed against the
 real `claude` CLI:
 
-- **The symlink is the only way in.** An absolute path, a
+- **A path inside the marketplace root is the only way in.** An absolute path, a
   `{"source": "directory"|"local", "path": …}` object and a parent-relative
   `../plugins/<name>` are each rejected with `source: Invalid input`. A
   repo-relative path that stays inside the marketplace root is the one accepted
-  form, so the authored tree has to be reachable from within
-  `.dev-marketplace/`.
+  form, so the plugins have to be reachable from within `.dev-marketplace/` —
+  and as **staged copies**, not a symlink to the tree: for a directory source
+  Claude reads the plugin's own `plugin.json` version and ignores the entry's,
+  and `update` compares versions only, so a copy is the only place the `X.Y.Z+N`
+  it needs to see can be written without touching the tracked manifest.
 - **Both manifests carry the same marketplace `name`.** A plugin's
   `dependencies` edge names its marketplace by name, so vwf installed from a
   differently-named dev marketplace would send its `stackgen` edge back to the
   tagged marketplace and fail on a tag that does not exist yet. The consequence
   — one registered at a time, never both — is a feature, not a limitation.
-- **A `ref: develop` variant also works** and needs no symlink, but it serves
+- **A `ref: develop` variant also works** and needs no staging, but it serves
   *pushed* develop. The failure being fixed is "I cannot run what I just
-  changed", so the working-tree form won. It stays the fallback if the symlink
-  ever costs more than it does today.
+  changed", so the working-tree form won. It stays the fallback if staging ever
+  costs more than it does today.
 
 Note the three neighbours that read confusingly: `.claude-plugin/` is the
 published manifest, `.dev-marketplace/` is the local one, and `.claude/` is this
 repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 
-Setup and the refresh loop — including why it is uninstall-then-install rather
-than `claude plugin update` — are [`dev-marketplace.md`](dev-marketplace.md).
+Setup and the refresh loop — `mise run plugins:local`, and the three measured
+CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
 > **Authoring one:** the eleven checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
@@ -114,18 +118,18 @@ allows one Trusted Publisher and validates the entry-point filename):
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
   2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
   `tags` and supplying what no manifest holds: the marketplace header, and the
-  per-entry `category`, `strict` and `source`. It also writes the
-  `.dev-marketplace/plugins` symlink the dev sources resolve through.
+  per-entry `category`, `strict` and `source`. It also creates the
+  `.dev-marketplace/plugins/` staging directory the dev sources resolve into.
   **`--check`** regenerates both in memory and fails if the committed published
-  file differs, or if a dev manifest that **exists** is stale or its symlink is
-  wrong. An absent `.dev-marketplace/` is reported as not applicable, since it
-  is gitignored and CI never has one. That mode is the only guard on a file that
-  is generated **and** committed — a manifest edited without a regenerate is
-  invisible to every other check, and the committed manifest keeps advertising
-  the old version. It is what `plugins:render-clean` narrowed down to. **There
-  is no `--dev` flag**: both are written together because a flag is one more
-  thing to forget, and a stale dev manifest fails as a plugin quietly serving
-  yesterday's tree.
+  file differs, or if a dev manifest that **exists** is stale or its staging
+  path is the retired symlink. An absent `.dev-marketplace/` is reported as not
+  applicable, since it is gitignored and CI never has one. That mode is the only
+  guard on a file that is generated **and** committed — a manifest edited
+  without a regenerate is invisible to every other check, and the committed
+  manifest keeps advertising the old version. It is what `plugins:render-clean`
+  narrowed down to. **There is no `--dev` flag**: both are written together
+  because a flag is one more thing to forget, and a stale dev manifest fails as
+  a plugin quietly serving yesterday's tree.
 - **`plugins:check`** — validates the authored tree. Eleven rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **pack task files executable** (every file a stackgen pack

@@ -10,9 +10,9 @@
  *   `main`.
  * - `.dev-marketplace/.claude-plugin/marketplace.json` — **local authoring
  *   only**, never published and **gitignored**. Every `source` is a
- *   repo-relative path reaching the authored tree through the
- *   `.dev-marketplace/plugins` symlink, so the authoring machine runs the
- *   working tree rather than the last release.
+ *   repo-relative path into `.dev-marketplace/plugins/`, the staged copies of
+ *   the authored tree that `plugins:local` writes under `X.Y.Z+N` versions, so
+ *   the authoring machine runs the working tree rather than the last release.
  *
  * Both are written and checked together on purpose. A `--dev` flag was the
  * planned shape and is one more thing to forget; a dev manifest that goes stale
@@ -60,11 +60,10 @@
  */
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
-  readlinkSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import {
@@ -85,15 +84,18 @@ export const DEV_MANIFEST_PATH =
   `${DEV_MARKETPLACE_DIR}/.claude-plugin/marketplace.json`;
 
 /**
- * The symlink a dev `source` resolves through, relative to `DEV_MARKETPLACE_DIR`.
+ * The directory a dev `source` resolves into, relative to `DEV_MARKETPLACE_DIR`.
  *
- * It has to exist because Claude rejects every other way of naming a local
+ * It holds a **staged copy** of each plugin, written by `plugins:local` with the
+ * version rewritten to `X.Y.Z+N` — the build number Claude's `update` needs to
+ * see a change, kept out of the tracked tree. It has to sit inside the
+ * marketplace root because Claude rejects every other way of naming a local
  * tree: an absolute path, a `{source: "directory"|"local", path}` object, and a
- * parent-relative `../plugins/<name>` are all `source: Invalid input`. A
- * repo-relative path that stays inside the marketplace root is the only accepted
- * form, so the tree has to be reachable from inside `.dev-marketplace/`.
+ * parent-relative `../plugins/<name>` are all `source: Invalid input`. It has to
+ * be a copy rather than a symlink because the version Claude compares is the
+ * plugin's own `plugin.json`, not the marketplace entry's — measured both ways.
  */
-export const DEV_PLUGINS_LINK = "plugins";
+export const DEV_PLUGINS_DIR = "plugins";
 
 /**
  * Which projection to emit.
@@ -242,7 +244,7 @@ export function buildManifest(
  */
 function source(plugin: Plugin, mode: Mode): unknown {
   if (mode === "dev") {
-    return `./${DEV_PLUGINS_LINK}/${plugin.dir}`;
+    return `./${DEV_PLUGINS_DIR}/${plugin.dir}`;
   }
   return {
     source: "git-subdir",
@@ -344,10 +346,10 @@ if (import.meta.main) {
   }
 
   if (check) {
-    checkDevLink(repoRoot);
+    checkDevPluginsDir(repoRoot);
   }
   else {
-    writeDevLink(repoRoot);
+    writeDevPluginsDir(repoRoot);
   }
 }
 
@@ -363,44 +365,46 @@ function devMarketplaceExists(repoRoot: string): boolean {
 }
 
 /**
- * The symlink every dev `source` resolves through.
+ * The directory every dev `source` resolves into.
  *
- * Gitignored along with the rest of `.dev-marketplace/`, so this is what
- * creates it on a fresh clone as well as what repairs a tree where it went
- * missing. Its absence is silent at install time: the source resolves to
- * nothing and the plugin simply is not there.
+ * `plugins:local` fills it; this only makes sure it is a real directory. Until
+ * 2026-09-03 it was a symlink to `../plugins`, which served the working tree
+ * but under the tracked version — so `update` never saw an edit. A symlink
+ * found here is that retired shape and is replaced, since the staged copies
+ * cannot be written through it without rewriting the tracked manifests.
  */
-function writeDevLink(repoRoot: string): void {
-  const link = join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK);
-  if (devLinkIsGood(link)) {
-    return;
+function writeDevPluginsDir(repoRoot: string): void {
+  const dir = join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_DIR);
+  if (isSymlink(dir)) {
+    rmSync(dir);
+    console.log(
+      `replaced the ${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_DIR} symlink — run `
+        + `'mise run plugins:local' to stage the plugins`,
+    );
   }
-  rmSync(link, { force: true, recursive: true });
-  symlinkSync("../plugins", link, "dir");
-  console.log(
-    `linked ${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_LINK} -> ../plugins`,
-  );
+  mkdirSync(dir, { recursive: true });
 }
 
-function checkDevLink(repoRoot: string): void {
-  const rel = `${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_LINK}`;
+function checkDevPluginsDir(repoRoot: string): void {
+  const rel = `${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_DIR}`;
   if (!devMarketplaceExists(repoRoot)) {
     console.log(`${rel} is absent — not generated on this machine.`);
     return;
   }
-  if (!devLinkIsGood(join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK))) {
+  if (isSymlink(join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_DIR))) {
     console.error(
-      `${rel} is not a symlink to ../plugins, so every dev source resolves to `
-        + `nothing.\n\nRe-run 'mise run plugins:marketplace' and stage the result.`,
+      `${rel} is a symlink — the retired shape, under which 'claude plugin `
+        + `update' never sees an edit.\n\nRe-run 'mise run plugins:marketplace', `
+        + `then 'mise run plugins:local'.`,
     );
     process.exit(1);
   }
-  console.log(`${rel} is up to date.`);
+  console.log(`${rel} is a staging directory.`);
 }
 
-function devLinkIsGood(link: string): boolean {
+function isSymlink(path: string): boolean {
   try {
-    return readlinkSync(link) === "../plugins";
+    return lstatSync(path).isSymbolicLink();
   }
   catch {
     return false;

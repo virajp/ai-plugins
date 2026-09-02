@@ -19,17 +19,17 @@ plugin manifests, differing only in each entry's `source`.
 ## Setup, once per machine
 
 ```sh
-mise run plugins:marketplace                    # both manifests + the symlink
+mise run plugins:marketplace                    # both manifests + the staging dir
 claude plugin marketplace remove virajp-plugins # if you have the published one
 claude plugin marketplace add ./.dev-marketplace
-claude plugin install vwf@virajp-plugins --scope user
+mise run plugins:local                          # stage the plugins and install vwf
 ```
 
 `claude plugin list` should then read:
 
 ```text
-❯ stackgen@virajp-plugins   0.19.0   ✔ enabled
-❯ vwf@virajp-plugins        19.9.1   ✔ enabled
+❯ stackgen@virajp-plugins   0.19.0+1   ✔ enabled
+❯ vwf@virajp-plugins        19.10.0+1  ✔ enabled
 ```
 
 stackgen arrives on its own — vwf declares it as a dependency and the dev
@@ -51,22 +51,26 @@ The install is a directory *copy* into
 `~/.claude/plugins/cache/virajp-plugins/<plugin>/<version>/`, keyed by version,
 and `claude plugin update` compares versions only. With the source edited and
 the version unchanged it reports `✔ vwf is already at the latest version` and
-copies nothing — measured, not assumed. So on `develop` every plugin's version
-is **`X.Y.Z+N`**: `X.Y.Z` is the *next* release, and `+N` counts the
-working-tree iterations. `plugins:local` is what moves `N` — for each plugin
-whose tree differs from its installed copy under an unchanged version it bumps
-`+N`, regenerates the manifests, refreshes the marketplace and runs
-`claude plugin update`, which now sees a change. The bump lands in the working
-tree; commit it with the work. A version you already moved by hand is left
-alone.
+copies nothing — measured, not assumed. So the dev marketplace does not serve
+`plugins/` directly. Its sources point into `.dev-marketplace/plugins/`, the
+**staged copies** `plugins:local` writes: each plugin whose tree differs from
+its staged copy is re-copied with its `plugin.json` version rewritten to
+**`X.Y.Z+N`** — the tracked version plus a build number that exists only here —
+then the manifests are regenerated, the marketplace refreshed, and
+`claude plugin update` runs and now sees a change. The tracked manifests stay
+plain semver, nothing is committed per iteration, and `plugins:check` fails a
+tracked manifest that carries a `+N`.
 
-Claude compares versions as **strings**, so `+4` → `+5` registers as an update
-even though semver ranks them equal — and writes the cache directory with the
-`+` as `-` (`vwf/19.10.0-1/`), which is why `plugins:local` reads each install's
-path from `installed_plugins.json` rather than building it. That is measured
-against the real CLI and undocumented, which is why the `+N` never reaches
-users: `plugins:release` refuses a ref that carries one, and dropping it is the
-first step of the release ritual (`.claude/skills/release/`).
+Three measured facts shape that design. The version has to be in the staged
+`plugin.json`, not the marketplace entry: for a directory source Claude reads
+the plugin's own manifest and ignores the entry's `version`, which is why the
+old `.dev-marketplace/plugins` symlink to the tree could never work — it served
+the tracked version. Claude compares versions as **strings**, so `+4` → `+5`
+registers as an update even though semver ranks them equal. And it writes the
+cache directory with the `+` as `-` (`vwf/19.10.0-1/`) **and reuses one it has
+seen before without clearing it** — so `plugins:local` takes `N` past the
+installed number as well as the staged one, and removes a pre-existing cache
+directory for the version it is about to install.
 
 This is the
 [`vwf-edits-do-not-reach-the-running-tools`](../memory/gaps/2026-08-26-vwf-edits-do-not-reach-the-running-tools.md)
@@ -92,14 +96,15 @@ directory and is unaffected by which mode you are in.
 
 - **`add .dev-marketplace` is rejected** — *"Invalid marketplace source
   format"*. Use `./.dev-marketplace` or an absolute path.
-- **The `.dev-marketplace/plugins` symlink is load-bearing.** Every dev `source`
-  is `./plugins/<name>`, resolved against the marketplace root. Claude rejects
-  every other way of naming a local tree — an absolute path, a
+- **`.dev-marketplace/plugins/` is a staging directory, not a symlink.** Every
+  dev `source` is `./plugins/<name>`, resolved against the marketplace root.
+  Claude rejects every other way of naming a local tree — an absolute path, a
   `{"source": "directory"|"local", "path": …}` object, and a parent-relative
-  `../plugins/<name>` all fail with `source: Invalid input` — so the tree has to
-  be reachable from *inside* `.dev-marketplace/`. `plugins:marketplace --check`
-  asserts the link, because a checkout that wrote it as a text file resolves to
-  nothing and reports as a plugin that is simply absent.
+  `../plugins/<name>` all fail with `source: Invalid input` — so the copies have
+  to live *inside* `.dev-marketplace/`. A symlink to `../plugins` was the shape
+  until 2026-09-03; `plugins:marketplace` replaces one it finds and `--check`
+  fails on it, because under it `update` never sees an edit. An empty staging
+  directory reports as plugins that are simply absent: run `plugins:local`.
 - **The dev manifest is gitignored, and checked only once it exists.** Edit a
   plugin manifest without re-running `plugins:marketplace` and the gate fails on
   your machine — but CI, which never generates one, reports it as not

@@ -40,11 +40,11 @@ the old one and nobody's update does anything. Plugin and skill version numbers
 are independent by design; a plugin may hold skills versioned on their own
 cadence, so nothing cross-checks them.
 
-On `develop` the version is **`X.Y.Z+N`** — the next release plus a working-tree
-iteration counter. `mise run plugins:local` moves the `+N` for every plugin
-whose tree changed, so the authoring machine's `update` re-copies; the release
-ritual strips it, and `plugins:release` refuses a ref that still carries one.
-The checker accepts both forms.
+The tracked version is **plain semver, always** — the checker fails a manifest
+carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
+releases is written by `mise run plugins:local` into the gitignored staged copy
+under `.dev-marketplace/plugins/`, never into `plugins/`: that is what lets
+`claude plugin update` re-copy an edit without a commit.
 
 ## `plugin.json` — the manifest
 

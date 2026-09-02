@@ -102,14 +102,20 @@ describe("the manifest", () => {
     ]);
   });
 
-  it("flags a missing or non-semver version", () => {
+  it("flags a missing, non-semver, or build-metadata version", () => {
+    // `1.0.0+3` is the staged dev copy's shape (`plugins:local`); tracked, it
+    // is that local counter leaking into what an install pins to.
     const root = tree({
       alpha: { manifest: { name: "alpha", version: "1.0", description: "x" } },
       beta: { manifest: { name: "beta", description: "x" } },
+      gamma: {
+        manifest: { name: "gamma", version: "1.0.0+3", description: "x" },
+      },
     });
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("version \"1.0\" is not semver"),
-      expect.stringContaining("version undefined is not semver"),
+      expect.stringContaining("version \"1.0\" is not plain semver"),
+      expect.stringContaining("version undefined is not plain semver"),
+      expect.stringContaining("version \"1.0.0+3\" is not plain semver"),
     ]);
   });
 

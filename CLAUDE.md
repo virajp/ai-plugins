@@ -116,10 +116,10 @@ scripts/src/**             repo tooling: the generator and the checker
 **Two files are generated**, both projections of the same 2 plugin manifests and
 differing in exactly one field per entry — `source`:
 
-| File                                               | Is                                                                                                                                                                    |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude-plugin/marketplace.json`                  | **published** — what users read from `main`. `git-subdir` at a per-plugin tag, so a merge ships nothing until `plugins:release` cuts it                               |
-| `.dev-marketplace/.claude-plugin/marketplace.json` | **local authoring only**, gitignored and never published. Repo-relative sources through the `.dev-marketplace/plugins` symlink, so this machine runs the working tree |
+| File                                               | Is                                                                                                                                                                                                                |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude-plugin/marketplace.json`                  | **published** — what users read from `main`. `git-subdir` at a per-plugin tag, so a merge ships nothing until `plugins:release` cuts it                                                                           |
+| `.dev-marketplace/.claude-plugin/marketplace.json` | **local authoring only**, gitignored and never published. Repo-relative sources into `.dev-marketplace/plugins/`, the staged copies `plugins:local` writes under `X.Y.Z+N`, so this machine runs the working tree |
 
 The dev marketplace is what lets the toolkit be **used before it is published**
 — without it, the author runs the last release and a plugin edited today reaches
@@ -143,9 +143,9 @@ Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
 which is the installer's and whose trigger surface must stay untouched):
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
-  2 plugin manifests, plus the `.dev-marketplace/plugins` symlink they resolve
-  through; **`--check`** fails if either committed file, or the symlink,
-  differs.
+  2 plugin manifests, plus the `.dev-marketplace/plugins/` staging directory the
+  dev sources resolve into; **`--check`** fails if the committed file differs,
+  or if that path is the retired symlink.
 - **`plugins:check`** — validates the authored tree, eleven rules.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
@@ -244,10 +244,10 @@ decouples **merged** from **released**. Two tag families, both namespaced:
 | `<name>-v<version>`    | one plugin             | nothing — refs resolve to it |
 | `installer-v<version>` | `@askviraj/ai-plugins` | `release.yml` → npm publish  |
 
-On `develop` a plugin's version is `X.Y.Z+N` — the next release plus a
-working-tree iteration counter that `mise run plugins:local` moves so the
-authoring machine's `claude plugin update` sees each edit. Releasing starts by
-dropping the `+N`; `plugins:release` refuses a ref that still carries one.
+A tracked plugin version is always plain `X.Y.Z` — `plugins:check` fails one
+carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
+releases exists only in the gitignored staged copies `mise run plugins:local`
+writes, so `claude plugin update` sees each edit without a commit.
 
 **Ask the user before running `plugins:release` or `i:release`.**
 
@@ -290,7 +290,7 @@ verdict reads exactly like a hook that decided to stay quiet.
 ## Adding a Plugin
 
 1. Create `plugins/<name>/.claude-plugin/plugin.json` with `name`, `version`
-   (what an install pins to; `X.Y.Z+N` on `develop`, plain `X.Y.Z` to ship) and
+   (what an install pins to; plain `X.Y.Z`, bumped to ship changes) and
    `description`.
 2. Run `mise run plugins:marketplace` and stage the result.
 

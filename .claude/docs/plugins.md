@@ -62,8 +62,8 @@ There is a **second** manifest,
 from the same 2 manifests. It is the authoring machine's and is never published;
 everything below describes the published one unless it says otherwise. The two
 differ in exactly one field per entry — `source` — and the dev form is a
-repo-relative `./plugins/<name>` reaching the authored tree through the
-`.dev-marketplace/plugins` symlink. Why that shape is forced, and the loop for
+repo-relative `./plugins/<name>` into the `.dev-marketplace/plugins/` staging
+directory `plugins:local` fills. Why that shape is forced, and the loop for
 using it, are [`repo-shape.md`](repo-shape.md) and
 [`dev-marketplace.md`](dev-marketplace.md).
 

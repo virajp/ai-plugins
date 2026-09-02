@@ -45,24 +45,21 @@ Each entry in `.claude-plugin/marketplace.json` pins its plugin to a
 materializes the tag the manifest already names.
 
 ```sh
-# on develop: drop the +N from plugins/<name>/.claude-plugin/plugin.json
-#   (19.10.0+3 → 19.10.0; edit X.Y.Z first if the release is minor/major), then
+# on develop: bump plugins/<name>/.claude-plugin/plugin.json, then
 mise run plugins:marketplace     # the ref renames itself
-# commit, merge develop → main, then
+# merge develop → main, then
 mise run plugins:release --dry-run
 mise run plugins:release
 ```
 
-On `develop` a plugin's version is `X.Y.Z+N`: the next release plus the
-iteration counter `plugins:local` moves so the authoring machine's
-`claude plugin update` sees each edit. The release is the commit that strips it.
+The tracked version is plain `X.Y.Z` always; the `X.Y.Z+N` the authoring machine
+runs between releases exists only in the gitignored staged copies
+`plugins:local` writes, and `plugins:check` fails a manifest that carries one.
 
 `plugins:release` tags only the plugins whose ref has no tag yet, so a plugin
 whose version did not move is skipped and its entry stays byte-identical — that
 is what makes releases per-plugin. It refuses to run off `main`, on a dirty
-tree, against a stale manifest, or on a ref that still carries `+N` — users get
-plain semver only, because Claude's acceptance of build metadata is measured,
-not documented.
+tree, or against a stale manifest.
 
 **No GitHub Release and no npm publish.** The tag *is* the release. Users move
 with `claude plugin marketplace update virajp-plugins` (re-reads the pins) then

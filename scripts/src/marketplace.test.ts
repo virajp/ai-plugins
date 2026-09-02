@@ -1,7 +1,7 @@
 import {
   existsSync,
+  lstatSync,
   readFileSync,
-  readlinkSync,
 } from "node:fs";
 import { join } from "node:path";
 import {
@@ -13,7 +13,7 @@ import {
   buildManifest,
   DEV_MANIFEST_PATH,
   DEV_MARKETPLACE_DIR,
-  DEV_PLUGINS_LINK,
+  DEV_PLUGINS_DIR,
   MANIFEST_PATH,
 } from "./marketplace.ts";
 import { readPlugins } from "./plugins.ts";
@@ -189,14 +189,14 @@ describe("the local authoring manifest", () => {
     );
   });
 
-  it.skipIf(!onDisk)("resolves through its symlink", () => {
+  it.skipIf(!onDisk)("resolves into a staging directory, not a symlink", () => {
     // Every dev `source` is `./plugins/<name>`, which resolves against the
-    // marketplace root. Without this link that is a path to nothing, and Claude
-    // reports it as a plugin that simply is not there rather than as an error.
-    expect(
-      readlinkSync(join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_LINK)),
-    )
-      .toBe("../plugins");
+    // marketplace root. A symlink to the authored tree is the retired shape:
+    // it served the working tree under the tracked version, so `update` never
+    // saw an edit. `plugins:local` writes staged copies here under `X.Y.Z+N`.
+    const dir = join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_DIR);
+    expect(lstatSync(dir).isSymbolicLink()).toBe(false);
+    expect(lstatSync(dir).isDirectory()).toBe(true);
   });
 
   it("differs from the published manifest in `source` and nothing else", () => {
@@ -217,7 +217,7 @@ describe("the local authoring manifest", () => {
     for (const entry of parsedDev.plugins) {
       const source = entry["source"];
       expect(source, entry["name"] as string).toBe(
-        `./${DEV_PLUGINS_LINK}/${entry["name"] as string}`,
+        `./${DEV_PLUGINS_DIR}/${entry["name"] as string}`,
       );
       expect(typeof source).toBe("string");
       expect(source as string).not.toContain("..");

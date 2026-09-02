@@ -58,19 +58,7 @@ mapfile -t REFS < <(node -p "
     .plugins.map(p => p.source.ref).join('\n')
 ")
 
-# 5. No build metadata. On develop a version is `X.Y.Z+N` so `plugins:local`
-#    can move it per working-tree iteration; a release drops the `+N` first,
-#    in its own develop commit. A ref that still carries one is that step
-#    skipped, and Claude's acceptance of `+N` versions is measured, not
-#    documented — users get plain semver only.
-for ref in "${REFS[@]}"; do
-  if [[ "${ref}" == *+* ]]; then
-    print_error "${ref} carries build metadata — drop the +N from that plugin's manifest on develop, regenerate, merge, then release."
-    exit 1
-  fi
-done
-
-# 6. Fetch tags so 'already exists' means the remote's answer, not this
+# 5. Fetch tags so 'already exists' means the remote's answer, not this
 #    checkout's. A tag present locally but never pushed is still unreleased.
 git fetch --tags --quiet origin
 
@@ -103,7 +91,7 @@ if [[ "${DRY_RUN}" == "true" ]]; then
   exit 0
 fi
 
-# 7. Annotated tags, then one push. Pushed together so a partial release is not
+# 6. Annotated tags, then one push. Pushed together so a partial release is not
 #    a state anyone has to reason about.
 for ref in "${TO_TAG[@]}"; do
   git tag -a "${ref}" -m "${ref}"

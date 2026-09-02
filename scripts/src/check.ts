@@ -62,8 +62,13 @@ const TOKEN_RE = /`([a-z0-9]+(?:-[a-z0-9]+)+)`/g;
 const LINK_RE = /\]\((\.{1,2}\/[^)\s#]+\.(?:md|ya?ml))(?:#[^)\s]*)?\)/g;
 /** A plugin-root-relative reference, and the path behind it. */
 const ROOT_REF_RE = /\$\{CLAUDE_PLUGIN_ROOT\}\/([A-Za-z0-9_./-]+)/g;
-/** Loose semver — the shape Claude parses a plugin `version` as. */
-const SEMVER_RE = /^\d+\.\d+\.\d+(?:[-+].+)?$/;
+/**
+ * Loose semver, minus build metadata. Claude accepts a `+N` version, and the
+ * dev marketplace uses exactly that for its staged copies (`plugins:local`) —
+ * but a tracked manifest carrying one is that local counter leaking into what
+ * an end-user install pins to.
+ */
+const SEMVER_RE = /^\d+\.\d+\.\d+(?:-.+)?$/;
 
 export function check(repoRoot: string): Finding[] {
   const pluginsRoot = join(repoRoot, "plugins");
@@ -119,8 +124,11 @@ function checkManifest(plugin: Plugin): Finding[] {
 
   if (typeof m.version !== "string" || !SEMVER_RE.test(m.version)) {
     at(
-      `plugin.json version ${JSON.stringify(m.version)} is not semver — it is `
-        + `what an end-user install pins to`,
+      `plugin.json version ${
+        JSON.stringify(m.version)
+      } is not plain semver — it `
+        + `is what an end-user install pins to, and a +N build number belongs `
+        + `only to the staged dev copy`,
     );
   }
 
