@@ -89,6 +89,15 @@ each other lives in `bundle`, so no cross-flow gap is lost to sharding.
 - [ ] The `entities/index.md` `erDiagram` equals the union of the entities'
       Relationships tables — a missing/extra node or edge is a gap (the tables
       are authoritative).
+- [ ] **Released-schema compatibility (hard gap).** When
+      `apis/released/entities/<entity>@<date>.schema.yaml` snapshots exist,
+      diff each living `schema.yaml` against its **latest** snapshot (latest
+      date in the filenames). Any breaking change — a removed or renamed
+      property, a type/format change, a new required property, a narrowed enum
+      — **without** a dated staged-migration note on the owning entity's
+      `index.md` declaring the expand → migrate → contract stages
+      (`baseline/expand-contract`) is a gap marked **HARD**: the orchestrator
+      may not stamp coverage complete over it.
 
 **5. API contracts**
 
@@ -131,8 +140,8 @@ NO GAPS
 ```
 
 Otherwise, a numbered list — each item names the docs involved, the exact
-location, and which rule fails; prefix released-contract compatibility gaps with
-`HARD:`:
+location, and which rule fails; prefix released-contract and released-schema
+compatibility gaps with `HARD:`:
 
 ```text
 GAPS:

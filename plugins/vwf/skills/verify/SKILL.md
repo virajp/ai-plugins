@@ -23,8 +23,8 @@ Two passes: **health** (is every deployed project up) and **acceptance** (do the
 blueprint's flow criteria hold against the real environment). A failure here is
 production feedback — it routes exactly like `/vwf:feedback` input. A clean run
 against **production** additionally offers to record a **release** (§5) —
-freezing each deployed service's API contract, the point from which backward
-compatibility is enforced.
+freezing each deployed service's API contract and every stored entity's schema,
+the point from which backward compatibility is enforced.
 
 ## Halt Conditions
 
@@ -134,9 +134,10 @@ just automated feedback):
 Runs only when this run targeted the **release environment** (§1) **and** both
 passes came back clean (every probed project healthy, every criterion `PASS`).
 Only then, read [Release freeze](references/release-freeze.md) and follow it —
-the confirmation prompt, the per-`service` snapshot into `apis/released/`, and
-the never-overwrite rule. A staging run, or any run with a failure, skips this
-section entirely.
+the confirmation prompt, the per-`service` snapshot into `apis/released/`, the
+per-entity `schema.yaml` snapshot into its sibling `entities/` dir (same copy
+machinery, same freeze moment), and the never-overwrite rule. A staging run, or
+any run with a failure, skips this section entirely.
 
 **Persist.** Store the run's outcome (environment, per-criterion results,
 routing, any release recorded) to mempalace room `problems` (releases also to

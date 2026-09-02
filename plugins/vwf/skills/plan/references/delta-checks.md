@@ -1,8 +1,8 @@
 # §3's Conditional Checks
 
-Four checks that run **after** the surveyor returns, each only when its trigger
+Five checks that run **after** the surveyor returns, each only when its trigger
 is present. Read this once per chain element, while working §3 — the harness
-preflight fires on every element, the other three only when their condition
+preflight fires on every element, the other four only when their condition
 holds.
 
 ## Stamp-heal (only when the computed delta is empty)
@@ -21,6 +21,21 @@ change is additive per the rest-api-design skill (reference 8). A breaking
 desired change is a blueprint problem — route it per §4 (the sweep's coherence
 review enforces the major-version bump); never plan code that breaks a released
 contract.
+
+## Released entity-schema check (only when the delta touches a released entity schema)
+
+When the delta touches an entity whose `schema.yaml` has a released snapshot
+(latest = latest date under `apis/released/entities/`), diff the desired schema
+against that snapshot. Any **non-additive** delta — a removed or renamed
+property, a type change, a new required property — forces the plan to spell
+`baseline/expand-contract`'s three stages as **explicit ordered steps**, each
+behind its own approval like any other step: an **expand release** (the new
+form written alongside the old; readers tolerate both), a **backfill job**
+(idempotent, resumable, progress checkpoints — the flow contract's Background
+Jobs shape), then a **contract release** (the old form removed). Expand and
+contract never share a release. Every backfill step carries acceptance
+criteria — a completion metric or old-vs-new row-count parity — before the
+contract step may run.
 
 ## Harness preflight (every element)
 
