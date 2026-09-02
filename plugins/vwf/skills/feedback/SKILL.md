@@ -108,7 +108,13 @@ of the fixing command**:
 - **Metric reading** → append a dated row to the **Metric readings** appendix of
   `product.md` (create the appendix on first use — it is a log, not part of the
   reviewed contract). A **miss against target** → offer `/vwf:product` to
-  re-rank slices / revisit the goal; a hit → just recorded.
+  re-rank slices / revisit the goal; a hit → just recorded. A reading breaching
+  a goal's `Re-evaluate if: <metric> below <floor> by <date>` line escalates:
+  the `/vwf:product` re-run is **mandatory-offered**, with
+  **kill / pivot / re-scope** as the named agenda — a killed goal keeps its
+  subsection, marked `status: killed — <date, reading>`. The reading also
+  closes any open experiment record for the goal (fill Result and Decision —
+  see the product skill's `references/validation.md`).
 - **UX issue** → record it against the screen's **home flow** — the `## Screens`
   row in `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` that defines it
   (a deviation or open question at the exact screen/state) — and offer

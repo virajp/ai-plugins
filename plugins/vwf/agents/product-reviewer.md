@@ -39,8 +39,21 @@ re-elicit the missing decisions with the user.
       whose "serves goal" names no existing goal is a gap.
 - [ ] **Non-goals**: at least one explicit exclusion; "none" must be stated
       deliberately, not left blank.
-- [ ] **Risks & assumptions**: every row has all three cells; the riskiest
-      assumption is not left implicit if the problem/why-now text hints at one.
+- [ ] **Risks & assumptions**: every row fills Assumption, Risk if wrong, and
+      Validation method; the riskiest assumption is not left implicit if the
+      problem/why-now text hints at one.
+- [ ] **Validation vocabulary**: every Validation method is one of
+      `interviews`, `landing-page`, `prototype`, `concierge`, `usage-data`,
+      `slice:<name>`, `accepted-risk — <why>` — free text outside these is a
+      gap; no row has an empty Status
+      (`untested | validated | invalidated`), and a row whose status left
+      `untested` carries Evidence.
+- [ ] **Slice-validated assumptions**: every `untested` assumption whose
+      method is `slice:<name>` appears in some Slice priority `Validates`
+      cell.
+- [ ] **Riskiest validated first**: the rank-1 slice validates the riskiest
+      `untested` assumption, or one line under the Slice priority table says
+      why not (`accepted-risk` on the assumption's row also satisfies this).
 - [ ] **OKF frontmatter** present and complete: `type: vwf-product`, `title`,
       `description`, `status`.
 - [ ] **No realization leaked**: the doc names no technology, framework,
@@ -51,7 +64,11 @@ re-elicit the missing decisions with the user.
 
 A **Metric readings** section, when present, is a dated log maintained by
 `/vwf:feedback` — it is exempt from the checklist (do not flag its rows as
-placeholders or unmeasured metrics).
+placeholders or unmeasured metrics). So is an **Experiments** appendix.
+
+A goal subsection marked `status: killed — <date, reading>` is a deliberately
+retired goal kept for the record — never a gap. Do not flag its metrics,
+anchors, or placeholders, and do not expect Slice priority to serve it.
 
 ## Return contract
 

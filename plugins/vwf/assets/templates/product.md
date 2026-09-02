@@ -38,6 +38,7 @@ status: draft # draft | reviewed | stable
 - Outcome: <the user/business outcome, one line>
 - Metric: <what is measured> — target <value> within <horizon>
 - Measured via: <one of the four forms below>
+- Re-evaluate if: <metric> below <floor> by <date> → kill / pivot / re-scope
 
 <!-- `Measured via:` takes exactly one of the four structured forms:
 
@@ -49,6 +50,12 @@ status: draft # draft | reviewed | stable
      A `counter` form must also be declared in the owning doc — the flow form
      beside that flow's Acceptance block, the entity form beside its Lifecycle
      table — or the coherence reviewer flags the goal as unmeasurable. -->
+
+<!-- `Re-evaluate if:` is the goal's kill criterion — mandatory for the first
+     goal, optional after. When a reading breaches the floor, /vwf:feedback
+     makes the /vwf:product re-run mandatory-offered, with kill / pivot /
+     re-scope as the named agenda. A killed goal KEEPS its subsection, marked
+     `status: killed — <date, reading>` — never silently deleted. -->
 
 ## Tiers & entitlements
 
@@ -78,10 +85,12 @@ status: draft # draft | reviewed | stable
      /vwf:blueprint and /vwf:plan pick up first, and why. Re-rank on each /vwf:product re-run;
      history lives in git. With three or more slices, also draw the build order
      as a small mermaid flowchart (slice names only) so the roadmap reads at a
-     glance — a view of the table, which stays authoritative. -->
+     glance — a view of the table, which stays authoritative. `Validates` names
+     the Risks & assumptions row this slice validates — `—` when it validates
+     none. -->
 
-| Rank | Slice (flow / entity) | Serves goal | Why now |
-| ---- | --------------------- | ----------- | ------- |
+| Rank | Slice (flow / entity) | Serves goal | Validates | Why now |
+| ---- | --------------------- | ----------- | --------- | ------- |
 
 ## Non-goals
 
@@ -95,5 +104,16 @@ status: draft # draft | reviewed | stable
 <!-- Riskiest first: what must be true for the goals to be reachable, and how
      each assumption gets validated (or which slice validates it). -->
 
-| Assumption | Risk if wrong | Validated by |
-| ---------- | ------------- | ------------ |
+| Assumption | Risk if wrong | Validation method | Status | Evidence |
+| ---------- | ------------- | ----------------- | ------ | -------- |
+
+<!-- `Validation method` is a closed vocabulary (evidence bars per method are
+     the product skill's references/validation.md):
+
+       interviews | landing-page | prototype | concierge | usage-data |
+       slice:<name> | accepted-risk — <why>
+
+     `Status` is `untested | validated | invalidated`. `Evidence` is a link or
+     one-line source, required once status leaves `untested`. Rule: the top row
+     (the riskiest assumption) may not use `slice:` unless marked
+     `accepted-risk` — building is the most expensive way to learn. -->
