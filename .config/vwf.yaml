@@ -1,5 +1,5 @@
-config_format: 15
-blueprint_format: 23
+config_format: 16
+blueprint_format: 24
 
 product:
   name: ai-plugins
@@ -23,18 +23,21 @@ projects:
     stack:
       template: project/claude-code-plugin
       backing_template: []
-      deploy_template: n/a
+      deploy_template: []
       languages: [ markdown, bash ]
       frameworks: []
       dependencies: []
-      note: A plugin is served from the marketplace on `main`, never deployed,
-        so the deploy axis is n/a rather than unset.
+      note: A plugin reaches users through its own <name>-v<semver> tag, which
+        the marketplace manifest on `main` pins; the manifest is served, never
+        deployed. No installed stack plugin ships a template for tag-based
+        marketplace delivery, so the axis is [] — decided, none — rather than
+        pinning a name nothing backs.
     cicd: github-actions
   installer:
     stack:
       template: project/typescript-parseargs-cli
       backing_template: []
-      deploy_template: deploy/npm-package
+      deploy_template: [ deploy/npm-package ]
       languages: [ typescript ]
       frameworks: []
       dependencies: [ tsup, vitest ]
@@ -79,4 +82,13 @@ enforcement:
       reason: No staging destination exists, so the <env> segment would encode a
         distinction this product does not have. Tags keep the <project> segment
         and read <project>-v<semver> (installer-v6.0.0). Paired with the note in
+        docs/blueprint/conventions.md#pipeline.
+    pipeline/rollback-path:
+      waived: true
+      reason: Neither release path is a deploy with a redeployable predecessor.
+        A
+        plugin rollback is re-pointing the marketplace manifest at the previous
+        <name>-v<semver> tag, which is a manifest edit rather than a deployment;
+        an npm version is immutable, so rolling the installer back is publishing
+        forward. Paired with the note in
         docs/blueprint/conventions.md#pipeline.

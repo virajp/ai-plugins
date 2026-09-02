@@ -182,7 +182,7 @@ index.
 | Plugin     | Is                                                                                                                                                                                                                                                                                        |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. → [`vwf-plugin`][vwf]                                                                            |
-| `stackgen` | The principles-driven stack materializer — 36 packs and 32 bundles across eleven kinds for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager and gates since `devtools` dissolved into it. A vwf dep. → [`plugins.md`][plug] |
+| `stackgen` | The principles-driven stack materializer — 38 packs and 32 bundles across eleven kinds for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager and gates since `devtools` dissolved into it. A vwf dep. → [`plugins.md`][plug] |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine: the
