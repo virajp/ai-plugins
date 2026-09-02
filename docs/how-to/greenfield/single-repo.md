@@ -99,7 +99,9 @@ Relay's answers:
 A `product-reviewer` subagent gates the doc: an unmeasurable metric or a
 solution-shaped problem statement comes back as a gap, not a pass. Relay's first
 draft failed on "make standups faster" and was reworked into the timing metric
-above.
+above. Each goal also states how it is measured in one of four fixed forms, the
+first goal carries a `Re-evaluate if:` kill criterion, and every risk names how
+it gets validated — free text in any of the three is a gap.
 
 Output: `docs/blueprint/product.md`. Re-run it on any product change — see
 [`/vwf:product`](../../plugins/vwf.md#vwfproduct).
@@ -135,9 +137,10 @@ axis, both from `stackgen`. The repo axis is answered once for the checkout
 rather than per project. What each axis means and why they never merge:
 [stack templates](../../plugins/vwf.md#stack-templates).
 
-Last comes the product-foundations walk — twelve concerns, one accept / adapt /
-not-applicable question each. Relay's answers are in
-[The twelve foundations](#the-twelve-foundations) below.
+Last comes the product-foundations walk — thirteen concerns; the eight elective
+ones take one accept / adapt / not-applicable question each, the five core ones
+accept / adapt / defer. Relay's answers are in
+[The thirteen foundations](#the-thirteen-foundations) below.
 
 Output: `docs/blueprint/registry.yaml` (authoritative) and
 `docs/blueprint/architecture.md` (its prose view, with a system-shape diagram),
@@ -275,10 +278,11 @@ gap.
 
 Relay's staging run passes. Later, after the first production deploy, a clean
 `/vwf:verify production` offers to record a release, freezing each standalone
-`service` project's contract so backward compatibility is enforceable from then
-on. Relay is skipped: it declares `[service, webapp]`, so its API serves its own
-UI in the same deployable and there is no independent consumer to protect.
-Details: [`/vwf:verify`](../../plugins/vwf.md#vwfverify).
+`service` project's contract and every entity's schema so backward compatibility
+is enforceable from then on. Relay's contract is skipped: it declares
+`[service, webapp]`, so its API serves its own UI in the same deployable and
+there is no independent consumer to protect — its entity schemas are frozen
+either way. Details: [`/vwf:verify`](../../plugins/vwf.md#vwfverify).
 
 From here the loop is production talking back: route what it says with
 [the production feedback loop](../operate/production-feedback-loop.md), and when
@@ -316,12 +320,17 @@ your technology, and list them in the product's `stacks:` roster, before you
 reach `/vwf:architecture` — or the menu is short and you will pin something you
 did not want. [Stack templates](../../plugins/vwf.md#stack-templates).
 
-### The twelve foundations
+### The thirteen foundations
 
-`/vwf:architecture` walks twelve concerns every product eventually hits, each
-with a default contract, as one accept / adapt / not-applicable question. They
-are elicited defaults, not enforced rules — declining one is a recorded
-decision. Relay's answers, and why:
+`/vwf:architecture` walks thirteen concerns every product eventually hits, each
+with a default contract. Eight are **elective** — accept / adapt /
+not-applicable, and declining one is a recorded decision. Five are **core**
+(users & operators, observability, reliability targets, DR & backup, incident
+response): they have no not-applicable answer, only accept / adapt / defer — not
+production-bound, and a deferral records a `<foundation>: deferred-preprod`
+token that `/vwf:plan` (on a production-bound slice) and
+`/vwf:verify
+production` report as blocking. Relay's answers, and why:
 
 | Foundation           | Relay                                                              |
 | -------------------- | ------------------------------------------------------------------ |
@@ -337,6 +346,7 @@ decision. Relay's answers, and why:
 | Reliability targets  | Adapt — one service, so one availability target, no per-tier SLOs  |
 | DR & backup          | Accept — the datastore has an RPO/RTO, restores drilled quarterly  |
 | Cost guardrails      | Not applicable — one small deployment, revisit at scale            |
+| Incident response    | Accept — one alert table, one runbook per probe, postmortems filed |
 
 Answer these honestly rather than accepting everything: each accepted foundation
 becomes contract that `/vwf:blueprint` expands into `conventions.md` anchors and

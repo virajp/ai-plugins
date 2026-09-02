@@ -80,4 +80,5 @@ API errors + idempotency), the goal-traceability bars (`Serves:` on flows,
 `Used by:` on entities), and the code-independence guardrail (no
 file/class/library/CSS/pixel leakage); the `blueprint-coherence-reviewer` closes
 the sweep with the cross-doc pass (flow↔lifecycle↔schema↔operationId agreement,
-catalog/erDiagram sync, the released-API additive-only diff).
+catalog/erDiagram sync, goal-counter resolution, and the additive-only diff
+against released APIs and released entity schemas).

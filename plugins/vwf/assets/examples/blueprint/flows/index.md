@@ -9,7 +9,7 @@ status: reviewed
 
 # Flows & Cross-Flow Contracts
 
-<!-- Conformance example (blueprint-format 23). Deliberately thin: per-flow
+<!-- Conformance example (blueprint-format 24). Deliberately thin: per-flow
      contracts live in flows/<project>/<NNN>-<flow>/index.md with each
      platform's screens in a sibling <platform>.md — this file holds only the
      catalog and what is cross-flow by nature. One section per project, no

@@ -10,7 +10,7 @@ status: reviewed
 Cross-cutting decisions referenced by entity docs. Defined once; entity docs
 link to the relevant anchors rather than repeating.
 
-<!-- Conformance example (blueprint-format 23). Only the anchors the example
+<!-- Conformance example (blueprint-format 24). Only the anchors the example
      entities reference are filled; a real conventions.md carries every
      system-wide concern the architecture registry declares. -->
 
@@ -68,10 +68,22 @@ deviating doc and as an `enforcement.rules` waiver:
     logs, traces, and metrics via OpenTelemetry.
 15. `baseline/integer-money` — money as integer minor units with a currency
     field.
+16. `baseline/expand-contract` — a non-additive stored-schema change ships in
+    stages (expand → migrate → contract); expand and contract land in separate
+    releases, so every release is N-1 compatible.
 
 Active waiver: `baseline/write-versioning/entities/customer` — profile fields
 are last-write-wins by design (see the
 [customer entity](./entities/customer/index.md)).
+
+## Reliability {#reliability}
+
+Per-service SLOs: `api` 99.9% monthly availability, p95 < 400ms reads / < 1s
+writes; `worker` completes 99.9% of jobs within their retry budget. Expected
+scale at year 1: ~2,000 monthly shoppers, ~5 req/s aggregate peak. Error-budget
+stance: a burned budget pauses feature releases for reliability work until the
+SLO recovers. Flow Guarantees cells reading `default — per
+conventions#reliability` inherit these numbers.
 
 ## Config {#config}
 

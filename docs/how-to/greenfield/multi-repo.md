@@ -95,8 +95,8 @@ Stallfront's corrections:
   it describes a checkout, so in a multi-repo product each member answers it for
   itself rather than the product answering once
   ([stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time)).
-- **Foundations** — the same twelve-concern walk, with the same guidance:
-  [the twelve foundations](./single-repo.md#the-twelve-foundations).
+- **Foundations** — the same thirteen-concern walk, with the same guidance:
+  [the thirteen foundations](./single-repo.md#the-thirteen-foundations).
 
 Note where the topology question is *asked*. The spine makes the same point for
 a different reason: `/vwf:setup` on a blank repo does not ask it, and here it

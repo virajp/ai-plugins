@@ -9,7 +9,7 @@ tags: [ commerce, checkout ]
 
 # Flow: Place order
 
-<!-- Conformance example (blueprint-format 23). The PLATFORM-AGNOSTIC contract:
+<!-- Conformance example (blueprint-format 24). The PLATFORM-AGNOSTIC contract:
      no screens — they live in webapp.md beside this file. The goal-traceability
      spine runs product goal → this flow → entity/API/screen. Code-independent:
      names entities, the `api` service, and operationIds only. -->
@@ -46,10 +46,10 @@ Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
 
 ## Guarantees
 
-| Step / group             | Consistency                                             | On failure                                                                                                       | Idempotency                                                        |
-| ------------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 1-3 placement + payment  | atomic — the order commits only once payment authorizes | Declined or provider timeout → placement rolls back, no `placed` order is retained, cart left intact for a retry | `placeOrder` `Idempotency-Key`; a retry returns the original order |
-| 4-5 fulfilment + notices | eventual                                                | Retried by the owning job; the order stays `placed`                                                              | per-job, keyed on the order id                                     |
+| Step / group             | Consistency                                             | On failure                                                                                                       | Idempotency                                                        | Load & latency                        |
+| ------------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------- |
+| 1-3 placement + payment  | atomic — the order commits only once payment authorizes | Declined or provider timeout → placement rolls back, no `placed` order is retained, cart left intact for a retry | `placeOrder` `Idempotency-Key`; a retry returns the original order | ~1/s peak; p95 < 2s                   |
+| 4-5 fulfilment + notices | eventual                                                | Retried by the owning job; the order stays `placed`                                                              | per-job, keyed on the order id                                     | default — per conventions#reliability |
 
 ## Diagram
 
@@ -81,6 +81,9 @@ sequenceDiagram
 - Given a customer at checkout whose payment is declined, when they submit, then
   no order is persisted, their cart is unchanged, and the decline is shown
   inline.
+- Abuse case: given a signed-in customer, when they attempt to check out a cart
+  they do not own, then the request is denied with `forbidden`, the attempt is
+  audit-recorded, and no order is created.
 
 ## References
 

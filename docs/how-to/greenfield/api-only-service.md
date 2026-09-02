@@ -75,8 +75,8 @@ project axis (the template that declares `service`), `postgres` on the backing
 axis, `container-generic` on the deploy axis, and the repo axis answered once
 for the checkout. Why the axes never merge:
 [Stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time).
-The twelve-foundation walk follows, unchanged in shape from
-[The twelve foundations](./single-repo.md#the-twelve-foundations) — though
+The thirteen-foundation walk follows, unchanged in shape from
+[The thirteen foundations](./single-repo.md#the-thirteen-foundations) — though
 Hookline's answers lean harder on background processes and reliability targets,
 since retrying delivery *is* the product.
 
@@ -173,14 +173,14 @@ frozen contract protects.
 ```
 
 Accept the offer and the living contract is snapshotted into the released-API
-directory, keyed by its version. What that buys is enforcement everywhere the
-contract could quietly change afterwards: the blueprint sweep's coherence review
-and `execute`'s code review both start checking every later change against the
-snapshot and blocking anything that is not additive, unless you consciously cut
-a new major version. Before the first release, breaking your own API is a
-judgement call nobody is making; after it, it is a gate. The snapshot rules and
-what enforcement looks like on each side:
-[`/vwf:verify`](../../plugins/vwf.md#vwfverify).
+directory, keyed by its version, alongside every entity schema, keyed by date.
+What that buys is enforcement everywhere the contract could quietly change
+afterwards: the blueprint sweep's coherence review and `execute`'s code review
+both start checking every later change against the snapshot and blocking
+anything that is not additive, unless you consciously cut a new major version.
+Before the first release, breaking your own API is a judgement call nobody is
+making; after it, it is a gate. The snapshot rules and what enforcement looks
+like on each side: [`/vwf:verify`](../../plugins/vwf.md#vwfverify).
 
 ## Decision points
 

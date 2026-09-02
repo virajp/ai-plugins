@@ -78,8 +78,8 @@ stackgen bundle serving mobile, tablet, desktop and webapp from one codebase
 ([stack templates](../../plugins/vwf.md#stack-templates)). The other axes work
 as in the spine's
 [stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time),
-and the twelve-foundation walk is unchanged from
-[the twelve foundations](./single-repo.md#the-twelve-foundations).
+and the thirteen-foundation walk is unchanged from
+[the thirteen foundations](./single-repo.md#the-thirteen-foundations).
 
 ### 4. /vwf:design-system
 

@@ -1,4 +1,4 @@
-# Conformance example (blueprint-format 23) — the machine-readable registry.
+# Conformance example (blueprint-format 24) — the machine-readable registry.
 #
 # Every downstream command parses THIS file; architecture.md is the prose view
 # and is omitted from this bundle for brevity. Note what is absent: there is no

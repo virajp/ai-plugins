@@ -361,22 +361,26 @@ docs/
 │       ├── <project>.openapi.yaml  # one per API-publishing project
 │       │                           # (a project declaring `service`)
 │       └── released/            # frozen production snapshots — the release
-│                                # record backward compatibility is enforced against
+│           │                    # record backward compatibility is enforced against
+│           └── entities/        # every entity's schema.yaml, frozen at the same
+│                                # release moment — <entity>@<date>.schema.yaml
 ├── plans/                       # per-cycle plans (the diff to apply)
 │   ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
 │   └── archived/                # surfaced during execution" section
-└── prompts/                     # canvas design briefs (committed intent)
-    └── <type>/                  # prompt type (e.g. screens)
-        └── <project>/           # registry project
-            ├── CLAUDE--<platform>.md # the platform canvas project's conventions
-            │                         # CLAUDE.md source (one per pinned design
-            │                         # project; canvas-owned section preserved
-            │                         # on regeneration)
-            └── <NNN>-<flow>/    # the flow the briefs commission
-                └── <platform>.md # ONE brief per platform (mobile.md, tablet.md,
-                                  # desktop.md, web.md, auto.md) — mirrors the
-                                  # flow folder's platform files; always the
-                                  # flow's full blueprint, regenerated in place
+├── prompts/                     # canvas design briefs (committed intent)
+│   └── <type>/                  # prompt type (e.g. screens)
+│       └── <project>/           # registry project
+│           ├── CLAUDE--<platform>.md # the platform canvas project's conventions
+│           │                         # CLAUDE.md source (one per pinned design
+│           │                         # project; canvas-owned section preserved
+│           │                         # on regeneration)
+│           └── <NNN>-<flow>/    # the flow the briefs commission
+│               └── <platform>.md # ONE brief per platform (mobile.md, tablet.md,
+│                                 # desktop.md, web.md, auto.md) — mirrors the
+│                                 # flow folder's platform files; always the
+│                                 # flow's full blueprint, regenerated in place
+└── runbooks/                    # operational runbooks (incident-response foundation)
+    └── postmortems.md           # postmortem stubs /vwf:feedback incident appends
 ```
 
 Each flow doc holds one journey end to end — who triggers it, the steps across
@@ -636,7 +640,7 @@ Two placement rules ride along with the shape — seeded into each repo's
    project imports a third-party SDK directly (client-side sign-in is the one
    exception).
 
-They are joined by the **engineering baseline** — 15 centralized technical rules
+They are joined by the **engineering baseline** — 16 centralized technical rules
 seeded into `conventions.md#baseline` on the blueprint's first touch and
 followed by default everywhere; only exceptions are documented. The set:
 optimistic **write versioning** on every mutating write (entity docs stop
@@ -650,11 +654,13 @@ pagination, retry-only-idempotent with backoff + jitter, tolerant-reader event
 consumers, **stateless processes** (every service/worker safe at N replicas),
 **graceful shutdown** (acknowledged work never lost to a termination),
 structured logs with no PII (logs/traces/metrics through one vendor-neutral
-telemetry pipeline), and integer minor units for money. A deviation lives in
-**two places, always**: stated on the doc it applies to and waived under
-`enforcement.rules` (`baseline/<rule>[/<unit>]`) — the blueprint reviewers flag
-either half missing, and the execute reviewers enforce the rules against the
-code itself.
+telemetry pipeline), integer minor units for money, and **expand → migrate →
+contract** for non-additive stored-schema changes (expand and contract never
+share a release, so every release stays compatible with the one before it). A
+deviation lives in **two places, always**: stated on the doc it applies to and
+waived under `enforcement.rules` (`baseline/<rule>[/<unit>]`) — the blueprint
+reviewers flag either half missing, and the execute reviewers enforce the rules
+against the code itself.
 
 Beside the baseline sits the **principles catalog** (`assets/principles/` —
 thirteen entries: KISS, YAGNI, DRY and its limits, the five SOLID principles,
@@ -680,8 +686,13 @@ re-validated by the pipeline rather than trusted from its trigger — the pipeli
 **proves the commit is reachable** from that environment's branch, and **no
 deploy step runs before the released project's and its dependents' tests pass in
 the same run**. A staging deploy is never a release; production releases are
-recorded only by `/vwf:verify`. The contract names no mechanism on purpose: the
-tag grammar `<project>-<env>-v<semver>`, the trigger globs and the reachability
+recorded only by `/vwf:verify`. Three further rules bind the release itself: a
+flow whose declared peak rate meets the load threshold gets a staging load run
+before its first production release, every production deploy states the release
+it rolls back to (or records that it is irreversible), and every release-capable
+run audits the lockfile — a known-critical advisory fails it, waivable only per
+advisory and with a date. The contract names no mechanism on purpose: the tag
+grammar `<project>-<env>-v<semver>`, the trigger globs and the reachability
 check are the recommended default, owned by the CI system pinned on the
 project's `cicd` axis — [`stackgen`](./stackgen.md)'s
 `contracts/release-trigger.md` and its `ci-system` pack.
@@ -853,12 +864,12 @@ by presenting the [stack templates](#stack-templates) for its type as a menu
 leaves three ways forward, none of them a free-text pin; the answer lands as a
 structured block in `.config/vwf.yaml`), walks the **product-foundations
 checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
-foundation, recorded as cross-cutting tokens), and writes **both**
-`docs/blueprint/registry.yaml` — the machine-readable registry every other
-command depends on — and `docs/blueprint/architecture.md`, its prose view with a
-system-shape mermaid diagram kept in sync with it. Re-run it any time the
-topology changes; it asks only about genuine deltas, never re-eliciting what's
-confirmed.
+elective foundation and accept/adapt/defer per core one, recorded as
+cross-cutting tokens), and writes **both** `docs/blueprint/registry.yaml` — the
+machine-readable registry every other command depends on — and
+`docs/blueprint/architecture.md`, its prose view with a system-shape mermaid
+diagram kept in sync with it. Re-run it any time the topology changes; it asks
+only about genuine deltas, never re-eliciting what's confirmed.
 
 **With no registry yet but a `product.md` in place, it derives rather than
 interviews.** The structural questions — which surfaces exist, which projects
@@ -1343,14 +1354,16 @@ operational, not filed as a blueprint gap.
 A clean run against the **production** environment (the env named `production`,
 or whatever `production_env` in `.config/vwf.yaml` names) offers to record a
 **release**: each deployed `service` project's living OpenAPI contract is frozen
-into `docs/blueprint/apis/released/<project>@<version>.openapi.yaml` — the
-release record. A `[service, webapp]` project owns a contract too but is never
-frozen: its API serves its own UI, shipped in the same deployable, so there is
-no independent consumer to protect. From the first snapshot on, backward
-compatibility is enforced everywhere: the blueprint's coherence review
-hard-gates a breaking contract change without a major-version bump, and
-execute's code review treats a code change that would break the released
-contract like a security finding.
+into `docs/blueprint/apis/released/<project>@<version>.openapi.yaml`, and every
+entity's `schema.yaml` into `apis/released/entities/<entity>@<date>.schema.yaml`
+— the release record. From then on a non-additive entity-schema change must ship
+staged (expand → migrate → contract). A `[service, webapp]` project owns a
+contract too but is never frozen: its API serves its own UI, shipped in the same
+deployable, so there is no independent consumer to protect — its entity schemas
+are frozen either way. From the first snapshot on, backward compatibility is
+enforced everywhere: the blueprint's coherence review hard-gates a breaking
+contract change without a major-version bump, and execute's code review treats a
+code change that would break the released contract like a security finding.
 
 ### /vwf:feedback
 
@@ -1362,11 +1375,16 @@ reading, or a user complaint; it classifies and routes it to where it gets
   offer (deferred items land in the owning flow doc's Open Questions, so nothing
   depends on memory being up).
 - **Metric reading** → a dated row in `product.md`'s Metric readings appendix; a
-  miss triggers a `/vwf:product` re-rank offer.
+  miss triggers a `/vwf:product` re-rank offer, and a reading under a goal's
+  `Re-evaluate if:` floor makes that re-run mandatory-offered with kill / pivot
+  / re-scope as the agenda.
 - **UX issue** → recorded at the exact screen/state, with a `/vwf:design-system`
   or `/vwf:blueprint` offer.
 - **Feature idea** → `/vwf:product` first (which goal does it serve?), then the
   normal pipeline — never straight to code.
+- **Incident** (`/vwf:feedback incident <what happened>`) → filed to memory as a
+  problem with a postmortem stub appended to `docs/runbooks/postmortems.md`;
+  each action item goes back through the classifier as its own intake.
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"
@@ -1687,15 +1705,19 @@ most you never invoke, since they auto-apply and inform how Claude writes and
 reviews (`karpathy-guidelines` is the exception, also reachable by hand as
 `/vwf:karpathy-guidelines`):
 
-- **`product-foundations`** — the twelve foundational concerns every product
+- **`product-foundations`** — the thirteen foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
   & operators, observability, audit logs, change logs, background processes,
   data retention & PII, notifications, runtime settings, rate limiting,
-  reliability targets, disaster recovery & backup, and cost guardrails. Each
-  ships with an opinionated default (e.g. audit logs are append-only over
-  privileged and destructive actions; durable work goes to a worker, ephemeral
-  to a service). `architecture` walks the checklist — accept / adapt / skip per
-  foundation — and `blueprint` expands the accepted ones into contracts.
+  reliability targets, disaster recovery & backup, cost guardrails, and incident
+  response. Each ships with an opinionated default (e.g. audit logs are
+  append-only over privileged and destructive actions; durable work goes to a
+  worker, ephemeral to a service). `architecture` walks the checklist — accept /
+  adapt / skip for the eight elective ones, accept / adapt / defer for the five
+  **core** ones (users & operators, observability, reliability targets, DR &
+  backup, incident response), whose deferral records a `deferred-preprod` token
+  `/vwf:plan` and `/vwf:verify production` treat as blocking — and `blueprint`
+  expands the accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`), the **density** bars (per-doc budgets, the delete
   test, the anti-patterns that inflate a contract), and the per-surface
