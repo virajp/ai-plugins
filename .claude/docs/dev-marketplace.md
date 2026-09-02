@@ -44,6 +44,13 @@ you which by the version it reports.
 ## After you change a plugin
 
 ```sh
+mise run plugins:local
+```
+
+which regenerates the manifests, refuses to run in user mode, and then does the
+actual refresh:
+
+```sh
 claude plugin uninstall vwf@virajp-plugins
 claude plugin install  vwf@virajp-plugins --scope user
 ```

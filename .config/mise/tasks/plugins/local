@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#MISE description="Reinstall vwf from the dev marketplace so this machine runs the working tree"
+#MISE dir="{{ config_root }}"
+
+# The dev-marketplace refresh loop as one command. A plugin install is a
+# directory COPY into ~/.claude/plugins/cache/, keyed by version, and
+# `claude plugin update` compares versions only — so with the source edited and
+# the version unchanged it copies nothing. Uninstall-then-install re-copies
+# unconditionally, which is why this task is that pair and not `update`.
+#
+# Only vwf is named: stackgen arrives as its dependency, from the same
+# marketplace, so the pair refreshes both.
+#
+# This does NOT release anything. Users are reached only by `plugins:release`,
+# from main. The setup this task assumes (registering ./.dev-marketplace) is
+# .claude/docs/dev-marketplace.md.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+# 1. Regenerate both manifests and the symlink, so the install below serves
+#    today's plugin manifests rather than the last generate.
+mise run plugins:marketplace
+
+# 2. Refuse to run in user mode. There the registered virajp-plugins is the
+#    tagged one, and the reinstall would quietly re-copy the last RELEASE —
+#    exactly the state this task exists to escape.
+if ! claude plugin marketplace list | grep -q '\.dev-marketplace'; then
+  print_error "virajp-plugins is not registered from ./.dev-marketplace — this machine is in user mode."
+  print_normal "Setup is .claude/docs/dev-marketplace.md: 'claude plugin marketplace add ./.dev-marketplace' (the leading ./ is required)."
+  exit 1
+fi
+
+# 3. The pair. Uninstall may find nothing on a first run — that is fine.
+claude plugin uninstall vwf@virajp-plugins || true
+claude plugin install vwf@virajp-plugins --scope user
+
+print_success "Reinstalled from the working tree:"
+claude plugin list | grep '@virajp-plugins' || true
+print_warn "Restart Claude Code — a plugin's skills are read at session start."
