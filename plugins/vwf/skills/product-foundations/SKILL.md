@@ -3,8 +3,8 @@ name: product-foundations
 description: The foundational concerns every product must decide — users &
   operators, observability, audit logs, change logs, background processes, data
   retention & PII, notifications, runtime settings, rate limiting, reliability
-  targets, disaster recovery & backup, cost guardrails. Elicited
-  defaults distilled from the 95octane reference implementation. Used by
+  targets, disaster recovery & backup, cost guardrails, incident response.
+  Elicited defaults distilled from the 95octane reference implementation. Used by
   /vwf:architecture (the foundations checklist) and /vwf:blueprint (expanding
   accepted foundations into contracts); read the reference matching the
   foundation being decided or expanded.
@@ -16,7 +16,7 @@ paths:
 
 # Product Foundations
 
-Twelve concerns every product hits sooner or later. Each has a **default
+Thirteen concerns every product hits sooner or later. Each has a **default
 contract** distilled from the 95octane reference implementation — proposed per
 product, never silently assumed: `/vwf:architecture` walks this checklist as
 part of its cross-cutting elicitation, records the selection as a
@@ -24,9 +24,10 @@ part of its cross-cutting elicitation, records the selection as a
 canonical contract in `conventions.md` plus the per-entity surfaces each
 reference names.
 
-Four of the twelve are **core** — users & operators, observability, reliability
-targets, DR & backup — the concerns a production-bound product cannot skip
-without a recorded, expiring exception. The other eight are **elective**:
+Five of the thirteen are **core** — users & operators, observability,
+reliability targets, DR & backup, incident response — the concerns a
+production-bound product cannot skip without a recorded, expiring exception.
+The other eight are **elective**:
 declining one is a recorded decision (the registry simply omits the token), not
 an `enforcement:` opt-out. The contract layer here is code-independent; each
 reference points at the reference-stack docs for the 95octane realization.
@@ -47,6 +48,7 @@ reference points at the reference-stack docs for the 95octane realization.
 | Reliability targets (Core) | Per-service availability + latency SLOs with an error-budget stance  | [reliability-targets](references/reliability-targets.md)   |
 | DR & backup (Core)   | RPO/RTO per datastore; automated backups; restore drills on a cadence      | [disaster-recovery](references/disaster-recovery.md)       |
 | Cost guardrails      | One budget with 50/90/100% alerts; per-service scaling caps; metered ops   | [cost-guardrails](references/cost-guardrails.md)           |
+| Incident response (Core) | Alert-condition table in conventions; runbooks per project; postmortem stubs | [incident-response](references/incident-response.md)   |
 
 ## How the workflow consumes this
 

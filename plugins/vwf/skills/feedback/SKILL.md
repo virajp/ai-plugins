@@ -89,6 +89,7 @@ Classify — confirm by MCQ when ambiguous, per
 | **Metric reading** | A number for a `product.md` metric (hit or miss) |
 | **UX issue**       | Rendered experience contradicts design-system/UX |
 | **Feature idea**   | A want that serves (or implies) a product goal   |
+| **Incident**       | Production broke — outage, failed probe, SLO burn |
 
 ### 2. Route
 
@@ -125,11 +126,21 @@ of the fixing command**:
   `blueprint → plan → execute` path. Deferred → a row in `product.md`'s Metric
   readings appendix is wrong for this; instead note it under the served goal's
   slice-priority row as a candidate, marked unranked.
+- **Incident** → an operational event, not (yet) a blueprint gap: file to room
+  `problems`, and append the postmortem stub to `docs/runbooks/postmortems.md`
+  per the incident-response foundation — what happened, impact window,
+  contributing causes, action items. Then run **each action item** back through
+  this classifier as its own intake (usually a blueprint hole or a behavior
+  bug). An incident is also a reading against the reliability foundation's
+  **error-budget stance** (`conventions.md#reliability`): state what the stance
+  says happens now. Invoked as `/vwf:feedback incident <what happened>` — the
+  form `/vwf:verify` offers when a production probe fails.
 
 ### 3. Persist & commit
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`: bugs/holes to room `gaps`,
-readings and routing decisions to room `decisions`. Skip silently if mempalace
+incidents to room `problems`, readings and routing decisions to room
+`decisions`. Skip silently if mempalace
 is down — the doc edits from step 2 are the durable record.
 
 Commit any doc edits via `/vwf:git-workflow` (`docs:` or `blueprint(...)`

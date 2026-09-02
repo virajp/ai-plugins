@@ -125,7 +125,11 @@ just automated feedback):
   `/vwf:plan <slice>` for a fix cycle. Deferred → record one line in the owning
   flow doc's **Open Questions** so it survives a mempalace outage.
 - **Health down / infrastructure failure** → report precisely (project, probe,
-  error); this is operational, not a blueprint gap — do not file it as one.
+  error); this is operational, not a blueprint gap — do not file it as one. On
+  a **production** run, additionally name the matching runbook from the
+  `conventions.md#incidents` alert-condition table (the incident-response
+  foundation) when one exists, and offer `/vwf:feedback incident` to file the
+  incident and its postmortem stub.
 - **NOT-COVERED / no harness** → a testing gap; file to room `gaps` and offer a
   plan step next cycle.
 
