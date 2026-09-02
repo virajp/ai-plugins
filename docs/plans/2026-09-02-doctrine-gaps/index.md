@@ -1,6 +1,10 @@
 # Plan — vwf doctrine gaps (2026-09-02)
 
-**Status: DRAFT — awaiting review. Do not execute.**
+**Status: APPROVED 2026-09-02 — autonomous execution authorized.** The user
+pre-granted consent: on a fully green run (all nine units plus the final gate),
+commit, merge to `develop`, and push. Stop and wait for the user only on a
+failed unit verification or a genuine open question. Releasing
+(`plugins:release`) remains NOT authorized.
 
 Implements all seven drafts of
 [`docs/scratchpad/vwf-doctrine-proposals.md`](../../scratchpad/vwf-doctrine-proposals.md)
@@ -44,8 +48,8 @@ the core/elective mechanism (created in 01). 04 runs before 05 because both edit
 ## Execution protocol (for the orchestrator, when approved)
 
 1. Create an isolated worktree via the `vwf:git-workflow` skill. All nine units
-   run in it; the branch is the reviewable change — land to `develop` only with
-   explicit consent (per standing rule).
+   run in it; the branch is the reviewable change. Landing consent is
+   pre-granted per the Status block above.
 2. Per unit, in order: spawn one `general-purpose` subagent with the prompt
    *"Read `docs/plans/2026-09-02-doctrine-gaps/index.md` (Shared guardrails +
    your row's assumed decisions), then read your unit file in full. Execute its
@@ -56,8 +60,11 @@ the core/elective mechanism (created in 01). 04 runs before 05 because both edit
    orchestrator halts the sequence rather than patching around it.
 4. After unit 9: run the full local gate (`mise run plugins:check`,
    `mise run plugins:marketplace --check`, `mise x -- vitest run`,
-   `tsc --noEmit` in `cli/` and `scripts/`) and stop. **No merge, no push, no
-   `plugins:release`** without the user saying so.
+   `tsc --noEmit` in `cli/` and `scripts/`). If everything is green, land per
+   the pre-granted consent: merge the branch to `develop`, push, and remove the
+   worktree (git-workflow's "Merge, push & clean up"). If anything fails, stop
+   and report — no merge, no push. **`plugins:release` is never run** without
+   the user saying so.
 
 ## Shared guardrails (every subagent reads this section)
 
