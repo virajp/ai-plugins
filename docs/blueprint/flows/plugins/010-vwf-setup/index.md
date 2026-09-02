@@ -90,10 +90,10 @@ documentation bundle, a prior memory of settled decisions.
 
 ## Guarantees
 
-| Step / group                                          | Consistency                                                                    | On failure                                                                  | Idempotency                                        |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | -------------------------------------------------- |
-| Mode resolution → artifact write → health check (1–5) | eventual — recall, resolve, write owned artifacts, then validate, stamp, check | halt reverts the stamp (delete if this run created it, else restore)        | full — no progress key; re-run resolves mode fresh |
-| Approval, commit & optional graph build (6–8)         | n/a — local only, never pushed                                                 | none — consent stands until approved; a decline is honoured, never re-asked | n/a — one-shot per invocation                      |
+| Step / group                                          | Consistency                                                                    | On failure                                                                  | Idempotency                                        | Load & latency                        |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------- |
+| Mode resolution → artifact write → health check (1–5) | eventual — recall, resolve, write owned artifacts, then validate, stamp, check | halt reverts the stamp (delete if this run created it, else restore)        | full — no progress key; re-run resolves mode fresh | default — per conventions#reliability |
+| Approval, commit & optional graph build (6–8)         | n/a — local only, never pushed                                                 | none — consent stands until approved; a decline is honoured, never re-asked | n/a — one-shot per invocation                      | default — per conventions#reliability |
 
 ## Diagram
 
@@ -170,6 +170,17 @@ here: the README — a separate flow owns it.
   again, then it does not re-ask and reports the decline as a degradation.
 - Given an infrastructure-repo extraction was declined on record, when the flow
   runs, then it completes without halting and reports the finding as a warning.
+
+**Abuse case:** `n/a` — the only actor is the developer running the flow on
+their own machine, authorized by owning it
+([conventions#auth](../../../conventions.md#auth)). There is no external or
+unauthenticated trigger to attempt what its authorization does not allow, and
+the flow mutates no payment or entitlement.
+
+**Counter:** `vwf-setup.completed` on a run that commits within the
+documentation tree, the configuration directory and the agent instructions file;
+`vwf-setup.failed` on a run that touches anything outside them. Serves
+[#goal-adopt-without-rewrite](../../../product.md#goal-adopt-without-rewrite).
 
 ## References
 

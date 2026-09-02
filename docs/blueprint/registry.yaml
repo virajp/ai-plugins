@@ -29,14 +29,27 @@ projects:
     platforms: [ cli ]
     path: cli/
     capabilities: []
+    threat_notes:
+      - >-
+        Supply chain: one command registers a marketplace and installs from it,
+        so a compromised source repo or a hijacked package name runs as the
+        developer on their own machine, with their credentials and their
+        agent's tool access, before anything is reviewed.
     depends_on: []
     doc_unit: module
 
 cross_cutting:
   auth: none
   errors: exit-code-and-message
-  observability: none
+  observability: no-telemetry-by-design
   config: env-vars
   testing: unit-integration-and-real-install
   integrations: [ github, npm-registry, context7 ]
   runtime_settings: config-file-per-repo
+  # Core foundations (product-foundations). All five are ADAPTED rather than
+  # accepted or deferred: the defaults assume a deployed, multi-user service,
+  # and this product is a toolkit that runs on one developer's own machine.
+  users: single-local-actor
+  reliability: delivery-surface-availability
+  dr: release-artifact-recoverability
+  incidents: release-failure-conditions
