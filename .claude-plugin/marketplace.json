@@ -19,7 +19,7 @@
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "plugins/stackgen",
-        "ref": "stackgen-v0.19.0"
+        "ref": "stackgen-v0.19.0+1"
       },
       "strict": true,
       "tags": [
@@ -31,7 +31,7 @@
         "materializer",
         "vwf-stack-adapter"
       ],
-      "version": "0.19.0"
+      "version": "0.19.0+1"
     },
     {
       "author": {
@@ -51,7 +51,7 @@
         "source": "git-subdir",
         "url": "https://github.com/virajp/ai-plugins.git",
         "path": "plugins/vwf",
-        "ref": "vwf-v19.10.0"
+        "ref": "vwf-v19.10.0+1"
       },
       "strict": true,
       "tags": [
@@ -73,7 +73,7 @@
         "git-workflow",
         "vwf-design-adapter"
       ],
-      "version": "19.10.0"
+      "version": "19.10.0+1"
     }
   ]
 }
