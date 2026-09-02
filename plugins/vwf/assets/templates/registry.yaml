@@ -43,6 +43,10 @@ projects:
     platforms: [ <platform>, <...> ]
     path: <repo-or-directory>
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
+    threat_notes: [
+      <one worst-plausible-abuse line per trust boundary>,
+      <...>,
+    ] # only where a boundary exists (external caller, webhook, file upload)
     depends_on: [ <project-name>, <...> ] # or []
     doc_unit: <entity|page|module> # defaults by platform: site|webapp -> page; packages|iac|plugin|cli -> module; else entity
 

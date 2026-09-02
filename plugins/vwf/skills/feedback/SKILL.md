@@ -2,12 +2,13 @@
 name: feedback
 description: The front door for production feedback — a bug, a metric reading,
   a UX
-  complaint, or a feature idea. Classifies it and routes it into the doc and
-  command that fix it (gaps → blueprint/plan, metrics → product, UX →
-  design-system/screens). "canvas" harvests the design review conversations from
-  each project's own design tool, via the design adapter, into the same routes.
-  Durable even when mempalace is down.
-argument-hint: "[the feedback — paste a bug report, metric, or complaint | canvas]"
+  complaint, a feature idea, or an incident. Classifies it and routes it into
+  the doc and command that fix it (gaps → blueprint/plan, metrics → product,
+  UX → design-system/screens, incidents → postmortem stub + action items).
+  "canvas" harvests the design review conversations from each project's own
+  design tool, via the design adapter, into the same routes. Durable even when
+  mempalace is down.
+argument-hint: "[the feedback — paste a bug report, metric, or complaint | incident <what happened> | canvas]"
 model: sonnet
 effort: high
 disable-model-invocation: false
