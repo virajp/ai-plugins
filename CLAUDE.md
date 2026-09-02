@@ -244,6 +244,11 @@ decouples **merged** from **released**. Two tag families, both namespaced:
 | `<name>-v<version>`    | one plugin             | nothing — refs resolve to it |
 | `installer-v<version>` | `@askviraj/ai-plugins` | `release.yml` → npm publish  |
 
+On `develop` a plugin's version is `X.Y.Z+N` — the next release plus a
+working-tree iteration counter that `mise run plugins:local` moves so the
+authoring machine's `claude plugin update` sees each edit. Releasing starts by
+dropping the `+N`; `plugins:release` refuses a ref that still carries one.
+
 **Ask the user before running `plugins:release` or `i:release`.**
 
 The mise environment split, the three workflows and why `deps-update.yml`
@@ -285,7 +290,8 @@ verdict reads exactly like a hook that decided to stay quiet.
 ## Adding a Plugin
 
 1. Create `plugins/<name>/.claude-plugin/plugin.json` with `name`, `version`
-   (what an install pins to; bump it to ship changes) and `description`.
+   (what an install pins to; `X.Y.Z+N` on `develop`, plain `X.Y.Z` to ship) and
+   `description`.
 2. Run `mise run plugins:marketplace` and stage the result.
 
 There is no second place to register it: the marketplace manifest is generated

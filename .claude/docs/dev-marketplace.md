@@ -47,25 +47,31 @@ you which by the version it reports.
 mise run plugins:local
 ```
 
-which regenerates the manifests, refuses to run in user mode, and then does the
-actual refresh:
-
-```sh
-claude plugin uninstall vwf@virajp-plugins
-claude plugin install  vwf@virajp-plugins --scope user
-```
-
-**Not `claude plugin update`.** The install is a directory *copy* into
+The install is a directory *copy* into
 `~/.claude/plugins/cache/virajp-plugins/<plugin>/<version>/`, keyed by version,
-and `update` compares versions only. With the source edited and the version
-unchanged it reports `✔ vwf is already at the latest version` and copies nothing
-— measured, not assumed. Uninstall-then-install re-copies. `update` becomes
-correct again the moment the version bumps.
+and `claude plugin update` compares versions only. With the source edited and
+the version unchanged it reports `✔ vwf is already at the latest version` and
+copies nothing — measured, not assumed. So on `develop` every plugin's version
+is **`X.Y.Z+N`**: `X.Y.Z` is the *next* release, and `+N` counts the
+working-tree iterations. `plugins:local` is what moves `N` — for each plugin
+whose tree differs from its installed copy under an unchanged version it bumps
+`+N`, regenerates the manifests, refreshes the marketplace and runs
+`claude plugin update`, which now sees a change. The bump lands in the working
+tree; commit it with the work. A version you already moved by hand is left
+alone.
+
+Claude compares versions as **strings**, so `+4` → `+5` registers as an update
+even though semver ranks them equal — and writes the cache directory with the
+`+` as `-` (`vwf/19.10.0-1/`), which is why `plugins:local` reads each install's
+path from `installed_plugins.json` rather than building it. That is measured
+against the real CLI and undocumented, which is why the `+N` never reaches
+users: `plugins:release` refuses a ref that carries one, and dropping it is the
+first step of the release ritual (`.claude/skills/release/`).
 
 This is the
 [`vwf-edits-do-not-reach-the-running-tools`](../memory/gaps/2026-08-26-vwf-edits-do-not-reach-the-running-tools.md)
-gap. The dev marketplace does not close it; it makes the workaround one pair of
-commands.
+gap. The dev marketplace does not close it; `plugins:local` makes the workaround
+one command.
 
 Restart Claude Code afterwards — a plugin's skills are read at session start.
 

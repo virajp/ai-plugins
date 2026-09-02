@@ -1,42 +1,125 @@
 #!/usr/bin/env bash
-#MISE description="Reinstall vwf from the dev marketplace so this machine runs the working tree"
+#MISE description="Bump the +N build number of every changed plugin and update the local install from the working tree"
 #MISE dir="{{ config_root }}"
 
-# The dev-marketplace refresh loop as one command. A plugin install is a
-# directory COPY into ~/.claude/plugins/cache/, keyed by version, and
-# `claude plugin update` compares versions only — so with the source edited and
-# the version unchanged it copies nothing. Uninstall-then-install re-copies
-# unconditionally, which is why this task is that pair and not `update`.
+# The dev-marketplace refresh loop as one command.
 #
-# Only vwf is named: stackgen arrives as its dependency, from the same
-# marketplace, so the pair refreshes both.
+# A plugin install is a directory COPY into ~/.claude/plugins/cache/, keyed by
+# version, and `claude plugin update` compares versions only: with the source
+# edited and the version unchanged it copies nothing. So on develop a plugin's
+# version carries semver build metadata — `X.Y.Z+N`, where X.Y.Z is the NEXT
+# release and N counts the working-tree iterations — and this task is what
+# moves N. Each run, for every plugin under plugins/:
+#
+#   tree == installed copy                 nothing to do
+#   tree != installed, version unchanged   bump +N, so update has something to see
+#   tree != installed, version already moved   the author bumped by hand; leave it
+#
+# then regenerates the manifests and runs `claude plugin update`, which now
+# copies. The bump lands in the working tree and is committed with the work.
+#
+# A version with no `+` is either unreleased (its tag does not exist yet — the
+# bump keeps X.Y.Z and starts +1) or released (its tag exists — the bump moves
+# to the next PATCH and starts +1, because `X.Y.Z+1` would strip back to a tag
+# that is already cut). Edit X.Y.Z by hand when the next release is minor or
+# major; the +N is preserved on the next run. Tags are checked LOCALLY — this is
+# the machine that pushes them.
+#
+# Claude compares versions as strings, not by semver precedence, so a +N bump
+# registers as an update even though semver ranks `+4` and `+5` equal — measured
+# against the real CLI, and undocumented, so `plugins:release` refuses to tag a
+# ref that still carries one.
 #
 # This does NOT release anything. Users are reached only by `plugins:release`,
-# from main. The setup this task assumes (registering ./.dev-marketplace) is
-# .claude/docs/dev-marketplace.md.
+# from main, after the `+N` is dropped. The setup this task assumes (registering
+# ./.dev-marketplace) is .claude/docs/dev-marketplace.md.
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# 1. Regenerate both manifests and the symlink, so the install below serves
-#    today's plugin manifests rather than the last generate.
-mise run plugins:marketplace
+MARKETPLACE="virajp-plugins"
+INSTALLED_JSON="${HOME}/.claude/plugins/installed_plugins.json"
 
-# 2. Refuse to run in user mode. There the registered virajp-plugins is the
-#    tagged one, and the reinstall would quietly re-copy the last RELEASE —
-#    exactly the state this task exists to escape.
+# 1. Refuse to run in user mode. There the registered marketplace is the tagged
+#    one, and the update below would quietly re-copy the last RELEASE — exactly
+#    the state this task exists to escape.
 if ! claude plugin marketplace list | grep -q '\.dev-marketplace'; then
-  print_error "virajp-plugins is not registered from ./.dev-marketplace — this machine is in user mode."
+  print_error "${MARKETPLACE} is not registered from ./.dev-marketplace — this machine is in user mode."
   print_normal "Setup is .claude/docs/dev-marketplace.md: 'claude plugin marketplace add ./.dev-marketplace' (the leading ./ is required)."
   exit 1
 fi
 
-# 3. The pair. Uninstall may find nothing on a first run — that is fine.
-claude plugin uninstall vwf@virajp-plugins || true
-claude plugin install vwf@virajp-plugins --scope user
+# The install record: "<version> <installPath>" for one plugin, or nothing.
+installed_record() {
+  node -p "
+    const r = (require('${INSTALLED_JSON}').plugins['$1@${MARKETPLACE}'] || [])
+      .find(e => e.scope === 'user');
+    r ? r.version + ' ' + r.installPath : ''
+  " 2>/dev/null || true
+}
 
-print_success "Reinstalled from the working tree:"
-claude plugin list | grep '@virajp-plugins' || true
+manifest_version() {
+  node -p "require('./plugins/$1/.claude-plugin/plugin.json').version"
+}
+
+# 2. Bump every plugin whose tree moved under an unchanged version.
+BUMPED=()
+for dir in plugins/*/; do
+  name="$(basename "${dir}")"
+  record="$(installed_record "${name}")"
+  [[ -n "${record}" ]] || continue
+  installed_version="${record%% *}"
+  install_path="${record#* }"
+
+  if diff -rq "plugins/${name}" "${install_path}" >/dev/null; then
+    continue
+  fi
+
+  version="$(manifest_version "${name}")"
+  if [[ "${version}" != "${installed_version}" ]]; then
+    print_normal "${name}: ${installed_version} → ${version} (already bumped)"
+    continue
+  fi
+
+  base="${version%%+*}"
+  if [[ "${version}" == *+* ]]; then
+    next="${base}+$(( ${version#*+} + 1 ))"
+  elif git rev-parse -q --verify "refs/tags/${name}-v${base}" >/dev/null; then
+    IFS=. read -r major minor patch <<<"${base}"
+    next="${major}.${minor}.$(( patch + 1 ))+1"
+  else
+    next="${base}+1"
+  fi
+
+  # The manifest's top-level version line only — BSD sed, so no -i without ''.
+  sed -i '' -E "s/^(  \"version\": \")[^\"]+(\")/\1${next}\2/" \
+    "plugins/${name}/.claude-plugin/plugin.json"
+  print_normal "${name}: ${version} → ${next}"
+  BUMPED+=("${name}")
+done
+
+# 3. Regenerate both manifests (the refs rename themselves) and refresh the
+#    marketplace's view of them before asking for updates.
+mise run plugins:marketplace
+claude plugin marketplace update "${MARKETPLACE}"
+
+# 4. Update, or install on a machine that has nothing yet — vwf pulls stackgen
+#    in as its dependency.
+if [[ -z "$(installed_record vwf)" ]]; then
+  claude plugin install "vwf@${MARKETPLACE}" --scope user
+else
+  for dir in plugins/*/; do
+    name="$(basename "${dir}")"
+    [[ -n "$(installed_record "${name}")" ]] || continue
+    claude plugin update "${name}@${MARKETPLACE}"
+  done
+fi
+
+print_success "Local install matches the working tree:"
+claude plugin list | awk "/@${MARKETPLACE}/ { print; getline; print }"
+if [[ "${#BUMPED[@]}" -gt 0 ]]; then
+  print_normal "Bumped: ${BUMPED[*]} — commit the manifest and marketplace changes with the work."
+fi
 print_warn "Restart Claude Code — a plugin's skills are read at session start."

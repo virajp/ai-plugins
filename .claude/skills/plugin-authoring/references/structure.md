@@ -40,6 +40,12 @@ the old one and nobody's update does anything. Plugin and skill version numbers
 are independent by design; a plugin may hold skills versioned on their own
 cadence, so nothing cross-checks them.
 
+On `develop` the version is **`X.Y.Z+N`** — the next release plus a working-tree
+iteration counter. `mise run plugins:local` moves the `+N` for every plugin
+whose tree changed, so the authoring machine's `update` re-copies; the release
+ritual strips it, and `plugins:release` refuses a ref that still carries one.
+The checker accepts both forms.
+
 ## `plugin.json` — the manifest
 
 One file per plugin at `<plugin>/.claude-plugin/plugin.json`, in Claude Code's

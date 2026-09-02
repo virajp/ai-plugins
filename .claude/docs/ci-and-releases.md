@@ -46,11 +46,17 @@ is what publishes. What decouples the two is that **every plugin is pinned to
 its own tag** in the marketplace manifest, so shipping is a deliberate act:
 
 ```text
-bump plugins/<name>/.claude-plugin/plugin.json version   (on develop)
-mise run plugins:marketplace                             → the ref renames itself
+drop the +N from plugins/<name>/.claude-plugin/plugin.json   (on develop)
+mise run plugins:marketplace                                 → the ref renames itself
 merge develop → main
-mise run plugins:release                                 → creates + pushes the tags
+mise run plugins:release                                     → creates + pushes the tags
 ```
+
+On `develop` a plugin's version is `X.Y.Z+N` — the next release plus a
+working-tree iteration counter that `plugins:local` moves so the authoring
+machine's `claude plugin update` sees each edit (`dev-marketplace.md`). The
+release is the commit that strips the `+N`; `plugins:release` refuses a ref that
+still carries one, so users only ever see plain semver.
 
 `plugins:release` tags **only** the plugins whose ref has no tag yet, which is
 what makes releases per-plugin: a plugin whose version did not move already has
@@ -168,11 +174,11 @@ time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
 
 Two rituals now, for the two things this repo ships.
 
-**The plugins**: bump the version in each changed plugin's manifest on
-`develop`, `mise run plugins:marketplace`, merge to `main`, then
-`mise run plugins:release` (`--dry-run` first). No npm, no GitHub Release — the
-tag *is* the release, and users move on
-`claude plugin marketplace update virajp-plugins`.
+**The plugins**: drop the `+N` from each changed plugin's manifest version on
+`develop` (bumping `X.Y.Z` first if the release is minor or major),
+`mise run plugins:marketplace`, merge to `main`, then `mise run plugins:release`
+(`--dry-run` first). No npm, no GitHub Release — the tag *is* the release, and
+users move on `claude plugin marketplace update virajp-plugins`.
 
 **The installer**: `mise run i:version` on `develop` (`--minor`/`--major` to
 choose the bump), commit, merge to `main`, then `mise run i:release` there — it
