@@ -74,6 +74,14 @@ literally named `production`).
    A green commit status from an earlier run does not substitute: the release
    run proves it. Dependents are included because a release changes what they
    build against.
+6. **`pipeline/load-proven`** — before the **first production release** of a
+   flow whose declared peak rate (its Guarantees table's Load & latency cell)
+   meets a threshold (default `~10/s`), a load run on staging demonstrates the
+   stated SLO holds at the declared peak; evidence linked in the release
+   record. Mechanism and tooling (the load-test tool, how the run is triggered
+   and scored) belong to the CI system pinned on the project's `cicd` axis;
+   waivable via the standard `pipeline/…` doc-note + `enforcement.rules` waiver
+   pair, like any other pipeline rule.
 
 ## How the surfaces apply it
 
@@ -85,12 +93,15 @@ literally named `production`).
   in `environments:` is flagged as drift); its release offer stays
   production-only — rule 4 is why.
 - **The CI system pinned on the project's `cicd` axis** generates pipelines
-  conforming to rules 1–3 and 5 when the repo carries this contract, and asks
-  its own questions for everything the contract does not pin (runner, secrets,
-  deploy commands, job shape). It owns the mechanism these rules deliberately
-  leave open — including the recommended tag grammar itself. vwf never names
-  that system: the pin is a config key, and the doctrine behind it ships with
-  whichever plugin claims the axis.
+  conforming to rules 1–3, 5, and 6 when the repo carries this contract, and
+  asks its own questions for everything the contract does not pin (runner,
+  secrets, deploy commands, job shape, the load-test tool). It owns the
+  mechanism these rules deliberately leave open — including the recommended
+  tag grammar itself. vwf never names that system: the pin is a config key,
+  and the doctrine behind it ships with whichever plugin claims the axis.
+- **`/vwf:plan`** injects a `test:load` harness-capability preflight step (per
+  its delta-checks) when a chain element's declared peak rate meets rule 6's
+  threshold, so the load run exists before the release it gates.
 - **The execute reviewers** treat a pipeline file that violates the seeded
   `#pipeline` lines (a branch-push deploy, a per-language toolchain install, a
   missing branch validation) as a finding like any conventions violation.

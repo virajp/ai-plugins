@@ -18,6 +18,7 @@ re-verified cheaply when a cycle needs it.
 | `health`      | any project declares the `service` platform     | a `GET /health` (or documented readiness) endpoint            |
 | `screenshots` | a **browser** screen platform (`site`/`webapp`) | a repeatable way to render a screen and scan it               |
 | `goldens`     | a **device** screen platform (`desktop`/`mobile`/`tablet`/`auto`) | a repeatable visual check + the platform's a11y assertions |
+| `test:load`   | a flow's declared peak rate meets the delivery-pipeline load-validation threshold (default `~10/s`), ahead of its first production release | a `test:load` task/script running a load run against staging |
 
 Reference implementations live in the **stack plugins**, not here. A repo may
 satisfy a capability under a **non-canonical name**; detection records what it

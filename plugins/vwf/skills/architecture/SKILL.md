@@ -248,14 +248,21 @@ concern **not applicable** to omit it from the doc entirely.
 **Foundations checklist.** Then walk the **product-foundations** skill's
 checklist — users & operators, observability, audit logs, change logs,
 background processes, data retention & PII, notifications, runtime settings,
-rate limiting. For each: present its default contract in one line and ask via
-MCQ — **accept the default / adapt it / not applicable** — recording the
-selection as its cross-cutting token (e.g. `audit: privileged-destructive`,
+rate limiting, reliability targets, DR & backup. For each **elective**
+foundation: present its default contract in one line and ask via MCQ —
+**accept the default / adapt it / not applicable** — recording the selection
+as its cross-cutting token (e.g. `audit: privileged-destructive`,
 `notifications: [push, email]`, `background:
-durable-worker-ephemeral-service`).
-These are elicited defaults, not enforced standards: a skip simply omits the
-token (no `enforcement:` entry). On an update run, walk only foundations not yet
-decided — never re-litigate a recorded selection.
+durable-worker-ephemeral-service`); a skip simply omits the token (no
+`enforcement:` entry). For each **core** foundation (users & operators,
+observability, reliability targets, DR & backup) the MCQ instead offers
+**accept the default / adapt it / defer — not production-bound** — a core
+foundation has no "not applicable"; a deferral records a registry token
+`<foundation>: deferred-preprod`, never an omission. These are elicited
+defaults, not enforced standards, but a core deferral is a recorded,
+production-blocking exception rather than a silent skip. On an update run,
+walk only foundations not yet decided — never re-litigate a recorded
+selection.
 
 Capture each decision as a single short token or list. Record only the decision,
 not the full blueprint — `blueprint` expands it into

@@ -70,6 +70,12 @@ to its canonical environment, and flag a synonym **key** in the config's
 this run targets it — §5 fires only then. A staging run is never a release
 (`pipeline/staging-is-not-a-release`).
 
+**Deferred core token (production runs only).** When this run targets the
+release environment, read the registry for any `<foundation>: deferred-preprod`
+core token (per the product-foundations skill) and report it as a **blocking**
+finding — the product is shipping to customers on a foundation it explicitly
+said was not ready; §5 (release) does not fire while one is present.
+
 **Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall rooms `gaps`
 and `problems` for still-open items — a criterion already known-failing is
 reported as **known**, not rediscovered. Skip silently if mempalace is down.

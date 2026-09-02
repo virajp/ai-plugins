@@ -63,11 +63,15 @@ Background Jobs if the registry has no worker.
 - **Guarantees** — one table, one row per step group whose guarantees differ
   (`all` when the whole journey shares them): consistency (atomic | eventual),
   what happens on failure (the compensation or rollback, or
-  `none — <why safe>`), and the key a retry is idempotent under (or `n/a`).
-  Format 16 merged the former Consistency boundary / Failure handling /
-  Idempotency sections: three one-bullet sections that grew into essays and then
-  cross-referenced each other, so one decision ended up split across three
-  places.
+  `none — <why safe>`), the key a retry is idempotent under (or `n/a`), and a
+  **Load & latency** cell — the expected peak rate (order of magnitude,
+  `~10/s`) and a p95 budget for user-facing groups, or the token
+  `default — per conventions#reliability` when the group carries no need
+  stricter than the service's stated SLO (the normal cell, so the density cost
+  is near zero). Format 16 merged the former Consistency boundary / Failure
+  handling / Idempotency sections: three one-bullet sections that grew into
+  essays and then cross-referenced each other, so one decision ended up split
+  across three places.
 - **Diagram** — the mandatory `sequenceDiagram` (below).
 - **Background Jobs** — the jobs this flow requires (below).
 - **Acceptance** — observable Given/When/Then outcomes (below).

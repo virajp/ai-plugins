@@ -54,7 +54,7 @@ it. When a planning decision is genuinely open, elicit it following the
 
 | Reference                                    | When to read                                                                                                                    |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [§3 conditional checks](references/delta-checks.md) | While working §3 — stamp-heal (empty delta), the released-contract check (a touched `apis/released/` snapshot), the harness preflight (always), and the visual-review advisory (a flow with platform files) |
+| [§3 conditional checks](references/delta-checks.md) | While working §3 — stamp-heal (empty delta), the released-contract check (a touched `apis/released/` snapshot), the harness preflight (always), the deferred-core-token check (a production-bound slice), and the visual-review advisory (a flow with platform files) |
 | [Writing the plan doc](references/plan-doc.md)      | At §7, once the delta is computed and every decision is settled — the doc's frontmatter, chain position, and acceptance-criteria transcription |
 
 ---
@@ -233,11 +233,11 @@ named explicitly in that step (package + what it's for): the plan's approval
 gate is where the user consents to new dependencies, and execute never installs
 one the plan doesn't name.
 
-**Then run the four checks** in
+**Then run the five checks** in
 [§3 conditional checks](references/delta-checks.md) — stamp-heal, the
-released-contract check, the harness preflight, and the visual-review advisory.
-The harness preflight fires on every element; the other three only when their
-condition holds.
+released-contract check, the harness preflight, the deferred-core-token check,
+and the visual-review advisory. The harness preflight fires on every element;
+the other four only when their condition holds.
 
 ### 4. Route blueprint gaps back; flag drift
 

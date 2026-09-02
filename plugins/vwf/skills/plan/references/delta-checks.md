@@ -27,13 +27,26 @@ contract.
 Per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`, work out which harness
 capabilities this element's gates will need (acceptance criteria → `e2e_local` +
 `local_stack`; changed screens in a web UI → `dev` + `screenshots`; a touched
-cloud project → `health`; flows + a deploy target → `e2e_staging`). Read the
+cloud project → `health`; flows + a deploy target → `e2e_staging`; a flow whose
+Guarantees table declares a peak rate meeting the delivery-pipeline's
+load-validation threshold, ahead of its first production release →
+`test:load`). Read the
 `.config/vwf.yaml` `harness:` block (plus any per-project
 `projects.<name>.harness` override) and **re-verify just those** against the
 repo (the stamp may be stale). For each one missing, **inject a bootstrap step**
 into the ordered steps — the coder builds it under the normal pipeline. Harness
 steps are gate-required guardrails: the minimalism ladder never strikes them,
 and they order **before** the steps whose verification depends on them.
+
+## Deferred-core-token check (every element, when the slice is production-bound)
+
+When this element's slice is production-bound, read the registry for any
+`<foundation>: deferred-preprod` core token (per the product-foundations
+skill). A deferred core token still on the registry is a **blocking** finding —
+report it and halt, pointing at `/vwf:architecture` to resolve the deferral
+(accept, adapt, or a conscious re-deferral is not available for a
+production-bound slice). This mirrors `/vwf:verify production`'s same check
+against the deployed environment.
 
 ## Visual-review advisory (only for a flow with platform files — soft, never a halt)
 

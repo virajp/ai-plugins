@@ -88,10 +88,14 @@ orchestrator passes both. Verify the contract and every platform file:
       `operationId` exists in the `apis/*.openapi.yaml` the orchestrator passed
       (Grep — existence only), where the operation documents its error cases and
       idempotency.
-- [ ] A **Guarantees** table states consistency, on-failure behaviour, and
-      idempotency for every step group; none implied but unlisted. Separate
-      `## Consistency boundary` / `## Failure handling` / `## Idempotency`
-      sections are pre-format-16 drift — flag them for merging.
+- [ ] A **Guarantees** table states consistency, on-failure behaviour,
+      idempotency, and a **Load & latency** cell for every step group; none
+      implied but unlisted. A Load & latency cell is complete whether it states
+      a peak rate + p95 budget or carries the default token
+      (`default — per conventions#reliability`) — only a missing cell is a gap.
+      Separate `## Consistency boundary` / `## Failure handling` /
+      `## Idempotency` sections are pre-format-16 drift — flag them for
+      merging.
 - [ ] The flow carries a mermaid `sequenceDiagram` whose participants are the
       entities/services its steps name, including the failure/compensation
       branch. A missing diagram is a gap; a diagram that adds or contradicts a
@@ -194,6 +198,9 @@ The doc is `docs/blueprint/entities/<entity>/` — **always** `index.md` +
       link to a flow doc that **resolves** (or is reported as "target not yet
       authored" when absent from the passed flow list). A missing Used-by line
       is a gap — an entity no flow uses is a speculative surface.
+- [ ] The Purpose section carries a **Scale:** line — expected count
+      order-of-magnitude at a stated horizon plus the growth driver. A missing
+      Scale line is a gap.
 - [ ] `schema.yaml` exists beside `index.md`, parses as YAML, and meets the bar:
       JSON Schema draft 2020-12 header (`$schema`, `title`, `description`,
       `type: object`); every property typed **and** described; every enum lists
