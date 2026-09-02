@@ -137,6 +137,16 @@ surface it as a grouping, but do use it: only a `B` token can be answered by a
 `/vwf:doctor` §5 reports. A token added via **Other** must be classified into
 the asset before it is recorded.
 
+**Trust-boundary threat notes.** While walking a project's capabilities, each
+one that opens a trust boundary — an external caller (a published `service`
+API), an inbound integration callback or webhook (`payments-subscriptions` and
+its kin), a file upload (`object-file-storage`) — takes **one elicited line**:
+the worst plausible abuse of that boundary. Record the lines in
+`registry.yaml` as a `threat_notes:` list beside the project's `capabilities`
+— the block `/vwf:execute`'s security reviewer already reads when it
+threat-models a diff, so each note lands exactly where the threat model
+starts. One line per boundary, no more: a seed, never a threat-model document.
+
 Then ask the user to enumerate all projects, and walk the projects one at
 a time, gathering for each:
 
@@ -297,7 +307,8 @@ for explicit approval before proceeding to Step 5.
 Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 
 - All elicited prose answers (system overview, interconnects, hosting).
-- All per-project registry rows (name, role, platforms, path, capabilities, depends_on,
+- All per-project registry rows (name, role, platforms, path, capabilities —
+  with their trust-boundary `threat_notes` — depends_on,
   doc_unit, platforms) — **no stack**; it is not a registry field.
 - All cross-cutting decisions.
 - **Update mode only:** the **paths** `docs/blueprint/architecture.md` and

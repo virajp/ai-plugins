@@ -90,6 +90,15 @@ literally named `production`).
    target; a release that genuinely cannot roll back (an irreversible step)
    says so in the release record — irreversibility becomes a visible chosen
    state, never the silent default.
+8. **`pipeline/dependency-audit`** — every pipeline run that can lead to a
+   release runs the ecosystem's lockfile vulnerability audit (the package
+   manager's own audit command), and a **known-critical advisory fails the
+   run**. Waivable **per-advisory** —
+   `pipeline/dependency-audit/<advisory-id>`, with a reason **and a date**, so
+   a waiver ages visibly instead of quietly becoming policy. Automated
+   dependency updates stay recommended, never mandated; the audit tooling,
+   like every other mechanism here, belongs to the CI system pinned on the
+   project's `cicd` axis.
 
 ## How the surfaces apply it
 
@@ -101,12 +110,18 @@ literally named `production`).
   in `environments:` is flagged as drift); its release offer stays
   production-only — rule 4 is why.
 - **The CI system pinned on the project's `cicd` axis** generates pipelines
-  conforming to rules 1–3, 5, and 6 when the repo carries this contract, and
+  conforming to rules 1–3, 5, 6, and 8 when the repo carries this contract, and
   asks its own questions for everything the contract does not pin (runner,
-  secrets, deploy commands, job shape, the load-test tool). It owns the
+  secrets, deploy commands, job shape, the load-test tool, the audit tooling).
+  It owns the
   mechanism these rules deliberately leave open — including the recommended
   tag grammar itself. vwf never names that system: the pin is a config key,
   and the doctrine behind it ships with whichever plugin claims the axis.
+- **`/vwf:doctor`** runs the same audit per project ahead of any pipeline: a
+  critical advisory reports as a **blocking** finding (halting `/vwf:plan` and
+  `/vwf:execute` like any other), high/moderate as information — so a release
+  the pipeline would fail on rule 8 is visible before the release act, not
+  during it.
 - **`/vwf:plan`** injects a `test:load` harness-capability preflight step (per
   its delta-checks) when a chain element's declared peak rate meets rule 6's
   threshold, so the load run exists before the release it gates.

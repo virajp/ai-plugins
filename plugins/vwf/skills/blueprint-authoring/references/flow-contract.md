@@ -144,6 +144,13 @@ never the test file, fixture, or tool. These are the contract `plan` turns into
 E2E test steps and `execute`'s **acceptance stage** verifies end-to-end (and
 `/vwf:verify` re-runs against deployed environments).
 
+A flow whose Trigger & Actors table includes an **external or unauthenticated
+actor**, or that mutates **payments or entitlements**, carries at least one
+**abuse-case criterion**: a Given/When/Then in which that actor attempts what
+its Authorization entry does not allow, and the observable outcome is the
+denial **plus the audit record** of the attempt. `n/a — <why>` is allowed when
+the flow genuinely has no such surface to abuse.
+
 ## What `flows/index.md` holds
 
 `docs/blueprint/flows/index.md` (type `vwf-integration`) is deliberately thin —

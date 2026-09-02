@@ -139,6 +139,19 @@ optional, and no reference restates a rule that lives above.
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
+**Dependency audit (per in-scope project).** Alongside the manifest checks,
+run the ecosystem's own audit command against each project's lockfile — the
+package manager's, whatever it is; doctor names no tool beyond it. A
+**critical** advisory reports as **blocking** — the same class callers halt
+on; high/moderate advisories report as information. An advisory waived
+per-advisory under `enforcement.rules`
+(`pipeline/dependency-audit/<advisory-id>`, per the delivery-pipeline asset)
+reports as **degraded** with its waiver's date, never re-escalated. A project
+with no lockfile, or whose package manager offers no audit command, reports
+`n/a — no audit surface`, never a failure. Doctor reports the advisory and the
+remediation command; it never updates a dependency — `pipeline/dependency-audit`
+is what gates the release itself.
+
 ### 9. Report & persist
 
 One table, findings first, grouped by kind — **blocking** (something *mandatory*
@@ -148,7 +161,8 @@ project inside another repo whose extraction the user has **not** declined on
 the record, `mise` and an **unknown** language — the last two **conditionally**,
 once a stack axis is pinned (§5, §3) — a `custom` template pin, a
 project whose template does not cover every platform it declares, a broken
-membership link (§1), a misplaced / duplicated /
+membership link (§1), an unwaived **critical** dependency advisory (the audit
+check), a misplaced / duplicated /
 missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 **drift** (config and repo disagree), **missing** (something declared has no
 install — including a **`B`**-kind capability a project declares that none of

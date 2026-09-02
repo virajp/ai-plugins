@@ -131,6 +131,12 @@ orchestrator passes both. Verify the contract and every platform file:
       criterion naming a test file, fixture, tool, or internal function is a
       code-independence gap; a criterion that is not observable ("the workflow
       completes") is a gap.
+- [ ] **Abuse case** — where the Trigger & Actors table lists an external or
+      unauthenticated actor, or a step mutates payments/entitlements, the
+      Acceptance block carries at least one **abuse-case criterion** — a
+      Given/When/Then in which that actor attempts what it is not authorized
+      to do, with the observable outcome being denial plus the audit record —
+      or an explicit `n/a — <why>`. Silence on it is a gap.
 - [ ] Every cross-cutting reference resolves to a real `conventions.md` anchor,
       written as a markdown link (References are links, not bare text).
 - [ ] **OKF frontmatter** present and complete: `type: vwf-flow`, `title`,
