@@ -1,7 +1,6 @@
 ---
 convention:
   commitTypes:
-    - blueprint
     - ops
     - docs
     - merge

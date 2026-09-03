@@ -7,52 +7,6 @@
   `readme.md`, this file, and `docs/` in the same commit — stale docs are more
   harmful than no docs
 
-## vwf workflow
-
-This repo uses the **vwf** Product → Blueprint → Plan → Execute workflow — the
-one it ships. Docs live under `docs/blueprint/` (the desired state) and
-`docs/plans/` (the diffs to apply).
-
-**Order:** `/vwf:setup` → `/vwf:product` → `/vwf:architecture` →
-`/vwf:blueprint` (a full-product sweep — `plan` halts until its coverage stamp
-reads complete) → `/vwf:plan <slice>` → `/vwf:execute` → `/vwf:archive`. Then
-`/vwf:verify production` and `/vwf:feedback` route what production says back
-into product/blueprint/plan.
-
-`/vwf:design-system` runs in its **text-only Terminal UX** mode here: the
-registry declares no screen platform (`plugin` has no screens, `cli` is a
-terminal surface), so there is no canvas, no mockups and no `docs/scratchpad/`
-render tree. `/vwf:screens` and `/vwf:mockups` do not apply to this product.
-
-**The blueprint is a code-independent contract.** It records only decisions that
-have more than one reasonable answer *and* are true regardless of how the code
-is written today. Reuse-vs-build, file placement, step ordering, and library
-choices are `plan`'s job — not the blueprint's.
-
-**Docs:**
-
-- `docs/blueprint/product.md` — problem, users, measurable goals (every flow
-  `Serves:` one), slice priority.
-- `docs/blueprint/architecture.md` — system shape + machine-readable Project
-  Registry (`registry.yaml`).
-- `docs/blueprint/conventions.md` — cross-cutting decisions.
-- `docs/blueprint/environment.md` — per-project inventory of env vars + secrets,
-  no values.
-- `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — one folder per flow,
-  the **primary** blueprint unit. No `<platform>.md` files here: neither project
-  declares a screen platform. `flows/index.md` is the catalog.
-- `docs/blueprint/entities/<entity>/` — `index.md` (lifecycle, relationships,
-  invariants) + `schema.yaml`. `entities/index.md` is the catalog + ER diagram.
-- `docs/blueprint/apis/` — per-project API contracts; empty while neither
-  project publishes one.
-
-**The blueprint is an OKF bundle** — every doc is a typed concept (YAML
-frontmatter) and relationships are markdown links, so any OKF-aware tool can
-render it and graphify can ingest it.
-
-Re-run `/vwf:setup` after upgrading vwf to migrate the docs to the latest
-format.
-
 ## What This Repo Is
 
 A multi-agent plugin toolkit (`virajp-plugins`) containing LSP servers, MCP
