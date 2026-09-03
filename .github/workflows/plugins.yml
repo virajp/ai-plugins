@@ -1,7 +1,7 @@
 name: Plugins
 
 # Validates the plugin toolkit: the one authored tree under plugins/, the
-# marketplace manifest generated from its 13 manifests, and the repo tooling that
+# marketplace manifest generated from its 2 manifests, and the repo tooling that
 # does both.
 #
 # Deliberately a SEPARATE workflow from release.yml. npm allows exactly one
@@ -62,7 +62,7 @@ jobs:
       # so a ref with no tag is an install that fails for every user.
       #
       # Deliberately not part of `plugins:marketplace --check`. That check is a
-      # pure function of the 7 manifests and must stay offline and
+      # pure function of the 2 manifests and must stay offline and
       # fresh-clone-safe; this one asks the remote a question.
       - name: Every marketplace ref names a tag that exists
         if: github.ref == 'refs/heads/main'
