@@ -4,6 +4,5 @@
 # generated from the per-plugin manifests; the manifests themselves are indexed
 .claude-plugin/
 
-# superseded artifacts and the memory mirror (mempalace owns recall)
-archived/
+# the memory mirror (mempalace owns recall)
 docs/memory/

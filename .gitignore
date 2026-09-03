@@ -44,14 +44,11 @@ bin/
 
 # Working notes and session handoffs — personal state, not the team's.
 #
-# vwf's memory doctrine splits its seven rooms: `decisions`, `planning`, `gaps`
-# and `problems` are the team's and stay committed; `handoff`, `doctor` and
-# `runs` are one developer's state and are not. Only `docs/scratchpad/` was ever
-# listed here, so the comment described a rule half of which did not exist and
-# every `/vwf:handoff` committed a personal handoff. `doctor/` and `runs/` are
-# listed before they exist on purpose — they are written by a command, so the
-# first run that creates one would otherwise reintroduce exactly this bug.
-docs/scratchpad/
+# docs/memory/ splits by audience: `decisions`, `planning`, `gaps` and
+# `problems` are the team's and stay committed; `handoff`, `doctor` and `runs`
+# are one developer's state and are not. All three are listed whether or not
+# they exist right now — they are written by a command, so the first run that
+# creates one would otherwise commit personal state.
 docs/memory/handoff/
 docs/memory/doctor/
 docs/memory/runs/
