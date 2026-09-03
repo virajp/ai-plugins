@@ -238,7 +238,7 @@ subtraction, dropping only the keys your repo's lockfile recorded. A pack may
 also declare **repo config files** it owns — the mise config and the file-based
 task library everything else runs through — on the same merges-never-owns terms
 and behind their own consent line; gate configs like `dprint.json` are
-deliberately outside that fence, named as prerequisites rather than written. 36
+deliberately outside that fence, named as prerequisites rather than written. 38
 packs and 32 bundles ship across all eleven kinds, the newest two being the
 `toolchain-manager` and `workspace` kinds that arrived when the `devtools`
 plugin dissolved into stackgen. stackgen is now the only stack plugin: its packs
