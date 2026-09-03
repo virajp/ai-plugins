@@ -8,29 +8,22 @@
 #
 # Routing walks a file's path parts outermost-first and returns on the first room
 # whose name or keywords match, so every top-level directory is claimed below on
-# purpose — that is what stops `plugins/vwf/skills/doctor/` landing in the
-# protocol `doctor` room. `docs` itself stays unclaimed so that
-# docs/memory/<room>/ reaches its own room, docs/cli/ reaches `installer`, and
-# docs/plugins/ reaches `plugins`.
+# purpose. `docs` itself stays unclaimed so that docs/memory/<room>/ reaches its
+# own room, docs/cli/ reaches `installer`, and docs/plugins/ reaches `plugins`.
 #
 # But leaving `docs` unclaimed is only half a rule, and the other half had to be
 # learned from a mine: an unclaimed part means routing walks *past* it, so any
-# docs/ subtree whose own name — or, worse, whose filename — brushes a protocol
-# room's keyword is captured by it. Two did.
-#
-#   docs/plans/**                            → `planning`, on the `plans` keyword
-#   docs/how-to/operate/sessions-and-handoff.md → `handoff`, on the *filename*
-#
-# The second is the one that shows. A guide *about* the handoff mechanism ranked
-# above the actual handoffs in the room they live in, so a recall there answered
-# with doctrine instead of state. Nothing errored; the room just stopped meaning
-# one thing.
+# docs/ subtree whose own name — or, worse, whose filename — brushes a room's
+# keyword is captured by it. Two did: `docs/plans/**` landed in `planning` on the
+# `plans` keyword, and `docs/how-to/operate/sessions-and-handoff.md` landed in
+# the then-existing `handoff` room on its *filename*, where a guide about the
+# mechanism outranked the state it described. Nothing errored; the room just
+# stopped meaning one thing.
 #
 # So every docs/ subtree is now claimed as deliberately as every top-level
-# directory, and the two keywords that did the capturing are gone: `planning`
-# keeps only its own name, and `handoff` drops the broad `session`. A protocol
-# room should be reachable by its own name — which is how docs/memory/<room>/
-# still finds it — and by little else.
+# directory, and the keyword that did the first capture is gone: `planning` keeps
+# only its own name. A room should be reachable by its own name — which is how
+# docs/memory/<room>/ still finds it — and by little else.
 
 wing: ai-plugins
 
@@ -49,11 +42,6 @@ exclude_patterns:
   # mined — there is one tree now, so nothing is a near-duplicate of anything.
   - /.claude-plugin/
 
-  # Superseded vwf commands, agents and templates from prior models. Kept in git
-  # as history; excluded here because a recall cannot tell retired doctrine from
-  # current doctrine once both are ranked by meaning alone.
-  - /archived/
-
   # Dependency and build output. node_modules/, dist/ and bin/ are already
   # gitignored (and node_modules/ and dist/ are in mempalace's own SKIP_DIRS);
   # listed for the case where the tree is mined without git.
@@ -63,10 +51,11 @@ exclude_patterns:
 
 rooms:
   # ---------------------------------------------------------------------------
-  # The seven protocol rooms vwf writes to. All seven are seeded even where this
-  # repo has no directory for them yet: without the seed, the first agent write
-  # creates the room implicitly with no keywords, so a later mine routes nothing
-  # to it and the room only ever holds what vwf put there by hand.
+  # The docs/memory/ rooms. This repo ships vwf but no longer runs it on itself,
+  # so only the four committed rooms are seeded — `runs`, `doctor` and `handoff`
+  # were dropped with the directories that fed them. Seeding matters because an
+  # implicit room, created by the first agent write, carries no keywords: a later
+  # mine routes nothing to it and it only holds what was filed by hand.
   # ---------------------------------------------------------------------------
   - name: decisions
     description: Design and architecture decisions with their rationale, from
@@ -85,20 +74,6 @@ rooms:
     description: Blueprint and plan holes surfaced during execution, plus scope
       parked during elicitation
     keywords: [ gaps ]
-  - name: runs
-    description: Execute run journals — dependency order and per-step progress
-      for resuming a paused run
-    keywords: [ runs ]
-  - name: doctor
-    description: /vwf:doctor findings per run, so a later run reports a known
-      one as known
-    keywords: [ doctor ]
-  - name: handoff
-    description: Session handoffs, including the reserved next handoff
-    # `session` removed: it matched the filename sessions-and-handoff.md, filing
-    # a how-to guide into the room the actual handoffs live in, where it
-    # outranked them. The room name alone still claims docs/memory/handoff/.
-    keywords: [ handoff, handoffs ]
 
   # ---------------------------------------------------------------------------
   # Path-derived rooms — what this repo actually holds.
