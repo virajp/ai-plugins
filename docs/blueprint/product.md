@@ -42,11 +42,12 @@ durable.
 
 ## Target users
 
-| Persona                   | Who they are                                                                                | Core need                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Fresh-start developer** | Starting a greenfield product with an agent, from an idea rather than a codebase            | Reach a shipped, reviewed first slice without inventing a process on the way                    |
-| **Adopting developer**    | Has a codebase that already works and earns; wants the workflow without a rewrite           | Onboard existing work so its conventions are recognized rather than replaced, and keep shipping |
-| **Toolkit maintainer**    | Authors and maintains the workflow and its plugins; runs this repo through its own workflow | Keep the parts internally consistent, and prove the workflow works by depending on it in anger  |
+| Persona                   | Who they are                                                                                | Core need                                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Fresh-start developer** | Starting a greenfield product with an agent, from an idea rather than a codebase            | Reach a shipped, reviewed first slice without inventing a process on the way                                  |
+| **Adopting developer**    | Has a codebase that already works and earns; wants the workflow without a rewrite           | Onboard existing work so its conventions are recognized rather than replaced, and keep shipping               |
+| **Operating developer**   | Runs a live product already on the workflow; ships slice after slice once the first landed  | Keep the contract true as reality diverges from it, and carry work across sessions without rebuilding context |
+| **Toolkit maintainer**    | Authors and maintains the workflow and its plugins; runs this repo through its own workflow | Keep the parts internally consistent, and prove the workflow works by depending on it in anger                |
 
 ## Goals & success metrics
 
@@ -65,9 +66,19 @@ durable.
 - Outcome: a later session reads the contract rather than re-deriving intent
   from the code, because the contract still matches reality.
 - Metric: share of planning runs that complete without routing a discovered gap
-  back into the blueprint — target ≥ 80%, every planning run.
-- Measured via: counter vwf-plan.completed — a run that routes a gap back to the
-  blueprint instead records `vwf-plan.compensated`, so the ratio is the metric.
+  back into the blueprint — target ≥ 80%, every planning run. A run that routes
+  a gap back instead records `vwf-plan.compensated`, so the ratio of the two is
+  the metric.
+- Measured via: counter vwf-plan.completed
+
+### A decision is made once {#goal-decisions-persist}
+
+- Outcome: a decision taken in one session is available to the next as a written
+  record, so it is never re-litigated from the code.
+- Metric: share of reality-changing runs that file their durable decisions, or
+  record that there were none — target 100%, every run.
+- Measured via: store-metric share of completed runs carrying a matching
+  decision record.
 
 ### Quality gates run unasked {#goal-unconditional-quality-gates}
 
@@ -75,9 +86,9 @@ durable.
   conformance happen because the workflow runs them, not because anyone asked.
 - Metric: share of execution runs reaching their final gate with every stage
   recorded and none skipped — target 100%, every run. A stage that reports
-  itself inapplicable counts as run.
-- Measured via: counter vwf-execute.completed — a run reaching its final gate
-  with every stage recorded; a skipped stage records `vwf-execute.failed`.
+  itself inapplicable counts as run; a skipped stage records
+  `vwf-execute.failed`, so the ratio of the two is the metric.
+- Measured via: counter vwf-execute.completed
 
 ### Dependencies precede dependents {#goal-ordered-dependencies}
 
@@ -94,10 +105,9 @@ durable.
   shipping, its conventions recognized rather than replaced.
 - Metric: share of onboarding runs that modify nothing outside the documentation
   tree, the configuration directory and the agent instructions file — target
-  100%, per onboarding.
-- Measured via: counter vwf-setup.completed — an onboarding run that commits
-  within the permitted paths; one that touches anything outside them records
-  `vwf-setup.failed`.
+  100%, per onboarding. A run that touches anything outside the permitted paths
+  records `vwf-setup.failed`, so the ratio of the two is the metric.
+- Measured via: counter vwf-setup.completed
 
 ### The toolkit stays internally consistent {#goal-consistent-toolkit}
 
@@ -128,18 +138,18 @@ durable.
 
 ## Slice priority
 
-| Rank | Slice (flow / entity)                   | Serves goal                       | Validates                                                            | Why now                                                                                              |
-| ---- | --------------------------------------- | --------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 1    | Local end-to-end verification task      | #goal-unconditional-quality-gates | —                                                                    | The acceptance stage has nothing to run until one named task exists; onboarding deliberately left it |
-| 2    | One small change through plan → execute | #goal-traceable-work              | The contract format can describe an agent-extension product          | The end-to-end proof the workflow operates on this product; depends on rank 1 to be meaningful       |
-| 3    | Post-release install verification       | #goal-one-command-start           | Continuous integration catches a bad merge before a user installs it | The goal with the weakest evidence today — nothing yet proves the single command works from clean    |
-| 4    | Consolidation of the optional parts     | #goal-stack-agnostic-workflow     | —                                                                    | Largest slice by far; each wave needs its own explicit go-ahead before it starts                     |
+| Rank | Slice (flow / entity)                    | Serves goal                       | Validates                                                            | Why now                                                                                                         |
+| ---- | ---------------------------------------- | --------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1    | Finish the whole-product blueprint sweep | #goal-authoritative-blueprint     | The revised granularity rule holds across the full sweep             | Coverage reads partial, which hard-halts planning — every slice below is blocked behind it                      |
+| 2    | Local end-to-end verification task       | #goal-unconditional-quality-gates | —                                                                    | The acceptance stage has nothing to run until one named task exists; onboarding deliberately left it            |
+| 3    | One small change through plan → execute  | #goal-traceable-work              | —                                                                    | The end-to-end proof the workflow operates on this product; needs rank 1 to unblock and rank 2 to be meaningful |
+| 4    | Post-release install verification        | #goal-one-command-start           | Continuous integration catches a bad merge before a user installs it | The goal with the weakest evidence today — nothing yet proves the single command works from clean               |
 
 ```mermaid
 flowchart LR
-  A[Local end-to-end verification task] --> B[One small change through plan and execute]
-  B --> C[Post-release install verification]
-  C --> D[Consolidation of the optional parts]
+  A[Finish the blueprint sweep] --> B[Local end-to-end verification task]
+  B --> C[One small change through plan and execute]
+  C --> D[Post-release install verification]
 ```
 
 ## Non-goals
@@ -153,6 +163,10 @@ flowchart LR
 - **Deploying anything.** The workflow states the delivery contract and verifies
   an environment after the fact. The mechanism belongs to an optional part; the
   act of deploying belongs to the user.
+- **Measuring its own users.** Nothing phones home. The workflow leaves its
+  evidence in the repository — run records, plan documents, continuous
+  integration — where the developer can read it, and nowhere else. That is also
+  why every goal above is measured from local artifacts.
 - **Being cheap to run.** Judgment-heavy stages run the strongest model
   available, hold the whole contract in context at once, and loop on findings.
   Meaningful cost per slice is a deliberate trade, not a defect to optimize
@@ -160,8 +174,9 @@ flowchart LR
 
 ## Risks & assumptions
 
-| Assumption                                                                           | Risk if wrong                                                                                                       | Validation method                                                                            | Status   | Evidence                                                                                                                                                                                                                                                                      |
-| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The contract format can describe an agent-extension product, not just an application | The blueprint sweep cannot express what a part does, and planning halts — the format underspecifies its own subject | `slice:one-small-change-through-plan-execute`                                                | untested | Partial: three flow docs written and certified ([010](./flows/plugins/010-vwf-setup/index.md), [020](./flows/plugins/020-vwf-product/index.md), [030](./flows/plugins/030-vwf-architecture/index.md)). No planning run has consumed them yet, which is what the slice settles |
-| Measuring the goals against one product is representative                            | Every metric reads green because the same author built both the workflow and the thing measured; n=1                | `accepted-risk — no external adoption is scheduled, so every reading is n=1 by construction` | untested | None. The risk is carried knowingly rather than mitigated; it closes only if an outside team adopts the workflow                                                                                                                                                              |
-| Continuous integration catches a bad merge before a user installs it                 | The catalog is served from the main branch, so a broken merge is installable until the build goes red               | `slice:post-release-install-verification`                                                    | untested | The per-push validation exists and runs, but narrows the window rather than closing it; nothing yet proves a published version installs from clean                                                                                                                            |
+| Assumption                                                                           | Risk if wrong                                                                                                       | Validation method                                                                            | Status      | Evidence                                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The contract format can describe an agent-extension product, not just an application | The blueprint sweep cannot express what a part does, and planning halts — the format underspecifies its own subject | `prototype`                                                                                  | invalidated | The first sweep (2026-08-27) found the literal reading demanded 102 flows, roughly 12,000 lines, against a repo whose densest document is about 600. Resolved by redefining an extension product's flow as an invocable extension point, which cut scope from 48 to 25 |
+| The revised granularity rule holds across the full sweep                             | The rule fixes the count without fixing the fit, and the sweep stalls again partway with the same overage argument  | `slice:finish-the-whole-product-blueprint-sweep`                                             | untested    | 3 of 25 flows written and certified ([010](./flows/plugins/010-vwf-setup/index.md), [020](./flows/plugins/020-vwf-product/index.md), [030](./flows/plugins/030-vwf-architecture/index.md)), each over budget but reviewed as genuine. The remaining 22 settle it       |
+| Measuring the goals against one product is representative                            | Every metric reads green because the same author built both the workflow and the thing measured; n=1                | `accepted-risk — no external adoption is scheduled, so every reading is n=1 by construction` | untested    | None. The risk is carried knowingly rather than mitigated; it closes only if an outside team adopts the workflow                                                                                                                                                       |
+| Continuous integration catches a bad merge before a user installs it                 | The catalog is served from the main branch, so a broken merge is installable until the build goes red               | `slice:post-release-install-verification`                                                    | untested    | The per-push validation exists and runs, and now asserts every catalog reference names a tag that exists — but it narrows the window rather than closing it; nothing yet proves a published version installs from clean                                                |
