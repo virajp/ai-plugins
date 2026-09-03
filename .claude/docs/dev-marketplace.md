@@ -73,7 +73,7 @@ installed number as well as the staged one, and removes a pre-existing cache
 directory for the version it is about to install.
 
 This is the
-[`vwf-edits-do-not-reach-the-running-tools`](../memory/gaps/2026-08-26-vwf-edits-do-not-reach-the-running-tools.md)
+[`vwf-edits-do-not-reach-the-running-tools`](../../docs/memory/gaps/2026-08-26-vwf-edits-do-not-reach-the-running-tools.md)
 gap. The dev marketplace does not close it; `plugins:local` makes the workaround
 one command.
 
