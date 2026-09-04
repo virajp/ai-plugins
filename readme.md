@@ -303,8 +303,9 @@ is a small CLI with three jobs: install **plugins** (`--all`, `--user`,
 [Install](#install) above), wire up **graphify**, and **remove** what this
 toolkit put on your machine.
 
-It used to be published as `@askviraj/ai-plugins`. That name is deprecated on
-npm with a pointer to this one; nothing further is published under it.
+It used to be published as `@askviraj/ai-plugins`. That package is sunset: it
+stays on npm, deprecated, and running it only prints a pointer to the new name
+and exits non-zero.
 
 **[docs/installer/](./docs/installer/)** is the full reference —
 [usage](./docs/installer/usage.md) for the flag surface,
