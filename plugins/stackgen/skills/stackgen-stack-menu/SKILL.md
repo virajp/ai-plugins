@@ -54,9 +54,9 @@ note: Packs listed here are curated and copied verbatim. Any technology no
   committed .claude/ tree. Generation needs Context7 reachable and halts
   without it.
 templates:
-  - slug: <pack directory name>
-    axis: <pack.yaml axis>
-    kind: <pack.yaml kind> # assets/kinds.md
+  - slug: <bundle filename without .md>
+    axis: <bundle frontmatter axis>
+    kind: <bundle frontmatter kind> # assets/kinds.md
     platforms: [ <platform> ] # project axis only
     name: <display name>
     summary: <one line>

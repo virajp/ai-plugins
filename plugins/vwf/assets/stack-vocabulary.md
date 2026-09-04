@@ -64,11 +64,12 @@ exactly what has not been chosen yet. The moment the project axis is pinned, the
 rule reverts: unknown is **blocking**, and `setup` and `execute` halt on it. The
 severity follows the pin, never the calendar.
 
-## The four axes
+## The six axes
 
-A stack is **composed from four independent templates**, not one monolith. Each
-axis answers a different question, and a project's `.config/vwf.yaml` `stack`
-block answers each one:
+A stack is **composed from six independent templates** — `project | backing |
+deploy | repo | design | cicd` — not one monolith. Each axis answers a different
+question, and a project's `.config/vwf.yaml` answers each one (the first four in
+its `stack` block, the two tool axes as `design` and `cicd` pins):
 
 | Axis        | Scope       | Cardinality           | Owns                                                    |
 | ----------- | ----------- | --------------------- | ------------------------------------------------------- |
@@ -76,13 +77,15 @@ block answers each one:
 | **backing** | per project | a list (one per capability) | Datastore, identity, queue, storage, the local stack |
 | **deploy**  | per project | a list (one per delivery mechanism, since `config_format` 16) | Build artifact, release pipeline, hosting, environments |
 | **repo**    | per repo    | one                   | Package manager, task runner, lint/format, workspace    |
+| **design**  | per project | one                   | The design tool and its adapter, for screen platforms   |
+| **cicd**    | per project | one                   | The CI system that builds and releases the project      |
 
 The templates themselves live in the **stack plugins**, never in vwf
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Since config_format 13 the
-first three are pinned **per project** — a product may run its site on one cloud
-and its API on another.
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Since config_format 13 every
+axis but `repo` is pinned **per project** — a product may run its site on one
+cloud and its API on another.
 
-**An axis may also be unanswered.** Since `config_format` 16 any of the four may
+**An axis may also be unanswered.** Since `config_format` 16 any of the six may
 read `unresolved` — deferred rather than decided
 (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). The
 axes stay independent under deferral too: one may be pinned while the other
@@ -100,71 +103,24 @@ needed. Where one axis must refer to another it names the *axis*, not a vendor �
 a project template says "the identity provider the backing axis selects", never
 a provider by name.
 
-## Template frontmatter
+## What vwf contracts of a template
 
-**Every template declares `axis:`**, whichever axis it is on — that key is what
-says which menu it joins, and `plugins:check` enforces it. A project-axis
-template carries `platforms:` *alongside* `axis:`, never instead of it: the
-platform list is real data, but it is not the axis.
+**Every payload declares `axis:`**, whichever axis it is on — that key is what
+says which menu it joins. A project-axis payload carries `platforms:`
+*alongside* `axis:`, never instead of it: the platform list is real data, but
+it is not the axis.
 
-Every **project** template a stack plugin ships, at
-`<plugin>/stacks/project/<slug>.md` — **flat, no role directory** since format
-22, because one template routinely serves several platforms and a directory name
-cannot say so — opens with:
-
-```yaml
----
-axis: project # which of the four menus this template joins
-platforms: [ <platform>, <...> ] # which registry platforms this template serves; see assets/templates/registry.yaml for the closed per-role lists
-name: <display name> # what the menu shows
-languages: [<token>] # open; the plugin owning the language defines its facts
-optional_languages: [] # admitted by the template, not required — e.g. a mobile template's platform languages. DECLARES the token for doctor's unknown-language test, but carries NO language facts, so doctor reports it known-but-unverified
-frameworks: [] # open, lowercase-kebab; 0..n
-dependencies: [] # open, lowercase-kebab; the few that characterize the stack
----
-```
-
-**Backing** templates declare which capability tokens they realize, so
-`/vwf:architecture` can match a project's declared capabilities against them:
-
-```yaml
----
-axis: backing
-name: <display name>
-capabilities: [] # from ${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md
-local_stack: <mechanism> # how the local_stack harness capability is satisfied
----
-```
-
-**Deploy** templates declare the artifact they produce:
-
-```yaml
----
-axis: deploy
-name: <display name>
-artifact: <container-image | static-bundle | …>
-private_plane: <mechanism> # how a non-public project is kept off the internet
----
-```
-
-**Repo** templates describe tooling, not a project:
-
-```yaml
----
-axis: repo
-name: <display name>
-topologies: [monorepo, workspace] # which topologies this template suits
-package_manager: <token> # only where the language has one; see the vwf-config asset
-tools: [] # the tooling that defines the template
----
-```
-
-The prose below the frontmatter is the template's **conventions**. It reaches
-`/vwf:plan` and `/vwf:execute` as the `conventions:` field of the
-template payload — neither reads a template file, and the config block records
-only which template was picked, never what it says. The fetch rule (deduped by
-slug, once per run, a failure halts) is *Resolving the conventions* in
+A stack plugin's template files are its own business — their layout, their
+frontmatter and where they sit in the plugin's tree are not vwf's to describe.
+What vwf contracts is the **payload** `stackgen-stack-template` returns for a
+slug, whose keys are listed in the template-payload section of
 `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`.
+
+A template's **conventions** prose reaches `/vwf:plan` and `/vwf:execute` as
+the `conventions:` field of that payload — neither reads a template file, and
+the config block records only which template was picked, never what it says.
+The fetch rule (deduped by slug, once per run, a failure halts) is *Resolving
+the conventions* in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`.
 
 Nothing in `docs/blueprint/` ever reads it, and nothing should: the prose names
 technology, which is exactly what a blueprint doc may not.

@@ -67,5 +67,5 @@ own task runner is tooling, and gets no project entry.
 ## Distribution
 
 Ships through a **package registry**, not a deploy target: pair this with the
-`deploy/npm-package` template (`assets/stacks/deploy/npm-package.md`), which
-carries the publish pipeline, provenance, and versioning rules.
+`npm-package` bundle on the `deploy` axis (`stacks/bundles/npm-package.md`),
+which carries the publish pipeline, provenance, and versioning rules.

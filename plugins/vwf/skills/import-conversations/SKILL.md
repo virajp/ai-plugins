@@ -16,10 +16,10 @@ payload**. You read from whichever design tool the named project uses and
 normalize; you never classify a remark, never route one, and never write a
 blueprint doc — those are vwf's, and `/vwf:feedback` does them.
 
-> **`invocation` must stay `both`.** vwf reaches this skill by delegation.
-> Flipping it to `user` removes the skill from the model's context and blocks
-> programmatic invocation — the call would not error, it would silently harvest
-> nothing.
+> **`disable-model-invocation` must stay `false`.** vwf reaches this skill by
+> delegation. Flipping it to `true` removes the skill from the model's context
+> and blocks programmatic invocation — the call would not error, it would
+> silently harvest nothing.
 
 The payload shape is defined by the vwf adapter contract; read it before
 returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.

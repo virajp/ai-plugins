@@ -37,7 +37,7 @@ Those three skills in turn delegate once more, to **three more fixed names in
 the repo's own `.claude/skills/`** — `design-import-screens`,
 `design-import-design-system` and `design-import-conversations`. Those are what
 the project's `design:` pin materializes, and they are the only place a tool is
-named. It is the same seam that dissolved the `<plugin>-ux-gate` construction,
+named. It is the same seam that retired the `<plugin>-ux-gate` construction,
 reused rather than reinvented: a fixed name in the repo, resolved at
 materialization time, never assembled at run time.
 
@@ -115,7 +115,7 @@ directly against the Screens contract.
 ```yaml
 flow: <NNN>-<flow-slug>
 project: <registry-project>
-platform: mobile | tablet | desktop | web | auto
+platform: mobile | tablet | desktop | auto | site | webapp
 screens:
   - code: <NNN><letter> # the pinned screen code — the join key
     name: <screen name>
@@ -197,7 +197,7 @@ project: <registry-project>
 remarks:
   - surface: screen | state | design-system | project # what the remark bears on
     code: <NNN><letter> # the pinned screen code, or null when not recoverable
-    platform: mobile | tablet | desktop | web | auto # or null
+    platform: mobile | tablet | desktop | auto | site | webapp # or null
     kind: comment | change-request | observation
     remark: <what was said, close to how it was said>
     notes: [] # ambiguity, truncation, anything with no slot above

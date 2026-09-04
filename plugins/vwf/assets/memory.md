@@ -157,12 +157,27 @@ exclude_patterns: # secrets first, then trees not worth mining
   - node_modules/
   - dist/
 rooms:
+  - name: decisions
+    description: Architecture and product decisions from docs/memory/decisions/
+    keywords: [ decision, decisions, adr ]
+  - name: problems
+    description: Problems and postmortems from docs/memory/problems/
+    keywords: [ problem, problems, incident, postmortem ]
+  - name: planning
+    description: Cycle plans from docs/memory/planning/
+    keywords: [ plan, plans, planning ]
+  - name: gaps
+    description: Gaps the pipeline captured
+    keywords: [ gap, gaps ]
+  - name: runs
+    description: Execute run records
+    keywords: [ run, runs, execute ]
+  - name: doctor
+    description: Doctor reports
+    keywords: [ doctor, drift ]
   - name: handoff
     description: Session handoffs from docs/memory/handoff/
     keywords: [ handoff, handoffs, session ]
-  - name: general
-    description: Files that don't fit other rooms
-    keywords: []
 ```
 
 `exclude_patterns` takes gitignore syntax and survives for exactly two jobs: the

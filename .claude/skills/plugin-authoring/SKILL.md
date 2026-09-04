@@ -1,9 +1,9 @@
 ---
 name: plugin-authoring
 description: This repo's plugin doctrine — how a plugin is structured,
-  packaged and registered, the two mise tasks, what plugins:check asserts, the
-  language-plugin contract, and the traps specific to this marketplace.
-  Auto-applies when editing anything under plugins/.
+  packaged and registered, the three mise tasks, what plugins:check asserts,
+  and the traps specific to this marketplace. Auto-applies when editing
+  anything under plugins/.
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
@@ -91,14 +91,16 @@ script a stackgen pack ships as payload is covered elsewhere (the
 
 ## References
 
-| Reference                                             | Covers                                                                       |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [structure.md](references/structure.md)               | the authored tree, `plugin.json`, versions, the marketplace and its traps    |
-| [checks.md](references/checks.md)                     | what `plugins:check` asserts, rule by rule, and the technology-free guard    |
-| [language-plugins.md](references/language-plugins.md) | the language-plugin contract — boundary, mandatory core, posture, collisions |
+| Reference                               | Covers                                                                    |
+| --------------------------------------- | ------------------------------------------------------------------------- |
+| [structure.md](references/structure.md) | the authored tree, `plugin.json`, versions, the marketplace and its traps |
+| [checks.md](references/checks.md)       | what `plugins:check` asserts, rule by rule, and the technology-free guard |
 
 Artifact validity — frontmatter, invocation, hooks — is **not** in this table.
-It is stackgen's `assets/artifact-doctrine.md`, and it applies here too.
+It is stackgen's `assets/artifact-doctrine.md`, and it applies here too. Nor is
+the language-plugin contract that used to sit beside these: it is retired with
+the curated language plugins, and a language is a stackgen `language-bundle`
+kind now, per `plugins/stackgen/assets/kinds.md`.
 
 ## Documentation
 

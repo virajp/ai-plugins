@@ -1,6 +1,6 @@
 ---
 type: vwf-flow-platform
-title: Home — web
+title: Home — webapp
 description: The browser home surface — cart summary, recent orders, and
   routes onward.
 status: reviewed
@@ -8,7 +8,7 @@ platform: webapp
 implementation: complete
 ---
 
-# Home — web
+# Home — webapp
 
 Flow contract: [Home](./index.md)
 

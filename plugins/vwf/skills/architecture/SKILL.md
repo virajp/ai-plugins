@@ -228,14 +228,15 @@ CLI/TUI question are in
 step, for every project.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.** It
-is composed from **four independent axes** (project / backing / deploy per
-project, repo per repo), each elicited as its own round, plus the per-project
-`design` and `cicd` keys. The menus, what each axis records, and the recording
-rules are in [the stack menu](references/stack-menu.md) — read it before
-eliciting any of them. Two rules hold whatever the answers are: vwf ships **no
-default and no recommended template**, and **every project gets a written
-`stack` block**, because that block is what `/vwf:doctor` checks the repo against
-and it cannot check what was never recorded.
+is composed from **six independent axes** (project / backing / deploy / design /
+cicd per project, repo per repo), each elicited as its own round; the `design`
+and `cicd` pins are the per-project keys of the same name, since on those two
+axes the slug *is* the config value. The menus, what each axis records, and the
+recording rules are in [the stack menu](references/stack-menu.md) — read it
+before eliciting any of them. Two rules hold whatever the answers are: vwf
+ships **no default and no recommended template**, and **every project gets a
+written `stack` block**, because that block is what `/vwf:doctor` checks the
+repo against and it cannot check what was never recorded.
 
 The stack never reaches `docs/blueprint/`. That is not a convention the authors
 have to keep — it is what the registry's shape enforces, and it is why a flow

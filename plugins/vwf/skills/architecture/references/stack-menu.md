@@ -6,15 +6,18 @@ project's technology never needs it.
 
 ## The stack is a menu — elicited, and it lives in config, not the registry
 
-Since format 19 a stack is composed from **four independent axes**
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`), each its own menu:
+Since format 19 a stack is composed from **six independent axes**
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` holds the enum), each its own
+menu:
 
 | Axis        | Scope       | Menu                    | Recorded as                              |
 | ----------- | ----------- | ----------------------- | ---------------------------------------- |
-| **project** | per project | the plugins' `project/` | `projects.<name>.stack.template`         |
-| **backing** | per project | the plugins' `backing/` | `projects.<name>.stack.backing_template` |
-| **deploy**  | per project | the plugins' `deploy/`  | `projects.<name>.stack.deploy_template`  |
-| **repo**    | per repo    | the plugins' `repo/`    | `repo.stack.template`                    |
+| **project** | per project | project-axis entries    | `projects.<name>.stack.template`         |
+| **backing** | per project | backing-axis entries    | `projects.<name>.stack.backing_template` |
+| **deploy**  | per project | deploy-axis entries     | `projects.<name>.stack.deploy_template`  |
+| **repo**    | per repo    | repo-axis entries       | `repo.stack.template`                    |
+| **design**  | per project | design-axis entries     | `projects.<name>.design`                 |
+| **cicd**    | per project | cicd-axis entries       | `projects.<name>.cicd`                   |
 
 Elicit each as its **own** round (per `assets/elicitation.md` — one decision),
 and per §3a of that protocol **every question names the project it decides**.
@@ -53,8 +56,8 @@ collapse the recorded values back into a shared pin.
 
 ## Every stack round also offers *defer this axis*
 
-Alongside the menu entries, each of the four stack rounds offers one more
-option: **defer this axis**, recorded as `unresolved`
+Alongside the menu entries, each of the project, backing, deploy and repo
+rounds offers one more option: **defer this axis**, recorded as `unresolved`
 (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). It is
 not the retired *other (describe)* returning — that recorded a stack vwf had no
 template for; this records no stack at all, out loud. Defining the product runs

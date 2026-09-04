@@ -89,7 +89,7 @@ dependency until it dissolved into `stackgen`; if your machine still has it,
 enabled, shadowing the stackgen packs its skills moved into.
 
 `stackgen` is a dependency because vwf's stack menu is the union of what the
-installed stack plugins declare, and the four axes carry no *other (describe)*
+installed stack plugins declare, and the six axes carry no *other (describe)*
 option — so with no stack plugin present, `/vwf:architecture` asks a question
 you cannot answer. Having it installed costs nothing if you are not ready to
 choose a stack: stackgen acts only when an axis is pinned.
@@ -495,7 +495,7 @@ postponement rather than a dead end: vwf names the three ways forward (install
 the plugin that has one, write it, or **defer the axis** as `unresolved`) rather
 than coming back quietly short.
 
-A stack is composed from **four independent axes** — you answer each one, and
+A stack is composed from **six independent axes** — you answer each one, and
 they never merge because they never overlap. `project` and `repo` take a single
 template; `backing` and `deploy` take a **list**, one entry per capability and
 one per delivery mechanism (`deploy_template` became a list in `config_format`
@@ -508,23 +508,26 @@ a container image):
 | **backing** | per project | a list — one entry per capability the project talks to (datastore, identity, telemetry, …) |
 | **deploy**  | per project | a list — one entry per delivery mechanism the project ships through                        |
 | **repo**    | per repo    | one template describing the checkout — its package manager and workspace layout            |
+| **design**  | per project | one design tool — the slug *is* the config value                                           |
+| **cicd**    | per project | one CI system — the slug *is* the config value                                             |
 
 **No slug appears in that table on purpose.** The roster is not vwf's to state:
 the menu is the union of what your **installed** stack plugins declare, so it
 changes with what you install, and `/vwf:architecture` is what enumerates it for
 your repo. Today [stackgen](./stackgen.md) is the only stack plugin, and it
-carries all four axes — the general-purpose set, the managed backing and deploy
+carries all six axes — the general-purpose set, the managed backing and deploy
 services of each cloud it packs, and a generator for whatever no pack covers.
 
-Since `config_format` **13** the first three are pinned **per project**, so a
-product can host its site on Cloudflare, its API on GCP and its worker somewhere
-else again — and design its app in one tool while its website is designed in
-another (`design`, likewise per project). Two more per-project keys sit beside
-them: `design` (the design tool) and `cicd` (the CI system). Only `repo` stays
-per repo; it describes the checkout, not a project.
+Since `config_format` **13** every axis but `repo` is pinned **per project**, so
+a product can host its site on Cloudflare, its API on GCP and its worker
+somewhere else again — and design its app in one tool while its website is
+designed in another. On the `design` and `cicd` axes the slug **is** the config
+value, so the menu pick and the config key are one value rather than two that
+can disagree. Only `repo` stays per repo; it describes the checkout, not a
+project.
 
 **An axis can also be left unanswered.** Since `config_format` **16** any of the
-four may read `unresolved` — deferred, not decided — which is the line between
+six may read `unresolved` — deferred, not decided — which is the line between
 *defining* a product and *building* one. `/vwf:product`, `/vwf:architecture`,
 `/vwf:blueprint`, `/vwf:design-system` and every other doc surface run to
 completion with no stack chosen at all; `/vwf:doctor` reports the deferral as a
@@ -547,7 +550,7 @@ role meant. **Your pin must cover every platform your project declares**, which
 stack plugin's answer — [stackgen](./stackgen.md) states the set it ships.
 
 **Templates ship in a stack plugin, never in vwf.** vwf has no `stacks/` tree at
-all: it owns the four axes, the platform vocabulary a template declares against,
+all: it owns the six axes, the platform vocabulary a template declares against,
 and the two adapter skill names it reaches a plugin through. So a product gets
 whichever menu its installed plugins add up to, and one that installs nothing
 sees an empty one.
@@ -579,10 +582,11 @@ nothing. Recording the decline under `enforcement:` drops the finding to a
 warning reported every run, and neither `setup` nor `execute` halts on it after
 that. Nothing else about repo shape is enforced.
 
-Each template is a markdown file: YAML frontmatter carrying the four axes
+A template reaches vwf as a **payload**, never as a file: its stack facts
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
-template admits — Flutter's Kotlin and Swift), and prose carrying the layout,
-testing and deployment **conventions**. Picking one fills those axes into
+template admits — Flutter's Kotlin and Swift) and its **conventions** prose,
+carrying the layout, testing and deployment rules. How a stack plugin stores
+that template is its own business. Picking one fills those facts into
 `.config/vwf.yaml`; you can then customize any of them.
 
 Only the axes land in the config — the conventions prose stays with the plugin,
@@ -697,7 +701,7 @@ check are the recommended default, owned by the CI system pinned on the
 project's `cicd` axis — [`stackgen`](./stackgen.md)'s
 `contracts/release-trigger.md` and its `ci-system` pack.
 
-The **operator back-office** deserves a note. Since format 19 it is not its own
+The **operator back-office** deserves a note. Since format 22 it is not its own
 role: it is `platforms: [service, webapp]` plus the `operator-rbac` capability —
 a single app serving both the operator API and an embedded UI, and the **sole
 holder of admin capabilities** (the public `service` exposes no admin routes).
@@ -714,7 +718,7 @@ record.
 | `/vwf:setup`             | Onboard/migrate a repo into vwf's format (re-runnable)                                                                          |
 | `/vwf:product`           | The Phase −1 outcome contract — problem, users, goals, slice priority                                                           |
 | `/vwf:architecture`      | Bootstrap or update the system shape + Project Registry                                                                         |
-| `/vwf:design-system`     | Import the product's Claude Design design system into the contract (mandatory once UI exists)                                   |
+| `/vwf:design-system`     | Import the product's design system from its design tool into the contract (mandatory once UI exists)                            |
 | `/vwf:blueprint [flow]`  | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                    |
 | `/vwf:mockups [flow]`    | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                        |
 | `/vwf:screens <mode>`    | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                              |
@@ -890,10 +894,11 @@ blueprint deliberately doesn't.
 ### /vwf:design-system
 
 A second foundation, **mandatory once the registry has a UI project** (some
-project declares a **screen platform**) — and **import-only**: Claude Design
-owns design-system authoring. You pick or build the design system on
-claude.ai/design (its stock systems are strong, and visual language is judged on
-a canvas, not as hex values in chat); the command imports it:
+project declares a **screen platform**) — and **import-only**: the design tool
+owns design-system authoring. You pick or build the design system in the tool
+the project pins on its `design` axis (for example Claude Design, whose stock
+systems are strong; visual language is judged on a canvas, not as hex values in
+chat); the command imports it through the design adapter:
 
 ```text
 /vwf:design-system                  # resolve: pin → pick from your design systems
@@ -902,7 +907,7 @@ a canvas, not as hex values in chat); the command imports it:
 
 It reads the chosen design system **as data**, distills it into
 `docs/blueprint/design-system.md` — the **offline contract** the reviewers, the
-execute ux gate, and the coder consume without network or claude.ai auth —
+execute ux gate, and the coder consume without network or design-tool auth —
 elicits only what a canvas never decides (the accessibility conformance target;
 the **Terminal UX** section when a project declares platform `cli`), runs the
 **reviewer subagent** gate until `NO GAPS`, and pins `design.design_system_id`
@@ -912,9 +917,9 @@ library, CSS framework, or design file. Every flow's Screens reference it;
 `blueprint` halts on a flow with screens until it exists.
 
 **Drift is one-way.** The canvas is the source; the doc is its distillation.
-Change the design system on claude.ai/design and re-run the import — the doc is
-never published back. With no design-tool connection the command halts with
-connect instructions (`/mcp`).
+Change the design system in the design tool and re-run the import — the doc is
+never published back. With no design tool pinned for the project, or its pack
+not yet materialized, the command halts naming the fix.
 
 **One offline path, and only one.** A registry declaring **no** screen platform
 at all — a `cli`- or `plugin`-only product — takes the **text-only path**: the
@@ -995,8 +1000,9 @@ So `home` is `100` in every product you ever blueprint, and its screens are
 always coded `100a`, `100b`, … Deviating takes a waiver, like any other enforced
 rule.
 
-**Six platforms, one vocabulary** — `mobile`, `tablet`, `desktop` (a natively
-installed app), `web` (browser-delivered), `auto` (in-car), and `cli` (a shipped
+**Seven platforms, one vocabulary** — `mobile`, `tablet`, `desktop` (a natively
+installed app), `site` (a browser-delivered content surface), `webapp` (the
+browser-delivered application), `auto` (in-car), and `cli` (a shipped
 command-line or TUI tool). The names are form factors, not vendors: `mobile`
 already hides iOS/Android, so **`auto` covers CarPlay and Android Auto
 together**, with their template differences recorded as deviations inside
@@ -1024,7 +1030,7 @@ changed Screens **gates on a render & review**: the pass renders that flow's
 screens as static HTML mockups — the happy path *and* every pinned sad path
 (error and empty states are mandatory pins per screen) — into the repo's
 gitignored `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` tree (**never
-pushed to Claude Design**), you open them in your browser, and your remarks
+pushed to the design tool**), you open them in your browser, and your remarks
 route straight back into the Screens contract before the pass closes. Prefer the
 canvas to *design* the screens instead? The pass can defer design-first to
 [`/vwf:screens`](#vwfscreens) — brief out, canvas designs, import folds back.
@@ -1106,7 +1112,7 @@ change unrendered.
 
 ### /vwf:screens
 
-The **two-way screen sync** — for when you want Claude Design to *design* the
+The **two-way screen sync** — for when you want the design tool to *design* the
 screens rather than review vwf's contract-derived renders (blueprint's §6a
 offers this as its design-first option):
 
@@ -1118,7 +1124,7 @@ offers this as its design-first option):
 `prompt` writes **one compact wireframe-level design brief per platform**
 (`mobile.md`, `tablet.md`, `auto.md`, …). **The files are the deliverable**: you
 paste each into the canvas chat yourself — vwf never runs a brief against the
-Claude Design MCP. Each brief is always the flow's **full** screen blueprint,
+design tool. Each brief is always the flow's **full** screen blueprint,
 regenerated in place, never a change note.
 
 The standing conventions don't live in the briefs. They live in the canvas
@@ -1141,9 +1147,10 @@ validation timing, the **components and their rules** transcribed from the flow
 doc, and the states its tweaks must cover.
 
 Nothing that steers the *visual* design goes in — no tokens, type, spacing, or
-component styling. Claude Design resolves those from its Design System project,
-and the canvas chat is where you make the design yours. What a screen **shows**
-and how it **behaves** is contract, transcribed rather than left to the canvas.
+component styling. The design tool resolves those from its own design system
+(Claude Design, for example, from its Design System project), and the canvas
+chat is where you make the design yours. What a screen **shows** and how it
+**behaves** is contract, transcribed rather than left to the canvas.
 
 `import` reads the designed pages back **as data**, matches them by the naming
 contract (an unmatched page gets a per-page question — assign, propose a new
@@ -1856,8 +1863,8 @@ rules:
 
 ### mempalace — memory, over HTTP
 
-Declared as `transport: http` against `http://127.0.0.1:8765/mcp` — a daemon you
-run yourself rather than a stdio subprocess the agent owns. The two skills that
+Declared as `type: http` against `http://127.0.0.1:8765/mcp` — a daemon you run
+yourself rather than a stdio subprocess the agent owns. The two skills that
 drive it are vendored into `vwf` under MIT, which is what lets memory ship on
 every target rather than only where a marketplace reaches. Setup, why HTTP, the
 second-server trap and the provenance record are in

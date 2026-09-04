@@ -79,14 +79,27 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
 
 ## What to watch for
 
-- **The marketplace is added from a local path** during verification (the repo
-  root), not from GitHub, so you are testing the tree in the working copy. Say
-  so explicitly in the report — a user's install resolves `main` instead, and
-  that is a difference your run cannot cover.
-- **Sources resolve against the marketplace root.** Every entry is
-  `./plugins/<name>`, so a plugin must land from `<repo>/plugins/<name>`. A path
-  that exists but resolves from the wrong base is the classic failure and looks
-  fine in the manifest.
+- **Registering the repo root from a local path does not test the working
+  tree.** Every entry in the published `.claude-plugin/marketplace.json` is a
+  `git-subdir` source, and a `git-subdir` source is self-contained: it fetches
+  from GitHub at the pinned `<name>-v<version>` tag even when the marketplace
+  was added as a local directory (`.claude/docs/ci-and-releases.md`). So adding
+  the repo root proves the **published pins** — what a user gets — and nothing
+  about an uncommitted edit. To verify the working tree, register
+  `.dev-marketplace` instead, by absolute path: `mise run plugins:marketplace`
+  writes its manifest, whose sources are repo-relative `./plugins/<name>` into
+  the `.dev-marketplace/plugins/` staging directory of copies. `plugins:local`
+  is what fills that directory, but it assumes the author's own registered
+  machine (it reads `$HOME/.claude/plugins/`), so under a hermetic home copy
+  each `plugins/<name>` tree into `.dev-marketplace/plugins/<name>` yourself and
+  leave the tracked manifests untouched. Say in the report which marketplace you
+  registered — the two prove different things, and a run that covered only one
+  cannot speak for the other.
+- **Dev sources resolve against the marketplace root.** Every dev entry is
+  `./plugins/<name>`, so a plugin must land from
+  `<repo>/.dev-marketplace/plugins/<name>`. An empty staging directory reports
+  as plugins that are simply absent, and a path that exists but resolves from
+  the wrong base is the classic failure and looks fine in the manifest.
 - **`strict: true` on every entry** means Claude requires the plugin's own
   `.claude-plugin/plugin.json` to be present in the plugin folder. A missing or
   unparseable manifest fails the install rather than falling back to the entry.
@@ -95,7 +108,8 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
   unset, it resolves by accident through a fallback chain.
 - **The dependency edge.** Installing `vwf` must pull `stackgen` automatically,
   from this same marketplace, at the same scope. That is Claude's own native
-  behaviour (≥ 2.1.143) and it is the thing that replaced the retired `--all`.
+  behaviour (≥ 2.1.143), and it is what the CLI's `--all` leans on: the flag
+  installs `DEFAULT_INSTALL` (`vwf`) alone and lets the edge bring `stackgen`.
 - **MCP and LSP declarations** ride in the plugin manifest. Confirm they appear
   in the installed plugin, and note that a declared server is inert until its
   transport is reachable — do not report an unconnected mempalace HTTP server as
@@ -108,9 +122,10 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
    tree that does not validate.
 2. `mise run i:build`, then `mise run i:test`. Same rule.
 3. Set up the hermetic home; record the exact env you used.
-4. **Add the marketplace** from the repo root and **install** at least `vwf`
-   (for the dependency edge) and one leaf plugin. Snapshot the file tree and
-   Claude's own bookkeeping.
+4. **Add the marketplace** — the repo root to prove the published pins, or
+   `.dev-marketplace` to prove the working tree, per *What to watch for* — and
+   **install** at least `vwf` (for the dependency edge) and one leaf plugin.
+   Snapshot the file tree and Claude's own bookkeeping.
 5. **Install again.** The second run must be a no-op, and `claude plugin list`
    must still report the right versions.
 6. **Uninstall** — the plugins via `claude plugin uninstall` and the marketplace
@@ -126,9 +141,12 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
 8. **The legacy-receipt path — seed it, then prove both halves.** Nothing writes
    a receipt any more, so no run produces one to test with by accident: you have
    to seed them. That reader is the only thing standing between an upgrading
-   machine and being orphaned, and this step is the only check of `legacyItems`
-   and `revertLegacyReceipt` against a real filesystem — `uninstall.test.ts` no
-   longer carries these assertions.
+   machine and being orphaned. `uninstall.test.ts` asserts the reader and the
+   restore itself, against a temp directory and with the removal driven directly
+   (`installer/CLAUDE.md`, Testing); what it cannot do is drive the **built
+   bundle** through the interactive path, since `--uninstall` refuses without a
+   TTY. This step is the only check of `legacyItems` and `revertLegacyReceipt`
+   end to end — the published artifact, a real pty, a real filesystem.
 
    Use a **fresh** hermetic home per sub-step, `cd`'d into a throwaway directory
    per rule 1. Two paths matter:
@@ -276,8 +294,8 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
      seeded**: the `statusLine` key still names the now-absent script. **This is
      expected and is not a finding.** No receipt records that key, and this CLI
      deletes only what it wrote; re-pointing it is what installing
-     `@askviraj/claude-status` does. Report it as observed and say it matched
-     expectation.
+     `claude-status` (`brew install virajp/tap/claude-status`) does. Report it
+     as observed and say it matched expectation.
 9. Remove the temp home.
 
 ## Output
@@ -288,13 +306,14 @@ Report, in this order:
 2. The env and commands you ran, verbatim enough to re-run.
 3. What landed: paths, grouped, with counts rather than full listings for bulk
    trees.
-4. What `claude plugin list` reported, per plugin, with versions.
-5. Receipt: version, entry count by kind, and the first-vs-second-run diff.
-6. Findings, numbered, each naming the file or path, what you expected, and what
-   you observed. A survivor after uninstall and a receipt entry that disappeared
-   on re-install are both **findings**, never notes.
-7. Anything you could not verify, and why — including, always, that the
-   marketplace was read from a local path rather than from GitHub.
+4. What `claude plugin list` reported, per plugin, with versions, and the
+   first-vs-second-run diff.
+5. Findings, numbered, each naming the file or path, what you expected, and what
+   you observed. A survivor after uninstall and a seeded receipt that survived
+   its revert are both **findings**, never notes.
+6. Anything you could not verify, and why — including, always, which marketplace
+   you registered, and so whether the run proved the published pins or the
+   working tree.
 
 Report what you observed. Do not diagnose the cause in the code unless the
 observation is ambiguous without it, and never edit anything.

@@ -8,8 +8,8 @@ non-UI projects alike. Since **format 15** the folder holds two kinds of file:
   the journey is, who triggers it, its steps, diagram, jobs, and acceptance.
   **No screens.**
 - **`<platform>.md`** (type `vwf-flow-platform`) — one per platform that
-  implements the journey (`mobile` | `tablet` | `desktop` | `web` | `auto`),
-  holding **only** that platform's Screens + Components + deviations.
+  implements the journey (`mobile` | `tablet` | `desktop` | `auto` | `site` |
+  `webapp`), holding **only** that platform's Screens + Components + deviations.
 
 A non-UI flow is `index.md` alone — as is a flow of a project whose platform is
 `cli`, a terminal surface with no screens. The goal-traceability spine runs

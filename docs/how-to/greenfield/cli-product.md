@@ -97,11 +97,11 @@ conversation, never imported, because no canvas designs a terminal.
 
 Which leaves the wrinkle to know before you hit it: `/vwf:design-system` is an
 import command, and on a registry with no screen platform it first asks whether
-a design system is needed at all, then, on proceeding, resolves which design
-tool to import from by reading the projects that declare a screen platform. A
-cli-only registry has none, so running it on clockon reaches that resolution
-with nothing to resolve. Treat Terminal UX as something you pin deliberately
-rather than something the import hands you — see
+a design system is needed at all. On proceeding it takes the **text-only path**:
+the adapter resolution is skipped entirely, since the adapter exists for screens
+and a cli-only registry declares none, and the command elicits the doc — the
+Terminal UX section included — directly in conversation. Running it on clockon
+never touches a design tool. See
 [the Terminal UX contract](#the-terminal-ux-contract). Reference:
 [`/vwf:design-system`](../../plugins/vwf.md#vwfdesign-system).
 

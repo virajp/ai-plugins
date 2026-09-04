@@ -41,7 +41,7 @@ the tool will be unreachable — never a silent partial landing.
     ├── lock.yaml              # the materialization record (below)
     ├── templates/<slug>.md    # template payloads: frontmatter (incl. the
     │                          #   components: composition) + conventions body
-    └── citations/<slug>.yaml  # per-component research sources with URLs + fetch dates
+    └── citations/<component-slug>.yaml  # per-component research sources with URLs + fetch dates
 ```
 
 **Skills vs rules — one mechanism per content, never both.** Doctrine that
@@ -130,9 +130,10 @@ stacks/<type>/<slug>/
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**
-`toolchain-manager`, then `package-manager` / `language`, then `app-framework`
-— a later component's file wins, and the lockfile records per file which
-component supplied the version that landed.
+`toolchain-manager`, then `package-manager` / `language`, then
+`toolchain-gate`, then `app-framework` — a later component's file wins, and
+the lockfile records per file which component supplied the version that
+landed.
 
 **Precedent, and its limit.** The `capability-provider/fnox` and
 `package-manager/pnpm` packs already ship hook scripts copied into a target

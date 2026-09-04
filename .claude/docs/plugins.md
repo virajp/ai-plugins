@@ -75,7 +75,7 @@ Every `source` is a **`git-subdir` fetch pinned to a per-plugin tag**, not the
   "source": "git-subdir",
   "url": "https://github.com/virajp/claude-plugins.git",
   "path": "plugins/vwf",
-  "ref": "vwf-v19.9.0"
+  "ref": "vwf-vX.Y.Z"
 }
 ```
 

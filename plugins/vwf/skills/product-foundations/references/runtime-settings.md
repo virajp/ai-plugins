@@ -40,7 +40,8 @@ env vars. Cross-cutting token: `runtime_settings: cached-settings-doc`.
 
 ## Blueprint expansion
 
-- A small **settings entity** (`docs/blueprint/settings/`) owns the document
-  schema and the console edit surface; `conventions.md#config` states the
+- A small **settings entity** (`docs/blueprint/entities/settings/index.md` plus
+  its `schema.yaml`) owns the document schema and the console edit surface;
+  `conventions.md#config` states the
   boundary (env vs runtime settings) and links both. Entity docs reference the
   keys they read.

@@ -88,8 +88,8 @@ conventions: |
   <the entry's body, verbatim — do not summarize it away>
 ```
 
-`language_facts` is the **materialized escape**: a language no curated plugin
-claims is still *known* to vwf when its pin is a stackgen template carrying
+`language_facts` is the **materialized escape**: a language no shipped bundle
+covers is still *known* to vwf when its pin is a stackgen template carrying
 these emitted facts — doctor verifies against them instead of against a
 language plugin. Emitting them honestly (`n/a` included) is what keeps that
 check real.

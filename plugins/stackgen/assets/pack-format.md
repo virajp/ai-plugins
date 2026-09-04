@@ -9,11 +9,12 @@ floods no session with every stack's doctrine, because nothing under
 `stacks/` is discovered by Claude Code — it only reaches a session once the
 materializer copies it into a repo's `.claude/` tree.
 
-**The first packs landed with Wave A** — the four `toolchain-gate`
-components under `stacks/toolchain-gate/`. Everything else remains the
-curated plugins' until its wave lands, and this file is the contract each is
-folded into, so Wave B/C authors target a shape the materializer already
-reads.
+**Every pack in the tree is authored here.** The `toolchain-gate` type ships
+eight packs under `stacks/toolchain-gate/` — `analysis-options`, `dprint`,
+`eslint`, `gitleaks`, `grype`, `pre-commit`, `ruff` and `tsconfig` — and no
+curated plugin stands behind any pack: the tree is each pack's only home.
+This file is the contract every pack is folded into, so an author targets a
+shape the materializer already reads.
 
 ## Layout
 
@@ -79,7 +80,6 @@ languages: # language and app-framework components only
       manifest: <the manifest file doctor checks deps against — or n/a>
 package_manager: <token> # package-manager components only
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
-private_plane: <mechanism> # deploy-side components — how a non-public project is kept off the internet (vwf's stack-vocabulary key)
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
 user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, tier 3
 lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3

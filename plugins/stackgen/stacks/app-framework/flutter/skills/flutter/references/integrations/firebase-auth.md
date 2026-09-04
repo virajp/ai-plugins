@@ -46,7 +46,8 @@ if (MyEnv.isDebugMode) {
 
 Emulator hosts are set via mise env vars (`FIREBASE_AUTH_EMULATOR_HOST`,
 `FIRESTORE_EMULATOR_HOST`). Start the emulators with the project's
-emulator-start task (e.g. `mise run setup:deps:start`) before running the app.
+emulator-start task (`mise run stack:up`, the pack's `local_stack` task)
+before running the app.
 
 ---
 

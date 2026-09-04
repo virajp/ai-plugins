@@ -74,7 +74,7 @@ A flow's **platform file** carries one more key beside `status:` and
 `implementation:`:
 
 ```yaml
-platform: mobile # mobile | tablet | desktop | web | auto
+platform: mobile # mobile | tablet | desktop | auto | site | webapp
 ```
 
 Since **format 15** the platform lives in the **filename** (`mobile.md`,

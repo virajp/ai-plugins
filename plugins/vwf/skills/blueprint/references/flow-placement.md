@@ -10,9 +10,10 @@ question. A pass that only edits an existing doc in place does not need it.
   for screen-platform and screenless projects alike. The folder holds **`index.md`** — the
   platform-agnostic contract (purpose, trigger, steps, diagram, jobs,
   acceptance; **no screens**) — plus **one `<platform>.md` per implemented
-  platform** (`mobile` | `tablet` | `desktop` | `web` | `auto`) carrying only
-  that platform's Screens + Components. A non-UI flow is `index.md` alone — and
-  so is a flow of a `cli` project, since a terminal surface has no screens.
+  platform** (`mobile` | `tablet` | `desktop` | `auto` | `site` | `webapp`)
+  carrying only that platform's Screens + Components. A non-UI flow is
+  `index.md` alone — and so is a flow of a `cli` project, since a terminal
+  surface has no screens.
   Flows are **grouped by their primary registry project** — the project that
   owns the journey (the screen-platform project of its Screens; for a screenless flow, the
   service/worker whose trigger starts it; ambiguous → ask, never guess). Since

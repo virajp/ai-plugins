@@ -13,18 +13,20 @@
 #   .dev-marketplace/.claude-plugin/marketplace.json
 #                                                   LOCAL AUTHORING ONLY — never
 #                                                   published. Sources are
-#                                                   repo-relative paths through
-#                                                   the .dev-marketplace/plugins
-#                                                   symlink, so this machine runs
-#                                                   the working tree rather than
+#                                                   repo-relative paths into
+#                                                   .dev-marketplace/plugins, a
+#                                                   staging directory of copies
+#                                                   that `plugins:local` writes,
+#                                                   so this machine runs the
+#                                                   working tree rather than
 #                                                   the last release.
 #
 # The published one lives at the repo ROOT because every `source` inside it is
 # root-relative and would resolve nowhere from anywhere else. The dev one needs
-# its own directory for the same reason, plus the symlink — Claude rejects an
-# absolute path, a {source: "directory"|"local", path} object, and a
-# parent-relative ../plugins/<name>, so a repo-relative path that stays inside
-# the marketplace root is the only accepted way to name a local tree.
+# its own directory for the same reason, plus the staging directory of copies —
+# Claude rejects an absolute path, a {source: "directory"|"local", path} object,
+# and a parent-relative ../plugins/<name>, so a repo-relative path that stays
+# inside the marketplace root is the only accepted way to name a local tree.
 #
 # Both are written together rather than behind a --dev flag: a flag is one more
 # thing to forget, and a stale dev manifest fails as a plugin quietly serving
@@ -39,9 +41,10 @@
 # committed file declaring the marketplace name `virajp-plugins` is a footgun on
 # the branch users read. So `--check` reports an absent dev manifest as not
 # applicable — the normal state in CI and in a fresh clone — and fails only on
-# one that exists and is stale, or whose symlink is missing or points elsewhere.
-# A symlink that landed as a text file resolves to nothing and reports as a
-# plugin that is simply absent, which is why it is checked at all.
+# one that exists and is stale, or whose plugins path is the retired symlink.
+# Until 2026-09-03 .dev-marketplace/plugins was a symlink to ../plugins, under
+# which `claude plugin update` never saw an edit; the generator replaces one it
+# finds with an empty staging directory, and `--check` fails on one it finds.
 #
 # Run with no build step: node strips the TypeScript types directly. That needs
 # node >= 22.6, which .config/mise.toml already pins.
