@@ -29,21 +29,18 @@ The examples use `pnpx`; if you do not use pnpm, `npx` works the same.
 | `--user <name>`    | Install a plugin at user scope; repeatable                        |
 | `--project <name>` | Install a plugin at project scope, for this repo only; repeatable |
 | `--uninstall`      | List everything installed and remove what you do not deselect     |
-| `--statusline`     | Report where the statusline moved; it is its own package now      |
 | `--dry-run`        | Show the full diff without writing anything                       |
 | `-v`, `--version`  | This CLI's version, and each plugin's version on `main`           |
 | `-h`, `--help`     | The usage text                                                    |
 
 **An invocation that installs nothing prints the help and exits 1.** A bare run
-is the common case there. The one exception is `--statusline`: it installs
-nothing either, but it is a question rather than an empty run, so it answers
-with where the bar went and exits 1 without the flag table.
+is the common case there.
 
 Parsing is strict, so a flag that no longer exists reports itself by name rather
-than being silently ignored. **`--platform`, `--upgrade`, `--force` and
-`--no-statusline` are the four on that list.** Upgrading is Claude's own
-`claude plugin update`, and `--force` existed only for the statusline, which
-installs from another package now.
+than being silently ignored. **`--platform`, `--upgrade`, `--force`,
+`--statusline` and `--no-statusline` are the five on that list.** Upgrading is
+Claude's own `claude plugin update`, and the two statusline flags existed only
+for the bar, which installs from another package now.
 
 ## Installing plugins
 
@@ -131,9 +128,8 @@ Earlier versions installed a powerline statusline for Claude Code, and its
 context-caps hook with it. Both now live in
 [`claude-status`](https://claude-status.virajp.dev) —
 `brew install virajp/tap/claude-status` — and this CLI neither installs nor
-removes them. `--statusline` is kept only to say so: it prints that redirection
-and exits 1. It composes — `--all --statusline` still installs the plugins and
-prints the install report, then the notice last, and still exits 1.
+removes them. It has no flag for the bar any more: `--statusline` is retired and
+reports itself as an unknown option.
 
 **If you installed the bar from here, `--uninstall` no longer tidies up after
 it.** A `statusline.json` receipt that version left is still read and reverted

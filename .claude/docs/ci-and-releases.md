@@ -91,8 +91,9 @@ every time. Renaming the installer family was preferred over narrowing the glob
 because it removes the whole collision class rather than this one instance: no
 future plugin name can collide, whatever letter it starts with. It is safe
 against the npm constraint — the Trusted Publisher binds to `release.yml`'s
-**filename**, not to which tags reach it. The old `v3.1.0`–`v6.0.0` tags stay as
-history; nothing fires on them any more.
+**filename**, not to which tags reach it. The `installer-v*` family belongs to
+`@virajp.dev/claude-plugins` alone and starts at `installer-v1.0.0`; the old
+package's tags were removed, so nothing in this repo names it any more.
 
 **Dogfooding unreleased plugin work does not go through an install.** A
 `git-subdir` source is self-contained, so it fetches from GitHub at the tag even
@@ -174,17 +175,16 @@ set it to `release.yml` only (not a comma-separated list, and not
 surfaces only at publish time as `ENEEDAUTH`. Until configured, `release.yml`
 cannot publish.
 
-**The sunset stub is a one-time hand publish too.** `@askviraj/ai-plugins`, the
-package's former name, ships once more as `7.0.0` from `sunset/` — a standalone
-package, not a workspace member, never built — then is deprecated. After the new
-package's first release is live:
+**The old name is deprecated by hand, once.** `@askviraj/ai-plugins`, the
+package's former name, gets a single command after the new package's first
+release is live:
 
 ```sh
-cd sunset && npm publish --access public
 npm deprecate "@askviraj/ai-plugins@*" "Moved to @virajp.dev/claude-plugins"
 ```
 
-`release.yml` has nothing to do with it and never publishes it again.
+Nothing else is published under the old name — no stub, no task, no workflow —
+and `release.yml` has nothing to do with it.
 
 ## Cutting a release
 
