@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/social-preview.png" width="640" alt="vwf">
+</p>
+
 # vwf — Product → Blueprint → Plan → Execute for Claude Code
 
 `virajp-plugins` is a plugin marketplace for AI coding agents, built around

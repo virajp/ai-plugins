@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>vwf</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html, body {
+        margin: 0;
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+      }
+      body {
+        background: #1e3f8f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 56px;
+      }
+      .grid {
+        position: absolute;
+        inset: 0;
+      }
+      img {
+        position: relative;
+        display: block;
+      }
+      .word {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .word div {
+        font-family: "Geist Mono", ui-monospace, monospace;
+        font-weight: 300;
+        font-size: 176px;
+        letter-spacing: 0.02em;
+        line-height: 0.9;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <svg
+      class="grid"
+      width="1280"
+      height="640"
+      viewBox="0 0 1280 640"
+      fill="none"
+    >
+      <defs>
+        <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+          <circle cx="12" cy="12" r="1" fill="#ffffff" opacity=".26" />
+        </pattern>
+      </defs>
+      <rect width="1280" height="640" fill="url(#grid)" />
+    </svg>
+    <img src="vwf-mark-white.svg" width="224" height="224" alt="vwf mark" />
+    <div class="word">
+      <div>vwf</div>
+      <svg
+        width="334"
+        height="12"
+        viewBox="0 0 334 12"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
+        <line x1="1" y1="6" x2="333" y2="6" />
+        <line x1="1" y1="1" x2="1" y2="11" />
+        <line x1="333" y1="1" x2="333" y2="11" />
+      </svg>
+    </div>
+  </body>
+</html>
