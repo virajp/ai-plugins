@@ -1,5 +1,5 @@
 {
-  "name": "@ai-plugins/scripts",
+  "name": "@claude-plugins/scripts",
   "version": "0.0.0",
   "private": true,
   "description": "Repo tooling for the authored plugins/ tree: generates .claude-plugin/marketplace.json and the stackgen stacks inventory, and statically validates every plugin. Run directly by node — nothing here is published.",

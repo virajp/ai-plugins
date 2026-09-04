@@ -17,7 +17,7 @@
       "name": "stackgen",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/virajp/ai-plugins.git",
+        "url": "https://github.com/virajp/claude-plugins.git",
         "path": "plugins/stackgen",
         "ref": "stackgen-v0.20.0"
       },
@@ -46,10 +46,10 @@
       ],
       "description": "Highly opinionated Product → Blueprint → Plan → Execute workflow for solo developers or small teams — enforced workspace structure with a selectable stack-template menu checked by /vwf:doctor, a flow-first blueprint (entities as data contracts, OpenAPI + JSON-Schema artifacts) with whole-product coherence review, chained dependency plans, an autonomous execute with review/security/acceptance/UX subagents behind one final merge gate that stamps blueprint implementation state, post-deploy verify with production release freezing + API backward-compat enforcement, feedback intake, and mempalace-backed memory.",
       "name": "vwf",
-      "repository": "https://github.com/virajp/ai-plugins",
+      "repository": "https://github.com/virajp/claude-plugins",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/virajp/ai-plugins.git",
+        "url": "https://github.com/virajp/claude-plugins.git",
         "path": "plugins/vwf",
         "ref": "vwf-v19.10.0"
       },
