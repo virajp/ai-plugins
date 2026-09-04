@@ -20,7 +20,7 @@ resolves env variants):
 Keep common tools in `mise.toml` (don't duplicate across dev/ci); put
 environment-specific tools in the matching env file.
 
-## The branch model, and the two tag families
+## The branch model, and the three tag families
 
 **`develop` takes the work; `main` is what users read.** Claude resolves
 `claude plugin marketplace add virajp/claude-plugins` against the repo's
@@ -33,13 +33,15 @@ uninstalled here; the exception is a merge that stops on a **conflict**, whose
 resolution ends in a real commit. Remotely, the `protected-branches` ruleset
 blocks force-push and deletion on both branches, and `release-tags` does the
 same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
-`plugins:release`, `i:release` and `deps-update.yml` all still push directly.
+`plugins:release`, `i:release`, `site:release` and `deps-update.yml` all still
+push directly.
 
-That is why **neither release task commits**: `i:release` and `plugins:release`
-both tag what has already landed on `main`, and the version bump is an ordinary
-`develop` commit (`i:version` for the installer, the plugin manifest by hand). A
-release task that commits has to be trusted to commit the right thing; one that
-only tags can be checked against what is already reviewed.
+That is why **no release task commits**: `i:release`, `plugins:release` and
+`site:release` all tag what has already landed on `main`, and the version bump
+is an ordinary `develop` commit (`i:version` for the installer, `site:version`
+for the website, the plugin manifest by hand). A release task that commits has
+to be trusted to commit the right thing; one that only tags can be checked
+against what is already reviewed.
 
 The branch alone would not hold anything back, though, because a merge to `main`
 is what publishes. What decouples the two is that **every plugin is pinned to
@@ -76,13 +78,14 @@ stops applying to it. Nothing here changes: the tags, the release task and what
 users get are exactly as described. See
 [`dev-marketplace.md`](dev-marketplace.md).
 
-**Two tag families, both namespaced**, and the namespacing is load-bearing
+**Three tag families, all namespaced**, and the namespacing is load-bearing
 rather than tidiness:
 
-| Tag                    | Releases                     | Triggers                     |
-| ---------------------- | ---------------------------- | ---------------------------- |
-| `<name>-v<version>`    | one plugin                   | nothing — refs resolve to it |
-| `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish  |
+| Tag                    | Releases                     | Triggers                       |
+| ---------------------- | ---------------------------- | ------------------------------ |
+| `<name>-v<version>`    | one plugin                   | nothing — refs resolve to it   |
+| `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish    |
+| `site-v<version>`      | the website                  | `site.yml` → `wrangler deploy` |
 
 The installer's tags were bare `v*` until 2026-08-30. GitHub's tag globs match
 any character **except** `/`, so `v*` matched `vwf-v19.9.0` — every vwf release
@@ -155,6 +158,26 @@ loads the working tree for that session, no install and no cache.
   workflow runs — but **`workflow_dispatch` and `repository_dispatch` are
   explicit exceptions to that rule**, so no PAT or GitHub App token is needed.
   The dispatch is fire-and-forget: the `release.yml` run is the publish record.
+- **`site.yml`** — builds and deploys the website at
+  `claude-plugins.virajp.dev`, the Astro site under `site/`, served from
+  Cloudflare Workers Static Assets. Two jobs. **`build`** is the gate: it runs
+  `mise run site:check` (type-check, build, search index, link check) on every
+  PR and every push to `main` or `develop` that touches `site/**` or the
+  workflow itself, and on every `site-v*` tag; on a tag only, it uploads
+  `site/dist` as an artifact so `deploy` ships exactly the tree the gate
+  checked. **`deploy`** runs only on a pushed `site-v*` tag, after `build`, and
+  only once the tag is proven to match `site/package.json`'s version and to be
+  reachable from `main` — the same two verifications `release.yml` makes, so a
+  merge to `main` ships nothing until `mise run site:release` cuts the tag. It
+  sets up mise and installs the workspace first, so the `wrangler` pinned in
+  `site/package.json` is the one that deploys, then runs
+  `cloudflare/wrangler-action` (pinned by commit) with the repository secrets
+  `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Superseded branch and PR
+  runs are cancelled; a tag's deploy never is. It is deliberately a **separate
+  file** from `release.yml` for the same reason `plugins.yml` is — it publishes
+  nothing to npm and holds no `id-token` permission — and `plugins.yml` is
+  untouched by it: the site's gate runs here alone. The tag glob is namespaced
+  because a bare `v*` would fire it on every plugin and installer release.
 
 ## Supply-chain settings
 
@@ -194,7 +217,7 @@ with it.
 
 ## Cutting a release
 
-Two rituals now, for the two things this repo ships.
+Three rituals now, for the three things this repo ships.
 
 **The plugins**: bump the version in each changed plugin's manifest on
 `develop`, `mise run plugins:marketplace`, merge to `main`, then
@@ -210,7 +233,15 @@ tag carries one, so a missing Release means a missed step. Prefer releasing via
 CI over the local `i:publish`, so every version keeps the strongest npm trust
 level.
 
-**Ask the user before running either.**
+**The website**: `mise run site:version` on `develop`, commit, merge to `main`,
+then `mise run site:release` there — it runs the site gate, tags, pushes `main`
+before the tag (`site.yml` checks reachability the same way `release.yml` does),
+and watches the deploy run. Then a GitHub Release for the tag, as for the
+installer. When plugins, installer and site release together, cut them from the
+same `main` merge in that order — plugins, installer, site — each with its own
+note.
+
+**Ask the user before running any of them.**
 
 > The full ritual, the release-note format, and the CI facts that make a failed
 > publish legible are in `.claude/skills/release/` — run `/release`.

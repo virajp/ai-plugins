@@ -1,0 +1,675 @@
+---
+import Footer from "../components/Footer.astro";
+import Mark from "../components/Mark.astro";
+import Nav from "../components/Nav.astro";
+import Base from "../layouts/Base.astro";
+
+// The landing, section by section from the composite mockup. Dark only, no
+// JavaScript; each multi-column section collapses to one column under 768px
+// in its own style block. `data-pagefind-ignore` keeps it out of the search
+// index.
+const phases = [
+  {
+    name: "Product",
+    command: "/vwf:product",
+    text:
+      "Pin the outcome contract: the problem, the users, measurable goals, and the order to build in. Everything downstream must trace to it.",
+  },
+  {
+    name: "Blueprint",
+    command: "/vwf:blueprint",
+    text:
+      "Keep an always-current blueprint of the whole product, organized by flow, with entities as the data contracts under them, closed by a whole-product coherence review.",
+  },
+  {
+    name: "Plan",
+    command: "/vwf:plan",
+    text:
+      "Diff the blueprint against the real code for one slice, planning its unbuilt dependencies as their own chained plans first, and write the delta to apply.",
+  },
+  {
+    name: "Execute",
+    command: "/vwf:execute",
+    text:
+      "Implement the plan autonomously under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.",
+  },
+];
+
+const caveats = [
+  {
+    title: "Built for the 1-million-token window",
+    text:
+      "The orchestrator holds the blueprint, the plan, the registry and each subagent's output at once. The standard window will degrade or overflow on a real cycle.",
+  },
+  {
+    title: "Runs opus where judgment decides",
+    text:
+      "An execute cycle runs several opus subagents per step with fix loop-backs. Expect a meaningful token cost per slice. This is not a cheap workflow.",
+  },
+  {
+    title: "Expects a testable, registry-described project",
+    text:
+      "Execute enforces TDD and a coverage gate, and each slice maps to a project in a registry you author first. It will not operate on an ad-hoc folder.",
+  },
+  {
+    title: "Five binaries on your PATH",
+    text:
+      "mise, graphify, uv, pnpm and rtk. Nothing checks this at install time, and doctor does not cover all five. Install them rather than relying on it.",
+  },
+];
+
+const guides = [
+  {
+    label: "Starting fresh",
+    entries: [
+      {
+        title: "Start a product from an empty repo",
+        note: "Relay, a team task manager",
+        href: "/how-to/greenfield/single-repo/",
+      },
+      {
+        title: "Design the screens in a design tool, then build them",
+        note: "Centwise, a Flutter expense tracker",
+        href: "/how-to/greenfield/ui-with-design-tool/",
+      },
+      {
+        title: "Build a headless service with no UI anywhere",
+        note: "Hookline, a payments-webhook relay",
+        href: "/how-to/greenfield/api-only-service/",
+      },
+      {
+        title: "Build a product whose only surface is a terminal",
+        note: "clockon, a CLI time tracker",
+        href: "/how-to/greenfield/cli-product/",
+      },
+      {
+        title: "Start a product that spans several repos",
+        note: "Stallfront, e-commerce in four repos",
+        href: "/how-to/greenfield/multi-repo/",
+      },
+    ],
+  },
+  {
+    label: "Adopting vwf",
+    entries: [
+      {
+        title: "Adopt vwf in a codebase that already works",
+        note: "brownfield",
+        href: "/how-to/brownfield/onboard-existing-codebase/",
+      },
+      {
+        title: "Migrate a repo from an older vwf",
+        note: "brownfield",
+        href: "/how-to/brownfield/migrate-old-vwf-repo/",
+      },
+    ],
+  },
+  {
+    label: "Operating",
+    entries: [
+      {
+        title: "Choosing your stack",
+        note: "operate",
+        href: "/how-to/operate/choosing-your-stack/",
+      },
+      {
+        title: "The production feedback loop",
+        note: "operate",
+        href: "/how-to/operate/production-feedback-loop/",
+      },
+      {
+        title: "Sessions and handoff",
+        note: "operate",
+        href: "/how-to/operate/sessions-and-handoff/",
+      },
+    ],
+  },
+];
+---
+
+<Base
+  title="vwf: four phases from a vague idea to a reviewed release"
+  description="An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended."
+>
+  <div class="page">
+    <Nav />
+    <main data-pagefind-ignore>
+      <div class="hero dot-grid-blue">
+        <div class="copy">
+          <h1>Four phases from a vague idea to a reviewed release.</h1>
+          <p>
+            An opinionated Claude Code plugin: Product, Blueprint, Plan,
+            Execute. Asks one question at a time, then builds unattended.
+          </p>
+          <div class="cta">
+            <a class="btn" href="/how-to/">Get started</a>
+            <a class="btn sec" href="https://github.com/virajp/claude-plugins"
+            >GitHub</a>
+          </div>
+        </div>
+        <div class="draw">
+          <Mark size={400} class="mark" />
+          <span class="note product">product</span>
+          <span class="note blueprint">blueprint</span>
+          <span class="note gate">merge gate</span>
+        </div>
+      </div>
+
+      <section>
+        <h2>Four phases, one slash command each.</h2>
+        <div class="rail">
+          <div class="side">
+            <p>
+              Everything up to the blueprint is done in full before planning;
+              plan halts on a partial coverage stamp. While you author, Claude
+              asks one question at a time. While it executes, it runs unattended
+              and never merges until you approve.
+            </p>
+            <p>
+              <a href="/plugins/vwf/#commands">Read the command reference</a>
+            </p>
+          </div>
+          <div class="steps">
+            {phases.map(p => (
+              <div class="st">
+                <div class="dot" />
+                <div>
+                  <h3>
+                    {p.name}
+                    <code>{p.command}</code>
+                  </h3>
+                  <p>{p.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Install</h2>
+        <div class="inst">
+          <div>
+            <h3>One command</h3>
+            <p>
+              Registers the marketplace and installs the workflow. stackgen, its
+              one dependency, comes with it.
+            </p>
+            <pre class="codeblock">pnpx @virajp.dev/claude-plugins --all</pre>
+          </div>
+          <div>
+            <h3>Or Claude Code's own commands</h3>
+            <p>
+              The wrapper sequences these two. The marketplace manifest is this
+              repo's main branch either way.
+            </p>
+            <pre class="codeblock">claude plugin marketplace add virajp/claude-plugins
+claude plugin install vwf@virajp-plugins</pre>
+          </div>
+        </div>
+        <p class="lead after">
+          Restart Claude Code afterwards, then run <code>/vwf:doctor</code>.
+          Nothing is checked at install time.
+        </p>
+      </section>
+
+      <section>
+        <h2>Two plugins ship.</h2>
+        <div class="bento">
+          <div class="cell blue dot-grid-blue">
+            <img
+              src="/brand/vwf-mark-white.svg"
+              width="56"
+              height="56"
+              alt=""
+            />
+            <h3>vwf<code>vwf@virajp-plugins</code></h3>
+            <p>
+              The workflow. Onboard a repo, pin the outcome contract, model the
+              system, sweep the blueprint to complete coverage, plan one slice,
+              execute it unattended, verify the deploy, and route what
+              production teaches you back to the document that fixes it. It
+              names no technology at all.
+            </p>
+            <a href="/plugins/vwf/">vwf manual</a>
+          </div>
+          <div class="cell ink">
+            <h3>stackgen<code>stackgen@virajp-plugins</code></h3>
+            <p>
+              The stack materializer. Every concrete choice arrives as a pack
+              landed in your own repo: copied when covered, generated behind a
+              reviewer and your consent when not. A vwf dependency.
+            </p>
+            <a href="/plugins/stackgen/">stackgen manual</a>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Know this before you install.</h2>
+        <p class="lead">
+          vwf is deliberately heavyweight. Some of what it needs is a real
+          adoption blocker rather than a preference.
+        </p>
+        <div class="cav">
+          {caveats.map(c => (
+            <div>
+              <h3>{c.title}</h3>
+              <p>{c.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Guides</h2>
+        <p class="lead">
+          Journey-shaped: each one narrates a whole product's walk through vwf,
+          organized by the situation you are in rather than by the command you
+          are about to type.
+        </p>
+        <div class="toc">
+          {guides.map(g => (
+            <div class="g">
+              <h3>{g.label}</h3>
+              <div>
+                {g.entries.map(e => (
+                  <a href={e.href}>
+                    {e.title}
+                    <span>{e.note}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </div>
+</Base>
+
+<style>
+  h2 {
+    font-size: 36px;
+    letter-spacing: -0.015em;
+  }
+  section {
+    padding: var(--section-gap) 0 0;
+  }
+  .lead {
+    font-size: 17px;
+    color: var(--mist);
+    max-width: 60ch;
+    line-height: 1.6;
+    margin-top: 12px;
+  }
+  .lead.after {
+    margin-top: 24px;
+    font-size: 15px;
+  }
+  .lead code {
+    color: var(--blue-3);
+  }
+
+  /* Hero: the blue sheet with the construction drawing */
+  .hero {
+    margin: 32px 0 0;
+    min-height: 600px;
+    display: grid;
+    grid-template-columns: 1fr 520px;
+    position: relative;
+  }
+  .hero .copy {
+    padding: 88px 0 88px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .hero h1 {
+    font-size: 54px;
+    letter-spacing: -0.02em;
+    max-width: 22ch;
+    line-height: 1.04;
+  }
+  .hero .copy > p {
+    font-size: 19px;
+    color: rgba(244, 245, 248, 0.82);
+    max-width: 46ch;
+    line-height: 1.5;
+  }
+  .cta {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .cta .btn {
+    background: var(--paper);
+    color: var(--blue);
+    border-color: var(--paper);
+  }
+  .cta .btn:hover {
+    background: var(--paper);
+    color: var(--blue-2);
+  }
+  .cta .btn.sec {
+    background: transparent;
+    color: var(--paper);
+    border-color: rgba(244, 245, 248, 0.35);
+  }
+  .cta .btn.sec:hover {
+    border-color: var(--paper);
+  }
+  .draw {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .note {
+    position: absolute;
+    font: 12px var(--mono);
+    letter-spacing: 0.04em;
+    color: rgba(244, 245, 248, 0.75);
+  }
+  .note.product {
+    left: 56px;
+    top: 112px;
+  }
+  .note.blueprint {
+    right: 56px;
+    top: 112px;
+  }
+  .note.gate {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 56px;
+  }
+
+  /* The phases rail */
+  .rail {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 64px;
+    margin-top: 48px;
+  }
+  .rail .side {
+    position: sticky;
+    top: 48px;
+    align-self: start;
+  }
+  .rail .side p {
+    font-size: 16px;
+    color: var(--mist);
+    line-height: 1.6;
+    margin-top: 12px;
+  }
+  .steps {
+    display: flex;
+    flex-direction: column;
+  }
+  .st {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 24px;
+    padding: 0 0 40px;
+    position: relative;
+  }
+  .st::before {
+    content: "";
+    position: absolute;
+    left: 11px;
+    top: 22px;
+    bottom: 0;
+    width: 1px;
+    background: var(--line-2);
+  }
+  .st:last-child::before {
+    display: none;
+  }
+  .dot {
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--paper);
+    background: var(--ink);
+    margin: 6px 0 0 5px;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+  }
+  .st:last-child .dot {
+    background: var(--paper);
+  }
+  .st h3 {
+    font-size: 24px;
+  }
+  .st h3 code {
+    font: 400 13px var(--mono);
+    color: var(--blue-3);
+    margin-left: 12px;
+    letter-spacing: 0;
+  }
+  .st p {
+    font-size: 16px;
+    color: var(--mist);
+    line-height: 1.6;
+    margin-top: 8px;
+    max-width: 58ch;
+  }
+
+  /* Install split */
+  .inst {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-top: 40px;
+  }
+  .inst h3 {
+    font-size: 20px;
+  }
+  .inst p {
+    font-size: 15px;
+    color: var(--mist);
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+  .codeblock {
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    padding: 18px 22px;
+    font: 14px/1.7 var(--mono);
+    color: var(--paper);
+    white-space: pre;
+    overflow-x: auto;
+    margin: 20px 0 0;
+  }
+
+  /* Bento */
+  .bento {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-top: 40px;
+  }
+  .cell {
+    padding: 40px;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 14px;
+    position: relative;
+  }
+  .cell.ink {
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+  }
+  .cell h3 {
+    font-size: 30px;
+  }
+  .cell h3 code {
+    display: block;
+    font: 400 13px var(--mono);
+    letter-spacing: 0;
+    margin-top: 6px;
+    opacity: 0.8;
+  }
+  .cell p {
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 60ch;
+  }
+  .cell.blue p {
+    color: rgba(244, 245, 248, 0.85);
+  }
+  .cell.ink p {
+    color: var(--mist);
+  }
+  .cell.blue a {
+    color: var(--paper);
+  }
+  .cell img {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+  }
+
+  /* Caveats: the hairline grid */
+  .cav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 40px;
+    border-top: 1px solid var(--line-2);
+    border-left: 1px solid var(--line-2);
+  }
+  .cav > div {
+    padding: 32px;
+    border-right: 1px solid var(--line-2);
+    border-bottom: 1px solid var(--line-2);
+  }
+  .cav h3 {
+    font-size: 20px;
+  }
+  .cav p {
+    font-size: 15px;
+    color: var(--mist);
+    line-height: 1.6;
+    margin-top: 10px;
+    max-width: 48ch;
+  }
+
+  /* Guides table of contents */
+  .toc {
+    margin-top: 40px;
+    max-width: 960px;
+  }
+  .g {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 32px;
+    padding: 28px 0;
+    border-top: 1px solid var(--line-2);
+  }
+  .g:last-child {
+    border-bottom: 1px solid var(--line-2);
+  }
+  .g h3 {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--muted);
+    padding-top: 4px;
+  }
+  .toc a {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    text-decoration: none;
+    color: var(--paper);
+    font-size: 17px;
+    padding: 8px 0;
+  }
+  .toc a:hover {
+    color: var(--blue-3);
+  }
+  .toc a span {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* Single column under 768px, section by section */
+  @media (max-width: 767px) {
+    h2 {
+      font-size: 30px;
+    }
+    section {
+      padding-top: 64px;
+    }
+    .hero {
+      grid-template-columns: 1fr;
+      min-height: 0;
+    }
+    .hero .copy {
+      padding: 48px 24px 0;
+    }
+    .hero h1 {
+      font-size: 36px;
+    }
+    .draw {
+      padding: 32px 0 48px;
+    }
+    .draw :global(.mark) {
+      width: 240px;
+      height: 240px;
+    }
+    .note.product {
+      left: 24px;
+      top: 40px;
+    }
+    .note.blueprint {
+      right: 24px;
+      top: 40px;
+    }
+    .note.gate {
+      bottom: 16px;
+    }
+    .rail {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .rail .side {
+      position: static;
+    }
+    .inst {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .bento {
+      grid-template-columns: 1fr;
+    }
+    .cell {
+      min-height: 0;
+      padding: 32px 24px;
+    }
+    .cell img {
+      position: static;
+      margin-bottom: 8px;
+    }
+    .cav {
+      grid-template-columns: 1fr;
+    }
+    .g {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .toc a {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+    .toc a span {
+      text-align: left;
+    }
+  }
+</style>

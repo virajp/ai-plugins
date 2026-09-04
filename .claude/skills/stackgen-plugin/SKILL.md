@@ -38,9 +38,9 @@ restate a count or a rule that an asset below already owns.
 | `stacks/readme.md`            | the narrative — which wave landed what, and why                                             |
 | `agents/`                     | `stackgen-skill-reviewer`, the generator's gate                                             |
 
-The user-facing reference is `docs/plugins/stackgen.md`. The checker rules, the
-two mise gates and the authoring traps are the sibling `plugin-authoring` skill,
-which also applies here.
+The user-facing reference is `site/src/content/docs/plugins/stackgen.md`. The
+checker rules, the two mise gates and the authoring traps are the sibling
+`plugin-authoring` skill, which also applies here.
 
 ## The dispatch rule
 
@@ -132,10 +132,10 @@ scripts must stay portable to macOS BSD `sed` — no `\s`, no `\b`.
 ## Documentation
 
 Any change to stackgen's behaviour must reconcile `readme.md`, `CLAUDE.md` and
-`docs/plugins/stackgen.md` in the **same commit** — the repo's hard rule.
-Delegate the sweep to the `docs-reconciler` agent. A behaviour change also bumps
-`version` in `plugin.json` (plain `X.Y.Z`) and regenerates the marketplace with
-`mise run plugins:marketplace`. A new pack, bundle or kind regenerates
-`stacks/inventory.md` with `mise run plugins:inventory` — never type a count
-into prose; `--check` in pre-commit and CI fails a stale inventory, and the
-generator throws on a `kind` that `assets/kinds.md` does not define.
+`site/src/content/docs/plugins/stackgen.md` in the **same commit** — the repo's
+hard rule. Delegate the sweep to the `docs-reconciler` agent. A behaviour change
+also bumps `version` in `plugin.json` (plain `X.Y.Z`) and regenerates the
+marketplace with `mise run plugins:marketplace`. A new pack, bundle or kind
+regenerates `stacks/inventory.md` with `mise run plugins:inventory` — never type
+a count into prose; `--check` in pre-commit and CI fails a stale inventory, and
+the generator throws on a `kind` that `assets/kinds.md` does not define.

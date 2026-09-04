@@ -1,0 +1,85 @@
+---
+import Search from "./Search.astro";
+
+// The top bar: brand mark and wordmark, the search slot on docs pages, the
+// three sections and GitHub with the current section marked.
+interface Props {
+  current?: "plugins" | "how-to" | "installer";
+  search?: boolean;
+}
+const { current, search = false } = Astro.props;
+
+const links = [
+  { key: "plugins", label: "Docs", href: "/plugins/" },
+  { key: "how-to", label: "Guides", href: "/how-to/" },
+  { key: "installer", label: "Installer", href: "/installer/" },
+] as const;
+---
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <img
+      src="/brand/vwf-mark-small-white.svg"
+      width="20"
+      height="20"
+      alt=""
+    />vwf
+  </a>
+  <div class="links">
+    {search && <Search />}
+    {links.map(l => (
+      <a
+        class:list={[{ on: l.key === current }]}
+        href={l.href}
+        aria-current={l.key === current ? "page" : undefined}
+      >
+        {l.label}
+      </a>
+    ))}
+    <a href="https://github.com/virajp/claude-plugins">GitHub</a>
+    {!search && <a class="btn sm" href="/how-to/">Get started</a>}
+  </div>
+</nav>
+
+<style>
+  .nav {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 400 16px var(--mono);
+    color: var(--paper);
+    text-decoration: none;
+  }
+  .links {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+  }
+  .links > a {
+    font-size: 14px;
+    color: var(--mist);
+    text-decoration: none;
+  }
+  .links > a:hover,
+  .links > a.on {
+    color: var(--paper);
+  }
+  .links > a.btn {
+    color: var(--paper);
+  }
+  @media (max-width: 767px) {
+    .links {
+      gap: 16px;
+    }
+    .links > .btn {
+      display: none;
+    }
+  }
+</style>

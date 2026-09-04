@@ -6,3 +6,6 @@
 
 # the memory mirror (mempalace owns recall)
 docs/memory/
+
+# the Astro build output (gitignored too)
+site/dist/

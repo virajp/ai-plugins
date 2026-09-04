@@ -1,41 +1,45 @@
 ---
 name: release
 description: Cut a release — the plugins via plugins:release, the installer
-  CLI
-  via i:release, the GitHub Release note format, and the CI facts that make a
-  failed publish legible. Run when the user asks to cut, tag, or publish a
-  release.
+  CLI via i:release, the website via site:release, the GitHub Release note
+  format, and the CI facts that make a failed publish legible. Run when the
+  user asks to cut, tag, or publish a release.
 allowed-tools: Read Grep Glob Bash
 ---
 
 # Release
 
-**Ask the user before running `i:release` or `plugins:release`.** It is the
-repo's hard rule, and both tasks tag and push.
+**Ask the user before running `i:release`, `plugins:release` or
+`site:release`.** It is the repo's hard rule, and all three tasks tag and push.
 
-**There are two independent things to release, and one tag family each.** Ask
+**There are three independent things to release, and one tag family each.** Ask
 which is meant before doing anything; the answer is usually visible in what
 changed.
 
-| Releasing           | Tag                    | Task              | Ends at              |
-| ------------------- | ---------------------- | ----------------- | -------------------- |
-| one or more plugins | `<name>-v<version>`    | `plugins:release` | the pushed tag       |
-| the installer CLI   | `installer-v<version>` | `i:release`       | npm + GitHub Release |
+| Releasing           | Tag                    | Task              | Ends at                  |
+| ------------------- | ---------------------- | ----------------- | ------------------------ |
+| one or more plugins | `<name>-v<version>`    | `plugins:release` | the pushed tag           |
+| the installer CLI   | `installer-v<version>` | `i:release`       | npm + GitHub Release     |
+| the website         | `site-v<version>`      | `site:release`    | Workers + GitHub Release |
 
-The namespaces must both stay prefixed. GitHub's tag globs match any character
+When plugins, installer and site release together, cut them from the same `main`
+merge in that order — plugins, installer, site — each with its own note.
+
+The namespaces must all stay prefixed. GitHub's tag globs match any character
 except `/`, so a bare `v*` family matched `vwf-v19.9.0` and fired the npm
 publish on a plugin release — which is why `release.yml` filters `installer-v*`.
 The 54 pre-2026-08-30 `v1.2.1`–`v6.0.0` tags are history; nothing fires on them,
 and they are deliberately left unprotected.
 
-**Adding a third tag family means widening the ruleset.** GitHub's
+**Adding a fourth tag family means widening the ruleset.** GitHub's
 `release-tags` ruleset blocks deletion and re-pointing for `refs/tags/*-v*`,
-which covers both families above and every plugin ref the generator can emit — a
-test pins their shape to `/^[a-z][a-z0-9-]*-v\d+\.\d+\.\d+/`. A family without
-`-v` in the name (`nightly-2026-09`, say) simply falls outside the pattern and
-gets **no** protection, silently: nothing fails, it is just unguarded. Either
-give the new family a `-v` or widen `conditions.ref_name.include` to `["~ALL"]`
-on ruleset `21871515`.
+which covers all three families above and every plugin ref the generator can
+emit — a test pins their shape to `/^[a-z][a-z0-9-]*-v\d+\.\d+\.\d+/`, and
+`site-v1.0.0` matches both, so the site family needed no widening. A family
+without `-v` in the name (`nightly-2026-09`, say) simply falls outside the
+pattern and gets **no** protection, silently: nothing fails, it is just
+unguarded. Either give the new family a `-v` or widen
+`conditions.ref_name.include` to `["~ALL"]` on ruleset `21871515`.
 
 ## Releasing plugins
 
@@ -126,6 +130,51 @@ gh release create installer-vX.Y.Z --title installer-vX.Y.Z \
 - **`--latest` resolves by publish date**, so a normal forward release is
   correct by default. Pass `--latest=false` when backfilling out of order.
 
+## Releasing the site
+
+The website deploys only from a `site-v<version>` tag; a merge to `main` ships
+nothing. Same shape as the installer: bump on `develop`, tag on `main`.
+
+### 1. Bump on develop, merge to main
+
+```sh
+# on develop
+mise run site:version           # patch; --minor / --major to choose the bump
+git add site/package.json && mise x -- git commit -m "ops: bump site to X.Y.Z"
+# merge develop → main
+```
+
+### 2. Cut the tag
+
+```sh
+# on main
+mise run site:release
+```
+
+It requires a clean tree **and `main`**, refuses if `site-vX.Y.Z` already exists
+(which means `site/package.json` was never bumped for this release), runs
+`mise run site:check`, creates the annotated tag, then — interactively — pushes
+**`main` first and the tag second** and watches the `site.yml` run with
+`gh run watch --exit-status`, so the task only succeeds if the deploy does. The
+push order is load-bearing for the same reason as the installer's: `site.yml`
+checks the tagged commit is reachable from `origin/main`.
+
+`--ci` stops after the tag, with no push and no watch. Nothing passes it today;
+do not pass it by hand.
+
+### 3. Cut the GitHub Release
+
+Every `site-vX.Y.Z` tag carries one, in the note format below — the same 1:1
+rule as the installer's.
+
+```sh
+gh release create site-vX.Y.Z --title site-vX.Y.Z \
+  --notes-file <notes> --verify-tag
+```
+
+`site.yml` triggers on `push: tags: site-v*`; creating a Release never deploys,
+and `--verify-tag` refuses to invent a tag that would.
+
 ## The note format
 
 Follow `.config/git-conventional-commits.yaml` — the same config the repo
@@ -177,5 +226,5 @@ release.
 ## Before cutting
 
 Confirm the working tree is clean and that the change being released has its
-docs reconciled — `readme.md`, `CLAUDE.md` and `docs/plugins/<plugin>.md` ship
-with the change, not after it.
+docs reconciled — `readme.md`, `CLAUDE.md` and
+`site/src/content/docs/plugins/<plugin>.md` ship with the change, not after it.

@@ -73,6 +73,7 @@ mise run plugins:inventory --check
 pnpm vitest run
 pnpm exec tsc --noEmit -p installer && pnpm exec tsc --noEmit -p scripts
 mise run plugins:npm-normalize-test
+mise run site:check      # only when the plan's units own anything under site/
 ```
 
 A red line here is `develop`'s, not the plan's. Stop and report it as such —
@@ -167,10 +168,11 @@ list, and commit as one final `docs:` commit. Then read the Consent block:
 
 If any Consent row records a release, and the landing merged and pushed, ask
 **one** question: run the release now? The answer authorises invoking the
-`release` skill, which owns the `develop → main` merge, `plugins:release` and
-`i:release`. It does not authorise anything else, and it is asked in the moment
-even though the plan recorded the intent — `CLAUDE.md`'s hard rule stands, and
-`i:release` is interactive in any case.
+`release` skill, which owns the `develop → main` merge, `plugins:release`,
+`i:release` and `site:release`. It does not authorise anything else, and it is
+asked in the moment even though the plan recorded the intent — `CLAUDE.md`'s
+hard rule stands, and `i:release` and `site:release` are interactive in any
+case.
 
 If the landing was not consented, there is nothing to release yet; say so in the
 final line and stop.
@@ -202,6 +204,7 @@ log and answered at the end.
   looks small
 - Dispatches a wave whose predecessor is not green or explicitly skipped
 - Runs a generator or bumps a version outside the gates-and-bump unit
-- Runs `plugins:release` or `i:release` itself, or merges to `main`
+- Runs `plugins:release`, `i:release` or `site:release` itself, or merges to
+  `main`
 - Picks up an item from *Out of scope* or *Parked*, however adjacent
 - Reports the run from recollection when the run log exists
