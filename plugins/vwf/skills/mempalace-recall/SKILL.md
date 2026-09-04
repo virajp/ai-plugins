@@ -64,10 +64,6 @@ and violates MemPalace's "memory should feel instant" budget.
 6. When a fact changes: `mempalace_kg_invalidate` the old fact, then
    `mempalace_kg_add` the new one.
 
-The full canonical protocol — shared verbatim with the Cursor recall
-rule and the other integrations — lives in
-[`integrations/shared/recall-protocol.md`](../../integrations/shared/recall-protocol.md).
-
 ## Tool selection
 
 | You need | Tool |

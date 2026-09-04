@@ -15,10 +15,10 @@ Return the product's design system as a **vwf design-system payload**. You read
 from whichever design tool the project uses and normalize; you never write a
 blueprint doc, and you never decide what the design system *should* be.
 
-> **`invocation` must stay `both`.** vwf reaches this skill by delegation.
-> Flipping it to `user` removes the skill from the model's context and blocks
-> programmatic invocation — the call would not error, it would silently import
-> nothing.
+> **`disable-model-invocation` must stay `false`.** vwf reaches this skill by
+> delegation. Flipping it to `true` removes the skill from the model's context
+> and blocks programmatic invocation — the call would not error, it would
+> silently import nothing.
 
 The payload shape is defined by the vwf adapter contract; read it before
 returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.

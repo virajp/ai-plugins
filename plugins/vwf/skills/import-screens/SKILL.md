@@ -17,10 +17,10 @@ payload**. You read from whichever design tool the project uses and normalize;
 you never diff, never decide what a delta means, and never touch a blueprint
 doc.
 
-> **`invocation` must stay `both`.** vwf reaches this skill by delegation.
-> Flipping it to `user` removes the skill from the model's context and blocks
-> programmatic invocation — the call would not error, it would silently import
-> nothing.
+> **`disable-model-invocation` must stay `false`.** vwf reaches this skill by
+> delegation. Flipping it to `true` removes the skill from the model's context
+> and blocks programmatic invocation — the call would not error, it would
+> silently import nothing.
 
 The payload shape is defined by the vwf adapter contract; read it before
 returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
@@ -28,11 +28,11 @@ returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 ## Inputs
 
 `$ARGUMENTS` is `<flow> <platform>` — the flow folder name (`<NNN>-<flow-slug>`)
-and one of `mobile` / `tablet` / `desktop` / `web` / `auto`. vwf also passes the
-**registry project** the flow belongs to, plus whatever canvas pins that tool
-needs — vwf passes the `design:` block's per-project, per-platform entries
-through without interpreting them, since which of them matter is the adapter's
-business and not vwf's.
+and one of `mobile` / `tablet` / `desktop` / `auto` / `site` / `webapp`. vwf
+also passes the **registry project** the flow belongs to, plus whatever canvas
+pins that tool needs — vwf passes the `design:` block's per-project,
+per-platform entries through without interpreting them, since which of them
+matter is the adapter's business and not vwf's.
 
 ## 1. Resolve the project's design tool
 

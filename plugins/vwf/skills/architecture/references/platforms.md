@@ -52,8 +52,8 @@ Everything that used to key on `role` now keys on these:
 **`site` vs `webapp`.** `site` is a browser-delivered **content** surface — a
 marketing, docs or landing site. `webapp` is the browser-delivered
 **application**. A product with both declares both; they are separate surfaces
-with separate screens and often separate design projects, which a single `web`
-token could not express.
+with separate screens and often separate design projects, which the
+retired `web` token could not express (format 22 split it).
 
 ## Terminal surfaces
 

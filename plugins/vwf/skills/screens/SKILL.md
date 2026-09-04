@@ -45,8 +45,8 @@ the contract of record; the canvas is where screens get good.
   `100-home--auto`, …) — `<flow>` is exactly the numbered folder name under
   `docs/blueprint/flows/<project>/` for the registry project this canvas is
   pinned to, so the canvas sorts in execution order like the blueprint tree. The
-  platform suffix (`mobile`, `tablet`, `desktop`, `web`, `auto`) is read
-  **straight off the flow's platform files** — since format 15 a flow folder
+  platform suffix (`mobile`, `tablet`, `desktop`, `auto`, `site`, `webapp`) is
+  read **straight off the flow's platform files** — since format 15 a flow folder
   holds one `<platform>.md` per implemented platform, so the set of pages a flow
   gets *is* the set of files it has. No device→platform mapping and no
   narrowing: the vocabulary is the same everywhere (`auto` covers CarPlay and
@@ -74,7 +74,7 @@ reconcilable against the flows tree.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Flow contract | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (platform-agnostic; the Platforms table names the files)                                                                                                                                                                               |
 | Flow platform | `docs/blueprint/flows/<project>/<NNN>-<flow>/<platform>.md` (the `## Screens` section — rows carry the frame Codes, shared across platforms)                                                                                                                                                  |
-| Prompts       | `docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md` — grouped by prompt type → registry project → flow; **one brief per flow per platform** (`mobile.md`, `tablet.md`, `desktop.md`, `web.md`, `auto.md`), regenerated in place — the tree mirrors the flows tree exactly (format 15) |
+| Prompts       | `docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md` — grouped by prompt type → registry project → flow; **one brief per flow per platform** (`mobile.md`, `tablet.md`, `desktop.md`, `auto.md`, `site.md`, `webapp.md` — one file per platform the flow implements), regenerated in place — the tree mirrors the flows tree exactly (format 15) |
 | Prompt templ. | `${CLAUDE_PLUGIN_ROOT}/assets/templates/screen-prompt.md`                                                                                                                                                                                                                                     |
 | Conventions   | `docs/prompts/screens/<project>/CLAUDE--<platform>.md` — the platform canvas project's CLAUDE.md source, one per pinned design project; generated sections regenerated in place, the canvas-owned section preserved                                                                           |
 | Conv. templ.  | the conventions template the design adapter returns for the project's tool                                                                                                                                                                                       |
