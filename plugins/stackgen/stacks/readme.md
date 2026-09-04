@@ -204,7 +204,7 @@ provides it.
 TypeScript language bundle rather than a repo gate. See the `repo-gate` seam
 in `../assets/kinds.md`.
 
-**36 packs and 32 bundles, across all eleven kinds.** No curated plugin
+**38 packs and 32 bundles, across all eleven kinds.** No curated plugin
 stands behind any of them any more, so the covered path is exactly this tree,
 and stackgen's standing value beyond it is the uncovered tail:
 `generated/<technology-slug>`.
