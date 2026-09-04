@@ -28,8 +28,8 @@ idiomatic answer given the repo, do not ask — state it and move on.
    the user adds re-runs the survey for that tree.
 6. **Per project, the concrete edits.** File-level where the survey allows it.
    This becomes the unit table's *Owns* column, so it must be disjoint per wave.
-7. **Behaviour change or not.** Per project: does a user of the plugin or CLI
-   see a difference? Drives the release proposal.
+7. **Behaviour change or not.** Per project: does a user of the plugin, CLI or
+   website see a difference? Drives the release proposal.
 8. **New dependencies.** Does any edit need a package the tree does not already
    have? Name it, what for, and the existing thing it was preferred over. A unit
    adds no dependency the plan does not list.
@@ -64,7 +64,8 @@ idiomatic answer given the repo, do not ask — state it and move on.
 16. **Release, per affected project.** Release or not; patch, minor or major.
     Record every answer including "not this time". Note in the same breath that
     execute-plan always stops once before the `main` merge and tags — consent
-    here is intent, not authorisation to run `i:release` or `plugins:release`.
+    here is intent, not authorisation to run `i:release`, `plugins:release` or
+    `site:release`.
 
 ## F. Parked
 

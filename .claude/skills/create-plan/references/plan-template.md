@@ -64,24 +64,24 @@ the unit that adds it — or "none". A unit adds nothing not listed here.>
 
 ## Units
 
-| Id   | Wave   | Unit file              | Owns                                                                                 | Depends on | Status  | Commit |
-| ---- | ------ | ---------------------- | ------------------------------------------------------------------------------------ | ---------- | ------- | ------ |
-| U1   | 1      | [01-x.md](01-x.md)     | `path/a`, `path/b`                                                                   | —          | pending |        |
-| …    |        |                        |                                                                                      |            |         |        |
-| Un-1 | last   | `NN-docs.md`           | `readme.md`, `CLAUDE.md`, `docs/**`, `.claude/docs/**`, `.claude/skills/*-plugin/**` | all        | pending |        |
-| Un   | last+1 | `NN-gates-and-bump.md` | `plugins/*/.claude-plugin/plugin.json`, generated files                              | Un-1       | pending |        |
+| Id   | Wave   | Unit file              | Owns                                                                                                                    | Depends on | Status  | Commit |
+| ---- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| U1   | 1      | [01-x.md](01-x.md)     | `path/a`, `path/b`                                                                                                      | —          | pending |        |
+| …    |        |                        |                                                                                                                         |            |         |        |
+| Un-1 | last   | `NN-docs.md`           | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `site/src/content/docs/**`, `.claude/docs/**`, `.claude/skills/*-plugin/**` | all        | pending |        |
+| Un   | last+1 | `NN-gates-and-bump.md` | `plugins/*/.claude-plugin/plugin.json`, generated files                                                                 | Un-1       | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
 
 ## Shared-file rule
 
-| File                                                                      | Why it collides                                    | Owner                    |
-| ------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------ |
-| `plugins/*/.claude-plugin/plugin.json`                                    | several units bumping one version is a lost update | gates-and-bump unit only |
-| `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` | generated; regenerating mid-wave races             | gates-and-bump unit only |
-| `readme.md`, `CLAUDE.md`, `docs/**`, `.claude/docs/**`                    | n units editing one doc                            | docs unit only           |
-| <any other file two units would touch>                                    |                                                    |                          |
+| File                                                                                      | Why it collides                                    | Owner                    |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------ |
+| `plugins/*/.claude-plugin/plugin.json`                                                    | several units bumping one version is a lost update | gates-and-bump unit only |
+| `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                 | generated; regenerating mid-wave races             | gates-and-bump unit only |
+| `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `site/src/content/docs/**`, `.claude/docs/**` | n units editing one doc                            | docs unit only           |
+| <any other file two units would touch>                                                    |                                                    |                          |
 
 ## Waves
 
@@ -92,8 +92,9 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `mise run plugins:check`, `mise run plugins:marketplace --check`,
 `mise run plugins:inventory --check`, `pnpm vitest run`,
 `pnpm exec tsc --noEmit -p installer` and `-p scripts`,
-`mise run plugins:npm-normalize-test`, plus the wave review, plus every report
-read for `UNRESOLVED:`. <Add the plan's own checks here.>
+`mise run plugins:npm-normalize-test`, `mise run site:check` when any unit owns
+something under `site/`, plus the wave review, plus every report read for
+`UNRESOLVED:`. <Add the plan's own checks here.>
 
 ## Gates the orchestrator keeps
 
