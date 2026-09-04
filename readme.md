@@ -32,7 +32,7 @@ all, and every concrete choice — the language, the framework, the cloud, the
 task runner — arrives as a `stackgen` pack landed in your own repo rather than
 as a plugin each collaborator has to install. They install through Claude Code's
 own plugin commands, straight from this repo — or through one small CLI,
-[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins),
+[`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins),
 which sequences those same commands and wires up graphify.
 
 These are **Claude Code plugins**, authored natively. Other agents are served by
@@ -83,7 +83,7 @@ One command, which registers the marketplace and installs the workflow —
 `stackgen`, its one dependency, comes with it:
 
 ```sh
-pnpx @askviraj/ai-plugins --all
+pnpx @virajp.dev/claude-plugins --all
 ```
 
 That is a thin wrapper over Claude Code's own two commands, which work just as
@@ -91,7 +91,7 @@ well directly — the marketplace manifest is this repo's `main` either way:
 
 ```sh
 # Register this repo as a plugin marketplace, once
-claude plugin marketplace add virajp/ai-plugins
+claude plugin marketplace add virajp/claude-plugins
 
 # Install the workflow
 claude plugin install vwf@virajp-plugins
@@ -109,7 +109,7 @@ follows it as a dependency at the same scope — but it can be installed on its
 own by name:
 
 ```sh
-pnpx @askviraj/ai-plugins --project stackgen
+pnpx @virajp.dev/claude-plugins --project stackgen
 # or
 claude plugin install --scope project stackgen@virajp-plugins
 ```
@@ -153,7 +153,7 @@ Paste one of these, adjusting the plugin name:
 **One plugin, adapted for whatever you are running:**
 
 > Install the `vwf` plugin from
-> `https://github.com/virajp/ai-plugins/tree/main/plugins/vwf` into this
+> `https://github.com/virajp/claude-plugins/tree/main/plugins/vwf` into this
 > project, adapted to the conventions of the agent you are running in. Read its
 > `.claude-plugin/plugin.json` first — it declares the MCP servers, LSP servers
 > and dependencies the plugin expects. Skills live in `skills/<name>/SKILL.md`
@@ -164,7 +164,7 @@ Paste one of these, adjusting the plugin name:
 **The whole marketplace, to pick from:**
 
 > Read
-> `https://github.com/virajp/ai-plugins/blob/main/.claude-plugin/marketplace.json`
+> `https://github.com/virajp/claude-plugins/blob/main/.claude-plugin/marketplace.json`
 > and list the plugins with their descriptions, so I can choose which to install
 > here. Then install the ones I name, following the per-plugin instructions
 > above.
@@ -265,9 +265,9 @@ claude plugin install --scope project stackgen@virajp-plugins
 ## Statusline
 
 **The statusline has moved to its own project.** It is not installed from here
-any more — `pnpx @askviraj/ai-plugins --statusline` says so and exits non-zero,
-which is all that flag does now. `--platform`, `--upgrade` and `--force` are
-retired flags that exit non-zero naming themselves.
+any more — `pnpx @virajp.dev/claude-plugins --statusline` says so and exits
+non-zero, which is all that flag does now. `--platform`, `--upgrade` and
+`--force` are retired flags that exit non-zero naming themselves.
 
 ```sh
 brew install virajp/tap/claude-status
@@ -288,21 +288,25 @@ that is not a step you can complete: the pause is simply unavailable, and a long
 autonomous run has to be sized accordingly.
 
 **If you installed the bar from here, `--uninstall` no longer tidies up after
-it.** `pnpx @askviraj/ai-plugins --uninstall` still reads and reverts the old
-receipt like any other, which removes the script files it recorded — but nothing
-unwires the `statusLine` and `subagentStatusLine` keys or the context-caps hook
-entry, and no receipt is known to have recorded them. So the key is left naming
-a script that is gone; installing `claude-status` re-points it. The discontinued
-OpenCode TUI bar and Oh-My-Pi configuration are still restored from their
-receipts.
+it.** `pnpx @virajp.dev/claude-plugins --uninstall` still reads and reverts the
+old receipt like any other, which removes the script files it recorded — but
+nothing unwires the `statusLine` and `subagentStatusLine` keys or the
+context-caps hook entry, and no receipt is known to have recorded them. So the
+key is left naming a script that is gone; installing `claude-status` re-points
+it. The discontinued OpenCode TUI bar and Oh-My-Pi configuration are still
+restored from their receipts.
 
 ## The installer CLI
 
-[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins) is
-a small CLI with three jobs: install **plugins** (`--all`, `--user`, `--project`
-— a thin wrapper driving Claude's own commands, shown under [Install](#install)
-above), wire up **graphify**, and **remove** what this toolkit put on your
-machine.
+[`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
+is a small CLI with three jobs: install **plugins** (`--all`, `--user`,
+`--project` — a thin wrapper driving Claude's own commands, shown under
+[Install](#install) above), wire up **graphify**, and **remove** what this
+toolkit put on your machine.
+
+It used to be published as `@askviraj/ai-plugins`. That package is sunset: it
+stays on npm, but running it only prints a pointer to the new name and exits
+non-zero.
 
 **[docs/installer/](./docs/installer/)** is the full reference —
 [usage](./docs/installer/usage.md) for the flag surface,
@@ -316,16 +320,16 @@ Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
 # Install the default set (vwf, plus stackgen as its dependency), and wire graphify
-pnpx @askviraj/ai-plugins --all
+pnpx @virajp.dev/claude-plugins --all
 
 # See exactly what a run would do, without writing anything
-pnpx @askviraj/ai-plugins --all --dry-run
+pnpx @virajp.dev/claude-plugins --all --dry-run
 
 # Versions: this CLI against npm, and each plugin on main
-pnpx @askviraj/ai-plugins --version
+pnpx @virajp.dev/claude-plugins --version
 
 # List everything the toolkit installed, and remove what you do not deselect
-pnpx @askviraj/ai-plugins --uninstall
+pnpx @virajp.dev/claude-plugins --uninstall
 ```
 
 Two things worth knowing before you run it; everything else is

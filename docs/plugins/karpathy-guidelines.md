@@ -69,7 +69,7 @@ honest note.
 The skill ships with `vwf` and installs with it:
 
 ```sh
-claude plugin marketplace add virajp/ai-plugins
+claude plugin marketplace add virajp/claude-plugins
 claude plugin install vwf@virajp-plugins
 ```
 

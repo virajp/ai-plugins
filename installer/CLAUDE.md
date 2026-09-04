@@ -1,4 +1,4 @@
-# installer/ — the `@askviraj/ai-plugins` CLI
+# installer/ — the `@virajp.dev/claude-plugins` CLI
 
 The maintainer's context for this tree. The repo-wide rules, the branch model
 and the release ritual are the root [`CLAUDE.md`](../CLAUDE.md); the end-user
@@ -8,13 +8,13 @@ and is not repeated here).
 
 ## What it is
 
-`pnpx @askviraj/ai-plugins …` does **three things**: installs plugins, wires
-graphify, and removes what the toolkit put on a machine.
+`pnpx @virajp.dev/claude-plugins …` does **three things**: installs plugins,
+wires graphify, and removes what the toolkit put on a machine.
 
 - **Plugin installs are a thin wrapper.** `--all` / `--user <name>` /
   `--project <name>` drive Claude's own `claude plugin marketplace add` and
-  `claude plugin install` against `virajp/ai-plugins`, reading the manifest on
-  this repo's `main` (which pins each plugin to its own `<name>-v<version>`
+  `claude plugin install` against `virajp/claude-plugins`, reading the manifest
+  on this repo's `main` (which pins each plugin to its own `<name>-v<version>`
   tag). It never edits Claude's settings itself. What stays deliberately cut is
   everything thicker than that: the copied payload, the adapters, the
   `requires:` gate, and any receipt for a plugin install — Claude's settings are
@@ -41,10 +41,10 @@ alone, four files. `mise run i:build` regenerates it. Shipping
 `installer/src/*.ts` directly would raise `engines.node` from `>=18` to
 `>=22.18`, which is the whole reason the bundle exists.
 
-**The artifact is `installer.mjs`; the command is `ai-plugins`.**
-`package.json`'s `bin` *key* is what users invoke and what npm's Trusted
-Publisher is bound to — renaming the file did not touch it, and renaming the key
-would break every documented invocation.
+**The artifact is `installer.mjs`; the command is `claude-plugins`.**
+`package.json`'s `bin` *key* is what users invoke, and it is independent of both
+the artifact filename and npm's Trusted Publisher, which binds to the package
+name. Renaming it costs the documented invocations and nothing else.
 
 Nothing is read from the package root except `package.json`, and only for its
 `version`. Widening `files` needs its own justification: there is no bundled

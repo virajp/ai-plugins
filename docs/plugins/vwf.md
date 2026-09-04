@@ -16,7 +16,7 @@ product's whole walk through the workflow, the journey-shaped guides are in
 
 ```sh
 # Once
-claude plugin marketplace add virajp/ai-plugins
+claude plugin marketplace add virajp/claude-plugins
 
 # Installs vwf and its one dependency, stackgen
 claude plugin install vwf@virajp-plugins
@@ -26,8 +26,8 @@ Add `--scope project` to either command to keep it to one repo. Restart the
 agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
 time, and doctor is what reports a missing required binary.
 
-Any `pnpx @askviraj/ai-plugins` install also wires up **graphify**, which vwf
-enforces at its own entry gate. Installing outside a git repo works too:
+Any `pnpx @virajp.dev/claude-plugins` install also wires up **graphify**, which
+vwf enforces at its own entry gate. Installing outside a git repo works too:
 `graphify install` still runs, and its repo-scoped post-commit hook is skipped
 automatically (with a note).
 

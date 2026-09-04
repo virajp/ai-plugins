@@ -87,10 +87,9 @@ publishes**.
 installer/src/index.ts  →  tsup  →  bin/installer.mjs
 ```
 
-**The artifact is named `installer`; the command is still `ai-plugins`.**
-`package.json`'s `bin` *key* is what users invoke and what npm's Trusted
-Publisher is bound to, so it did not change with the filename —
-`pnpx @askviraj/ai-plugins` keeps working exactly as before.
+**The artifact is named `installer`; the command is `claude-plugins`.**
+`package.json`'s `bin` *key* is what users invoke, and it is independent of the
+artifact filename — `pnpx @virajp.dev/claude-plugins` runs the same bundle.
 
 The split is load-bearing rather than stylistic: shipping the TypeScript
 directly would raise `engines.node` from `>=18` to `>=22.18`. The externals

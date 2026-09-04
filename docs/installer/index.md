@@ -1,18 +1,20 @@
 # The installer CLI
 
-[`@askviraj/ai-plugins`](https://www.npmjs.com/package/@askviraj/ai-plugins) is
-a small CLI with three jobs: install **plugins**, wire up **graphify**, and
-**remove** what this toolkit put on your machine.
+[`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
+is a small CLI with three jobs: install **plugins**, wire up **graphify**, and
+**remove** what this toolkit put on your machine. It was published as
+`@askviraj/ai-plugins` before; that package is sunset and only prints a pointer
+here.
 
 ```sh
-pnpx @askviraj/ai-plugins --all
+pnpx @virajp.dev/claude-plugins --all
 ```
 
 The plugin half is a thin wrapper: it drives Claude Code's own commands, reading
 this repo from GitHub, and they work just as well directly:
 
 ```sh
-claude plugin marketplace add virajp/ai-plugins
+claude plugin marketplace add virajp/claude-plugins
 claude plugin install vwf@virajp-plugins
 ```
 
@@ -82,7 +84,7 @@ them.
 There is no Cursor, OpenCode or Oh-My-Pi install path any more. Point your agent
 at this repo and ask it to adapt the plugin — the prompts, and an honest
 statement of what is and is not promised, are in the repo's
-[readme](https://github.com/virajp/ai-plugins#other-tools).
+[readme](https://github.com/virajp/claude-plugins#other-tools).
 
 ## Related
 

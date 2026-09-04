@@ -73,7 +73,7 @@ Every `source` is a **`git-subdir` fetch pinned to a per-plugin tag**, not the
 ```json
 {
   "source": "git-subdir",
-  "url": "https://github.com/virajp/ai-plugins.git",
+  "url": "https://github.com/virajp/claude-plugins.git",
   "path": "plugins/vwf",
   "ref": "vwf-v19.9.0"
 }
