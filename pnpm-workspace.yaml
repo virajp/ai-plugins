@@ -25,6 +25,13 @@ packages:
 # silently does nothing.
 allowBuilds:
   esbuild: true
+  # Explicit denies: pnpm 11 fails `install --frozen-lockfile` with
+  # ERR_PNPM_IGNORED_BUILDS on a dependency with a build script that is neither
+  # allowed nor denied, so silence is no longer an answer for these two.
+  # astro's optional image pipeline; the site uses plain <img>, never <Image>.
+  sharp: false
+  # wrangler's local Workers runtime; the site only ever runs `wrangler deploy`.
+  workerd: false
 
 # Supply-chain hardening: refuse to install a dependency version until it has been
 # public for at least this many MINUTES. A compromised release is usually caught
