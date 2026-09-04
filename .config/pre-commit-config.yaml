@@ -120,13 +120,16 @@ repos:
         # anything it cannot lint must be kept out of the argument list, not merely
         # ignored in .config/linter.yaml.
         #
-        # Two kinds: the vwf blueprint templates and example bundle (ignored in
-        # linter.yaml, because OKF frontmatter reads as a second H1), and the hook
+        # Three kinds: the vwf blueprint templates and example bundle (ignored in
+        # linter.yaml, because OKF frontmatter reads as a second H1), the hook
         # scripts, which are shell — `plugins:npm-normalize-test` is what actually
-        # tests those, through the system sed. site/public/brand/ is the logo —
-        # SVG, PNG and the social-preview render source — none of which it
+        # tests those, through the system sed — and the site's Astro components,
+        # which the linter has no parser for (they are dprint's, via the markup
+        # plugin) and which linter.yaml already ignores, so passing them only
+        # produces the warnings that fail the run. site/public/brand/ is the logo
+        # — SVG, PNG and the social-preview render source — none of which it
         # lints, and its HTML rewrite fights dprint's.
-        exclude: ^plugins/vwf/assets/(templates|examples)/|^site/public/brand/|\.sh$
+        exclude: ^plugins/vwf/assets/(templates|examples)/|^site/public/brand/|\.sh$|\.astro$
         language: system
         stages: [ pre-commit ]
 
