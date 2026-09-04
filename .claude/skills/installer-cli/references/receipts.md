@@ -61,9 +61,9 @@ is the worked example: a `cursor.json` receipt records `~/.cursor/settings.json`
 → `virajp`, with the value that was there before that install as `previous`.
 Reverting writes that value back; it deletes the key only when `hadKey` says
 there was none to begin with, which is why `hadKey` is separate from a
-`previous` of literal `undefined`. `restoreJsonKey` in `cli/src/config/json.ts`
-is the hook that performs it — a generic JSONC key-writer, since every config
-any adapter ever touched is that format.
+`previous` of literal `undefined`. `restoreJsonKey` in
+`installer/src/config/json.ts` is the hook that performs it — a generic JSONC
+key-writer, since every config any adapter ever touched is that format.
 
 ## If a write path ever returns
 

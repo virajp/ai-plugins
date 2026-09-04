@@ -93,5 +93,5 @@ jobs:
       # `--noEmit` per project, because there are no project references to walk.
       - name: Type-check every package
         run: |
-          pnpm exec tsc --noEmit -p cli
+          pnpm exec tsc --noEmit -p installer
           pnpm exec tsc --noEmit -p scripts

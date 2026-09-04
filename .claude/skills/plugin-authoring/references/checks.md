@@ -11,7 +11,7 @@ format, and the one generated file that needs a freshness gate of its own.
 | `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 2 plugin manifests |
 | `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                 |
 | `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed     |
-| `pnpm vitest run`             | the `scripts/` and `cli/` suites                                          |
+| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                    |
 
 Both `plugins:check` and the `--check` mode run in pre-commit and in
 `plugins.yml`, in that order: **freshness before validity**, so a stale manifest

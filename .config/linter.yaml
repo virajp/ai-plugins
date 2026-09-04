@@ -6,7 +6,7 @@ version: 1
 
 ignores:
   - "**/archived/**"
-  # tsup's bundle of cli/. Build output, gitignored, and not ours to style —
+  # tsup's bundle of installer/. Build output, gitignored, and not ours to style —
   # esbuild emits empty catch blocks and keeps unused helpers from bundled deps.
   # The source it is built from is linted.
   - "bin/**"

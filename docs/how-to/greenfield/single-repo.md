@@ -34,7 +34,7 @@ backing axis, and the design-tool pack that answers the design imports. vwf
 ships no stack templates of its own, so without `stackgen` the stack menus come
 back empty and, with no design pack materialized, `/vwf:design-system` cannot
 run at all. Scopes and upgrades:
-[the installer CLI](../../cli/usage.md#installing-plugins).
+[the installer CLI](../../installer/usage.md#installing-plugins).
 
 **Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is
 what tells you whether the binaries vwf shells out to are actually on your

@@ -107,7 +107,7 @@ deletes nothing a receipt or another tool does not account for.
 
 > **Working on it:** the receipt entry kinds, the interactive uninstall and the
 > packaging traps are in `.claude/skills/installer-cli/`, which auto-applies
-> while you edit `cli/`.
+> while you edit `installer/`.
 
 ## Tasks
 
@@ -168,10 +168,10 @@ allows one Trusted Publisher and validates the entry-point filename):
   the source and what the pack copies into a target repo. The hook lives with
   the **package manager** it rewrites for, not in `vwf`: a JS/TS rewrite has no
   business in a language-agnostic workflow plugin.
-- **`vitest run`** — the `scripts/` and `cli/` suites.
-- **`tsc --noEmit`** per TypeScript project — `cli/` and `scripts/`. Nothing
-  emits, so `tsc` is only ever a checker, and there are no project references to
-  walk.
+- **`vitest run`** — the `scripts/` and `installer/` suites.
+- **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
+  Nothing emits, so `tsc` is only ever a checker, and there are no project
+  references to walk.
 
 `plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion

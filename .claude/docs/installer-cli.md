@@ -16,7 +16,7 @@ only to say so, printing the redirect and exiting 1. A machine upgrading from a
 version that did keeps a `statusLine` key naming a script this CLI no longer
 deletes, and re-points it by installing `claude-status`.
 
-> **The user-facing reference is `docs/cli/`** — `usage.md` for the flags,
+> **The user-facing reference is `docs/installer/`** — `usage.md` for the flags,
 > `targets.md` for what lands where, `internals.md` for the source map. What
 > follows is the shape a maintainer needs in context, not a second copy of them;
 > `internals.md`'s path table is the fuller one.
@@ -61,29 +61,29 @@ The hint to set one appears **only** for a real rate limit: `429`, or `403` with
 read-only token would not fix. The npm registry call is not GitHub and stays
 tokenless.
 
-**`cli/` is the source; `bin/` is the build output, and `bin/` is what npm
-publishes.** tsup bundles `cli/src/index.ts` → `bin/installer.mjs`; `bin/` is
-gitignored and `i:build` regenerates it. **The artifact was renamed; the command
-was not** — `package.json`'s `bin` *key* stays `ai-plugins`, which is what users
-invoke and what npm's Trusted Publisher is bound to. The published tarball is
-`bin` alone — **4 files**, where the four render trees once shipped ~12 MB
-inside it. The committed-tree-validated-by-CI guarantee moved channel rather
-than disappearing: what users install is `main`, and `plugins.yml` validates
-`main` on every push.
+**`installer/` is the source; `bin/` is the build output, and `bin/` is what npm
+publishes.** tsup bundles `installer/src/index.ts` → `bin/installer.mjs`; `bin/`
+is gitignored and `i:build` regenerates it. **The artifact was renamed; the
+command was not** — `package.json`'s `bin` *key* stays `ai-plugins`, which is
+what users invoke and what npm's Trusted Publisher is bound to. The published
+tarball is `bin` alone — **4 files**, where the four render trees once shipped
+~12 MB inside it. The committed-tree-validated-by-CI guarantee moved channel
+rather than disappearing: what users install is `main`, and `plugins.yml`
+validates `main` on every push.
 
-| Path                     | Is                                                                  |
-| ------------------------ | ------------------------------------------------------------------- |
-| `cli/src/args.ts`        | the flag surface on `util.parseArgs`, plus the usage renderer       |
-| `cli/src/index.ts`       | the router — resolve, gate, execute, report, exit                   |
-| `cli/src/install.ts`     | the plugin installer — plan against Claude's settings, drive claude |
-| `cli/src/uninstall.ts`   | enumerate → deselect → remove, plus the legacy-receipt reader       |
-| `cli/src/receipt.ts`     | read-only: reverting the receipts older versions wrote              |
-| `cli/src/github.ts`      | the token header and the rate-limit-only hint                       |
-| `cli/src/graphify.ts`    | `graphify install` + `hook install`                                 |
-| `cli/src/version.ts`     | `--version` — this CLI against npm, plugins on `main`               |
-| `cli/src/config/json.ts` | format-preserving JSON/JSONC edits, and `restoreJsonKey`            |
-| `cli/src/**/*.test.ts`   | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
+| Path                           | Is                                                                  |
+| ------------------------------ | ------------------------------------------------------------------- |
+| `installer/src/args.ts`        | the flag surface on `util.parseArgs`, plus the usage renderer       |
+| `installer/src/index.ts`       | the router — resolve, gate, execute, report, exit                   |
+| `installer/src/install.ts`     | the plugin installer — plan against Claude's settings, drive claude |
+| `installer/src/uninstall.ts`   | enumerate → deselect → remove, plus the legacy-receipt reader       |
+| `installer/src/receipt.ts`     | read-only: reverting the receipts older versions wrote              |
+| `installer/src/github.ts`      | the token header and the rate-limit-only hint                       |
+| `installer/src/graphify.ts`    | `graphify install` + `hook install`                                 |
+| `installer/src/version.ts`     | `--version` — this CLI against npm, plugins on `main`               |
+| `installer/src/config/json.ts` | format-preserving JSON/JSONC edits, and `restoreJsonKey`            |
+| `installer/src/**/*.test.ts`   | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
 
 > **Working here:** the flag surface, the receipt rules, the interactive
 > uninstall and the packaging traps are in `.claude/skills/installer-cli/`,
-> which auto-applies while you edit `cli/`.
+> which auto-applies while you edit `installer/`.

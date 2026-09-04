@@ -3,7 +3,7 @@
 ## The bundle
 
 `tsup.config.ts`: one entry, `outDir: bin`, ESM, `target: node18`,
-`clean: true`. The hashbang on `cli/src/index.ts` is not decoration — tsup
+`clean: true`. The hashbang on `installer/src/index.ts` is not decoration — tsup
 copies it through and marks the output executable, which is what lets `bin`
 point straight at the bundle.
 
@@ -42,11 +42,11 @@ read.
 
 ## Resolving the package root
 
-`cli/src/index.ts` resolves it by **walking up for a `package.json` whose name
-matches**, never by counting `..` segments — it runs from two depths (`cli/src/`
-in the repo, `bin/` once bundled), and a fixed offset would be right in one and
-silently wrong in the other. `AI_PLUGINS_SOURCE_DIR` is the escape hatch, and is
-how the tests point it at a fixture.
+`installer/src/index.ts` resolves it by **walking up for a `package.json` whose
+name matches**, never by counting `..` segments — it runs from two depths
+(`installer/src/` in the repo, `bin/` once bundled), and a fixed offset would be
+right in one and silently wrong in the other. `AI_PLUGINS_SOURCE_DIR` is the
+escape hatch, and is how the tests point it at a fixture.
 
 ## `--version`
 
@@ -61,8 +61,8 @@ Two lines, from two different places:
 Everything this CLI installs is installed by Claude or by graphify, each of
 which answers for its own version — what a user has is `claude plugin list`.
 Parsing Claude's bookkeeping a second time to say the same thing would only be a
-second thing to drift. `cli/src/version.ts` says so at the top; keep the two in
-agreement if a reader is ever added.
+second thing to drift. `installer/src/version.ts` says so at the top; keep the
+two in agreement if a reader is ever added.
 
 The "latest" side is fetched from raw GitHub and can be **CDN-cached for a few
 minutes** after a push; re-run before diagnosing a stale-looking report.
@@ -72,7 +72,7 @@ GitHub's anonymous limit is per source IP and shared egress exhausts it between
 users. The hint to set one appears **only** for a real rate limit — `429`, or
 `403` with `x-ratelimit-remaining: 0`. A plain `403` is an authorization failure
 a read-only token would not fix. The npm registry call is not GitHub and stays
-tokenless; see `cli/src/github.ts`.
+tokenless; see `installer/src/github.ts`.
 
 ## Distribution: npm for the CLI, GitHub for the plugins
 

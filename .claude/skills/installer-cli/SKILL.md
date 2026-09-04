@@ -2,20 +2,20 @@
 name: installer-cli
 description: Authoring discipline for the @askviraj/ai-plugins CLI — the
   read-only receipt path, the interactive uninstall, packaging, and the flag
-  surface. Auto-applies when editing cli/ or tsup.config.ts.
+  surface. Auto-applies when editing installer/ or tsup.config.ts.
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
-  - "cli/**"
+  - "installer/**"
   - "tsup.config.ts"
 ---
 
 # Installer CLI
 
-`cli/src/` is the source; `bin/installer.mjs` is the tsup bundle, is
-**gitignored**, and is what npm publishes. Shipping `cli/src/*.ts` directly
-would raise `engines.node` from `>=18` to `>=22.18`, which is the whole reason
-the bundle exists.
+`installer/src/` is the source; `bin/installer.mjs` is the tsup bundle, is
+**gitignored**, and is what npm publishes. Shipping `installer/src/*.ts`
+directly would raise `engines.node` from `>=18` to `>=22.18`, which is the whole
+reason the bundle exists.
 
 **The artifact is `installer.mjs`; the command is `ai-plugins`.**
 `package.json`'s `bin` *key* is what users invoke and what npm's Trusted
@@ -112,7 +112,7 @@ found. Do not reason about that map as if it gated the reader.
 ## Testing
 
 - `mise run i:test` bundles first and smoke-tests **`bin/installer.mjs`, not
-  `cli/src/index.ts`** — a packaging mistake only shows up in the built
+  `installer/src/index.ts`** — a packaging mistake only shows up in the built
   artifact, because in the repo everything resolves through the workspace.
 - Its end-to-end section **seeds a `cursor.json` legacy receipt** into a
   throwaway `HOME`'s receipt dir (plus `XDG_CONFIG_HOME` and `XDG_DATA_HOME`, or
@@ -125,10 +125,11 @@ found. Do not reason about that map as if it gated the reader.
   not here: `--uninstall` refuses without a TTY, and allocating one portably is
   a BSD-vs-GNU `script` trap not worth paying for one assertion.
 - **`vitest.config.mts` restricts collection to
-  `{cli,scripts}/src/**/*.test.ts`.** A test file anywhere else is silently
-  never run rather than failing — which is why the mempalace checkpoint *shell
-  script* test lives at `cli/src/mempalace-checkpoint-script.test.ts` even
-  though what it exercises is `plugins/`.
+  `{installer,scripts}/src/**/*.test.ts`.** A test file anywhere else is
+  silently never run rather than failing — which is why the mempalace checkpoint
+  *shell script* test lives at
+  `installer/src/mempalace-checkpoint-script.test.ts` even though what it
+  exercises is `plugins/`.
 - `claude` is stubbed in `i:test` only because the runs need it to *exist*;
   nothing shells out to it — the plugin path is exercised as `--dry-run` only,
   which never spawns. Do not stub a tool to exercise its command sequence end to
@@ -187,5 +188,6 @@ prints its own answer instead of the flag table with "nothing to do" under it.
 
 ## Documentation
 
-Behaviour changes here must reconcile `readme.md`, `CLAUDE.md` and `docs/cli/`
-in the same commit. Delegate that sweep to the `docs-reconciler` agent.
+Behaviour changes here must reconcile `readme.md`, `CLAUDE.md` and
+`docs/installer/` in the same commit. Delegate that sweep to the
+`docs-reconciler` agent.

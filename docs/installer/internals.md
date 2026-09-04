@@ -3,8 +3,8 @@
 > **This page is the map, not the rules.**
 > [`.claude/skills/installer-cli/`](../../.claude/skills/installer-cli/SKILL.md)
 > is authoritative for the receipt invariant, the uninstall discipline and the
-> packaging traps — and it auto-applies the moment anyone edits `cli/`, so a
-> contributor already has it in context. What follows is the orientation: the
+> packaging traps — and it auto-applies the moment anyone edits `installer/`, so
+> a contributor already has it in context. What follows is the orientation: the
 > shapes, the flow between them, and where to go for the rule that governs each.
 
 ## What this CLI is for
@@ -80,12 +80,12 @@ worth knowing apart: `fetchGithubJson` attaches `$GITHUB_API_TOKEN` when set,
 
 ## The build split
 
-`cli/src/` is the source. `bin/installer.mjs` is the tsup bundle, it is
+`installer/src/` is the source. `bin/installer.mjs` is the tsup bundle, it is
 **gitignored**, `mise run i:build` regenerates it, and **`bin/` is what npm
 publishes**.
 
 ```text
-cli/src/index.ts  →  tsup  →  bin/installer.mjs
+installer/src/index.ts  →  tsup  →  bin/installer.mjs
 ```
 
 **The artifact is named `installer`; the command is still `ai-plugins`.**
@@ -132,28 +132,28 @@ What users install is `main`, and `plugins.yml` validates `main` on every push.
 
 ## The map
 
-| Path                         | Is                                                                  |
-| ---------------------------- | ------------------------------------------------------------------- |
-| `cli/src/args.ts`            | the flag surface on `util.parseArgs`, plus the usage renderer       |
-| `cli/src/index.ts`           | the router — resolve, execute, report, exit                         |
-| `cli/src/context.ts`         | the injected run context, so a test can redirect a whole install    |
-| `cli/src/install.ts`         | the plugin installer — plan against Claude's settings, drive claude |
-| `cli/src/claude-settings.ts` | reading Claude's settings, shared by install and uninstall          |
-| `cli/src/uninstall.ts`       | enumerate → deselect → remove, plus the legacy-receipt reader       |
-| `cli/src/receipt.ts`         | reading and reverting the receipts older versions wrote             |
-| `cli/src/github.ts`          | the token header and the rate-limit-only hint                       |
-| `cli/src/graphify.ts`        | `graphify install` + `hook install`                                 |
-| `cli/src/version.ts`         | `--version` — this CLI against npm, the plugins on `main`           |
-| `cli/src/report.ts`          | the outcome table                                                   |
-| `cli/src/progress.ts`        | the live step on stderr, off when stderr is not a TTY               |
-| `cli/src/config/json.ts`     | format-preserving JSON/JSONC edits, and `restoreJsonKey`            |
-| `scripts/src/`               | repo tooling — the marketplace generator and the plugin checker     |
-| `cli/src/**/*.test.ts`       | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
+| Path                               | Is                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| `installer/src/args.ts`            | the flag surface on `util.parseArgs`, plus the usage renderer       |
+| `installer/src/index.ts`           | the router — resolve, execute, report, exit                         |
+| `installer/src/context.ts`         | the injected run context, so a test can redirect a whole install    |
+| `installer/src/install.ts`         | the plugin installer — plan against Claude's settings, drive claude |
+| `installer/src/claude-settings.ts` | reading Claude's settings, shared by install and uninstall          |
+| `installer/src/uninstall.ts`       | enumerate → deselect → remove, plus the legacy-receipt reader       |
+| `installer/src/receipt.ts`         | reading and reverting the receipts older versions wrote             |
+| `installer/src/github.ts`          | the token header and the rate-limit-only hint                       |
+| `installer/src/graphify.ts`        | `graphify install` + `hook install`                                 |
+| `installer/src/version.ts`         | `--version` — this CLI against npm, the plugins on `main`           |
+| `installer/src/report.ts`          | the outcome table                                                   |
+| `installer/src/progress.ts`        | the live step on stderr, off when stderr is not a TTY               |
+| `installer/src/config/json.ts`     | format-preserving JSON/JSONC edits, and `restoreJsonKey`            |
+| `scripts/src/`                     | repo tooling — the marketplace generator and the plugin checker     |
+| `installer/src/**/*.test.ts`       | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
 
 One placement rule that looks arbitrary and is not: `vitest.config.mts` collects
-only `{cli,scripts}/src/**/*.test.ts`, so a test file anywhere else is
+only `{installer,scripts}/src/**/*.test.ts`, so a test file anywhere else is
 **silently never run** — which is why the test for the mempalace checkpoint
-*shell script* lives under `cli/src/` even though what it exercises is
+*shell script* lives under `installer/src/` even though what it exercises is
 `plugins/`.
 
 ## Where the rules live

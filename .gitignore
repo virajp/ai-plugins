@@ -32,11 +32,11 @@ node_modules/
 # TypeScript build artifacts. Nothing here emits — `tsc` is only ever a checker —
 # but it still writes its incremental state, and `composite: true` in
 # tsconfig.base.json means every project has an outDir whether it fills it or not.
-cli/dist/
+installer/dist/
 scripts/dist/
 *.tsbuildinfo
 
-# Build output: tsup bundles cli/ into bin/, and bin/ is what npm publishes.
+# Build output: tsup bundles installer/ into bin/, and bin/ is what npm publishes.
 # Not committed — unlike the authored plugins/ tree and the marketplace manifest
 # generated from it, which are meant to be read and diffed. A bundle diff is
 # noise, and `i:build` regenerates it before every publish.
