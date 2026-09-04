@@ -48,7 +48,10 @@ import type {
 } from "./plugins.ts";
 
 export interface Finding {
-  /** What was being checked — a plugin name, or `<plugin>:<path>`. */
+  /**
+   * What was being checked — a plugin name, `<plugin>:<path>`, or
+   * `<plugin>:<path>:<line>` for a rule that fires on one line.
+   */
   readonly scope: string;
   readonly message: string;
 }
@@ -85,6 +88,7 @@ export function check(repoRoot: string): Finding[] {
     findings.push(...checkAgentReferences(plugin));
     findings.push(...checkExampleLinks(plugin));
     findings.push(...checkRootRefs(plugin, pluginsRoot));
+    findings.push(...checkRetiredVocabulary(plugin));
   }
 
   findings.push(...checkDesignAdapters(plugins));
@@ -910,6 +914,138 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
     }
   }
 
+  return findings;
+}
+
+// ---------------------------------------------------------------------------
+// Retired vocabulary
+// ---------------------------------------------------------------------------
+
+/**
+ * A word the corpus stopped meaning, and the one condition under which a line
+ * carrying it is still a live claim rather than history.
+ */
+interface RetiredTerm {
+  /** How a finding names the term. */
+  readonly name: string;
+  readonly pattern: RegExp;
+  /**
+   * A further test on the whole line, for a term whose bare presence proves
+   * nothing. Omitted, the pattern alone decides.
+   */
+  readonly when?: (line: string) => boolean;
+}
+
+/**
+ * The vocabulary the 2026-09-04 drift sweep found stated as live long after it
+ * was retired — each entry is a class of finding that recurred across files,
+ * not a one-off. Case-sensitive on purpose: the retired spellings are exact,
+ * and `Web` in a sentence is the ordinary word.
+ *
+ * The list is meant to stay short. A hit on a genuinely historical line is
+ * fixed by the narrowest exemption in `RETIRED_LINE_EXEMPT` or
+ * `RETIRED_FILE_EXEMPT`, never by deleting the pattern — a pattern that goes
+ * is a class of drift that comes back.
+ */
+const RETIRED_TERMS: readonly RetiredTerm[] = [
+  // The screen platform token, retired at format 22 for `site` / `webapp`.
+  // Backticked only, since bare `web` is a word — and even backticked it is a
+  // perfectly good registry PROJECT name (`api`, `web`, `console`), which the
+  // worked example uses. What marks the platform sense is company: a sibling
+  // platform token on the same line, or the word "token".
+  {
+    name: "`web` platform",
+    pattern: /`web`/,
+    when: line => /`(?:mobile|tablet|desktop|auto)`|token/.test(line),
+  },
+  // The UX gate is the repo's own unprefixed `ux-gate` skill. The literal
+  // `<plugin>-ux-gate` spelling names no skill and only ever appears where the
+  // retired construction is being explained, so it is not a hit.
+  { name: "-ux-gate", pattern: /(?<!<plugin>)-ux-gate/ },
+  // The template paths of the layer vwf no longer ships or describes.
+  { name: "stacks/project/", pattern: /stacks\/project\// },
+  { name: "assets/stacks/", pattern: /assets\/stacks\// },
+  // Six axes, per assets/stack-adapter.md.
+  {
+    name: "four axes",
+    pattern: /four (?:stack |independent )?axes|four menus|four stack rounds/,
+  },
+  // Dropped from both plugins' template shape.
+  { name: "private_plane", pattern: /private_plane/ },
+  // The plugin that dissolved into stackgen, named as one that still exists.
+  // The uninstall instruction is the one live sentence that must keep naming
+  // it; "dissolved" is covered by the line exemption below.
+  {
+    name: "`devtools` plugin",
+    pattern: /`devtools`/,
+    when: line => line.includes("plugin") && !line.includes("uninstall"),
+  },
+];
+
+/**
+ * A line that carries one of these is talking about the past, which is the
+ * only way retired vocabulary is allowed to appear. Stems rather than words
+ * (`retire` covers "retires" and "retirement", `migrat` covers "migrating")
+ * because the migration notes conjugate freely; `dissolved` and `moved` are
+ * how this corpus says a plugin or a template stopped being where it was; and
+ * `format 2N` covers the lineage notes naming the format a token retired at.
+ *
+ * Tested against the flagged line alone, by ruling. A migration note wrapped
+ * over a dozen lines with its marker on the first therefore has to repeat a
+ * marker on whichever line carries the token — a small tax, paid so that a
+ * "retired at format 22" sentence never shields a live claim beneath it.
+ */
+const RETIRED_LINE_EXEMPT =
+  /retire|migrat|dissolved|moved|→|pre-22|[Ff]ormat 2\d/;
+
+/**
+ * Files whose whole job is history: the format lineage, and any changelog.
+ * The lineage path is vwf's, and a second plugin growing one would be a second
+ * entry here rather than a wider match.
+ */
+const RETIRED_FILE_EXEMPT = [
+  /^skills\/setup\/references\/format-lineage\.md$/,
+  /(?:^|\/)changelog\.md$/i,
+];
+
+/**
+ * Retired vocabulary stated as live.
+ *
+ * The recurrence class of every drift sweep this repo has run: a token is
+ * renamed at the source of truth, the lineage records the rename, and a dozen
+ * other files keep using the old word as if nothing happened. Nothing fails —
+ * the old word is prose, not a reference — so the only reader that can catch it
+ * is a static one holding the retired spellings. The line-level exemption is
+ * what keeps this a gate on *claims* rather than on words: a line that says
+ * the token was retired is the one place it must still be spelled.
+ */
+function checkRetiredVocabulary(plugin: Plugin): Finding[] {
+  const findings: Finding[] = [];
+
+  for (const file of plugin.files) {
+    if (!/\.(?:md|ya?ml)$/.test(file.path)) {
+      continue;
+    }
+    if (RETIRED_FILE_EXEMPT.some(re => re.test(file.path))) {
+      continue;
+    }
+    const lines = readText(file.absolute).split("\n");
+    for (const [index, line] of lines.entries()) {
+      if (RETIRED_LINE_EXEMPT.test(line)) {
+        continue;
+      }
+      for (const term of RETIRED_TERMS) {
+        if (term.pattern.test(line) && (term.when?.(line) ?? true)) {
+          findings.push({
+            scope: `${plugin.dir}:${file.path}:${index + 1}`,
+            message: `states retired vocabulary ${term.name} as live — say `
+              + `what replaced it, or mark this line as history (retired, `
+              + `migration, dissolved, moved, →, pre-22, format 2N)`,
+          });
+        }
+      }
+    }
+  }
   return findings;
 }
 

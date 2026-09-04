@@ -805,6 +805,137 @@ describe("prescription vs enumeration", () => {
   });
 });
 
+describe("retired vocabulary", () => {
+  // The recurrence class of every drift sweep: a token is renamed at its
+  // source of truth and a dozen other files keep stating the old one as live.
+  // Nothing fails, because prose is not a reference — so the rule is pinned
+  // per term in the failing direction, and per exemption in the passing one.
+  const doc = (text: string) =>
+    tree({ alpha: { files: { "assets/x.md": text } } });
+  const retired = (text: string) =>
+    messages(check(doc(text))).filter(m => m.includes("retired vocabulary"));
+
+  it.each([
+    ["`web` platform", "platforms: `mobile` / `desktop` / `web`\n"],
+    ["`web` platform", "the `web` token\n"],
+    ["-ux-gate", "delegated to the stack plugin's `-ux-gate` skill\n"],
+    ["stacks/project/", "templates sit under `stacks/project/`\n"],
+    ["assets/stacks/", "see `assets/stacks/deploy/npm-package.md`\n"],
+    ["four axes", "a stack is composed from four axes\n"],
+    ["four axes", "composed from four independent axes\n"],
+    ["four axes", "the four stack axes\n"],
+    ["four axes", "which of the four menus this joins\n"],
+    ["four axes", "each of the four stack rounds\n"],
+    ["private_plane", "private_plane: <mechanism>\n"],
+    ["`devtools` plugin", "shipped by the `devtools` plugin\n"],
+  ])("flags %s stated as live", (name, text) => {
+    expect(retired(text)).toEqual([
+      expect.stringContaining(`states retired vocabulary ${name} as live`),
+    ]);
+  });
+
+  it("reports the path and the line", () => {
+    const found = check(doc("fine\n\nfine\nthe four axes\n"));
+    expect(found.map(f => f.scope)).toEqual(["alpha:assets/x.md:4"]);
+  });
+
+  it("scans yaml as well as markdown", () => {
+    const root = tree({
+      alpha: { files: { "stacks/thing/pack.yaml": "private_plane: vpc\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("private_plane"),
+    ]);
+  });
+
+  it("passes a clean document", () => {
+    expect(check(doc(
+      "platforms: `mobile` / `site` / `webapp`; the repo's own `ux-gate`;\n"
+        + "six axes; uninstall `devtools` by hand.\n",
+    )))
+      .toEqual([]);
+  });
+
+  it.each([
+    "retired",
+    "migration",
+    "→",
+    "pre-22",
+    "format 22",
+  ])("exempts a line carrying %s", marker => {
+    expect(check(doc(`the \`web\` token, ${marker}\n`))).toEqual([]);
+  });
+
+  it("exempts the conjugations the migration notes use", () => {
+    // `format 14 retires`, `a repo migrating from 9`, `since dissolved`, `the
+    // templates moved under`: every one of these is history, and the stems are
+    // what keep the rule from demanding the exact word "retired".
+    expect(check(doc(
+      "a value format 14 retires: `assets/stacks/x.md`\n\n"
+        + "a repo migrating from 9 reads `stacks/project/`\n\n"
+        + "the Docker doctrine of the `devtools` plugin, since dissolved\n\n"
+        + "the templates moved under `assets/stacks/project/`\n",
+    )))
+      .toEqual([]);
+  });
+
+  it("exempts the flagged line alone, not its paragraph", () => {
+    // By ruling. A migration note wrapped over many lines with its marker on
+    // the first still has to mark the line carrying the token — the price of
+    // a "retired at format 22" sentence never shielding a live claim under it.
+    const found = check(doc(
+      "- **`9 → 10` migration**: the templates live at\n"
+        + "  `assets/stacks/<type>/<slug>.md`, which\n"
+        + "  is also where `stacks/project/` came from\n\n"
+        + "a stack is composed from four axes\n"
+        + "(the fourth was retired at format 22)\n",
+    ));
+    expect(found.map(f => f.scope)).toEqual([
+      "alpha:assets/x.md:2",
+      "alpha:assets/x.md:3",
+      "alpha:assets/x.md:5",
+    ]);
+  });
+
+  it("exempts the format lineage and any changelog, whole", () => {
+    const root = tree({
+      alpha: {
+        files: {
+          "skills/setup/references/format-lineage.md": "the `web` token\n",
+          "CHANGELOG.md": "the four axes\n",
+          "vendor/thing/changelog.md": "private_plane\n",
+        },
+      },
+    });
+    expect(check(root)).toEqual([]);
+  });
+
+  it("does not take a project named `web` for the platform token", () => {
+    // `web` is a perfectly good registry project name, and the worked example
+    // uses it. The platform sense is marked by a sibling token or "token".
+    expect(check(doc(
+      "the registry project name (`api`, `web`, `console`);\n"
+        + "`web` here declares `webapp`\n",
+    )))
+      .toEqual([]);
+  });
+
+  it("does not take `<plugin>-ux-gate` for the retired gate", () => {
+    // The literal placeholder names no skill and only appears where the
+    // retired construction is being explained.
+    expect(check(doc("vwf never builds `<plugin>-ux-gate` from a pin\n")))
+      .toEqual([]);
+  });
+
+  it("names `devtools` only as a plugin, and never for the uninstall", () => {
+    expect(check(doc(
+      "run `claude plugin uninstall devtools` — the `devtools` plugin is gone\n\n"
+        + "the `devtools` skills folded into stackgen\n",
+    )))
+      .toEqual([]);
+  });
+});
+
 describe("resolveRootRef", () => {
   it("resolves against the plugin that wrote the reference", () => {
     expect(resolveRootRef("/p/vwf", "assets/doc.md")).toBe(
