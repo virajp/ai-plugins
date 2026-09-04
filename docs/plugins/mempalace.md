@@ -85,9 +85,9 @@ state file needs nothing from the payload but a session id, where parsing a
 transcript needs the transcript to exist, to be readable, and to keep its
 current shape across Claude Code releases; it is **simpler**, in the sense that
 there is less of it to be wrong; and it is what the tests actually cover
-(`cli/src/mempalace-checkpoint-script.test.ts` drives the script directly).
-Wrapping upstream's would mean owning a JSONL format nobody here controls in
-order to answer a question a counter already answers.
+(`installer/src/mempalace-checkpoint-script.test.ts` drives the script
+directly). Wrapping upstream's would mean owning a JSONL format nobody here
+controls in order to answer a question a counter already answers.
 
 The two shell hooks, declared in `plugins/vwf/hooks/hooks.json`, are all there
 is:

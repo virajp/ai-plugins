@@ -308,12 +308,12 @@ async function uninstall(
  * version report reads.
  *
  * Found by walking up rather than by counting `..` segments, because this code
- * runs from two depths: `cli/src/index.ts` in the repo and `bin/installer.mjs`
+ * runs from two depths: `installer/src/index.ts` in the repo and `bin/installer.mjs`
  * once tsup has bundled it. A fixed offset would be right in one and silently
  * wrong in the other, resolving `sourceRoot` to a directory that exists but
  * holds no manifest.
  *
- * Matched on the package *name*, so the workspace's own `cli/package.json` is
+ * Matched on the package *name*, so the workspace's own `installer/package.json` is
  * walked past rather than mistaken for the root.
  */
 function packageRoot(): string {

@@ -46,7 +46,7 @@ auto-apply the moment you edit the tree they govern; `release` is `/release`.
 [rel]: .claude/skills/release/SKILL.md
 
 The user-facing docs are a different tree and a different audience: `readme.md`,
-`docs/cli/`, `docs/plugins/`, `docs/how-to/`.
+`docs/installer/`, `docs/plugins/`, `docs/how-to/`.
 
 ### One authored tree
 
@@ -61,7 +61,7 @@ plugins/<plugin>/          the authored source, and the installed shape
 .claude-plugin/marketplace.json    generated at the repo root, committed
 .dev-marketplace/                  generated too — the authoring machine's, gitignored
 
-cli/src/**                 installer source (TypeScript)
+installer/src/**                 installer source (TypeScript)
   ↓  tsup
 bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
@@ -103,8 +103,8 @@ which is the installer's and whose trigger surface must stay untouched):
 - **`plugins:check`** — validates the authored tree, eleven rules.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
-- **`vitest run`** — the `scripts/` and `cli/` suites.
-- **`tsc --noEmit`** per TypeScript project — `cli/` and `scripts/`.
+- **`vitest run`** — the `scripts/` and `installer/` suites.
+- **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
 
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].
@@ -174,14 +174,14 @@ Claude's settings itself, and writes **no receipt** — both install paths belon
 to a tool that keeps its own records, and those records are what `--uninstall`
 reads live.
 
-**`cli/` is the source; `bin/` is the tsup output, is gitignored, and is what
-npm publishes.** The statusline is a separate package (`claude-status`), not a
-plugin and not installed here.
+**`installer/` is the source; `bin/` is the tsup output, is gitignored, and is
+what npm publishes.** The statusline is a separate package (`claude-status`),
+not a plugin and not installed here.
 
 The flag surface, the legacy-receipt reader, the GitHub token rule and the
 source map are [`.claude/docs/installer-cli.md`][cli]; the authoring discipline
-is the [`installer-cli`][icli] skill, which auto-applies under `cli/`. The
-user-facing reference is `docs/cli/`.
+is the [`installer-cli`][icli] skill, which auto-applies under `installer/`. The
+user-facing reference is `docs/installer/`.
 
 ## CI & Releases
 

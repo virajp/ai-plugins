@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Bundle cli/ into bin/ and verify the publishable package"
+#MISE description="Bundle installer/ into bin/ and verify the publishable package"
 #MISE dir="{{ config_root }}"
 
 set -e
@@ -7,10 +7,10 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# `cli/` is the TypeScript source; `bin/` is the built output and the only code
+# `installer/` is the TypeScript source; `bin/` is the built output and the only code
 # npm ships. bin/ is gitignored, so this step is not optional before a publish —
 # without it the tarball would carry no entrypoint at all.
-print_header "Bundling cli/ into bin/ ..."
+print_header "Bundling installer/ into bin/ ..."
 pnpm exec tsup
 
 if [[ ! -f bin/installer.mjs ]]; then

@@ -173,6 +173,6 @@ machine's business. Expect to do that once, and to be asked before it happens.
   spine, with the install step in context.
 - [The stackgen plugin](../../plugins/stackgen.md) — packs, bundles, kinds, and
   what a generation run actually does.
-- [The installer CLI](../../cli/usage.md) — flags, scopes, and the external-tool
-  gate.
+- [The installer CLI](../../installer/usage.md) — flags, scopes, and the
+  external-tool gate.
 - [The vwf manual](../../plugins/vwf.md) — the commands these pins feed.

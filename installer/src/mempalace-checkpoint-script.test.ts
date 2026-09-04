@@ -8,7 +8,7 @@
  * executes it. Same reasoning as `plugins:npm-normalize-test` for that hook.
  *
  * It lives here because `vitest.config.mts` collects only
- * `cli/src/**\/*.test.ts` — beside the script it would never run.
+ * `installer/src/**\/*.test.ts` — beside the script it would never run.
  */
 import { execFileSync } from "node:child_process";
 import {

@@ -302,10 +302,10 @@ a small CLI with three jobs: install **plugins** (`--all`, `--user`, `--project`
 above), wire up **graphify**, and **remove** what this toolkit put on your
 machine.
 
-**[docs/cli/](./docs/cli/)** is the full reference —
-[usage](./docs/cli/usage.md) for the flag surface,
-[targets](./docs/cli/targets.md) for what lands where, and
-[internals](./docs/cli/internals.md) for the maintainer's map.
+**[docs/installer/](./docs/installer/)** is the full reference —
+[usage](./docs/installer/usage.md) for the flag surface,
+[targets](./docs/installer/targets.md) for what lands where, and
+[internals](./docs/installer/internals.md) for the maintainer's map.
 
 ### Using it
 
@@ -327,8 +327,8 @@ pnpx @askviraj/ai-plugins --uninstall
 ```
 
 Two things worth knowing before you run it; everything else is
-[docs/cli/usage.md](./docs/cli/usage.md), which is the one place the flag
-surface is described.
+[docs/installer/usage.md](./docs/installer/usage.md), which is the one place the
+flag surface is described.
 
 - **It writes nothing of its own.** Every install goes through the tool that
   owns it — `claude plugin install` for plugins, `graphify` for its wiring — so

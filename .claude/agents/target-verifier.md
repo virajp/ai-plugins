@@ -68,8 +68,8 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
    say so and stop. (`i:test` puts a no-op `claude` on `PATH` because its runs
    only need the binary to *exist* — the plugin path there is `--dry-run` only;
    that is a different job from yours.)
-4. **Read the flag surface from `cli/src/args.ts`** rather than trusting any
-   document, including this one.
+4. **Read the flag surface from `installer/src/args.ts`** rather than trusting
+   any document, including this one.
 5. **Compare with `/usr/bin/diff`, never bare `diff`.** On this machine `diff`
    is aliased to `diff-so-fancy`, which pretty-prints and **always exits 0** —
    so `diff a b && echo identical` reads clean on files that differ, and a whole
@@ -134,7 +134,7 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
    per rule 1. Two paths matter:
 
    - receipts: `$XDG_CONFIG_HOME/ai-plugins/receipts/` (`receiptDir()` in
-     `cli/src/index.ts`)
+     `installer/src/index.ts`)
    - Claude's user config: `$CLAUDE_CONFIG_DIR/settings.json`
 
    Write every seed file with `printf` or `node -e`, never through `cat` — it is

@@ -1,16 +1,16 @@
 /**
  * Bundling the installer for publication.
  *
- * `cli/` is the TypeScript source; `bin/` is the built output, and `bin/` is
+ * `installer/` is the TypeScript source; `bin/` is the built output, and `bin/` is
  * what npm ships. The split is necessary rather than cosmetic: **shipping
- * `cli/src/*.ts` directly would need Node ≥ 22.18** (type stripping on by
+ * `installer/src/*.ts` directly would need Node ≥ 22.18** (type stripping on by
  * default), and bundling keeps `engines.node` where it is, so the CLI still runs
  * wherever it used to.
  *
  * It used to carry a second reason — `@ai-plugins/schema` was a private
  * workspace package that would not resolve from an installed tarball, and the
  * bundle erased it because every import of it was `import type`. That package
- * went with the renderer, and `cli/` now imports nothing outside itself and its
+ * went with the renderer, and `installer/` now imports nothing outside itself and its
  * three runtime dependencies.
  *
  * Runtime dependencies stay external: tsup treats `dependencies` as external by
@@ -26,7 +26,7 @@ export default defineConfig({
   // The name is the artifact's, not the command's: `package.json`'s `bin` KEY
   // stays `ai-plugins`, which is what users invoke and what npm's Trusted
   // Publisher is bound to.
-  entry: { installer: "cli/src/index.ts" },
+  entry: { installer: "installer/src/index.ts" },
   outDir: "bin",
   format: ["esm"],
   // Matches `engines.node`. The bundle is what makes that floor holdable.

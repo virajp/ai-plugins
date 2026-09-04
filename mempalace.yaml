@@ -9,7 +9,7 @@
 # Routing walks a file's path parts outermost-first and returns on the first room
 # whose name or keywords match, so every top-level directory is claimed below on
 # purpose. `docs` itself stays unclaimed so that docs/memory/<room>/ reaches its
-# own room, docs/cli/ reaches `installer`, and docs/plugins/ reaches `plugins`.
+# own room, docs/installer/ reaches `installer`, and docs/plugins/ reaches `plugins`.
 #
 # But leaving `docs` unclaimed is only half a rule, and the other half had to be
 # learned from a mine: an unclaimed part means routing walks *past* it, so any
@@ -83,8 +83,9 @@ rooms:
       under docs/plugins/
     keywords: [ plugins, plugin ]
   - name: installer
-    description: The install-time half — the @askviraj/ai-plugins CLI in cli/
-      and docs/cli/
+    description: The install-time half — the @askviraj/ai-plugins CLI in
+      installer/
+      and docs/installer/
     keywords: [ cli, installer ]
   - name: configuration
     description: Repo machinery under .config/ — mise envs, linter, formatter,

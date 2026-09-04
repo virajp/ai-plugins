@@ -35,8 +35,8 @@ claude plugin install vwf@virajp-plugins
 doctrine, and the language servers it declares — plus the `ux-gate` that renders
 Flutter screens, which matters at the end of the run, and the `claude-design`
 pack, without which `/vwf:design-system` has nothing to import from. Scopes and
-upgrades: [the installer CLI](../../cli/usage.md#installing-plugins); the rest
-of this step is the spine's
+upgrades: [the installer CLI](../../installer/usage.md#installing-plugins); the
+rest of this step is the spine's
 [Install the plugins](./single-repo.md#install-the-plugins).
 
 Then connect the canvas. Claude Design is a remote MCP server, and pinning the

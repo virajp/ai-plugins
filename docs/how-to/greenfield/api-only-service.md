@@ -34,7 +34,7 @@ and that is the first consequence of having no screens: the design adapter
 exists to answer imports from a canvas, and Hookline never reaches one.
 Everything else is unchanged — `stackgen` supplies the project- and backing-axis
 bundles, language doctrine included. Scopes and upgrades:
-[the installer CLI](../../cli/usage.md#installing-plugins).
+[the installer CLI](../../installer/usage.md#installing-plugins).
 
 ### 2. /vwf:setup
 
