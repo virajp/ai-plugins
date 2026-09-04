@@ -54,7 +54,7 @@ fresh session, with `/execute-plan <folder>`.
 | [`.claude/skills/plugin-authoring/`][auth] | the eleven checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
 | [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible          |
 | [`.claude/skills/create-plan/`][cp]        | planning a repo change — the survey, the one-question-at-a-time interview, the plan folder    |
-| [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — unit waves, the wave gate, resume, landing, release   |
+| [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — waves, review, the gate, resume, landing, release     |
 
 [repo]: .claude/docs/repo-shape.md
 [plug]: .claude/docs/plugins.md
