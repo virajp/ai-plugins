@@ -1,8 +1,8 @@
 {
-  "name": "@ai-plugins/installer",
+  "name": "@claude-plugins/installer",
   "version": "0.0.0",
   "private": true,
-  "description": "Installs the virajp-plugins plugins, wires graphify, and removes what the toolkit put on a machine. Bundled into the published @askviraj/ai-plugins package.",
+  "description": "Installs the virajp-plugins plugins, wires graphify, and removes what the toolkit put on a machine. Bundled into the published @virajp.dev/claude-plugins package.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

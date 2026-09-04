@@ -1,7 +1,7 @@
 {
-  "name": "@askviraj/ai-plugins",
+  "name": "@virajp.dev/claude-plugins",
   "version": "6.0.2",
-  "description": "Installs the virajp-plugins plugins for Claude Code and wires up graphify. The plugins install through Claude Code's own marketplace commands",
+  "description": "@virajp.dev/claude-plugins — installs the virajp-plugins plugins for Claude Code and wires up graphify. The plugins install through Claude Code's own marketplace commands",
   "keywords": [
     "claude",
     "claude-code",
@@ -18,12 +18,12 @@
     "ai",
     "anthropic"
   ],
-  "repository": "github:virajp/ai-plugins",
+  "repository": "github:virajp/claude-plugins",
   "license": "MIT",
   "author": "Viraj Patel",
   "type": "commonjs",
   "bin": {
-    "ai-plugins": "./bin/installer.mjs"
+    "claude-plugins": "./bin/installer.mjs"
   },
   "files": [
     "bin"

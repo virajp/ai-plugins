@@ -140,7 +140,7 @@ export function renderProgress(
   const blocks: string[] = [];
 
   if (report.version !== undefined) {
-    blocks.push(`  @askviraj/ai-plugins ${report.version}`);
+    blocks.push(`  @virajp.dev/claude-plugins ${report.version}`);
   }
 
   const rows = outcomes.map(rowFor);

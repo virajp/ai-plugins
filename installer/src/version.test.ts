@@ -149,7 +149,7 @@ describe("buildVersionReport", () => {
     });
 
     expect(asked[0]).toBe(
-      "npm https://registry.npmjs.org/@askviraj/ai-plugins/latest",
+      "npm https://registry.npmjs.org/@virajp.dev/claude-plugins/latest",
     );
     expect(asked[1]).toContain("github https://raw.githubusercontent.com/");
     expect(report.cliLatest).toBe("99.0.0");

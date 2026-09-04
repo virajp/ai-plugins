@@ -30,9 +30,9 @@ import {
 
 /** The published package, and the manifest on `main`. */
 export const NPM_LATEST_URL =
-  "https://registry.npmjs.org/@askviraj/ai-plugins/latest";
+  "https://registry.npmjs.org/@virajp.dev/claude-plugins/latest";
 export const REMOTE_MARKETPLACE_URL =
-  "https://raw.githubusercontent.com/virajp/ai-plugins/main/.claude-plugin/marketplace.json";
+  "https://raw.githubusercontent.com/virajp/claude-plugins/main/.claude-plugin/marketplace.json";
 
 /**
  * Compare two semver-ish versions, `-1 | 0 | 1`.
@@ -195,7 +195,7 @@ export function renderVersionReport(report: VersionReport): string {
   // `Math.max()` of nothing is `-Infinity`, and `padEnd(-Infinity)` throws.
   const width = Math.max(0, ...report.plugins.map(p => p.name.length));
   const lines = [
-    `@askviraj/ai-plugins  ${report.cli}${
+    `@virajp.dev/claude-plugins  ${report.cli}${
       updateNote(report.cli, report.cliLatest)
     }`,
   ];

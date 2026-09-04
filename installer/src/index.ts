@@ -10,7 +10,7 @@
  * **The CLI has three jobs**: plugins, graphify's wiring, and an interactive
  * `--uninstall`. Plugins are installed by **driving Claude Code's own commands**
  * against this repo on GitHub —
- * `claude plugin marketplace add virajp/ai-plugins` then `claude plugin
+ * `claude plugin marketplace add virajp/claude-plugins` then `claude plugin
  * install` per plugin (`install.ts`) — so the four plugin adapters, the payload
  * copy, `--platform` and the `requires:` dependency gate stay gone, along with
  * `plan.ts` and `executor.ts`. What is left is short enough that `run` below
@@ -317,10 +317,10 @@ async function uninstall(
  * walked past rather than mistaken for the root.
  */
 function packageRoot(): string {
-  // Escape hatch, and the same name the old installer used for it. Needed
-  // whenever the manifest is not somewhere above this module — a checkout being
-  // driven from elsewhere, as the tests do.
-  const override = process.env["AI_PLUGINS_SOURCE_DIR"];
+  // Escape hatch, renamed with the package. Needed whenever the manifest is not
+  // somewhere above this module — a checkout being driven from elsewhere, as
+  // the tests do.
+  const override = process.env["CLAUDE_PLUGINS_SOURCE_DIR"];
   if (override !== undefined && override.length > 0) {
     return override;
   }

@@ -73,7 +73,8 @@ describe("isRateLimited", () => {
 });
 
 describe("describeFailure", () => {
-  const url = "https://raw.githubusercontent.com/virajp/ai-plugins/main/x.json";
+  const url =
+    "https://raw.githubusercontent.com/virajp/claude-plugins/main/x.json";
 
   it("adds the hint only when the call was rate-limited", () => {
     expect(describeFailure(url, 429, headers())).toContain(RATE_LIMIT_HINT);
