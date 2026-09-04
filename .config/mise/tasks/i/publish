@@ -26,12 +26,12 @@ mise run i:build
 VERSION="$(node -p "require('./package.json').version")"
 
 if [[ "${usage_dry_run:-false}" == "true" ]]; then
-  print_header "Dry-run publish of @askviraj/ai-plugins@${VERSION} ..."
+  print_header "Dry-run publish of @virajp.dev/claude-plugins@${VERSION} ..."
   npm publish --access public --dry-run
   print_header "Dry run complete — nothing was published."
   exit 0
 fi
 
-print_header "Publishing @askviraj/ai-plugins@${VERSION} to npmjs.org ..."
+print_header "Publishing @virajp.dev/claude-plugins@${VERSION} to npmjs.org ..."
 npm publish --access public
-print_header "Published @askviraj/ai-plugins@${VERSION}!"
+print_header "Published @virajp.dev/claude-plugins@${VERSION}!"

@@ -117,4 +117,4 @@ fi
 print_header "Watching release run ${RUN_ID} ..."
 gh run watch "${RUN_ID}" --exit-status
 
-print_header "Release pipeline succeeded — @askviraj/ai-plugins@${VERSION} published to npm."
+print_header "Release pipeline succeeded — @virajp.dev/claude-plugins@${VERSION} published to npm."

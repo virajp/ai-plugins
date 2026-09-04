@@ -1,6 +1,6 @@
 name: Release
 
-# Publishes @askviraj/ai-plugins to npm. Triggered two ways:
+# Publishes @virajp.dev/claude-plugins to npm. Triggered two ways:
 #   1. a pushed `installer-v*` tag — the normal manual release path
 #   2. workflow_dispatch           — manual re-publish, and how deps-update.yml
 #                                    publishes its monthly release (`--ref <tag>`)
@@ -71,7 +71,7 @@ jobs:
             echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg"
             exit 1
           fi
-          echo "Releasing @askviraj/ai-plugins@$pkg"
+          echo "Releasing @virajp.dev/claude-plugins@$pkg"
 
       # conventions.md#pipeline, rule `pipeline/branch-validated`: a release tag
       # must be reachable from the default branch. Without this, a tag pushed
@@ -112,8 +112,8 @@ jobs:
       - name: Publish to npm (OIDC trusted publishing + provenance)
         run: |
           ver="$(node -p "require('./package.json').version")"
-          if npm view "@askviraj/ai-plugins@$ver" version >/dev/null 2>&1; then
-            echo "@askviraj/ai-plugins@$ver is already published — skipping."
+          if npm view "@virajp.dev/claude-plugins@$ver" version >/dev/null 2>&1; then
+            echo "@virajp.dev/claude-plugins@$ver is already published — skipping."
             exit 0
           fi
           npm publish --access public

@@ -83,7 +83,7 @@ rooms:
       under docs/plugins/
     keywords: [ plugins, plugin ]
   - name: installer
-    description: The install-time half — the @askviraj/ai-plugins CLI in
+    description: The install-time half — the @virajp.dev/claude-plugins CLI in
       installer/
       and docs/installer/
     keywords: [ cli, installer ]
