@@ -3,7 +3,8 @@
 [`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
 is a small CLI with three jobs: install **plugins**, wire up **graphify**, and
 **remove** what this toolkit put on your machine. It was published as
-`@askviraj/ai-plugins` before; that name is deprecated on npm and points here.
+`@askviraj/ai-plugins` before; that package is sunset and only prints a pointer
+here.
 
 ```sh
 pnpx @virajp.dev/claude-plugins --all
