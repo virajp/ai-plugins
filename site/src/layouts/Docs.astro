@@ -1,0 +1,370 @@
+---
+import type { MarkdownHeading } from "astro";
+import { getCollection } from "astro:content";
+
+import Nav from "../components/Nav.astro";
+import {
+  buildNav,
+  locate,
+  prevNext,
+} from "../nav.ts";
+import Base from "./Base.astro";
+
+// The docs chrome: nav with search, the tinted sidebar from nav.ts with the
+// current item marked by a node, breadcrumb, the article, the "On this page"
+// outline, and boxed previous/next. The sidebar becomes a top disclosure
+// under 1024px; the outline hides under 1280px.
+interface Props {
+  id?: string;
+  title: string;
+  description: string;
+  headings?: MarkdownHeading[];
+  hasMermaid?: boolean;
+  /** Whether Pagefind indexes the article; the 404 page opts out. */
+  searchable?: boolean;
+}
+const {
+  id,
+  title,
+  description,
+  headings = [],
+  hasMermaid = false,
+  searchable = true,
+} = Astro.props;
+
+const nav = buildNav(await getCollection("docs"));
+const here = id ? locate(nav, id) : null;
+const { prev, next } = id ? prevNext(nav, id) : { prev: null, next: null };
+const section = here?.section;
+// A generated section index (the Plugins page, which has no index.md and so
+// no entry of its own) is the section: its crumb ends at "Docs / Plugins".
+const isSectionRoot = !!section
+  && id === `${section.key}/index`
+  && !here?.entry;
+const current = section
+  ? (section.key as "plugins" | "how-to" | "installer")
+  : undefined;
+
+const outline = headings.filter(h => h.depth === 2 || h.depth === 3);
+const inSidebar = headings.filter(h => h.depth === 2);
+---
+
+<Base title={`${title} · vwf`} description={description}>
+  <div class="page">
+    <Nav current={current} search />
+  </div>
+  <div class="page layout">
+    <details class="side" open>
+      <summary>Contents</summary>
+      <div class="side-body">
+        {nav.map(s => (
+          <>
+            <div class="grp">{s.label}</div>
+            {s.index && (
+              <a
+                class:list={["item", { on: s.index.id === id }]}
+                href={s.index.route}
+              >
+                {s.index.title}
+              </a>
+            )}
+            {s.entries.map(e => (
+              <>
+                <a class:list={["item", { on: e.id === id }]} href={e.route}>
+                  {e.title}
+                </a>
+                {e.id === id
+                  && inSidebar.map(h => (
+                    <a class="item sub" href={`#${h.slug}`}>
+                      {h.text}
+                    </a>
+                  ))}
+              </>
+            ))}
+            {s.groups.map(g => (
+              <>
+                <div class="sub-grp">{g.label}</div>
+                {g.entries.map(e => (
+                  <a
+                    class:list={["item", "sub", { on: e.id === id }]}
+                    href={e.route}
+                  >
+                    {e.title}
+                  </a>
+                ))}
+              </>
+            ))}
+          </>
+        ))}
+      </div>
+    </details>
+
+    <main>
+      <div class="crumb">
+        <a href="/plugins/">Docs</a>
+        {section && <span>/</span>}
+        {section && <a href={section.route}>{section.label}</a>}
+        {here?.group && <span>/</span>}
+        {here?.group && here.group.label}
+        {!isSectionRoot && <span>/</span>}
+        {!isSectionRoot && title}
+      </div>
+      <article class="article" data-pagefind-body={searchable || undefined}>
+        <h1>{title}</h1>
+        <slot />
+      </article>
+      {(prev || next) && (
+        <div class="pn">
+          {prev ? (
+            <a href={prev.route}>
+              <span>Previous</span>
+              {prev.title}
+            </a>
+          ) : <div />}
+          {next && (
+            <a class="next" href={next.route}>
+              <span>Next</span>
+              {next.title}
+            </a>
+          )}
+        </div>
+      )}
+    </main>
+
+    {outline.length > 0 && (
+      <div class="outline">
+        <div class="t">On this page</div>
+        {outline.map(h => (
+          <a class:list={[{ sub: h.depth === 3 }]} href={`#${h.slug}`}>
+            {h.text}
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <script>
+    // Close the sidebar disclosure on narrow screens, where it sits above the
+    // article; it stays open, and its summary hidden, on wide ones.
+    if (matchMedia("(max-width: 1023px)").matches) {
+      document
+        .querySelector<HTMLDetailsElement>("details.side")
+        ?.removeAttribute("open");
+    }
+
+    // The copy affordance on every code block, skipping mermaid fences (the
+    // mermaid script swaps those for diagrams).
+    for (
+      const pre of document.querySelectorAll<HTMLElement>(
+        "article pre:not([data-language='mermaid'])",
+      )
+    ) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "copy";
+      button.textContent = "copy";
+      button.addEventListener("click", async () => {
+        const text = pre.querySelector("code")?.textContent
+          ?? pre.textContent
+          ?? "";
+        await navigator.clipboard.writeText(text);
+        button.textContent = "copied";
+        setTimeout(() => (button.textContent = "copy"), 1500);
+      });
+      pre.append(button);
+    }
+  </script>
+  {hasMermaid && <script src="../scripts/mermaid.ts" />}
+</Base>
+
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: var(--side) minmax(0, 1fr) var(--outline);
+    padding: 0;
+  }
+
+  /* Sidebar */
+  .side {
+    background: var(--ink-2);
+    border-right: 1px solid var(--line);
+    padding: 32px 24px 96px var(--gutter);
+    min-height: 900px;
+  }
+  .side > summary {
+    display: none;
+  }
+  .grp {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--paper);
+    margin: 28px 0 8px;
+  }
+  .grp:first-child {
+    margin-top: 0;
+  }
+  .sub-grp {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 14px 0 4px 20px;
+  }
+  .item {
+    display: block;
+    font-size: 14px;
+    color: var(--mist);
+    text-decoration: none;
+    padding: 6px 0 6px 20px;
+    position: relative;
+  }
+  .item::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--line-2);
+  }
+  .item:hover {
+    color: var(--paper);
+  }
+  .item.on {
+    color: var(--paper);
+  }
+  .item.on::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: var(--blue-3);
+  }
+  .item.sub {
+    padding-left: 36px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .item.sub::before {
+    left: 20px;
+  }
+  .item.sub:hover,
+  .item.sub.on {
+    color: var(--paper);
+  }
+  .item.sub.on::after {
+    left: 16px;
+  }
+
+  /* Article column */
+  main {
+    padding: 40px var(--gutter) 96px;
+    min-width: 0;
+  }
+  .crumb {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: var(--article);
+  }
+  .crumb a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .crumb a:hover {
+    color: var(--paper);
+  }
+  .crumb span {
+    margin: 0 8px;
+  }
+  .pn {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 64px;
+    max-width: var(--article);
+  }
+  .pn a {
+    text-decoration: none;
+    color: var(--paper);
+    font-size: 15px;
+    border: 1px solid var(--line-2);
+    padding: 16px 20px;
+  }
+  .pn a:hover {
+    border-color: var(--paper);
+  }
+  .pn a span {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .pn a.next {
+    text-align: right;
+  }
+
+  /* Outline */
+  .outline {
+    padding: 40px var(--gutter) 0 24px;
+    border-left: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  .outline .t {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .outline a {
+    display: block;
+    font-size: 13px;
+    color: var(--mist);
+    text-decoration: none;
+    padding: 5px 0;
+  }
+  .outline a:hover {
+    color: var(--blue-3);
+  }
+  .outline a.sub {
+    padding-left: 12px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 1279px) {
+    .layout {
+      grid-template-columns: var(--side) minmax(0, 1fr);
+    }
+    .outline {
+      display: none;
+    }
+  }
+  @media (max-width: 1023px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .side {
+      min-height: 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 16px var(--sp-6);
+    }
+    .side > summary {
+      display: list-item;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--paper);
+    }
+    .side[open] > summary {
+      margin-bottom: 16px;
+    }
+    main {
+      padding: 32px var(--sp-6) 64px;
+    }
+  }
+</style>

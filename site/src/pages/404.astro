@@ -1,0 +1,14 @@
+---
+import Docs from "../layouts/Docs.astro";
+
+// Built to dist/404.html; Cloudflare serves it for any unmatched request
+// (wrangler.jsonc, `not_found_handling: "404-page"`).
+---
+
+<Docs
+  title="Not found"
+  description="There is no page at this address."
+  searchable={false}
+>
+  <p>There is no page at this address. <a href="/">Go to the home page</a>.</p>
+</Docs>
