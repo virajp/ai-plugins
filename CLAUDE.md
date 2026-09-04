@@ -2,10 +2,11 @@
 
 ## Rules
 
-- ALWAYS ask user before running `i:release` task
+- ALWAYS ask user before running an `i:release`, `plugins:release` or
+  `site:release` task
 - **Docs ship with the change.** Any change to plugin behavior must reconcile
-  `readme.md`, this file, and `docs/` in the same commit — stale docs are more
-  harmful than no docs
+  `readme.md`, this file, and the manual under `site/src/content/docs/` in the
+  same commit — stale docs are more harmful than no docs
 
 ## What This Repo Is
 
@@ -17,7 +18,11 @@ The repo also ships a small **installer CLI** (`@virajp.dev/claude-plugins`),
 which sequences Claude's own plugin commands and wires graphify — see The
 installer CLI.
 
-### Three projects, three homes
+It also ships the **website** (`site/`) — the Astro build of the user manual,
+published at `https://claude-plugins.virajp.dev` — see Four projects, four
+homes.
+
+### Four projects, four homes
 
 This file is the repo-wide map. Each project carries its own context, rules and
 traps, loaded the moment you work in its tree — **look there first**, and put a
@@ -28,11 +33,13 @@ project-specific fact there, not here:
 | `installer/`       | [`installer/CLAUDE.md`][icl]            | Claude reads or edits `installer/` |
 | `plugins/vwf/`     | [`.claude/skills/vwf-plugin/`][vwf]     | editing `plugins/vwf/**`           |
 | `plugins/stackgen` | [`.claude/skills/stackgen-plugin/`][sg] | editing `plugins/stackgen/**`      |
+| `site/`            | [`site/CLAUDE.md`][scl]                 | Claude reads or edits `site/`      |
 
 The two plugin homes are path-scoped skills rather than nested CLAUDE.md files
 on purpose: `plugins/<name>/` is the installed shape, so a file there ships to
-every user and is scanned by `plugins:check`'s prose rules. The installer tree
-is not shipped (npm publishes `bin/` alone), so its context can sit in place.
+every user and is scanned by `plugins:check`'s prose rules. The installer and
+site trees are not shipped (npm publishes `bin/` alone, and the site deploys
+only its build output), so their context can sit in place.
 
 ### Where the detail lives
 
@@ -46,9 +53,10 @@ fresh session, with `/execute-plan <folder>`.
 | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                   |
 | [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest      |
-| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the two tag families, the workflows, the rituals     |
+| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the three tag families, the workflows, the rituals   |
 | [`.claude/docs/dev-marketplace.md`][dev]   | running the plugins you are editing — setup, the refresh loop, and why `update` is not it     |
 | [`installer/CLAUDE.md`][icl]               | the installer — flags, the read-only receipt path, the interactive uninstall, testing         |
+| [`site/CLAUDE.md`][scl]                    | the website — the tree, the link rule, the gate, the release model, the design source, traps  |
 | [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains   |
 | [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent      |
 | [`.claude/skills/plugin-authoring/`][auth] | the twelve checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
@@ -61,6 +69,7 @@ fresh session, with `/execute-plan <folder>`.
 [ci]: .claude/docs/ci-and-releases.md
 [dev]: .claude/docs/dev-marketplace.md
 [icl]: installer/CLAUDE.md
+[scl]: site/CLAUDE.md
 [vwf]: .claude/skills/vwf-plugin/SKILL.md
 [sg]: .claude/skills/stackgen-plugin/SKILL.md
 [auth]: .claude/skills/plugin-authoring/SKILL.md
@@ -69,7 +78,8 @@ fresh session, with `/execute-plan <folder>`.
 [ep]: .claude/skills/execute-plan/SKILL.md
 
 The user-facing docs are a different tree and a different audience: `readme.md`,
-`docs/installer/`, `docs/plugins/`, `docs/how-to/`.
+and `site/src/content/docs/{installer,plugins,how-to}/`, published as the
+website at `https://claude-plugins.virajp.dev`.
 
 ### One authored tree
 
@@ -89,6 +99,9 @@ installer/src/**                 installer source (TypeScript)
 bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
 sunset/**                  the retired @askviraj/ai-plugins stub — standalone, never built, published by hand once
+site/**                    the website (Astro) — src/content/docs/ is the user manual
+  ↓  astro build + pagefind
+site/dist/                 gitignored build output — deployed on a site-v* tag
 ```
 
 **Two files are generated**, both projections of the same 2 plugin manifests and
@@ -118,9 +131,9 @@ installer no longer writes, are in [`repo-shape.md`][repo].
 ### Tasks
 
 Run in `plugins.yml` (never in `release.yml`, which is the installer's and whose
-trigger surface must stay untouched); the first four also run locally via
-pre-commit, with marketplace, inventory and check in that order — freshness
-before validity:
+trigger surface must stay untouched, and never in `site.yml`, which is the
+website's); the first four also run locally via pre-commit, with marketplace,
+inventory and check in that order — freshness before validity:
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
   2 plugin manifests, plus the `.dev-marketplace/plugins/` staging directory the
@@ -134,25 +147,32 @@ before validity:
   through the system sed, for both package managers.
 - **`vitest run`** — the `scripts/` and `installer/` suites.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
+- **`site:check`** — the website's gate: `astro check`, `site:build` (Astro plus
+  the pagefind index), then the link checker over `site/dist/**/*.html`. Runs in
+  `site.yml`, not `plugins.yml`, and not in pre-commit. Beside it:
+  **`site:dev`**, **`site:build`**, **`site:version`** and **`site:release`**.
 
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].
 
 ### Traps worth knowing
 
-- **Only the published manifest is committed.** `.dev-marketplace/`, `bin/` and
-  the per-package `dist/` are gitignored. The published manifest is meant to be
-  diffed in review; a bundle diff is noise, and a second committed file
-  declaring the marketplace name `virajp-plugins` is a footgun on the branch
-  users read. So `plugins:marketplace --check` reports an **absent** dev
-  manifest as not applicable — the normal state in CI and in a fresh clone — and
-  a **present but stale** one as a failure.
+- **Only the published manifest is committed.** `.dev-marketplace/`, `bin/`,
+  `site/dist/`, `site/.astro/` and the per-package `dist/` are gitignored. The
+  published manifest is meant to be diffed in review; a bundle diff is noise,
+  and a second committed file declaring the marketplace name `virajp-plugins` is
+  a footgun on the branch users read. So `plugins:marketplace --check` reports
+  an **absent** dev manifest as not applicable — the normal state in CI and in a
+  fresh clone — and a **present but stale** one as a failure.
 - **`claude plugin marketplace add` needs a path that looks like one.**
   `add .dev-marketplace` is rejected with *"Invalid marketplace source format"*;
   `add ./.dev-marketplace` works. The leading `./` is not optional.
-- `CLAUDE.md`, `installer/CLAUDE.md` and `readme.md` **are** dprint-formatted,
-  so widening one table cell re-pads every row. `plugins/**/*.md` is **not**
-  formatted — match the surrounding fold width by hand.
+- `CLAUDE.md`, `installer/CLAUDE.md`, `site/CLAUDE.md` and `readme.md` **are**
+  dprint-formatted, so widening one table cell re-pads every row.
+  `plugins/**/*.md` is **not** formatted — match the surrounding fold width by
+  hand. `**/*.astro` **is** dprint's, via the markup plugin, and is excluded
+  from the linter and from its pre-commit argument list: the linter has no Astro
+  parser.
 - The authoring traps — strict-YAML frontmatter dropping a skill silently, the
   dprint exclusion, and `${CLAUDE_PLUGIN_ROOT}` naming only its own plugin — are
   in `.claude/skills/plugin-authoring/`.
@@ -191,31 +211,34 @@ and is what npm publishes. The statusline is a separate package
 
 Everything else — the flag surface, the legacy-receipt reader, the interactive
 uninstall, the GitHub token rule, testing — is [`installer/CLAUDE.md`][icl]; the
-user-facing reference is `docs/installer/`.
+user-facing reference is `site/src/content/docs/installer/`, published at
+`https://claude-plugins.virajp.dev/installer/`.
 
 ## CI & Releases
 
 **`develop` takes the work; `main` is what users read** — Claude resolves the
 marketplace against the default branch, so `main` stays default and PRs target
 `develop`. `main` is merge-only, enforced by pre-commit locally and a ruleset
-remotely. Neither release task commits: both tag what has already landed.
+remotely. No release task commits: all three tag what has already landed.
 
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
-decouples **merged** from **released**. Two tag families, both namespaced:
+decouples **merged** from **released**. Three tag families, all namespaced:
 
-| Tag                    | Releases                     | Triggers                     |
-| ---------------------- | ---------------------------- | ---------------------------- |
-| `<name>-v<version>`    | one plugin                   | nothing — refs resolve to it |
-| `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish  |
+| Tag                    | Releases                     | Triggers                       |
+| ---------------------- | ---------------------------- | ------------------------------ |
+| `<name>-v<version>`    | one plugin                   | nothing — refs resolve to it   |
+| `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish    |
+| `site-v<version>`      | the website                  | `site.yml` → `wrangler deploy` |
 
 A tracked plugin version is always plain `X.Y.Z` — `plugins:check` fails one
 carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
 releases exists only in the gitignored staged copies `mise run plugins:local`
 writes, so `claude plugin update` sees each edit without a commit.
 
-**Ask the user before running `plugins:release` or `i:release`.**
+**Ask the user before running `plugins:release`, `i:release` or
+`site:release`.**
 
-The mise environment split, the three workflows and why `deps-update.yml`
+The mise environment split, the four workflows and why `deps-update.yml`
 dispatches rather than calls `release.yml`, the supply-chain settings and the
 one-time npm setup are [`.claude/docs/ci-and-releases.md`][ci]. The release
 ritual itself is the [`release`][rel] skill — run `/release`.

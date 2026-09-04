@@ -9,13 +9,14 @@
 # Routing walks a file's path parts outermost-first and returns on the first room
 # whose name or keywords match, so every top-level directory is claimed below on
 # purpose. `docs` itself stays unclaimed so that docs/memory/<room>/ reaches its
-# own room, docs/installer/ reaches `installer`, and docs/plugins/ reaches `plugins`.
+# own room; the user manual now lives under site/src/content/docs/, whose
+# `installer`, `plugins` and `how-to` parts still reach those same rooms.
 #
 # But leaving `docs` unclaimed is only half a rule, and the other half had to be
 # learned from a mine: an unclaimed part means routing walks *past* it, so any
 # docs/ subtree whose own name — or, worse, whose filename — brushes a room's
 # keyword is captured by it. Two did: `docs/plans/**` landed in `planning` on the
-# `plans` keyword, and `docs/how-to/operate/sessions-and-handoff.md` landed in
+# `plans` keyword, and the `how-to/operate/sessions-and-handoff.md` guide landed in
 # the then-existing `handoff` room on its *filename*, where a guide about the
 # mechanism outranked the state it described. Nothing errored; the room just
 # stopped meaning one thing.
@@ -80,12 +81,12 @@ rooms:
   # ---------------------------------------------------------------------------
   - name: plugins
     description: Authored plugin sources under plugins/ and their user docs
-      under docs/plugins/
+      under site/src/content/docs/plugins/
     keywords: [ plugins, plugin ]
   - name: installer
     description: The install-time half — the @virajp.dev/claude-plugins CLI in
       installer/
-      and docs/installer/
+      and site/src/content/docs/installer/
     keywords: [ cli, installer ]
   - name: configuration
     description: Repo machinery under .config/ — mise envs, linter, formatter,
@@ -93,15 +94,16 @@ rooms:
     keywords: [ config, mise ]
   - name: cicd
     description: GitHub Actions workflows — plugin validation, npm release,
-      and the monthly dep update
+      the website deploy, and the monthly dep update
     keywords: [ github, workflows ]
   - name: repo-doctrine
     description: This repo's own Claude Code skills and agents under .claude/,
       plus CLAUDE.md
     keywords: [ claude ]
   - name: guides
-    description: The task-shaped operator guides under docs/how-to/ - the
-      greenfield and brownfield walkthroughs, and the operating loops
+    description: The task-shaped operator guides under
+      site/src/content/docs/how-to/ - the greenfield and brownfield
+      walkthroughs, and the operating loops
     # Claims the `how-to` part so routing returns there. Without it these walk
     # past `docs` and past `how-to` and are then routed by whatever their own
     # filename brushes — which put ten of them in `plugins` and one in `handoff`.

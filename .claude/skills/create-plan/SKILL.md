@@ -43,12 +43,14 @@ in the interview, never as a fresh choice.
 map, for the request in `$ARGUMENTS`:
 
 - the trees the change touches, and which project each belongs to —
-  `plugins/vwf/`, `plugins/stackgen/`, `installer/`, `scripts/`, `.claude/`,
-  root docs
+  `plugins/vwf/`, `plugins/stackgen/`, `installer/`, `site/`, `scripts/`,
+  `.claude/`, root docs
 - the gates that already cover those trees (`mise tasks`, the checker rules in
-  `.claude/skills/plugin-authoring/references/checks.md`, `plugins.yml`)
+  `.claude/skills/plugin-authoring/references/checks.md`, `plugins.yml`,
+  `site.yml`)
 - the docs that describe the current behaviour — `readme.md`, `CLAUDE.md`,
-  `docs/plugins/`, `docs/installer/`, `.claude/docs/`, the project's home skill
+  `site/src/content/docs/`, `.claude/docs/`, the project's home skill or
+  `CLAUDE.md`
 - the third-party dependencies already available to each tree, so a unit can be
   told to reuse before adding
 
@@ -98,6 +100,7 @@ Derive from the unit file scopes, then confirm with the user per project:
 | `plugins/vwf/**`                      | vwf       | bump `plugin.json` version; tag `vwf-vX.Y.Z`         |
 | `plugins/stackgen/**`                 | stackgen  | bump `plugin.json` version; tag `stackgen-vX.Y.Z`    |
 | `installer/**`, `package.json`        | installer | `mise run i:version`; tag `installer-vX.Y.Z`; npm    |
+| `site/**`                             | site      | `mise run site:version`; tag `site-vX.Y.Z`; deploy   |
 | `scripts/**`, `.claude/**`, root docs | none      | nothing to release — lands on the next merge to main |
 
 A plugin whose **user-visible behaviour** changed needs a release for users to

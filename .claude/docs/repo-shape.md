@@ -115,7 +115,7 @@ Run in `plugins.yml`, the first four also locally via pre-commit, with
 marketplace, inventory and check in that order — freshness before validity
 (never in `release.yml`, which is the installer's and whose trigger surface must
 stay untouched — npm allows one Trusted Publisher and validates the entry-point
-filename):
+filename — and never in `site.yml`, which runs the website's own gate):
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
   2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
@@ -185,6 +185,15 @@ filename):
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
   Nothing emits, so `tsc` is only ever a checker, and there are no project
   references to walk.
+- **`site:*`** — the website's family, all under `.config/mise/tasks/site/` and
+  all run from `site/`: `site:dev` (the Astro dev server), `site:build`
+  (`astro build` then `pagefind --site dist`), `site:check` (the gate:
+  `astro check`, `site:build`, then `scripts/check-links.ts` over
+  `dist/**/*.html`, asserting every internal href resolves to a built file and
+  every `#fragment` to an id in its target), `site:version` (bumps
+  `site/package.json`, no tag) and `site:release` (tags `site-v<version>` from
+  `main` and watches `site.yml`). None of them runs in `plugins.yml` or in
+  pre-commit — `site.yml` owns them.
 
 `plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion
