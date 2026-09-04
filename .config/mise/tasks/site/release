@@ -94,15 +94,19 @@ git push origin "${RELEASE_BRANCH}"
 git push origin "${TAG}"
 
 # 8. Watch the deploy pipeline to completion so this task's exit status reflects
-#    the release result. Poll until the tag's run appears (it is the site.yml
-#    run whose head commit is this release commit), then follow it.
+#    the release result. Poll until the tag's run appears, then follow it.
+#    Match on the ref, not the commit: the `main` push and the tag push share
+#    one SHA and both start a site.yml run, but only the tag's run deploys —
+#    the branch run skips the deploy job by design, and matching by SHA picked
+#    it first on site-v1.0.0 and reported success before the deploy had run.
+#    For a tag push `headBranch` is the tag name.
 RELEASE_SHA="$(git rev-parse HEAD)"
-print_header "Waiting for the site workflow to start ..."
+print_header "Waiting for the site workflow to start on ${TAG} ..."
 RUN_ID=""
 for _ in $(seq 1 30); do
   RUN_ID="$(gh run list --workflow=site.yml --limit 20 \
-    --json databaseId,headSha \
-    --jq "[.[] | select(.headSha==\"${RELEASE_SHA}\")][0].databaseId" 2>/dev/null || true)"
+    --json databaseId,headSha,headBranch \
+    --jq "[.[] | select(.headBranch==\"${TAG}\" and .headSha==\"${RELEASE_SHA}\")][0].databaseId" 2>/dev/null || true)"
   if [[ -n "${RUN_ID}" && "${RUN_ID}" != "null" ]]; then
     break
   fi
