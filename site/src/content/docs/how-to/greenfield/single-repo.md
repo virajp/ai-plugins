@@ -1,4 +1,8 @@
-# Start a product from an empty repo
+---
+title: "Start a product from an empty repo"
+description: "Walk the whole vwf spine, install through first deploy verification, as one continuous session log."
+order: 1
+---
 
 You have an idea, an empty git repo, and `vwf` installed. This guide walks the
 whole spine — install through first deploy verification — as one continuous

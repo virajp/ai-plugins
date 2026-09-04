@@ -1,4 +1,8 @@
-# Decide which stack your product pins
+---
+title: "Decide which stack your product pins"
+description: "Decide which stackgen bundle each of your product's six axes pins, and why, before it reaches /vwf:architecture."
+order: 1
+---
 
 Installing `vwf` gets you the workflow and tells you nothing about your
 technology: vwf names no language, no framework and no cloud, so every concrete

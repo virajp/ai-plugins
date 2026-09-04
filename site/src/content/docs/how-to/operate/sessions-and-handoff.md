@@ -1,4 +1,8 @@
-# Hand off work that outlives one session
+---
+title: "Hand off work that outlives one session"
+description: "Capture a session so a fresh one continues it, instead of rebuilding it from the diff and whatever you remember."
+order: 3
+---
 
 A blueprint sweep, a long elicitation, an unattended run — plenty of vwf work
 takes longer than one context window, and much of it lives in a worktree you

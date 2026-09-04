@@ -1,4 +1,8 @@
-# vwf plugin
+---
+title: "vwf plugin"
+description: "The flagship plugin: an opinionated Product, Blueprint, Plan, Execute workflow with post-deploy verification and a production-feedback intake, documented command by command."
+order: 1
+---
 
 The flagship plugin of the `virajp-plugins` marketplace — an opinionated
 workflow that turns a vague idea into a shipped, reviewed product through four
@@ -6,7 +10,7 @@ disciplined phases: **Product → Blueprint → Plan → Execute**, with post-de
 verification and a production-feedback intake closing the loop.
 
 This is the full manual. For the short pitch and the rest of the marketplace,
-see [../../readme.md](../../readme.md).
+see [readme.md](https://github.com/virajp/claude-plugins/blob/main/readme.md).
 
 This page is the reference, command by command. If you would rather follow one
 product's whole walk through the workflow, the journey-shaped guides are in
@@ -1904,8 +1908,8 @@ queries that library's documentation when a question is about a specific library
 
 ## See also
 
-- [../../readme.md](../../readme.md) — the marketplace overview and the full
-  plugin list.
+- [readme.md](https://github.com/virajp/claude-plugins/blob/main/readme.md) —
+  the marketplace overview and the full plugin list.
 - [mempalace](./mempalace.md) — the memory layer behind `/vwf:handoff` and
   `/vwf:recall`: the daemon, the auto-save hooks, and what was vendored.
 - [stackgen](./stackgen.md) — a vwf dependency: the stack plugin that answers

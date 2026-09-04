@@ -1,4 +1,8 @@
-# karpathy-guidelines
+---
+title: "karpathy-guidelines"
+description: "Behavioral guidelines that reduce the coding mistakes large language models make repeatedly, in four pillars."
+order: 4
+---
 
 `karpathy-guidelines` is a set of behavioral guidelines that reduce the coding
 mistakes large language models make repeatedly, derived from
@@ -46,7 +50,8 @@ guidelines missing on one target degrade quality, whereas a missing memory layer
 breaks `/vwf:handoff` outright — but the reasoning rested on it being *one*
 target, which was never true: only Claude ever had it. The four-target renderer
 is retired now — this repo is Claude-first, and another agent is served by the
-copy-paste prompt in readme.md's [Other tools](../../readme.md#other-tools)
+copy-paste prompt in readme.md's
+[Other tools](https://github.com/virajp/claude-plugins/blob/main/readme.md#other-tools)
 section rather than a rendered tree — but the vendoring decision outlives the
 architecture that motivated it: it settled a licensing question a dependency
 edge does not, and a plain `url`-sourced dependency would still leave the
@@ -87,8 +92,8 @@ and it is exactly where these mistakes occur. The guidelines cover that turn.
 
 ## See also
 
-- [../../readme.md](../../readme.md) — the marketplace overview and full plugin
-  list.
+- [readme.md](https://github.com/virajp/claude-plugins/blob/main/readme.md) —
+  the marketplace overview and full plugin list.
 - [vwf](./vwf.md) — the workflow that ships it, and where each pillar is already
   enforced structurally.
 - [mempalace](./mempalace.md) — the memory layer, vendored into `vwf` for the

@@ -1,11 +1,16 @@
-# CLI internals
+---
+title: "CLI internals"
+description: "The map of the installer's shapes, the flow between them, and where to go for the rule that governs each."
+order: 3
+---
 
 > **This page is the map, not the rules.**
-> [`installer/CLAUDE.md`](../../installer/CLAUDE.md) is authoritative for the
-> receipt invariant, the uninstall discipline and the packaging traps — and
-> Claude loads it the moment anyone works under `installer/`, so a contributor
-> already has it in context. What follows is the orientation: the shapes, the
-> flow between them, and where to go for the rule that governs each.
+> [`installer/CLAUDE.md`](https://github.com/virajp/claude-plugins/blob/main/installer/CLAUDE.md)
+> is authoritative for the receipt invariant, the uninstall discipline and the
+> packaging traps — and Claude loads it the moment anyone works under
+> `installer/`, so a contributor already has it in context. What follows is the
+> orientation: the shapes, the flow between them, and where to go for the rule
+> that governs each.
 
 ## What this CLI is for
 
@@ -68,8 +73,9 @@ receipt; what survives is `readReceipt` and `revert`, for the receipts older
 versions left on disk. **Every `Entry` kind stays reachable in `revert`** even
 though none are written: dropping one turns an existing receipt into a file
 nothing can undo, and the half-revert reports as a clean uninstall. The rules
-are stated once, in [receipts.md](../../.claude/docs/installer/receipts.md), and
-deliberately not restated here.
+are stated once, in
+[receipts.md](https://github.com/virajp/claude-plugins/blob/main/.claude/docs/installer/receipts.md),
+and deliberately not restated here.
 
 **`github.ts`.** The token header and the rate-limit-only hint. Two functions
 worth knowing apart: `fetchGithubJson` attaches `$GITHUB_API_TOKEN` when set,
@@ -92,7 +98,7 @@ artifact filename — `pnpx @virajp.dev/claude-plugins` runs the same bundle.
 The split is load-bearing rather than stylistic: shipping the TypeScript
 directly would raise `engines.node` from `>=18` to `>=22.18`. The externals
 rule, the ESM/CJS split and the rest of the packaging traps are in
-[packaging.md](../../.claude/docs/installer/packaging.md).
+[packaging.md](https://github.com/virajp/claude-plugins/blob/main/.claude/docs/installer/packaging.md).
 
 `mise run i:test` bundles first and smoke-tests the **built artifact**, not the
 source, because a packaging mistake only shows up there. Its end-to-end section
@@ -154,11 +160,11 @@ only `{installer,scripts}/src/**/*.test.ts`, so a test file anywhere else is
 
 ## Where the rules live
 
-| For                                                       | Read                                                      |
-| --------------------------------------------------------- | --------------------------------------------------------- |
-| Any receipt entry, and the revert path                    | [receipts.md](../../.claude/docs/installer/receipts.md)   |
-| tsup externals, the tarball, `packageRoot()`, `--version` | [packaging.md](../../.claude/docs/installer/packaging.md) |
-| The flag surface, the uninstall shape, testing discipline | [`installer/CLAUDE.md`](../../installer/CLAUDE.md)        |
+| For                                                       | Read                                                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Any receipt entry, and the revert path                    | [receipts.md](https://github.com/virajp/claude-plugins/blob/main/.claude/docs/installer/receipts.md)   |
+| tsup externals, the tarball, `packageRoot()`, `--version` | [packaging.md](https://github.com/virajp/claude-plugins/blob/main/.claude/docs/installer/packaging.md) |
+| The flag surface, the uninstall shape, testing discipline | [`installer/CLAUDE.md`](https://github.com/virajp/claude-plugins/blob/main/installer/CLAUDE.md)        |
 
 Behaviour changes here must reconcile `readme.md`, `CLAUDE.md` and these pages
 in the same commit — `installer/CLAUDE.md` names the `docs-reconciler` agent for

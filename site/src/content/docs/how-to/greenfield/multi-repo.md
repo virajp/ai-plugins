@@ -1,4 +1,8 @@
-# Start a product that spans several repos
+---
+title: "Start a product that spans several repos"
+description: "Where the walk differs when a product is a base repo holding the blueprint plus one member repo per group of projects."
+order: 5
+---
 
 Your product will not fit in one checkout — its pieces cannot share a dependency
 graph, or cannot ship on one cadence, or one of them holds credentials the rest

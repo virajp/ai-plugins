@@ -1,4 +1,8 @@
-# Keep the blueprint true once the product is live
+---
+title: "Keep the blueprint true once the product is live"
+description: "Route bugs, metric readings, UX complaints and feature requests from production into the one doc each belongs in."
+order: 2
+---
 
 [Start a product from an empty repo](../greenfield/single-repo.md) ends with a
 deploy verified against the blueprint. This guide picks up from there. **Relay**

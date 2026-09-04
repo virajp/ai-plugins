@@ -1,4 +1,8 @@
-# Which how-to guide am I?
+---
+title: "Which how-to guide am I?"
+description: "Journey-shaped guides organized by the situation you are in rather than by the command you are about to type."
+order: 0
+---
 
 These guides are journey-shaped: each one narrates a whole product's walk
 through vwf, organized by the situation you are in rather than by the command

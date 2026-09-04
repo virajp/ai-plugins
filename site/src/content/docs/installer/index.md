@@ -1,4 +1,8 @@
-# The installer CLI
+---
+title: "The installer CLI"
+description: "A small CLI with three jobs: install plugins, wire up graphify, and remove what this toolkit put on your machine."
+order: 0
+---
 
 [`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
 is a small CLI with three jobs: install **plugins**, wire up **graphify**, and

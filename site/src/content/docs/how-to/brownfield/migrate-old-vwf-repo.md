@@ -1,4 +1,8 @@
-# Catch a repo up after a vwf upgrade
+---
+title: "Catch a repo up after a vwf upgrade"
+description: "Bring a repo blueprinted under an earlier vwf format up to the current one with one command and a handful of confirmations."
+order: 2
+---
 
 You upgraded vwf, and a repo you blueprinted a while ago is still written
 against the format that shipped back then. Nothing is broken — the tree is

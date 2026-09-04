@@ -1,4 +1,8 @@
-# What lands on disk
+---
+title: "What lands on disk"
+description: "Which of the two writers, claude plugin install and graphify, puts what where, and why the CLI itself is not a third."
+order: 2
+---
 
 Two writers, and it is worth being clear about which puts what where.
 

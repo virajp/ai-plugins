@@ -1,4 +1,8 @@
-# Design a product's screens in a design tool, then build them
+---
+title: "Design a product's screens in a design tool, then build them"
+description: "Let a design tool author the design system and the screens, import both as contract, and build against the imported contract."
+order: 2
+---
 
 Your product is mostly interface, and the visuals are decided on a canvas rather
 than in a table. vwf supports that directly: the design tool authors the design

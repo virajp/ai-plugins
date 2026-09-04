@@ -1,4 +1,8 @@
-# mempalace
+---
+title: "mempalace"
+description: "The AI memory system that backs vwf's cross-session memory, now folded into vwf itself rather than installed as a plugin."
+order: 3
+---
 
 `mempalace` is an AI memory system — it mines projects and conversations into a
 searchable "memory palace" so an agent can recall past decisions and findings
@@ -378,8 +382,8 @@ fallback path.
 
 ## See also
 
-- [../../readme.md](../../readme.md) — the marketplace overview and full plugin
-  list.
+- [readme.md](https://github.com/virajp/claude-plugins/blob/main/readme.md) —
+  the marketplace overview and full plugin list.
 - [vwf](./vwf.md) — how the Product → Blueprint → Plan → Execute workflow uses
   memory, and the `assets/memory.md` protocol that is authoritative for it.
 - [karpathy-guidelines](./karpathy-guidelines.md) — the other vendored skill,

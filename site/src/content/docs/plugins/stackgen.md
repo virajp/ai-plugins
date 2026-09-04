@@ -1,4 +1,8 @@
-# stackgen plugin
+---
+title: "stackgen plugin"
+description: "The principles-driven stack materializer that implements vwf's stack-adapter contract with the dispatch rule and lands artifacts in the repo's committed .claude/ tree."
+order: 2
+---
 
 The principles-driven stack materializer. stackgen implements vwf's
 stack-adapter contract with one core rule — **the dispatch rule** — and one
@@ -79,14 +83,14 @@ uncovered framework copies the language's packs and generates only the
 framework's artifact — so a later re-sync can act on one component alone.
 
 **The full pack and bundle inventory is generated from the tree** —
-[`stacks/inventory.md`](../../plugins/stackgen/stacks/inventory.md), never typed
-by hand and guarded against drift in pre-commit and CI. The packs arrived in
-waves, starting with `dprint`, `gitleaks`, `grype` and `pre-commit` — the
-`repo-gate` kind's components — and closing with `cloud-provider`, the last kind
-that had been defined but never authored against, which the `cloudflare` and
-`gcp` packs filled. Along the way three packs each deleted a curated *skill* in
-the same commit, because the pack plus a neutral contract carry everything that
-source said — `deploy-target/container-image` with
+[`stacks/inventory.md`](https://github.com/virajp/claude-plugins/blob/main/plugins/stackgen/stacks/inventory.md),
+never typed by hand and guarded against drift in pre-commit and CI. The packs
+arrived in waves, starting with `dprint`, `gitleaks`, `grype` and `pre-commit` —
+the `repo-gate` kind's components — and closing with `cloud-provider`, the last
+kind that had been defined but never authored against, which the `cloudflare`
+and `gcp` packs filled. Along the way three packs each deleted a curated *skill*
+in the same commit, because the pack plus a neutral contract carry everything
+that source said — `deploy-target/container-image` with
 `assets/contracts/local-stack.md`, `capability-provider/doppler` with
 `assets/contracts/secrets.md`, and `ci-system/github-actions` with
 `assets/contracts/release-trigger.md`. The third was the first to retire not a

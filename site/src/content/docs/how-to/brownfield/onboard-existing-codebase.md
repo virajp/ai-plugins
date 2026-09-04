@@ -1,4 +1,8 @@
-# Adopt vwf in a codebase that already works
+---
+title: "Adopt vwf in a codebase that already works"
+description: "Adopt vwf in a product already in production, writing down what is true and correcting it where the repo disagrees with itself."
+order: 1
+---
 
 You have a product in production, a team that knows it, and no vwf history at
 all. This is the most common real entry point, and it inverts the greenfield

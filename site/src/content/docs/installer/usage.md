@@ -1,4 +1,8 @@
-# The installer CLI — usage
+---
+title: "The installer CLI: usage"
+description: "Install plugins by driving Claude Code's own commands, wire up graphify, and remove what this toolkit put on your machine."
+order: 1
+---
 
 `@virajp.dev/claude-plugins` installs **plugins** (by driving Claude Code's own
 commands), wires up **graphify**, and **removes** what this toolkit put on your

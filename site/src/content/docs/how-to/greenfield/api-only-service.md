@@ -1,4 +1,8 @@
-# Build a headless service with no UI anywhere
+---
+title: "Build a headless service with no UI anywhere"
+description: "A delta on the single-repo spine for a product that is an API and nothing else, where every consumer is somebody else's code."
+order: 3
+---
 
 Your product is an API and nothing else — no web app, no mobile client, no
 operator back-office. Every consumer is somebody else's code. This guide is a

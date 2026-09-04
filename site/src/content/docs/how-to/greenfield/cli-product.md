@@ -1,4 +1,8 @@
-# Build a product whose only surface is a terminal
+---
+title: "Build a product whose only surface is a terminal"
+description: "How a command-line tool diverges from vwf's screen-shaped spine, with cli as the platform that is not a screen platform."
+order: 4
+---
 
 vwf's spine assumes screens in several places — the design system is a
 foundation, the blueprint mandates a canonical screen vocabulary, and the
