@@ -4,9 +4,10 @@ export default defineConfig({
   test: {
     include: ["{installer,scripts}/src/**/*.test.ts"],
     environment: "node",
-    // The adapter suites copy whole rendered trees — the OpenCode bundle alone
-    // is 500+ files — so they are real filesystem work, not unit tests, and run
-    // ~1.2s each on an idle machine. Against the 5s default that is fine until
+    // The installer suites stage plugin trees into temp directories and the
+    // hook-script suites spawn a real shell per case, so they are filesystem
+    // and process work, not unit tests, and a case can take well over half a
+    // second on an idle machine. Against the 5s default that is fine until
     // anything else is competing for I/O, at which point they cross it and fail
     // as `Test timed out in 5000ms` rather than as anything diagnostic. That
     // turned `main` red once and cost four false alarms in a single day.

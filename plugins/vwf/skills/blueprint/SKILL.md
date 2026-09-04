@@ -68,7 +68,7 @@ surface without ambiguity. Surface open decisions rather than guessing.
 | Design system    | `docs/blueprint/design-system.md`                                                                                    |
 | Environment      | `docs/blueprint/environment.md`                                                                                      |
 | Flow contract    | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` (platform-agnostic; no screens)                               |
-| Flow platform    | `docs/blueprint/flows/<project>/<NNN>-<flow>/<platform>.md` (`mobile`/`tablet`/`desktop`/`web`/`auto`; screens only) |
+| Flow platform    | `docs/blueprint/flows/<project>/<NNN>-<flow>/<platform>.md` (`mobile`/`tablet`/`desktop`/`auto`/`site`/`webapp`; screens only) |
 | Flow catalog     | `docs/blueprint/flows/index.md`                                                                                      |
 | Entity           | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                                                            |
 | Entity catalog   | `docs/blueprint/entities/index.md`                                                                                   |
@@ -106,8 +106,8 @@ reach the API surface.
 
 Reserved names: `product`, `architecture`, `conventions`, `design-system`,
 `environment`, `flows`, `entities`, `apis`, the platform filenames (`mobile`,
-`tablet`, `desktop`, `web`, `auto`), and `index` inside a flow group /
-`entities/` — a flow or entity folder never takes one of these.
+`tablet`, `desktop`, `auto`, `site`, `webapp`), and `index` inside a flow group
+/ `entities/` — a flow or entity folder never takes one of these.
 
 ---
 

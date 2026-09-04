@@ -99,7 +99,7 @@ ordering is the no-skill-lost rule: a pack is the destination that must exist
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
-became the `toolchain-manager/mise` pack, its five repo gates the `repo-gates`
+became the `toolchain-manager/mise` pack, its four repo gates the `repo-gates`
 bundle, and `/devtools:scaffold` stopped being a command at all: laying the
 toolchain into a repo is a materialization now, like every other pack. Two kinds
 were minted on the way — `toolchain-manager` and `workspace` — and packs gained
@@ -257,7 +257,7 @@ facts `/vwf:doctor` verifies** — LSP provision, mise tool, manifest — plus
 harness tasks and mechanisms, with `frameworks`/`capabilities` derived from the
 composition), and the body is the `conventions:` prose `plan` sizes against and
 `execute` writes to. That emitted-facts block is the **materialized escape** in
-vwf's stack vocabulary: a language no curated plugin claims is still *known*
+vwf's stack vocabulary: a language no shipped bundle covers is still *known*
 when its pin carries these facts.
 
 In a multi-repo product the target repo defaults to the current one; name a
@@ -399,8 +399,9 @@ pack with a `config/` tree fills in its own half on top: `package-manager/pnpm`
 and `package-manager/uv` supply `setup/deps/*`, `toolchain-gate/ruff` and
 `app-framework/flutter` supply the `code/format` and `code/lint` their toolchain
 needs. Composition runs `toolchain-manager` first, then
-`package-manager`/`language`, then `app-framework`, so a later component's file
-wins and the lockfile records per file which component supplied it.
+`package-manager`/`language`, then `toolchain-gate`, then `app-framework`, so a
+later component's file wins and the lockfile records per file which component
+supplied it.
 
 ## Skills and the agent
 

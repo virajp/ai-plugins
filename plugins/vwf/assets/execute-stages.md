@@ -29,8 +29,8 @@ so one boot of the local stack serves both. Each is conditional — skipped
   section carries criteria (skip on `none — no flow touched`).
 - `ux` — only when the slice changes screens on a **screen platform** (`site`,
   `webapp`, `desktop`, `mobile`, `tablet`, `auto`). Every screen surface gets a real visual gate and a
-  real accessibility gate, delivered by the stack plugin's `-ux-gate` — never a
-  code-only read.
+  real accessibility gate, delivered by the repo's own `ux-gate` skill in
+  `.claude/skills/` — never a code-only read.
 
 Per-stage dispatch contract:
 
@@ -88,9 +88,10 @@ Per-stage dispatch contract:
   plan's screen steps, the `design-system.md` path, the owning flow docs'
   Screens section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`),
   the project's registry entry (role and platforms), the wing, and the **slice** and **round
-  number**). For a **web** slice it renders the changed screens via the repo's
-  stack plugin's `-ux-gate`, which renders each changed screen and runs its
-  ecosystem's accessibility scan; violations come back at WCAG A/AA severity
+  number**). For any slice with a screen surface it renders the changed screens
+  via the repo's own `ux-gate` skill in `.claude/skills/`, which renders each
+  changed screen and runs its ecosystem's accessibility scan; violations come
+  back at WCAG A/AA severity
   whatever the ecosystem, so one rule applies across every stack. The reviewer
   itself never renders. Either way it judges against the design system and the Screens
   contract and adds a code-level token/state pass. Findings loop back to `code`

@@ -42,10 +42,10 @@ fragment layer would be a templating mechanism this plugin deliberately does not
 have.
 
 **Composition order, since more than one component writes this tree:**
-`toolchain-manager`, then `package-manager` / `language`, then `app-framework` —
-a later component's file wins, recorded per file in the lockfile. An
-`app-framework` component is **last**, so these files win over both the
-`toolchain-manager` baseline's and a `package-manager`'s.
+`toolchain-manager`, then `package-manager` / `language`, then `toolchain-gate`,
+then `app-framework` — a later component's file wins, recorded per file in the
+lockfile. An `app-framework` component is **last**, so these files win over the
+`toolchain-manager` baseline's, a `package-manager`'s and a `toolchain-gate`'s.
 
 **`setup:deps:install` is SDK configuration and `flutter pub get` in one task,
 and the reason is causal rather than tidiness.** `flutter pub get` resolves

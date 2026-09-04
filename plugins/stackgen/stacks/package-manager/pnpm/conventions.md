@@ -35,10 +35,11 @@ copy-verbatim or generate, with nothing in between; a fragment layer would be a
 templating mechanism this plugin deliberately does not have.
 
 **Composition order, since more than one component writes this tree:**
-`toolchain-manager`, then `package-manager` / `language`, then `app-framework` —
-a later component's file wins, recorded per file in the lockfile. So this pack's
-`code/format` replaces the `toolchain-manager` baseline's, and an
-`app-framework` component's would replace this one's.
+`toolchain-manager`, then `package-manager` / `language`, then `toolchain-gate`,
+then `app-framework` — a later component's file wins, recorded per file in the
+lockfile. So this pack's `code/format` replaces the `toolchain-manager`
+baseline's, and a `toolchain-gate` or `app-framework` component's would replace
+this one's.
 
 **The `setup/deps/*` verbs are `install`, `outdated`, `audit` and `cleanup` —
 and deliberately not `upgrade`.** `install` is `pnpm install --recursive`,

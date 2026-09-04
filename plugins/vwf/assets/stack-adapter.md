@@ -186,10 +186,8 @@ templates; `/vwf:doctor` reports a pin that stopped covering as
 conventions written for something else. Nothing checked this before, because a
 single-role pin had nothing to check.
 
-**A template's own directory is not the source.** Templates sit flat under
-`stacks/project/` and declare their platforms in frontmatter; a plugin that
-still keys them on a `stacks/project/<role>/` directory is on the pre-22
-contract.
+**A template's own directory is not the source.** A template's platforms come
+from its payload, not from any directory.
 
 ### The two tool axes — `design` and `cicd`
 
@@ -199,8 +197,8 @@ rather than by a stack pin, and the menu is the only door a template can come
 through. A template nothing can offer is not an error — it is invisible, which
 is why it shipped unnoticed.
 
-These two axes close that door. They differ from the other four in one respect
-worth stating, because it is what keeps them cheap:
+These two axes close that door, making six axes in all. They differ from the
+other four in one respect worth stating, because it is what keeps them cheap:
 
 **The slug *is* the config value.** `projects.<name>.design` and
 `projects.<name>.cicd` already hold a tool token — `claude-design`,
@@ -329,11 +327,12 @@ invokes the repo's **own** `ux-gate` skill — a fixed name in the repo's
 stack — passing the slice, the changed screens, the design-system path and the
 flow's Screens contract.
 
-**The name is fixed, and that is the point.** vwf used to construct
-`<plugin>-ux-gate` from the stack pin, which stops working the moment stacks are
-packs rather than plugins: there is no plugin name left to build from. A name
-assembled from configuration is a name that can silently resolve to nothing, and
-a UX gate that resolves to nothing looks exactly like a slice with no findings.
+**The name is fixed, and that is the point.** vwf used to construct a name,
+the retired `<plugin>-ux-gate`, from the stack pin, which stops working the
+moment stacks are packs rather than plugins: there is no plugin name left to
+build from. A name assembled from configuration is a name that can silently
+resolve to nothing, and a UX gate that resolves to nothing looks exactly like a
+slice with no findings.
 A fixed repo-local name either exists or does not, and its absence is
 checkable. The plugin renders however its ecosystem does — a browser driver, a
 snapshot test suite, a simulator — runs its accessibility equivalent, and
@@ -365,8 +364,8 @@ reaches the final human gate rather than downgrading silently.
 3. A UI-owning pack materializes `skills/ux-gate/SKILL.md` into the repo's
    `.claude/` — an unprefixed, fixed name, because vwf invokes it there rather
    than through the plugin.
-4. `stacks/<axis>/<slug>.md` — the templates themselves, in the plugin's own
-   tree. Their shape is the plugin's business; only the payload is contracted.
+4. The templates themselves, in the plugin's own tree — their layout is the
+   plugin's business; only the payload is contracted.
 
 There is no registration step: the marketplace manifest is generated from the
 manifests, so adding the plugin is the registration.

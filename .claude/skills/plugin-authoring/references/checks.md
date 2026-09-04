@@ -3,19 +3,21 @@
 What `plugins:check` asserts, why each rule cannot be replaced by a type or a
 format, and the one generated file that needs a freshness gate of its own.
 
-## The two tasks
+## The gates
 
-| Task                          | Does                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `plugins:check`               | validates the authored tree; non-zero on any finding                      |
-| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 2 plugin manifests |
-| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                 |
-| `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed     |
-| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                    |
+| Task                          | Does                                                                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `plugins:check`               | validates the authored tree; non-zero on any finding                                                                  |
+| `plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir  |
+| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                             |
+| `plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree; `--check` asserts the committed file matches |
+| `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                 |
+| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                                                                |
 
-Both `plugins:check` and the `--check` mode run in pre-commit and in
-`plugins.yml`, in that order: **freshness before validity**, so a stale manifest
-fails as staleness rather than as a confusing downstream assertion.
+`plugins:marketplace --check`, `plugins:inventory --check` and then
+`plugins:check` run in that order — **freshness before validity**, in pre-commit
+and in `plugins.yml` alike — so a stale generated file fails as staleness rather
+than as a confusing downstream assertion.
 
 `--check` exists because `marketplace.json` is generated **and** committed. That
 combination has no other guard — a `plugin.json` edited without a regenerate is
@@ -23,7 +25,7 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The eleven rules
+## The twelve rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
@@ -82,6 +84,14 @@ much smaller than the one it replaced: whole families of assertion became
     plugin file reader's, because every one of these paths runs through a dot
     segment the reader's glob does not descend into. `plugins:check` is the only
     reader that sees the bit before it lands in someone's repo.
+12. **Retired vocabulary stated as live.** The recurrence class of every drift
+    sweep: a token is renamed at its source of truth, the lineage records the
+    rename, and a dozen other files keep using the old word as if nothing
+    happened — nothing fails, because the old word is prose, not a reference. So
+    the checker holds a **closed, case-sensitive list** of the retired spellings
+    and scans every `.md`, `.yml` and `.yaml` file a plugin ships, line by line.
+    It is the only rule that reports a **line number**, because it is the only
+    one that fires on a sentence rather than a file. Below.
 
 ### The plugin-root trap (rule 6)
 
@@ -134,6 +144,45 @@ recommendation while letting another runner answer.
 doctrine leans on) and `lovable` (an ordinary adjective). They prove an
 enumeration without being policed. The evidence set is wider than the
 prohibition set on purpose.
+
+### The retired-vocabulary rule (rule 12)
+
+`RETIRED_TERMS` in `scripts/src/check.ts` is what it matches — each entry a
+class of finding the 2026-09-04 sweep found recurring across files, never a
+one-off:
+
+| Term                  | Fires on                                                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| the `web` platform    | backticked `web` on a line that also carries a backticked `mobile`/`tablet`/`desktop`/`auto` or the word "token"     |
+| `-ux-gate`            | any `-ux-gate` suffix except the literal `<plugin>-ux-gate`, which only ever appears where the retired form is named |
+| `stacks/project/`     | the flat template path vwf no longer ships or describes                                                              |
+| `assets/stacks/`      | the template tree vwf no longer ships                                                                                |
+| four axes             | "four axes", "four stack axes", "four independent axes", "four menus", "four stack rounds"                           |
+| `private_plane`       | the key dropped from both plugins' template shape                                                                    |
+| the `devtools` plugin | backticked `devtools` on a line containing "plugin" but not "uninstall" — the one live sentence that must name it    |
+
+The two bare-word terms carry a second test on the whole line on purpose:
+backticked `web` is also a perfectly good registry *project* name, which the
+worked example uses, and `devtools` has to survive in the uninstall instruction.
+Matching is case-sensitive, since `Web` in a sentence is the ordinary word.
+
+**A line is exempt when it marks itself as history.** `RETIRED_LINE_EXEMPT`
+matches `retire`, `migrat`, `dissolved`, `moved`, `→`, `pre-22` or `format 2N`
+(any digit, either case of F) — stems rather than words, because the migration
+notes conjugate freely. It is tested against the **flagged line alone**: a
+migration note wrapped over a dozen lines with its marker on the first has to
+repeat a marker on whichever line carries the token, a small tax paid so that a
+"retired at format 22" sentence never shields a live claim beneath it.
+
+**Two files are exempt whole**, per `RETIRED_FILE_EXEMPT`, because their entire
+job is history: vwf's `skills/setup/references/format-lineage.md`, and any
+`changelog.md` (case-insensitive) in any plugin. A second plugin growing a
+lineage file is a second entry there, not a wider match.
+
+**A hit on genuine history is fixed by the narrowest exemption, never by
+deleting the pattern**: say what replaced the term, or add the one marker word
+that makes the line read as history. A pattern that goes is a class of drift
+that comes back.
 
 ## What retired, and why it is not a regression
 

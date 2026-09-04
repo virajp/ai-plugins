@@ -71,7 +71,7 @@ baseline.
 - **Facts**: per language — `lsp` (how a language server is provided;
   stackgen ships none, so this recommends the mise tool or marketplace
   plugin that does), `mise_tool`, `manifest`.
-- **Invocation**: router skill model-invocable; doctrine paths-scoped
+- **Invocation**: routers paths-scoped; doctrine paths-scoped
   (`**/*.<ext>` plus the config files); rules for one-screen constraints.
 
 ### The topic bar

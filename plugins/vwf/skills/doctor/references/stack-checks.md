@@ -100,12 +100,15 @@ the truth and the config is what needs updating.
 
 ## 5. Repo tooling
 
-**The four stack axes.** Since format 19 a stack is composed from four
-independent templates (`assets/stack-vocabulary.md`), and since format 13 three
-of the four are **per project**. Check each pin resolves to a template an
-installed stack plugin actually offers: `projects.<name>.stack.template`
-(project axis), each entry of `projects.<name>.stack.backing_template`,
-`projects.<name>.stack.deploy_template`, and `repo.stack.template`. A pin naming
+**The six stack axes.** Since format 19 a stack is composed from independent
+axes — `project`, `backing`, `deploy`, `repo`, `design` and `cicd`
+(`assets/stack-adapter.md` holds the enum) — and every one but `repo` is **per
+project** (the three technology axes since format 13). Check each pin resolves
+to a template an installed stack plugin actually offers:
+`projects.<name>.stack.template` (project axis), each entry of
+`projects.<name>.stack.backing_template`, `projects.<name>.stack.deploy_template`,
+`repo.stack.template`, and the `projects.<name>.design` and
+`projects.<name>.cicd` pins, whose slug is the config value itself. A pin naming
 a template that isn't there is **drift** — usually a template renamed under the
 user's feet, or a stack plugin that was never installed. An axis reading
 `unresolved` is not a pin: report the degradation above and resolve nothing. A

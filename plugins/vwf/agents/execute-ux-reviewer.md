@@ -3,7 +3,7 @@ name: execute-ux-reviewer
 description: UX-conformance reviewer for the /vwf:execute command. Invoked only
   by /vwf:execute, and only for UI slices — do not
   delegate to it for general tasks. Delegates rendering and the accessibility
-  scan to the stack plugin's `-ux-gate` skill, judges what comes back against
+  scan to the repo's own `ux-gate` skill, judges what comes back against
   design-system.md and the flow Screens contract, and returns findings only.
 tools: Read, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_search,
@@ -59,7 +59,7 @@ registry entry for the project (role, platforms and stack), the project wing, an
      UX, and content the flow's Screens section pins are actually present and
      behave as written (a specified empty state that never renders is a
      finding).
-3. **Accessibility.** The `-ux-gate` runs its ecosystem's accessibility check
+3. **Accessibility.** The `ux-gate` runs its ecosystem's accessibility check
    and returns the violations; treat each as a finding at WCAG A/AA severity.
    Additionally enforce whatever explicit accessibility standard
    `design-system.md` declares (contrast, focus order, touch-target size) —
@@ -74,9 +74,10 @@ registry entry for the project (role, platforms and stack), the project wing, an
 There is **one path**, not a web path and a native one. A slice on any screen
 platform — browser (`site`, `webapp`) or device (`desktop`, `mobile`, `tablet`,
 `auto`) — gets a real visual gate and a real accessibility gate, and
-all three get them the same way: from the `-ux-gate` of the plugin owning that
-project's stack. Whether that plugin drives a browser, runs a snapshot suite or
-boots a simulator is its decision and none of your business.
+every one gets them the same way: from the repo's own `ux-gate` skill, which
+the pack owning that project's stack materialized. Whether that pack drives a
+browser, runs a snapshot suite or boots a simulator is its decision and none of
+your business.
 
 Two rules survive that delegation, and they are vwf's:
 

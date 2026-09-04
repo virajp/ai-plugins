@@ -55,11 +55,11 @@ to a repo, and every write it makes is consent-gated and committed once.
    component may write into one `config/` tree — `.config/mise/tasks/` is
    the first destination that happens for. Compose in the order
    `toolchain-manager`, then `package-manager` / `language`, then
-   `app-framework`; a **later component's file wins**, and the lockfile
-   records per file which one that was. Get it backwards and nothing
-   errors: a stale baseline `code/format` shadowing a language's would
-   simply format less, in a repo where the task still exists and still
-   exits zero.
+   `toolchain-gate`, then `app-framework`; a **later component's file
+   wins**, and the lockfile records per file which one that was. Get it
+   backwards and nothing errors: a stale baseline `code/format` shadowing a
+   language's would simply format less, in a repo where the task still
+   exists and still exits zero.
 
    **The fence: stackgen writes only what a pack declares in `config/`.**
    Landing a config tree does not make stackgen the owner of a repo's

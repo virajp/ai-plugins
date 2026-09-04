@@ -52,6 +52,8 @@ harness:
   e2e_staging: false # gap: no staging mode yet
   health: true
   screenshots: true
+  goldens: false # no device platform
+  test:load: false # below the load threshold
 ```
 
 ## Provision & repair

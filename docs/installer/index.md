@@ -73,11 +73,11 @@ to refuse an install when a required binary was missing, and that gate stayed
 retired when the plugin flags returned.
 
 Doctor is the nearest replacement but not an equivalent one: it **blocks** on a
-missing `mise` or `graphify`, and `/vwf:setup` and `/vwf:execute` halt on
-either; a missing `rtk` is reported as a **degradation**, and `pnpm` is not
-checked at all. See [usage.md](./usage.md#nothing-is-gated-at-install-time) for
-the full picture. Install all five binaries and do not lean on doctor to catch
-them.
+missing `graphify`, and on a missing `mise` once any stack axis is pinned, and
+`/vwf:setup` and `/vwf:execute` halt on either; a missing `rtk` is reported as a
+**degradation**, and `pnpm` is not checked at all. See
+[usage.md](./usage.md#nothing-is-gated-at-install-time) for the full picture.
+Install all five binaries and do not lean on doctor to catch them.
 
 ## Other agents
 

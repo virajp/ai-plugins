@@ -2,10 +2,10 @@
 
 Two writers, and it is worth being clear about which puts what where.
 
-| Written by              | What                                                    |
-| ----------------------- | ------------------------------------------------------- |
-| `claude plugin install` | the plugins: skills, agents, hooks, MCP and LSP servers |
-| `graphify`              | its own index and the git hooks that refresh it         |
+| Written by              | What                                            |
+| ----------------------- | ----------------------------------------------- |
+| `claude plugin install` | the plugins: skills, agents, hooks, MCP servers |
+| `graphify`              | its own index and the git hooks that refresh it |
 
 **`pnpx @virajp.dev/claude-plugins` is not a third writer.** It sequences the
 other two and writes nothing itself: the plugin flags (`--all`, `--user`,

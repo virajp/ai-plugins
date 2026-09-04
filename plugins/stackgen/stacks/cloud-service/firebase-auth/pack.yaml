@@ -4,6 +4,7 @@ summary: The provider's managed identity issuer — one service under two names,
   verifiable ID tokens, and an emulator that stubs the provider handshake.
 version: 0.1.0
 type: cloud-service
+category: identity
 capability: third-party-auth
 kind: cloud-provider
 axis: backing

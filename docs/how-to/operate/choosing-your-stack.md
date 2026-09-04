@@ -5,7 +5,7 @@ technology: vwf names no language, no framework and no cloud, so every concrete
 option you are ever offered comes from `stackgen`. That plugin arrives as vwf's
 dependency, so there is no install decision left to make — but there is still a
 decision, and it is now one axis at a time rather than one plugin at a time.
-This guide is that decision: which **bundle** each of your product's four axes
+This guide is that decision: which **bundle** each of your product's six axes
 pins, and why, **before** it reaches `/vwf:architecture`. At the end you have a
 pin list you can defend.
 
@@ -21,16 +21,16 @@ parts of those pages you need to read.
 
 ## The axes in one minute
 
-A stack is composed from four templates that never merge and never outrank each
+A stack is composed from six templates that never merge and never outrank each
 other: **project** (language, framework, source layout), **backing** (datastore,
-identity, queue, storage), **deploy** (build artifact and host) — each pinned
-per project — and **repo** (package manager, task runner, workspace), pinned
-once for the checkout. That independence is why picking a web framework buys you
-no database and no cloud, and it is why the pin list below reads as roughly one
-decision per axis you hold an opinion about. The contract behind it — the
-covering rule, what a template payload carries, how `plan` and `execute` resolve
-a template's conventions — is
-[stack templates](../../plugins/vwf.md#stack-templates).
+identity, queue, storage), **deploy** (build artifact and host), **design** (the
+design tool) and **cicd** (the CI system) — each pinned per project — and
+**repo** (package manager, task runner, workspace), pinned once for the
+checkout. That independence is why picking a web framework buys you no database
+and no cloud, and it is why the pin list below reads as roughly one decision per
+axis you hold an opinion about. The contract behind it — the covering rule, what
+a template payload carries, how `plan` and `execute` resolve a template's
+conventions — is [stack templates](../../plugins/vwf.md#stack-templates).
 
 ## What answers each axis
 
@@ -59,8 +59,10 @@ readiness gates depend on. The managed alternatives are `cloud-run` and `gke`.
 plane in front of a project that must not be publicly reachable, whichever cloud
 hosts it.
 
-**The repo axis** is the package manager and workspace layout: `pnpm` (with or
-without a workspace), `bun`, or `pub` for a Flutter checkout.
+**The repo axis** is the package manager and workspace layout: `pnpm-workspace`,
+`pnpm-turbo`, or `bun`. A single-package repo pins no workspace bundle — that is
+the kind's edge, not a gap — and a Flutter checkout's `pub` is a pack inside the
+`dart-flutter` project bundle, not a repo bundle of its own.
 
 ## The closed menu, and the one door out of it
 

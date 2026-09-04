@@ -10,7 +10,7 @@
 # (`<name>-v<version>`), so bumping a version is what declares a release — this
 # task only creates the tag that ref points at. A plugin whose version did not
 # move already has its tag and is skipped, which is what makes releases
-# per-plugin: shipping vwf leaves the other six entries byte-identical, so
+# per-plugin: shipping vwf leaves the other entry byte-identical, so
 # `claude plugin update` sees a change for vwf alone.
 #
 # Ordering matters and is the reason this is a task rather than a paragraph in a

@@ -57,8 +57,9 @@ user's clock.
    as an *unknown task* rather than as a permission error, and
    `mise run init` is the restore. And where two components write into
    one tree, re-derive in composition order — `toolchain-manager`, then
-   `package-manager` / `language`, then `app-framework`, later wins — and
-   diff each file against the component the lockfile says supplied it. A
+   `package-manager` / `language`, then `toolchain-gate`, then
+   `app-framework`, later wins — and diff each file against the component
+   the lockfile says supplied it. A
    file whose supplying component **changed** is a real delta, reported
    as such: it means precedence moved, not that the pack did.
 

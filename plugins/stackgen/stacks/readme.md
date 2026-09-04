@@ -63,17 +63,17 @@ other 115 being API surface that Context7 serves current at use time. What was
 kept is setup order, platform configuration (manifest entries, entitlements,
 permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
 
-**The UX gate is materialized, not delegated.** The two curated `-ux-gate`
-skills moved into their packs as an unprefixed `ux-gate`, landed into the
-repo's own `.claude/skills/`. vwf invokes that fixed name instead of building
-`<plugin>-ux-gate` from the stack pin — once stacks are packs there is no
-plugin name to build from, and a name assembled from configuration is one that
-can silently resolve to nothing.
+**The UX gate is materialized, not delegated.** The two retired curated
+`-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed
+into the repo's own `.claude/skills/`. vwf invokes that fixed name instead of
+building `<plugin>-ux-gate` from the stack pin — once stacks are packs there
+is no plugin name to build from, and a name assembled from configuration is
+one that can silently resolve to nothing.
 
 **Wave D — `deploy-target/container-image`**, kind `deploy-target`, the
-eighth kind. Folded from the Docker/OCI doctrine of the `devtools` plugin
-(since dissolved into this one), and the fold split it in two, because that
-skill was two skills wearing one hat:
+eighth kind. Folded from the doctrine of the since-dissolved `devtools`
+plugin's Docker/OCI skill, and the fold split it in two, because that skill
+was two skills wearing one hat:
 
 - **The deploy artifact** — the build file, its ignore file, and promoting
   one digest rather than rebuilding per environment — is this pack, and it
@@ -145,20 +145,21 @@ rather than omitting them: deployed environments take their secrets from the
 platform that runs them. That is the contract's "a clause a tool cannot satisfy
 is stated as such" rule doing what it exists for.
 
-The `devtools` plugin lost its `doppler` skill in the same landing — the
-second pack to retire its source skill on arrival. That plugin has since
+The since-dissolved `devtools` plugin lost its `doppler` skill in the same
+landing — the second pack to retire its source skill on arrival. That plugin
 dissolved into this one entirely; nothing named `devtools` ships any more.
 
 **The two tool axes, and the stranded pack that forced them.** `design:` and
-`cicd:` are per-project config keys outside the four stack axes, and the bundle
-menu was the only door a template could come through — so `ci-system/github-actions`
+`cicd:` began as per-project config keys outside the stack axes rather than
+axes of their own, and the bundle menu was the only door a template could come
+through — so `ci-system/github-actions`
 landed in Wave C and **nothing could ever materialize it**. Not an error;
 invisible. The `design` and `cicd` axes close that door, and their bundle slug
 **is** the config token, so the menu pick and the config key are one value rather
 than two that can disagree.
 
 **Bundles — `bundles/`, the recorded compositions users actually pick.** Every
-curated option survives the merge — the twelve TypeScript ones, the Flutter app,
+curated option survives the merge — the eight TypeScript ones, the Flutter app,
 the provider-neutral container deploy and the Claude Code plugin template, the
 four Wave D added on the two tool axes, the `secrets-manager` pair above, and
 the five Wave E added for the two clouds. Each names its components as refs,

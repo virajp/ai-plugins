@@ -356,8 +356,9 @@ where it is enforced.
   — a language no installed stack plugin declares is the one an
   otherwise-onboarded repo reaches.
   [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
-- **A stack axis or platform with nothing fitting on the menu halts** rather
-  than recording a free-text pin.
+- **A stack axis or platform with nothing fitting on the menu never takes a
+  free-text pin.** The axis can be deferred as `unresolved` instead — recorded
+  as not yet decided, with `/vwf:doctor` naming it every run until it is.
   [Stack templates](../../plugins/vwf.md#stack-templates)
 - **Design-system halts with no registry**, and again if the project's design
   tool has no adapter answering it.

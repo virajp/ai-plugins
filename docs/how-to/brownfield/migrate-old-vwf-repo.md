@@ -25,8 +25,10 @@ You do not go looking for this. vwf installs once at user level, so an upgrade
 does not re-run itself per repo — instead each workflow command opens with a
 cheap format check, and that is what reaches Jotter. The next `/vwf:plan` there
 names the repo's format, the one vwf now ships, and `/vwf:setup` as the way to
-reconcile them. (The upgrade itself is just re-running the installer —
-[the installer CLI](../../installer/usage.md).)
+reconcile them. (The upgrade itself is
+`claude plugin marketplace update virajp-plugins` then
+`claude plugin update vwf` — the [installer CLI](../../installer/usage.md) never
+updates a plugin it has already installed.)
 
 The nudge is not a halt. The command carries on if the docs it needs are
 present, and stops only when the old tree lacks something the current format

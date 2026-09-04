@@ -27,9 +27,9 @@ has a plugin for across the whole repo; ruff owns Python. The shipped
 language shape the node and flutter overlays have.
 
 **Composition order, when more than one component writes this tree:**
-`toolchain-manager`, then `package-manager` / `language`, then `app-framework`
-— a later component's file wins, and the lockfile records per file which
-component supplied what landed.
+`toolchain-manager`, then `package-manager` / `language`, then
+`toolchain-gate`, then `app-framework` — a later component's file wins, and
+the lockfile records per file which component supplied what landed.
 
 ## Not yet reachable
 

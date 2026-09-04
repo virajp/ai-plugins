@@ -8,8 +8,9 @@ rules); every doc and every cycle then follows them without being asked. Only
 surfaces read it rather than carrying their own copy.
 
 The rules are **stack-agnostic contracts** — what must hold, never how. Each
-stack realizes them its own way (the realization notes live in
-`assets/stacks/`); the blueprint's code-independence line is untouched.
+stack realizes them its own way (the realization notes live in the pinned
+stackgen bundle's `conventions` payload); the blueprint's code-independence
+line is untouched.
 
 **Exceptions (both places, always).** A deviation is recorded where it applies —
 on the deviating doc, in the section the rule governs (e.g. an entity's
