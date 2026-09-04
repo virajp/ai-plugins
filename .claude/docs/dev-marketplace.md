@@ -28,8 +28,8 @@ mise run plugins:local                          # stage the plugins and install 
 `claude plugin list` should then read:
 
 ```text
-❯ stackgen@virajp-plugins   0.19.0+1   ✔ enabled
-❯ vwf@virajp-plugins        19.10.0+1  ✔ enabled
+❯ stackgen@virajp-plugins   X.Y.Z+1   ✔ enabled
+❯ vwf@virajp-plugins        X.Y.Z+1   ✔ enabled
 ```
 
 stackgen arrives on its own — vwf declares it as a dependency and the dev
@@ -67,7 +67,7 @@ the plugin's own manifest and ignores the entry's `version`, which is why the
 old `.dev-marketplace/plugins` symlink to the tree could never work — it served
 the tracked version. Claude compares versions as **strings**, so `+4` → `+5`
 registers as an update even though semver ranks them equal. And it writes the
-cache directory with the `+` as `-` (`vwf/19.10.0-1/`) **and reuses one it has
+cache directory with the `+` as `-` (`vwf/X.Y.Z-1/`) **and reuses one it has
 seen before without clearing it** — so `plugins:local` takes `N` past the
 installed number as well as the staged one, and removes a pre-existing cache
 directory for the version it is about to install.

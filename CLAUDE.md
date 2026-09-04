@@ -9,9 +9,9 @@
 
 ## What This Repo Is
 
-A multi-agent plugin toolkit (`virajp-plugins`) containing LSP servers, MCP
-servers, and `vwf` — a full Product → Blueprint → Plan → Execute workflow plugin
-(with post-deploy verify + production-feedback intake).
+A multi-agent plugin toolkit (`virajp-plugins`) containing MCP servers and `vwf`
+— a full Product → Blueprint → Plan → Execute workflow plugin (with post-deploy
+verify + production-feedback intake).
 
 The repo also ships a small **installer CLI** (`@virajp.dev/claude-plugins`),
 which sequences Claude's own plugin commands and wires graphify — see The
@@ -51,7 +51,7 @@ fresh session, with `/execute-plan <folder>`.
 | [`installer/CLAUDE.md`][icl]               | the installer — flags, the read-only receipt path, the interactive uninstall, testing         |
 | [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains   |
 | [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent      |
-| [`.claude/skills/plugin-authoring/`][auth] | the eleven checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
+| [`.claude/skills/plugin-authoring/`][auth] | the twelve checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
 | [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible          |
 | [`.claude/skills/create-plan/`][cp]        | planning a repo change — the survey, the one-question-at-a-time interview, the plan folder    |
 | [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — waves, review, the gate, resume, landing, release     |
@@ -117,8 +117,10 @@ installer no longer writes, are in [`repo-shape.md`][repo].
 
 ### Tasks
 
-Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
-which is the installer's and whose trigger surface must stay untouched):
+Run in `plugins.yml` (never in `release.yml`, which is the installer's and whose
+trigger surface must stay untouched); the first four also run locally via
+pre-commit, with marketplace, inventory and check in that order — freshness
+before validity:
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
   2 plugin manifests, plus the `.dev-marketplace/plugins/` staging directory the
@@ -127,7 +129,7 @@ which is the installer's and whose trigger surface must stay untouched):
 - **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree, so no pack, bundle or kind count is ever typed by hand;
   **`--check`** fails if the committed file differs.
-- **`plugins:check`** — validates the authored tree, eleven rules.
+- **`plugins:check`** — validates the authored tree, twelve rules.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
 - **`vitest run`** — the `scripts/` and `installer/` suites.

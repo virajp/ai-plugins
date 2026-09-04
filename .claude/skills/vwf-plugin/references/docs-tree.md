@@ -14,28 +14,29 @@ grouped by primary registry project and numbered in execution order** —
 projects alike — `index.md` holding the **platform-agnostic contract** (trigger,
 actors, steps, diagram, jobs, acceptance; no screens) beside one
 **`<platform>.md` per implemented platform** (`mobile`/`tablet`/`desktop`/
-`web`/`auto`) carrying that platform's Screens (rows coded `<NNN><letter>`,
-codes **shared across platform files**, each with its per-screen Components
-block); a non-UI flow is `index.md` alone, as is a `cli` project's — the sixth
-platform is a terminal surface with no screens, so it takes no platform file and
-never reaches the canvas, mockups or the scratchpad, and a cli-only project is
-exempt from the standard-flows mandates. Numbers are **designated** — `100` is
-always `home`, `010` splash / `020` signin / `030` recover-account / `040`
-onboarding, `110`–`890` product flows, `910`–`940` the account screens — on one
-number line per project. `flows/index.md` is the catalog (per-project sections,
-numeric order, a Platforms column) + inter-service contracts; **one entity
-folder per entity** — `entities/<entity>/` holding exactly `index.md` +
-`schema.yaml` — with `entities/index.md` the catalog + product-wide erDiagram;
-and the API contracts `apis/<project>.openapi.yaml` — one per API-publishing
-project, one declaring the `service` platform — plus the frozen `apis/released/`
-snapshots, which a `service` with no co-declared screen platform alone gets (a
-`[service, webapp]` project's API serves its own UI, so no independent consumer
-needs the freeze), and `apis/released/entities/<entity>@<date>.schema.yaml`,
-frozen at the same moment for every entity regardless of project shape; the
-blueprint root holds only the system docs), `docs/plans/`
-(`<date>-<time>-<slice>.md`, with `archived/`), `docs/runbooks/` (per-project
-operational runbooks plus `postmortems.md`, seeded by the incident-response
-foundation and appended to by `/vwf:feedback incident`), and `docs/prompts/`
+`auto`/`site`/`webapp`) carrying that platform's Screens (rows coded
+`<NNN><letter>`, codes **shared across platform files**, each with its
+per-screen Components block); a non-UI flow is `index.md` alone, as is a `cli`
+project's — the seventh platform is a terminal surface with no screens, so it
+takes no platform file and never reaches the canvas, mockups or the scratchpad,
+and a cli-only project is exempt from the standard-flows mandates. Numbers are
+**designated** — `100` is always `home`, `010` splash / `020` signin / `030`
+recover-account / `040` onboarding, `110`–`890` product flows, `910`–`940` the
+account screens — on one number line per project. `flows/index.md` is the
+catalog (per-project sections, numeric order, a Platforms column) +
+inter-service contracts; **one entity folder per entity** — `entities/<entity>/`
+holding exactly `index.md` + `schema.yaml` — with `entities/index.md` the
+catalog + product-wide erDiagram; and the API contracts
+`apis/<project>.openapi.yaml` — one per API-publishing project, one declaring
+the `service` platform — plus the frozen `apis/released/` snapshots, which a
+`service` with no co-declared screen platform alone gets (a `[service, webapp]`
+project's API serves its own UI, so no independent consumer needs the freeze),
+and `apis/released/entities/<entity>@<date>.schema.yaml`, frozen at the same
+moment for every entity regardless of project shape; the blueprint root holds
+only the system docs), `docs/plans/` (`<date>-<time>-<slice>.md`, with
+`archived/`), `docs/runbooks/` (per-project operational runbooks plus
+`postmortems.md`, seeded by the incident-response foundation and appended to by
+`/vwf:feedback incident`), and `docs/prompts/`
 (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
 prompt type → registry project → flow, one brief per platform regenerated in
 place (the filename carries the platform, mirroring the flows tree exactly),

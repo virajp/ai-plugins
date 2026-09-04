@@ -66,7 +66,7 @@ repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 Setup and the refresh loop — `mise run plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
-> **Authoring one:** the eleven checker rules, the invocation frontmatter, the
+> **Authoring one:** the twelve checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -111,9 +111,11 @@ deletes nothing a receipt or another tool does not account for.
 
 ## Tasks
 
-Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
-which is the installer's and whose trigger surface must stay untouched — npm
-allows one Trusted Publisher and validates the entry-point filename):
+Run in `plugins.yml`, the first four also locally via pre-commit, with
+marketplace, inventory and check in that order — freshness before validity
+(never in `release.yml`, which is the installer's and whose trigger surface must
+stay untouched — npm allows one Trusted Publisher and validates the entry-point
+filename):
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
   2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
@@ -138,7 +140,7 @@ allows one Trusted Publisher and validates the entry-point filename):
   heading defines, since the vocabulary is closed. **`--check`** is the same
   byte compare the marketplace task makes, run by pre-commit and `plugins.yml`,
   and `inventory.test.ts` pins it in vitest too.
-- **`plugins:check`** — validates the authored tree. Eleven rules: manifest
+- **`plugins:check`** — validates the authored tree. Twelve rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **pack task files executable** (every file a stackgen pack
   ships under `config/.config/mise/tasks/**` carries its exec bit, because mise
@@ -155,8 +157,11 @@ allows one Trusted Publisher and validates the entry-point filename):
   keyworded `vwf-stack-adapter`, **and** the keyword declared by every plugin
   shipping either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would
-  otherwise have turned the rule off entirely while `check()` still passed); and
-  the **technology-free vwf** guard.
+  otherwise have turned the rule off entirely while `check()` still passed); the
+  **technology-free vwf** guard; and **retired vocabulary stated as live** (a
+  closed list of spellings the corpus stopped meaning, flagged per line and
+  exempt on a line that marks itself as history — the only rule that reports a
+  line number).
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
