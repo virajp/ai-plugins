@@ -58,7 +58,7 @@ lsp_servers:
       ".swift": swift
     startupTimeout: 1000
 harness:
-  screenshots:
+  goldens:
     task: test:golden
     mechanism: >-
       Flutter golden tests plus flutter_test's meetsGuideline accessibility

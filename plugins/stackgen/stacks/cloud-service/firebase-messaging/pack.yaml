@@ -4,6 +4,7 @@ summary: The provider's push transport to mobile and web clients — free at the
   emulator for delivery.
 version: 0.1.0
 type: cloud-service
+category: messaging
 capability: push-notifications
 kind: cloud-provider
 axis: backing

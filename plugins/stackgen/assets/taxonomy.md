@@ -84,7 +84,7 @@ and its components leave `category` unset.
 - **`framework`**: `webserver` / `orm` / `otel-sdk` / `testing` /
   `meta-framework` / `ui-library` / `cli` / `iac` / `workflow-sdk`
 - **`cloud-service`**: `compute` / `sql` / `document` / `queue` /
-  `object-storage` / `cdn` / `access`
+  `object-storage` / `cdn` / `access` / `identity` / `messaging`
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
