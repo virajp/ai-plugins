@@ -265,9 +265,8 @@ claude plugin install --scope project stackgen@virajp-plugins
 ## Statusline
 
 **The statusline has moved to its own project.** It is not installed from here
-any more — `pnpx @virajp.dev/claude-plugins --statusline` says so and exits
-non-zero, which is all that flag does now. `--platform`, `--upgrade` and
-`--force` are retired flags that exit non-zero naming themselves.
+any more, and the CLI has no flag for it — `--statusline` is retired, like
+`--platform`, `--upgrade` and `--force`, and exits non-zero naming itself.
 
 ```sh
 brew install virajp/tap/claude-status
@@ -304,9 +303,8 @@ is a small CLI with three jobs: install **plugins** (`--all`, `--user`,
 [Install](#install) above), wire up **graphify**, and **remove** what this
 toolkit put on your machine.
 
-It used to be published as `@askviraj/ai-plugins`. That package is sunset: it
-stays on npm, but running it only prints a pointer to the new name and exits
-non-zero.
+It used to be published as `@askviraj/ai-plugins`. That name is deprecated on
+npm with a pointer to this one; nothing further is published under it.
 
 **[docs/installer/](./docs/installer/)** is the full reference —
 [usage](./docs/installer/usage.md) for the flag surface,

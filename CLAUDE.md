@@ -88,7 +88,6 @@ installer/src/**                 installer source (TypeScript)
   ↓  tsup
 bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
-sunset/**                  the retired @askviraj/ai-plugins stub — standalone, never built, published by hand once
 ```
 
 **Two files are generated**, both projections of the same 2 plugin manifests and

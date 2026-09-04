@@ -16,7 +16,6 @@ describe("parse", () => {
     expect(args.user).toEqual([]);
     expect(args.project).toEqual([]);
     expect(args.uninstall).toBe(false);
-    expect(args.statusline).toBe(false);
     expect(args.dryRun).toBe(false);
     expect(args.version).toBe(false);
     expect(args.help).toBe(false);
@@ -69,20 +68,12 @@ describe("parse", () => {
     }
   });
 
-  it("accepts --statusline rather than retiring it", () => {
-    // A user who has not heard the statusline moved will reach for this flag,
-    // and `strict` would answer them with "unknown option" and nowhere to go.
-    // It parses so the run can point them at the package that has it now.
-    expect(parse(["--statusline"]).statusline).toBe(true);
-  });
-
-  it("parses --statusline alongside a real install", () => {
-    // The combination is the whole reason it is not a short-circuit: these
-    // plugins still get installed, and the statusline notice prints after.
-    const args = parse(["--all", "--statusline"]);
-
-    expect(args.all).toBe(true);
-    expect(args.statusline).toBe(true);
+  it("rejects --statusline as an unknown option", () => {
+    // The bar ships from its own package, and this CLI no longer carries a
+    // flag for it — not even one that only redirects. It answers like any
+    // other retired flag: by name, through `strict`.
+    expect(() => parse(["--statusline"])).toThrow(/--statusline/);
+    expect(() => parse(["--all", "--statusline"])).toThrow(/--statusline/);
   });
 
   it("rejects a stray positional", () => {
@@ -102,7 +93,6 @@ describe("renderUsage", () => {
         "--user",
         "--project",
         "--uninstall",
-        "--statusline",
         "--dry-run",
         "--version",
         "--help",
@@ -121,6 +111,7 @@ describe("renderUsage", () => {
         "--platform",
         "--upgrade",
         "--force",
+        "--statusline",
       ]
     ) {
       expect(renderUsage().includes(`  ${flag}`), flag).toBe(false);
