@@ -18,10 +18,14 @@ if ! command -v claude >/dev/null 2>&1; then
   exit 0
 fi
 
-# Marketplaces this repo installs plugins from. Add a row per marketplace;
-# registering one already registered is a no-op, so this stays idempotent.
+# Marketplaces this repo installs plugins from, one row per marketplace as
+# `<github-source>|<marketplace-name>`. The name is what the marketplace's own
+# manifest declares and what `claude plugin marketplace update` takes; it is not
+# derivable from the source (the repo is `claude-plugins`, the marketplace is
+# `virajp-plugins`). Registering one already registered is a no-op, so this
+# stays idempotent.
 MARKETPLACES=(
-  "virajp/ai-plugins"
+  "virajp/claude-plugins|virajp-plugins"
 )
 
 # Plugins this repo wants at PROJECT scope, as `<name>@<marketplace>`. Leave the
@@ -29,10 +33,12 @@ MARKETPLACES=(
 PROJECT_PLUGINS=()
 
 print_header "Refreshing plugin marketplaces ..."
-for marketplace in "${MARKETPLACES[@]}"; do
-  claude plugin marketplace add "${marketplace}" >/dev/null 2>&1 || true
-  claude plugin marketplace update "${marketplace##*/}" >/dev/null 2>&1 || true
-  print_yellow "- ${marketplace}"
+for row in "${MARKETPLACES[@]}"; do
+  source="${row%%|*}"
+  name="${row##*|}"
+  claude plugin marketplace add "${source}" >/dev/null 2>&1 || true
+  claude plugin marketplace update "${name}" >/dev/null 2>&1 || true
+  print_yellow "- ${source} (${name})"
 done
 
 if [ ${#PROJECT_PLUGINS[@]} -gt 0 ]; then
