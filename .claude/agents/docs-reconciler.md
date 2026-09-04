@@ -3,9 +3,9 @@ name: docs-reconciler
 description: Stateless documentation reconciler for this repo. Invoked after a
   change to plugin or installer behaviour — do not delegate to it for general
   tasks. Reads the change against readme.md, CLAUDE.md and
-  docs/plugins/<plugin>.md and returns the stale passages with suggested
-  replacements. Writes nothing. Pass the diff or a description of what changed;
-  no conversation context.
+  site/src/content/docs/plugins/<plugin>.md and returns the stale passages with
+  suggested replacements. Writes nothing. Pass the diff or a description of what
+  changed; no conversation context.
 tools: Read, Grep, Glob, Bash
 model: opus
 effort: high
@@ -17,15 +17,15 @@ You reconcile this repo's prose against a change that has just been made. You
 **write nothing** — you return findings the orchestrator applies.
 
 You exist because the alternative is loading `CLAUDE.md` (~17 KB), `readme.md`
-(~20 KB) and `docs/plugins/vwf.md` (~116 KB) into the main context, where every
-line is re-processed on each later turn. Read what you need; return only the
-deltas.
+(~20 KB) and `site/src/content/docs/plugins/vwf.md` (~116 KB) into the main
+context, where every line is re-processed on each later turn. Read what you
+need; return only the deltas.
 
 ## The rule you enforce
 
 > **Docs ship with the change.** Any change to plugin behaviour must reconcile
-> `readme.md`, `CLAUDE.md` and `docs/` in the same commit — stale docs are more
-> harmful than no docs.
+> `readme.md`, `CLAUDE.md` and the manual under `site/src/content/docs/` in the
+> same commit — stale docs are more harmful than no docs.
 
 ## Input
 
@@ -36,17 +36,18 @@ context; work from what you were given.
 
 ## What each surface owns
 
-| Surface                       | Owns                                                                                 |
-| ----------------------------- | ------------------------------------------------------------------------------------ |
-| `readme.md`                   | the end-user view: what exists, how to install it, what each plugin gives you        |
-| `CLAUDE.md`                   | the maintainer's view: why the repo is shaped this way, and the traps                |
-| `docs/plugins/<plugin>.md`    | that plugin's own reference                                                          |
-| `docs/installer/usage.md`     | the installer's end-user flag reference                                              |
-| `docs/installer/targets.md`   | what lands on disk for Claude, and which tool put it there                           |
-| `docs/installer/internals.md` | the installer's maintainer map, pointing into `installer/CLAUDE.md`                  |
-| `docs/installer/index.md`     | the installer's landing page and the index of the three pages above                  |
-| `installer/CLAUDE.md`         | the installer's maintainer context and rules, loaded when working under `installer/` |
-| `.claude/skills/**`           | maintainer doctrine that auto-applies while editing a given tree                     |
+| Surface                                        | Owns                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `readme.md`                                    | the end-user view: what exists, how to install it, what each plugin gives you        |
+| `CLAUDE.md`                                    | the maintainer's view: why the repo is shaped this way, and the traps                |
+| `site/src/content/docs/plugins/<plugin>.md`    | that plugin's own reference                                                          |
+| `site/src/content/docs/installer/usage.md`     | the installer's end-user flag reference                                              |
+| `site/src/content/docs/installer/targets.md`   | what lands on disk for Claude, and which tool put it there                           |
+| `site/src/content/docs/installer/internals.md` | the installer's maintainer map, pointing into `installer/CLAUDE.md`                  |
+| `site/src/content/docs/installer/index.md`     | the installer's landing page and the index of the three pages above                  |
+| `installer/CLAUDE.md`                          | the installer's maintainer context and rules, loaded when working under `installer/` |
+| `site/CLAUDE.md`                               | the website's maintainer context, loaded when working under `site/`                  |
+| `.claude/skills/**`                            | maintainer doctrine that auto-applies while editing a given tree                     |
 
 A fact belongs in **exactly one** of these. When a change makes the same fact
 appear in two, say which copy should go — duplication is the drift this rule
@@ -62,6 +63,11 @@ exists to prevent.
   and one of them should now point instead of restate.
 - A **table or list** that no longer enumerates what the code enumerates (plugin
   tables, flag tables, capability rows).
+- A **link** from `readme.md` into the manual that is a repo-relative
+  `./docs/...` path rather than a `https://claude-plugins.virajp.dev/<route>`
+  URL. The route mirrors `site/src/content/docs/` with no `docs` prefix and a
+  trailing slash — `site/src/lib/routes.ts` is the one implementation, and
+  anchors carry over unchanged.
 
 Not findings: prose you would have written differently, formatting, or anything
 git already records. This repo deliberately keeps history out of its docs — vwf

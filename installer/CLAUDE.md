@@ -2,9 +2,10 @@
 
 The maintainer's context for this tree. The repo-wide rules, the branch model
 and the release ritual are the root [`CLAUDE.md`](../CLAUDE.md); the end-user
-reference is `docs/installer/` (`usage.md` for the flags, `targets.md` for what
-lands where, `internals.md` for the source map — its path table is the full one,
-and is not repeated here).
+reference is `site/src/content/docs/installer/`, published at
+`https://claude-plugins.virajp.dev/installer/` (`usage.md` for the flags,
+`targets.md` for what lands where, `internals.md` for the source map — its path
+table is the full one, and is not repeated here).
 
 ## What it is
 
@@ -211,5 +212,5 @@ tokenless — `fetchGithubJson` attaches the token, `fetchJson` never does.
 Publisher and validates the entry-point filename.
 
 Behaviour changes here must reconcile `readme.md`, the root `CLAUDE.md`, this
-file and `docs/installer/` in the same commit. Delegate that sweep to the
-`docs-reconciler` agent.
+file and `site/src/content/docs/installer/` in the same commit. Delegate that
+sweep to the `docs-reconciler` agent.

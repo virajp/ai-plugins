@@ -1,0 +1,27 @@
+---
+// Pagefind's Component UI, mounted in the nav's search slot. The assets under
+// /pagefind/ are written by `pagefind --site dist` after the Astro build, so
+// they exist in the built site and in `astro preview`, not in `astro dev`.
+// The modal is styled through the --pf-* variables in global.css.
+---
+
+<link href="/pagefind/pagefind-component-ui.css" rel="stylesheet" />
+<script src="/pagefind/pagefind-component-ui.js" type="module" is:inline />
+
+<pagefind-modal-trigger
+  placeholder="Search"
+  class="search"
+></pagefind-modal-trigger>
+<pagefind-modal reset-on-close></pagefind-modal>
+
+<style>
+  .search {
+    display: block;
+    width: 240px;
+  }
+  @media (max-width: 767px) {
+    .search {
+      width: auto;
+    }
+  }
+</style>

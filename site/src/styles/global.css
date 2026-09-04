@@ -1,0 +1,300 @@
+/* Reset and base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  background: var(--ink);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+p {
+  margin: 0;
+}
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+a {
+  color: var(--blue-3);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  color: var(--paper);
+}
+:focus-visible {
+  outline: 2px solid var(--blue-3);
+  outline-offset: 2px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+code,
+kbd,
+pre {
+  font-family: var(--mono);
+}
+
+/* Page frame */
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+@media (max-width: 767px) {
+  .page {
+    padding: 0 var(--sp-6);
+  }
+}
+
+/* Buttons: fill with blueprint or outline with line-2. Sharp corners. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  font: 500 15px var(--sans);
+  text-decoration: none;
+  color: var(--paper);
+  background: var(--blue);
+  border: 1px solid var(--blue);
+}
+.btn:hover {
+  color: var(--paper);
+  background: var(--blue-2);
+  border-color: var(--blue-2);
+}
+.btn.sec {
+  background: transparent;
+  border-color: var(--line-2);
+}
+.btn.sec:hover {
+  background: transparent;
+  border-color: var(--paper);
+}
+.btn.sm {
+  height: 34px;
+  font-size: 13px;
+  padding: 0 14px;
+}
+
+/* Article: the rendered markdown */
+.article {
+  max-width: var(--article);
+}
+.article h1 {
+  font-size: 44px;
+  letter-spacing: -0.02em;
+  margin: 10px 0 20px;
+}
+.article h2 {
+  font-size: 28px;
+  margin: 52px 0 14px;
+  padding-left: 16px;
+  border-left: 2px solid var(--blue-3);
+}
+.article h3 {
+  font-size: var(--fs-h4);
+  margin: 36px 0 12px;
+}
+.article h4 {
+  font-size: var(--fs-body);
+  margin: 28px 0 10px;
+}
+.article p,
+.article li {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--mist);
+}
+.article p {
+  margin: 0 0 16px;
+}
+.article ul,
+.article ol {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+.article li {
+  margin: 4px 0;
+}
+.article li > p {
+  margin: 0 0 8px;
+}
+.article strong {
+  color: var(--paper);
+  font-weight: 500;
+}
+.article hr {
+  border: 0;
+  border-top: 1px solid var(--line-2);
+  margin: 40px 0;
+}
+.article :not(pre) > code {
+  font-size: 13.5px;
+  background: var(--ink-3);
+  border: 1px solid var(--line);
+  padding: 1px 6px;
+  color: var(--paper);
+}
+.article a:hover code {
+  color: var(--paper);
+}
+
+/* Code blocks: on ink-3, a titled bar naming the language, a copy affordance
+   the docs script attaches. Shiki's inline background is stripped by the
+   transformer in astro.config.ts, so the token applies without a fight. */
+.article pre {
+  position: relative;
+  background: var(--ink-3);
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--paper);
+  margin: 16px 0 24px;
+  padding: 14px 18px;
+  overflow-x: auto;
+}
+.article pre::before {
+  content: attr(data-language);
+  display: block;
+  margin: -14px -18px 14px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.article pre > code {
+  font-size: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.article pre .copy {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.article pre .copy:hover {
+  color: var(--paper);
+}
+
+/* Tables: boxed, mono headers */
+.article table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+  margin: 16px 0 24px;
+  border: 1px solid var(--line);
+  display: block;
+  overflow-x: auto;
+}
+.article th {
+  text-align: left;
+  font: 500 12px var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 10px 12px;
+  background: var(--ink-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.article td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--mist);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.article tr:last-child td {
+  border-bottom: 0;
+}
+.article td:first-child {
+  color: var(--paper);
+}
+
+/* Callout: a blockquote */
+.article blockquote {
+  border: 1px solid var(--line-2);
+  border-left: 2px solid var(--blue-3);
+  padding: 14px 18px;
+  margin: 8px 0 24px;
+  font-size: 15px;
+  color: var(--mist);
+  line-height: 1.6;
+}
+.article blockquote p {
+  font-size: 15px;
+  margin: 0;
+}
+.article blockquote p + p {
+  margin-top: 10px;
+}
+
+/* Mermaid diagrams render into this at runtime */
+.article .mermaid {
+  border: 1px solid var(--line-2);
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.1) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  padding: 24px;
+  margin: 8px 0 24px;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+/* Pagefind's Component UI, mapped to the tokens. Radius 0, no shadows. */
+:root {
+  --pf-text: var(--paper);
+  --pf-text-secondary: var(--mist);
+  --pf-text-muted: var(--muted);
+  --pf-background: var(--ink-2);
+  --pf-border: var(--line-2);
+  --pf-border-focus: var(--blue-3);
+  --pf-skeleton: var(--ink-3);
+  --pf-skeleton-shine: var(--line);
+  --pf-hover: var(--ink-3);
+  --pf-mark: var(--blue-3);
+  --pf-scroll-shadow: rgba(0, 0, 0, 0.3);
+  --pf-shadow-sm: none;
+  --pf-shadow-md: none;
+  --pf-shadow-lg: none;
+  --pf-outline-focus: var(--blue-3);
+  --pf-font: var(--sans);
+  --pf-border-radius: 0;
+  --pf-modal-backdrop: rgba(21, 22, 26, 0.7);
+}

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/social-preview.png" width="640" alt="vwf">
+  <img src="https://claude-plugins.virajp.dev/brand/social-preview.png" width="640" alt="vwf">
 </p>
 
 # vwf — Product → Blueprint → Plan → Execute for Claude Code
@@ -24,9 +24,12 @@ reviewed product through four disciplined phases.
 You drive it with slash commands. Claude does the work — asking one question at
 a time while authoring, running unattended while executing — and never merges
 until you approve. The whole manual, command by command, is
-**[docs/plugins/vwf.md](./docs/plugins/vwf.md)**. Journey-shaped guides —
-starting fresh, adopting vwf in a codebase that already works, and running a
-live product — are in **[docs/how-to](./docs/how-to/index.md)**.
+**[the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/)**.
+Journey-shaped guides — starting fresh, adopting vwf in a codebase that already
+works, and running a live product — are in
+**[the how-to guides](https://claude-plugins.virajp.dev/how-to/)**. Both are
+published at [claude-plugins.virajp.dev](https://claude-plugins.virajp.dev) and
+authored under `site/` in this repo.
 
 Around it the marketplace ships **one more plugin** — `stackgen`, which
 materializes whatever stack you pin, right down to the repo's toolchain manager
@@ -64,22 +67,22 @@ blocker rather than a preference. Know this before you install.
 - **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `pnpm`
   and `rtk`. `pnpm` is only the **default** Context7 runner; `CONTEXT7_RUNNER`
   overrides it, so a bun or npm user needs no pnpm — see
-  [docs/plugins/vwf.md](./docs/plugins/vwf.md). **Nothing checks this at install
-  time**, and `/vwf:doctor` does not cover all five: it blocks on a missing
-  `graphify`, and on a missing `mise` once any stack axis is pinned (and
-  `/vwf:setup` and `/vwf:execute` halt on either), reports a missing language
-  server as an ordinary finding, reports a missing `rtk` as a **degradation** —
-  its hook is guarded, so the run is correct and merely costs more — and says
-  nothing at all about the Context7 runner, while `uv` matters as graphify's
-  runtime rather than on its own. Run `/vwf:doctor` first regardless, but
-  install all five rather than relying on it to tell you.
+  [the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/). **Nothing
+  checks this at install time**, and `/vwf:doctor` does not cover all five: it
+  blocks on a missing `graphify`, and on a missing `mise` once any stack axis is
+  pinned (and `/vwf:setup` and `/vwf:execute` halt on either), reports a missing
+  language server as an ordinary finding, reports a missing `rtk` as a
+  **degradation** — its hook is guarded, so the run is correct and merely costs
+  more — and says nothing at all about the Context7 runner, while `uv` matters
+  as graphify's runtime rather than on its own. Run `/vwf:doctor` first
+  regardless, but install all five rather than relying on it to tell you.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
 
 The full discussion — how model and effort are tiered per surface, what
 delegating read-heavy work buys, and the rest of the fit questions — is in
-[docs/plugins/vwf.md](./docs/plugins/vwf.md#caveats).
+[the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/#caveats).
 
 ## Install
 
@@ -200,36 +203,37 @@ pass to `claude plugin install`.
 
 ### The workflow
 
-**[vwf](./docs/plugins/vwf.md)** — the flagship. The `/vwf:` commands covering
-the whole arc: onboard a repo, pin the outcome contract, model the system, sweep
-a whole-product blueprint to complete coverage, plan one slice as a reviewable
-diff, execute it unattended behind one merge gate, verify the deploy, and route
-what production teaches you back to the document that fixes it. It carries
-[cross-session memory](./docs/plugins/mempalace.md), a knowledge-graph layer,
-session handoff and recall, the
-[Karpathy coding guidelines](./docs/plugins/karpathy-guidelines.md), and the
-Markdown and Context7 docs surfaces it absorbed. It names **no** technology — no
-language, no framework, no cloud — which is what lets the rest of this list
-exist. `vwf@virajp-plugins`
+**[vwf](https://claude-plugins.virajp.dev/plugins/vwf/)** — the flagship. The
+`/vwf:` commands covering the whole arc: onboard a repo, pin the outcome
+contract, model the system, sweep a whole-product blueprint to complete
+coverage, plan one slice as a reviewable diff, execute it unattended behind one
+merge gate, verify the deploy, and route what production teaches you back to the
+document that fixes it. It carries
+[cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
+knowledge-graph layer, session handoff and recall, the
+[Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
+and the Markdown and Context7 docs surfaces it absorbed. It names **no**
+technology — no language, no framework, no cloud — which is what lets the rest
+of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
-**[stackgen](./docs/plugins/stackgen.md)** — the principles-driven stack
-materializer. A stack is a composition of **components** — the language, its
-package manager, each framework, the toolchain gates — and each one resolves on
-its own: a component a shipped **pack** covers is copied verbatim; an uncovered
-one is **generated** — researched via Context7 topic by topic, instantiated
-against vwf's principles catalog, gated by a reviewer agent and your explicit
-consent, so a covered language never regenerates because its framework is new.
-Both paths land mostly in the repo's committed `.claude/` tree — skills, agents,
-hooks and rules only, shaped by a closed kind vocabulary whose per-kind **topic
-bar** fixes what the output must cover and how deep, recorded in a lockfile per
-component — so most of the result is plain files your collaborators get with a
-`git pull` and no plugin install. Two things cannot be repo files, and each
-carries its own consent line rather than riding the landing: an MCP server goes
-into the project's `.mcp.json`, and a **language server** is a plugin-manifest
-feature no project file can express at all, so stackgen writes one small local
-plugin on your machine — at the fixed path
+**[stackgen](https://claude-plugins.virajp.dev/plugins/stackgen/)** — the
+principles-driven stack materializer. A stack is a composition of **components**
+— the language, its package manager, each framework, the toolchain gates — and
+each one resolves on its own: a component a shipped **pack** covers is copied
+verbatim; an uncovered one is **generated** — researched via Context7 topic by
+topic, instantiated against vwf's principles catalog, gated by a reviewer agent
+and your explicit consent, so a covered language never regenerates because its
+framework is new. Both paths land mostly in the repo's committed `.claude/` tree
+— skills, agents, hooks and rules only, shaped by a closed kind vocabulary whose
+per-kind **topic bar** fixes what the output must cover and how deep, recorded
+in a lockfile per component — so most of the result is plain files your
+collaborators get with a `git pull` and no plugin install. Two things cannot be
+repo files, and each carries its own consent line rather than riding the
+landing: an MCP server goes into the project's `.mcp.json`, and a **language
+server** is a plugin-manifest feature no project file can express at all, so
+stackgen writes one small local plugin on your machine — at the fixed path
 `~/.claude/plugins/local/stackgen-lsp/`, holding the union across the repos you
 have materialized from — and **prints the two registration commands for you to
 run rather than running them itself**. That one is user-scoped and your
@@ -258,8 +262,8 @@ Having it installed commits you to nothing; it acts only once an axis is pinned.
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
 guidelines — is now a
-[skill vendored inside `vwf`](./docs/plugins/karpathy-guidelines.md) and
-installs with it.
+[skill vendored inside `vwf`](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/)
+and installs with it.
 
 ```sh
 claude plugin install vwf@virajp-plugins
@@ -311,10 +315,12 @@ It used to be published as `@askviraj/ai-plugins`. That package is sunset: it
 stays on npm, deprecated, and running it only prints a pointer to the new name
 and exits non-zero.
 
-**[docs/installer/](./docs/installer/)** is the full reference —
-[usage](./docs/installer/usage.md) for the flag surface,
-[targets](./docs/installer/targets.md) for what lands where, and
-[internals](./docs/installer/internals.md) for the maintainer's map.
+**[The installer manual](https://claude-plugins.virajp.dev/installer/)** is the
+full reference — [usage](https://claude-plugins.virajp.dev/installer/usage/) for
+the flag surface,
+[targets](https://claude-plugins.virajp.dev/installer/targets/) for what lands
+where, and [internals](https://claude-plugins.virajp.dev/installer/internals/)
+for the maintainer's map.
 
 ### Using it
 
@@ -336,8 +342,8 @@ pnpx @virajp.dev/claude-plugins --uninstall
 ```
 
 Two things worth knowing before you run it; everything else is
-[docs/installer/usage.md](./docs/installer/usage.md), which is the one place the
-flag surface is described.
+[the usage page](https://claude-plugins.virajp.dev/installer/usage/), which is
+the one place the flag surface is described.
 
 - **It writes nothing of its own.** Every install goes through the tool that
   owns it — `claude plugin install` for plugins, `graphify` for its wiring — so

@@ -10,6 +10,13 @@ ignores:
   # esbuild emits empty catch blocks and keeps unused helpers from bundled deps.
   # The source it is built from is linted.
   - "bin/**"
+  # The website's build output.
+  - "site/dist/**"
+  # Astro's generated types.
+  - "site/.astro/**"
+  # `.astro` is dprint's: the markup plugin formats it and the linter has no
+  # Astro parser.
+  - "site/**/*.astro"
 
 overrides:
   markdown:
@@ -39,3 +46,21 @@ configs:
       frontmatter: yaml
     rules:
       markdown/no-multiple-h1: [ "error", { frontmatterTitle: "" } ]
+
+  # The website's hand-authored stylesheets. Two false-positive sources:
+  #
+  #   1. Every custom property is defined in tokens.css and consumed in
+  #      global.css, and `css/no-invalid-properties` validates one file at a
+  #      time — so each `var(--ink)` reads as an unknown variable. The rule
+  #      stays on for everything else it checks; `allowUnknownVariables` only
+  #      stops it guessing about a variable it cannot see.
+  #   2. The site uses no Tailwind (tokens are CSS custom properties), so the
+  #      `tailwindcss/*` rules have nothing to enforce: they flag standard
+  #      properties as invalid and pixel values as missing theme tokens.
+  - files: [ "site/**/*.css" ]
+    rules:
+      css/no-invalid-properties: [ "error", { allowUnknownVariables: true } ]
+      tailwindcss/no-important: off
+      tailwindcss/no-invalid-properties: off
+      tailwindcss/prefer-theme-tokens: off
+      tailwindcss/use-baseline: off

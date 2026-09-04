@@ -1,0 +1,24 @@
+{
+  // The website on Cloudflare Workers Static Assets: a purely static site, so
+  // there is no `main` (no Worker script) and no bindings. `wrangler deploy`
+  // uploads dist/ and serves it directly.
+  //
+  // Credentials never live here. The deploy job in .github/workflows/site.yml
+  // passes the API token and the account id from the repository secrets
+  // CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "claude-plugins-virajp-dev",
+  "compatibility_date": "2026-09-05",
+  "assets": {
+    "directory": "./dist",
+    // Unmatched requests get dist/404.html (Astro builds it from
+    // src/pages/404.astro) with a 404 status.
+    "not_found_handling": "404-page",
+  },
+  "routes": [
+    {
+      "pattern": "claude-plugins.virajp.dev",
+      "custom_domain": true,
+    },
+  ],
+}

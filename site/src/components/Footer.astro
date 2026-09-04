@@ -1,0 +1,81 @@
+---
+// The title block: three columns, real fields only.
+---
+
+<footer class="footer">
+  <div>
+    <div class="w">
+      <img
+        src="/brand/vwf-mark-small-white.svg"
+        width="22"
+        height="22"
+        alt=""
+      />vwf
+    </div>
+    <p>
+      Claude Code plugins, authored natively. MIT licensed. Authored by Viraj
+      Patel.
+    </p>
+  </div>
+  <div>
+    <div class="h">Read</div>
+    <a href="/plugins/vwf/">vwf manual</a>
+    <a href="/plugins/stackgen/">stackgen manual</a>
+    <a href="/how-to/">Guides</a>
+    <a href="/installer/">Installer</a>
+  </div>
+  <div>
+    <div class="h">Source</div>
+    <a href="https://github.com/virajp/claude-plugins"
+    >github.com/virajp/claude-plugins</a>
+    <a href="https://www.npmjs.com/package/@virajp.dev/claude-plugins"
+    >npm: @virajp.dev/claude-plugins</a>
+    <a href="https://github.com/virajp/claude-plugins#credits--acknowledgements"
+    >Credits</a>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-top: var(--section-gap);
+    padding: 40px 0 64px;
+    border-top: 1px solid var(--line-2);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 48px;
+  }
+  .w {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font: 300 24px var(--mono);
+    letter-spacing: 0.02em;
+  }
+  .footer p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 12px;
+    max-width: 34ch;
+  }
+  .footer a {
+    display: block;
+    font-size: 15px;
+    color: var(--mist);
+    text-decoration: none;
+    line-height: 1.9;
+  }
+  .footer a:hover {
+    color: var(--paper);
+  }
+  .h {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  @media (max-width: 767px) {
+    .footer {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+  }
+</style>

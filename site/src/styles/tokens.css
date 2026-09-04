@@ -1,0 +1,105 @@
+/* The site design system as custom properties. Dark only: ink with one
+   blueprint accent, radius 0 everywhere. Values are the design sheet's. */
+:root {
+  /* Surfaces */
+  --ink: #15161a; /* page */
+  --ink-2: #1b1d23; /* raised */
+  --ink-3: #22252d; /* code, inputs */
+  --line: #2b2f39; /* hairline */
+  --line-2: #3a3f4b; /* borders */
+
+  /* Text */
+  --paper: #f4f5f8; /* primary */
+  --mist: #b9bdc9; /* body, 9.4:1 on ink */
+  --muted: #7d8392; /* labels, 4.7:1 on ink */
+
+  /* The one accent */
+  --blue: #1e3f8f; /* fills */
+  --blue-2: #2a52b8; /* hover */
+  --blue-3: #7aa0f2; /* text and links on ink, 7.1:1 */
+
+  /* Type: grotesk for everything read, mono only where it carries meaning */
+  --sans: "Schibsted Grotesk", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+
+  /* Scale 56 / 40 / 32 / 22 / 17 / 14 / 13 code / 12 labels */
+  --fs-display: 56px;
+  --fs-h2: 40px;
+  --fs-h3: 32px;
+  --fs-h4: 22px;
+  --fs-body: 17px;
+  --fs-small: 14px;
+  --fs-code: 13px;
+  --fs-label: 12px;
+
+  /* Spacing on a 4px base */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-24: 96px;
+  --sp-28: 112px;
+  --sp-32: 128px;
+
+  /* Layout */
+  --page-max: 1440px;
+  --gutter: 64px;
+  --side: 280px;
+  --article: 800px;
+  --outline: 220px;
+  --section-gap: 112px; /* landing */
+  --docs-gap: 48px;
+
+  --radius: 0;
+}
+
+/* Blueprint devices */
+
+/* The dot grid: a surface texture. White at 12% on ink, 26% on blueprint. */
+.dot-grid {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.12) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+.dot-grid-blue {
+  background-color: var(--blue);
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.26) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* The dimension rule: a 1px line with 12px end ticks. Separates sections and
+   measures real spans. */
+.dim-rule {
+  display: flex;
+  align-items: center;
+  height: 12px;
+}
+.dim-rule::before,
+.dim-rule::after {
+  content: "";
+  width: 1px;
+  height: 12px;
+  background: var(--line-2);
+}
+.dim-rule i {
+  flex: 1;
+  height: 1px;
+  background: var(--line-2);
+}
+
+/* The one small uppercase label allowed per three sections. */
+.label {
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}

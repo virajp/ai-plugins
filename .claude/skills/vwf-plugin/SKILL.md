@@ -40,7 +40,8 @@ before it was cut.
 
 The twelve checker rules, the two mise gates and the authoring traps are the
 sibling `plugin-authoring` skill, which also applies here. The user-facing
-reference is `docs/plugins/vwf.md`.
+reference is `site/src/content/docs/plugins/vwf.md`, published at
+`https://claude-plugins.virajp.dev/plugins/vwf/`.
 
 ## Dependencies
 
@@ -156,8 +157,8 @@ skill.
 ## Documentation
 
 Any change to vwf's behaviour must reconcile `readme.md`, `CLAUDE.md` and
-`docs/plugins/vwf.md` in the **same commit** — the repo's hard rule. Delegate
-the sweep to the `docs-reconciler` agent rather than reading those files inline;
-`docs/plugins/vwf.md` is large enough that loading it costs the rest of the
-session. A behaviour change also bumps `version` in `plugin.json` (plain
+`site/src/content/docs/plugins/vwf.md` in the **same commit** — the repo's hard
+rule. Delegate the sweep to the `docs-reconciler` agent rather than reading
+those files inline; that file is large enough that loading it costs the rest of
+the session. A behaviour change also bumps `version` in `plugin.json` (plain
 `X.Y.Z`) and regenerates the marketplace with `mise run plugins:marketplace`.

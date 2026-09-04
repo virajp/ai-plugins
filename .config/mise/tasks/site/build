@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Build the website and its search index into site/dist"
+#MISE dir="{{ config_root }}/site"
+
+set -e
+
+pnpm exec astro build
+# Pagefind indexes the built HTML in place, writing dist/pagefind/.
+pnpm exec pagefind --site dist
