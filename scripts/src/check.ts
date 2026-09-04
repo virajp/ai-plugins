@@ -19,7 +19,12 @@
  *
  * Usage: node scripts/src/check.ts
  */
-import { existsSync } from "node:fs";
+import {
+  existsSync,
+  globSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
 import {
   isAbsolute,
   join,
@@ -57,8 +62,13 @@ const TOKEN_RE = /`([a-z0-9]+(?:-[a-z0-9]+)+)`/g;
 const LINK_RE = /\]\((\.{1,2}\/[^)\s#]+\.(?:md|ya?ml))(?:#[^)\s]*)?\)/g;
 /** A plugin-root-relative reference, and the path behind it. */
 const ROOT_REF_RE = /\$\{CLAUDE_PLUGIN_ROOT\}\/([A-Za-z0-9_./-]+)/g;
-/** Loose semver — the shape Claude parses a plugin `version` as. */
-const SEMVER_RE = /^\d+\.\d+\.\d+(?:[-+].+)?$/;
+/**
+ * Loose semver, minus build metadata. Claude accepts a `+N` version, and the
+ * dev marketplace uses exactly that for its staged copies (`plugins:local`) —
+ * but a tracked manifest carrying one is that local counter leaking into what
+ * an end-user install pins to.
+ */
+const SEMVER_RE = /^\d+\.\d+\.\d+(?:-.+)?$/;
 
 export function check(repoRoot: string): Finding[] {
   const pluginsRoot = join(repoRoot, "plugins");
@@ -70,6 +80,7 @@ export function check(repoRoot: string): Finding[] {
     findings.push(...checkManifest(plugin));
     findings.push(...checkDependencies(plugin, dirs));
     findings.push(...checkHookScripts(plugin));
+    findings.push(...checkPackTaskModes(plugin));
     findings.push(...checkFrontmatterYaml(plugin));
     findings.push(...checkAgentReferences(plugin));
     findings.push(...checkExampleLinks(plugin));
@@ -113,8 +124,11 @@ function checkManifest(plugin: Plugin): Finding[] {
 
   if (typeof m.version !== "string" || !SEMVER_RE.test(m.version)) {
     at(
-      `plugin.json version ${JSON.stringify(m.version)} is not semver — it is `
-        + `what an end-user install pins to`,
+      `plugin.json version ${
+        JSON.stringify(m.version)
+      } is not plain semver — it `
+        + `is what an end-user install pins to, and a +N build number belongs `
+        + `only to the staged dev copy`,
     );
   }
 
@@ -229,6 +243,53 @@ function* hookCommands(
           yield [event, command];
         }
       }
+    }
+  }
+}
+
+/** Where a pack's `config/` tier puts the file-based mise task library. */
+const PACK_MISE_TASKS = join("config", ".config", "mise", "tasks");
+
+/**
+ * A task file a pack ships under `config/` must land executable.
+ *
+ * `.config/mise/tasks/**` is a *file-based* task library — mise runs each file
+ * directly, so one arriving without its exec bit fails as an unknown task
+ * rather than as a permission error, which reads as a pack that never shipped
+ * it. `plugins:check` is the only reader that sees the bit before it lands.
+ *
+ * The walk is its own rather than `plugin.files`: every one of these paths runs
+ * through `.config/`, and the reader's glob does not descend into a dot
+ * segment, so the whole tier is invisible there.
+ */
+function checkPackTaskModes(plugin: Plugin): Finding[] {
+  const findings: Finding[] = [];
+
+  for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
+    const tasks = join(plugin.root, pack, PACK_MISE_TASKS);
+    for (const absolute of filesUnder(tasks)) {
+      if ((statSync(absolute).mode & 0o111) === 0) {
+        findings.push({
+          scope: plugin.dir,
+          message: `mise task file is not executable: ${
+            relative(plugin.root, absolute)
+          }`,
+        });
+      }
+    }
+  }
+  return findings;
+}
+
+/** Every regular file under a directory, recursively; none when it is absent. */
+function* filesUnder(dir: string): Generator<string> {
+  if (!existsSync(dir)) {
+    return;
+  }
+  const entries = readdirSync(dir, { recursive: true, withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isFile()) {
+      yield join(entry.parentPath, entry.name);
     }
   }
 }

@@ -41,10 +41,13 @@ acceptance criterion, so those come back not covered rather than quietly
 skipped. That is a testing gap, filed as one, with a plan step offered for next
 cycle. A probe coming back down would have been something else entirely: an
 infrastructure failure is reported as operational and never filed as a blueprint
-gap.
+gap — on a production run it also names the matching runbook from
+`conventions.md#incidents`, offers `/vwf:feedback incident`, and names the
+previous release tag as the first remedy to consider (it never deploys).
 
-Relay is never offered the release freeze, on this run or any other — that offer
-belongs to a standalone service, and
+Relay's API contract is never frozen, on this run or any other — that half of
+the offer belongs to a standalone service (the release record still snapshots
+Relay's entity schemas), and
 [an API-only product](../greenfield/api-only-service.md#9-vwfverify-and-the-release-freeze)
 is where it is worked through.
 
@@ -178,13 +181,16 @@ reading and every later plan is a guess.
 
 ### Classification is the judgment, not the paperwork
 
-The same sentence from a user can be any of four things, and what decides is not
-the wording but what the blueprint already says about that surface. "The badge
-looks wrong" is a UX issue when the design system pinned a colour role and the
-screen ignored it, and a blueprint hole when nothing ever pinned what that badge
-means. Ambiguity is confirmed with you by multiple choice, one decision at a
-time, rather than guessed — and it is worth answering carefully, because the
-class picks the destination.
+The same sentence from a user can be any of five things. An outage is the easy
+one — production itself broke, so it routes as an incident
+(`/vwf:feedback incident`), filed with a postmortem stub whose action items come
+back through this same classifier. For the rest, what decides is not the wording
+but what the blueprint already says about that surface. "The badge looks wrong"
+is a UX issue when the design system pinned a colour role and the screen ignored
+it, and a blueprint hole when nothing ever pinned what that badge means.
+Ambiguity is confirmed with you by multiple choice, one decision at a time,
+rather than guessed — and it is worth answering carefully, because the class
+picks the destination.
 
 ### A blueprint hole and an implementation defect look identical from production
 

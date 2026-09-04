@@ -23,8 +23,8 @@ environment-specific tools in the matching env file.
 ## The branch model, and the two tag families
 
 **`develop` takes the work; `main` is what users read.** Claude resolves
-`claude plugin marketplace add virajp/ai-plugins` against the repo's **default
-branch**, so `main` stays the default and PRs target `develop`.
+`claude plugin marketplace add virajp/claude-plugins` against the repo's
+**default branch**, so `main` stays the default and PRs target `develop`.
 
 **`main` is merge-only, enforced in two places.** Locally, pre-commit's
 `no-commit-to-branch` blocks a commit on `main` — it does *not* block merges,
@@ -52,6 +52,11 @@ merge develop → main
 mise run plugins:release                                 → creates + pushes the tags
 ```
 
+The tracked version is always plain `X.Y.Z` — `plugins:check` fails a manifest
+carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
+releases lives only in the gitignored staged copies `plugins:local` writes
+(`dev-marketplace.md`), so no iteration touches git.
+
 `plugins:release` tags **only** the plugins whose ref has no tag yet, which is
 what makes releases per-plugin: a plugin whose version did not move already has
 its tag and is skipped, so its entry stays byte-identical and
@@ -59,13 +64,25 @@ its tag and is skipped, so its entry stays byte-identical and
 dirty tree, or against a stale manifest — a tag cut anywhere else would publish
 content `main` never carried.
 
+**The cost of that discipline, and what pays it.** Between the bump and the tag,
+the manifest names a ref that does not exist — normal on `develop`, and harmless
+for users, who resolve against `main`. It is *not* harmless for anyone who
+registered the marketplace from a local checkout of `develop`: their manifest is
+live, so a plugin update fetches a missing tag and a plugin deleted from the
+manifest disappears from their machine on the merge. That is what
+`.dev-marketplace/` exists for — the authoring machine registers **it** instead,
+gets repo-relative sources with no tags in the picture at all, and this section
+stops applying to it. Nothing here changes: the tags, the release task and what
+users get are exactly as described. See
+[`dev-marketplace.md`](dev-marketplace.md).
+
 **Two tag families, both namespaced**, and the namespacing is load-bearing
 rather than tidiness:
 
-| Tag                    | Releases               | Triggers                     |
-| ---------------------- | ---------------------- | ---------------------------- |
-| `<name>-v<version>`    | one plugin             | nothing — refs resolve to it |
-| `installer-v<version>` | `@askviraj/ai-plugins` | `release.yml` → npm publish  |
+| Tag                    | Releases                     | Triggers                     |
+| ---------------------- | ---------------------------- | ---------------------------- |
+| `<name>-v<version>`    | one plugin                   | nothing — refs resolve to it |
+| `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish  |
 
 The installer's tags were bare `v*` until 2026-08-30. GitHub's tag globs match
 any character **except** `/`, so `v*` matched `vwf-v19.9.0` — every vwf release
@@ -86,23 +103,24 @@ loads the working tree for that session, no install and no cache.
 ## Workflows (`.github/workflows/`)
 
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
-  `develop` and every PR: `plugins:marketplace --check`, then `plugins:check`,
-  then the vitest suites, then `plugins:npm-normalize-test`, then `tsc --noEmit`
-  per project. The order matters — proving the committed manifest is what the
-  plugin manifests generate *before* validating anything means a stale manifest
-  fails as staleness rather than as some confusing downstream assertion. On
-  `main` only it adds one more gate: **every `source.ref` names a tag that
-  exists**. That one is deliberately *not* part of
-  `plugins:marketplace --check`, which must stay offline and fresh-clone-safe;
-  this asks the remote a question. It goes red in exactly one state — merged to
-  `main` without running `plugins:release` — which is a marketplace whose
-  installs fail for every user, so red is correct. Deliberately a **separate
-  file** from `release.yml`: npm allows one Trusted Publisher and validates the
-  entry-point workflow's filename, so that file's trigger surface stays
-  untouched. This workflow publishes nothing and holds no `id-token` permission.
-- **`release.yml`** — publishes `@askviraj/ai-plugins` to npm via **OIDC trusted
-  publishing** (no stored token, provenance automatic). Triggered two ways: a
-  pushed `installer-v*` tag, or `workflow_dispatch` — which is also how
+  `develop` and every PR: `plugins:marketplace --check`, then
+  `plugins:inventory --check`, then `plugins:check`, then the vitest suites,
+  then `plugins:npm-normalize-test`, then `tsc --noEmit` per project. The order
+  matters — proving the two committed generated files are what their sources
+  generate *before* validating anything means a stale one fails as staleness
+  rather than as some confusing downstream assertion. On `main` only it adds one
+  more gate: **every `source.ref` names a tag that exists**. That one is
+  deliberately *not* part of `plugins:marketplace --check`, which must stay
+  offline and fresh-clone-safe; this asks the remote a question. It goes red in
+  exactly one state — merged to `main` without running `plugins:release` — which
+  is a marketplace whose installs fail for every user, so red is correct.
+  Deliberately a **separate file** from `release.yml`: npm allows one Trusted
+  Publisher and validates the entry-point workflow's filename, so that file's
+  trigger surface stays untouched. This workflow publishes nothing and holds no
+  `id-token` permission.
+- **`release.yml`** — publishes `@virajp.dev/claude-plugins` to npm via **OIDC
+  trusted publishing** (no stored token, provenance automatic). Triggered two
+  ways: a pushed `installer-v*` tag, or `workflow_dispatch` — which is also how
   `deps-update.yml` publishes. Plugin tags never reach it; see The branch model
   above. **Every publish path must enter through this file** (see below). It
   sets up mise (`MISE_ENV=ci`), checks out the triggering ref, verifies the tag
@@ -146,11 +164,27 @@ potentially compromised — releases.
 ## One-time manual setup (not automatable here)
 
 On **npmjs.com**, add this repo + `release.yml` as the **Trusted Publisher** for
-`@askviraj/ai-plugins` (enables OIDC). The workflow-filename field takes a
-**single file** and a package has **exactly one** Trusted Publisher — set it to
-`release.yml` only (not a comma-separated list, and not `deps-update.yml`, which
-publishes by *dispatching* `release.yml`). A mismatch surfaces only at publish
-time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
+`@virajp.dev/claude-plugins` (enables OIDC). A package name that has never been
+published cannot be configured at all, so the first version under a new name is
+published **by hand** (`mise run i:build && mise run i:publish` under the user's
+npm login) and the publisher is added afterwards. The workflow-filename field
+takes a **single file** and a package has **exactly one** Trusted Publisher —
+set it to `release.yml` only (not a comma-separated list, and not
+`deps-update.yml`, which publishes by *dispatching* `release.yml`). A mismatch
+surfaces only at publish time as `ENEEDAUTH`. Until configured, `release.yml`
+cannot publish.
+
+**The sunset stub is a one-time hand publish too.** `@askviraj/ai-plugins`, the
+package's former name, ships once more as `7.0.0` from `sunset/` — a standalone
+package, not a workspace member, never built — then is deprecated. After the new
+package's first release is live:
+
+```sh
+cd sunset && npm publish --access public
+npm deprecate "@askviraj/ai-plugins@*" "Moved to @virajp.dev/claude-plugins"
+```
+
+`release.yml` has nothing to do with it and never publishes it again.
 
 ## Cutting a release
 

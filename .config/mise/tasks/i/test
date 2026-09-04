@@ -9,9 +9,9 @@ cd "$MISE_PROJECT_ROOT"
 
 # Test the BUILT artifact, not the source. bin/ is what npm ships, and the
 # bundle is where a packaging mistake would show up — a missing external, a
-# broken package-root resolution — none of which `node cli/src/index.ts` can
+# broken package-root resolution — none of which `node installer/src/index.ts` can
 # expose, because in the repo everything resolves through the workspace.
-print_header "Bundling cli/ into bin/ ..."
+print_header "Bundling installer/ into bin/ ..."
 pnpm exec tsup >/dev/null
 
 CLI=(node bin/installer.mjs)
@@ -77,7 +77,7 @@ print_header "Asserting --user vwf --dry-run describes the claude commands ..."
 before_plugins="$(find "$E2E_HOME" -type f | sort)"
 plugin_dry="$(e2e --user vwf --dry-run)"
 for expected in \
-  "claude plugin marketplace add virajp/ai-plugins" \
+  "claude plugin marketplace add virajp/claude-plugins" \
   "claude plugin install vwf@virajp-plugins --scope user"; do
   if ! grep -qF "$expected" <<<"$plugin_dry"; then
     print_error "--user vwf --dry-run did not describe: $expected"

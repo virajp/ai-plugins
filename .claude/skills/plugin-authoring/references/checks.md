@@ -8,10 +8,10 @@ format, and the one generated file that needs a freshness gate of its own.
 | Task                          | Does                                                                      |
 | ----------------------------- | ------------------------------------------------------------------------- |
 | `plugins:check`               | validates the authored tree; non-zero on any finding                      |
-| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 3 plugin manifests |
+| `plugins:marketplace`         | regenerates `.claude-plugin/marketplace.json` from the 2 plugin manifests |
 | `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                 |
 | `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed     |
-| `pnpm vitest run`             | the `scripts/` and `cli/` suites                                          |
+| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                    |
 
 Both `plugins:check` and the `--check` mode run in pre-commit and in
 `plugins.yml`, in that order: **freshness before validity**, so a stale manifest
@@ -23,7 +23,7 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The ten rules
+## The eleven rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
@@ -74,6 +74,14 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
+11. **Pack task files are executable.** Every file a stackgen pack ships under
+    `config/.config/mise/tasks/**` carries its exec bit. That tree is a
+    *file-based* task library — mise runs each file directly — so one landing
+    644 fails as an **unknown task** rather than as a permission error, which
+    reads as a pack that never shipped it. The walk is its own rather than the
+    plugin file reader's, because every one of these paths runs through a dot
+    segment the reader's glob does not descend into. `plugins:check` is the only
+    reader that sees the bit before it lands in someone's repo.
 
 ### The plugin-root trap (rule 6)
 

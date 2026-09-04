@@ -36,7 +36,7 @@ this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
 
 ```yaml
 config_format: 16 # this file's own schema version — setup migrates it
-blueprint_format: 23 # the docs/blueprint format stamp
+blueprint_format: 24 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -518,7 +518,7 @@ earlier than 65/90/80), never loosen.
   `projects.<name>.harness.health`, and the harness capability entries — where it
   has always meant "declared: no such surface" and still does.
 
-  `blueprint_format` is **untouched** and stays **23**: nothing under
+  `blueprint_format` was **untouched** and stayed **23**: nothing under
   `docs/blueprint/` changes, which is the second config bump to ship without a
   paired blueprint bump, after `14`. Readers treat a scalar `deploy_template`, or
   a `deploy_template: n/a`, as `15` drift.

@@ -32,11 +32,11 @@ node_modules/
 # TypeScript build artifacts. Nothing here emits — `tsc` is only ever a checker —
 # but it still writes its incremental state, and `composite: true` in
 # tsconfig.base.json means every project has an outDir whether it fills it or not.
-cli/dist/
+installer/dist/
 scripts/dist/
 *.tsbuildinfo
 
-# Build output: tsup bundles cli/ into bin/, and bin/ is what npm publishes.
+# Build output: tsup bundles installer/ into bin/, and bin/ is what npm publishes.
 # Not committed — unlike the authored plugins/ tree and the marketplace manifest
 # generated from it, which are meant to be read and diffed. A bundle diff is
 # noise, and `i:build` regenerates it before every publish.
@@ -44,14 +44,11 @@ bin/
 
 # Working notes and session handoffs — personal state, not the team's.
 #
-# vwf's memory doctrine splits its seven rooms: `decisions`, `planning`, `gaps`
-# and `problems` are the team's and stay committed; `handoff`, `doctor` and
-# `runs` are one developer's state and are not. Only `docs/scratchpad/` was ever
-# listed here, so the comment described a rule half of which did not exist and
-# every `/vwf:handoff` committed a personal handoff. `doctor/` and `runs/` are
-# listed before they exist on purpose — they are written by a command, so the
-# first run that creates one would otherwise reintroduce exactly this bug.
-docs/scratchpad/
+# docs/memory/ splits by audience: `decisions`, `planning`, `gaps` and
+# `problems` are the team's and stay committed; `handoff`, `doctor` and `runs`
+# are one developer's state and are not. All three are listed whether or not
+# they exist right now — they are written by a command, so the first run that
+# creates one would otherwise commit personal state.
 docs/memory/handoff/
 docs/memory/doctor/
 docs/memory/runs/
@@ -60,3 +57,12 @@ docs/memory/runs/
 # prompt route. That is a personal choice rather than the project's, and this repo
 # ships nothing Cursor-specific any more.
 .cursor/
+
+# The authoring machine's develop-tracking marketplace, written by
+# `mise run plugins:marketplace` alongside the published manifest. One machine's
+# local state: it exists so the author can run the working tree rather than the
+# last release. Untracked because a second file in the tree declaring the
+# marketplace name `virajp-plugins` is a footgun on the branch users read, and
+# because regenerating it is one command. `--check` reports it absent rather
+# than failing — see `.claude/docs/dev-marketplace.md`.
+.dev-marketplace/

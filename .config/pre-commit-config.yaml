@@ -34,7 +34,7 @@ repos:
       # `plugins-build` and `render-clean` retired with the template layer: there
       # is one authored tree under `plugins/` and nothing renders, so there is no
       # staleness for them to catch — except in the one file that is still
-      # generated. `.claude-plugin/marketplace.json` is a projection of the 13
+      # generated. `.claude-plugin/marketplace.json` is a projection of the 2
       # plugin manifests AND committed, so nothing else notices when the two
       # diverge; this is what render-clean narrowed down to. It fires on a
       # manifest edit and on a hand-edit of the manifest itself, since either
@@ -45,6 +45,17 @@ repos:
         language: system
         pass_filenames: false
         files: ^(plugins/|\.claude-plugin/)
+        stages: [ pre-commit ]
+      # The second generated-and-committed file: the stackgen pack, bundle and
+      # kind inventory, rendered from the stacks tree so no count is ever typed
+      # by hand. Fires on any stacks or kinds edit, and on a hand-edit of the
+      # inventory itself.
+      - id: plugins-inventory
+        name: stackgen inventory matches the stacks tree
+        entry: mise x -- mise run plugins:inventory --check
+        language: system
+        pass_filenames: false
+        files: ^plugins/stackgen/(stacks/|assets/kinds\.md)
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks

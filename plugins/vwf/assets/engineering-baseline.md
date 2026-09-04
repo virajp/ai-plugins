@@ -147,10 +147,23 @@ them enforced rather than advisory)
     minor units** (cents, satoshi, grams) with an explicit currency/unit field —
     never floats.
 
+**Schema evolution**
+
+16. **`baseline/expand-contract`** — a **non-additive** change to a stored
+    entity's schema (a removed or renamed field, a type change) ships in
+    stages: **expand** (the new form is written alongside the old; readers
+    tolerate both) → **migrate** (the backfill runs as an idempotent,
+    resumable background job with progress checkpoints — the flow contract's
+    Background Jobs shape) → **contract** (the old form is removed). Expand
+    and contract land in **separate releases**, so every single release is N-1
+    compatible; destructive DDL never rides the release that stops writing the
+    old form. A product with no datastore has nothing to evolve —
+    inapplicable, per the third state above.
+
 ## How the surfaces apply it
 
 - **`/vwf:blueprint`** seeds `#baseline` into `conventions.md` on first touch
-  (all 15 lines, minus any product-wide waivers) and applies the defaults while
+  (all 16 lines, minus any product-wide waivers) and applies the defaults while
   authoring: entity Concurrency defaults to rule 1, flow Consistency boundaries
   assume rule 2, API operations carry rules 7–9 — elicitation covers only
   genuine deviations, never re-asks a rule.
@@ -161,4 +174,7 @@ them enforced rather than advisory)
 - **The execute reviewers** enforce the seeded `#baseline` lines like every
   other conventions anchor — code that last-writes without a version check,
   skips boundary validation, or embeds business logic in a technical layer is a
-  finding, unless a waiver covers it.
+  finding, unless a waiver covers it. A migration that drops or renames the old
+  form in the **same release** as the code change that stops writing it is a
+  finding (`baseline/expand-contract`) — the contract stage takes its own
+  release.

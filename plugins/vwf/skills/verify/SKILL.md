@@ -23,8 +23,8 @@ Two passes: **health** (is every deployed project up) and **acceptance** (do the
 blueprint's flow criteria hold against the real environment). A failure here is
 production feedback — it routes exactly like `/vwf:feedback` input. A clean run
 against **production** additionally offers to record a **release** (§5) —
-freezing each deployed service's API contract, the point from which backward
-compatibility is enforced.
+freezing each deployed service's API contract and every stored entity's schema,
+the point from which backward compatibility is enforced.
 
 ## Halt Conditions
 
@@ -69,6 +69,12 @@ to its canonical environment, and flag a synonym **key** in the config's
 `production_env:` key names another (per the vwf-config asset). Note whether
 this run targets it — §5 fires only then. A staging run is never a release
 (`pipeline/staging-is-not-a-release`).
+
+**Deferred core token (production runs only).** When this run targets the
+release environment, read the registry for any `<foundation>: deferred-preprod`
+core token (per the product-foundations skill) and report it as a **blocking**
+finding — the product is shipping to customers on a foundation it explicitly
+said was not ready; §5 (release) does not fire while one is present.
 
 **Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall rooms `gaps`
 and `problems` for still-open items — a criterion already known-failing is
@@ -119,18 +125,33 @@ just automated feedback):
   `/vwf:plan <slice>` for a fix cycle. Deferred → record one line in the owning
   flow doc's **Open Questions** so it survives a mempalace outage.
 - **Health down / infrastructure failure** → report precisely (project, probe,
-  error); this is operational, not a blueprint gap — do not file it as one.
+  error); this is operational, not a blueprint gap — do not file it as one. On
+  a **production** run, additionally name the matching runbook from the
+  `conventions.md#incidents` alert-condition table (the incident-response
+  foundation) when one exists, and offer `/vwf:feedback incident` to file the
+  incident and its postmortem stub.
 - **NOT-COVERED / no harness** → a testing gap; file to room `gaps` and offer a
   plan step next cycle.
+
+**Production failures: name the rollback first.** When this run targeted the
+release environment and a probe or criterion failed, the **first offered
+remedy** is "roll back to `<previous tag>`" — the previous release the release
+record names (the latest prior `apis/released/` snapshot, per
+`pipeline/rollback-path` in
+`${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`) — then fix-forward via the
+routes above. This command **names** the rollback; it never executes a deploy —
+deployment is yours. A release record naming no rollback target (an
+irreversible release) leaves only the fix-forward routes; say so.
 
 ### 5. Release (production only)
 
 Runs only when this run targeted the **release environment** (§1) **and** both
 passes came back clean (every probed project healthy, every criterion `PASS`).
 Only then, read [Release freeze](references/release-freeze.md) and follow it —
-the confirmation prompt, the per-`service` snapshot into `apis/released/`, and
-the never-overwrite rule. A staging run, or any run with a failure, skips this
-section entirely.
+the confirmation prompt, the per-`service` snapshot into `apis/released/`, the
+per-entity `schema.yaml` snapshot into its sibling `entities/` dir (same copy
+machinery, same freeze moment), and the never-overwrite rule. A staging run, or
+any run with a failure, skips this section entirely.
 
 **Persist.** Store the run's outcome (environment, per-criterion results,
 routing, any release recorded) to mempalace room `problems` (releases also to

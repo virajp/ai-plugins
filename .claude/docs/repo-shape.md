@@ -10,17 +10,63 @@ Plugins are **authored natively for Claude Code**, once, and installed by
 Claude's own plugin commands. What you edit is exactly what a user gets. The
 tree diagram is [`CLAUDE.md`](../../CLAUDE.md)'s and is not repeated here.
 
-**One file is generated**: the marketplace manifest, a projection of the 3
-plugin manifests. It lives at the repo **root**, not under `plugins/`, because
-that is where Claude looks when this repo is added as a marketplace. It is
-committed so what users install is inspectable and diffable, and
+**Two files are generated**, both projections of the same 2 plugin manifests and
+differing in exactly one field per entry — `source`. Only the **published** one
+is committed, so what users install is inspectable and diffable;
 `plugins:marketplace --check` asserts it matches a fresh generation.
 
-Note the two neighbours that read confusingly: `.claude-plugin/` is that
-generated manifest, while `.claude/` is this repo's own skills, docs, agents and
-worktrees. Neither is `plugins/`.
+`.claude-plugin/marketplace.json` is the **published** one, and it lives at the
+repo **root** because that is where Claude looks when this repo is added as a
+marketplace. Every `source` is a `git-subdir` fetch pinned to a per-plugin tag,
+which is what lets unreleased work sit on `develop`.
 
-> **Authoring one:** the ten checker rules, the invocation frontmatter, the
+`.dev-marketplace/.claude-plugin/marketplace.json` is **local authoring only**,
+**gitignored**, and never published. Every `source` is a repo-relative
+`./plugins/<name>`, resolved into the `.dev-marketplace/plugins/` staging
+directory the same run creates and `plugins:local` fills with `X.Y.Z+N` copies,
+so the authoring machine runs the working tree rather than the last release. It
+exists because this repo ships a workflow plugin whose author could not
+otherwise run the unreleased version of it.
+
+**It is gitignored rather than committed**, which was the reverse of the plan's
+D1. Committing it would buy a fresh clone one command, at the price of a second
+file in the tree declaring the marketplace name `virajp-plugins` on the branch
+users read — a footgun that outweighs the convenience, since regenerating is
+`mise run plugins:marketplace`. The consequence is that `--check` has to tell
+**absent** (normal in CI and in a fresh clone) apart from **present but stale**
+(a real bug on a machine that uses it), which is what `MANIFESTS`'s `tracked`
+flag is for.
+
+Three things make that design forced rather than chosen, each probed against the
+real `claude` CLI:
+
+- **A path inside the marketplace root is the only way in.** An absolute path, a
+  `{"source": "directory"|"local", "path": …}` object and a parent-relative
+  `../plugins/<name>` are each rejected with `source: Invalid input`. A
+  repo-relative path that stays inside the marketplace root is the one accepted
+  form, so the plugins have to be reachable from within `.dev-marketplace/` —
+  and as **staged copies**, not a symlink to the tree: for a directory source
+  Claude reads the plugin's own `plugin.json` version and ignores the entry's,
+  and `update` compares versions only, so a copy is the only place the `X.Y.Z+N`
+  it needs to see can be written without touching the tracked manifest.
+- **Both manifests carry the same marketplace `name`.** A plugin's
+  `dependencies` edge names its marketplace by name, so vwf installed from a
+  differently-named dev marketplace would send its `stackgen` edge back to the
+  tagged marketplace and fail on a tag that does not exist yet. The consequence
+  — one registered at a time, never both — is a feature, not a limitation.
+- **A `ref: develop` variant also works** and needs no staging, but it serves
+  *pushed* develop. The failure being fixed is "I cannot run what I just
+  changed", so the working-tree form won. It stays the fallback if staging ever
+  costs more than it does today.
+
+Note the three neighbours that read confusingly: `.claude-plugin/` is the
+published manifest, `.dev-marketplace/` is the local one, and `.claude/` is this
+repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
+
+Setup and the refresh loop — `mise run plugins:local`, and the three measured
+CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
+
+> **Authoring one:** the eleven checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -60,8 +106,8 @@ and `opencode.json` among them. Nothing this CLI does adds to that pile, and
 deletes nothing a receipt or another tool does not account for.
 
 > **Working on it:** the receipt entry kinds, the interactive uninstall and the
-> packaging traps are in `.claude/skills/installer-cli/`, which auto-applies
-> while you edit `cli/`.
+> packaging traps are in `installer/CLAUDE.md`, which Claude loads whenever it
+> works under `installer/`.
 
 ## Tasks
 
@@ -69,32 +115,48 @@ Run locally via pre-commit **and** in `plugins.yml` (never in `release.yml`,
 which is the installer's and whose trigger surface must stay untouched — npm
 allows one Trusted Publisher and validates the entry-point filename):
 
-- **`plugins:marketplace`** — generates `.claude-plugin/marketplace.json` from
-  the 3 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
+- **`plugins:marketplace`** — generates **both** marketplace manifests from the
+  2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
   `tags` and supplying what no manifest holds: the marketplace header, and the
-  per-entry `category`, `strict` and `source`. **`--check`** regenerates in
-  memory and fails if the committed file differs. That mode is the only guard on
-  a file that is generated **and** committed — a manifest edited without a
-  regenerate is invisible to every other check, and the committed manifest keeps
-  advertising the old version. It is what `plugins:render-clean` narrowed down
-  to.
-- **`plugins:check`** — validates the authored tree. Ten rules: manifest
+  per-entry `category`, `strict` and `source`. It also creates the
+  `.dev-marketplace/plugins/` staging directory the dev sources resolve into.
+  **`--check`** regenerates both in memory and fails if the committed published
+  file differs, or if a dev manifest that **exists** is stale or its staging
+  path is the retired symlink. An absent `.dev-marketplace/` is reported as not
+  applicable, since it is gitignored and CI never has one. That mode is the only
+  guard on a file that is generated **and** committed — a manifest edited
+  without a regenerate is invisible to every other check, and the committed
+  manifest keeps advertising the old version. It is what `plugins:render-clean`
+  narrowed down to. **There is no `--dev` flag**: both are written together
+  because a flag is one more thing to forget, and a stale dev manifest fails as
+  a plugin quietly serving yesterday's tree.
+- **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
+  from the stacks tree: every `<type>/<slug>/pack.yaml`, every bundle
+  frontmatter, and the kind headings in `assets/kinds.md`. It exists because the
+  pack, bundle and kind counts were typed into four prose files and drifted; the
+  tree is the only inventory true by construction. It throws on a `kind` no
+  heading defines, since the vocabulary is closed. **`--check`** is the same
+  byte compare the marketplace task makes, run by pre-commit and `plugins.yml`,
+  and `inventory.test.ts` pins it in vitest too.
+- **`plugins:check`** — validates the authored tree. Eleven rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
-  and executable; **strict-YAML frontmatter**; relative links under
-  `assets/examples/**`; **root-relative reference resolution** (every such
-  reference resolves inside the plugin that wrote it); **agent cross-reference
-  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
-  own prose names a real agent, and every declared agent is referenced at least
-  once — the two directions cover each other on a rename); the vwf
-  design-adapter contract (all **three** import skills present and
-  model-invocable); the vwf **stack-adapter** contract (both
-  `<plugin>-stack-menu` and `<plugin>-stack-template` present and
-  model-invocable on every plugin keyworded `vwf-stack-adapter`, **and** the
-  keyword declared by every plugin shipping either skill — the same
-  two-directions-cover-each-other idiom, since `stackgen` is now the only
-  adapter left and dropping that one keyword would otherwise have turned the
-  rule off entirely while `check()` still passed); and the **technology-free
-  vwf** guard.
+  and executable; **pack task files executable** (every file a stackgen pack
+  ships under `config/.config/mise/tasks/**` carries its exec bit, because mise
+  reports a 644 task as an *unknown* one rather than a permission error);
+  **strict-YAML frontmatter**; relative links under `assets/examples/**`;
+  **root-relative reference resolution** (every such reference resolves inside
+  the plugin that wrote it); **agent cross-reference resolution** in both
+  directions (every role-shaped `` `token` `` in a plugin's own prose names a
+  real agent, and every declared agent is referenced at least once — the two
+  directions cover each other on a rename); the vwf design-adapter contract (all
+  **three** import skills present and model-invocable); the vwf
+  **stack-adapter** contract (both `<plugin>-stack-menu` and
+  `<plugin>-stack-template` present and model-invocable on every plugin
+  keyworded `vwf-stack-adapter`, **and** the keyword declared by every plugin
+  shipping either skill — the same two-directions-cover-each-other idiom, since
+  `stackgen` is now the only adapter left and dropping that one keyword would
+  otherwise have turned the rule off entirely while `check()` still passed); and
+  the **technology-free vwf** guard.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
@@ -114,10 +176,10 @@ allows one Trusted Publisher and validates the entry-point filename):
   the source and what the pack copies into a target repo. The hook lives with
   the **package manager** it rewrites for, not in `vwf`: a JS/TS rewrite has no
   business in a language-agnostic workflow plugin.
-- **`vitest run`** — the `scripts/` and `cli/` suites.
-- **`tsc --noEmit`** per TypeScript project — `cli/` and `scripts/`. Nothing
-  emits, so `tsc` is only ever a checker, and there are no project references to
-  walk.
+- **`vitest run`** — the `scripts/` and `installer/` suites.
+- **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
+  Nothing emits, so `tsc` is only ever a checker, and there are no project
+  references to walk.
 
 `plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion

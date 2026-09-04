@@ -72,8 +72,8 @@ Bookable that plan holds the `docs/blueprint/` and `docs/plans/` trees, the
 memory tree and the product's `mempalace.yaml`, the root `.graphifyignore` — the
 vwf-standard excludes plus whatever committed-but-not-code trees two years of
 history left behind, each proposed with its evidence — a vwf section merged into
-the existing `CLAUDE.md` (merged, not overwritten), and the mise config through
-`/devtools:scaffold`.
+the existing `CLAUDE.md` (merged, not overwritten), and the mise config and repo
+gates, materialized from stackgen's `mise` and `repo-gates` bundles.
 
 Two brownfield-only items appear in that plan. **Harness detection** records
 which verification capabilities the repo can already run: Bookable's `dev` task
@@ -159,9 +159,10 @@ the menu still answers. Why the axes never merge:
 consequence at install time is in
 [stack pins, one axis at a time](../greenfield/single-repo.md#stack-pins-one-axis-at-a-time).
 
-Last comes the product-foundations walk — twelve concerns, one accept / adapt /
-not-applicable question each, listed with a worked set of answers under
-[the twelve foundations](../greenfield/single-repo.md#the-twelve-foundations).
+Last comes the product-foundations walk — thirteen concerns; the eight elective
+ones take one accept / adapt / not-applicable question each, the five core ones
+accept / adapt / defer — listed with a worked set of answers under
+[the thirteen foundations](../greenfield/single-repo.md#the-thirteen-foundations).
 Answer for the product you have. Bookable already writes an audit trail for
 booking cancellations, so accepting that foundation records a contract the
 blueprint then describes; the fact that the code exists shows up later as an

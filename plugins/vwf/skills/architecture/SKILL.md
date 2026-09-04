@@ -137,6 +137,16 @@ surface it as a grouping, but do use it: only a `B` token can be answered by a
 `/vwf:doctor` §5 reports. A token added via **Other** must be classified into
 the asset before it is recorded.
 
+**Trust-boundary threat notes.** While walking a project's capabilities, each
+one that opens a trust boundary — an external caller (a published `service`
+API), an inbound integration callback or webhook (`payments-subscriptions` and
+its kin), a file upload (`object-file-storage`) — takes **one elicited line**:
+the worst plausible abuse of that boundary. Record the lines in
+`registry.yaml` as a `threat_notes:` list beside the project's `capabilities`
+— the block `/vwf:execute`'s security reviewer already reads when it
+threat-models a diff, so each note lands exactly where the threat model
+starts. One line per boundary, no more: a seed, never a threat-model document.
+
 Then ask the user to enumerate all projects, and walk the projects one at
 a time, gathering for each:
 
@@ -248,14 +258,32 @@ concern **not applicable** to omit it from the doc entirely.
 **Foundations checklist.** Then walk the **product-foundations** skill's
 checklist — users & operators, observability, audit logs, change logs,
 background processes, data retention & PII, notifications, runtime settings,
-rate limiting. For each: present its default contract in one line and ask via
-MCQ — **accept the default / adapt it / not applicable** — recording the
-selection as its cross-cutting token (e.g. `audit: privileged-destructive`,
+rate limiting, reliability targets, DR & backup, cost guardrails, incident
+response. For each **elective**
+foundation: present its default contract in one line and ask via MCQ —
+**accept the default / adapt it / not applicable** — recording the selection
+as its cross-cutting token (e.g. `audit: privileged-destructive`,
 `notifications: [push, email]`, `background:
-durable-worker-ephemeral-service`).
-These are elicited defaults, not enforced standards: a skip simply omits the
-token (no `enforcement:` entry). On an update run, walk only foundations not yet
-decided — never re-litigate a recorded selection.
+durable-worker-ephemeral-service`); a skip simply omits the token (no
+`enforcement:` entry). For each **core** foundation (users & operators,
+observability, reliability targets, DR & backup, incident response) the MCQ
+instead offers
+**accept the default / adapt it / defer — not production-bound** — a core
+foundation has no "not applicable"; a deferral records a registry token
+`<foundation>: deferred-preprod`, never an omission. These are elicited
+defaults, not enforced standards, but a core deferral is a recorded,
+production-blocking exception rather than a silent skip. On an update run,
+walk only foundations not yet decided — never re-litigate a recorded
+selection.
+
+**Metrics cross-check.** After the walk, when `docs/blueprint/product.md`
+exists, check its goals' `Measured via:` lines against the observability
+decision: a product that deferred observability (`observability:
+deferred-preprod`) or adapted it away from metrics while any goal writes a
+`counter` Measured-via form is a **flagged contradiction** — the counter has
+nothing to emit it. Surface it and have the user resolve it explicitly: accept
+the observability foundation, or change the goal's measurement source
+(`store-metric` / `external`) via `/vwf:product`. Never record both silently.
 
 Capture each decision as a single short token or list. Record only the decision,
 not the full blueprint — `blueprint` expands it into
@@ -281,7 +309,8 @@ for explicit approval before proceeding to Step 5.
 Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 
 - All elicited prose answers (system overview, interconnects, hosting).
-- All per-project registry rows (name, role, platforms, path, capabilities, depends_on,
+- All per-project registry rows (name, role, platforms, path, capabilities —
+  with their trust-boundary `threat_notes` — depends_on,
   doc_unit, platforms) — **no stack**; it is not a registry field.
 - All cross-cutting decisions.
 - **Update mode only:** the **paths** `docs/blueprint/architecture.md` and

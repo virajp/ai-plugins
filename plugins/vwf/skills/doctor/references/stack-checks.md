@@ -204,8 +204,9 @@ and no capability claimed, it is a **degradation**: there is no toolchain to
 manage and no harness task to run, so halting `setup` and `execute` over it
 would block a product on day one for a stack nobody has chosen yet. A repo with
 no `.config/mise*.toml` at all is the same finding one level up, at the same
-severity: report it and nudge `/vwf:setup`, which delegates to
-`devtools:scaffold`.
+severity: report it and nudge `/vwf:setup`, which materializes the
+unconditional `mise` bundle by its fixed slug through the stack adapter's
+`-stack-template` skill.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —

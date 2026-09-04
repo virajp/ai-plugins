@@ -52,6 +52,10 @@ mise run plugins:release --dry-run
 mise run plugins:release
 ```
 
+The tracked version is plain `X.Y.Z` always; the `X.Y.Z+N` the authoring machine
+runs between releases exists only in the gitignored staged copies
+`plugins:local` writes, and `plugins:check` fails a manifest that carries one.
+
 `plugins:release` tags only the plugins whose ref has no tag yet, so a plugin
 whose version did not move is skipped and its entry stays byte-identical — that
 is what makes releases per-plugin. It refuses to run off `main`, on a dirty
@@ -133,7 +137,7 @@ already uses. **Do not invent a second changelog format.**
 - Headlines: **Features**, **Bug Fixes**, **Performance Improvements**,
   **Merges**, **BREAKING CHANGES**.
 - Scopes are bolded; each entry links its commit via
-  `https://github.com/virajp/ai-plugins/commit/%commit%`.
+  `https://github.com/virajp/claude-plugins/commit/%commit%`.
 
 Shape of the note, in order:
 

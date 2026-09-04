@@ -47,6 +47,14 @@ each other lives in `bundle`, so no cross-flow gap is lost to sharding.
 - [ ] Every goal anchor in the passed list is `Serves:`-linked by at least one
       flow.
 - [ ] Every flow's `Serves:` anchors exist in the passed list.
+- [ ] **Goal instrumentation**: every goal's `Measured via:` (read
+      `product.md` under the blueprint root) resolves — a
+      `counter <flow-slug>.<outcome>` form resolves to that counter declared
+      beside the owning flow's Acceptance block, a `counter <entity>.<state>`
+      form to the owning entity doc beside its Lifecycle table; a goal counter
+      no doc declares is a gap. `store-metric` and `external` forms are exempt
+      from resolution but are listed **info-level** in the return, so the
+      operator sees every goal the system itself cannot measure in one place.
 
 **2. Per flow, walked end-to-end**
 
@@ -89,6 +97,15 @@ each other lives in `bundle`, so no cross-flow gap is lost to sharding.
 - [ ] The `entities/index.md` `erDiagram` equals the union of the entities'
       Relationships tables — a missing/extra node or edge is a gap (the tables
       are authoritative).
+- [ ] **Released-schema compatibility (hard gap).** When
+      `apis/released/entities/<entity>@<date>.schema.yaml` snapshots exist,
+      diff each living `schema.yaml` against its **latest** snapshot (latest
+      date in the filenames). Any breaking change — a removed or renamed
+      property, a type/format change, a new required property, a narrowed enum
+      — **without** a dated staged-migration note on the owning entity's
+      `index.md` declaring the expand → migrate → contract stages
+      (`baseline/expand-contract`) is a gap marked **HARD**: the orchestrator
+      may not stamp coverage complete over it.
 
 **5. API contracts**
 
@@ -131,8 +148,8 @@ NO GAPS
 ```
 
 Otherwise, a numbered list — each item names the docs involved, the exact
-location, and which rule fails; prefix released-contract compatibility gaps with
-`HARD:`:
+location, and which rule fails; prefix released-contract and released-schema
+compatibility gaps with `HARD:`:
 
 ```text
 GAPS:
@@ -140,6 +157,17 @@ GAPS:
 2. HARD: <apis/<project>.openapi.yaml — <endpoint/field>> — breaking vs released <project>@<version> without a major-version bump
 ```
 
+**Goal-instrumentation info lines.** When the goal-instrumentation check finds
+goals measured via `store-metric` or `external`, append them after the verdict
+(after `NO GAPS` or the `GAPS:` list) — they are information, never gaps, and
+never turn `NO GAPS` into `GAPS:`:
+
+```text
+INFO — goals not system-measured:
+- <goal-anchor> — <store-metric|external> <detail>
+```
+
 Your entire reply is read verbatim into the orchestrator's context window.
-Output **only** `NO GAPS` or the `GAPS:` list — never echo docs, the checklist,
-your reasoning, or any praise, summary, or fix. One terse line per gap.
+Output **only** `NO GAPS` or the `GAPS:` list (plus the INFO block above when
+it applies) — never echo docs, the checklist, your reasoning, or any praise,
+summary, or fix. One terse line per gap.

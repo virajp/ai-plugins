@@ -2,12 +2,13 @@
 name: feedback
 description: The front door for production feedback — a bug, a metric reading,
   a UX
-  complaint, or a feature idea. Classifies it and routes it into the doc and
-  command that fix it (gaps → blueprint/plan, metrics → product, UX →
-  design-system/screens). "canvas" harvests the design review conversations from
-  each project's own design tool, via the design adapter, into the same routes.
-  Durable even when mempalace is down.
-argument-hint: "[the feedback — paste a bug report, metric, or complaint | canvas]"
+  complaint, a feature idea, or an incident. Classifies it and routes it into
+  the doc and command that fix it (gaps → blueprint/plan, metrics → product,
+  UX → design-system/screens, incidents → postmortem stub + action items).
+  "canvas" harvests the design review conversations from each project's own
+  design tool, via the design adapter, into the same routes. Durable even when
+  mempalace is down.
+argument-hint: "[the feedback — paste a bug report, metric, or complaint | incident <what happened> | canvas]"
 model: sonnet
 effort: high
 disable-model-invocation: false
@@ -89,6 +90,7 @@ Classify — confirm by MCQ when ambiguous, per
 | **Metric reading** | A number for a `product.md` metric (hit or miss) |
 | **UX issue**       | Rendered experience contradicts design-system/UX |
 | **Feature idea**   | A want that serves (or implies) a product goal   |
+| **Incident**       | Production broke — outage, failed probe, SLO burn |
 
 ### 2. Route
 
@@ -108,7 +110,13 @@ of the fixing command**:
 - **Metric reading** → append a dated row to the **Metric readings** appendix of
   `product.md` (create the appendix on first use — it is a log, not part of the
   reviewed contract). A **miss against target** → offer `/vwf:product` to
-  re-rank slices / revisit the goal; a hit → just recorded.
+  re-rank slices / revisit the goal; a hit → just recorded. A reading breaching
+  a goal's `Re-evaluate if: <metric> below <floor> by <date>` line escalates:
+  the `/vwf:product` re-run is **mandatory-offered**, with
+  **kill / pivot / re-scope** as the named agenda — a killed goal keeps its
+  subsection, marked `status: killed — <date, reading>`. The reading also
+  closes any open experiment record for the goal (fill Result and Decision —
+  see the product skill's `references/validation.md`).
 - **UX issue** → record it against the screen's **home flow** — the `## Screens`
   row in `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` that defines it
   (a deviation or open question at the exact screen/state) — and offer
@@ -119,11 +127,21 @@ of the fixing command**:
   `blueprint → plan → execute` path. Deferred → a row in `product.md`'s Metric
   readings appendix is wrong for this; instead note it under the served goal's
   slice-priority row as a candidate, marked unranked.
+- **Incident** → an operational event, not (yet) a blueprint gap: file to room
+  `problems`, and append the postmortem stub to `docs/runbooks/postmortems.md`
+  per the incident-response foundation — what happened, impact window,
+  contributing causes, action items. Then run **each action item** back through
+  this classifier as its own intake (usually a blueprint hole or a behavior
+  bug). An incident is also a reading against the reliability foundation's
+  **error-budget stance** (`conventions.md#reliability`): state what the stance
+  says happens now. Invoked as `/vwf:feedback incident <what happened>` — the
+  form `/vwf:verify` offers when a production probe fails.
 
 ### 3. Persist & commit
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`: bugs/holes to room `gaps`,
-readings and routing decisions to room `decisions`. Skip silently if mempalace
+incidents to room `problems`, readings and routing decisions to room
+`decisions`. Skip silently if mempalace
 is down — the doc edits from step 2 are the durable record.
 
 Commit any doc edits via `/vwf:git-workflow` (`docs:` or `blueprint(...)`

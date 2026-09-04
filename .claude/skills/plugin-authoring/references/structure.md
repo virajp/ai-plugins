@@ -40,6 +40,12 @@ the old one and nobody's update does anything. Plugin and skill version numbers
 are independent by design; a plugin may hold skills versioned on their own
 cadence, so nothing cross-checks them.
 
+The tracked version is **plain semver, always** — the checker fails a manifest
+carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
+releases is written by `mise run plugins:local` into the gitignored staged copy
+under `.dev-marketplace/plugins/`, never into `plugins/`: that is what lets
+`claude plugin update` re-copy an edit without a commit.
+
 ## `plugin.json` — the manifest
 
 One file per plugin at `<plugin>/.claude-plugin/plugin.json`, in Claude Code's

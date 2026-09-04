@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+#MISE description="Stage every changed plugin into the dev marketplace under an X.Y.Z+N version and update the local install"
+#MISE dir="{{ config_root }}"
+
+# The dev-marketplace refresh loop as one command.
+#
+# A plugin install is a directory COPY into ~/.claude/plugins/cache/, keyed by
+# version, and `claude plugin update` compares versions only: with the source
+# edited and the version unchanged it copies nothing. So the dev marketplace
+# does not serve plugins/ directly — it serves .dev-marketplace/plugins/<name>,
+# a STAGED COPY this task writes, whose plugin.json carries `X.Y.Z+N`: the
+# tracked version plus a build number that only ever exists here. The tracked
+# manifests stay plain semver, nothing is committed per iteration, and a
+# release is still just the version bump on develop.
+#
+# The version has to be in the staged plugin.json and not in the marketplace
+# entry: for a directory source Claude reads the plugin's own manifest and
+# ignores the entry's `version` — measured against the real CLI, both ways.
+#
+# Each run, for every plugin under plugins/:
+#
+#   tree == staged copy (version aside)   nothing to do
+#   otherwise                             restage under +N, N past both the
+#                                         staged and the installed number
+#
+# then regenerates the manifests, refreshes the marketplace and runs
+# `claude plugin update`, which now copies. Claude compares versions as strings,
+# so a +N bump registers even though semver ranks `+4` and `+5` equal.
+#
+# Two cache facts shape the details. Claude writes the cache directory with the
+# `+` as `-` (`vwf/19.10.0-3/`), and it REUSES a directory whose version it has
+# seen before without clearing it — so a fresh clone restarting N at 1 would
+# install yesterday's copy. Hence N is taken past the installed number too, and
+# a pre-existing directory for the target version is removed first.
+#
+# This does NOT release anything. Users are reached only by `plugins:release`,
+# from main. The setup this task assumes (registering ./.dev-marketplace) is
+# .claude/docs/dev-marketplace.md.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+MARKETPLACE="virajp-plugins"
+STAGE=".dev-marketplace/plugins"
+CACHE="${HOME}/.claude/plugins/cache/${MARKETPLACE}"
+INSTALLED_JSON="${HOME}/.claude/plugins/installed_plugins.json"
+
+# 1. Refuse to run in user mode. There the registered marketplace is the tagged
+#    one, and the update below would quietly re-copy the last RELEASE — exactly
+#    the state this task exists to escape.
+if ! claude plugin marketplace list | grep -q '\.dev-marketplace'; then
+  print_error "${MARKETPLACE} is not registered from ./.dev-marketplace — this machine is in user mode."
+  print_normal "Setup is .claude/docs/dev-marketplace.md: 'claude plugin marketplace add ./.dev-marketplace' (the leading ./ is required)."
+  exit 1
+fi
+
+# The installed version of one plugin at user scope, or nothing.
+installed_version() {
+  node -p "
+    const r = (require('${INSTALLED_JSON}').plugins['$1@${MARKETPLACE}'] || [])
+      .find(e => e.scope === 'user');
+    r ? r.version : ''
+  " 2>/dev/null || true
+}
+
+manifest_version() {
+  node -p "require('./$1/.claude-plugin/plugin.json').version" 2>/dev/null || true
+}
+
+# The build number of a version, or 0 when it has none or a different base.
+build_of() { # <version> <base>
+  [[ "$1" == "$2+"* ]] && echo "${1#*+}" || echo 0
+}
+
+# Whether a tree and its staged copy differ anywhere but the version line.
+changed() { # <tree> <staged>
+  [[ -d "$2" ]] || return 0
+  ! diff -rq -x plugin.json "$1" "$2" >/dev/null && return 0
+  ! diff -q \
+    <(sed -E 's/^(  "version": ")[^"]+/\1/' "$1/.claude-plugin/plugin.json") \
+    <(sed -E 's/^(  "version": ")[^"]+/\1/' "$2/.claude-plugin/plugin.json") \
+    >/dev/null
+}
+
+mkdir -p "${STAGE}"
+
+# 2. Restage every plugin whose tree moved.
+STAGED=()
+for dir in plugins/*/; do
+  name="$(basename "${dir}")"
+  tree="plugins/${name}"
+  staged="${STAGE}/${name}"
+
+  changed "${tree}" "${staged}" || continue
+
+  base="$(manifest_version "${tree}")"
+  if [[ "${base}" == *+* ]]; then
+    print_error "${tree} declares ${base} — the tracked manifest stays plain semver; the +N lives only in the staged copy."
+    exit 1
+  fi
+
+  n_staged="$(build_of "$(manifest_version "${staged}")" "${base}")"
+  n_installed="$(build_of "$(installed_version "${name}")" "${base}")"
+  next="${base}+$(( (n_staged > n_installed ? n_staged : n_installed) + 1 ))"
+
+  rm -rf "${staged}"
+  cp -R "${tree}" "${staged}"
+  # The staged manifest's top-level version line only — BSD sed, hence -i ''.
+  sed -i '' -E "s/^(  \"version\": \")[^\"]+(\")/\1${next}\2/" \
+    "${staged}/.claude-plugin/plugin.json"
+
+  # A cache directory Claude has seen for this version is stale by definition.
+  rm -rf "${CACHE}/${name}/${base}-${next#*+}"
+
+  print_normal "${name}: staged ${next}"
+  STAGED+=("${name}")
+done
+
+# 3. Regenerate both manifests and refresh the marketplace's view of them
+#    before asking for updates.
+mise run plugins:marketplace
+claude plugin marketplace update "${MARKETPLACE}"
+
+# 4. Update, or install on a machine that has nothing yet — vwf pulls stackgen
+#    in as its dependency.
+if [[ -z "$(installed_version vwf)" ]]; then
+  claude plugin install "vwf@${MARKETPLACE}" --scope user
+else
+  for dir in plugins/*/; do
+    name="$(basename "${dir}")"
+    [[ -n "$(installed_version "${name}")" ]] || continue
+    claude plugin update "${name}@${MARKETPLACE}"
+  done
+fi
+
+print_success "Local install matches the working tree:"
+claude plugin list | awk "/@${MARKETPLACE}/ { print; getline; print }"
+if [[ "${#STAGED[@]}" -gt 0 ]]; then
+  print_warn "Restart Claude Code — a plugin's skills are read at session start."
+fi

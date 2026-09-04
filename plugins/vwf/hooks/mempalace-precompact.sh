@@ -5,6 +5,6 @@
 # retired neutral hook schema, which named a script and passed it nothing; with
 # hooks authored directly as hooks.json an argument is now expressible, so this
 # is merely how it is. Collapsing the two entries into one would be a fine
-# simplification — cli/src/mempalace-checkpoint-script.test.ts covers the
+# simplification — installer/src/mempalace-checkpoint-script.test.ts covers the
 # behaviour either way.
 exec "$(dirname "$0")/mempalace-checkpoint.sh" --compact

@@ -10,7 +10,7 @@ tags: [ commerce, refunds ]
 
 # Flow: Order cancellation & refund
 
-<!-- Conformance example (blueprint-format 23). A worked, format-valid flow doc
+<!-- Conformance example (blueprint-format 24). A worked, format-valid flow doc
      with an operator actor, a background job, and a compensation branch. -->
 
 ## Purpose
@@ -50,10 +50,10 @@ Serves: [Trusted refunds](../../../product.md#goal-trusted-refunds)
 
 ## Guarantees
 
-| Step / group              | Consistency                      | On failure                                                                                                                                                                                                | Idempotency                                                                                             |
-| ------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| 1 cancellation            | atomic — single system of record | —                                                                                                                                                                                                         | cancelling an already-`cancelled` order is a no-op returning the current order                          |
-| 2-3 refund + notification | eventual                         | A failed refund never reverts the cancellation: the order stays `cancelled` with the refund marked failed/pending for staff retry, and the customer is told the refund is delayed, never silently dropped | the refund request carries the order id as its idempotency key, so a retry never issues a second refund |
+| Step / group              | Consistency                      | On failure                                                                                                                                                                                                | Idempotency                                                                                             | Load & latency                        |
+| ------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| 1 cancellation            | atomic — single system of record | —                                                                                                                                                                                                         | cancelling an already-`cancelled` order is a no-op returning the current order                          | default — per conventions#reliability |
+| 2-3 refund + notification | eventual                         | A failed refund never reverts the cancellation: the order stays `cancelled` with the refund marked failed/pending for staff retry, and the customer is told the refund is delayed, never silently dropped | the refund request carries the order id as its idempotency key, so a retry never issues a second refund | default — per conventions#reliability |
 
 ## Diagram
 
@@ -94,6 +94,9 @@ sequenceDiagram
   order, then the order still reads `cancelled`, the refund is visibly marked
   failed/pending for staff, and no second refund is issued when the retry later
   succeeds.
+- Abuse case: given a signed-in customer who does not own a `paid` order, when
+  they attempt to cancel it, then the request is denied with `forbidden`, the
+  attempt is audit-recorded, and no refund is issued.
 
 ## References
 

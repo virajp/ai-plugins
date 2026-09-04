@@ -70,11 +70,13 @@ than to a target you deploy into. The axes stay independent for the usual
 reason:
 [stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time).
 
-Topology and the twelve foundations run unchanged
+Topology and the thirteen foundations run unchanged
 ([topology](./single-repo.md#the-topology-answer),
-[foundations](./single-repo.md#the-twelve-foundations)), though clockon marks
-three not-applicable with the same justification — there is no server to
-instrument, nobody to notify, and no shared resource to rate-limit. Reference:
+[foundations](./single-repo.md#the-thirteen-foundations)), though clockon marks
+notifications and rate limiting not-applicable — nobody to notify, no shared
+resource to limit — and adapts observability, which is core and so has no
+not-applicable answer: local-only telemetry, since there is no server to
+instrument. Reference:
 [`/vwf:architecture`](../../plugins/vwf.md#vwfarchitecture).
 
 ### 4. /vwf:design-system

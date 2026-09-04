@@ -1,7 +1,7 @@
 name: Plugins
 
 # Validates the plugin toolkit: the one authored tree under plugins/, the
-# marketplace manifest generated from its 13 manifests, and the repo tooling that
+# marketplace manifest generated from its 2 manifests, and the repo tooling that
 # does both.
 #
 # Deliberately a SEPARATE workflow from release.yml. npm allows exactly one
@@ -52,6 +52,9 @@ jobs:
       - name: Marketplace manifest matches the plugin manifests
         run: mise run plugins:marketplace --check
 
+      - name: stackgen inventory matches the stacks tree
+        run: mise run plugins:inventory --check
+
       - name: Static validation of plugins/
         run: mise run plugins:check
 
@@ -62,7 +65,7 @@ jobs:
       # so a ref with no tag is an install that fails for every user.
       #
       # Deliberately not part of `plugins:marketplace --check`. That check is a
-      # pure function of the 7 manifests and must stay offline and
+      # pure function of the 2 manifests and must stay offline and
       # fresh-clone-safe; this one asks the remote a question.
       - name: Every marketplace ref names a tag that exists
         if: github.ref == 'refs/heads/main'
@@ -93,5 +96,5 @@ jobs:
       # `--noEmit` per project, because there are no project references to walk.
       - name: Type-check every package
         run: |
-          pnpm exec tsc --noEmit -p cli
+          pnpm exec tsc --noEmit -p installer
           pnpm exec tsc --noEmit -p scripts

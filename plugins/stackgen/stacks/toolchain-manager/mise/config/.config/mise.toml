@@ -1,0 +1,54 @@
+# The common base — loaded in EVERY environment, MISE_ENV set or not.
+#
+# mise loads this file first, then deep-merges the active MISE_ENV variant on
+# top, so a variant holds deltas only. Never duplicate a tool or a setting
+# across the layers: a tool pinned twice is a version that can disagree with
+# itself, and the disagreement surfaces on someone else's machine.
+#
+# A repo with no CI/CD and no deploy target needs only this file. Add
+# mise.dev.toml and mise.ci.toml when a pipeline or a deployed environment
+# appears.
+
+[settings]
+activate_aggressive  = true     # let mise shims win on PATH
+env_shell_expand     = true     # expand $VARS in [env]
+gpg_verify           = true     # verify tool signatures (see the CI exception)
+raw                  = true     # streams output
+status.missing_tools = "always"
+
+# Runtime-specific settings blocks — keep ONLY the one matching this repo's
+# runtime, and delete the rest. A block for a runtime the repo does not have is
+# a setting nothing reads and a claim about the stack that is not true.
+#
+# Node:
+#   node.compile        = false
+#   npm.package_manager = "pnpm"
+#
+# Python:
+#   pipx.uvx            = true
+#   python.compile      = false
+#   python.uv_venv_auto = "create|source"
+
+[env]
+# Names shared with the variants; the VALUES live per layer. Only what is the
+# same everywhere belongs here.
+DISABLE_TELEMETRY = 1
+
+[tools]
+# The language RUNTIME only — the minimum to run or build the project anywhere.
+# Formatters, linters, scanners and AI tooling are development concerns and
+# belong in mise.dev.toml, so a fresh checkout and a CI build do not pull them.
+#
+# The runtime pins arrive with this repo's language and package-manager
+# components. For example, a Node repo would carry:
+#   node = { version = "latest" }
+#   pnpm = { version = "latest" }
+
+[tasks.init]
+# Mandatory, and it lives in the BASE rather than in dev on purpose: the
+# file-based tasks under .config/mise/tasks/ must be executable under
+# MISE_ENV=ci too, not only on a developer laptop. mise runs a task file
+# directly, so one without its exec bit fails as an *unknown task*.
+description = "Initialize mise tasks"
+hide        = true
+run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"

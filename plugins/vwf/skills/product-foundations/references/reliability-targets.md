@@ -40,6 +40,10 @@ token: `reliability: slo`.
 - `conventions.md#reliability` holds the per-service SLO table, the SLI sources,
   and the error-budget stance. Flow docs never restate targets; a flow with a
   stricter need than its service's SLO records **that delta** on the flow.
+- On first touch, `conventions.md#reliability` also gains the **expected user
+  count** and the **aggregate request-rate** at a stated horizon — two extra
+  elicited questions beside the SLOs, the capacity numbers a load run and a
+  flow's `Load & latency` cells are sized against.
 - `/vwf:verify`'s health pass reads the table when present: a health check that
   passes but breaches a stated latency target is reported as a warning, not a
   pass. Realization (alert rules, dashboards): the stack docs' observability

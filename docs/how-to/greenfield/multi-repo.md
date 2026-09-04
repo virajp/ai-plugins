@@ -23,11 +23,11 @@ Mechanics — flags, halt conditions, config keys, file formats — live in the
 
 ### 1. Install the plugins
 
-Identical to the spine — one name, with `devtools` and `stackgen` arriving as
-dependencies: [install the plugins](./single-repo.md#install-the-plugins). One
-thing matters more here than it does in a single-repo product — install at
-**user** scope, which is the default. You will be running vwf commands from four
-different checkouts, and `--scope project` would reach exactly one of them.
+Identical to the spine — one name, with `stackgen` arriving as its dependency:
+[install the plugins](./single-repo.md#install-the-plugins). One thing matters
+more here than it does in a single-repo product — install at **user** scope,
+which is the default. You will be running vwf commands from four different
+checkouts, and `--scope project` would reach exactly one of them.
 
 ### 2. /vwf:setup, in the base repo
 
@@ -95,8 +95,8 @@ Stallfront's corrections:
   it describes a checkout, so in a multi-repo product each member answers it for
   itself rather than the product answering once
   ([stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time)).
-- **Foundations** — the same twelve-concern walk, with the same guidance:
-  [the twelve foundations](./single-repo.md#the-twelve-foundations).
+- **Foundations** — the same thirteen-concern walk, with the same guidance:
+  [the thirteen foundations](./single-repo.md#the-thirteen-foundations).
 
 Note where the topology question is *asked*. The spine makes the same point for
 a different reason: `/vwf:setup` on a blank repo does not ask it, and here it

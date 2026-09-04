@@ -30,8 +30,12 @@ and the API contracts `apis/<project>.openapi.yaml` — one per API-publishing
 project, one declaring the `service` platform — plus the frozen `apis/released/`
 snapshots, which a `service` with no co-declared screen platform alone gets (a
 `[service, webapp]` project's API serves its own UI, so no independent consumer
-needs the freeze); the blueprint root holds only the system docs), `docs/plans/`
-(`<date>-<time>-<slice>.md`, with `archived/`), and `docs/prompts/`
+needs the freeze), and `apis/released/entities/<entity>@<date>.schema.yaml`,
+frozen at the same moment for every entity regardless of project shape; the
+blueprint root holds only the system docs), `docs/plans/`
+(`<date>-<time>-<slice>.md`, with `archived/`), `docs/runbooks/` (per-project
+operational runbooks plus `postmortems.md`, seeded by the incident-response
+foundation and appended to by `/vwf:feedback incident`), and `docs/prompts/`
 (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
 prompt type → registry project → flow, one brief per platform regenerated in
 place (the filename carries the platform, mirroring the flows tree exactly),
@@ -65,7 +69,7 @@ The doctrine lives in the blueprint-authoring skill's `frontmatter-and-links`
 reference.
 
 **Format versioning.** vwf ships the stamp in `assets/blueprint-format`
-(currently **23**). Since vwf 18 the stamps are **drift detectors only** —
+(currently **24**). Since vwf 18 the stamps are **drift detectors only** —
 nothing selects a migration by them. There is no `N → N+1` delta ladder for the
 blueprint format: a stale stamp sends `/vwf:setup` into its `migrate` mode,
 which **reconciles the tree against the current format's own sources**
@@ -88,6 +92,6 @@ stack menu; the second gave each stack axis its `unresolved` state and made
 one config file). `22`/`15` shipped **together**, as `19`/`12` and `20`/`13` did
 — the config's `template` pin and `ui:` key both depend on the platform
 vocabulary, so a repo on one but not the other is a state neither migration
-expects. `23` then shipped alone and purely additively: it lifts the
-blueprint-coverage exemption for the `plugin` platform, retires no spelling, and
-needs no config key.
+expects. `23` and `24` each then shipped alone and purely additively: the first
+lifts the blueprint-coverage exemption for the `plugin` platform, retires no
+spelling, and needs no config key.

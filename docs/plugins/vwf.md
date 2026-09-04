@@ -16,9 +16,9 @@ product's whole walk through the workflow, the journey-shaped guides are in
 
 ```sh
 # Once
-claude plugin marketplace add virajp/ai-plugins
+claude plugin marketplace add virajp/claude-plugins
 
-# Installs vwf and its two dependencies, devtools and stackgen
+# Installs vwf and its one dependency, stackgen
 claude plugin install vwf@virajp-plugins
 ```
 
@@ -26,8 +26,8 @@ Add `--scope project` to either command to keep it to one repo. Restart the
 agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
 time, and doctor is what reports a missing required binary.
 
-Any `pnpx @askviraj/ai-plugins` install also wires up **graphify**, which vwf
-enforces at its own entry gate. Installing outside a git repo works too:
+Any `pnpx @virajp.dev/claude-plugins` install also wires up **graphify**, which
+vwf enforces at its own entry gate. Installing outside a git repo works too:
 `graphify install` still runs, and its repo-scoped post-commit hook is skipped
 automatically (with a note).
 
@@ -81,18 +81,18 @@ Nothing else about memory needs installing. The two mempalace skills are
 auto-save hooks are reimplemented here, so memory arrives with the plugin rather
 than depending on anything being reachable at install time.
 
-`vwf` also depends on two plugins — `devtools` and `stackgen` — resolved from
-the same `virajp-plugins` marketplace. Claude Code **auto-installs and
-auto-enables** them when you enable `vwf` (requires Claude Code ≥ 2.1.143).
+`vwf` also depends on one plugin — `stackgen` — resolved from the same
+`virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
+when you enable `vwf` (requires Claude Code ≥ 2.1.143). `devtools` was a second
+dependency until it dissolved into `stackgen`; if your machine still has it,
+`claude plugin uninstall devtools` — an upgrade stops listing it but leaves it
+enabled, shadowing the stackgen packs its skills moved into.
 
-`devtools` is a dependency rather than an optional extra because `/vwf:setup`
-orchestrates `/devtools:scaffold`, and a skill vwf cannot see fails silently.
-
-`stackgen` is one because vwf's stack menu is the union of what the installed
-stack plugins declare, and the four axes carry no *other (describe)* option — so
-with no stack plugin present, `/vwf:architecture` asks a question you cannot
-answer. Having it installed costs nothing if you are not ready to choose a
-stack: stackgen acts only when an axis is pinned.
+`stackgen` is a dependency because vwf's stack menu is the union of what the
+installed stack plugins declare, and the four axes carry no *other (describe)*
+option — so with no stack plugin present, `/vwf:architecture` asks a question
+you cannot answer. Having it installed costs nothing if you are not ready to
+choose a stack: stackgen acts only when an axis is pinned.
 
 The Markdown/documentation skills and the Context7 docs server used to be two
 more dependencies. They are **part of `vwf` now**: `documentation-standards` and
@@ -361,22 +361,26 @@ docs/
 │       ├── <project>.openapi.yaml  # one per API-publishing project
 │       │                           # (a project declaring `service`)
 │       └── released/            # frozen production snapshots — the release
-│                                # record backward compatibility is enforced against
+│           │                    # record backward compatibility is enforced against
+│           └── entities/        # every entity's schema.yaml, frozen at the same
+│                                # release moment — <entity>@<date>.schema.yaml
 ├── plans/                       # per-cycle plans (the diff to apply)
 │   ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
 │   └── archived/                # surfaced during execution" section
-└── prompts/                     # canvas design briefs (committed intent)
-    └── <type>/                  # prompt type (e.g. screens)
-        └── <project>/           # registry project
-            ├── CLAUDE--<platform>.md # the platform canvas project's conventions
-            │                         # CLAUDE.md source (one per pinned design
-            │                         # project; canvas-owned section preserved
-            │                         # on regeneration)
-            └── <NNN>-<flow>/    # the flow the briefs commission
-                └── <platform>.md # ONE brief per platform (mobile.md, tablet.md,
-                                  # desktop.md, web.md, auto.md) — mirrors the
-                                  # flow folder's platform files; always the
-                                  # flow's full blueprint, regenerated in place
+├── prompts/                     # canvas design briefs (committed intent)
+│   └── <type>/                  # prompt type (e.g. screens)
+│       └── <project>/           # registry project
+│           ├── CLAUDE--<platform>.md # the platform canvas project's conventions
+│           │                         # CLAUDE.md source (one per pinned design
+│           │                         # project; canvas-owned section preserved
+│           │                         # on regeneration)
+│           └── <NNN>-<flow>/    # the flow the briefs commission
+│               └── <platform>.md # ONE brief per platform (mobile.md, tablet.md,
+│                                 # desktop.md, web.md, auto.md) — mirrors the
+│                                 # flow folder's platform files; always the
+│                                 # flow's full blueprint, regenerated in place
+└── runbooks/                    # operational runbooks (incident-response foundation)
+    └── postmortems.md           # postmortem stubs /vwf:feedback incident appends
 ```
 
 Each flow doc holds one journey end to end — who triggers it, the steps across
@@ -636,7 +640,7 @@ Two placement rules ride along with the shape — seeded into each repo's
    project imports a third-party SDK directly (client-side sign-in is the one
    exception).
 
-They are joined by the **engineering baseline** — 15 centralized technical rules
+They are joined by the **engineering baseline** — 16 centralized technical rules
 seeded into `conventions.md#baseline` on the blueprint's first touch and
 followed by default everywhere; only exceptions are documented. The set:
 optimistic **write versioning** on every mutating write (entity docs stop
@@ -650,11 +654,13 @@ pagination, retry-only-idempotent with backoff + jitter, tolerant-reader event
 consumers, **stateless processes** (every service/worker safe at N replicas),
 **graceful shutdown** (acknowledged work never lost to a termination),
 structured logs with no PII (logs/traces/metrics through one vendor-neutral
-telemetry pipeline), and integer minor units for money. A deviation lives in
-**two places, always**: stated on the doc it applies to and waived under
-`enforcement.rules` (`baseline/<rule>[/<unit>]`) — the blueprint reviewers flag
-either half missing, and the execute reviewers enforce the rules against the
-code itself.
+telemetry pipeline), integer minor units for money, and **expand → migrate →
+contract** for non-additive stored-schema changes (expand and contract never
+share a release, so every release stays compatible with the one before it). A
+deviation lives in **two places, always**: stated on the doc it applies to and
+waived under `enforcement.rules` (`baseline/<rule>[/<unit>]`) — the blueprint
+reviewers flag either half missing, and the execute reviewers enforce the rules
+against the code itself.
 
 Beside the baseline sits the **principles catalog** (`assets/principles/` —
 thirteen entries: KISS, YAGNI, DRY and its limits, the five SOLID principles,
@@ -680,8 +686,13 @@ re-validated by the pipeline rather than trusted from its trigger — the pipeli
 **proves the commit is reachable** from that environment's branch, and **no
 deploy step runs before the released project's and its dependents' tests pass in
 the same run**. A staging deploy is never a release; production releases are
-recorded only by `/vwf:verify`. The contract names no mechanism on purpose: the
-tag grammar `<project>-<env>-v<semver>`, the trigger globs and the reachability
+recorded only by `/vwf:verify`. Three further rules bind the release itself: a
+flow whose declared peak rate meets the load threshold gets a staging load run
+before its first production release, every production deploy states the release
+it rolls back to (or records that it is irreversible), and every release-capable
+run audits the lockfile — a known-critical advisory fails it, waivable only per
+advisory and with a date. The contract names no mechanism on purpose: the tag
+grammar `<project>-<env>-v<semver>`, the trigger globs and the reachability
 check are the recommended default, owned by the CI system pinned on the
 project's `cicd` axis — [`stackgen`](./stackgen.md)'s
 `contracts/release-trigger.md` and its `ci-system` pack.
@@ -698,26 +709,26 @@ record.
 
 ## Commands
 
-| Command                  | What it does                                                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `/vwf:setup`             | Onboard/migrate a repo into vwf's format (re-runnable)                                                           |
-| `/vwf:product`           | The Phase −1 outcome contract — problem, users, goals, slice priority                                            |
-| `/vwf:architecture`      | Bootstrap or update the system shape + Project Registry                                                          |
-| `/vwf:design-system`     | Import the product's Claude Design design system into the contract (mandatory once UI exists)                    |
-| `/vwf:blueprint [flow]`  | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                     |
-| `/vwf:mockups [flow]`    | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                         |
-| `/vwf:screens <mode>`    | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint               |
-| `/vwf:plan [slice]`      | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                |
-| `/vwf:execute [plan]`    | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                       |
-| `/vwf:archive [plan]`    | Retire a completed plan into `docs/plans/archived/`                                                              |
-| `/vwf:doctor [project]`  | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, mempalace, graphify, stamps    |
-| `/vwf:verify [env]`      | Post-deploy: health-check + re-run acceptance criteria against the environment                                   |
-| `/vwf:feedback [input]`  | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat) |
-| `/vwf:handoff [name]`    | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                          |
-| `/vwf:recall [name]`     | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                      |
-| `/vwf:readme`            | Scan a repo and write or update its README against eight required sections                                       |
-| `/vwf:docs-sync [range]` | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog             |
-| `/vwf:git-workflow`      | Internal — worktree isolation, commits, merges                                                                   |
+| Command                  | What it does                                                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `/vwf:setup`             | Onboard/migrate a repo into vwf's format (re-runnable)                                                                          |
+| `/vwf:product`           | The Phase −1 outcome contract — problem, users, goals, slice priority                                                           |
+| `/vwf:architecture`      | Bootstrap or update the system shape + Project Registry                                                                         |
+| `/vwf:design-system`     | Import the product's Claude Design design system into the contract (mandatory once UI exists)                                   |
+| `/vwf:blueprint [flow]`  | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                    |
+| `/vwf:mockups [flow]`    | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                        |
+| `/vwf:screens <mode>`    | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                              |
+| `/vwf:plan [slice]`      | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                               |
+| `/vwf:execute [plan]`    | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                                      |
+| `/vwf:archive [plan]`    | Retire a completed plan into `docs/plans/archived/`                                                                             |
+| `/vwf:doctor [project]`  | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, stamps |
+| `/vwf:verify [env]`      | Post-deploy: health-check + re-run acceptance criteria against the environment                                                  |
+| `/vwf:feedback [input]`  | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                |
+| `/vwf:handoff [name]`    | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                         |
+| `/vwf:recall [name]`     | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                     |
+| `/vwf:readme`            | Scan a repo and write or update its README against eight required sections                                                      |
+| `/vwf:docs-sync [range]` | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                            |
+| `/vwf:git-workflow`      | Internal — worktree isolation, commits, merges                                                                                  |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
 carry `disable-model-invocation: true`, so the model never fires them on its
@@ -795,9 +806,11 @@ inert rather than merely wrong). Nothing is written until you approve; it works
 in a worktree, never deletes, and **never moves a source file** — a layout that
 differs from its topology's grouping, and an `iac` project sitting in another
 project's repo, both end the run as written recommendations rather than as
-moves. It scaffolds tooling through `/devtools:scaffold`, merges a vwf section
-into your `CLAUDE.md`, writes a `.graphifyignore` at the repo root (the
-vwf-standard excludes, plus any committed-but-not-code trees it detects — see
+moves. It materializes the repo's toolchain manager and gates through the stack
+adapter — the `mise` and `repo-gates` bundles, fetched by fixed slug rather than
+offered as a menu pick — merges a vwf section into your `CLAUDE.md`, writes a
+`.graphifyignore` at the repo root (the vwf-standard excludes, plus any
+committed-but-not-code trees it detects — see
 [Code intelligence](#code-intelligence)), bootstraps `environment.md` from the
 repo's existing env-var and secret usage (names only), detects the repo's
 verification-harness capabilities (dev server, E2E, staging mode), and stamps
@@ -831,7 +844,9 @@ The **Phase −1** foundation — run it before `architecture`. It elicits, PM
 style, what no other doc pins down: the **problem** (and why now), the **target
 users**, **goals with measurable metrics** (each under a stable anchor), the
 **slice priority** (what to build next and why), non-goals, and the riskiest
-assumptions. A stateless `product-reviewer` subagent gates the doc — an
+assumptions — each assumption carrying a validation method from a closed
+vocabulary with a status and evidence, and the first goal a `Re-evaluate if:`
+kill criterion. A stateless `product-reviewer` subagent gates the doc — an
 unmeasurable metric or a solution-shaped problem statement is a gap, not a pass.
 
 This is what gives the rest of the workflow product teeth: `blueprint` halts
@@ -851,12 +866,12 @@ by presenting the [stack templates](#stack-templates) for its type as a menu
 leaves three ways forward, none of them a free-text pin; the answer lands as a
 structured block in `.config/vwf.yaml`), walks the **product-foundations
 checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
-foundation, recorded as cross-cutting tokens), and writes **both**
-`docs/blueprint/registry.yaml` — the machine-readable registry every other
-command depends on — and `docs/blueprint/architecture.md`, its prose view with a
-system-shape mermaid diagram kept in sync with it. Re-run it any time the
-topology changes; it asks only about genuine deltas, never re-eliciting what's
-confirmed.
+elective foundation and accept/adapt/defer per core one, recorded as
+cross-cutting tokens), and writes **both** `docs/blueprint/registry.yaml` — the
+machine-readable registry every other command depends on — and
+`docs/blueprint/architecture.md`, its prose view with a system-shape mermaid
+diagram kept in sync with it. Re-run it any time the topology changes; it asks
+only about genuine deltas, never re-eliciting what's confirmed.
 
 **With no registry yet but a `product.md` in place, it derives rather than
 interviews.** The structural questions — which surfaces exist, which projects
@@ -1341,14 +1356,16 @@ operational, not filed as a blueprint gap.
 A clean run against the **production** environment (the env named `production`,
 or whatever `production_env` in `.config/vwf.yaml` names) offers to record a
 **release**: each deployed `service` project's living OpenAPI contract is frozen
-into `docs/blueprint/apis/released/<project>@<version>.openapi.yaml` — the
-release record. A `[service, webapp]` project owns a contract too but is never
-frozen: its API serves its own UI, shipped in the same deployable, so there is
-no independent consumer to protect. From the first snapshot on, backward
-compatibility is enforced everywhere: the blueprint's coherence review
-hard-gates a breaking contract change without a major-version bump, and
-execute's code review treats a code change that would break the released
-contract like a security finding.
+into `docs/blueprint/apis/released/<project>@<version>.openapi.yaml`, and every
+entity's `schema.yaml` into `apis/released/entities/<entity>@<date>.schema.yaml`
+— the release record. From then on a non-additive entity-schema change must ship
+staged (expand → migrate → contract). A `[service, webapp]` project owns a
+contract too but is never frozen: its API serves its own UI, shipped in the same
+deployable, so there is no independent consumer to protect — its entity schemas
+are frozen either way. From the first snapshot on, backward compatibility is
+enforced everywhere: the blueprint's coherence review hard-gates a breaking
+contract change without a major-version bump, and execute's code review treats a
+code change that would break the released contract like a security finding.
 
 ### /vwf:feedback
 
@@ -1360,11 +1377,16 @@ reading, or a user complaint; it classifies and routes it to where it gets
   offer (deferred items land in the owning flow doc's Open Questions, so nothing
   depends on memory being up).
 - **Metric reading** → a dated row in `product.md`'s Metric readings appendix; a
-  miss triggers a `/vwf:product` re-rank offer.
+  miss triggers a `/vwf:product` re-rank offer, and a reading under a goal's
+  `Re-evaluate if:` floor makes that re-run mandatory-offered with kill / pivot
+  / re-scope as the agenda.
 - **UX issue** → recorded at the exact screen/state, with a `/vwf:design-system`
   or `/vwf:blueprint` offer.
 - **Feature idea** → `/vwf:product` first (which goal does it serve?), then the
   normal pipeline — never straight to code.
+- **Incident** (`/vwf:feedback incident <what happened>`) → filed to memory as a
+  problem with a postmortem stub appended to `docs/runbooks/postmortems.md`;
+  each action item goes back through the classifier as its own intake.
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"
@@ -1685,15 +1707,19 @@ most you never invoke, since they auto-apply and inform how Claude writes and
 reviews (`karpathy-guidelines` is the exception, also reachable by hand as
 `/vwf:karpathy-guidelines`):
 
-- **`product-foundations`** — the twelve foundational concerns every product
+- **`product-foundations`** — the thirteen foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
   & operators, observability, audit logs, change logs, background processes,
   data retention & PII, notifications, runtime settings, rate limiting,
-  reliability targets, disaster recovery & backup, and cost guardrails. Each
-  ships with an opinionated default (e.g. audit logs are append-only over
-  privileged and destructive actions; durable work goes to a worker, ephemeral
-  to a service). `architecture` walks the checklist — accept / adapt / skip per
-  foundation — and `blueprint` expands the accepted ones into contracts.
+  reliability targets, disaster recovery & backup, cost guardrails, and incident
+  response. Each ships with an opinionated default (e.g. audit logs are
+  append-only over privileged and destructive actions; durable work goes to a
+  worker, ephemeral to a service). `architecture` walks the checklist — accept /
+  adapt / skip for the eight elective ones, accept / adapt / defer for the five
+  **core** ones (users & operators, observability, reliability targets, DR &
+  backup, incident response), whose deferral records a `deferred-preprod` token
+  `/vwf:plan` and `/vwf:verify production` treat as blocking — and `blueprint`
+  expands the accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`), the **density** bars (per-doc budgets, the delete
   test, the anti-patterns that inflate a contract), and the per-surface
@@ -1880,7 +1906,5 @@ queries that library's documentation when a question is about a specific library
   `/vwf:screens` and `/vwf:design-system` import through, materialized into the
   repo's `.claude/`. Its `ci-system` kind implements the delivery-pipeline
   contract vwf states.
-- [devtools](./devtools.md) — a vwf dependency; `/vwf:setup` orchestrates
-  `/devtools:scaffold`.
 - [`claude-status`](https://claude-status.virajp.dev) — the statusline, and the
   caps hook that pauses a long `/vwf:execute` run. macOS on Apple silicon only.

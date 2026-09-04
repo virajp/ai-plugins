@@ -19,8 +19,9 @@ is about what must be *recoverable*. Cross-cutting token: `dr: backup-rpo-rto`.
 - **Restore is tested, not assumed**: a restore drill on a stated cadence
   (default: quarterly, into a non-production environment). An untested backup is
   a hope, not a contract.
-- **Recovery is documented**: the restore runbook lives with the repo's ops
-  docs; the contract here records only that it exists and where.
+- **Recovery is documented**: the restore runbook lives in `docs/runbooks/` —
+  the incident-response foundation's home ([incident-response](incident-response.md));
+  the contract here records only that it exists and where.
 - Cross-region/HA topology is **realization** (the stack and hosting decide it);
   this concern pins only the objectives and the backup/restore contract.
 

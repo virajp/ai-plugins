@@ -15,7 +15,11 @@ the precision budget on `schema.yaml`.
 ## The slimmed entity sections (`index.md`)
 
 - **Purpose** — one paragraph: what it is and why it exists, no implementation
-  detail. Plus a mandatory `Used by:` line (below).
+  detail. Plus a mandatory `Used by:` line (below) and a mandatory `Scale:`
+  line — expected count order-of-magnitude at a stated horizon plus the growth
+  driver (example: `~10^6 rows in year 1, grows with orders`). It is the
+  number that justifies or waives index/pagination/archival decisions in
+  `plan`.
 - **Out of Scope** — explicit exclusions; the highest-value section for
   preventing scope drift.
 - **Lifecycle / State Machine** — the transition table + diagram bar (below).

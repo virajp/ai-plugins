@@ -9,7 +9,7 @@ tags: [ identity, commerce ]
 
 # Entity: Customer
 
-<!-- Conformance example (blueprint-format 23). See order/index.md for the bundle
+<!-- Conformance example (blueprint-format 24). See order/index.md for the bundle
      note. Customer has no Screens — screens live on the flows that use it. -->
 
 ## Purpose
@@ -17,6 +17,8 @@ tags: [ identity, commerce ]
 A Customer is the account that places and owns orders. It holds the minimal
 identity and contact detail needed to attribute purchases and communicate about
 them.
+
+Scale: ~10^4 rows in year 1; grows with registered shoppers.
 
 Used by: [Place order](../../flows/web/110-place-order/index.md),
 [Order cancellation & refund](../../flows/web/120-cancel-refund/index.md)

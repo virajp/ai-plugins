@@ -76,9 +76,9 @@ Every language plugin ships all of:
 ## Posture
 
 - **Self-contained: zero `dependencies:`.** Repo-level gates (dprint, eslint,
-  gitleaks, grype, pre-commit) stay `devtools`' property — a stack template may
-  **name** them as recommendations, never own, restate, or require them. This
-  keeps every language plugin independently installable.
+  gitleaks, grype, pre-commit) belong to stackgen's `repo-gates` bundle — a
+  stack template may **name** them as recommendations, never own, restate, or
+  require them. This keeps every language plugin independently installable.
 - **`requires:` is `mise` plus what mise cannot provide.** Every bundled LSP
   runs through `mise x`, so `mise` is always required; add only binaries mise
   cannot supply to the LSP command (`pnpm` for the TS server, `kotlin-lsp` /
@@ -108,9 +108,9 @@ knows what is in scope versus aspirational:
   offering one does it as an `mcpServers:` entry.
 
 Deliberately out of scope, whatever the tier: formatter/linter/scanner binaries
-and repo gates (devtools'), toolchain installation (mise's), secrets management
-(a stackgen `secrets-manager` pack's), CI mechanics (a stackgen `ci-system`
-pack's).
+and repo gates (stackgen's `repo-gates` bundle's), toolchain installation
+(stackgen's `toolchain-manager/mise` pack's), secrets management (a stackgen
+`secrets-manager` pack's), CI mechanics (a stackgen `ci-system` pack's).
 
 ## Deferred checks
 

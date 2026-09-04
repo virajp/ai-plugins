@@ -1,0 +1,23 @@
+# CI builds AND the deployed runtime — loaded when MISE_ENV=ci.
+#
+# One variant, two roles: the pipeline and production read the same layer, so
+# the production overrides live here rather than in a fourth file nothing
+# selects.
+
+[settings]
+# Per-runtime CI workarounds go here and nowhere else.
+#
+# Node: CI runs on Linux, where mise's bundled Node release-key gpg import can
+# fail ("no valid OpenPGP data found"). Disable ONLY the Node signature check —
+# the tarball is still SHA256-verified, and the general gpg_verify = true in
+# mise.toml stays intact. Uncomment for a Node project:
+#   node.gpg_verify = false
+
+[tools]
+# Usually empty — CI reuses the runtime from mise.toml. Add a tool here only if
+# the pipeline genuinely needs it and development does not.
+
+[env]
+# The PRODUCTION values for the same keys mise.dev.toml sets locally.
+LOG_LEVEL   = "warn"
+RUNTIME_ENV = "production"

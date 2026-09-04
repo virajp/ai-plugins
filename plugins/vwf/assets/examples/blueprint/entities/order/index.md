@@ -10,7 +10,7 @@ tags: [ sales, commerce ]
 
 # Entity: Order
 
-<!-- Conformance example (blueprint-format 23). A worked, format-valid entity doc:
+<!-- Conformance example (blueprint-format 24). A worked, format-valid entity doc:
      a supporting data contract whose behavior lives in the flows that use it and
      whose data model is the sibling schema.yaml. Mandatory frontmatter;
      Relationships/References as resolving links. -->
@@ -20,6 +20,8 @@ tags: [ sales, commerce ]
 An Order records a customer's intent to buy a set of items at agreed prices, and
 tracks that purchase from placement through fulfilment. It is the system of
 record for what was bought, by whom, and for how much.
+
+Scale: ~10^5 rows in year 1; grows linearly with orders placed.
 
 Used by: [Home](../../flows/web/100-home/index.md),
 [Place order](../../flows/web/110-place-order/index.md),

@@ -10,7 +10,7 @@ tags: [ commerce, navigation ]
 
 # Flow: Home
 
-<!-- Conformance example (blueprint-format 23). The ANCHOR flow: every screen-platform
+<!-- Conformance example (blueprint-format 24). The ANCHOR flow: every screen-platform
      project carries `100-home`, so its screens are always coded 100a, 100b, …
      Platform-agnostic contract only — screens live in webapp.md. -->
 
@@ -45,9 +45,9 @@ Serves: [Reliable ordering](../../../product.md#goal-reliable-ordering)
 
 ## Guarantees
 
-| Step / group | Consistency                  | On failure                                                                                                                                  | Idempotency                  |
-| ------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| all          | read-only, nothing committed | Order history unavailable → home still renders with navigation intact and a retryable error in the history region; checkout stays reachable | pure read, repeatable freely |
+| Step / group | Consistency                  | On failure                                                                                                                                  | Idempotency                  | Load & latency                        |
+| ------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------- |
+| all          | read-only, nothing committed | Order history unavailable → home still renders with navigation intact and a retryable error in the history region; checkout stays reachable | pure read, repeatable freely | default — per conventions#reliability |
 
 ## Diagram
 
@@ -75,6 +75,9 @@ sequenceDiagram
 - Given the order history is unavailable, when a customer opens the shop, then
   home still renders and offers checkout, with the history region showing a
   retryable error.
+- Abuse case: n/a — a read-only surface with nothing to mutate; any visitor is
+  authorized for everything it shows, and order-history reads are owner-scoped
+  per [auth](../../../conventions.md#auth).
 
 ## References
 

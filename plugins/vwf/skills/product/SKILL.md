@@ -75,8 +75,11 @@ user is unsure. Cover, in order:
    `docs/blueprint/`, offer them as the ranking candidates.
 5. **Non-goals** — what is deliberately out; at least one, or an explicit "none
    yet".
-6. **Risks & assumptions** — riskiest first, each with how it gets validated
-   (name the slice that validates it where one does).
+6. **Risks & assumptions** — riskiest first, each with a validation method,
+   status, and evidence per [validation](references/validation.md) — read it
+   before this round for the method vocabulary, the evidence bar per method,
+   and the experiment record (name the slice that validates an assumption
+   where one does).
 
 ## Step 4 — Approval Gate
 

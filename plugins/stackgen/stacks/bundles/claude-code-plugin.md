@@ -3,7 +3,8 @@ name: Claude Code plugin
 axis: project
 kind: language-bundle
 components:
-- language/markdown@generated
+- language/markdown@0.1.0
+- language/bash@0.1.0
 platforms:
 - plugin
 ---

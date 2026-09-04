@@ -38,10 +38,16 @@ project's stack answers, recorded as the cross-cutting `observability:` token.
 - The environment names (`deployment.environment.name` values) and which
   projects export from local/dev.
 - Any product-specific metrics beyond the request counters. Business counters
-  are usually a combination of **flow outcomes** (a flow completed, failed, or
+  are a combination of **flow outcomes** (a flow completed, failed, or
   compensated — name them in the owning flow doc, beside its Acceptance block)
   and **entity states** (counts by lifecycle state — name them in the owning
-  entity doc, beside its Lifecycle table).
+  entity doc, beside its Lifecycle table). **Goal-serving counters are
+  mandatory, not elicited**: a product goal whose `Measured via:` names
+  `counter <flow-slug>.<outcome>` requires that counter declared beside the
+  owning flow's Acceptance block, and the `counter <entity>.<state>` form
+  beside the owning entity's Lifecycle table — the coherence reviewer flags a
+  goal counter no doc declares. Counters serving no goal stay
+  elicited-optional.
 - Alerting/dashboards: driven from the observability backing service by default,
   not from the application (so nothing in-repo); elicit only if the product
   wants dashboards-as-code.

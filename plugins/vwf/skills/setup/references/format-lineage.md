@@ -15,7 +15,7 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**23**) and `config_format` (**16**) are **drift
+`blueprint_format` (**24**) and `config_format` (**16**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
@@ -79,6 +79,20 @@ must go through the rule below. Every other row is mechanical.
 | `stage-*` / `prod-*` tag globs in `conventions.md#pipeline` | `<project>-stage-v<semver>` / `<project>-prod-v<semver>` | doc-section | |
 | a secrets or env-var **catalog** under `conventions.md#config` | `docs/blueprint/environment.md`; `#config` keeps only the injection mechanism | doc-section | |
 | type `vwf-integration` on a root `integration.md` | the same token, now the type of `flows/index.md` — the spelling never changed, its referent did | doc-section | |
+| a Risks-table `Validated by` cell (or no validation column at all) | `Validation method` + `Status` + `Evidence` columns — old text maps onto the closed method vocabulary (the product skill's `references/validation.md`); `Status` is `untested` unless the row already carries evidence | doc-section | yes |
+| a Slice priority table with no `Validates` column | a `Validates` column naming the Risks row the slice validates — `—` when it validates none | doc-section | |
+| a goal with no `Re-evaluate if:` line | the first goal gains one — `<metric> below <floor> by <date> → kill / pivot / re-scope` — elicited, never invented | doc-section | yes |
+| a free-text `Measured via:` line | one of the four structured forms (`counter <flow-slug>.<outcome>`, `counter <entity>.<state>`, `store-metric <intent>`, `external <source>`) — propose from the old text, confirm where ambiguous; a `counter` form is also declared beside the owning flow's Acceptance block or entity's Lifecycle table | doc-section | yes |
+| a flow Guarantees row with no `Load & latency` cell | the cell, defaulted to the token `default — per conventions#reliability` | doc-section | |
+| an entity doc with no `Scale:` line | a `Scale:` line — count order-of-magnitude at a stated horizon plus the growth driver — elicited | doc-section | yes |
+| an externally-triggered or payment/entitlement-mutating flow with no abuse-case criterion | one abuse-case Given/When/Then in Acceptance, or `n/a — <why>` — elicited | doc-section | yes |
+| a core foundation skipped by omission in the registry | accepted (or adapted), or an explicit `<foundation>: deferred-preprod` token — elicited, never defaulted | doc-section | yes |
+| a registry `capabilities` block with no trust-boundary abuse notes | one worst-plausible-abuse line per trust boundary (external caller, webhook, file upload) — elicited | doc-section | yes |
+| a `conventions.md#reliability` carrying SLOs only | plus expected user count and aggregate request rate at a stated horizon — elicited on first touch | doc-section | yes |
+| `conventions.md#baseline` ending at rule 15 | rule 16, `baseline/expand-contract` | doc-section | |
+| released-API snapshots only under `apis/released/` | plus per-entity `schema.yaml` snapshots in `apis/released/entities/` — written by the next production `/vwf:verify`, nothing to migrate | doc-section | |
+| `conventions.md#pipeline` ending at rule 5 | rules 6–8 — `pipeline/load-proven`, `pipeline/rollback-path`, `pipeline/dependency-audit` | doc-section | |
+| no `conventions.md#incidents` section | the alert-conditions table (condition → destination → runbook), once the incident foundation is accepted | doc-section | |
 | an entity's `Actors & Actions` section | retired — actors are the owning flow's Trigger & Actors | retirement | |
 | ungrouped, unnumbered flow folders | `flows/<project>/<NNN>-<flow>/`, gap-numbered by 10 | numbering | |
 | numbers assigned per device subgroup | one number line per project | numbering | |

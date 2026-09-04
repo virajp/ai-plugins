@@ -102,14 +102,20 @@ describe("the manifest", () => {
     ]);
   });
 
-  it("flags a missing or non-semver version", () => {
+  it("flags a missing, non-semver, or build-metadata version", () => {
+    // `1.0.0+3` is the staged dev copy's shape (`plugins:local`); tracked, it
+    // is that local counter leaking into what an install pins to.
     const root = tree({
       alpha: { manifest: { name: "alpha", version: "1.0", description: "x" } },
       beta: { manifest: { name: "beta", description: "x" } },
+      gamma: {
+        manifest: { name: "gamma", version: "1.0.0+3", description: "x" },
+      },
     });
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("version \"1.0\" is not semver"),
-      expect.stringContaining("version undefined is not semver"),
+      expect.stringContaining("version \"1.0\" is not plain semver"),
+      expect.stringContaining("version undefined is not plain semver"),
+      expect.stringContaining("version \"1.0.0+3\" is not plain semver"),
     ]);
   });
 
@@ -231,6 +237,37 @@ describe("hook scripts", () => {
     });
     expect(messages(check(root))).toEqual([
       "PreToolUse hook script is not executable: hooks/run.sh",
+    ]);
+  });
+});
+
+describe("pack config task modes", () => {
+  const task =
+    "stacks/toolchain-manager/mise/config/.config/mise/tasks/code/format";
+
+  it("accepts an executable task, and ignores the rest of the pack", () => {
+    // The `config/` tier mirrors the repo root, so a pack ships plenty there
+    // that is not a task and has no reason to be executable.
+    const root = tree({
+      alpha: {
+        files: {
+          [task]: "#!/usr/bin/env bash\n",
+          "stacks/toolchain-manager/mise/config/dprint.json": "{}\n",
+        },
+        executable: [task],
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a task file that is not executable", () => {
+    // mise runs a file-based task directly: without the bit it reports an
+    // unknown task, which reads as a pack that never shipped one.
+    const root = tree({
+      alpha: { files: { [task]: "#!/usr/bin/env bash\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      `mise task file is not executable: ${task}`,
     ]);
   });
 });

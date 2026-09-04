@@ -54,7 +54,7 @@ it. When a planning decision is genuinely open, elicit it following the
 
 | Reference                                    | When to read                                                                                                                    |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [§3 conditional checks](references/delta-checks.md) | While working §3 — stamp-heal (empty delta), the released-contract check (a touched `apis/released/` snapshot), the harness preflight (always), and the visual-review advisory (a flow with platform files) |
+| [§3 conditional checks](references/delta-checks.md) | While working §3 — stamp-heal (empty delta), the released-contract check (a touched `apis/released/` snapshot), the harness preflight (always), the deferred-core-token check (a production-bound slice), and the visual-review advisory (a flow with platform files) |
 | [Writing the plan doc](references/plan-doc.md)      | At §7, once the delta is computed and every decision is settled — the doc's frontmatter, chain position, and acceptance-criteria transcription |
 
 ---
@@ -233,11 +233,11 @@ named explicitly in that step (package + what it's for): the plan's approval
 gate is where the user consents to new dependencies, and execute never installs
 one the plan doesn't name.
 
-**Then run the four checks** in
+**Then run the five checks** in
 [§3 conditional checks](references/delta-checks.md) — stamp-heal, the
-released-contract check, the harness preflight, and the visual-review advisory.
-The harness preflight fires on every element; the other three only when their
-condition holds.
+released-contract check, the harness preflight, the deferred-core-token check,
+and the visual-review advisory. The harness preflight fires on every element;
+the other four only when their condition holds.
 
 ### 4. Route blueprint gaps back; flag drift
 
@@ -300,6 +300,13 @@ Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, following
 [Writing the plan doc](references/plan-doc.md) — the OKF frontmatter (`covers:`
 and `requires:` in particular), the chain position, TDD-ordered steps, and the
 verbatim acceptance-criteria transcription.
+
+**Dark exposure.** A plan doc may declare `exposure: dark` for its slice — the
+slice ships behind a **release flag** in the runtime-settings document (per the
+runtime-settings foundation: same schema/cache/audit path, no new
+infrastructure). Declaring it injects the flag key into the plan — **name,
+owner, removal date** — and an explicit **flag-removal step**, so the flag's
+retirement is planned work, never silently accumulated debt.
 
 **Into the repo whose code this plan changes.** In a `repo` or `monorepo`
 topology that is the one checkout and the rule costs nothing. In `multi-repo` it
