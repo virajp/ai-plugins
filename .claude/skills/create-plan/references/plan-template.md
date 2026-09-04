@@ -1,9 +1,10 @@
 # The plan folder template
 
 `docs/plans/<YYYY-MM-DD>-<kebab-name>/` holds `index.md` and one `NN-<unit>.md`
-per unit. Every section below is required. The **Status**, **Consent** and
-**Units** blocks have a fixed shape: execute-plan parses them and rewrites the
-status column, so keep the headings and the column order exactly.
+per unit. Every section below is required. The frontmatter and the **Status**,
+**Consent**, **Units** and **Run log** blocks have a fixed shape: execute-plan
+parses them and rewrites the status column and the run log, so keep the headings
+and the column order exactly.
 
 Two archived plans are the worked specimens: `2026-09-01-devtools-dissolution`
 for waves and the shared-file rule, `2026-09-02-doctrine-gaps` for the folder
@@ -12,13 +13,21 @@ form and the unit prompt.
 ## index.md
 
 ```markdown
+---
+type: repo-plan
+title: <title>
+requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
+---
+
 # Plan — <title> (<date>)
 
 ## Status
 
-**DRAFT** | **APPROVED** | **RUNNING** | **BLOCKED** | **COMPLETE** <one line:
-when it changed and by what — "APPROVED 2026-09-04 by the user"; "BLOCKED at
-wave 2, U4 UNRESOLVED: <ruling needed>">
+**DRAFT** | **APPROVED** | **RUNNING** | **BLOCKED** | **COMPLETE**
+
+<one line: when it changed and by what — "APPROVED 2026-09-04 by the user";
+"RUNNING since 2026-09-05 10:12 in .claude/worktrees/<name>"; "BLOCKED at wave 2
+— U4 UNRESOLVED: <ruling needed>; U5 skipped (depends on U4)">
 
 ## Consent
 
@@ -35,17 +44,23 @@ tags and asks, per `CLAUDE.md`.
 ## Goal
 
 <one paragraph: what is true after this lands. Then the framing that produced
-the plan, if any.>
+the plan, and any reversal of a standing decision, named as one.>
 
 ## Facts the survey established
 
-<what the Explore pass found, so no unit re-derives it: counts, paths, the gates
-that cover the trees, the docs that describe today's behaviour>
+<what recall and the Explore pass found, so no unit re-derives it: counts,
+paths, the gates that cover the trees, the docs that describe today's behaviour,
+the dependencies each tree already has>
 
 ## Assumed decisions — confirm or override at review
 
-| # | Decision | Ruling | Unit |
-| - | -------- | ------ | ---- |
+| # | Decision | Ruling | Rejected | Unit |
+| - | -------- | ------ | -------- | ---- |
+
+## New dependencies
+
+<one line per package: name, what for, the existing thing it was preferred over,
+the unit that adds it — or "none". A unit adds nothing not listed here.>
 
 ## Units
 
@@ -56,7 +71,8 @@ that cover the trees, the docs that describe today's behaviour>
 | Un-1 | last   | `NN-docs.md`           | `readme.md`, `CLAUDE.md`, `docs/**`, `.claude/docs/**`, `.claude/skills/*-plugin/**` | all        | pending |        |
 | Un   | last+1 | `NN-gates-and-bump.md` | `plugins/*/.claude-plugin/plugin.json`, generated files                              | Un-1       | pending |        |
 
-Status is one of `pending`, `running`, `green`, `failed`, `unresolved`.
+Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`.
 
 ## Shared-file rule
 
@@ -76,8 +92,8 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`.
 `mise run plugins:check`, `mise run plugins:marketplace --check`,
 `mise run plugins:inventory --check`, `pnpm vitest run`,
 `pnpm exec tsc --noEmit -p installer` and `-p scripts`,
-`mise run plugins:npm-normalize-test`, plus every report read for `UNRESOLVED:`.
-<Add the plan's own checks here.>
+`mise run plugins:npm-normalize-test`, plus the wave review, plus every report
+read for `UNRESOLVED:`. <Add the plan's own checks here.>
 
 ## Gates the orchestrator keeps
 
@@ -88,14 +104,37 @@ tests, each with its pass condition>
 
 Every unit prompt carries, in order: its ruling quoted from this file, its owned
 paths plus "touch nothing outside this list", the facts section, the shared-file
-rule, and the return contract. A unit returns a terse report — files changed,
-decisions taken inside scope, `UNRESOLVED:` for anything it could not settle.
-Never file contents. A unit never bumps a version, never runs a generator, never
-edits a doc, never commits.
+rule, and the return block below. A unit never bumps a version, never runs a
+generator, never edits a doc, never adds a dependency this file does not list,
+never commits.
+
+A unit returns exactly this block and nothing else — no file contents, no diff:
+
+    CHANGED: <path> — <one line>            (one per file)
+    DECIDED: <what> — <why>                 (choices made inside scope, or none)
+    DOCS FALSIFIED: <path> — <passage>      (reported, never edited; or none)
+    GAP: <what the plan left unspecified and the assumption taken>   (or none)
+    UNRESOLVED: <the ruling needed>         (or none)
+
+A `GAP:` is a hole in the plan the unit could proceed past on a stated
+assumption; it is recorded and the run continues. An `UNRESOLVED:` is a ruling
+the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Out of scope
 
-<each declined or deferred item, with the reason>
+<each declined item, with the reason>
+
+## Parked
+
+<each item raised during the interview that belongs to a later plan, with enough
+context to pick it up — or "none">
+
+## Run log
+
+<written by execute-plan; empty at approval>
+
+| Wave | Unit | Model | Round | Outcome | Detail | Commit |
+| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
 
 ## Launch
 
@@ -112,6 +151,7 @@ Run in a fresh session:
 - **Wave:** <n>
 - **Depends on:** <ids or —>
 - **Owns:** <explicit paths>
+- **Model:** <inherit | a named tier>
 - **Read first:** every owned file, top to bottom, before editing.
 - **Lazy-load:** <files to open only if an edit needs them>
 
@@ -146,12 +186,14 @@ by the unit.
 ## The two fixed final units
 
 **Docs.** Dispatched as the `docs-reconciler` agent with the run's diff, then a
-`general-purpose` unit applying its findings plus the list from index.md's
-survey facts. Under `CLAUDE.md`'s rule docs ship with the change, so this unit
-is never optional. A confirmed reversal from the interview also lands here, as a
+`general-purpose` unit applying its findings plus every `DOCS FALSIFIED:` line
+the earlier units returned and the list from index.md's survey facts. Under
+`CLAUDE.md`'s rule docs ship with the change, so this unit is never optional. A
+confirmed reversal from the interview also lands here, as a
 `docs/memory/decisions/<date>-<slug>.md`.
 
-**Gates and bump.** Bumps each released project's version per the consent block,
-runs `mise run plugins:marketplace` and `mise run plugins:inventory`, and passes
-the full wave gate. Runs `target-verifier` when `plugins/` or `installer/`
-changed. Its report is the run's final gate.
+**Gates and bump.** Bumps each released project's version per the consent block
+(`plugin.json` by hand, the installer via `mise run i:version`), runs
+`mise run plugins:marketplace` and `mise run plugins:inventory`, and passes the
+full wave gate. Runs `target-verifier` when `plugins/` or `installer/` changed.
+Its report is the run's final gate.
