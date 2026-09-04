@@ -5,7 +5,7 @@
 # `transcript_path`, a Claude Code JSONL transcript, to count human messages.
 # Counting *stops* in a state file instead needs nothing from the payload but a
 # session id, which is simpler and is what the tests cover
-# (cli/src/mempalace-checkpoint-script.test.ts).
+# (installer/src/mempalace-checkpoint-script.test.ts).
 #
 # Contract:
 #   stdin  — JSON with `session_id`, and on a stop `stop_hook_active`
