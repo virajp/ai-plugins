@@ -175,16 +175,22 @@ set it to `release.yml` only (not a comma-separated list, and not
 surfaces only at publish time as `ENEEDAUTH`. Until configured, `release.yml`
 cannot publish.
 
-**The old name is deprecated by hand, once.** `@askviraj/ai-plugins`, the
-package's former name, gets a single command after the new package's first
-release is live:
+**The sunset stub is a one-time hand publish too.** `@askviraj/ai-plugins`, the
+package's former name, ships once more as `7.0.0` from `sunset/` — a standalone
+package, not a workspace member, never built — and every version including it is
+deprecated. The stub exists because a deprecation alone is not enough: `npx`
+prints the notice only on the first, uncached run, and `pnpx` never prints it,
+so a user with the old name cached gets no hint at all. `7.0.0` resolves as
+`latest` and prints the pointer itself, exiting non-zero. Both commands are run
+by hand, in this order, and need the interactive npm login:
 
 ```sh
+cd sunset && npm publish --access public
 npm deprecate "@askviraj/ai-plugins@*" "Moved to @virajp.dev/claude-plugins"
 ```
 
-Nothing else is published under the old name — no stub, no task, no workflow —
-and `release.yml` has nothing to do with it.
+No task and no workflow touch the old name, and `release.yml` has nothing to do
+with it.
 
 ## Cutting a release
 
