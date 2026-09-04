@@ -1,10 +1,10 @@
 ---
 name: vwf-plugin
 description: The vwf plugin's own shape — its skills, agents, assets, hooks
-  and
-  vendored code, the docs tree its commands maintain, the two format stamps, the
-  workflow ordering and what each gate means, and why it depends on exactly two
-  plugins. Auto-applies when editing anything under plugins/vwf/.
+  and vendored code, the docs tree its commands maintain, the two format
+  stamps, the workflow ordering and what each gate means, how to add a skill
+  and pick its invocation mode, and why it depends on exactly one plugin.
+  Auto-applies when editing anything under plugins/vwf/.
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
@@ -14,8 +14,12 @@ paths:
 # The vwf Plugin
 
 `vwf` is the flagship plugin — a full Product → Blueprint → Plan → Execute
-workflow, with post-deploy verify and production-feedback intake closing the
-loop. It names **no** technology: no stack templates, no language list.
+workflow: slash-invocable workflow skills, auto-applying doctrine skills, the
+subagents they delegate to, the shared doctrine in `assets/`, the guarded `rtk`
+hook, the two mempalace auto-save hooks, and two MCP servers. It names **no**
+technology — no stack templates, no language list; what each axis offers comes
+from a stack plugin behind the stack-adapter contract, and `plugins:check`'s
+technology-free guard enforces it.
 
 **Each SKILL.md, agent file and asset is authoritative for its own behavior.**
 The references below are an index of which file owns what, not a second copy of
@@ -34,11 +38,22 @@ before it was cut.
 [dt]: references/docs-tree.md
 [de]: references/dependencies.md
 
-Adding a skill and picking its invocation mode is in
-[`CLAUDE.md`](../../../CLAUDE.md); the eleven checker rules and the authoring
-traps are the sibling `plugin-authoring` skill.
+The eleven checker rules, the two mise gates and the authoring traps are the
+sibling `plugin-authoring` skill, which also applies here. The user-facing
+reference is `docs/plugins/vwf.md`.
 
-**Foundations & ordering.** The workflow is
+## Dependencies
+
+vwf depends on exactly one plugin, `stackgen`, resolved from this marketplace —
+declared in `plugin.json` with `"marketplace": "virajp-plugins"`, which
+`plugins:check` asserts resolves. `devtools` was the other until it dissolved
+into stackgen. `mempalace` and `andrej-karpathy-skills` are **vendored** rather
+than depended on, with provenance under `vendor/`; `markdown` and `context7`
+were **absorbed**. The reasoning is [`dependencies.md`][de].
+
+## Foundations & ordering
+
+The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 with `verify` (post-deploy) and `feedback` (production intake) closing the loop
 back into `product`/`blueprint`/`plan`. `setup` is the Phase-0 bootstrapper — it
@@ -82,3 +97,67 @@ file/class/library/CSS/pixel leakage); the `blueprint-coherence-reviewer` closes
 the sweep with the cross-doc pass (flow↔lifecycle↔schema↔operationId agreement,
 catalog/erDiagram sync, goal-counter resolution, and the additive-only diff
 against released APIs and released entity schemas).
+
+## Adding a skill
+
+Create `skills/<name>/SKILL.md` — no other registration is needed
+(auto-discovered by directory convention; this repo has no `commands/` dirs, a
+former command is a skill so one artifact serves both invocation paths). Then
+pick the invocation mode per the policy below, and run `mise run plugins:check`
+— strict-YAML frontmatter drops a skill **silently** when it fails to parse.
+
+### Invocation policy
+
+Claude spells this with two independent booleans, and the useful states are
+three:
+
+| State              | Frontmatter                        | For                      |
+| ------------------ | ---------------------------------- | ------------------------ |
+| user **and** model | `disable-model-invocation: false`  | anything delegated to    |
+| model only         | `user-invocable: false` + `paths:` | auto-applying doctrine   |
+| user only          | `disable-model-invocation: true`   | the user owns the timing |
+
+It is **not cosmetic**: a user-only skill is removed from the model's context
+entirely, so it **cannot be invoked by another skill**, and the failure is
+**silent** — the caller simply cannot see it. The rule: model-invocable when
+anything delegates to it, user-only when nothing does.
+
+Cross-plugin skill-name uniqueness is no longer required — Claude scopes a skill
+to its plugin. The `<plugin>-` prefix on adapter skill names is readability now,
+not correctness, and `prefixSkillNames` is gone.
+
+> The host rules behind this — the three states and the silent failure — are
+> `plugins/stackgen/assets/artifact-doctrine.md` §2. The per-skill rulings and
+> the two contracts the checker enforces (the design adapter's three import
+> skills, the stack adapter's menu + template pair) are
+> `.claude/skills/plugin-authoring/references/checks.md`.
+
+## Hooks
+
+`hooks/hooks.json` is authored directly in Claude's own format, with the scripts
+beside it: the guarded `rtk` Bash hook, and the two mempalace auto-save hooks
+(`Stop` and `PreCompact`). Plugin hooks are auto-discovered from that file and
+**never written to `settings.json`**, so verify them with `/hooks`.
+
+The verdict trap that shipped here: **a script's verdict shape is decided by its
+event**. `hookSpecificOutput.permissionDecision` is `PreToolUse`-only — `Stop`
+and `PreCompact` deny with the top-level `decision`/`reason`, and Claude rejects
+the whole verdict if a `hookSpecificOutput` arrives without a matching
+`hookEventName`. The mempalace checkpoint hook shipped with that mistake, where
+a rejected verdict reads exactly like a hook that decided to stay quiet. Its
+shell-script test lives at `installer/src/mempalace-checkpoint-script.test.ts`,
+because `vitest.config.mts` collects only `{installer,scripts}/src/**`.
+
+Why the mempalace hooks are reimplemented rather than vendored, and the host
+rules a hook must satisfy (BSD `sed`, the per-event verdict shapes), are
+`plugins/stackgen/assets/artifact-doctrine.md` §4 and the `plugin-authoring`
+skill.
+
+## Documentation
+
+Any change to vwf's behaviour must reconcile `readme.md`, `CLAUDE.md` and
+`docs/plugins/vwf.md` in the **same commit** — the repo's hard rule. Delegate
+the sweep to the `docs-reconciler` agent rather than reading those files inline;
+`docs/plugins/vwf.md` is large enough that loading it costs the rest of the
+session. A behaviour change also bumps `version` in `plugin.json` (plain
+`X.Y.Z`) and regenerates the marketplace with `mise run plugins:marketplace`.

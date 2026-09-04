@@ -17,32 +17,49 @@ The repo also ships a small **installer CLI** (`@askviraj/ai-plugins`), which
 sequences Claude's own plugin commands and wires graphify — see The installer
 CLI.
 
+### Three projects, three homes
+
+This file is the repo-wide map. Each project carries its own context, rules and
+traps, loaded the moment you work in its tree — **look there first**, and put a
+project-specific fact there, not here:
+
+| Project            | Context lives in                        | Loads when                         |
+| ------------------ | --------------------------------------- | ---------------------------------- |
+| `installer/`       | [`installer/CLAUDE.md`][icl]            | Claude reads or edits `installer/` |
+| `plugins/vwf/`     | [`.claude/skills/vwf-plugin/`][vwf]     | editing `plugins/vwf/**`           |
+| `plugins/stackgen` | [`.claude/skills/stackgen-plugin/`][sg] | editing `plugins/stackgen/**`      |
+
+The two plugin homes are path-scoped skills rather than nested CLAUDE.md files
+on purpose: `plugins/<name>/` is the installed shape, so a file there ships to
+every user and is scanned by `plugins:check`'s prose rules. The installer tree
+is not shipped (npm publishes `bin/` alone), so its context can sit in place.
+
 ### Where the detail lives
 
-`CLAUDE.md` is the map. Each row below is loaded **on demand** — follow the link
-when you need more than the summary here. The `.claude/skills/` rows also
-auto-apply the moment you edit the tree they govern; `release` is `/release`.
+Each row below is loaded **on demand** — follow the link when you need more than
+the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
+the tree they govern; `release` is `/release`.
 
 | Read                                       | For                                                                                           |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                   |
 | [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest      |
-| [`.claude/docs/installer-cli.md`][cli]     | the `@askviraj/ai-plugins` shape a maintainer needs — flags, receipts, the source map         |
 | [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the two tag families, the workflows, the rituals     |
 | [`.claude/docs/dev-marketplace.md`][dev]   | running the plugins you are editing — setup, the refresh loop, and why `update` is not it     |
-| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, the docs tree it maintains, its dependencies        |
+| [`installer/CLAUDE.md`][icl]               | the installer — flags, the read-only receipt path, the interactive uninstall, testing         |
+| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains   |
+| [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent      |
 | [`.claude/skills/plugin-authoring/`][auth] | the eleven checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
-| [`.claude/skills/installer-cli/`][icli]    | the receipt kinds, the interactive uninstall, the packaging traps                             |
 | [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible          |
 
 [repo]: .claude/docs/repo-shape.md
 [plug]: .claude/docs/plugins.md
-[cli]: .claude/docs/installer-cli.md
 [ci]: .claude/docs/ci-and-releases.md
 [dev]: .claude/docs/dev-marketplace.md
+[icl]: installer/CLAUDE.md
 [vwf]: .claude/skills/vwf-plugin/SKILL.md
+[sg]: .claude/skills/stackgen-plugin/SKILL.md
 [auth]: .claude/skills/plugin-authoring/SKILL.md
-[icli]: .claude/skills/installer-cli/SKILL.md
 [rel]: .claude/skills/release/SKILL.md
 
 The user-facing docs are a different tree and a different audience: `readme.md`,
@@ -121,66 +138,47 @@ in [`repo-shape.md`][repo].
 - **`claude plugin marketplace add` needs a path that looks like one.**
   `add .dev-marketplace` is rejected with *"Invalid marketplace source format"*;
   `add ./.dev-marketplace` works. The leading `./` is not optional.
-- `CLAUDE.md` and `readme.md` **are** dprint-formatted, so widening one table
-  cell re-pads every row. `plugins/**/*.md` is **not** formatted — match the
-  surrounding fold width by hand.
+- `CLAUDE.md`, `installer/CLAUDE.md` and `readme.md` **are** dprint-formatted,
+  so widening one table cell re-pads every row. `plugins/**/*.md` is **not**
+  formatted — match the surrounding fold width by hand.
 - The authoring traps — strict-YAML frontmatter dropping a skill silently, the
   dprint exclusion, and `${CLAUDE_PLUGIN_ROOT}` naming only its own plugin — are
   in `.claude/skills/plugin-authoring/`.
 
 ## Plugins
 
-Two plugins ship. Each row's linked doc is authoritative; the cells are an
+Two plugins ship. Each row's linked home is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                                                                                                        |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. → [`vwf-plugin`][vwf]                                                                            |
-| `stackgen` | The principles-driven stack materializer — 38 packs and 32 bundles across eleven kinds for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager and gates since `devtools` dissolved into it. A vwf dep. → [`plugins.md`][plug] |
+| Plugin     | Is                                                                                                                                                                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]         |
+| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager and gates since `devtools` dissolved into it. → [`stackgen-plugin`][sg] |
 
 Full inventory, the native manifest shape, and the generated marketplace
-manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine: the
+manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
+both — the checker rules, the two mise gates, the hook rules, the traps — is the
 [`plugin-authoring`][auth] skill, which auto-applies under `plugins/`.
-
-## The vwf Plugin
-
-`vwf` is a full Product → Blueprint → Plan → Execute workflow — slash-invocable
-workflow skills, auto-applying doctrine skills, the subagents they delegate to,
-and the shared doctrine in `assets/`. It ships **no** stack templates and names
-no technology; what each axis offers comes from a stack plugin behind the
-stack-adapter contract.
-
-It depends on exactly one plugin, `stackgen`, resolved from this marketplace.
-`devtools` was the other until it dissolved into stackgen. `mempalace` and
-`andrej-karpathy-skills` are **vendored** rather than depended on; `markdown`
-and `context7` were **absorbed**.
 
 The workflow runs `setup` → `product` → `architecture` → `design-system` →
 `blueprint` → `plan` → `execute`, with `verify` and `feedback` closing the loop.
 **Everything up to `blueprint` is done in full before planning** — `plan`
-hard-halts on a partial coverage stamp.
-
-The skill and agent tables, the assets map, the `docs/blueprint/` tree, the two
-format stamps, the ordering gates and the dependency reasoning are the
-[`vwf-plugin`][vwf] skill, which auto-applies under `plugins/vwf/`.
+hard-halts on a partial coverage stamp. The ordering gates, the skill and agent
+tables, how to add a skill and pick its invocation mode, and the dependency
+reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 
 `@askviraj/ai-plugins`, run as `pnpx @askviraj/ai-plugins …`, does three things:
-**plugin installs as a thin wrapper** (`--all` / `--user <name>` /
-`--project <name>` drive Claude's own `plugin marketplace add` +
-`plugin install`), **graphify's wiring**, and **`--uninstall`**. It never edits
-Claude's settings itself, and writes **no receipt** — both install paths belong
-to a tool that keeps its own records, and those records are what `--uninstall`
-reads live.
+**plugin installs as a thin wrapper** that sequences Claude's own marketplace
+registration and plugin install commands, **graphify's wiring**, and
+**`--uninstall`**. It never edits Claude's settings itself and writes **no
+receipt**. `installer/` is the source; `bin/` is the tsup output, is gitignored,
+and is what npm publishes. The statusline is a separate package
+(`claude-status`), not a plugin and not installed here.
 
-**`installer/` is the source; `bin/` is the tsup output, is gitignored, and is
-what npm publishes.** The statusline is a separate package (`claude-status`),
-not a plugin and not installed here.
-
-The flag surface, the legacy-receipt reader, the GitHub token rule and the
-source map are [`.claude/docs/installer-cli.md`][cli]; the authoring discipline
-is the [`installer-cli`][icli] skill, which auto-applies under `installer/`. The
+Everything else — the flag surface, the legacy-receipt reader, the interactive
+uninstall, the GitHub token rule, testing — is [`installer/CLAUDE.md`][icl]; the
 user-facing reference is `docs/installer/`.
 
 ## CI & Releases
@@ -212,34 +210,12 @@ ritual itself is the [`release`][rel] skill — run `/release`.
 
 ## Hooks
 
-Hooks are authored directly as each plugin's `hooks/hooks.json`, in Claude's own
-format, with the scripts beside it. What ships as a plugin hook today is vwf's
-only: the guarded `rtk` Bash hook, and the two mempalace auto-save hooks (`Stop`
-and `PreCompact`).
-
-**Two scripts ship that are not plugin hooks**, both stackgen pack payloads
-copied into the target repo rather than discovered here: the
-`capability-provider/fnox` pack's git pre-commit gate, and the
-`package-manager/pnpm` pack's npm→pnpm/bun normalizer (`PreToolUse` on `Bash`,
-via `updatedInput`), which used to be a `typescript` plugin hook and moved with
-the package manager it rewrites for. `plugins:check`'s hook rule reads only a
-plugin's own `hooks/hooks.json`, so it sees neither script nor its executable
-bit; `plugins:npm-normalize-test` is what covers the normalizer instead.
-
-Three rules that bite: hook scripts must be portable to macOS **BSD `sed`** (no
-`\s`, no `\b`); **plugin hooks are never written to `settings.json`** — they are
-auto-discovered from `hooks/hooks.json`, so verify them with `/hooks`; and **a
-script's verdict shape is decided by its event**, not by convention.
-`hookSpecificOutput.permissionDecision` is `PreToolUse`-only — `Stop` and
-`PreCompact` deny with the top-level `decision`/`reason`, and Claude rejects the
-whole verdict if a `hookSpecificOutput` arrives without a matching
-`hookEventName`. That shipped in the mempalace checkpoint hook, where a rejected
-verdict reads exactly like a hook that decided to stay quiet.
-
-> Details, including why the mempalace hooks are reimplemented rather than
-> vendored: `plugins/stackgen/assets/artifact-doctrine.md` §4 (the host rules,
-> which apply to a generated hook and a plugin's alike) and
-> `.claude/skills/plugin-authoring/` (ours).
+What ships as a plugin hook today is vwf's only — the guarded `rtk` Bash hook
+and the two mempalace auto-save hooks — and is the [`vwf-plugin`][vwf] skill's.
+Two more scripts ship as **stackgen pack payloads** copied into a target repo
+rather than discovered here, covered by the [`stackgen-plugin`][sg] skill. The
+three host rules that bite any hook — BSD `sed`, never in `settings.json`, the
+per-event verdict shape — are the [`plugin-authoring`][auth] skill's.
 
 ## Adding a Plugin
 
@@ -247,39 +223,11 @@ verdict reads exactly like a hook that decided to stay quiet.
    (what an install pins to; plain `X.Y.Z`, bumped to ship changes) and
    `description`.
 2. Run `mise run plugins:marketplace` and stage the result.
+3. Give it a home: a path-scoped skill under `.claude/skills/<name>-plugin/`,
+   and a row in the two tables above.
 
 There is no second place to register it: the marketplace manifest is generated
 from the manifests, so step 2 *is* the registration.
-
-## Adding a vwf Skill
-
-Create `plugins/vwf/skills/<name>/SKILL.md` — no other registration is needed
-(auto-discovered). Then pick the invocation mode per the policy below.
-
-### Invocation policy
-
-Claude spells this with two independent booleans, and the useful states are
-three:
-
-| State              | Frontmatter                        | For                      |
-| ------------------ | ---------------------------------- | ------------------------ |
-| user **and** model | `disable-model-invocation: false`  | anything delegated to    |
-| model only         | `user-invocable: false` + `paths:` | auto-applying doctrine   |
-| user only          | `disable-model-invocation: true`   | the user owns the timing |
-
-It is **not cosmetic**: a user-only skill is removed from the model's context
-entirely, so it **cannot be invoked by another skill**, and the failure is
-**silent** — the caller simply cannot see it. The rule: model-invocable when
-anything delegates to it, user-only when nothing does.
-
-Cross-plugin skill-name uniqueness is no longer required — Claude scopes a skill
-to its plugin. The `<plugin>-` prefix on adapter skill names is readability now,
-not correctness, and `prefixSkillNames` is gone.
-
-> The host rules behind this — the three states and the silent failure — are
-> `plugins/stackgen/assets/artifact-doctrine.md` §2. The per-skill rulings and
-> the two contracts the checker enforces are
-> `.claude/skills/plugin-authoring/references/checks.md`.
 
 ## Installation (end-user)
 

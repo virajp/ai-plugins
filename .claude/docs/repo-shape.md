@@ -106,8 +106,8 @@ and `opencode.json` among them. Nothing this CLI does adds to that pile, and
 deletes nothing a receipt or another tool does not account for.
 
 > **Working on it:** the receipt entry kinds, the interactive uninstall and the
-> packaging traps are in `.claude/skills/installer-cli/`, which auto-applies
-> while you edit `installer/`.
+> packaging traps are in `installer/CLAUDE.md`, which Claude loads whenever it
+> works under `installer/`.
 
 ## Tasks
 

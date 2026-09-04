@@ -36,16 +36,17 @@ context; work from what you were given.
 
 ## What each surface owns
 
-| Surface                       | Owns                                                                          |
-| ----------------------------- | ----------------------------------------------------------------------------- |
-| `readme.md`                   | the end-user view: what exists, how to install it, what each plugin gives you |
-| `CLAUDE.md`                   | the maintainer's view: why the repo is shaped this way, and the traps         |
-| `docs/plugins/<plugin>.md`    | that plugin's own reference                                                   |
-| `docs/installer/usage.md`     | the installer's end-user flag reference                                       |
-| `docs/installer/targets.md`   | what lands on disk for Claude, and which tool put it there                    |
-| `docs/installer/internals.md` | the installer's maintainer map, pointing into `.claude/skills/installer-cli/` |
-| `docs/installer/index.md`     | the installer's landing page and the index of the three pages above           |
-| `.claude/skills/**`           | maintainer doctrine that auto-applies while editing a given tree              |
+| Surface                       | Owns                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
+| `readme.md`                   | the end-user view: what exists, how to install it, what each plugin gives you        |
+| `CLAUDE.md`                   | the maintainer's view: why the repo is shaped this way, and the traps                |
+| `docs/plugins/<plugin>.md`    | that plugin's own reference                                                          |
+| `docs/installer/usage.md`     | the installer's end-user flag reference                                              |
+| `docs/installer/targets.md`   | what lands on disk for Claude, and which tool put it there                           |
+| `docs/installer/internals.md` | the installer's maintainer map, pointing into `installer/CLAUDE.md`                  |
+| `docs/installer/index.md`     | the installer's landing page and the index of the three pages above                  |
+| `installer/CLAUDE.md`         | the installer's maintainer context and rules, loaded when working under `installer/` |
+| `.claude/skills/**`           | maintainer doctrine that auto-applies while editing a given tree                     |
 
 A fact belongs in **exactly one** of these. When a change makes the same fact
 appear in two, say which copy should go — duplication is the drift this rule

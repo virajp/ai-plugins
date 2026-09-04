@@ -66,6 +66,26 @@ the one file that still has the problem.
    dependencies vwf once had are **vendored skills** now, with provenance under
    `plugins/vwf/vendor/`.
 
+## Hooks
+
+Hooks are authored directly as a plugin's `hooks/hooks.json`, in Claude's own
+format, with the scripts beside it. Three rules that bite, whichever plugin the
+hook belongs to:
+
+1. **Scripts must be portable to macOS BSD `sed`** — no `\s`, no `\b`.
+2. **Plugin hooks are never written to `settings.json`.** They are
+   auto-discovered from `hooks/hooks.json`, so verify them with `/hooks`.
+3. **A script's verdict shape is decided by its event**, not by convention.
+   `hookSpecificOutput.permissionDecision` is `PreToolUse`-only; `Stop` and
+   `PreCompact` deny with the top-level `decision`/`reason`, and Claude rejects
+   the whole verdict if a `hookSpecificOutput` arrives without a matching
+   `hookEventName` — which reads exactly like a hook that decided to stay quiet.
+
+`plugins:check`'s hook rule reads only a plugin's own `hooks/hooks.json`; a
+script a stackgen pack ships as payload is covered elsewhere (the
+`stackgen-plugin` skill). The host rules in full are stackgen's
+`assets/artifact-doctrine.md` §4.
+
 ## References
 
 | Reference                                             | Covers                                                                       |
