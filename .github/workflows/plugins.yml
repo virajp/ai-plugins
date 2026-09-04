@@ -52,6 +52,9 @@ jobs:
       - name: Marketplace manifest matches the plugin manifests
         run: mise run plugins:marketplace --check
 
+      - name: stackgen inventory matches the stacks tree
+        run: mise run plugins:inventory --check
+
       - name: Static validation of plugins/
         run: mise run plugins:check
 

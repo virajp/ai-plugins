@@ -103,20 +103,21 @@ loads the working tree for that session, no install and no cache.
 ## Workflows (`.github/workflows/`)
 
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
-  `develop` and every PR: `plugins:marketplace --check`, then `plugins:check`,
-  then the vitest suites, then `plugins:npm-normalize-test`, then `tsc --noEmit`
-  per project. The order matters — proving the committed manifest is what the
-  plugin manifests generate *before* validating anything means a stale manifest
-  fails as staleness rather than as some confusing downstream assertion. On
-  `main` only it adds one more gate: **every `source.ref` names a tag that
-  exists**. That one is deliberately *not* part of
-  `plugins:marketplace --check`, which must stay offline and fresh-clone-safe;
-  this asks the remote a question. It goes red in exactly one state — merged to
-  `main` without running `plugins:release` — which is a marketplace whose
-  installs fail for every user, so red is correct. Deliberately a **separate
-  file** from `release.yml`: npm allows one Trusted Publisher and validates the
-  entry-point workflow's filename, so that file's trigger surface stays
-  untouched. This workflow publishes nothing and holds no `id-token` permission.
+  `develop` and every PR: `plugins:marketplace --check`, then
+  `plugins:inventory --check`, then `plugins:check`, then the vitest suites,
+  then `plugins:npm-normalize-test`, then `tsc --noEmit` per project. The order
+  matters — proving the two committed generated files are what their sources
+  generate *before* validating anything means a stale one fails as staleness
+  rather than as some confusing downstream assertion. On `main` only it adds one
+  more gate: **every `source.ref` names a tag that exists**. That one is
+  deliberately *not* part of `plugins:marketplace --check`, which must stay
+  offline and fresh-clone-safe; this asks the remote a question. It goes red in
+  exactly one state — merged to `main` without running `plugins:release` — which
+  is a marketplace whose installs fail for every user, so red is correct.
+  Deliberately a **separate file** from `release.yml`: npm allows one Trusted
+  Publisher and validates the entry-point workflow's filename, so that file's
+  trigger surface stays untouched. This workflow publishes nothing and holds no
+  `id-token` permission.
 - **`release.yml`** — publishes `@askviraj/ai-plugins` to npm via **OIDC trusted
   publishing** (no stored token, provenance automatic). Triggered two ways: a
   pushed `installer-v*` tag, or `workflow_dispatch` — which is also how

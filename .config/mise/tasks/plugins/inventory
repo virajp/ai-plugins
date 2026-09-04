@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Generate plugins/stackgen/stacks/inventory.md from the stacks tree (--check to assert freshness)"
+#MISE dir="{{ config_root }}"
+
+# Renders the stackgen pack, bundle and kind inventory from the tree itself:
+#
+#   plugins/stackgen/stacks/<type>/<slug>/pack.yaml   one row per pack
+#   plugins/stackgen/stacks/bundles/<slug>.md         one row per bundle
+#   plugins/stackgen/assets/kinds.md                  the kind vocabulary
+#
+# The counts used to be typed into prose in four places and drifted. The tree is
+# the only inventory that is true by construction, so the file is generated from
+# it, committed so a reader gets it without running anything, and guarded by
+# `--check` in pre-commit and plugins.yml — the same shape as the marketplace
+# manifest, and for the same reason: a generated-and-committed file has no
+# other staleness guarantee.
+#
+# Run with no build step: node strips the TypeScript types directly.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+# "$@" so --check passes straight through, as plugins:marketplace does.
+node scripts/src/inventory.ts "$@"

@@ -34,7 +34,8 @@ restate a count or a rule that an asset below already owns.
 | `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`           |
 | `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all        |
 | `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin |
-| `stacks/readme.md`            | the pack and bundle inventory, wave by wave — the only home for the counts                  |
+| `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run plugins:inventory`       |
+| `stacks/readme.md`            | the narrative — which wave landed what, and why                                             |
 | `agents/`                     | `stackgen-skill-reviewer`, the generator's gate                                             |
 
 The user-facing reference is `docs/plugins/stackgen.md`. The checker rules, the
@@ -134,5 +135,7 @@ Any change to stackgen's behaviour must reconcile `readme.md`, `CLAUDE.md` and
 `docs/plugins/stackgen.md` in the **same commit** — the repo's hard rule.
 Delegate the sweep to the `docs-reconciler` agent. A behaviour change also bumps
 `version` in `plugin.json` (plain `X.Y.Z`) and regenerates the marketplace with
-`mise run plugins:marketplace`; a new pack or bundle updates `stacks/readme.md`
-and the manifest's `description`, which is where the inventory counts live.
+`mise run plugins:marketplace`. A new pack, bundle or kind regenerates
+`stacks/inventory.md` with `mise run plugins:inventory` — never type a count
+into prose; `--check` in pre-commit and CI fails a stale inventory, and the
+generator throws on a `kind` that `assets/kinds.md` does not define.

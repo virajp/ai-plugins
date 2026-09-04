@@ -34,23 +34,26 @@ paths:
 a user installs. There is no template layer, no render step, and no per-target
 variant.
 
-One file is generated: **`.claude-plugin/marketplace.json`** at the repo root, a
-projection of the 2 per-plugin manifests. Never edit it by hand.
+Two files are generated: **`.claude-plugin/marketplace.json`** at the repo root,
+a projection of the 2 per-plugin manifests, and
+**`plugins/stackgen/stacks/inventory.md`**, a projection of the stacks tree.
+Never edit either by hand.
 
 ## The one rule
 
-A change under `plugins/` is not done until both gates pass:
+A change under `plugins/` is not done until the gates pass:
 
 ```sh
 mise run plugins:check              # validates the authored tree
 mise run plugins:marketplace        # regenerate, if you touched a manifest
+mise run plugins:inventory          # regenerate, if you touched stackgen's stacks/ or kinds.md
 ```
 
-`--check` on that second task is what CI and pre-commit run. It exists because
-the marketplace manifest is generated **and** committed, so a manifest edited
-without a regenerate is invisible to every other check — this is the one piece
-of staleness the retired `plugins:render-clean` was really guarding, narrowed to
-the one file that still has the problem.
+`--check` on the two generators is what CI and pre-commit run. It exists because
+each output is generated **and** committed, so a source edited without a
+regenerate is invisible to every other check — this is the one piece of
+staleness the retired `plugins:render-clean` was really guarding, narrowed to
+the two files that still have the problem.
 
 ## Two traps that are ours, not Claude's
 

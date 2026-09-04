@@ -418,7 +418,7 @@ function isSymlink(path: string): boolean {
  * entries — the first divergence names the plugin whose manifest moved, which is
  * the whole question a failing gate has to answer.
  */
-function firstDifference(committed: string, generated: string): string {
+export function firstDifference(committed: string, generated: string): string {
   const a = committed.split("\n");
   const b = generated.split("\n");
 

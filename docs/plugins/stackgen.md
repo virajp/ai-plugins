@@ -78,17 +78,19 @@ Mixed compositions are the ordinary case — a covered language beside an
 uncovered framework copies the language's packs and generates only the
 framework's artifact — so a later re-sync can act on one component alone.
 
-**38 packs and 32 bundles now ship, across all eleven kinds**, starting with
-`dprint`, `gitleaks`, `grype` and `pre-commit` — the `repo-gate` kind's
-components — and closing with `cloud-provider`, the last kind that had been
-defined but never authored against, which the `cloudflare` and `gcp` packs
-filled. Along the way three packs each deleted a curated *skill* in the same
-commit, because the pack plus a neutral contract carry everything that source
-said — `deploy-target/container-image` with `assets/contracts/local-stack.md`,
-`capability-provider/doppler` with `assets/contracts/secrets.md`, and
-`ci-system/github-actions` with `assets/contracts/release-trigger.md`. The third
-was the first to retire not a skill but a **whole plugin**: `cicd` was exactly
-one kind wearing a manifest.
+**The full pack and bundle inventory is generated from the tree** —
+[`stacks/inventory.md`](../../plugins/stackgen/stacks/inventory.md), never typed
+by hand and guarded against drift in pre-commit and CI. The packs arrived in
+waves, starting with `dprint`, `gitleaks`, `grype` and `pre-commit` — the
+`repo-gate` kind's components — and closing with `cloud-provider`, the last kind
+that had been defined but never authored against, which the `cloudflare` and
+`gcp` packs filled. Along the way three packs each deleted a curated *skill* in
+the same commit, because the pack plus a neutral contract carry everything that
+source said — `deploy-target/container-image` with
+`assets/contracts/local-stack.md`, `capability-provider/doppler` with
+`assets/contracts/secrets.md`, and `ci-system/github-actions` with
+`assets/contracts/release-trigger.md`. The third was the first to retire not a
+skill but a **whole plugin**: `cicd` was exactly one kind wearing a manifest.
 
 The retirement wave then took the four that were left — `typescript`, `flutter`,
 `gcp` and `cloudflare` — each once its doctrine had landed as packs. That
@@ -127,8 +129,8 @@ in shape while only content varies:
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                  |
 | `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature                                                                                                                          |
 
-All eleven kinds are defined; no reservations are outstanding. Two of the six
-axes — `design` and `cicd` — are **tool axes**, where the bundle slug is the
+Every kind in that table is defined; no reservations are outstanding. Two of the
+six axes — `design` and `cicd` — are **tool axes**, where the bundle slug is the
 token the project config already holds, so picking from the menu and writing the
 config key are one act. Kinds compose through vwf's capability vocabulary — a
 language bundle says "the datastore", never a database by name — so each stays

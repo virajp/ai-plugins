@@ -238,16 +238,18 @@ subtraction, dropping only the keys your repo's lockfile recorded. A pack may
 also declare **repo config files** it owns — the mise config and the file-based
 task library everything else runs through — on the same merges-never-owns terms
 and behind their own consent line; gate configs like `dprint.json` are
-deliberately outside that fence, named as prerequisites rather than written. 38
-packs and 32 bundles ship across all eleven kinds, the newest two being the
-`toolchain-manager` and `workspace` kinds that arrived when the `devtools`
-plugin dissolved into stackgen. stackgen is now the only stack plugin: its packs
-are the covered path, its generator the uncovered tail. A `vwf` dependency,
-because vwf's stack menu is the union of what the installed stack plugins offer
-— with none present it comes back empty, and the axes carry no free-text escape.
-You can defer an axis and keep defining the product, but `/vwf:plan` and
-`/vwf:execute` halt until it is answered. Having it installed commits you to
-nothing; it acts only once an axis is pinned. `stackgen@virajp-plugins`
+deliberately outside that fence, named as prerequisites rather than written. The
+packs, bundles and kinds that ship are inventoried in
+[`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
+the tree itself; the newest two kinds are `toolchain-manager` and `workspace`,
+which arrived when the `devtools` plugin dissolved into stackgen. stackgen is
+now the only stack plugin: its packs are the covered path, its generator the
+uncovered tail. A `vwf` dependency, because vwf's stack menu is the union of
+what the installed stack plugins offer — with none present it comes back empty,
+and the axes carry no free-text escape. You can defer an axis and keep defining
+the product, but `/vwf:plan` and `/vwf:execute` halt until it is answered.
+Having it installed commits you to nothing; it acts only once an axis is pinned.
+`stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding

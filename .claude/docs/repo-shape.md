@@ -130,6 +130,14 @@ allows one Trusted Publisher and validates the entry-point filename):
   narrowed down to. **There is no `--dev` flag**: both are written together
   because a flag is one more thing to forget, and a stale dev manifest fails as
   a plugin quietly serving yesterday's tree.
+- **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
+  from the stacks tree: every `<type>/<slug>/pack.yaml`, every bundle
+  frontmatter, and the kind headings in `assets/kinds.md`. It exists because the
+  pack, bundle and kind counts were typed into four prose files and drifted; the
+  tree is the only inventory true by construction. It throws on a `kind` no
+  heading defines, since the vocabulary is closed. **`--check`** is the same
+  byte compare the marketplace task makes, run by pre-commit and `plugins.yml`,
+  and `inventory.test.ts` pins it in vitest too.
 - **`plugins:check`** — validates the authored tree. Eleven rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **pack task files executable** (every file a stackgen pack

@@ -117,6 +117,9 @@ which is the installer's and whose trigger surface must stay untouched):
   2 plugin manifests, plus the `.dev-marketplace/plugins/` staging directory the
   dev sources resolve into; **`--check`** fails if the committed file differs,
   or if that path is the retired symlink.
+- **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
+  from the stacks tree, so no pack, bundle or kind count is ever typed by hand;
+  **`--check`** fails if the committed file differs.
 - **`plugins:check`** — validates the authored tree, eleven rules.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
