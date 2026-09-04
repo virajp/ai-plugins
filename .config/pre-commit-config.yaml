@@ -24,13 +24,6 @@ repos:
         pass_filenames: false
         files: ^plugins/stackgen/stacks/package-manager/pnpm/hooks/
         stages: [ pre-commit ]
-      - id: plugins-check
-        name: Static validation of the authored plugins/ tree
-        entry: mise x -- mise run plugins:check
-        language: system
-        pass_filenames: false
-        files: ^plugins/
-        stages: [ pre-commit ]
       # `plugins-build` and `render-clean` retired with the template layer: there
       # is one authored tree under `plugins/` and nothing renders, so there is no
       # staleness for them to catch — except in the one file that is still
@@ -56,6 +49,13 @@ repos:
         language: system
         pass_filenames: false
         files: ^plugins/stackgen/(stacks/|assets/kinds\.md)
+        stages: [ pre-commit ]
+      - id: plugins-check
+        name: Static validation of the authored plugins/ tree
+        entry: mise x -- mise run plugins:check
+        language: system
+        pass_filenames: false
+        files: ^plugins/
         stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
