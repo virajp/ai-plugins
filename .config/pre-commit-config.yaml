@@ -123,8 +123,10 @@ repos:
         # Two kinds: the vwf blueprint templates and example bundle (ignored in
         # linter.yaml, because OKF frontmatter reads as a second H1), and the hook
         # scripts, which are shell — `plugins:npm-normalize-test` is what actually
-        # tests those, through the system sed.
-        exclude: ^plugins/vwf/assets/(templates|examples)/|\.sh$
+        # tests those, through the system sed. docs/assets/ is the logo — SVG,
+        # PNG and the social-preview render source — none of which it lints,
+        # and its HTML rewrite fights dprint's.
+        exclude: ^plugins/vwf/assets/(templates|examples)/|^docs/assets/|\.sh$
         language: system
         stages: [ pre-commit ]
 
