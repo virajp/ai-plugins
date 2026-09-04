@@ -7,7 +7,7 @@
   // passes the API token and the account id from the repository secrets
   // CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "claude-plugins-site",
+  "name": "claude-plugins-virajp-dev",
   "compatibility_date": "2026-09-05",
   "assets": {
     "directory": "./dist",
