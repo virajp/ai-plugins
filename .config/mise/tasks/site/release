@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+#MISE description="Tag the website release on main and watch the deploy pipeline"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--ci" help="CI mode: stop after creating the tag (the caller pushes + dispatches); skips the interactive push and pipeline watch"
+
+# Tags whatever version `main` already carries, and pushes it.
+#
+# It does NOT bump and does NOT commit. `main` is merge-only — the version bump
+# is `mise run site:version` on `develop`, committed there and merged over like
+# any other change — so this task is the same shape as `plugins:release` and
+# `i:release`: verify, tag what is on main, push. Every release task answers
+# "release what has already landed" rather than "make a change and release it in
+# one move".
+#
+# That split is what the `no-commit-to-branch` hook forces, and it is the better
+# shape anyway: a release task that commits has to be trusted to commit the
+# right thing, while one that only tags can be checked against what is already
+# reviewed and pushed.
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+RELEASE_BRANCH="main"
+
+# 1. A tag names a commit, so the tree must be clean — otherwise the tag points
+#    at content that is not what was tested.
+if [[ -n "$(git status --porcelain)" ]]; then
+  print_error "Working tree is not clean. Commit or stash your changes first."
+  exit 1
+fi
+
+# 2. Only from the release branch. `site.yml` refuses to deploy a tag that
+#    is not reachable from main, so a tag cut anywhere else fails at the gate
+#    rather than here — which is a far more confusing place to learn it.
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
+  print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Bump with 'mise run site:version' on develop, commit, merge to ${RELEASE_BRANCH}, then run this."
+  exit 1
+fi
+
+VERSION="$(node -p "require('./site/package.json').version")"
+# Namespaced: every tag in this repo says what it releases. Plugins tag as
+# `<name>-v<version>` and the marketplace manifest pins each entry to one, and
+# the installer tags as `installer-v<version>`, so a bare `v*` tag family would
+# collide — GitHub's tag globs match any character but `/`, which made `v*`
+# match `vwf-v19.9.0`. `site-v*` is the third family.
+TAG="site-v${VERSION}"
+
+# 3. The tag must not already exist. If it does, site/package.json was never
+#    bumped for this release — the commit to tag is not the one that is checked
+#    out. Fetch first so "exists" means the remote's answer, not this checkout's.
+git fetch --tags --quiet origin
+if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+  print_error "${TAG} already exists. Bump with 'mise run site:version' on develop, commit, and merge to ${RELEASE_BRANCH} first."
+  exit 1
+fi
+
+# 4. The site gate must pass before anything is tagged.
+mise run site:check
+
+# 5. The annotated tag.
+git tag -a "${TAG}" -m "${TAG}"
+
+print_header "Created ${TAG}."
+
+# 6. With --ci this stops here — tag only. The calling workflow pushes and
+#    delegates deploying to site.yml, so it must NOT also push/watch from here.
+if [[ "${usage_ci:-false}" == "true" ]]; then
+  print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + deploy."
+  exit 0
+fi
+
+# 7. Interactive release: push and watch the deploy pipeline. `gh` must be
+#    present and authenticated — we never push a tag we cannot then watch.
+if ! command -v gh >/dev/null 2>&1; then
+  print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
+  exit 1
+fi
+if ! gh auth status >/dev/null 2>&1; then
+  print_error "gh is not authenticated. Run: gh auth login"
+  exit 1
+fi
+
+# main BEFORE the tag, and this order is load-bearing: `site.yml` checks the
+# tagged commit is reachable from `origin/main` exactly as `release.yml` does,
+# so a tag that arrives first fails that gate until the branch catches up.
+# (`plugins:release` pushes tags alone because no plugin tag is checked for
+# reachability.)
+print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
+git push origin "${RELEASE_BRANCH}"
+git push origin "${TAG}"
+
+# 8. Watch the deploy pipeline to completion so this task's exit status reflects
+#    the release result. Poll until the tag's run appears (it is the site.yml
+#    run whose head commit is this release commit), then follow it.
+RELEASE_SHA="$(git rev-parse HEAD)"
+print_header "Waiting for the site workflow to start ..."
+RUN_ID=""
+for _ in $(seq 1 30); do
+  RUN_ID="$(gh run list --workflow=site.yml --limit 20 \
+    --json databaseId,headSha \
+    --jq "[.[] | select(.headSha==\"${RELEASE_SHA}\")][0].databaseId" 2>/dev/null || true)"
+  if [[ -n "${RUN_ID}" && "${RUN_ID}" != "null" ]]; then
+    break
+  fi
+  sleep 4
+done
+
+if [[ -z "${RUN_ID}" || "${RUN_ID}" == "null" ]]; then
+  print_error "Site workflow run did not appear. Check manually: gh run list --workflow=site.yml"
+  exit 1
+fi
+
+# --exit-status makes `gh run watch` exit non-zero if the run fails, so `set -e`
+# fails this task — i.e. completing site:release means the pipeline succeeded.
+print_header "Watching site run ${RUN_ID} ..."
+gh run watch "${RUN_ID}" --exit-status
+
+print_header "Deploy pipeline succeeded — https://claude-plugins.virajp.dev is on site-v${VERSION}."

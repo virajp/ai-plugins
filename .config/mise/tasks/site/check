@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#MISE description="Type-check, build and link-check the website (the site gate)"
+#MISE dir="{{ config_root }}/site"
+
+# The site gate: what the wave gate and `site:release` run.
+
+set -e
+
+pnpm exec astro check
+mise run site:build
+# Every internal href in dist/**/*.html must resolve to a built file, and every
+# #fragment to an id in its target.
+pnpm exec tsx scripts/check-links.ts

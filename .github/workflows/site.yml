@@ -1,0 +1,138 @@
+name: Site
+
+# Builds and deploys the website (claude-plugins.virajp.dev): the Astro site
+# under site/, served from Cloudflare Workers Static Assets.
+#
+# Deliberately a SEPARATE workflow from release.yml. npm allows exactly one
+# Trusted Publisher per package and validates the entry-point workflow's
+# filename, so release.yml's trigger surface is left untouched — this file
+# publishes nothing to npm and holds no id-token permission.
+#
+# Two jobs, two roles:
+#   - `build`  — the gate. Runs `mise run site:check` (type-check, build, search
+#                index, link check) on every PR and push to develop/main that
+#                touches site/, and on every `site-v*` tag.
+#   - `deploy` — the release. Runs only on a pushed `site-v*` tag, after `build`,
+#                and only once the tag is proven to match site/package.json and
+#                to be reachable from main. A merge to main ships nothing until
+#                `mise run site:release` cuts the tag.
+#
+# The tag family is namespaced like the other two (`<plugin>-v*`,
+# `installer-v*`): GitHub's tag globs match any character except `/`, so a bare
+# `v*` filter would fire this workflow on every plugin and installer release.
+on:
+  pull_request:
+    paths:
+      - "site/**"
+      - ".github/workflows/site.yml"
+  push:
+    branches: [ main, develop ]
+    paths:
+      - "site/**"
+      - ".github/workflows/site.yml"
+    # `paths` does not apply to tag pushes; a tag always builds and deploys.
+    tags:
+      - "site-v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+# Superseded branch and PR runs are cancelled; a tag's deploy never is.
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+env:
+  MISE_ENV: ci
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 so a tag checkout carries the history the reachability
+      # check in `deploy` needs, and the same checkout shape serves both jobs.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up mise (node + pnpm, ci env)
+        uses: jdx/mise-action@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The site gate: `astro check`, `astro build`, `pagefind --site dist`, then
+      # the link checker over dist/**/*.html.
+      - name: Type-check, build and link-check the site
+        run: mise run site:check
+
+      # Only a tag build is deployed, so only a tag build is kept: `deploy`
+      # ships exactly the tree the gate checked rather than rebuilding it.
+      - name: Upload the built site
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-dist
+          path: site/dist
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # mise first, as in release.yml: the version check below runs `node`, and
+      # the wrangler pinned in site/package.json is the one that deploys, so the
+      # config validates against the same version locally and here.
+      - name: Set up mise (node + pnpm, ci env)
+        uses: jdx/mise-action@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Runs only on a tag (the job-level `if` above), so the ref name is the
+      # tag. Strip the whole namespace, not a bare `v`: `${...#v}` on
+      # `site-v1.0.0` removes nothing (the tag starts with `s`), so the
+      # comparison would silently never match.
+      - name: Verify the tag matches site/package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#site-v}"
+          pkg="$(node -p "require('./site/package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match site/package.json version $pkg"
+            exit 1
+          fi
+          echo "Deploying site@$pkg"
+
+      # conventions.md#pipeline, rule `pipeline/branch-validated`: a release tag
+      # must be reachable from the default branch. Without this, a tag pushed
+      # from any branch deploys — the tag/package.json check above proves the
+      # version is consistent, never that the commit was ever reviewed.
+      - name: Verify the tag is reachable from main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::tag $GITHUB_REF_NAME is not reachable from main — refusing to deploy"
+            exit 1
+          fi
+          echo "$GITHUB_REF_NAME is on main."
+
+      - name: Download the built site
+        uses: actions/download-artifact@v8
+        with:
+          name: site-dist
+          path: site/dist
+
+      # Pinned by commit, not tag: the SHA is v4.0.0.
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: site
+          command: deploy

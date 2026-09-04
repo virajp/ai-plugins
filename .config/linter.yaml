@@ -10,6 +10,13 @@ ignores:
   # esbuild emits empty catch blocks and keeps unused helpers from bundled deps.
   # The source it is built from is linted.
   - "bin/**"
+  # The website's build output.
+  - "site/dist/**"
+  # Astro's generated types.
+  - "site/.astro/**"
+  # `.astro` is dprint's: the markup plugin formats it and the linter has no
+  # Astro parser.
+  - "site/**/*.astro"
 
 overrides:
   markdown:

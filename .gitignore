@@ -42,6 +42,11 @@ scripts/dist/
 # noise, and `i:build` regenerates it before every publish.
 bin/
 
+# The Astro build output and its generated type cache. `site.yml` rebuilds both,
+# and `site-v*` tags deploy from a fresh build, never from a committed `dist/`.
+site/dist/
+site/.astro/
+
 # Working notes and session handoffs — personal state, not the team's.
 #
 # docs/memory/ splits by audience: `decisions`, `planning`, `gaps` and

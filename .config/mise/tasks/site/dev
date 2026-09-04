@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Run the website's dev server"
+#MISE dir="{{ config_root }}/site"
+
+set -e
+
+pnpm exec astro dev "$@"

@@ -7,9 +7,13 @@
 #
 # `scripts` is private and never published: it runs from a checkout, straight
 # from source, so it needs no build step and appears in no tarball.
+#
+# `site` is the website, built by Astro, versioned and tagged on its own
+# (`site-v*`) and never published to npm — the root `files` list is `bin` alone.
 packages:
   - installer
   - scripts
+  - site
 
 # Install scripts are blocked by default. esbuild is the one exception: it is
 # tsup's engine — which builds `installer/` into the published `bin/` — and its
