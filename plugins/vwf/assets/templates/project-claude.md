@@ -44,7 +44,8 @@ choices are `plan`'s job — not the blueprint's.
 - `docs/blueprint/flows/<project>/<NNN>-<flow>/` — one folder per flow, the
   **primary** blueprint unit: `index.md` carries the platform-agnostic contract
   (trigger, actors, steps, jobs, acceptance) and one `<platform>.md` per
-  implemented platform (`mobile` / `tablet` / `desktop` / `web` / `auto`)
+  implemented platform (`mobile` / `tablet` / `desktop` / `auto` / `site` /
+  `webapp`)
   carries that platform's screens, each row with its frame code. Numbers are
   designated — `100` is always `home`. `flows/index.md` holds the catalog +
   inter-service contracts.

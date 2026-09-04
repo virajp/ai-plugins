@@ -12,7 +12,7 @@ product that is realization rather than description: each project's **stack**.
 That lives here precisely so no blueprint-authoring or reviewing surface can
 reach it, which is what makes a vendor name in a blueprint doc structurally
 impossible rather than merely discouraged. Since **format 11** the stack is
-**structured** — a template selection plus the four axes `/vwf:doctor` checks
+**structured** — a template selection plus the six axes `/vwf:doctor` checks
 the repo against — and is written for **every** project, always. Since
 **format 13** every technology choice is **per project**: the backing and deploy
 axes, the design tool and the CI tool all live under `projects.<name>`, because
@@ -98,9 +98,11 @@ harness: # workspace-level capability inventory (see the harness contract)
   e2e_staging: false
   health: true
   screenshots: true
+  goldens: true # required when any project declares a DEVICE screen platform (desktop/mobile/tablet/auto) — see the harness contract
+  test:load: false # required when a flow's declared peak rate meets the delivery-pipeline load-validation threshold, ahead of its first production release
 
 enforcement: # vwf's enforcement opt-outs
-  # `structure:` was retired in format 19 and `stacks:` in format 10, for the same reason: both became MENUS (assets/topologies/, assets/stacks/), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `stacks:` block reads as drift — structure migrates into `topology` + `topology_reason`, stacks into projects.<name>.stack (its reason into `note`).
+  # `structure:` was retired in format 19 and `stacks:` in format 10, for the same reason: both became MENUS (assets/topologies/ for structure; the stack menu is stackgen's, offered through the stack adapter), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `stacks:` block reads as drift — structure migrates into `topology` + `topology_reason`, stacks into projects.<name>.stack (its reason into `note`).
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
 
 pipeline: # bounded knobs — see the hard floor below
@@ -119,7 +121,7 @@ design: # CANVAS STATE only — ids and flow names, never content. The design TO
   design_system_id: <uuid> # UNIVERSAL — one per product: the design system /vwf:design-system imports from, as the design tool identifies it (its own canvas project); every mockup push binds it
   projects: # one canvas design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
-      <platform>: <uuid> # mobile | tablet | desktop | web | auto — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
+      <platform>: <uuid> # mobile | tablet | desktop | auto | site | webapp — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
   flows_rendered: [] # flow PLATFORMS whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>/<platform> (format 15: platform granularity, so a flow rendered for mobile but not auto is visibly partial); recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/<NNN>-<flow>/<platform>/ tree, NEVER on the canvas
 
 memory:
@@ -331,7 +333,7 @@ earlier than 65/90/80), never loosen.
      entirely: topology is a menu now (`assets/topologies/`), so no choice
      deviates from anything and none needs a waiver — the same retirement
      `enforcement.stacks` got in format 11.
-  2. **The stack splits into four axes.** `projects.<name>.stack.template`
+  2. **The stack splits into four axes (pre-22).** `projects.<name>.stack.template`
      re-points from `<type>/<slug>` to `project/<role>/<slug>` (the templates
      moved under `assets/stacks/project/`). Add the product-wide **`backing`**
      and **`deploy`** blocks — this is the one step needing input, since the old
@@ -529,7 +531,7 @@ earlier than 65/90/80), never loosen.
   - **had a `stack:` list** → map its entries onto the axes: tokens matching the
     closed language vocabulary (`assets/stack-vocabulary.md`) become
     `languages`, the rest split between `frameworks` and `dependencies` per that
-    asset's rule. Set `template:` to the `assets/stacks/<type>/<slug>.md` whose
+    asset's rule. Set `template:` to the pre-22 `assets/stacks/<type>/<slug>.md` whose
     frontmatter matches, else `custom` — a value **format 14 retires**, so a repo
     running this delta today writes it only as an intermediate and the `13 → 14`
     step above resolves it before the run ends. Any `stack_reason` moves verbatim
@@ -542,12 +544,13 @@ earlier than 65/90/80), never loosen.
     migration: absence used to mean "read a prose doc and infer", and that
     indirection is what let a repo's real stack drift with nothing recording it.
 
-  Then elicit the **`repo.stack`** block once (topology-appropriate templates
-  from `assets/stacks/repo/`), and drop `enforcement.stacks` if a legacy block
-  survived the `9 → 10` migration. Readers treat a flat list at
+  Then, still in this migration, elicit the **`repo.stack`** block once
+  (topology-appropriate templates from the pre-22 `assets/stacks/repo/`), and
+  drop `enforcement.stacks` if a legacy block survived the `9 → 10` migration.
+  Readers treat a flat list at
   `projects.<name>.stack`, or an absent block on a project the registry
   declares, as `10` drift.
 
   The stack templates moved in the same release: `assets/stacks/<type>.md` →
-  `assets/stacks/<type>/<slug>.md`, each gaining machine-readable frontmatter. A
+  the pre-22 `assets/stacks/<type>/<slug>.md`, each gaining frontmatter. A
   link to the old flat path is `10` drift.

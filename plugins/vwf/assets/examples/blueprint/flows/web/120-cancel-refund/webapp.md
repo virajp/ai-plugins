@@ -1,6 +1,6 @@
 ---
 type: vwf-flow-platform
-title: Order cancellation & refund — web
+title: Order cancellation & refund — webapp
 description: The browser journey for cancelling an order and tracking its
   refund.
 status: reviewed
@@ -8,7 +8,7 @@ platform: webapp
 implementation: none
 ---
 
-# Order cancellation & refund — web
+# Order cancellation & refund — webapp
 
 Flow contract: [Order cancellation & refund](./index.md)
 

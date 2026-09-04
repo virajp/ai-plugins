@@ -1,6 +1,6 @@
 ---
 type: vwf-flow-platform
-title: Place order — web
+title: Place order — webapp
 description: The browser checkout journey — cart review, payment,
   confirmation.
 status: reviewed
@@ -8,7 +8,7 @@ platform: webapp
 implementation: partial
 ---
 
-# Place order — web
+# Place order — webapp
 
 Flow contract: [Place order](./index.md)
 
