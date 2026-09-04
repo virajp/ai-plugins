@@ -78,7 +78,7 @@ describe("the generated marketplace manifest", () => {
       const name = entry["name"] as string;
       expect(entry["source"], name).toEqual({
         source: "git-subdir",
-        url: "https://github.com/virajp/ai-plugins.git",
+        url: "https://github.com/virajp/claude-plugins.git",
         path: `plugins/${name}`,
         ref: expect.any(String) as unknown,
       });
@@ -140,7 +140,9 @@ describe("the generated marketplace manifest", () => {
 
   it("passes vwf's repository and dependencies through, and nobody else's", () => {
     const vwf = parsed.plugins.find(e => e["name"] === "vwf");
-    expect(vwf?.["repository"]).toBe("https://github.com/virajp/ai-plugins");
+    expect(vwf?.["repository"]).toBe(
+      "https://github.com/virajp/claude-plugins",
+    );
     expect(vwf?.["dependencies"]).toEqual([
       { marketplace: "virajp-plugins", name: "stackgen" },
     ]);

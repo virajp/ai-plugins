@@ -151,7 +151,7 @@ describe("planInstall", () => {
       "plugin",
       "marketplace",
       "add",
-      "virajp/ai-plugins",
+      "virajp/claude-plugins",
     ]);
     expect(steps[2]?.args).toEqual([
       "plugin",
@@ -223,7 +223,7 @@ describe("executeInstall", () => {
       "plugin",
       "marketplace",
       "add",
-      "virajp/ai-plugins",
+      "virajp/claude-plugins",
     ]);
     expect(ran[1]?.args).toEqual([
       "plugin",
@@ -258,7 +258,7 @@ describe("executeInstall", () => {
 
     expect(ran).toHaveLength(0);
     expect(outcomes.map(o => o.actions[0]?.summary)).toEqual([
-      "claude plugin marketplace add virajp/ai-plugins",
+      "claude plugin marketplace add virajp/claude-plugins",
       "claude plugin install vwf@virajp-plugins --scope user",
     ]);
   });

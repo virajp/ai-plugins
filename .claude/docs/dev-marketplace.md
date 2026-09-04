@@ -83,7 +83,7 @@ Restart Claude Code afterwards — a plugin's skills are read at session start.
 
 ```sh
 claude plugin marketplace remove virajp-plugins
-claude plugin marketplace add ./     # or: virajp/ai-plugins
+claude plugin marketplace add ./     # or: virajp/claude-plugins
 claude plugin install vwf@virajp-plugins --scope user
 ```
 

@@ -1,22 +1,22 @@
 # The installer CLI — usage
 
-`@askviraj/ai-plugins` installs **plugins** (by driving Claude Code's own
+`@virajp.dev/claude-plugins` installs **plugins** (by driving Claude Code's own
 commands), wires up **graphify**, and **removes** what this toolkit put on your
 machine.
 
 ```sh
 # Install the default plugin set (vwf; stackgen arrives as its dependency)
-pnpx @askviraj/ai-plugins --all
+pnpx @virajp.dev/claude-plugins --all
 
 # Install plugins by name, at either scope
-pnpx @askviraj/ai-plugins --user vwf --user stackgen
-pnpx @askviraj/ai-plugins --project vwf
+pnpx @virajp.dev/claude-plugins --user vwf --user stackgen
+pnpx @virajp.dev/claude-plugins --project vwf
 
 # See what a run would do, without writing anything
-pnpx @askviraj/ai-plugins --all --dry-run
+pnpx @virajp.dev/claude-plugins --all --dry-run
 
 # List everything the toolkit installed, and remove what you do not deselect
-pnpx @askviraj/ai-plugins --uninstall
+pnpx @virajp.dev/claude-plugins --uninstall
 ```
 
 The examples use `pnpx`; if you do not use pnpm, `npx` works the same.
@@ -53,7 +53,7 @@ runs:
 
 ```sh
 # Once
-claude plugin marketplace add virajp/ai-plugins
+claude plugin marketplace add virajp/claude-plugins
 
 # Then, per plugin
 claude plugin install vwf@virajp-plugins
@@ -183,10 +183,10 @@ nothing to remove has nothing to guess about.
 
 ```sh
 # Interactive: see the list, deselect what stays
-pnpx @askviraj/ai-plugins --uninstall
+pnpx @virajp.dev/claude-plugins --uninstall
 
 # Non-interactive: just show me what is installed and what removing it would do
-pnpx @askviraj/ai-plugins --uninstall --dry-run
+pnpx @virajp.dev/claude-plugins --uninstall --dry-run
 ```
 
 **What it never touches**: plugins enabled from another marketplace, any
@@ -200,7 +200,7 @@ bar you configure next. Delete them by hand if you want the space back.
 ## Versions
 
 ```sh
-pnpx @askviraj/ai-plugins --version
+pnpx @virajp.dev/claude-plugins --version
 ```
 
 Two things, from two places:
@@ -228,8 +228,8 @@ registry call is not GitHub and never sends it.
 
 There is no Cursor, OpenCode or Oh-My-Pi install path. Point your agent at this
 repo and ask it to adapt the plugin — the prompts are in the
-[readme](https://github.com/virajp/ai-plugins#other-tools), along with a plain
-statement of what that route does not promise.
+[readme](https://github.com/virajp/claude-plugins#other-tools), along with a
+plain statement of what that route does not promise.
 
 ## See also
 

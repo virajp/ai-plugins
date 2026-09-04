@@ -9,9 +9,10 @@ point straight at the bundle.
 
 **The entry is named, so the output is `bin/installer.mjs`** rather than
 `bin/index.mjs`. That name is the *artifact's*, not the command's:
-`package.json`'s `bin` key stays `ai-plugins`, which is what users invoke and
-what npm's Trusted Publisher is bound to. Renaming the file is safe; renaming
-the key breaks every documented invocation and the publish path with it.
+`package.json`'s `bin` key is `claude-plugins`, which is what users invoke.
+npm's Trusted Publisher binds to the **package name**, not the bin key, so
+neither pins the other — renaming the file is safe, and renaming the key costs
+only the documented invocations, which move with it.
 
 **tsup treats `dependencies` as external and inlines everything else.** So a
 runtime import that is only a `devDependency` gets **silently bundled**: it
@@ -45,7 +46,7 @@ read.
 `installer/src/index.ts` resolves it by **walking up for a `package.json` whose
 name matches**, never by counting `..` segments — it runs from two depths
 (`installer/src/` in the repo, `bin/` once bundled), and a fixed offset would be
-right in one and silently wrong in the other. `AI_PLUGINS_SOURCE_DIR` is the
+right in one and silently wrong in the other. `CLAUDE_PLUGINS_SOURCE_DIR` is the
 escape hatch, and is how the tests point it at a fixture.
 
 ## `--version`
@@ -76,14 +77,14 @@ tokenless; see `installer/src/github.ts`.
 
 ## Distribution: npm for the CLI, GitHub for the plugins
 
-`pnpx @askviraj/ai-plugins`, which needs Node. There is deliberately no
+`pnpx @virajp.dev/claude-plugins`, which needs Node. There is deliberately no
 standalone binary, no Homebrew tap and no Scoop bucket — every non-npm channel
 would be a per-platform archive plus a per-release checksum plus an
 extract-and-symlink installer, a second distribution system delivering what npm
 already delivers.
 
 The plugins go the other way entirely:
-`claude plugin marketplace add virajp/ai-plugins` reads this repo's `main`
+`claude plugin marketplace add virajp/claude-plugins` reads this repo's `main`
 directly. The committed-tree-validated-by-CI guarantee survives with a new
 channel — the manifest users read is `main`, and `plugins.yml` validates `main`
 on every push.

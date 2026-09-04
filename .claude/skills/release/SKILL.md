@@ -137,7 +137,7 @@ already uses. **Do not invent a second changelog format.**
 - Headlines: **Features**, **Bug Fixes**, **Performance Improvements**,
   **Merges**, **BREAKING CHANGES**.
 - Scopes are bolded; each entry links its commit via
-  `https://github.com/virajp/ai-plugins/commit/%commit%`.
+  `https://github.com/virajp/claude-plugins/commit/%commit%`.
 
 Shape of the note, in order:
 

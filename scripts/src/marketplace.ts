@@ -188,7 +188,7 @@ const STRICT = true;
  * resolves against the marketplace root, which means it always served the
  * default branch and there was no way to hold a plugin back from a release.
  */
-const REPO_URL = "https://github.com/virajp/ai-plugins.git";
+const REPO_URL = "https://github.com/virajp/claude-plugins.git";
 
 /**
  * The git tag one plugin release is pinned to.

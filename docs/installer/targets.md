@@ -7,11 +7,11 @@ Two writers, and it is worth being clear about which puts what where.
 | `claude plugin install` | the plugins: skills, agents, hooks, MCP and LSP servers |
 | `graphify`              | its own index and the git hooks that refresh it         |
 
-**`pnpx @askviraj/ai-plugins` is not a third writer.** It sequences the other
-two and writes nothing itself: the plugin flags (`--all`, `--user`, `--project`)
-drive `claude plugin` and never edit Claude's settings directly — Claude keeps
-bookkeeping beside what it writes, and hand-editing would strand the two apart —
-and graphify's wiring is `graphify`'s own two commands.
+**`pnpx @virajp.dev/claude-plugins` is not a third writer.** It sequences the
+other two and writes nothing itself: the plugin flags (`--all`, `--user`,
+`--project`) drive `claude plugin` and never edit Claude's settings directly —
+Claude keeps bookkeeping beside what it writes, and hand-editing would strand
+the two apart — and graphify's wiring is `graphify`'s own two commands.
 
 This is why the CLI leaves **no receipt**. There is nothing of its own on disk
 to record; what is there belongs to a tool that already tracks it.
@@ -22,7 +22,7 @@ Claude Code writes these itself, whether you run its commands or let the CLI
 sequence them. You register the marketplace once and install by name:
 
 ```sh
-claude plugin marketplace add virajp/ai-plugins
+claude plugin marketplace add virajp/claude-plugins
 claude plugin install vwf@virajp-plugins
 ```
 
@@ -101,7 +101,7 @@ or two and then dropped. See [usage.md](./usage.md#undoing-an-install).
 There is no Cursor, OpenCode or Oh-My-Pi install path, and no rendered tree for
 them. Point your agent at this repo and ask it to adapt the plugin; the prompts
 and the caveats are in the
-[readme](https://github.com/virajp/ai-plugins#other-tools).
+[readme](https://github.com/virajp/claude-plugins#other-tools).
 
 ## See also
 

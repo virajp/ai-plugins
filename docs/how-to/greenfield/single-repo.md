@@ -22,7 +22,7 @@ decisions; when it names a command, the manual section is the link.
 One install brings everything Relay needs.
 
 ```sh
-claude plugin marketplace add virajp/ai-plugins   # once
+claude plugin marketplace add virajp/claude-plugins   # once
 
 claude plugin install vwf@virajp-plugins
 ```

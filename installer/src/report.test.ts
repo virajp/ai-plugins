@@ -86,7 +86,7 @@ describe("renderProgress", () => {
         version: "4.3.3",
       }),
     )
-      .toContain("@askviraj/ai-plugins 4.3.3");
+      .toContain("@virajp.dev/claude-plugins 4.3.3");
   });
 });
 

@@ -159,7 +159,7 @@ export function shallowestNew(
  * Read by `packageRoot()`, which finds the root by walking up for a
  * `package.json` whose name matches rather than by counting `..` segments.
  */
-export const PACKAGE_NAME = "@askviraj/ai-plugins";
+export const PACKAGE_NAME = "@virajp.dev/claude-plugins";
 
 /** The marketplace this toolkit registers with Claude. */
 export const MARKETPLACE_NAME = "virajp-plugins";

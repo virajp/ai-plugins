@@ -13,9 +13,9 @@ A multi-agent plugin toolkit (`virajp-plugins`) containing LSP servers, MCP
 servers, and `vwf` — a full Product → Blueprint → Plan → Execute workflow plugin
 (with post-deploy verify + production-feedback intake).
 
-The repo also ships a small **installer CLI** (`@askviraj/ai-plugins`), which
-sequences Claude's own plugin commands and wires graphify — see The installer
-CLI.
+The repo also ships a small **installer CLI** (`@virajp.dev/claude-plugins`),
+which sequences Claude's own plugin commands and wires graphify — see The
+installer CLI.
 
 ### Three projects, three homes
 
@@ -88,6 +88,7 @@ installer/src/**                 installer source (TypeScript)
   ↓  tsup
 bin/installer.mjs          gitignored build output — the published entrypoint
 scripts/src/**             repo tooling: the generator and the checker
+sunset/**                  the retired @askviraj/ai-plugins stub — standalone, never built, published by hand once
 ```
 
 **Two files are generated**, both projections of the same 2 plugin manifests and
@@ -178,9 +179,9 @@ reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 
-`@askviraj/ai-plugins`, run as `pnpx @askviraj/ai-plugins …`, does three things:
-**plugin installs as a thin wrapper** that sequences Claude's own marketplace
-registration and plugin install commands, **graphify's wiring**, and
+`@virajp.dev/claude-plugins`, run as `pnpx @virajp.dev/claude-plugins …`, does
+three things: **plugin installs as a thin wrapper** that sequences Claude's own
+marketplace registration and plugin install commands, **graphify's wiring**, and
 **`--uninstall`**. It never edits Claude's settings itself and writes **no
 receipt**. `installer/` is the source; `bin/` is the tsup output, is gitignored,
 and is what npm publishes. The statusline is a separate package
@@ -200,10 +201,10 @@ remotely. Neither release task commits: both tag what has already landed.
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
 decouples **merged** from **released**. Two tag families, both namespaced:
 
-| Tag                    | Releases               | Triggers                     |
-| ---------------------- | ---------------------- | ---------------------------- |
-| `<name>-v<version>`    | one plugin             | nothing — refs resolve to it |
-| `installer-v<version>` | `@askviraj/ai-plugins` | `release.yml` → npm publish  |
+| Tag                    | Releases                     | Triggers                     |
+| ---------------------- | ---------------------------- | ---------------------------- |
+| `<name>-v<version>`    | one plugin                   | nothing — refs resolve to it |
+| `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish  |
 
 A tracked plugin version is always plain `X.Y.Z` — `plugins:check` fails one
 carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
@@ -242,11 +243,11 @@ from the manifests, so step 2 *is* the registration.
 
 ```sh
 # The wrapper: registers the marketplace and installs in one run
-pnpx @askviraj/ai-plugins --all                      # vwf (+ stackgen) at user scope
-pnpx @askviraj/ai-plugins --project <plugin-name>    # into this repo
+pnpx @virajp.dev/claude-plugins --all                      # vwf (+ stackgen) at user scope
+pnpx @virajp.dev/claude-plugins --project <plugin-name>    # into this repo
 
 # Or Claude's own commands directly — the same thing, unsequenced
-claude plugin marketplace add --scope user virajp/ai-plugins
+claude plugin marketplace add --scope user virajp/claude-plugins
 claude plugin install --scope project <plugin-name>@virajp-plugins
 ```
 

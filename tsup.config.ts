@@ -24,8 +24,8 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   // Named, so the output is `bin/installer.mjs` rather than `bin/index.mjs`.
   // The name is the artifact's, not the command's: `package.json`'s `bin` KEY
-  // stays `ai-plugins`, which is what users invoke and what npm's Trusted
-  // Publisher is bound to.
+  // is `claude-plugins`, which is what users invoke. npm's Trusted Publisher
+  // binds to the package name, not the bin key, so neither pins the other.
   entry: { installer: "installer/src/index.ts" },
   outDir: "bin",
   format: ["esm"],

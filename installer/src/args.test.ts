@@ -130,7 +130,9 @@ describe("renderUsage", () => {
   it("names the claude commands the install drives", () => {
     const usage = renderUsage();
 
-    expect(usage).toContain("claude plugin marketplace add virajp/ai-plugins");
+    expect(usage).toContain(
+      "claude plugin marketplace add virajp/claude-plugins",
+    );
     expect(usage).toContain("claude plugin install vwf@virajp-plugins");
   });
 

@@ -23,8 +23,8 @@ environment-specific tools in the matching env file.
 ## The branch model, and the two tag families
 
 **`develop` takes the work; `main` is what users read.** Claude resolves
-`claude plugin marketplace add virajp/ai-plugins` against the repo's **default
-branch**, so `main` stays the default and PRs target `develop`.
+`claude plugin marketplace add virajp/claude-plugins` against the repo's
+**default branch**, so `main` stays the default and PRs target `develop`.
 
 **`main` is merge-only, enforced in two places.** Locally, pre-commit's
 `no-commit-to-branch` blocks a commit on `main` — it does *not* block merges,
@@ -79,10 +79,10 @@ users get are exactly as described. See
 **Two tag families, both namespaced**, and the namespacing is load-bearing
 rather than tidiness:
 
-| Tag                    | Releases               | Triggers                     |
-| ---------------------- | ---------------------- | ---------------------------- |
-| `<name>-v<version>`    | one plugin             | nothing — refs resolve to it |
-| `installer-v<version>` | `@askviraj/ai-plugins` | `release.yml` → npm publish  |
+| Tag                    | Releases                     | Triggers                     |
+| ---------------------- | ---------------------------- | ---------------------------- |
+| `<name>-v<version>`    | one plugin                   | nothing — refs resolve to it |
+| `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish  |
 
 The installer's tags were bare `v*` until 2026-08-30. GitHub's tag globs match
 any character **except** `/`, so `v*` matched `vwf-v19.9.0` — every vwf release
@@ -118,9 +118,9 @@ loads the working tree for that session, no install and no cache.
   Publisher and validates the entry-point workflow's filename, so that file's
   trigger surface stays untouched. This workflow publishes nothing and holds no
   `id-token` permission.
-- **`release.yml`** — publishes `@askviraj/ai-plugins` to npm via **OIDC trusted
-  publishing** (no stored token, provenance automatic). Triggered two ways: a
-  pushed `installer-v*` tag, or `workflow_dispatch` — which is also how
+- **`release.yml`** — publishes `@virajp.dev/claude-plugins` to npm via **OIDC
+  trusted publishing** (no stored token, provenance automatic). Triggered two
+  ways: a pushed `installer-v*` tag, or `workflow_dispatch` — which is also how
   `deps-update.yml` publishes. Plugin tags never reach it; see The branch model
   above. **Every publish path must enter through this file** (see below). It
   sets up mise (`MISE_ENV=ci`), checks out the triggering ref, verifies the tag
@@ -164,11 +164,27 @@ potentially compromised — releases.
 ## One-time manual setup (not automatable here)
 
 On **npmjs.com**, add this repo + `release.yml` as the **Trusted Publisher** for
-`@askviraj/ai-plugins` (enables OIDC). The workflow-filename field takes a
-**single file** and a package has **exactly one** Trusted Publisher — set it to
-`release.yml` only (not a comma-separated list, and not `deps-update.yml`, which
-publishes by *dispatching* `release.yml`). A mismatch surfaces only at publish
-time as `ENEEDAUTH`. Until configured, `release.yml` cannot publish.
+`@virajp.dev/claude-plugins` (enables OIDC). A package name that has never been
+published cannot be configured at all, so the first version under a new name is
+published **by hand** (`mise run i:build && mise run i:publish` under the user's
+npm login) and the publisher is added afterwards. The workflow-filename field
+takes a **single file** and a package has **exactly one** Trusted Publisher —
+set it to `release.yml` only (not a comma-separated list, and not
+`deps-update.yml`, which publishes by *dispatching* `release.yml`). A mismatch
+surfaces only at publish time as `ENEEDAUTH`. Until configured, `release.yml`
+cannot publish.
+
+**The sunset stub is a one-time hand publish too.** `@askviraj/ai-plugins`, the
+package's former name, ships once more as `7.0.0` from `sunset/` — a standalone
+package, not a workspace member, never built — then is deprecated. After the new
+package's first release is live:
+
+```sh
+cd sunset && npm publish --access public
+npm deprecate "@askviraj/ai-plugins@*" "Moved to @virajp.dev/claude-plugins"
+```
+
+`release.yml` has nothing to do with it and never publishes it again.
 
 ## Cutting a release
 

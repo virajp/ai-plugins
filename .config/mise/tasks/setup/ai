@@ -9,4 +9,4 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
 print_header "Upgrading AI tools ..."
 
 print_subheader "Adding marketplaces ..."
-pnpx @askviraj/ai-plugins --all --project typescript --project cicd
+pnpx @virajp.dev/claude-plugins --all --project typescript --project cicd

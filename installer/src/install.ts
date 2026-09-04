@@ -41,7 +41,7 @@ import type { Outcome } from "./report.ts";
  * installs and updates reading this repo's `main`, which `plugins.yml`
  * validates on every push.
  */
-export const MARKETPLACE_SOURCE = "virajp/ai-plugins";
+export const MARKETPLACE_SOURCE = "virajp/claude-plugins";
 
 /**
  * What `--all` installs. Only `vwf`: its dependency (`stackgen`) arrives
