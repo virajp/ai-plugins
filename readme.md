@@ -155,11 +155,11 @@ Paste one of these, adjusting the plugin name:
 > Install the `vwf` plugin from
 > `https://github.com/virajp/claude-plugins/tree/main/plugins/vwf` into this
 > project, adapted to the conventions of the agent you are running in. Read its
-> `.claude-plugin/plugin.json` first — it declares the MCP servers, LSP servers
-> and dependencies the plugin expects. Skills live in `skills/<name>/SKILL.md`
-> with YAML frontmatter; hooks are declared in `hooks/hooks.json` with their
-> scripts beside them. Port each of those to this tool's equivalent mechanism,
-> and tell me plainly what has no equivalent rather than dropping it silently.
+> `.claude-plugin/plugin.json` first — it declares the MCP servers and
+> dependencies the plugin expects. Skills live in `skills/<name>/SKILL.md` with
+> YAML frontmatter; hooks are declared in `hooks/hooks.json` with their scripts
+> beside them. Port each of those to this tool's equivalent mechanism, and tell
+> me plainly what has no equivalent rather than dropping it silently.
 
 **The whole marketplace, to pick from:**
 
@@ -196,13 +196,13 @@ pass to `claude plugin install`.
 
 ### The workflow
 
-**[vwf](./docs/plugins/vwf.md)** — the flagship. Sixteen `/vwf:` commands
-covering the whole arc: onboard a repo, pin the outcome contract, model the
-system, sweep a whole-product blueprint to complete coverage, plan one slice as
-a reviewable diff, execute it unattended behind one merge gate, verify the
-deploy, and route what production teaches you back to the document that fixes
-it. It carries [cross-session memory](./docs/plugins/mempalace.md), a
-knowledge-graph layer, session handoff and recall, the
+**[vwf](./docs/plugins/vwf.md)** — the flagship. The `/vwf:` commands covering
+the whole arc: onboard a repo, pin the outcome contract, model the system, sweep
+a whole-product blueprint to complete coverage, plan one slice as a reviewable
+diff, execute it unattended behind one merge gate, verify the deploy, and route
+what production teaches you back to the document that fixes it. It carries
+[cross-session memory](./docs/plugins/mempalace.md), a knowledge-graph layer,
+session handoff and recall, the
 [Karpathy coding guidelines](./docs/plugins/karpathy-guidelines.md), and the
 Markdown and Context7 docs surfaces it absorbed. It names **no** technology — no
 language, no framework, no cloud — which is what lets the rest of this list

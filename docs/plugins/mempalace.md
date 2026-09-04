@@ -2,7 +2,7 @@
 
 `mempalace` is an AI memory system — it mines projects and conversations into a
 searchable "memory palace" so an agent can recall past decisions and findings
-across sessions. It ships 33 MCP tools and guided setup, and it is what backs
+across sessions. It ships MCP tools and guided setup, and it is what backs
 `vwf`'s cross-session memory.
 
 **It is not a plugin in this marketplace.** It was one — a `url`-sourced

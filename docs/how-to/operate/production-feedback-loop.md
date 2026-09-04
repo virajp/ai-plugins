@@ -181,8 +181,9 @@ reading and every later plan is a guess.
 
 ### Classification is the judgment, not the paperwork
 
-The same sentence from a user can be any of five things. An outage is the easy
-one — production itself broke, so it routes as an incident
+The same sentence from a user can be any of six things — a behavior bug, a
+blueprint hole, a metric reading, a UX issue, a feature idea, or an incident. An
+outage is the easy one — production itself broke, so it routes as an incident
 (`/vwf:feedback incident`), filed with a postmortem stub whose action items come
 back through this same classifier. For the rest, what decides is not the wording
 but what the blueprint already says about that surface. "The badge looks wrong"

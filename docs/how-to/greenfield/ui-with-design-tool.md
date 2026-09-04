@@ -315,15 +315,14 @@ code.
 The spine's [halts](./single-repo.md#when-things-halt) all still apply. These
 are the ones this scenario adds, each explained where it is enforced.
 
-- **Design-system import halts when the project has no design tool configured**,
-  when its token is one no adapter supports, or when the adapter returns nothing
-  usable — each with its own message, because they need different fixes.
+- **Design-system import halts on exactly three conditions**, each with its own
+  message because they need different fixes: the project has no design tool
+  configured; the configured tool was never materialized, so
+  `/vwf:import-design-system` has no `design-import-design-system` skill in the
+  repo's own `.claude/` to delegate to; or the adapter returns nothing usable.
+  There is no offline authoring mode.
   [`/vwf:design-system`](../../plugins/vwf.md#vwfdesign-system),
   [stackgen](../../plugins/stackgen.md)
-- **Design-system import halts when the design pack was never materialized**,
-  since `/vwf:import-design-system` has no `design-import-design-system` skill
-  in the repo's own `.claude/` to delegate to, and there is no offline authoring
-  mode. [`/vwf:design-system`](../../plugins/vwf.md#vwfdesign-system)
 - **`/vwf:screens` halts without a design system**, in either mode — screens
   reference it. [`/vwf:screens`](../../plugins/vwf.md#vwfscreens)
 - **`prompt` halts on a flow that has no folder yet.** A brand-new journey is
