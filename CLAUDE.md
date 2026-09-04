@@ -38,7 +38,9 @@ is not shipped (npm publishes `bin/` alone), so its context can sit in place.
 
 Each row below is loaded **on demand** — follow the link when you need more than
 the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
-the tree they govern; `release` is `/release`.
+the tree they govern; `release`, `create-plan` and `execute-plan` are slash
+commands — a change to this repo is planned with `/create-plan` and run, in a
+fresh session, with `/execute-plan <folder>`.
 
 | Read                                       | For                                                                                           |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
@@ -51,6 +53,8 @@ the tree they govern; `release` is `/release`.
 | [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent      |
 | [`.claude/skills/plugin-authoring/`][auth] | the eleven checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
 | [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible          |
+| [`.claude/skills/create-plan/`][cp]        | planning a repo change — the survey, the one-question-at-a-time interview, the plan folder    |
+| [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — unit waves, the wave gate, resume, landing, release   |
 
 [repo]: .claude/docs/repo-shape.md
 [plug]: .claude/docs/plugins.md
@@ -61,6 +65,8 @@ the tree they govern; `release` is `/release`.
 [sg]: .claude/skills/stackgen-plugin/SKILL.md
 [auth]: .claude/skills/plugin-authoring/SKILL.md
 [rel]: .claude/skills/release/SKILL.md
+[cp]: .claude/skills/create-plan/SKILL.md
+[ep]: .claude/skills/execute-plan/SKILL.md
 
 The user-facing docs are a different tree and a different audience: `readme.md`,
 `docs/installer/`, `docs/plugins/`, `docs/how-to/`.
