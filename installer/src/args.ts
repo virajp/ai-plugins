@@ -20,7 +20,8 @@
  *
  * `strict` is on, so an unknown flag is an **error naming itself** rather than
  * a silent no-op. That is what makes a retired flag legible instead of ignored
- * — which is how `--platform`, `--upgrade` and `--force` all answer.
+ * — which is how `--platform`, `--upgrade`, `--force` and `--statusline` all
+ * answer.
  */
 import { parseArgs } from "node:util";
 
@@ -59,11 +60,6 @@ const FLAGS: readonly FlagDoc[] = [
       + "deselect",
   },
   {
-    display: "--statusline",
-    description:
-      "Report where the statusline moved; it ships from its own package now",
-  },
-  {
     display: "--dry-run",
     description: "Show the full diff without writing anything",
   },
@@ -79,10 +75,6 @@ const OPTIONS = {
   user: { type: "string", multiple: true },
   project: { type: "string", multiple: true },
   uninstall: { type: "boolean" },
-  // Not an install any more: it reports where the bar went. Declared rather
-  // than retired precisely because `strict` would otherwise answer a user
-  // looking for the statusline with "unknown option" and nowhere to go.
-  statusline: { type: "boolean" },
   "dry-run": { type: "boolean" },
   version: { type: "boolean", short: "v" },
   // Declared rather than special-cased: `strict` rejects anything undeclared,
@@ -98,8 +90,6 @@ export interface Args {
   /** Plugins to install at project scope, in the order given. */
   readonly project: readonly string[];
   readonly uninstall: boolean;
-  /** Asked where the statusline went; nothing here installs one. */
-  readonly statusline: boolean;
   readonly dryRun: boolean;
   readonly version: boolean;
   readonly help: boolean;
@@ -123,7 +113,6 @@ export function parse(argv: readonly string[]): Args {
     user: values.user ?? [],
     project: values.project ?? [],
     uninstall: values.uninstall === true,
-    statusline: values.statusline === true,
     dryRun: values["dry-run"] === true,
     version: values.version === true,
     help: values.help === true,

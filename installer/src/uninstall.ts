@@ -169,11 +169,12 @@ export interface Item {
  * that may still be on disk, and refusing to read one because its target was
  * discontinued would strand exactly the machine most in need of cleaning.
  *
- * So the five entries for the retired targets — `cursor.json`, `ohmypi.json`,
- * `opencode.json`, `statusline-ohmypi.json`, `statusline-opencode.json` — were
- * dropped for their **labels and their `omp` plumbing**, not to stop them being
- * processed. Only Claude Code is supported now, and a row naming a tool this
- * project no longer ships for was describing a surface, not doing work.
+ * So the entries for the retired targets — `cursor.json`, `ohmypi.json`,
+ * `opencode.json`, and the per-target receipts of the bar this CLI no longer
+ * ships — were dropped for their **labels and their `omp` plumbing**, not to
+ * stop them being processed. Only Claude Code is supported now, and a row naming
+ * a tool this project no longer ships for was describing a surface, not doing
+ * work.
  *
  * What went with them: the `bin` field, the `hasBin` skip, and the `runUndo`
  * hook. The one remaining named receipt is Claude Code's and does not replay a

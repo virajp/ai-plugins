@@ -3,8 +3,7 @@
 [`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
 is a small CLI with three jobs: install **plugins**, wire up **graphify**, and
 **remove** what this toolkit put on your machine. It was published as
-`@askviraj/ai-plugins` before; that package is sunset and only prints a pointer
-here.
+`@askviraj/ai-plugins` before; that name is deprecated on npm and points here.
 
 ```sh
 pnpx @virajp.dev/claude-plugins --all
@@ -35,8 +34,8 @@ Homebrew tap and no Scoop bucket.
 Earlier versions of this CLI also installed a powerline statusline for Claude
 Code. It now lives in [`claude-status`](https://claude-status.virajp.dev) —
 `brew install virajp/tap/claude-status` — and nothing here installs it or cleans
-up after the versions that did. `--statusline` prints that redirection and exits
-1; that is the only thing the flag still does.
+up after the versions that did. The `--statusline` flag is retired and reports
+itself as an unknown option.
 
 So if you installed the bar from here, an upgrade can leave your `settings.json`
 naming a script this CLI no longer ships; installing that package re-points it.

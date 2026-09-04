@@ -24,14 +24,12 @@ wires graphify, and removes what the toolkit put on a machine.
 
 **The statusline is a separate package** — `claude-status`
 (`brew install virajp/tap/claude-status`) — and it is what provides the caps
-hook `/vwf:execute` depends on. Nothing here installs, configures or removes it;
-`--statusline` survives only to say so, printing the redirect and exiting with
-status 1. It was briefly retired outright, and that was wrong: `strict` answered
-a user who had not heard about the move with `unknown option` and nowhere to go,
-which is the one population that most needed the pointer. A machine upgrading
-from a version that did configure the bar keeps a `statusLine` key naming a
-script this CLI no longer deletes, and re-points it by installing
-`claude-status`.
+hook `/vwf:execute` depends on. Nothing here installs, configures, removes or
+mentions it: `--statusline` is retired and answers as an unknown option like
+every other retired flag, and the pointer to the package lives in the docs, not
+in the CLI. A machine upgrading from a version that did configure the bar keeps
+a `statusLine` key naming a script this CLI no longer deletes, and re-points it
+by installing `claude-status`.
 
 ## Source and artifact
 
@@ -131,18 +129,17 @@ touch.
 | `--user <name>`    | install a plugin at user scope; **repeatable** (`multiple: true`)                                                          |
 | `--project <name>` | install a plugin at project scope; repeatable. Project wins a name requested at both scopes                                |
 | `--uninstall`      | enumerate → deselect → remove. Interactive; no TTY refuses once there is something to remove                               |
-| `--statusline`     | installs nothing — reports where the bar moved and exits **1**. Composes: other installs still run, the notice prints last |
 | `--dry-run`        | writes nothing, diff to stdout, progress to stderr. The scriptable half of `--uninstall`, and of a plugin install          |
 | `--version`        | this CLI against npm, and the plugins available on `main`; exits 1 when the network is unreachable. Reads nothing off disk |
 | `-h, --help`       | usage on stdout, exit 0 — **declared**, since `strict` rejects anything undeclared                                         |
 
 **Retired, and each answers by name**: `--platform`, `--upgrade`, `--force`,
-`--no-statusline`. That legibility is the entire point of `strict` being on — a
-user with one in a script is told, rather than watching a run do less than they
-asked for. `--force` is worth a sentence of its own: it existed only for the
-status bar, so it could be configured on a machine where Claude was off `PATH`.
-Every remaining install *is* a `claude` invocation, so there is no case left
-where forcing means anything.
+`--statusline`, `--no-statusline`. That legibility is the entire point of
+`strict` being on — a user with one in a script is told, rather than watching a
+run do less than they asked for. `--force` is worth a sentence of its own: it
+existed only for the status bar, so it could be configured on a machine where
+Claude was off `PATH`. Every remaining install *is* a `claude` invocation, so
+there is no case left where forcing means anything.
 
 **The parser is `node:util`'s `parseArgs`, in `args.ts`, and repeatability is
 why.** It was `citty` until a repeated `--user` was found to install only the
@@ -161,9 +158,7 @@ a receipt to do what naming the plugins again did; upgrading is Claude's own
 path reports an already-installed plugin as satisfied with a note pointing there
 — never auto-updated.
 
-**An invocation that installs nothing prints the help and exits 1** — with one
-exception: `--statusline` alone is a *request*, not an empty invocation, so it
-prints its own answer instead of the flag table with "nothing to do" under it.
+**An invocation that installs nothing prints the help and exits 1.**
 
 ## GitHub calls
 
