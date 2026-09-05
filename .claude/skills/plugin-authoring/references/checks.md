@@ -11,6 +11,7 @@ format, and the one generated file that needs a freshness gate of its own.
 | `plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir  |
 | `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                             |
 | `plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree; `--check` asserts the committed file matches |
+| `plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`  |
 | `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                 |
 | `pnpm vitest run`             | the `scripts/` and `installer/` suites                                                                                |
 
@@ -76,14 +77,34 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **Pack task files are executable.** Every file a stackgen pack ships under
-    `config/.config/mise/tasks/**` carries its exec bit. That tree is a
-    *file-based* task library — mise runs each file directly — so one landing
-    644 fails as an **unknown task** rather than as a permission error, which
-    reads as a pack that never shipped it. The walk is its own rather than the
-    plugin file reader's, because every one of these paths runs through a dot
-    segment the reader's glob does not descend into. `plugins:check` is the only
-    reader that sees the bit before it lands in someone's repo.
+11. **A pack's `config/` payload tier is materializable as-is.** Five
+    assertions, every one of them about a file whose failure mode in the
+    *target* repo is silence rather than an error:
+    - a **task file lands executable**. `config/.config/mise/tasks/**` is a
+      *file-based* task library — mise runs each file directly — so one landing
+      644 fails as an **unknown task** rather than as a permission error, which
+      reads as a pack that never shipped it;
+    - and **starts with a known shebang** (`bash`, `node`, `python3`). mise
+      execs the file, so a missing or exotic one is an exec-format error at the
+      first `mise run`, and the shell gate picks its dialect from the same line;
+    - a **hook script** lands executable and shebanged too (`bash` or `sh`, a
+      narrower set because a hook is wired into `settings.json` as a bare path).
+      Same reasoning from the other end: a hook fault is the quietest fault
+      there is, since nothing downstream ever reports that it did not run;
+    - the tier's **root stays allowlisted** — `.gitignore`, `.editorconfig`,
+      `.gitattributes`, `LICENSE`, `SECURITY.md`, `readme.md`, `CLAUDE.md`,
+      `fnox.toml`, `eslint.config.mjs` and a language's mandated manifests.
+      Everything else belongs under `.config/`, and a pack landing one more
+      dotfile beside them is widening the root of every repo it materializes
+      into;
+    - a **pre-commit fragment parses** and declares a top-level `repos:` list,
+      because `/vwf:init` concatenates the fragments into one config and a
+      malformed one breaks a file no pack owns.
+
+    The walk is its own rather than the plugin file reader's, because every one
+    of these paths runs through a dot segment the reader's glob does not descend
+    into. `plugins:check` is the only reader that sees any of it before it lands
+    in someone's repo.
 12. **Retired vocabulary stated as live.** The recurrence class of every drift
     sweep: a token is renamed at its source of truth, the lineage records the
     rename, and a dozen other files keep using the old word as if nothing

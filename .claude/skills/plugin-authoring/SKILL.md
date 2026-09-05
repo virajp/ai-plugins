@@ -55,14 +55,24 @@ regenerate is invisible to every other check — this is the one piece of
 staleness the retired `plugins:render-clean` was really guarding, narrowed to
 the two files that still have the problem.
 
-## Two traps that are ours, not Claude's
+## Three traps that are ours, not Claude's
 
 1. **dprint deliberately excludes `plugins/**/*.md`.** Do not reach for the
    formatter — match the surrounding fold width by hand. (The exclusion outlived
    its original reason, which was Eta reflowing folded scalars. It stays because
    formatting ~2000 authored prose files is a decision, not a side effect.)
    `CLAUDE.md`, `readme.md` and `docs/` **are** formatted.
-2. **A dependency stays inside this marketplace.** Add the name to
+2. **`plugins/*/stacks/*/*/config/` is excluded too, and for a different
+   reason.** That tier is **payload** — copied byte-for-byte into a target repo,
+   where the *gate pack's own* dprint config formats it. That config
+   deliberately omits the `bracketSpacing`/`braceSpacing` this repo sets, so a
+   payload file formatted here comes out different from what the shipped config
+   produces, and a freshly initialised repo fails its own first `--all-files`
+   hook run on a file nobody touched. It has happened. The exclusion is on the
+   **directory**, so a new payload file type cannot silently re-acquire the
+   defect; when a payload file genuinely needs formatting, run the **shipped**
+   config over it, never this repo's.
+3. **A dependency stays inside this marketplace.** Add the name to
    `dependencies` in `plugin.json` with `"marketplace": "virajp-plugins"`; the
    marketplace entry is generated from it, and `plugins:check` asserts it
    resolves. Nothing here is url-sourced and nothing should be — the two outside

@@ -719,6 +719,7 @@ record.
 
 | Command                  | What it does                                                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `/vwf:init`              | Shape a repo — the config layout, the task library, the gates, the hygiene files, a licence (re-runnable)                       |
 | `/vwf:setup`             | Onboard/migrate a repo into vwf's format (re-runnable)                                                                          |
 | `/vwf:product`           | The Phase −1 outcome contract — problem, users, goals, slice priority                                                           |
 | `/vwf:architecture`      | Bootstrap or update the system shape + Project Registry                                                                         |
@@ -766,10 +767,78 @@ needs a recent Claude Code), and the model can also invoke them itself when the
 conversation calls for one. One artifact serves both paths, which is why this
 plugin ships no `commands/` directory.
 
+### /vwf:init
+
+`/vwf:init [--new | --existing] [target-dir]` shapes the **base repo** — the
+layout everything else assumes. `/vwf:setup` sets up **vwf** in it. The two are
+a pair and neither does the other's job: the config layout, the task vocabulary,
+the gates, the ignore set and a licence belong to `init`; `docs/blueprint/`,
+`.config/vwf.yaml` and the memory tree stay `setup`'s. On a repo that has
+neither, run `init` first.
+
+**It names no tool, and that is the design.** Every file it lays down comes from
+a stackgen pack, fetched through the stack adapter by three fixed slugs — the
+toolchain manager, the repo gates and the repo hygiene bundles, all three
+*unconditional*, so a repo that has picked no stack still gets them. `init`
+decides *when* the packs land, *what* you are asked, and how an existing tree is
+reconciled against what they ship. With no stack-adapter plugin installed it
+**halts** with the install command rather than printing an empty plan that reads
+exactly like an already-shaped repo.
+
+What a shaped repo has when it is done: a sectioned `.gitignore`, a lowercase
+`readme.md`, every tool config under `.config/`, the toolchain manager's
+five-file split, a file-based task library grouped `setup:*`, `code:*` and
+`p:<project>:*` over a shared helper library, pre-commit with the full hook set
+and conventional commits wired for release notes, a secrets provider, the
+security and dependency gates configured, and `.editorconfig`, `.gitattributes`,
+a Renovate config, `SECURITY.md` and the licence you chose.
+
+**Mode resolves from what is on disk**, unless `--new` or `--existing` says
+otherwise: no `.config/` directory *and* no task-library directory means
+**new**; anything else means **existing**. The signal is deliberately narrow — a
+repo with source, a readme and a licence but no configuration layout has never
+been shaped, and nothing in the new pipeline touches source.
+
+**Five questions, each one round**, asked *before* the plan so one yes covers
+all of it. Two on a new repo only — the repo name (proposed from the directory)
+and a one-line brief, which may be empty. Three on any repo — which provider
+holds this repo's secrets (the adapter's own menu, filtered to capability
+providers, plus *none — decide later*), the licence (MIT, Apache-2.0 or none),
+and a security-contact URL (defaulted to the origin's advisories page; declining
+writes no security file, since one naming a channel nobody watches is worse than
+none).
+
+**On an existing repo it surveys, plans, and applies on one consent.** The
+survey walks nine checks — root files against the allowlist, the readme's
+casing, task names against the pack's *legacy-name table*, task shebangs, the
+helper library's shape, missing files, ignore sections and hook fragments,
+commit types, and per-project task groups. What comes back is **one plan** —
+every create, move, rename and fragment merge, listed — applied on a single yes.
+It never asks per file, never writes before the yes, never touches application
+code, and never writes a language manifest, a lockfile or a CI workflow.
+
+**Every run ends with the same report** — files written, files moved, tasks
+renamed, sections appended, fragments merged, and anything deferred with the
+thing that would unlock it; an empty section prints as `none`. Then two
+next-step lines, always both and neither of them run: `/vwf:readme` to fill the
+readme the stub only opens, and `/vwf:setup` to bring the repo into vwf's
+format.
+
+A second run on a shaped repo produces an **empty plan** and says so. A declined
+write is a recorded deferral, never a halt — re-run `/vwf:init` whenever.
+
 ### /vwf:setup
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
 it after upgrading vwf to bring the tree back to the current format.
+
+**Step 0 begins with a shape check, before the mode fork.** A repo is *shaped*
+when the stack adapter's lockfile records all three unconditional slugs. Any of
+them missing and setup says what is absent and offers [`/vwf:init`](#vwfinit),
+which is what lays them down — that seam is why `init` is model-invocable as
+well as slash-invocable. Declining is a recorded deferral, not a halt: the repo
+shape and the vwf format are two different things, and a repo can be onboarded
+into one without the other. Setup itself never materializes a bundle any more.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -801,24 +870,20 @@ then produces a **dry-run plan** of every doc to scaffold or reconcile. On a
 new/empty repo it applies the workspace structure as the default and elicits
 each project's stack from the [template menu](#stack-templates) — a platform no
 installed plugin has a template for leaves that axis unrecorded for
-`/vwf:architecture` to settle rather than halting the run, and the tooling step
-defers the same way, recording what it could not provision without a stack
-alongside the unlock for each. `setup` never writes `unresolved` itself; that
-value only ever comes from an `/vwf:architecture` run that offered the axis. It
-also writes the product's **one** `mempalace.yaml`, at the repo root — one wing,
-the seven rooms vwf's memory protocol uses, and a secret denylist behind
-`.gitignore` — mining the whole tree including submodules, and consolidating
-away any config it finds in `.config/` or a submodule root (mining reads the
-config only from the directory it is pointed at, so a stray one is silently
-inert rather than merely wrong). Nothing is written until you approve; it works
-in a worktree, never deletes, and **never moves a source file** — a layout that
-differs from its topology's grouping, and an `iac` project sitting in another
-project's repo, both end the run as written recommendations rather than as
-moves. It materializes the repo's toolchain manager and gates through the stack
-adapter — the `mise` and `repo-gates` bundles, fetched by fixed slug rather than
-offered as a menu pick — merges a vwf section into your `CLAUDE.md`, writes a
-`.graphifyignore` at the repo root (the vwf-standard excludes, plus any
-committed-but-not-code trees it detects — see
+`/vwf:architecture` to settle rather than halting the run. `setup` never writes
+`unresolved` itself; that value only ever comes from an `/vwf:architecture` run
+that offered the axis. It also writes the product's **one** `mempalace.yaml`, at
+the repo root — one wing, the seven rooms vwf's memory protocol uses, and a
+secret denylist behind `.gitignore` — mining the whole tree including
+submodules, and consolidating away any config it finds in `.config/` or a
+submodule root (mining reads the config only from the directory it is pointed
+at, so a stray one is silently inert rather than merely wrong). Nothing is
+written until you approve; it works in a worktree, never deletes, and **never
+moves a source file** — a layout that differs from its topology's grouping, and
+an `iac` project sitting in another project's repo, both end the run as written
+recommendations rather than as moves. It merges a vwf section into your
+`CLAUDE.md`, writes a `.graphifyignore` at the repo root (the vwf-standard
+excludes, plus any committed-but-not-code trees it detects — see
 [Code intelligence](#code-intelligence)), bootstraps `environment.md` from the
 repo's existing env-var and secret usage (names only), detects the repo's
 verification-harness capabilities (dev server, E2E, staging mode), and stamps
@@ -1477,7 +1542,10 @@ with a bare `/vwf:handoff`, then `/clear` and `/vwf:recall next`.
 README, applying the [documentation standards](#documentation-standards) below.
 It defaults to the current repo root; pass a directory to document another repo.
 An existing readme is updated in place (its filename and casing preserved);
-otherwise it creates `README.md`.
+otherwise it creates **`readme.md`**. Lowercase is the default because every
+other file the toolkit lays at a repo root is lowercase. It never renames an
+existing `README.md` — that is a repo-shape move, and [`/vwf:init`](#vwfinit)
+makes it, as one line of a plan you approve in full.
 
 The generated README always carries these sections, in order (the tasks section
 is omitted when the repo has no task runner):
@@ -1543,11 +1611,19 @@ commits `docs:` through `/vwf:git-workflow`.
 
 Internal — you rarely invoke it directly. The other commands route **all** git
 actions through it: it isolates work in a git worktree (always the outermost
-superproject, never a submodule), initializes it with the repo's `worktree:init`
-(or `setup:all`) mise task, commits with conventional messages, and ends a
-worktree with full coverage — landing the branch (plus any submodule work and
-pointer updates), then removing it. It never pushes without your explicit
-request.
+superproject, never a submodule), initializes it with the repo's
+`setup:worktree` (or `setup:all`) mise task, commits with conventional messages,
+and ends a worktree with full coverage — landing the branch (plus any submodule
+work and pointer updates), then removing it. It never pushes without your
+explicit request.
+
+Two details follow the task contract [`/vwf:init`](#vwfinit) lays down. The
+pre-commit gate runs **before staging**, over the working tree's changed files,
+so a fixup folds into the same commit instead of needing one of its own — the
+sequence is `code:precommit`, then stage, then commit. And landing runs through
+`code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which push
+with `--follow-tags`; the explicit push step survives only in the manual
+fallback for a repo that has no such task.
 
 ## How it asks questions
 
@@ -1654,9 +1730,10 @@ fix reaches it only at the next rebuild.
 ## A worked walkthrough
 
 A first slice, end to end. Assume a backend service whose first flow is
-`place-order` (with an `order` entity under it). (On a fresh repo, `/vwf:setup`
-prints these steps as the chain and offers to start step 1 — it runs none of
-them.)
+`place-order` (with an `order` entity under it). (On a bare repo, run
+[`/vwf:init`](#vwfinit) first to shape it, then `/vwf:setup` — which offers init
+itself if you skip it. `/vwf:setup` then prints these steps as the chain and
+offers to start step 1; it runs none of them.)
 
 ```text
 # 1. Pin the outcome contract (once per workspace, re-run to pivot)

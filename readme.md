@@ -107,7 +107,9 @@ claude plugin install vwf@virajp-plugins
 Restart your agent afterward so the skills, hooks and MCP servers load, then run
 `/vwf:doctor`. It is the closest thing to a preflight now that nothing is gated
 at install time — though see the [caveat](#caveats) on what it does and does not
-check.
+check. On a repo that has never been shaped — no `.config/` layout, no task
+library — run `/vwf:init` before either: it lays down the config layout, the
+gates and the hygiene files the rest of the workflow assumes.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
@@ -206,11 +208,11 @@ pass to `claude plugin install`.
 ### The workflow
 
 **[vwf](https://claude-plugins.virajp.dev/plugins/vwf/)** — the flagship. The
-`/vwf:` commands covering the whole arc: onboard a repo, pin the outcome
-contract, model the system, sweep a whole-product blueprint to complete
-coverage, plan one slice as a reviewable diff, execute it unattended behind one
-merge gate, verify the deploy, and route what production teaches you back to the
-document that fixes it. It carries
+`/vwf:` commands covering the whole arc: shape a bare repo into the standard
+layout, onboard it, pin the outcome contract, model the system, sweep a
+whole-product blueprint to complete coverage, plan one slice as a reviewable
+diff, execute it unattended behind one merge gate, verify the deploy, and route
+what production teaches you back to the document that fixes it. It carries
 [cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
 knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
@@ -246,20 +248,23 @@ against newer packs is an explicit, diffed decision — never a silent overwrite
 never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
 also declare **repo config files** it owns — the mise config and the file-based
-task library everything else runs through — on the same merges-never-owns terms
-and behind their own consent line; gate configs like `dprint.json` are
-deliberately outside that fence, named as prerequisites rather than written. The
-packs, bundles and kinds that ship are inventoried in
+task library everything else runs through, each gate's own config, the hygiene
+files, a provider's environment fragment, and the pre-commit fragment
+`/vwf:init` merges — on the same merges-never-owns terms, behind their own
+consent line, and capped by a fixed allowlist of what may sit at a repo's root.
+Language manifests and CI workflow files stay outside that fence: they declare
+what the project *is*, and no pack decides that. The packs, bundles and kinds
+that ship are inventoried in
 [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
-the tree itself; the newest two kinds are `toolchain-manager` and `workspace`,
-which arrived when the `devtools` plugin dissolved into stackgen. stackgen is
-now the only stack plugin: its packs are the covered path, its generator the
-uncovered tail. A `vwf` dependency, because vwf's stack menu is the union of
-what the installed stack plugins offer — with none present it comes back empty,
-and the axes carry no free-text escape. You can defer an axis and keep defining
-the product, but `/vwf:plan` and `/vwf:execute` halt until it is answered.
-Having it installed commits you to nothing; it acts only once an axis is pinned.
-`stackgen@virajp-plugins`
+the tree itself; the newest kind is `repo-hygiene`, joining `toolchain-manager`
+and `workspace`, which arrived when the `devtools` plugin dissolved into
+stackgen. stackgen is now the only stack plugin: its packs are the covered path,
+its generator the uncovered tail. A `vwf` dependency, because vwf's stack menu
+is the union of what the installed stack plugins offer — with none present it
+comes back empty, and the axes carry no free-text escape. You can defer an axis
+and keep defining the product, but `/vwf:plan` and `/vwf:execute` halt until it
+is answered. Having it installed commits you to nothing; it acts only once an
+axis is pinned. `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding

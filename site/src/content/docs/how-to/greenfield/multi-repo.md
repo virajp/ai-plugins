@@ -33,17 +33,22 @@ more here than it does in a single-repo product — install at **user** scope,
 which is the default. You will be running vwf commands from four different
 checkouts, and `--scope project` would reach exactly one of them.
 
-### 2. /vwf:setup, in the base repo
+### 2. /vwf:init, then /vwf:setup, in the base repo
 
 Create the base repo first, and leave it empty. It is where `docs/blueprint/`,
-the vwf config, the plan index, the product-wide mise config and the local stack
-live, and it holds no product code — now or ever.
+the vwf config, the plan index, the product-wide toolchain config and the local
+stack live, and it holds no product code — now or ever.
 
 ```text
+/vwf:init
 /vwf:setup
 ```
 
-The run is the spine's blank-repo bootstrap unchanged
+`init` shapes the base repo the same way it shapes any other
+([`/vwf:init`](./single-repo.md#vwfinit)) — and each member repo gets its own
+`init` run when it is created, since the shape is per repo, not per product.
+
+The setup run is the spine's blank-repo bootstrap unchanged
 ([`/vwf:setup`](./single-repo.md#vwfsetup)): two questions, both proposed from
 the directory name, both answered `stallfront` — the product name and the memory
 wing. It asks nothing about structure, and could not usefully have: the member
@@ -123,21 +128,22 @@ git submodule add git@github.com:stallfront/stallfront-infra.git infra
 Then, from inside each one:
 
 ```text
+/vwf:init
 /vwf:setup
 ```
 
-Adding a repo to a vwf product **is** a setup run from inside that repo. Finding
-no config of its own, the run onboards it; base-repo resolution reaches
-Stallfront's config from there, so it acts on that one member's delta instead of
-re-onboarding the product. What it records is the membership in both directions
-— the base gains an entry naming the member, where it sits, the git URL to clone
-it from, and which registry projects live in it, and the member gains a small
-file naming the product and the way back to the base. Neither direction is
-decoration: the entry is what lets a command running in the base find code it
-does not contain, and the back-link is what stops a command running inside a
-member reporting a perfectly onboarded repo as un-onboarded. Where each one
-lives, and why both directions matter:
-[Structure](../../plugins/vwf.md#structure).
+Adding a repo to a vwf product **is** a setup run from inside that repo, with
+`init` first because each member carries its own shape. Finding no config of its
+own, the run onboards it; base-repo resolution reaches Stallfront's config from
+there, so it acts on that one member's delta instead of re-onboarding the
+product. What it records is the membership in both directions — the base gains
+an entry naming the member, where it sits, the git URL to clone it from, and
+which registry projects live in it, and the member gains a small file naming the
+product and the way back to the base. Neither direction is decoration: the entry
+is what lets a command running in the base find code it does not contain, and
+the back-link is what stops a command running inside a member reporting a
+perfectly onboarded repo as un-onboarded. Where each one lives, and why both
+directions matter: [Structure](../../plugins/vwf.md#structure).
 
 What is deliberately **not** recorded is which members are cloned on this
 machine. That is per-developer state that changes daily, so it is detected on

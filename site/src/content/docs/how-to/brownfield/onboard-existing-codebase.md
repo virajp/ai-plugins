@@ -75,9 +75,18 @@ each file created, moved and updated. Nothing lands until you approve. For
 Bookable that plan holds the `docs/blueprint/` and `docs/plans/` trees, the
 memory tree and the product's `mempalace.yaml`, the root `.graphifyignore` — the
 vwf-standard excludes plus whatever committed-but-not-code trees two years of
-history left behind, each proposed with its evidence — a vwf section merged into
-the existing `CLAUDE.md` (merged, not overwritten), and the mise config and repo
-gates, materialized from stackgen's `mise` and `repo-gates` bundles.
+history left behind, each proposed with its evidence — and a vwf section merged
+into the existing `CLAUDE.md` (merged, not overwritten).
+
+The repo's own tooling is **not** in that plan. Before the mode fork, setup
+checks whether the repo is *shaped* — whether the toolchain config, the repo
+gates and the hygiene files are recorded as materialized — and if any is missing
+it offers [`/vwf:init`](../../plugins/vwf.md#vwfinit), which is what lays them
+down. Bookable has a `Makefile` and a hand-rolled CI script and no `.config/`
+layout, so the offer comes up; accepting runs init's existing-repo survey (which
+shows its own plan, and its own single consent) before setup carries on.
+Declining is recorded as a deferral and the onboard continues — the repo shape
+and the vwf format are two different things.
 
 Two brownfield-only items appear in that plan. **Harness detection** records
 which verification capabilities the repo can already run: Bookable's `dev` task
