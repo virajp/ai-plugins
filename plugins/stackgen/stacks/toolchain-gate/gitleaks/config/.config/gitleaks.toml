@@ -41,9 +41,9 @@ useDefault = true
 # so the next instance of that credential type is still caught.
 [allowlist]
 paths = [
-'''build/*''',
-'''dist/*''',
-'''graphify-out/*''',
-'''node_modules/*''',
-'''target/*''',
+  '''build/*''',
+  '''dist/*''',
+  '''graphify-out/*''',
+  '''node_modules/*''',
+  '''target/*''',
 ]

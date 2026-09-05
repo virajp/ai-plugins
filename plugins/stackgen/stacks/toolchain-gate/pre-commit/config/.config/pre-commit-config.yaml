@@ -22,7 +22,7 @@ default_install_hook_types:
   - commit-msg
 
 # Stated once so each hook below only says what differs from it.
-default_stages: [ pre-commit ]
+default_stages: [pre-commit]
 
 # The exclusion set, stated once rather than per gate.
 #
@@ -58,7 +58,7 @@ repos:
         name: Check for added large files (>1MB)
         description: A binary committed by accident is cheap to refuse and
           expensive to remove — it stays in history after the delete.
-        args: [ "--maxkb=1024" ]
+        args: ["--maxkb=1024"]
       - id: check-case-conflict
         name: Check for case-conflicting filenames
         description: Two paths differing only in case collide on macOS and
@@ -116,12 +116,12 @@ repos:
         name: Normalise line endings to LF
         description: A CRLF file entering the tree rewrites whole-file diffs
           for everyone else. `--fix=lf` settles it rather than reporting it.
-        args: [ "--fix=lf" ]
+        args: ["--fix=lf"]
       - id: no-commit-to-branch
         name: Refuse a direct commit to main
         description: main is what consumers read, and it takes merges only.
           Merges are unaffected — git runs `pre-merge-commit` for those.
-        args: [ "--branch", "main" ]
+        args: ["--branch", "main"]
 
   - repo: local
     hooks:
@@ -144,7 +144,7 @@ repos:
           and silently stop checking every *.sh outside the tasks tree.
         entry: mise x -- shellcheck -x
         language: system
-        types: [ shell ]
+        types: [shell]
 
       - id: shfmt
         name: Check shell formatting
@@ -153,7 +153,7 @@ repos:
           committing.
         entry: mise x -- shfmt -d -i 2 -ci
         language: system
-        types: [ shell ]
+        types: [shell]
 
       - id: actionlint
         name: Lint GitHub workflows
@@ -180,7 +180,7 @@ repos:
           takes at most one positional argument, so with filenames appended any
           commit touching two files dies on an arg-count error rather than
           scanning.
-        args: [ --config, .config/gitleaks.toml ]
+        args: [--config, .config/gitleaks.toml]
         pass_filenames: false
 
   - repo: https://github.com/qoomon/git-conventional-commits
@@ -191,8 +191,8 @@ repos:
         description: The commit-msg gate. The release notes are generated from
           these messages, so a type outside the convention is a change that
           silently never appears in a changelog.
-        args: [ "--config", ".config/git-conventional-commits.yaml" ]
-        stages: [ commit-msg ]
+        args: ["--config", ".config/git-conventional-commits.yaml"]
+        stages: [commit-msg]
 
   # The config audit — deliberately `manual`, not a commit-stage gate.
   #
@@ -211,12 +211,12 @@ repos:
         name: Audit — every hook matches at least one file
         description: Catches a `files:` regex that stopped matching after a
           rename, which is a gate that reports success while checking nothing.
-        stages: [ manual ]
+        stages: [manual]
       - id: check-useless-excludes
         name: Audit — every exclude matches at least one file
         description: Catches an exclusion whose reason expired, which is the
           failure mode nobody re-reads because it keeps working.
-        stages: [ manual ]
+        stages: [manual]
 
 # Fragments from `.config/pre-commit.d/*.yaml` are merged below this line by
 # `/vwf:init`, each between a `# >>> pre-commit.d/<name>.yaml` and a matching

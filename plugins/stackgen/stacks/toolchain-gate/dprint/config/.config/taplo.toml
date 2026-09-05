@@ -8,11 +8,11 @@
 # reshuffled block.
 
 exclude = [
-"**/.git/**",
-"**/build/**",
-"**/dist/**",
-"**/node_modules/**",
-"**/target/**",
+  "**/.git/**",
+  "**/build/**",
+  "**/dist/**",
+  "**/node_modules/**",
+  "**/target/**",
 ]
 include = [ "**/*.toml" ]
 

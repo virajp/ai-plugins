@@ -14,4 +14,4 @@ repos:
         files: (^|.*/)pyproject\.toml$
         language: system
         pass_filenames: false
-        stages: [ pre-commit ]
+        stages: [pre-commit]

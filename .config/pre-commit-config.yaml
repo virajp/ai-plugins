@@ -127,6 +127,22 @@ repos:
 
   - repo: local
     hooks:
+      # `dprint.json` excludes `plugins/*/stacks/*/*/config/` on top of the
+      # `plugins/**/*.md` exclusion it has always carried, and for the same
+      # reason: a pack's `config/` tree is PAYLOAD, not this repo's source.
+      # Every file in it is copied byte-for-byte into someone else's repo,
+      # where the gate pack's own `.config/dprint.json` is what formats it —
+      # and that config deliberately omits the `bracketSpacing`/`braceSpacing`
+      # this one sets. Formatting a payload here rewrites it to settings the
+      # target does not use, so a freshly initialised repo fails its own first
+      # hook run: `dprint fmt` rewrites four files it just materialized.
+      #
+      # Anything a pack ships as bytes belongs to the target's config, never to
+      # this one. `hooks/` needs no exclusion — its scripts are `.sh`, which
+      # dprint does not format (`plugins:shellcheck` is their gate), and
+      # `hooks.yaml` is a manifest this repo reads rather than a file it ships.
+      # The linter below is not affected: it reports rule violations rather
+      # than reformatting, and finds none across the payload tree.
       - id: formatter
         name: Formatter
         entry: mise x -- dprint fmt --allow-no-files --log-level warn

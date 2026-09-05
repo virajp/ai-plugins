@@ -14,7 +14,7 @@ repos:
         files: ^lib/.*\.dart$
         language: system
         pass_filenames: false
-        stages: [ pre-commit ]
+        stages: [pre-commit]
 
       - id: flutter-import-sorter
         name: Flutter import sorter
@@ -22,7 +22,7 @@ repos:
         files: ^lib/.*\.dart$
         language: system
         pass_filenames: false
-        stages: [ pre-commit ]
+        stages: [pre-commit]
 
       - id: flutter-dependency-validator
         name: Flutter dependency validator
@@ -32,4 +32,4 @@ repos:
         files: ^lib/.*\.dart$
         language: system
         pass_filenames: false
-        stages: [ pre-commit ]
+        stages: [pre-commit]

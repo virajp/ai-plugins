@@ -14,4 +14,4 @@ repos:
         # The linter resolves its own targets from the repo's config, and its
         # cross-file rules need the whole tree rather than the staged subset.
         pass_filenames: false
-        stages: [ pre-commit ]
+        stages: [pre-commit]

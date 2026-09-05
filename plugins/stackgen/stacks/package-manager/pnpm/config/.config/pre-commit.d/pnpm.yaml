@@ -12,4 +12,4 @@ repos:
         entry: mise x -- pnpm dlx sort-package-json
         files: (^|.*/)package\.json$
         language: system
-        stages: [ pre-commit ]
+        stages: [pre-commit]

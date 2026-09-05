@@ -13,8 +13,8 @@ repos:
       # compatibility only and names the same entry.
       - id: ruff-check
         name: Ruff lint
-        args: [ --fix ]
-        stages: [ pre-commit ]
+        args: [--fix]
+        stages: [pre-commit]
       - id: ruff-format
         name: Ruff format
-        stages: [ pre-commit ]
+        stages: [pre-commit]
