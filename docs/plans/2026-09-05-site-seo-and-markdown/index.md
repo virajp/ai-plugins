@@ -247,8 +247,8 @@ plan (no `sharp` build) stands.
 | -- | ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | -------- |
 | U1 | 1    | [01-markdown-mirror.md](01-markdown-mirror.md)               | `site/src/lib/markdown.ts`, `site/src/pages/[...path].md.ts`, `site/src/pages/llms.txt.ts`, `site/src/pages/llms-full.txt.ts`                                                                                                                    | —          | green   | 35e5fed5 |
 | U2 | 1    | [02-icons-manifest-headers.md](02-icons-manifest-headers.md) | `.config/mise/tasks/site/icons`, `site/public/favicon.ico`, `site/public/apple-touch-icon.png`, `site/public/icon-192.png`, `site/public/icon-512.png`, `site/public/site.webmanifest`, `site/public/_headers`, `.config/pre-commit-config.yaml` | —          | green   | 59e32a29 |
-| U3 | 2    | [03-head-and-build-shape.md](03-head-and-build-shape.md)     | `site/src/layouts/Base.astro`, `site/src/layouts/Docs.astro`, `site/src/pages/index.astro`, `site/astro.config.ts`, and only under decision 9's fallback `site/src/scripts/docs.ts`                                                              | U1         | pending |          |
-| U4 | 2    | [04-check-links.md](04-check-links.md)                       | `site/scripts/check-links.ts`                                                                                                                                                                                                                    | U1         | pending |          |
+| U3 | 2    | [03-head-and-build-shape.md](03-head-and-build-shape.md)     | `site/src/layouts/Base.astro`, `site/src/layouts/Docs.astro`, `site/src/pages/index.astro`, `site/astro.config.ts`, and only under decision 9's fallback `site/src/scripts/docs.ts`                                                              | U1         | green   | 264bf206 |
+| U4 | 2    | [04-check-links.md](04-check-links.md)                       | `site/scripts/check-links.ts`                                                                                                                                                                                                                    | U1         | green   | 7f6433ac |
 | U5 | 3    | [05-docs.md](05-docs.md)                                     | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/repo-shape.md`, `.claude/docs/ci-and-releases.md`, `site/src/content/docs/**`, `.claude/skills/*-plugin/**`, `docs/memory/decisions/**`                                                | all        | pending |          |
 | U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md)                 | `site/package.json`, `plugins/*/.claude-plugin/plugin.json`, generated files                                                                                                                                                                     | U5         | pending |          |
 
@@ -511,6 +511,88 @@ the same browser. Both module scripts also fetch `200 text/javascript` under the
 CSP. So the CSP and U3's build-shape change are both exonerated and the gate's
 intent holds; what is unproven is the positive assertion, because `--dump-dom`
 does not await mermaid's dynamic `import()`. Not treated as a block | — |
+
+| 2 | commit | — | — | green | U3 `264bf206`, U4 `7f6433ac`. GAP:
+`04-check-links.md`'s commit line reads `test(site): …`, but `test` is not in
+`.config/git-conventional-commits.yaml`'s type list (ops, docs, merge, feat,
+fix, refactor) and pre-commit rejected it; committed as `ops(site):` with the
+same description. Also removed `site/.wrangler/` — untracked residue from the
+orchestrator's own CSP-gate `wrangler dev`, not a unit's, and not gitignored | —
+| | 3 | DR | — | 1 | findings(10+) | `docs-reconciler` run before the docs unit.
+Report truncated in transit twice; U5 pulls the remainder from DR directly.
+Findings 1–8 are `site/CLAUDE.md` (check-links row, the `public/brand/` split,
+three tree-table rows for the mirror, the tasks table's missing `site:icons`,
+the "no sharp" carve-out, a new CSP-vs-build-shape trap, the landing row's "no
+JS", the layouts row); 9 is `CLAUDE.md:150-153`; 10 is
+`.claude/docs/repo-shape.md:188-196` | — | | 3 | orch | — | — | note | Scope
+extension recorded: `.config/mise/tasks/site/check:11-12` carries a comment U4's
+change falsified, and **no unit's Owns list covers that file**. Wave 3 is U5
+alone, so there is no collision; the orchestrator extended U5 to that one
+comment rather than leave a doc the change falsified — the repo's "docs ship
+with the change" rule. Named explicitly here because it is a departure from the
+plan's Owns lists | — |
+
+| 3 | U5 | inherit | 1 | green | 6 files: `site/CLAUDE.md` (the largest — "What
+it is" gains the mirror sentence, five new tree rows, three new Rules, the
+`site:icons` carve-out on the no-sharp rule, the tasks table, six new Traps),
+`CLAUDE.md`, `readme.md` (one sentence in "Other tools"),
+`.claude/docs/repo-shape.md`, `.claude/docs/ci-and-releases.md`, and the
+authorised comment in `.config/mise/tasks/site/check`. DECIDED: the CSP goes in
+Rules and the config-key trap in Traps — complementary facts, and the policy
+string itself stays only in `site/public/_headers` (one-place guardrail);
+`site/CLAUDE.md`'s "(starts `1.0.0`)" left alone since it states the initial
+value and stays true after U6's bump; the two `llms*.txt.ts` endpoints share one
+tree row; nothing under `site/src/content/docs/**` or
+`.claude/skills/*-plugin/**` was falsified (grepped for the site URL, `favicon`,
+`check-links`, `CSP`, `font`, `og:`); `ci-and-releases.md:236-241`'s release
+ritual checked and left alone. DOCS FALSIFIED: none outstanding. GAP (**since
+closed**): U5 believed DR never answered its request for findings 10+; DR had in
+fact sent 10–12 and confirmed 12 was the last, and those three map onto exactly
+the three files U5 had already reconciled — so coverage is complete. GAP: the
+plan index showing modified is the orchestrator's run log, not U5's edit | | | 3
+| DR | — | 2 | note | Two notes back on U5's work: the readme sentence landed in
+"Other tools" (`readme.md:157-158`) rather than the intro DR's finding named,
+which DR judged the better single home and consistent with the plan's Out of
+scope, so `readme.md:30-32` stays untouched; and U5's `_headers` sentence at
+`ci-and-releases.md:168` is an addition rather than a fix to something DR found
+stale | — |
+
+| 3 | R3 | inherit | 1 | findings(3) | CONTRACT clean, RULINGS clean, but
+**three claims U5 wrote that the tree does not support** — the defect a docs
+wave exists to catch. `site/CLAUDE.md:155` said a `#fragment` on a `.md` link
+fails the checker; `check-links.ts:186` gates the fragment check on `.html`, so
+it is *skipped*, as decision 14 says, and `markdown.ts:69` deliberately emits
+such links. `:152` said Pagefind's *index* files carry the `.pagefind`
+extension; only the WASM binaries do. `:64` said a new client script goes in
+`src/scripts/` referenced by `src`; `Docs.astro:230` authors an inline
+`<script>` that Astro hoists, which is what `assetsInlineLimit: 0` exists to
+preserve. Everything else verified true against the tree, dprint green on all
+five formatted docs | — |
+
+| 3 | U5 | inherit | 2 | green | Three corrections in `site/CLAUDE.md`: the
+inline rule now binds the **built HTML** (an authored `<script>` block is
+hoisted; `is:inline` is what defeats that), the `.pagefind` trap names the two
+WASM binaries and points the index at `pf_index`/`pf_fragment`/`pf_meta`, and
+the `.md#fragment` trap says *skipped* rather than failed. DECIDED: kept
+`mermaid.ts` as the `src/scripts/` example but reframed the rule as "a script
+with enough substance to want its own module" — the tree ships **both** shapes
+(`Docs.astro:198` inline-and-hoisted, `:229` `src=`), so a rule mandating one
+contradicts the other. All three verified against check-links.ts, markdown.ts,
+Docs.astro, `dist/pagefind/`, astro.config.ts and `_headers` | | | 3 | R3 |
+inherit | 2 | findings(2) | CONTRACT clean, RULINGS clean, count 3→2
+(converging). Both are one-line factual errors: `site/CLAUDE.md:67`'s "what must
+never go on an executable script is `is:inline`" is a **false absolute** —
+`Search.astro:9` ships exactly that (`src=` + `type="module"` + `is:inline`),
+and the real constraint is inline *content*, not the directive; `:160`'s "the
+index itself is elsewhere" misplaces `*.pf_meta`, which sits in `dist/pagefind/`
+beside the WASM binaries, not in a subdirectory. The round-1 corrections all
+verified good, dprint clean | — | | 3 | orch | — | — | note | Both R3 round-2
+findings **verified by the orchestrator directly** rather than taken on the
+reviewer's word: `grep -n 'is:inline' site/src/components/Search.astro` returns
+line 9 as described, and `ls site/dist/pagefind/` shows
+`pagefind.en_3c6620935d.pf_meta` at the top level with `fragment/` and `index/`
+as the only subdirectories. Loop capped at two rounds, so these went back as a
+mechanical fix rather than a third review round | — |
 
 ## Launch
 
