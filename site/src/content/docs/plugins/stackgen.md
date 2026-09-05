@@ -107,7 +107,9 @@ became the `toolchain-manager/mise` pack, its four repo gates the `repo-gates`
 bundle, and `/devtools:scaffold` stopped being a command at all: laying the
 toolchain into a repo is a materialization now, like every other pack. Two kinds
 were minted on the way — `toolchain-manager` and `workspace` — and packs gained
-a fourth output target so one could write a repo's own config files.
+a fourth output target so one could write a repo's own config files. A third
+kind, `repo-hygiene`, followed when that target widened to cover every gate's
+config and the hygiene files, and `/vwf:init` arrived to lay them down.
 
 **stackgen is now the only stack plugin.** Its packs are the covered path, and
 the menu keeps its open `generate` entry for the rest — the stack you use that
@@ -119,19 +121,20 @@ Every pack and generation run declares a **kind**, and the kind — not the run 
 decides the output's structure and scope, so generated output is deterministic
 in shape while only content varies:
 
-| Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `language/typescript` bundle)                                                                                                                                                                                      |
-| `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                   |
-| `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                            |
-| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus artifact/pipeline/health where the service's category is `compute` (archetype: the `cloud-provider/gcp` bundle)                                                                                                                                                                                  |
-| `repo-gate`           | repo                   | the `toolchain-gate` components that run over the whole repo, composed together. A **language-specific** linter or formatter appearing here is a gap — it belongs to that language's bundle                                                                                                                                                                                                                               |
-| `toolchain-manager`   | repo                   | **exactly one component, standing alone** — the thing that pins the repo's tools, holds the environment values they read, and runs its tasks. A **5-topic bar** behind a router skill: the config split, environment values, the task-library contract, the mandatory task set, and bootstrap/CI parity. A polyglot repo materializes it **once**                                                                         |
-| `workspace`           | repo                   | the `package-manager` component that installs and locks the repo's members, plus a `build-orchestrator` where there is one — a **5-topic bar**, no router. The only repo-axis kind you **pick**: it is what `repo.stack.template` selects from. A single-package repo pins none, which is the kind's edge rather than a gap                                                                                               |
-| `ci-system`           | cicd                   | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage |
-| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `app-framework/flutter` bundle)                                                                                                                                                                                                                        |
-| `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                  |
-| `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature                                                                                                                          |
+| Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `language/typescript` bundle)                                                                                                                                                                                                                                                |
+| `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                                                                             |
+| `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                                                                                      |
+| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus artifact/pipeline/health where the service's category is `compute` (archetype: the `cloud-provider/gcp` bundle)                                                                                                                                                                                                                                            |
+| `repo-gate`           | repo                   | the `toolchain-gate` components that run over the whole repo, composed together. A **language-specific** linter or formatter appearing here is a gap — it belongs to that language's bundle                                                                                                                                                                                                                                                                                         |
+| `toolchain-manager`   | repo                   | **exactly one component, standing alone** — the thing that pins the repo's tools, holds the environment values they read, and runs its tasks. A **5-topic bar** behind a router skill: the config split, environment values, the task-library contract, the mandatory task set, and bootstrap/CI parity. A polyglot repo materializes it **once**                                                                                                                                   |
+| `repo-hygiene`        | repo                   | **exactly one component, standing alone** — the files every repo carries whatever wrote it. A **4-topic bar**, no router: the ignore set, the editor and attribute defaults, licensing and the security contact, and the dependency-update policy. Not a gate, and that is the distinction the kind holds: a gate *runs, finds something and fails*; hygiene runs nothing and *declares*. It also owns the **root allowlist** every other kind's `config/` tree is measured against |
+| `workspace`           | repo                   | the `package-manager` component that installs and locks the repo's members, plus a `build-orchestrator` where there is one — a **5-topic bar**, no router. The only repo-axis kind you **pick**: it is what `repo.stack.template` selects from. A single-package repo pins none, which is the kind's edge rather than a gap                                                                                                                                                         |
+| `ci-system`           | cicd                   | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage                                                           |
+| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `app-framework/flutter` bundle)                                                                                                                                                                                                                                                                                  |
+| `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                                                                            |
+| `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature                                                                                                                                                                                    |
 
 Every kind in that table is defined; no reservations are outstanding. Two of the
 six axes — `design` and `cicd` — are **tool axes**, where the bundle slug is the
@@ -186,11 +189,15 @@ than something that rides the landing:
   you have materialized from contributed, and **prints the two registration
   commands rather than running them**.
 - **A repo's own config files** belong to the repo, not to `.claude/`. A pack
-  that owns some — the toolchain manager owns `.config/mise.toml` and the task
-  library under `.config/mise/tasks/` — declares them in a `config/` tree
-  mirroring the repo root, and they land there. Mode is preserved, because a
-  task file arriving without its exec bit fails as an *unknown task* rather than
-  as a permission error.
+  that owns some — the toolchain manager owns the `mise.*.toml` layers and the
+  task library under `.config/mise/tasks/`; a gate owns its own config file; the
+  hygiene pack owns the root files; a provider drops an env fragment into
+  `.config/mise/conf.d/` and a hook fragment into `.config/pre-commit.d/` —
+  declares them in a `config/` tree mirroring the repo root, and they land
+  there. Everything else goes under `.config/`: a `config/` tree landing a root
+  path outside the fixed allowlist is a pack authoring error the materializer
+  refuses. Mode is preserved, because a task file arriving without its exec bit
+  fails as an *unknown task* rather than as a permission error.
 
 The need still travels as `language_facts` in the template payload for
 `/vwf:doctor` to verify; the local plugin is what actually provides the server.
@@ -235,11 +242,22 @@ directory and its registration go only when the last key does. Hook *scripts*
 come only from curated packs; generation never emits an executable.
 
 **A pack may still need repo files the materializer will not write.** The
-`config/` tree is what a pack *owns*, and the fence around it is deliberate:
-nothing writes `dprint.json`, `.config/pre-commit-config.yaml`, `package.json`
-or a CI workflow — a gate pack **names** its config file as a prerequisite the
-repo still owns. So a pack whose correctness depends on a repo-wide edit it does
-not own — a scanner allowlist, a `.gitignore` block, a pre-commit entry, a
+`config/` tree is what a pack *owns*, and the fence around it is still real,
+just drawn further out. Gate and provider configs came inside it on 2026-09-05;
+**four things stay out, enumerated rather than left to judgment** — a language
+manifest and its lockfile (a manifest is the project's own declaration of what
+it is), CI workflow files (a pack states which task names CI must run; the
+workflow is the repo's), editor settings (they belong to the people typing), and
+`CLAUDE.md` (vwf's, out of scope outright). Charters ratchet, which is why they
+are a list: each file the tier absorbs makes the argument for the next one
+easier, and "gate configs went in, so why not the manifest" is the argument that
+list exists to answer.
+
+The pre-commit config is the one file inside the fence that no pack writes
+whole: each contributes a `pre-commit.d/` fragment, and `/vwf:init` concatenates
+them between markers. Nothing in stackgen edits the config itself, which is what
+keeps a fragment a fragment. So a pack whose correctness depends on a repo-wide
+edit it genuinely does not own — a scanner allowlist, a `.gitignore` block, a
 mining exclude — carries that edit as a literal block in the reference that owns
 it, and ships a gate that fails the first commit naming whichever block is
 missing. `capability-provider/fnox` is the first: three of the four conditions
@@ -268,19 +286,23 @@ In a multi-repo product the target repo defaults to the current one; name a
 member repo to materialize there instead. Each repo gets independent copies and
 its own lockfile.
 
-## The repo baseline — mise and the gates
+## The repo baseline — mise, the gates and the hygiene files
 
-Two bundles are **unconditional**: `stackgen-stack-menu` leaves them out of the
-payload it returns, and `/vwf:setup` fetches them by their fixed slugs, `mise`
-and `repo-gates`. Nothing is recorded in `.config/vwf.yaml` for either — nothing
-was chosen, so there is no choice to record — and the landing goes in
-`lock.yaml` like any other materialization.
+Three bundles are **unconditional**: `stackgen-stack-menu` leaves them out of
+the payload it returns, and [`/vwf:init`](./vwf.md#vwfinit) fetches them by
+their fixed slugs, `mise`, `repo-gates` and `repo-hygiene`. Nothing is recorded
+in `.config/vwf.yaml` for any of them — nothing was chosen, so there is no
+choice to record — and the landing goes in `lock.yaml` like any other
+materialization. All three slugs present in that lockfile is what "this repo is
+shaped" means: `/vwf:setup` no longer fetches them, it checks for exactly that
+and offers `/vwf:init` when one is missing.
 
 They are unconditional because a repo that has picked no stack yet still needs a
-formatter, a secret scanner, a vulnerability scanner, and a way to run them by
-name. Left to the menu, "no stack chosen" and "this repo has no gates" would be
-the same state and nothing would tell them apart. Neither bundle needs a project
-axis or any stack knowledge, so both materialize onto a blank repo.
+formatter, a secret scanner, a vulnerability scanner, an ignore set, and a way
+to run them by name. Left to the menu, "no stack chosen" and "this repo has no
+gates" would be the same state and nothing would tell them apart. None of the
+three needs a project axis or any stack knowledge, so all three materialize onto
+a blank repo.
 
 **`repo-gates`** composes the four gates that run over the whole repository:
 **dprint** as the single formatter, **gitleaks** the secret scanner, **grype**
@@ -288,26 +310,47 @@ the dependency vulnerability scanner, and **pre-commit** the local gate that
 runs them. Nothing there is language-specific — ESLint is JS/TS-only, so it is a
 topic of the TypeScript language bundle rather than a repo gate. Getting that
 backwards is how a polyglot repo ends up with three secret scanners, one per
-language.
+language. Each of those four packs now ships **its own config file** under
+`.config/`, plus a `pre-commit.d/` fragment where it contributes a hook.
+
+**`repo-hygiene`** is the newest kind on the repo axis, beside `repo-gate`,
+`toolchain-manager` and `workspace`. Its single pack ships the files every repo
+needs and no tool owns: a sectioned `.gitignore`, `.editorconfig`,
+`.gitattributes`, `SECURITY.md`, a Renovate config, and the chosen `LICENSE`.
+
+The seam with `repo-gates` is worth stating, because it is the reason the kind
+exists rather than folding in: **a gate scans, while hygiene declares what is
+not there to scan.** Ignoring a file and allowlisting it in a scanner are two
+different decisions, and a secret that is ignored is still a secret nothing ever
+scanned — writing them as one act is how that gets missed. Two consequences
+follow. The licence texts live under `config/_licenses/` as a **pack-private**
+payload that is never copied wholesale: a repo gets the one licence it chose,
+not a directory of them. And the stack-specific ignore sections are **appended
+per repo** by `/vwf:init`, one section per technology, never frozen into the
+pack — a pack that hard-codes them ages the moment a language renames its build
+directory.
 
 **`mise`** is the toolchain manager, and the rest of this section is its
 subject: how the toolchain is pinned, where env values live, and the task
 library everything else runs through. It lands as a `config/` tree — the config
 files and the task library itself — plus a paths-scoped doctrine skill.
 
-### The three-file split
+### The five-file split
 
 mise config lives under `.config/`, where mise resolves `MISE_ENV` variants. A
-repo built or deployed through CI/CD splits its config across three files. mise
-loads `mise.toml` first, then deep-merges the active `MISE_ENV` variant on top,
-so each variant holds only deltas — never a copy of the base. Never duplicate a
-tool or setting across files; put it in the lowest layer that needs it.
+repo splits its config across five files, four of which the pack ships. mise
+loads `mise.toml` first, then deep-merges the active `MISE_ENV` variants on top,
+then the local file last of all — so each variant holds only deltas, never a
+copy of the base. Never duplicate a tool or setting across files; put it in the
+lowest layer that needs it.
 
-| File            | Loads when         | Holds                                                                         |
-| --------------- | ------------------ | ----------------------------------------------------------------------------- |
-| `mise.toml`     | always (every env) | shared `[settings]`, runtime `[tools]`, common `[env]`, `[tasks.init]`        |
-| `mise.dev.toml` | `MISE_ENV=dev`     | dev-only tooling, shell aliases, local/dev env values                         |
-| `mise.ci.toml`  | `MISE_ENV=ci`      | CI/production-only settings + tools, the node-gpg workaround, prod env values |
+| File              | Loads when          | Holds                                                                         |
+| ----------------- | ------------------- | ----------------------------------------------------------------------------- |
+| `mise.toml`       | always (every env)  | shared `[settings]`, runtime `[tools]`, common `[env]`, `[tasks.init]`        |
+| `mise.dev.toml`   | `MISE_ENV=dev`      | dev-only tooling, shell aliases, local/dev env values                         |
+| `mise.ci.toml`    | `MISE_ENV=ci`       | CI/production-only settings + tools, the node-gpg workaround, prod env values |
+| `mise.test.toml`  | `MISE_ENV=dev,test` | test deltas, layered on top of dev — never selected alone                     |
+| `mise.local.toml` | always, last        | this machine's overrides — **never committed**, and never shipped             |
 
 Selecting the environment:
 
@@ -315,10 +358,19 @@ Selecting the environment:
   local env values load automatically.
 - **CI/CD pipelines and production runtimes** set `MISE_ENV=ci`, so the CI/prod
   overrides apply.
+- `MISE_ENV` is a **comma list and the last entry wins**, which is what makes
+  `MISE_ENV=dev,test` a delta on dev rather than a fourth full config.
 - With `MISE_ENV` unset, only `mise.toml` loads — the minimal, portable base.
 
-A repo with no CI/CD and no deploy target needs only `mise.toml`. Add the
-variants when a pipeline or deployed environment appears.
+A repo with no CI/CD, no deploy target and no separate test environment needs
+only `mise.toml`. The others cost nothing empty and are shipped anyway, so the
+answer to "where does this go" never requires creating a file first.
+`mise.local.toml` is the exception: it is gitignored by the hygiene pack and
+documented in `mise.toml`'s banner, never written for you.
+
+A sixth path sits beside them and is not part of the count:
+`.config/mise/conf.d/<pack>.toml`, a directory mise auto-loads, where a secrets
+provider contributes its own `[env]` without any component editing `mise.toml`.
 
 `mise.toml` carries the language **runtime only** in `[tools]`. Formatters,
 linters, security scanners, and other dev tooling belong in `mise.dev.toml`, so
@@ -352,60 +404,116 @@ names: `.config/mise/tasks/code/format` becomes `mise run code:format`. List
 them with `mise tasks`. Reserve `[tasks.*]` toml entries for trivial run-strings
 and `depends` aggregations.
 
+**Three groups, and every task is in exactly one.** `setup:*` is bootstrap and
+re-sync — what a machine runs to be able to work here at all. `code:*` is what a
+*change* runs through: the quality gates and the git operations. `p:<id>:*` is
+one project's own commands. The first two are a **contract** whose names are
+identical on every repo, because those names are what the rest of the toolkit
+invokes by hand; `p:*` is the opposite, and every name in it is the repo's own.
+
 Every repo ships the same mandatory set. The contract — helpers,
 `#MISE`/`#USAGE` headers, flags — is identical across stacks; only the commands
 inside `code/*` and `setup/*` change with the tech stack.
 
-- **`code/*` — quality gates.** `code/format`, `code/lint`, `code/sec`,
-  `code/precommit`, `code/git-config`, `code/worktrees`, and the `code/all`
-  aggregator (`format` → `lint` → `sec`). `code:all` is the one-command gate;
-  `precommit` and `git-config` are wired into the pre-commit hooks and `setup`,
-  not into `code:all`. A stack's `code:sec` fill typically needs scanners from
-  `mise.dev.toml` — run it under the dev toolchain (`MISE_ENV=dev`).
+- **`code/*` — what a change runs through.** `code/format`, `code/lint`,
+  `code/sec`, `code/precommit`, `code/git-config`, `code/worktrees`, `code/ai`,
+  `code/merge/develop`, `code/merge/main`, and the `code/all` aggregator
+  (`format` → `lint` → `sec`). `code:all` is the one-command gate; `precommit`
+  and `git-config` are wired into the pre-commit hooks and `setup`, not into
+  `code:all`. `code:sec` needs scanners from `mise.dev.toml` — run it under the
+  dev toolchain (`MISE_ENV=dev`).
+- **`code/merge/*` — landing, with the predicates first.**
+  `code:merge:develop <branch>` refuses a source that is `main` or `develop`,
+  refuses an unclean tree, runs the pre-commit safety net and **fails if it
+  changed anything**, then hops to the main worktree, `git merge --no-ff` and
+  `git push --follow-tags`. `code:merge:main` is the same sequence with one
+  extra predicate: the source must be `develop`, with nothing unpushed. A
+  conflict leaves the tree mid-merge on purpose. (These were `merge:develop` and
+  `merge:main`; a merge is one more thing a change runs through, like the
+  gates.)
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
-  `setup:deps:all`, `setup:external:update` (only if that exists),
-  `setup:precommit` and `setup:ai` in order, and stays idempotent. `--clean`
-  wipes deps and caches first; `--all` recurses into every git submodule. Alias
-  it as `setup` (and `setup-all` where there are submodules).
-- **`setup/deps/*` — the package manager, and only that.** `install` (the one
-  required slot — install from the lockfile) plus whichever of `upgrade`,
-  `outdated`, `audit` and `cleanup` that manager actually has; `setup:deps:all`
-  runs `install` and probes for the rest. **The task path carries no tool name**
-  — `setup:pnpm:*`, `setup:uv:*` and `setup:app:*` are gone, so the contract
+  `setup:external:start`, `setup:deps:all`, `setup:precommit` and `code:ai` in
+  order, and stays idempotent. `--all` recurses into every git submodule, and
+  one `--<project-id>` flag per member is generated from the repo's own project
+  ids. Alias it as `setup`.
+- **`setup/deps/*` — the package manager, and only that.** Five verbs, all five
+  slots: `cleanup`, `install` (which honours `--frozen`, the lockfile-strict
+  mode CI uses), `upgrade`, `outdated`, `audit`. `setup:deps:all` runs them in
+  that order, and a manager missing one leaves its slot printing the placeholder
+  notice. `update` split into `upgrade` because the one word read as both
+  install-and-refresh. **The task path carries no tool name** — `setup:pnpm:*`,
+  `setup:uv:*`, `setup:app:*` and `setup:doppler` are gone, so the contract
   reads the same on every stack.
 - **`setup/external/*` — services, and optional.** Emulators, containers, local
-  queues, under `update` / `pull` / `check` / `start` / `stop` / `restart`. A
-  repo that runs against none has **no such folder** — not a placeholder, just
-  absent — and `setup:all` probes by name so that absence is silent. Only
-  `update` is wired into setup: it pulls and builds, and starts nothing.
-- **`worktree/init`.** The lighter sibling of `setup:all` for a fresh worktree —
-  submodules, mise, `setup:deps:install`. vwf's git-workflow probes for it by
-  name before falling back to `setup:all`.
-- **Four tasks ship as slots.** `code/lint`, `code/sec`, `setup/secrets` and
-  `setup/deps/install` carry a `#PLACEHOLDER` marker: the task name is the
-  contract, the mechanism comes from whichever stack the repo pins. Running one
-  prints every unconfigured task in the repo and **exits 0**, so `code:all` and
-  `setup:all` work end to end before any stack is chosen. `code/format` is the
-  exception that has a real default — dprint over the repo's markdown — because
-  every repo has markdown from the first commit.
-- **`_scripts/helpers`.** The `_scripts/` directory is underscore-prefixed, so
-  mise treats it as **not a task**. It holds the shared shell library (colors
-  plus `print_header` / `print_warn` / `print_error` / `line_sep`) that every
-  task sources as its first real line for uniform output.
+  queues, under `pull` / `start` / `stop`. A repo that runs against none gets
+  placeholder slots that announce themselves and exit 0, so `setup:all` runs end
+  to end regardless.
+- **`setup/worktree`.** The lighter sibling of `setup:all` for a fresh worktree
+  — submodules, mise, `setup:secrets`, `setup:deps:install --frozen`. vwf's
+  git-workflow probes for it by name before falling back to `setup:all`. (It was
+  `worktree:init`; `worktree:` was a group of one, and this is a bootstrap.)
+- **Several tasks ship as slots.** `code/lint`, `setup/secrets`, every
+  `setup/deps/*` and every `setup/external/*` carry a `#PLACEHOLDER` marker: the
+  task name is the contract, the mechanism comes from whichever stack the repo
+  pins. Running one prints every unconfigured task in the repo and **exits 0**,
+  so `code:all` and `setup:all` work end to end before any stack is chosen.
+  `code/format` and `code/sec` are the exceptions with real defaults — the
+  formatter over the repo's markdown, and the secret and vulnerability scanners
+  the gates bundle installs — because every repo has markdown and dependencies
+  from the first commit.
+- **`_scripts/helpers`, plus siblings.** The `_scripts/` directory is
+  underscore-prefixed, so mise treats it as **not a task**. `helpers` is the
+  shared shell library (colors plus `print_header` / `print_subheader` /
+  `print_warn` / `print_error` / `line_sep`) that every task sources as its
+  first real line; the separator is baked into the two header functions, so a
+  caller never draws one. Beside it: `checks` (the merge predicates), `merge`
+  (their shared body), `placeholder` (what a slot prints) and `helpers.mjs`,
+  which mirrors the print API for a Node task. One underscore, not two — the
+  directory already says *library*.
 - **`[tasks.init]`.** A toml task in `mise.toml` that chmods every file under
   `.config/mise/tasks/` executable. It lives in the base so tasks run in every
   env, CI included; `setup:all` and others declare `#MISE depends=["init"]`.
 
 **Who fills the slots.** The `mise` pack ships the common contract — the
-`code/*` gates, `worktree/init`, `setup/*` and the helpers — and every other
+`code/*` gates, `setup/worktree`, `setup/*` and the helpers — and every other
 pack with a `config/` tree fills in its own half on top: `package-manager/pnpm`
 and `package-manager/uv` supply `setup/deps/*`, `toolchain-gate/ruff` and
 `app-framework/flutter` supply the `code/format` and `code/lint` their toolchain
-needs. Composition runs `toolchain-manager` first, then
-`package-manager`/`language`, then `toolchain-gate`, then `app-framework`, so a
-later component's file wins and the lockfile records per file which component
-supplied it.
+needs, and the secrets providers overlay `setup/secrets`. Composition runs
+`toolchain-manager` first, then the `repo-gate` components, then `repo-hygiene`,
+then `package-manager`/`language`, then `app-framework`, then
+`capability-provider`, so a later component's file wins and the lockfile records
+per file which component supplied it. The two ends are what the order is for:
+the manager goes **first** because it lays the baseline every overlay overlays,
+and a provider goes **last** because a secrets overlay is the most specific
+answer anything gives to `setup:secrets` — whatever a language pack thought that
+task should do, the repo's actual secrets manager knows better.
+
+**Two things no pack can know**, and `/vwf:init` fills both: the marked
+positions a pack ships as commented slots (the bootstrap aggregator's member
+flags, the shell aliases) and the per-project `p:<id>:*` groups, which it
+scaffolds as a `_default` placeholder per project. Filling a slot a pack marked
+is init's job; authoring pack-owned content from scratch is not.
+
+**Legacy names.** The contract replaced these, and the pack carries the table so
+`/vwf:init` can rename them on an existing repo — the renaming is a fact about
+this task library, and vwf's own prose names no tool.
+
+| Was                                         | Is now               |
+| ------------------------------------------- | -------------------- |
+| `worktree:init`                             | `setup:worktree`     |
+| `merge:develop`, `merge:main`               | `code:merge:*`       |
+| `setup:pnpm:*`, `setup:uv:*`, `setup:app:*` | `setup:deps:*`       |
+| `setup:ai`                                  | `code:ai`            |
+| `setup:doppler`                             | `setup:secrets`      |
+| `setup:deps:{start,stop,pull,update}`       | `setup:external:*`   |
+| `setup:deps:update`                         | `setup:deps:upgrade` |
+| `_scripts/_helpers`, `_scripts/_checks`     | `_scripts/helpers`   |
+
+A repo still carrying a left-hand name is not broken, but nothing else in the
+toolkit will find it: vwf probes `setup:worktree`, the aggregators call
+`setup:deps:*`, and the shell aliases point at `code:*`.
 
 ## Skills and the agent
 
@@ -455,6 +563,8 @@ before it lands:
   upgraded pack by design; `/stackgen:stackgen-sync` is where the divergence
   becomes a diff you decide about.
 - **Repo config is a fenced target, not a free one.** A pack writes only the
-  config files its own component owns. Gate configs, the package manifest and CI
-  workflows are named as prerequisites and left to you — deliberately, because
-  each file the tier absorbs makes the argument for the next one easier.
+  config files its own component owns — its gate's config included, since
+  2026-09-05. The language manifest and its lockfile, CI workflows, your editor
+  settings and `CLAUDE.md` are named as prerequisites and left to you,
+  deliberately: each file the tier absorbs makes the argument for the next one
+  easier, and those four are where the line holds.

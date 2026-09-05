@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-#MISE description="List git worktrees across this repo and every submodule"
+#MISE description="List git worktrees across this repo and every member"
 
-set -e
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # git only, so it belongs to every repo whatever the stack. It exists because
 # the worktree discipline makes it easy to accumulate branches you have stopped
 # thinking about — this is the one command that shows all of them at once,
-# including the ones inside submodules, which `git worktree list` will not.
+# including the ones inside members, which `git worktree list` will not.
 
 # Ahead/behind against the repo's own default branch, read from origin/HEAD.
 default_branch() {
@@ -37,21 +38,28 @@ report() {
     branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
 
     if git -C "$wt" rev-parse --verify --quiet "origin/${base}" >/dev/null 2>&1; then
-      counts="$(git -C "$wt" rev-list --left-right --count "origin/${base}...HEAD" 2>/dev/null || echo '0	0')"
+      counts="$(git -C "$wt" rev-list --left-right --count "origin/${base}...HEAD" 2>/dev/null || printf '0\t0')"
       behind="$(echo "$counts" | awk '{print $1}')"
       ahead="$(echo "$counts" | awk '{print $2}')"
       print_yellow "  ${branch}  +${ahead}/-${behind}  ${wt}"
     else
       print_yellow "  ${branch}  (no origin/${base})  ${wt}"
     fi
-  done <<< "$worktrees"
+  done <<<"$worktrees"
 
   print_newline
 }
 
+# The repo's members, one relative path per line. `$displaypath` is git's own
+# variable and stays single-quoted so git, not this shell, expands it.
+# shellcheck disable=SC2016
+members() {
+  git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true
+}
+
 report "${MISE_PROJECT_ROOT}" "$(basename "${MISE_PROJECT_ROOT}")"
 
-while read -r submodule; do
-  [ -n "$submodule" ] || continue
-  report "${MISE_PROJECT_ROOT}/${submodule}" "${submodule}"
-done < <(git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true)
+while read -r member; do
+  [ -n "$member" ] || continue
+  report "${MISE_PROJECT_ROOT}/${member}" "${member}"
+done < <(members)

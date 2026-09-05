@@ -1,0 +1,35 @@
+# Merged into `.config/pre-commit-config.yaml` by `/vwf:init`, between the
+# marker comments that name this file. Edit here and re-run init — an edit made
+# inside the merged block is overwritten on the next run.
+#
+# All three scope to `lib/`: the generated platform folders are the build's
+# output, and the analyzer has opinions about code nobody wrote.
+
+repos:
+  - repo: local
+    hooks:
+      - id: dart-analyze
+        name: Dart analyze
+        entry: mise x -- dart analyze --fatal-infos
+        files: ^lib/.*\.dart$
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: flutter-import-sorter
+        name: Flutter import sorter
+        entry: mise x -- dart run import_sorter:main
+        files: ^lib/.*\.dart$
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: flutter-dependency-validator
+        name: Flutter dependency validator
+        description: Catches a declared package nothing imports, and an import
+          nothing declares — neither of which the analyzer sees.
+        entry: mise x -- dart run dependency_validator
+        files: ^lib/.*\.dart$
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

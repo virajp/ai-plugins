@@ -37,8 +37,8 @@ flag() {
 # plain, and regex-escaped, since a gitleaks `paths` entry writes the dot as
 # `\.` and a plain grep for `fnox.toml` does not find `fnox\.toml`.
 names_fnox_file() {
-  grep -Fq "$FNOX_FILE" "$1" \
-    || grep -Fq "$(printf '%s' "$FNOX_FILE" | sed 's/\./\\./g')" "$1"
+  grep -Fq "$FNOX_FILE" "$1" ||
+    grep -Fq "$(printf '%s' "$FNOX_FILE" | sed 's/\./\\./g')" "$1"
 }
 
 # No fnox config, nothing to guard. A repo that has not pinned fnox — or one
@@ -99,8 +99,8 @@ fi
 #
 # What makes the ciphertext safe to commit is that the key is not beside it,
 # so a scanner hit on an identity is ALWAYS real and must never be silenced.
-if [ -f "$GITLEAKS_CONFIG" ] \
-  && grep -Eq 'age\\?\.txt|AGE-SECRET-KEY|\\?\.fnox/|key_file' "$GITLEAKS_CONFIG"; then
+if [ -f "$GITLEAKS_CONFIG" ] &&
+  grep -Eq 'age\\?\.txt|AGE-SECRET-KEY|\\?\.fnox/|key_file' "$GITLEAKS_CONFIG"; then
   flag "$GITLEAKS_CONFIG appears to allowlist a decryption identity."
   say "  The allowlist covers $FNOX_FILE and nothing else. A hit on an age"
   say "  identity is always real. See the fnox skill, condition 2."

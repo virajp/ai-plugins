@@ -1,23 +1,46 @@
 #!/usr/bin/env bash
-#MISE description="Check or format files"
+
+#MISE description="Check or format the repo's files"
+#MISE dir="{{ config_root }}"
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-[[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="debug" || LOG_LEVEL="warn"
-[[ "${usage_fix:-false}" == "true" ]] && CMD="fmt"          || CMD="check"
+# Overlays whatever the tiers below wrote — this pack is on the app-framework
+# axis, so it is last and wins. dprint keeps the repo's markdown, YAML and the
+# platform manifests; the SDK's own formatter takes `lib/`, which is the only
+# tree it should touch (the generated platform folders are the build's output,
+# not the project's source).
 
-print_header "Formatting files (dprint) ..."
-dprint ${CMD} --config "${MISE_PROJECT_ROOT}/dprint.json" --allow-no-files --log-level ${LOG_LEVEL}
-
-print_header "Formatting Dart sources ..."
-if [[ "${usage_fix:-false}" == "true" ]]; then
-  dart format lib/
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  log_level="debug"
 else
-  dart format --set-exit-if-changed --output none lib/
+  log_level="warn"
 fi
 
-print_header "Formatting done"
+# `dart format` has no check flag pair: it formats by default, and the read-only
+# mode is two flags rather than one.
+dart_args=(lib/)
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  action="fmt"
+else
+  action="check"
+  dart_args=(--set-exit-if-changed --output none "${dart_args[@]}")
+fi
+
+print_header "Formatting files ..."
+
+print_subheader "Formatting with dprint ..."
+dprint "${action}" \
+  --config .config/dprint.json \
+  --allow-no-files \
+  --log-level "${log_level}"
+
+print_subheader "Formatting Dart sources ..."
+dart format "${dart_args[@]}"

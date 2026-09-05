@@ -7,6 +7,7 @@
     "**/dist/",
     "*/build/",
     "plugins/**/*.md",
+    "plugins/*/stacks/*/*/config/",
     "**/.astro/",
     "site/dist/**",
     "**/.turbo/",

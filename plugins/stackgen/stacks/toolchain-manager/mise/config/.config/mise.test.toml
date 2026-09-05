@@ -1,0 +1,17 @@
+# The test run — DELTAS ONLY, layered on top of dev: `MISE_ENV=dev,test`.
+#
+# MISE_ENV is a comma list and mise merges left to right, so this file is never
+# selected alone. Everything a test needs that a dev shell already has — the
+# tools, the local hosts, the emulator endpoints — comes from mise.dev.toml and
+# must NOT be repeated here. What belongs here is only what a test run has to
+# differ on: the keys whose value flips a runtime into its test mode.
+#
+# A repo whose tests run against the ordinary dev environment leaves this file
+# exactly as shipped. An empty layer costs nothing and documents where the
+# deltas go when the first one appears.
+
+[tools]
+
+[env]
+# Deltas only. For example, where the runtime reads a mode from the environment:
+#   RUNTIME_ENV = "test"

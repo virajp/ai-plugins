@@ -1,0 +1,224 @@
+---
+# The local gate. Every hook here either calls a task from the repo's task
+# library or pins a third-party repo at a rev, so the command that runs on a
+# commit is the command that runs in CI.
+#
+# The config lives under `.config/` with the rest of the repo's tooling, which
+# pre-commit does not discover: every invocation carries
+# `--config .config/pre-commit-config.yaml`. `setup:precommit` installs the
+# hooks with that path baked in, so `git commit` needs no flag; `pre-commit run`
+# by hand still does.
+
+# 3.2.0 is where `commit`/`push` became `pre-commit`/`pre-push`, which is the
+# vocabulary this file uses. An older pre-commit silently treats these as
+# unknown stages and runs nothing.
+minimum_pre_commit_version: "3.2.0"
+
+# `commit-msg` is here for the conventional-commits hook. A hook type that is
+# not installed is not a hook that fails — it is a hook that never runs, and
+# nothing reports it.
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
+# Stated once so each hook below only says what differs from it.
+default_stages: [pre-commit]
+
+# The exclusion set, stated once rather than per gate.
+#
+# graphify-out/ holds generated output. Some of it is tracked so the map is
+# shareable, but no hook may rewrite it: graphify writes those files without a
+# trailing newline, so end-of-file-fixer would "fix" every commit and the next
+# rebuild would undo it, forever. Regenerate with graphify, never format.
+#
+# In a repo that has never run graphify this pattern matches nothing, and the
+# manual `check-useless-excludes` audit at the bottom of this file will say so.
+# That is expected: the exclusion is a standing rule about a tree, not a claim
+# that the tree exists today. Add each further generated tree here — never a
+# second copy inside one hook.
+exclude: ^graphify-out/
+
+repos:
+  - repo: local
+    hooks:
+      - id: git-config
+        name: Forbidden local git-config
+        description: Prevents a local .git/config from overriding global user
+          and signing settings — the override is invisible in a diff and the
+          symptom is unsigned commits from an address nobody recognises.
+        entry: mise x -- mise run code:git-config --fix
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        name: Check for added large files (>1MB)
+        description: A binary committed by accident is cheap to refuse and
+          expensive to remove — it stays in history after the delete.
+        args: ["--maxkb=1024"]
+      - id: check-case-conflict
+        name: Check for case-conflicting filenames
+        description: Two paths differing only in case collide on macOS and
+          Windows checkouts, where one silently overwrites the other.
+      - id: check-illegal-windows-names
+        name: Check for filenames Windows cannot check out
+        description: A path named CON, AUX or carrying a reserved character
+          makes the whole clone fail on Windows, not just that file.
+      - id: check-executables-have-shebangs
+        name: Check that executables have shebangs
+        description: An executable with no shebang runs under whatever shell
+          the caller happens to have, which is how a bash script meets zsh.
+      - id: check-shebang-scripts-are-executable
+        name: Check that scripts with shebangs are executable
+        description: The other half of the same gate, and the one that bites
+          here — a task file landing 644 is reported by mise as an unknown
+          task rather than as a permission error.
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+        description: Conflict markers committed into a source file parse as
+          syntax errors somewhere far from the merge that caused them.
+      - id: check-symlinks
+        name: Check for broken symlinks
+        description: A symlink to a path that no longer exists is a silent
+          nothing at read time rather than an error.
+      - id: destroyed-symlinks
+        name: Check for destroyed symlinks
+        description: A symlink committed as a regular file containing its own
+          target path — what happens when a tool without symlink support
+          rewrites the tree.
+      - id: check-json
+        name: Check JSON syntax
+        description: Every config gate below reads a config file; an unparseable
+          one fails inside the tool with a message about the tool.
+      - id: check-toml
+        name: Check TOML syntax
+        description: Same reason as JSON, for the toolchain manager's config.
+      - id: check-yaml
+        name: Check YAML syntax
+        description: Same reason again, and it covers this file — a broken
+          hook config disables the gate rather than failing it.
+      - id: detect-private-key
+        name: Check for committed private keys
+        description: The secret scanner further down catches these too; this
+          one is free and runs first, so the common case fails immediately.
+      - id: end-of-file-fixer
+        name: Ensure files end with a newline
+        description: A missing final newline makes the next append show as a
+          two-line diff and breaks line-oriented tools mid-pipeline.
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        description: Invisible in review and the cause of diffs nobody
+          authored when the next editor strips it.
+      - id: mixed-line-ending
+        name: Normalise line endings to LF
+        description: A CRLF file entering the tree rewrites whole-file diffs
+          for everyone else. `--fix=lf` settles it rather than reporting it.
+        args: ["--fix=lf"]
+      - id: no-commit-to-branch
+        name: Refuse a direct commit to main
+        description: main is what consumers read, and it takes merges only.
+          Merges are unaffected — git runs `pre-merge-commit` for those.
+        args: ["--branch", "main"]
+
+  - repo: local
+    hooks:
+      - id: formatter
+        name: Formatter
+        description: The repo's one formatter, run over the files being
+          committed. `--config` is mandatory because the config lives under
+          `.config/`, which dprint does not discover on its own.
+        entry: mise x -- dprint fmt --config .config/dprint.json
+          --allow-no-files --log-level warn
+        language: system
+
+      - id: shellcheck
+        name: Lint shell scripts and the task library
+        description: Task files are the least reviewed code in a repo. `-x`
+          follows the sourced `_scripts/` libraries so they are analysed as
+          their callers actually see them. Scoped by `types:` rather than by
+          path — pre-commit identifies an extension-less task file as shell
+          from its shebang, and a `files:` narrowing here would AND with that
+          and silently stop checking every *.sh outside the tasks tree.
+        entry: mise x -- shellcheck -x
+        language: system
+        types: [shell]
+
+      - id: shfmt
+        name: Check shell formatting
+        description: The `-d` flag reports a diff and fails rather than
+          rewriting, so the formatting decision stays with whoever is
+          committing.
+        entry: mise x -- shfmt -d -i 2 -ci
+        language: system
+        types: [shell]
+
+      - id: actionlint
+        name: Lint GitHub workflows
+        description: A workflow usually only runs on a push or a tag, so a
+          mistake in one is normally found by cutting a release. This reads it
+          statically. Scoped by path, so it costs nothing in a repo with no
+          workflows.
+        entry: mise x -- actionlint
+        language: system
+        pass_filenames: false
+        files: ^\.github/workflows/.*\.ya?ml$
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks-system
+        name: Check for secrets
+        description: The `-system` variant runs the gitleaks the toolchain
+          manager already pins, instead of building one from source into
+          pre-commit's own environment. It therefore needs gitleaks on PATH,
+          and errors loudly rather than passing quietly when it is missing.
+          `pass_filenames` is restated because upstream sets it on the `gitleaks`
+          id and not on this one — the entry is `gitleaks git --staged`, which
+          takes at most one positional argument, so with filenames appended any
+          commit touching two files dies on an arg-count error rather than
+          scanning.
+        args: [--config, .config/gitleaks.toml]
+        pass_filenames: false
+
+  - repo: https://github.com/qoomon/git-conventional-commits
+    rev: v2.9.0
+    hooks:
+      - id: conventional-commits
+        name: Conventional Commits
+        description: The commit-msg gate. The release notes are generated from
+          these messages, so a type outside the convention is a change that
+          silently never appears in a changelog.
+        args: ["--config", ".config/git-conventional-commits.yaml"]
+        stages: [commit-msg]
+
+  # The config audit — deliberately `manual`, not a commit-stage gate.
+  #
+  # Both of these fail on a *correct* config in a young repo: check-hooks-apply
+  # reports any hook matching zero files, which is the normal state of the
+  # symlink, Windows-name and workflow hooks above until the repo grows one of
+  # each; check-useless-excludes reports the graphify-out/ exclusion for the
+  # same reason. Run them deliberately, when a hook is added or a scope is
+  # changed:
+  #
+  #   pre-commit run --config .config/pre-commit-config.yaml \
+  #     --hook-stage manual --all-files check-hooks-apply check-useless-excludes
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+        name: Audit — every hook matches at least one file
+        description: Catches a `files:` regex that stopped matching after a
+          rename, which is a gate that reports success while checking nothing.
+        stages: [manual]
+      - id: check-useless-excludes
+        name: Audit — every exclude matches at least one file
+        description: Catches an exclusion whose reason expired, which is the
+          failure mode nobody re-reads because it keeps working.
+        stages: [manual]
+
+# Fragments from `.config/pre-commit.d/*.yaml` are merged below this line by
+# `/vwf:init`, each between a `# >>> pre-commit.d/<name>.yaml` and a matching
+# `# <<< pre-commit.d/<name>.yaml` marker. A re-run replaces what is between a
+# pair; do not hand-edit there, and put a repo's own hooks above this line.

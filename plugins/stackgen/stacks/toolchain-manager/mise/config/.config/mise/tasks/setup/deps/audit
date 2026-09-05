@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#MISE description="Report known vulnerabilities in the dependency tree"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# The package manager's own advisory check, which knows the resolved tree.
+# Distinct from `code:sec`, which scans the repo as a directory and is the gate:
+# this one runs during setup and reports, that one runs before a commit and
+# fails.
+
+placeholder_notice "setup:deps:audit" "no package manager is pinned for this repo"

@@ -3,7 +3,7 @@ name: fnox
 axis: backing
 kind: capability-provider
 components:
-- capability-provider/fnox@0.1.0
+- capability-provider/fnox@1.0.0
 ---
 
 # Backing — fnox
@@ -38,6 +38,20 @@ only, no allowlist entry over a decryption identity, a pre-commit guard
 proving the file holds no plaintext, and the file excluded from mining. Two of
 those are repo-wide config edits the pack emits rather than advises, and the
 guard it ships refuses a commit when any of them is missing.
+
+**What it lands in the repo.** Its own config at the **repo root** — an
+accepted exception to the rule that everything configurable lives under
+`.config/`, because this tool discovers its config by walking up from the
+working directory and a nested one would be found from some directories and
+not others. Beside it, through the `config/` tier
+(`assets/output-tree.md`): an environment fragment under
+`.config/mise/conf.d/`, which the toolchain manager auto-loads, and an
+overlay of the manager's `setup/secrets` slot that verifies the tool is
+reachable and reports the keychain prefix in use. A provider component is
+**last** in composition order, so its overlay wins over anything a language
+pack put in that slot. The local override file is gitignored by the hygiene
+pack, and the ciphertext guard this pack ships is what makes the
+encrypt-into-git allowance safe rather than merely permitted.
 
 Full judgment: the component's own skill and its references. The contract it
 cites is `assets/contracts/secrets.md`.

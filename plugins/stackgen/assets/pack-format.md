@@ -29,8 +29,36 @@ stacks/<type>/<slug>/
 │   ├── <name>.sh        #   the script, copied into .claude/hooks/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
 └── config/              # optional: repo config files — tree mirrors the repo root
-    └── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
+    ├── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
+    ├── .config/mise/conf.d/<pack>.toml       #   env fragment, auto-loaded
+    ├── .config/pre-commit.d/<pack>.yaml      #   hook fragment, merged by /vwf:init
+    └── _<name>/…        #   pack-private payload — NEVER copied
 ```
+
+**Three sub-conventions inside `config/`**, each a different contract:
+
+- **`config/.config/…` and the root allowlist.** Everything under `config/`
+  mirrors the repo root, so `config/.config/dprint.json` lands at
+  `<repo>/.config/dprint.json` and `config/.gitignore` at `<repo>/.gitignore`.
+  A path landing at the **root** must be on the fixed allowlist
+  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`); anything else belongs
+  under `.config/`, and the materializer refuses a root path that is not on
+  it.
+- **`config/_<name>/` is pack-private and is not copied.** A leading
+  underscore marks a payload a *reader* uses rather than a file the repo
+  gets — `config/_licenses/MIT.txt` is the case that needs it: the hygiene
+  pack carries both licence texts, and `/vwf:init` copies the one the user
+  picked to `LICENSE` with the year and holder filled. Copying the directory
+  wholesale would land two licences and answer a question nobody asked.
+- **Fragments are named `<pack-name>.<ext>`, one per pack.**
+  `.config/mise/conf.d/<pack>.toml` is an environment fragment the toolchain
+  manager auto-loads, which is how a provider contributes variables without
+  editing `mise.toml`. `.config/pre-commit.d/<pack>.yaml` is a hook fragment
+  — a standalone `repos:` list, valid YAML on its own — that the materializer
+  copies **verbatim** and `/vwf:init` merges into
+  `.config/pre-commit-config.yaml` between markers. The pack name in the
+  filename is what makes a fragment attributable at a glance and keeps two
+  packs from colliding on one path.
 
 `<type>` is a component type from
 `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`. The slug is unique within the
@@ -48,9 +76,12 @@ materializer's separate settings-consent line.
 root rather than `.claude/`, so `config/.config/mise/tasks/code/format` lands
 at `<repo>/.config/mise/tasks/code/format`, behind its own consent line, and
 merging never owning — the rules, the per-file lockfile record, the
-composition order when two components write one tree, and the fence that
-keeps `dprint.json` and `.config/pre-commit-config.yaml` out of it are
-`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. **Mode is preserved**:
+composition order when two components write one tree, the root allowlist and
+the four things the tier still may not write are
+`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. A gate pack **does** ship the
+config file it governs, and a provider pack its environment fragment; what
+stays out is a language manifest, a CI workflow, editor settings and
+CLAUDE.md. **Mode is preserved**:
 anything under `config/.config/mise/tasks/**` must be authored executable
 (755), which `plugins:check` asserts, because mise runs a task file directly
 and reports a non-executable one as an unknown task.
@@ -68,7 +99,7 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo | design | cicd # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
@@ -130,11 +161,13 @@ questions, which is why a menu of components alone leaves nothing pickable.
 a slot with exactly one pack, where a one-entry menu would be theatre and
 where a repo that has picked no stack still needs the thing. It has two
 readers: `stackgen-stack-menu` **excludes** such a bundle from the payload
-it returns, and `/vwf:setup` fetches it by **fixed slug**, never a slug
-constructed from configuration. Two bundles carry it today, because a
-bundle declares one `kind` and these are two: `repo-gates` (`repo-gate`)
-and `mise` (`toolchain-manager`). Nothing about them is recorded in
-`.config/vwf.yaml` — nothing was chosen — only in `lock.yaml`.
+it returns, and `/vwf:init` fetches it by **fixed slug**, never a slug
+constructed from configuration. Three bundles carry it today, because a
+bundle declares one `kind` and these are three: `mise` (`toolchain-manager`),
+`repo-gates` (`repo-gate`) and `repo-hygiene` (`repo-hygiene`). Nothing about
+them is recorded in `.config/vwf.yaml` — nothing was chosen — only in
+`lock.yaml`, which is also what tells a caller whether the repo is shaped at
+all: all three slugs present, or not shaped.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the
@@ -183,3 +216,11 @@ which is the grain `stackgen-sync` acts at.
 - **Facts are per language and honest.** `n/a` is an answer; an invented
   mise tool or manifest name surfaces as a doctor finding in every repo that
   pins the pack.
+- **A generated pack may ship the `config/` tiers too.** Nothing about
+  `config/.config/…`, `conf.d` or `pre-commit.d` is reserved to curated
+  packs: a generated component that genuinely owns a config file may declare
+  one, and it lands through the same consent line and the same lockfile
+  record. Teaching the generator to **emit** them is a separate piece of work
+  and is not done — so the honest statement today is that the format allows
+  it and the pipeline does not yet produce it, which is a gap in the
+  generator rather than a rule in the format.

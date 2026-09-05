@@ -113,7 +113,48 @@ stacks/<type>/<slug>/
 
 `config/.config/mise/tasks/code/format` lands at
 `<repo>/.config/mise/tasks/code/format`, the same way `skills/` mirrors
-`.claude/skills/`. The rules mirror the ones the other targets already have:
+`.claude/skills/`.
+
+**What the tier covers**, since it is wider than the toolchain manager it
+started as:
+
+- **(a) The toolchain manager's config split and its task library** — the
+  `mise.*.toml` layers and every file under `.config/mise/tasks/`.
+- **(b) A gate's own config file** — `.config/dprint.json`,
+  `.config/taplo.toml`, `.config/pre-commit-config.yaml`,
+  `.config/git-conventional-commits.yaml`, `.config/gitleaks.toml`,
+  `.config/grype.yaml`. A gate whose doctrine ships without the file that
+  configures it is doctrine about a gate nobody has.
+- **(c) The hygiene files a repo carries whatever its stack is** —
+  `.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`, `LICENSE`,
+  and `.config/renovate.json`. Everything landing at the **repo root** is on
+  the fixed allowlist below; everything else goes under `.config/`.
+- **(d) Environment fragments a provider contributes** —
+  `.config/mise/conf.d/<pack>.toml`, which the manager auto-loads, so a
+  provider adds its own variables without any component editing the
+  manager's own `mise.toml`.
+- **(e) Hook fragments** — `.config/pre-commit.d/<pack>.yaml`, each a
+  standalone `repos:` list. The materializer **copies these verbatim and
+  stops**; `/vwf:init` is what merges them into
+  `.config/pre-commit-config.yaml`, between its markers. Nothing in stackgen
+  edits that file, which is what keeps a fragment a fragment.
+
+**The root allowlist** is the hygiene doctrine's, and the materializer
+enforces it as a ceiling. These files, and only these, may sit at a shaped
+repo's root: `.gitignore`, `.editorconfig`, `.gitattributes`, `LICENSE`,
+`SECURITY.md`, `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`,
+and the manifests and lockfiles a language mandates. A `config/` tree
+landing a root path that is not on this list is a **pack authoring error**:
+the materializer refuses it and reports it, rather than quietly adding one
+more dotfile to a place the doctrine says is closed. Everything else a pack
+configures lives under `.config/`.
+
+Being on that list is a ceiling, never a licence: `readme.md` and `CLAUDE.md`
+are on it because a shaped repo has them, and **no pack may ship either** —
+they belong to `/vwf:readme` and `/vwf:setup`, and the ban on writing
+CLAUDE.md below is unchanged.
+
+The rules mirror the ones the other targets already have:
 
 - **It merges, never owns.** Only the paths this repo's lockfile recorded are
   touched by sync or removal; a landing set colliding with an unlisted path is
@@ -130,10 +171,18 @@ stacks/<type>/<slug>/
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**
-`toolchain-manager`, then `package-manager` / `language`, then
-`toolchain-gate`, then `app-framework` — a later component's file wins, and
-the lockfile records per file which component supplied the version that
-landed.
+By component type: `toolchain-manager`, then `toolchain-gate` (the
+`repo-gate` kind's components), then `repo-hygiene`, then
+`package-manager` / `language`, then `app-framework`, then
+`capability-provider` — a later component's file wins, and the lockfile
+records per file which component supplied the version that landed.
+
+The two ends are what the order is for. The **manager goes first** because
+it ships the baseline every overlay overlays — the whole task library,
+including the slots a stack fills in. The **provider goes last** because a
+secrets overlay is the most specific answer anything gives to
+`setup/secrets`: whatever a language pack thought that task should do, the
+repo's actual secrets manager knows better.
 
 **Precedent, and its limit.** The `capability-provider/fnox` and
 `package-manager/pnpm` packs already ship hook scripts copied into a target
@@ -142,14 +191,43 @@ repo, so packs already write outside `.claude/`. This generalizes that from
 the same reason: the alternative is that the one thing which writes a repo's
 config lives in a plugin that exists for no other reason.
 
-**Deliberately not extended to gate configs, and this fence is the charter.**
-Nothing here writes `dprint.json`, `.config/pre-commit-config.yaml`,
-`package.json` or a CI workflow. A gate pack **names** its config file as a
-prerequisite the repo still needs; it does not own it. That is new capability
-rather than preserved capability, and it is a separate call — stated here
-rather than only in the plan that opened the tier, because a charter
-reopening ratchets: each file the tier absorbs makes the argument for the
-next one easier.
+**The fence, and where it now runs.** The tier originally stopped at the
+toolchain manager: a gate pack named its config file as a prerequisite and
+wrote nothing. That line was **opened on 2026-09-05, deliberately and once**,
+for gate and provider config files — the (b), (c), (d) and (e) rows above —
+because a gate that ships its doctrine and not its config leaves every repo
+to hand-write the file the doctrine describes, which is the failure the
+tier exists to prevent.
+
+Four things stay **outside** the fence, and they are the whole of it:
+
+1. **`package.json` and every language manifest** — `pyproject.toml`,
+   `Cargo.toml`, `pubspec.yaml`, `go.mod`. A manifest is the project's own
+   declaration of what it is; a pack that writes one is deciding the
+   project's dependencies for it.
+2. **CI workflow files.** A pack states which task names CI must run; the
+   workflow that runs them is the repo's, and a generated pipeline nobody
+   maintains is worse than none.
+3. **Editor settings.** A repo's editor configuration belongs to the people
+   typing in it, and no pack ships one — there is no editor setting that
+   would point at a config under `.config/` in the first place.
+4. **`CLAUDE.md`** — vwf's, out of scope outright, as it always was.
+
+**Charters ratchet**, which is why the four are enumerated rather than left
+to judgment: each file the tier absorbs makes the argument for the next one
+easier, and "gate configs went in, so why not the manifest" is exactly the
+argument this list exists to answer. Moving one of the four is a decision on
+the record, never an implementer's call.
+
+**The lockfile is what tells a caller the repo is shaped.** `/vwf:init` lays
+the tier down by fetching the three `unconditional:` bundles by fixed slug —
+`mise`, `repo-gates`, `repo-hygiene`
+(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — and every landing is
+recorded here. So the shape test is a lockfile read: **all three slugs
+present = shaped**, any missing = not, and nothing has to infer a repo's
+state from which files happen to sit in it. That matters because `.config/`
+holds the repo's own files too, and presence in the tree has never meant
+stackgen put it there.
 
 ## The three consent tiers
 

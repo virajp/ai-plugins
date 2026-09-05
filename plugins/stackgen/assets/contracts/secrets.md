@@ -59,6 +59,37 @@ tool that serves only `development` is a legitimate pick with a named gap: the
 product then answers clause 1 and 2 for its deployed environments somewhere
 else, and the pack says where.
 
+## The naming convention
+
+Every manager stores values under names, and the names outlive the manager —
+so the convention is the contract's, not a provider's:
+
+- **`<REPO>_<KEY>`** for a value one repository owns, where `<REPO>` is that
+  repository's own short name and `<KEY>` is what the value is.
+- **`GLB_<KEY>`** for a value genuinely shared across repositories — an
+  account-wide token, a shared registry credential.
+- Names are upper-case, digits and underscores only. Nothing else is
+  portable: this is the intersection every manager, every shell and every CI
+  runner accepts, and a name that has to be quoted somewhere is a name that
+  will be wrong somewhere.
+
+The prefix is what makes a flat namespace legible. Managers differ in whether
+they scope by project, by folder or not at all, and a bare `API_KEY` in a
+store two repos share is unattributable the moment there are two of them.
+Prefixing costs nothing and survives the migration to whichever manager comes
+next, which is the same reason the injection rule above outranks everything.
+
+**One store per repository is the default**, and one set of names in it
+covers every sub-project the repository holds — a monorepo's members share
+the repo's prefix rather than each minting their own, because the thing being
+scoped is the repository, not the directory. A member that genuinely needs
+isolation is a decision to record in `environment.md`, not a second prefix
+invented at the point of use.
+
+The **values** stay where the manager keeps them, and the **names** are
+catalogued in `docs/blueprint/environment.md` — clause 4 above is what makes
+that catalogue possible without printing anything.
+
 ## The encrypt-into-git allowance
 
 Some managers store the encrypted value **in the repository** rather than

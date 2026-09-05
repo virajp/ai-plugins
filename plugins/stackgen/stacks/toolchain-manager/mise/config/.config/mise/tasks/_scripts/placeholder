@@ -15,6 +15,12 @@
 # ships its own file at the same path, marker and all gone. Nothing edits a
 # placeholder in place.
 
+# Sourced directly as well as after `helpers`, so it pulls its own printers in
+# rather than assuming the caller already did. The guard inside `helpers` makes
+# the second source a no-op.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
 readonly PLACEHOLDER_MARKER="#PLACEHOLDER"
 
 # List every task file in this repo still carrying the marker, as task names.
@@ -24,9 +30,13 @@ readonly PLACEHOLDER_MARKER="#PLACEHOLDER"
 placeholder_tasks() {
   local root="${MISE_PROJECT_ROOT}/.config/mise/tasks"
   [ -d "$root" ] || return 0
-  grep -rl --exclude-dir=_scripts -- "${PLACEHOLDER_MARKER}" "$root" 2>/dev/null \
-    | command sed -e "s#^${root}/##" -e 's#/#:#g' \
-    | command sort
+  # `grep -rl` exits 1 on no match — the state of a fully configured repo, and
+  # an empty list rather than an error. Under `pipefail` that status would be
+  # the pipeline's, then the function's, then the caller's assignment's, and
+  # `set -e` would kill the notice instead of letting it print.
+  { grep -rl --exclude-dir=_scripts -- "${PLACEHOLDER_MARKER}" "$root" 2>/dev/null || true; } |
+    command sed -e "s#^${root}/##" -e 's#/#:#g' |
+    command sort
 }
 
 # placeholder_notice <task-name> <one-line reason>

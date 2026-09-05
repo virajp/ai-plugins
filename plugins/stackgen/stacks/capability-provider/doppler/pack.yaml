@@ -1,7 +1,7 @@
 name: Doppler
 summary: A vendor holds the secrets and the CLI injects them at the process
   boundary — onboarding is an org invite, and no key is ever distributed.
-version: 0.1.0
+version: 1.0.0
 type: capability-provider
 category: secrets-manager
 # `capability` is deliberately unset: `secrets-manager` realizes no vwf

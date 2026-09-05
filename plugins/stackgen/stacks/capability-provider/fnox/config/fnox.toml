@@ -1,0 +1,39 @@
+# fnox is discovered by walking UP from the working directory, so this file
+# has to sit at the repository root. Moving it under .config/ would mean
+# passing --config on every call, and --config also bypasses the directory
+# recursion and the local override — so the whole fnox.local.toml mechanism
+# would go with it. That is the reason for the root exception, and it is the
+# only exception this pack takes.
+#
+# Nothing here is a plaintext value. Every entry names a provider and a
+# lookup; the material stays in the OS keychain, which is also why there is no
+# ciphertext in the repository and therefore no decryption identity to lose.
+#
+# Key naming — one set per repository:
+#
+#   <REPO>_<KEY>   this repository's own value      SITE_DATABASE_URL
+#   GLB_<KEY>      shared across repositories       GLB_GITHUB_TOKEN
+#
+# Names are [A-Z0-9_]. A machine-local addition goes in fnox.local.toml, which
+# is gitignored.
+
+# A missing secret warns and continues rather than aborting, so a contributor
+# who has not populated their keychain yet can still run the repo's tasks. A
+# deployed or release path that must not run half-configured overrides this
+# per command: `fnox exec --if-missing error -- <task>`.
+if_missing = "warn"
+
+[providers]
+# The OS keychain. `prefix` namespaces entries inside the shared `fnox`
+# service: `global/` is the cross-repository set, so a lookup of `example`
+# reads the keychain entry `global/example`. A repository with its own
+# material adds a second provider here with its own prefix, rather than
+# widening this one.
+keychain = { prefix = "global/", service = "fnox", type = "keychain" }
+
+[secrets]
+# One entry per secret, declared even when its value is not yet in the
+# keychain — the name is the contract, and `docs/blueprint/environment.md`
+# catalogs the same names.
+#
+# GLB_EXAMPLE = { provider = "keychain", value = "example", description = "what this credential is for" }

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+#MISE description="Report known vulnerabilities in the dependency tree"
+#MISE hide=true
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Advisory, and deliberately not a gate. The auditor is not a declared
+# dependency of the project — it is pulled in for the length of this run — so
+# its ruleset moves under the repo without any lockfile change, and a gate that
+# can start failing on an unchanged tree is not one a commit can be held to. The
+# blocking supply-chain check is `code:sec`, which runs pinned tools.
+#
+# `uv run --with` layers the auditor over the project's own environment, so what
+# it reads is what the project actually resolved, not a fresh install of it.
+
+uv run --with pip-audit pip-audit || true

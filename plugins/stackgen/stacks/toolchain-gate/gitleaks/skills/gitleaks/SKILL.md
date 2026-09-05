@@ -1,6 +1,6 @@
 ---
 name: gitleaks
-version: 0.1.0
+version: 1.0.0
 category: development
 description: gitleaks as the repo's secret scanner — scan the working tree on
   every commit and the history once, allowlist by fingerprint rather than by
@@ -17,24 +17,49 @@ paths:
 
 # gitleaks — the secret scanner
 
-gitleaks is the gate that keeps credentials out of the repo. It runs inside
-`code:sec` alongside `grype`, which means it runs on every commit through
-pre-commit and again in CI.
+gitleaks is the gate that keeps credentials out of the repo, in two places. The
+pre-commit hook scans the **staged change** on every commit; `code:sec` scans
+the whole **working tree** alongside `grype`, by hand and in CI.
 
-Config, when the repo needs one, lives at `.config/gitleaks.toml`. The shipped
-`code/sec` task passes `--config` only when that file exists and otherwise uses
-gitleaks' own defaults — so **a repo with no config is already protected**. Add
-one to allowlist, never to enable.
+The config lives at **`.config/gitleaks.toml`** and ships with the repo, so
+`code:sec` and the pre-commit hook both pass `--config`. The file exists to
+allowlist and to add rules, never to enable scanning.
+
+**`--config` REPLACES the built-in ruleset rather than extending it**, which is
+why the shipped file opens with:
+
+```toml
+[extend]
+useDefault = true
+```
+
+Delete that and the rules below it become the entire scan — a repo that added
+one vendor key pattern would stop detecting the ~170 credential shapes gitleaks
+knows, and both gates would keep reporting green. Precedence, highest first:
+`--config`, then `GITLEAKS_CONFIG`, then `<target>/.gitleaks.toml`.
 
 ```sh
-mise run code:sec                    # grype + gitleaks, the commit gate
-gitleaks dir . --redact 50           # working tree
+mise run code:sec                    # grype + gitleaks over the working tree
+gitleaks dir . --config .config/gitleaks.toml --redact    # working tree
 gitleaks git . --log-opts="--all"    # the whole history, once
 ```
 
 `--redact` truncates the matched value in the output. Keep it on: a scanner that
 prints the secret it found has published it a second time, into CI logs that are
 usually more widely readable than the repo.
+
+The pre-commit hook is upstream's **`gitleaks-system`**, not `gitleaks`. The
+plain id builds gitleaks from source into pre-commit's own environment; the
+`-system` variant runs the binary the toolchain manager already pins, so the
+commit gate and `code:sec` are the same build. The cost is that it needs
+gitleaks on `PATH` — which it announces as an error rather than as a pass.
+
+Its entry is `gitleaks git --pre-commit --redact --staged --verbose`, which
+takes at most one positional argument, so the hook declares
+**`pass_filenames: false`**. Upstream sets that on the `gitleaks` id and omits
+it here, and pre-commit's default is to append the staged filenames: without
+the line, every commit touching two or more files fails with
+`accepts at most 1 arg(s)` and nothing is scanned.
 
 ## A hit is a credential to rotate
 

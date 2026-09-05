@@ -1,0 +1,30 @@
+# Line endings are normalised in the repository and checked out as LF, so a
+# clone on another platform never turns one edited line into a whole-file diff.
+* text=auto eol=lf
+
+# Lockfiles are generated: collapsed in review, and never counted as anyone's
+# language in the repository statistics.
+*.lock          linguist-generated
+pnpm-lock.yaml  linguist-generated
+mise.lock       linguist-generated
+
+# The knowledge graph is regenerated, never merged by hand. The `graphify`
+# merge driver is registered by the graph tooling, not by this file — without
+# that registration git falls back to the default driver and reports the
+# conflict instead of resolving it, which is the safe failure.
+graphify-out/graph.json merge=graphify
+
+# Binaries: never EOL-normalised, never shown as a diff. A byte lost to
+# normalisation here is unrecoverable, and the diff would be noise either way.
+*.png   -text -diff
+*.jpg   -text -diff
+*.jpeg  -text -diff
+*.gif   -text -diff
+*.ico   -text -diff
+*.webp  -text -diff
+*.pdf   -text -diff
+*.woff  -text -diff
+*.woff2 -text -diff
+*.ttf   -text -diff
+*.otf   -text -diff
+*.zip   -text -diff

@@ -1,30 +1,39 @@
 ---
 name: dprint
-version: 0.1.0
+version: 1.0.0
 category: development
-description: dprint as the repo's single formatter — one root config, plugins
-  pinned by version, `excludes` for generated trees, and the `exec` escape hatch
-  for languages dprint has no plugin for. Formatting authority; correctness
-  belongs to the linter. Auto-applies when editing dprint.json.
+description: dprint as the repo's single formatter — config at
+  .config/dprint.json so every call carries `--config`, plugins pinned by
+  version, `excludes` for generated trees, and the `exec` escape hatch for
+  languages dprint has no plugin for. Formatting authority; correctness belongs
+  to the linter. Auto-applies when editing a dprint or taplo config.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/dprint.json"
   - "**/dprint.jsonc"
+  - "**/.config/dprint.json"
+  - "**/.config/taplo.toml"
 ---
 
 # dprint — the repo formatter
 
-**One formatter, one config, at the repo root.** dprint owns whitespace and
-layout across every language in the repo; the linter owns correctness. Keeping
-them apart is the rule — a formatting rule in the linter and a correctness rule
-in dprint each cost more than they save, and the two then fight over the same
-line.
+**One formatter, one config, one repository.** dprint owns whitespace and layout
+across every language in the repo; the linter owns correctness. Keeping them
+apart is the rule — a formatting rule in the linter and a correctness rule in
+dprint each cost more than they save, and the two then fight over the same line.
 
-In a monorepo the root config is the config. Symlink it into members that need
-one rather than forking it; a per-member config is how two files in one repo end
-up formatted differently.
+The config is **`.config/dprint.json`**, with the rest of the repo's tooling.
+dprint discovers `dprint.json`/`dprint.jsonc` by walking up from the file it is
+formatting and does **not** look inside `.config/`, so every invocation carries
+`--config`. A call without it formats with built-in defaults and reports
+success — the worst failure available here, because it looks like a pass.
+
+In a monorepo the top-level config is the config; members read it through the
+same `--config` path. A **submodule** is the exception and takes its own copy,
+because it is a separate repository whose checkout may not contain the parent's
+`.config/` at all, and a relative symlink out of it resolves to nothing.
 
 ## The config, and what each key is for
 
@@ -72,16 +81,34 @@ either drop them or write down the new reason they stand on.
 ## Running it
 
 ```sh
-mise run code:format          # dprint check + package.json ordering
+mise run code:format          # dprint check
 mise run code:format --fix    # dprint fmt
 
-dprint check --config dprint.json --allow-no-files
-dprint fmt   --config dprint.json
+dprint check --config .config/dprint.json --allow-no-files
+dprint fmt   --config .config/dprint.json
 ```
 
-`check` is what CI and pre-commit run; `fmt` is what a human runs. Never
-hand-fix whitespace to satisfy `check` — it is mechanical by construction, and a
-hand-fix that differs from what `fmt` would produce fails again on the next run.
+`check` is what CI runs; `fmt` is what the pre-commit hook and a human run.
+Never hand-fix whitespace to satisfy `check` — it is mechanical by construction,
+and a hand-fix that differs from what `fmt` would produce fails again on the
+next run.
+
+`dprint config update --config .config/dprint.json` is how plugin versions move,
+and it is a deliberate act run from `setup:mise`, not something that happens on
+its own. Pinned plugins are the whole reason two machines format identically.
+
+## The editor does not follow `--config`
+
+The VS Code extension contributes three settings — `dprint.path`,
+`dprint.verbose` and `dprint.experimentalLsp` — and **none of them names a
+config file**. With the config under `.config/`, format-on-save finds nothing
+and silently does nothing; the gate still holds, because the hook and CI both
+pass `--config`, but the editor stops helping.
+
+There is no pointer to write, so this pack ships none. The CLI path is the one
+the gate depends on and it is correct either way; format-on-save is an editor
+preference the root allowlist does not carry a file for, and a repo that wants
+it back is deciding that for itself.
 
 ## Where this stops
 

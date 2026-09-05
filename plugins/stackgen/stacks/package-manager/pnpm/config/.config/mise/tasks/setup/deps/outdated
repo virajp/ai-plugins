@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
-#MISE description="List outdated pnpm packages"
+
+#MISE description="Report dependencies that have moved on"
 #MISE hide=true
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-print_header "Checking for outdated packages ..."
+# Advisory: `pnpm outdated` exits non-zero when it finds anything, which is the
+# normal state of a healthy repo, so the exit status is swallowed. The report is
+# the output.
+
 pnpm outdated --color --aggregate-output --recursive --long --depth 0 || true

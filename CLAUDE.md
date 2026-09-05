@@ -132,7 +132,7 @@ installer no longer writes, are in [`repo-shape.md`][repo].
 
 Run in `plugins.yml` (never in `release.yml`, which is the installer's and whose
 trigger surface must stay untouched, and never in `site.yml`, which is the
-website's); the first four also run locally via pre-commit, with marketplace,
+website's); the first five also run locally via pre-commit, with marketplace,
 inventory and check in that order — freshness before validity:
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
@@ -142,7 +142,15 @@ inventory and check in that order — freshness before validity:
 - **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree, so no pack, bundle or kind count is ever typed by hand;
   **`--check`** fails if the committed file differs.
-- **`plugins:check`** — validates the authored tree, twelve rules.
+- **`plugins:check`** — validates the authored tree, twelve rules. Rule 11 is
+  the widest: it walks a stackgen pack's whole `config/` payload tier — exec bit
+  and shebang on every task file, exec bit and shebang on every shipped hook
+  script, the `config/` root against the hygiene allowlist, and every
+  `pre-commit.d/*.yaml` parsing with a top-level `repos:` list.
+- **`plugins:shellcheck`** — the shell gate over everything a pack ships as
+  shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
+  `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
+  lands without its helper library beside it and may declare `sh`.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
 - **`vitest run`** — the `scripts/` and `installer/` suites.
@@ -176,6 +184,14 @@ in [`repo-shape.md`][repo].
   hand. `**/*.astro` **is** dprint's, via the markup plugin, and is excluded
   from the linter and from its pre-commit argument list: the linter has no Astro
   parser.
+- **`plugins/*/stacks/*/*/config/` is excluded whole, and the reason is not
+  style.** That tree is **payload**: it is copied byte-for-byte into a target
+  repo, where the gate pack's own dprint config formats it — and that config
+  deliberately omits the `bracketSpacing`/`braceSpacing` this repo sets. Format
+  a payload file here and a freshly initialised repo fails its own first hook
+  run on a file nobody touched. The exclusion is on the **directory**, so a new
+  payload file type cannot silently re-acquire the defect. When a payload file
+  needs formatting, run the **shipped** config over it, never this repo's.
 - The authoring traps — strict-YAML frontmatter dropping a skill silently, the
   dprint exclusion, and `${CLAUDE_PLUGIN_ROOT}` naming only its own plugin — are
   in `.claude/skills/plugin-authoring/`.
@@ -185,22 +201,25 @@ in [`repo-shape.md`][repo].
 Two plugins ship. Each row's linked home is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                                                                  |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]         |
-| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager and gates since `devtools` dissolved into it. → [`stackgen-plugin`][sg] |
+| Plugin     | Is                                                                                                                                                                                                                                                                                                                                 |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `/vwf:init` (the repo-shape orchestrator), the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                             |
+| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. Its packs ship the **config files** too, which `/vwf:init` lays down. → [`stackgen-plugin`][sg] |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
 both — the checker rules, the two mise gates, the hook rules, the traps — is the
 [`plugin-authoring`][auth] skill, which auto-applies under `plugins/`.
 
-The workflow runs `setup` → `product` → `architecture` → `design-system` →
-`blueprint` → `plan` → `execute`, with `verify` and `feedback` closing the loop.
-**Everything up to `blueprint` is done in full before planning** — `plan`
-hard-halts on a partial coverage stamp. The ordering gates, the skill and agent
-tables, how to add a skill and pick its invocation mode, and the dependency
-reasoning are the [`vwf-plugin`][vwf] skill.
+The workflow runs `init` → `setup` → `product` → `architecture` →
+`design-system` → `blueprint` → `plan` → `execute`, with `verify` and `feedback`
+closing the loop. `init` shapes the **base repo** — the config layout, the task
+vocabulary, the gates, the hygiene files — from stackgen's three unconditional
+bundles; `setup` then sets up **vwf** in it, and offers `init` when the shape is
+missing. **Everything up to `blueprint` is done in full before planning** —
+`plan` hard-halts on a partial coverage stamp. The ordering gates, the skill and
+agent tables, how to add a skill and pick its invocation mode, and the
+dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 
@@ -305,7 +324,8 @@ pins and finds nothing.
 
 **Nothing is gated at install time**, so the first thing to run afterwards is
 `/vwf:doctor` — it is what reports a missing required binary, as a **blocking**
-finding.
+finding. On a repo that has never been shaped, run `/vwf:init` before either: it
+lays down the config layout and the gates the rest of the workflow assumes.
 
 For **other agents** there is no marketplace and no rendered tree: point the
 tool at this repo and ask it to adapt the plugin. `readme.md`'s "Other tools"

@@ -61,9 +61,11 @@ bundle, so a later re-sync can act on one component alone. Packs are **assets,
 not live skills** — installing stackgen floods no session with every stack's
 doctrine.
 
-`mise` and `repo-gates` are **unconditional** bundles: left out of the menu
-payload and fetched by `/vwf:setup` at their fixed slugs, because a repo that
-has picked no stack still has to run its gates by name.
+`mise`, `repo-gates` and `repo-hygiene` are **unconditional** bundles: left out
+of the menu payload and fetched by `/vwf:init` at their fixed slugs, because a
+repo that has picked no stack still has to run its gates by name. `/vwf:setup`
+no longer fetches them — it checks the adapter's lockfile for all three and
+offers `/vwf:init` when one is missing.
 
 ## Where it lands, and the consent tiers
 
@@ -79,11 +81,22 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   language server is to *be* a plugin. User scope is safe because every
   generated `lspServers` entry **must** carry an `extensionToLanguage` map;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
-  a component genuinely owns (`.config/mise.toml`, `.config/mise/tasks/**`) —
-  **mode preserved**, so a task file lands 755, and **deliberately not
-  extended** to `dprint.json`, `.config/pre-commit-config.yaml`, `package.json`
-  or a CI workflow. A gate pack names its config file as a prerequisite the repo
-  still owns.
+  a component genuinely owns — **mode preserved**, so a task file lands 755.
+  Five kinds of entry: **(a)** the toolchain manager's own config and its task
+  library (`.config/mise*.toml`, `.config/mise/tasks/**`); **(b)** a gate's own
+  config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
+  `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
+  (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`,
+  `.config/renovate.json`, the licence texts); **(d)** a provider's environment
+  fragment at `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no component
+  edits `mise.toml`; **(e)** a hook fragment at
+  `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
+  it**, nothing in stackgen edits the pre-commit config, which is what keeps a
+  fragment a fragment. Still fenced out: `package.json`, any language manifest
+  or lockfile, and CI workflows. What lands at the repo **root** is capped by a
+  fixed allowlist (`plugins:check` rule 11 enforces it); `readme.md` and
+  `CLAUDE.md` are on that list only because a shaped repo has them — **no pack
+  may ship either**.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written
@@ -94,9 +107,20 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
 
 ## Authoring a pack
 
-- **Every task file a pack ships under `config/.config/mise/tasks/**` carries
-  its exec bit.** `plugins:check` asserts it, because mise reports a 644 task as
-  an *unknown* one rather than a permission error.
+- **The whole `config/` payload tier is checked before it ships.**
+  `plugins:check` rule 11 asserts the exec bit and a known shebang on every task
+  file (mise reports a 644 task as an *unknown* one rather than a permission
+  error) and on every `hooks/*.sh`, the root allowlist over the tier's top
+  level, and that each `.config/pre-commit.d/*.yaml` parses with a top-level
+  `repos:` list. `plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over
+  the same shell, in two groups — task libraries with the pack's `_scripts/`
+  beside them, hooks with no flags, since a hook lands alone and may declare
+  `sh`.
+- **Never format a payload file with this repo's dprint config.** The tier is
+  excluded from it on purpose: the target repo formats these files with the
+  *shipped* config, which omits settings this repo sets, so formatting one here
+  makes a freshly initialised repo fail its own first hook run. Run the shipped
+  config when a payload file needs formatting.
 - **A pack carries judgment, never the vendor's syntax** — worked YAML comes
   from Context7 at use time. Category-level doctrine is written once, in
   `assets/contracts/`; instance packs cite it.
@@ -122,9 +146,12 @@ a materialization rather than discovered from a `hooks/hooks.json`:
   plugin with the package manager it rewrites for — a JS/TS rewrite has no
   business in vwf.
 
-`plugins:check`'s hook rule reads only a plugin's own `hooks/hooks.json`, so it
-sees neither script nor its executable bit.
-`mise run plugins:npm-normalize-test` covers the normalizer instead: it
+Both are still gated here, as payload rather than as hooks: rule 11 asserts each
+script's exec bit and its shebang, and `plugins:shellcheck` lints the body. What
+no rule reads is the `hooks.yaml` beside them — `checkHookScripts`, the older
+rule, follows only a plugin's own `hooks/hooks.json`, so the event and matcher a
+payload hook is wired to are asserted by nothing in this repo.
+`mise run plugins:npm-normalize-test` covers the normalizer's behaviour: it
 table-tests the script through the **system sed** for both package managers,
 each table in a temp dir seeded with the lockfile that selects pnpm or bun. Hook
 scripts must stay portable to macOS BSD `sed` — no `\s`, no `\b`.

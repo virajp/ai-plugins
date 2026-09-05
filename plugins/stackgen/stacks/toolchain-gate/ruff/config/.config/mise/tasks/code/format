@@ -1,23 +1,46 @@
 #!/usr/bin/env bash
-#MISE description="Check or format files"
+
+#MISE description="Check or format the repo's files"
+#MISE dir="{{ config_root }}"
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-[[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="debug" || LOG_LEVEL="warn"
-[[ "${usage_fix:-false}" == "true" ]] && CMD="fmt"          || CMD="check"
+# Overlays the toolchain manager's `code:format`. dprint keeps the repo's
+# markdown, YAML and TOML — the docs a Python project is defined in do not stop
+# needing a formatter once there are sources — and ruff takes the `.py` files it
+# has no opinion about.
+#
+# ruff runs through `uv run` rather than a global install so the version that
+# formats is the one the lockfile pins, which is also the one CI uses.
 
-print_header "Formatting files (dprint) ..."
-dprint ${CMD} --config "${MISE_PROJECT_ROOT}/dprint.json" --allow-no-files --log-level ${LOG_LEVEL}
-
-print_header "Formatting Python sources (ruff) ..."
-if [[ "${usage_fix:-false}" == "true" ]]; then
-  uv run ruff format .
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  log_level="debug"
 else
-  uv run ruff format --check .
+  log_level="warn"
 fi
 
-print_header "Formatting done"
+ruff_args=()
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  action="fmt"
+else
+  action="check"
+  ruff_args=(--check)
+fi
+
+print_header "Formatting files ..."
+
+print_subheader "Formatting with dprint ..."
+dprint "${action}" \
+  --config .config/dprint.json \
+  --allow-no-files \
+  --log-level "${log_level}"
+
+print_subheader "Formatting Python sources ..."
+uv run ruff format ${ruff_args[@]+"${ruff_args[@]}"} .

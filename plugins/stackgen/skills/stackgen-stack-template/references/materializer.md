@@ -45,6 +45,32 @@ to a repo, and every write it makes is consent-gated and committed once.
      one, so it is presented at its own consent line in step 3 rather
      than riding the file plan
      (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`).
+
+     **Three copy rules inside that tree**, all of them assertions rather
+     than preferences:
+
+     - **`config/_<name>/` is never copied.** A leading underscore marks a
+       pack-private payload a reader picks from — the licence texts under
+       `config/_licenses/` are the case — so copying the directory would
+       land every option instead of the one chosen. Skip it silently; it
+       is not a landing set member and never appears in the plan.
+     - **A root path must be on the allowlist.** Only `.gitignore`,
+       `.editorconfig`, `.gitattributes`, `LICENSE`, `SECURITY.md`,
+       `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs` and a
+       language-mandated manifest or lockfile may land at the repo root
+       (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Any other root
+       path in a `config/` tree is a **pack authoring error**: halt the
+       landing set, name the pack and the path, and write nothing. This is
+       the materializer's own assertion because a pack author is the only
+       one who can fix it and the plan is the last place anyone would read
+       it. `readme.md` and `CLAUDE.md` are on the list because a shaped
+       repo has them, not because a pack may ship them — no pack may, and
+       CLAUDE.md is separately out of scope below.
+     - **A `.config/pre-commit.d/<pack>.yaml` fragment lands as a file and
+       stops there.** It is an ordinary landing-set member with an
+       ordinary lockfile entry; merging the fragments into
+       `.config/pre-commit-config.yaml` is `/vwf:init`'s work, and nothing
+       in this procedure reads or rewrites that file.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file. The
      per-component record is what lets sync act on one component alone,
@@ -53,24 +79,32 @@ to a repo, and every write it makes is consent-gated and committed once.
 
    **Composition order, and why a bug in it is silent.** More than one
    component may write into one `config/` tree — `.config/mise/tasks/` is
-   the first destination that happens for. Compose in the order
-   `toolchain-manager`, then `package-manager` / `language`, then
-   `toolchain-gate`, then `app-framework`; a **later component's file
-   wins**, and the lockfile records per file which one that was. Get it
-   backwards and nothing errors: a stale baseline `code/format` shadowing a
-   language's would simply format less, in a repo where the task still
-   exists and still exits zero.
+   the first destination that happens for. Compose by component type in
+   the order `toolchain-manager`, then `toolchain-gate`, then
+   `repo-hygiene`, then `package-manager` / `language`, then
+   `app-framework`, then `capability-provider`; a **later component's file
+   wins**, and the lockfile records per file which one that was. The
+   manager is first because it ships the baseline library every overlay
+   overlays; the provider is last because a secrets overlay is the most
+   specific answer anything gives to `setup/secrets`. Get it backwards and
+   nothing errors: a stale baseline `code/format` shadowing a language's
+   would simply format less, in a repo where the task still exists and
+   still exits zero.
 
    **The fence: stackgen writes only what a pack declares in `config/`.**
    Landing a config tree does not make stackgen the owner of a repo's
-   configuration. It does not acquire the right to write `dprint.json`,
-   `.config/pre-commit-config.yaml`, `package.json` or a CI workflow — a
-   gate component **names** its config file as a prerequisite the repo
-   still needs, and stops there
-   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Charters ratchet:
-   each file the tier absorbs makes the argument for the next one easier,
-   which is why the fence is restated here, where an implementer meets
-   it, and not only where it was decided.
+   configuration. What a pack **may** declare now includes the gate config
+   files and the provider environment fragments the tier was opened for on
+   2026-09-05; what stays outside is unchanged and enumerated
+   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`): a language manifest, a
+   CI workflow, editor settings — no pack ships one, there being no editor
+   setting that would point at a config under `.config/` — and
+   CLAUDE.md. Charters ratchet: each file the tier absorbs makes the
+   argument for the next one easier, which is why the four are restated
+   here, where an implementer meets them, and not only where they were
+   decided. A pack declaring one of the four is an authoring error, not a
+   judgment call — treat it the way a disallowed root path is treated
+   above.
 
    **Never in the set**: CLAUDE.md — that one is vwf's, out of scope
    outright.
@@ -237,9 +271,11 @@ to a repo, and every write it makes is consent-gated and committed once.
   gate. **LSP server configuration never lands in the repo** whatever the
   source ships; it goes to the local plugin, and the need still travels as
   `language_facts` in the payload for `/vwf:doctor` to read.
-- **The `config/` tier is what a pack declares, and no more.** It is not
-  a licence to write the repo's gate configs, manifests or CI workflows
-  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`).
+- **The `config/` tier is what a pack declares, and no more.** A gate's own
+  config file and a provider's environment fragment are inside it; the
+  repo's manifests, its CI workflows, its editor settings and its CLAUDE.md
+  are not (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`), and neither is
+  any root path off the allowlist.
 - **The local plugin is the machine's, not the repo's.** It is user-scoped
   and uncommitted, so it is never assumed present: nothing the repo owns may
   depend on it having been registered.

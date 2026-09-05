@@ -2,21 +2,48 @@
 
 #MISE description="Security scan the repo"
 #MISE dir="{{ config_root }}"
-#PLACEHOLDER
 
 #USAGE flag "--debug" help="emit debug logs"
 
-set -e
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
 
-# Scanning is mandatory; the scanners are a choice. This file used to hardcode
-# a dependency scanner and a secret scanner, which meant every repo scaffolded
-# from the template inherited two tools it never picked — and a repo that picked
-# differently had to delete the task rather than fill it.
+# Two scans, and both read the repo as a DIRECTORY rather than as a resolved
+# dependency tree — which is what makes them a default the way `code:format` is
+# one, and not a slot the way `code:lint` is. Neither needs a package manager,
+# a language runtime or a lockfile to say something true.
 #
-# The slot is the contract: before a change lands, this repo's dependencies are
-# checked for known vulnerabilities and its tree for committed secrets. Which
-# scanners do that comes from the pinned repo-gate components.
+#   secrets       every file in the tree, against the built-in rule set
+#   vulnerable    every manifest and lockfile the scanner recognises
+#
+# The package manager's own advisory check is `setup:deps:audit`, a different
+# task on purpose: that one reports during setup, this one fails before a
+# commit. A gate component that pins different scanners overwrites this file.
 
-placeholder_notice "code:sec" "no security scanners are pinned for this repo"
+SECRETS_CONFIG="${MISE_PROJECT_ROOT}/.config/gitleaks.toml"
+VULN_CONFIG="${MISE_PROJECT_ROOT}/.config/grype.yaml"
+
+if command -v gitleaks >/dev/null 2>&1; then
+  print_wait "Scanning for committed secrets ... "
+  if [ -f "${SECRETS_CONFIG}" ]; then
+    gitleaks dir . --config "${SECRETS_CONFIG}" --redact 50
+  else
+    gitleaks dir . --redact 50
+  fi
+  print_ok
+else
+  print_warn "gitleaks is not on PATH — skipping the secret scan."
+fi
+
+if command -v grype >/dev/null 2>&1; then
+  print_wait "Scanning dependencies for known vulnerabilities ... "
+  if [ -f "${VULN_CONFIG}" ]; then
+    grype "dir:${MISE_PROJECT_ROOT}" --config "${VULN_CONFIG}" --fail-on medium
+  else
+    grype "dir:${MISE_PROJECT_ROOT}" --fail-on medium
+  fi
+  print_ok
+else
+  print_warn "grype is not on PATH — skipping the vulnerability scan."
+fi
