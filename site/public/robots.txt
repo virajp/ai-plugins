@@ -1,4 +1,9 @@
+# Content signals (https://contentsignals.org/): this manual is meant to be
+# indexed, read by agents at its .md URLs, and trained on. An explicit yes,
+# not silence, because an absent signal grants nothing.
+
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 Sitemap: https://claude-plugins.virajp.dev/sitemap-index.xml
