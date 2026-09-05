@@ -12,6 +12,18 @@ export default defineConfig({
   // One route per file, always `/x/`. Cloudflare's default html_handling
   // redirects the bare form to the slashed one, so a link never 404s on it.
   trailingSlash: "always",
+  build: {
+    // The CSP's `style-src 'self'` admits no inline <style>, and the default
+    // `auto` inlines any stylesheet under Vite's 4kb limit. Emit them as files.
+    inlineStylesheets: "never",
+  },
+  vite: {
+    build: {
+      // Same reason on the script side: `script-src 'self'` needs the hoisted
+      // Docs.astro block as a file, not an inline <script type="module">.
+      assetsInlineLimit: 0,
+    },
+  },
   integrations: [sitemap()],
   markdown: {
     // Rewrites every relative `.md` link in the docs collection to its route

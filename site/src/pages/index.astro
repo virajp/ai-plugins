@@ -130,6 +130,14 @@ const guides = [
 <Base
   title="vwf: four phases from a vague idea to a reviewed release"
   description="An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended."
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "vwf",
+    url: Astro.site!.href,
+    description:
+      "An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended.",
+  }}
 >
   <div class="page">
     <Nav />
