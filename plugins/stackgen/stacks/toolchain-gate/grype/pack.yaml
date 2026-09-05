@@ -1,7 +1,7 @@
 name: grype
 summary: The repo's dependency vulnerability scanner — source per commit,
-  artifact before release, ignores time-boxed.
-version: 0.1.0
+  artifact before release, ignores time-boxed. Ships .config/grype.yaml.
+version: 1.0.0
 type: toolchain-gate
 kind: repo-gate
 axis: repo

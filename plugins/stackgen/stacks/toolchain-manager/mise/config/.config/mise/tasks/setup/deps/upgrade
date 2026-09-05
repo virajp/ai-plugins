@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#MISE description="Move this repo's lockfile forward within its declared ranges"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# The deliberate counterpart to `install --frozen`: this is the one task allowed
+# to rewrite the lockfile, so a version move is always something someone ran on
+# purpose and can commit as its own change.
+
+placeholder_notice "setup:deps:upgrade" "no package manager is pinned for this repo"

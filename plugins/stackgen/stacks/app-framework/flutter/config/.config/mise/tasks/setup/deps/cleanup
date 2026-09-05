@@ -1,12 +1,26 @@
 #!/usr/bin/env bash
-#MISE description="Clean Flutter build artifacts"
+
+#MISE description="Delete build output and the resolved package set"
 #MISE hide=true
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-print_header "Running flutter clean ..."
+# `pubspec.lock` IS deleted here, unlike every other pack's cleanup. The SDK
+# version is part of what the lockfile resolves against, so a lockfile written
+# by a previous SDK pins package versions that the current one may not accept —
+# and `pub get` will not re-resolve it on its own. A Flutter cleanup that leaves
+# the lockfile in place is the one that leaves the repo unbuildable.
+#
+# No header: the aggregator `setup:deps:all` already frames each verb with its
+# own subheader, so one here would invert the hierarchy. The subheaders below
+# frame the steps inside this task.
+
+print_subheader "Deleting build output ..."
 flutter clean
 
-print_header "Deleting pubspec.lock ..."
+print_subheader "Deleting the lockfile ..."
 find . -type f -name "pubspec.lock" -exec rm -f {} + || true

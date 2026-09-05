@@ -1,0 +1,15 @@
+# Merged into `.config/pre-commit-config.yaml` by `/vwf:init`, between the
+# marker comments that name this file. Edit here and re-run init — an edit made
+# inside the merged block is overwritten on the next run.
+
+repos:
+  - repo: local
+    hooks:
+      - id: package-json-sorter
+        name: Package.json sorter
+        description: Keeps package.json key order canonical, which dprint does
+          not do — the order is a convention, not a format.
+        entry: mise x -- pnpm dlx sort-package-json
+        files: (^|.*/)package\.json$
+        language: system
+        stages: [ pre-commit ]

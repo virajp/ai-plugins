@@ -1,6 +1,6 @@
 ---
 name: grype
-version: 0.1.0
+version: 1.0.0
 category: development
 description: grype as the repo's dependency vulnerability scanner — scan the
   source tree on every commit and the built image before release, fail on a
@@ -20,14 +20,18 @@ paths:
 grype scans dependencies for known vulnerabilities. It runs inside `code:sec`
 alongside `gitleaks`, so it gates every commit and runs again in CI.
 
-Config, when the repo needs one, lives at `.config/grype.yaml`. The shipped
-`code/sec` task passes `--config` only when that file exists — **a repo with no
-config still scans**, with grype's defaults. Add one to set a threshold or to
-record an ignore, never to enable scanning.
+The config lives at **`.config/grype.yaml`** and ships with the repo, carrying
+the threshold and an empty ignore list. grype reads `.grype.yaml` or
+`GRYPE_CONFIG` on its own and finds neither there, so `code:sec` passes
+`--config`. Edit it to move the threshold or to record an ignore, never to
+enable scanning.
+
+Unlike the secret scanner, **grype ships no pre-commit hook**. It reaches the
+commit gate only through `code:sec`; remove that task and nothing else runs it.
 
 ```sh
 mise run code:sec               # grype + gitleaks, the commit gate
-grype .                         # the source tree and its lockfiles
+grype dir:. --config .config/grype.yaml --fail-on medium
 grype <image>:<tag>             # the built image, before release
 ```
 
@@ -48,13 +52,18 @@ green.
 
 ```yaml
 # .config/grype.yaml
-fail-on-severity: high
+fail-on-severity: medium
 ```
 
-Set the threshold where the team will actually act. A threshold of `low` on a
-typical dependency tree produces a wall of findings, and a gate nobody can clear
-gets bypassed rather than fixed — which is strictly worse than a higher
-threshold honestly enforced.
+`medium` is what ships: anything medium or above fails, low and negligible are
+reported. Set the threshold where the team will actually act. A threshold of
+`low` on a typical dependency tree produces a wall of findings, and a gate
+nobody can clear gets bypassed rather than fixed — which is strictly worse than
+a higher threshold honestly enforced.
+
+`code:sec` also spells `--fail-on medium` at the call site, so the threshold is
+readable where the gate is invoked. The file is the home of the decision; move
+both or neither.
 
 ## Every ignore gets a reason and an expiry
 

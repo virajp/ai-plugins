@@ -7,15 +7,16 @@
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
 
-set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
 
-# A slot, unlike its sibling `code:format`. Formatting has a default that costs
-# nothing — dprint is one binary and every repo has markdown. Linting does not:
-# every linter worth running is a language's own, and the one this ecosystem
-# uses for prose would drag a package manager into a repo that holds only docs.
+# A slot, unlike its siblings `code:format` and `code:sec`. Those two have
+# defaults that cost nothing — one formatter binary and two scanners that read
+# a directory, all of them stack-agnostic. Linting is not: every linter worth
+# running is a language's own, and the one this ecosystem uses for prose would
+# drag a package manager into a repo that holds only docs.
 #
-# So the name is the contract and the stack overlay brings the linter.
+# So the name is the contract and the language pack brings the linter.
 
 placeholder_notice "code:lint" "no linter is pinned for this repo"

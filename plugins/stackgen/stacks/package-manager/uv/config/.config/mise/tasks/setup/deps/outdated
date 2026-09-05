@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
-#MISE description="List outdated Python packages"
+
+#MISE description="Report dependencies that have moved on"
 #MISE hide=true
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-print_header "Checking for outdated packages ..."
+# Advisory: the report is the output, and a repo with something newer available
+# is the normal state rather than a failure.
+
 uv pip list --outdated || true

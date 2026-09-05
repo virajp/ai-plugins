@@ -1,0 +1,49 @@
+title = "Repository secret-scanning rules"
+
+# `useDefault` is load-bearing, and its absence is a silent hole rather than an
+# error. A `--config` file REPLACES gitleaks' built-in ruleset rather than
+# adding to it, so without this line the rules in this file would be the ENTIRE
+# scan — a repo that added one custom rule would stop detecting the ~170 kinds
+# of credential gitleaks ships with, and both the pre-commit hook and `code:sec`
+# would keep reporting green.
+#
+# `extend` is what puts the defaults back and makes everything below an
+# addition. Never delete it to "start clean"; there is nothing to start clean
+# from.
+[extend]
+useDefault = true
+
+# Custom rules go here — one per credential shape this repo can leak that the
+# default ruleset does not know about, which in practice means a vendor's own
+# key format. Each needs an `id`, a `description` saying what it is, and a
+# `regex` anchored tightly enough that it does not fire on a UUID.
+#
+# [[rules]]
+# description = "<vendor> API key"
+# id          = "<vendor>-api-key"
+# regex       = '''<prefix>_[A-Za-z0-9]{20,}'''
+# tags        = [ "api-key", "<vendor>" ]
+
+# **Generated and gitignored trees, which `gitleaks dir` walks anyway.**
+#
+# `dir` mode scans the filesystem and does NOT honour `.gitignore`, so anything
+# a tool drops into the working copy is in scope. That is harmless until
+# `useDefault` above is on: the default ruleset's `generic-api-key` rule fires
+# on any long high-entropy string, and a cache index full of hashes is exactly
+# that — which fails the commit gate for a hash, not for a credential.
+#
+# Listed by path because gitleaks has no "ask git" option. Keep this list to
+# trees nothing commits and nobody reviews; widening it to tracked source is how
+# a scanner quietly stops scanning.
+#
+# A real finding is answered by ROTATING the credential, then removing it. It is
+# never answered by adding a rule id here — allowlist by path or by fingerprint,
+# so the next instance of that credential type is still caught.
+[allowlist]
+paths = [
+'''build/*''',
+'''dist/*''',
+'''graphify-out/*''',
+'''node_modules/*''',
+'''target/*''',
+]

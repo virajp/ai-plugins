@@ -1,0 +1,20 @@
+# The fnox CLI's pin, and nothing else. It sits in conf.d/ so that mise.toml
+# stays free of any provider's name: swapping the secrets manager is deleting
+# this file and landing the next provider's, with no edit to a file the
+# toolchain manager owns.
+#
+# conf.d has NO environment scoping — a file named `fnox.dev.toml` here would
+# still load under MISE_ENV=ci, because the directory is read by glob. Unlike
+# a hosted provider, that is what you want here: fnox resolves in CI too.
+#
+# There is no [env] block, because mise has no directive that activates a
+# secrets manager. Injection is `fnox exec -- <the repo's own task>`, written
+# into the task that needs it, or `fnox activate` in an interactive shell.
+# Wrapping the task and never the application is the secrets contract's rule
+# that outranks the rest.
+#
+# The repository's own configuration is fnox.toml at the root — fnox walks up
+# from the working directory to find it, which is why it is not under .config/.
+
+[tools]
+fnox = { version = "latest" }

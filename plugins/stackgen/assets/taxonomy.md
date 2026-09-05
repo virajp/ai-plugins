@@ -49,6 +49,14 @@ The closed list. A component is exactly one of:
   rather than tools. A component that does only one of the three jobs — a
   pinner that runs nothing, a task runner that pins nothing — records the
   others `n/a`; contributes the `repo`-axis facts.
+- **`repo-hygiene`** — the files a repository carries **whatever it is
+  written in**: the ignore set, the editor and attribute defaults, the
+  licence and the security contact, and the dependency-update policy. Not a
+  gate — it checks nothing and fails nothing; it is the ground the gates run
+  over, which is why folding it into `toolchain-gate` would have put a
+  licence file behind a scanner's doctrine. Exactly one per repo, and it
+  realizes no vwf capability: there is no seam here, because nothing in a
+  blueprint chooses an `.editorconfig`.
 - **`cloud-provider`** — a provider itself: the account/IAM/billing and
   emulator judgment that spans its services.
 - **`cloud-service`** — one service of one provider: a compute target, a
@@ -157,7 +165,7 @@ project config already holds**. Picking from the menu and writing
 exist because a template no menu can offer is not an error — it is invisible,
 which is how a CI-system pack shipped that nothing could ever materialize.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
-  the whole repository rather than to one toolchain in it — one of the three
+  the whole repository rather than to one toolchain in it — one of the four
   compositions rooted at the `repo` axis. A gate meaningful for exactly one
   toolchain is **not** here: it belongs to that language's bundle, which is
   what keeps a polyglot repo from materializing the same scanner once per
@@ -168,11 +176,16 @@ which is how a CI-system pack shipped that nothing could ever materialize.
   — and like a CI-Bundle it is **exactly one**: a repo with two task
   runners has two vocabularies for the same commands, and only one of them
   is the one anything else invokes.
+- A **Repo-Hygiene-Bundle** is exactly one `repo-hygiene` component,
+  standing alone like a Deploy-Bundle — the third composition on the
+  **`repo`** axis, and the newest. There is no second half because there is
+  no category above "the files every repo has" to write doctrine at, and the
+  fence that keeps it honest is its kind's scope rather than a pairing.
 - A **Workspace-Bundle** is the `package-manager` component that installs
   and locks the repo's members plus a `build-orchestrator` component where
-  the repo has one — the third composition on the **`repo`** axis, and the
-  only one of the three a user picks: `repo.stack.template` is what selects
-  it, while the other two are `unconditional:` baselines. A single-package
+  the repo has one — the fourth composition on the **`repo`** axis, and the
+  only one of the four a user picks: `repo.stack.template` is what selects
+  it, while the other three are `unconditional:` baselines. A single-package
   repo pins none, which is the edge rather than a gap. The
   `package-manager` component appears in two kinds' compositions the way
   `toolchain-gate` does — it carries `language-bundle` topics 7–8 there and

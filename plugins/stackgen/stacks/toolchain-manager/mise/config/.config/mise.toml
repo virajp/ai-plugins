@@ -1,13 +1,28 @@
 # The common base — loaded in EVERY environment, MISE_ENV set or not.
 #
-# mise loads this file first, then deep-merges the active MISE_ENV variant on
-# top, so a variant holds deltas only. Never duplicate a tool or a setting
-# across the layers: a tool pinned twice is a version that can disagree with
-# itself, and the disagreement surfaces on someone else's machine.
+# Five files, one job each, all of them under `.config/`:
 #
-# A repo with no CI/CD and no deploy target needs only this file. Add
-# mise.dev.toml and mise.ci.toml when a pipeline or a deployed environment
-# appears.
+#   mise.toml        this file — always loaded, whatever MISE_ENV says
+#   mise.dev.toml    MISE_ENV=dev   — the developer laptop
+#   mise.ci.toml     MISE_ENV=ci    — the pipeline and the deployed runtime
+#   mise.test.toml   MISE_ENV=dev,test — test deltas, layered on top of dev
+#   mise.local.toml  NEVER committed — this machine's private overrides
+#
+# mise loads this file first, then deep-merges the active MISE_ENV variants on
+# top — MISE_ENV is a comma list and the last entry wins — and finally
+# `mise.local.toml` / `mise.<env>.local.toml`, which outrank everything. So a
+# variant holds DELTAS only, never a copy of the base. Never duplicate a tool or
+# a setting across the layers: a tool pinned twice is a version that can
+# disagree with itself, and the disagreement surfaces on someone else's machine.
+#
+# **A tool the PIPELINE runs lives here, not in mise.dev.toml.** `MISE_ENV=ci`
+# never loads the dev file, so a gate pinned there is a gate CI cannot run. The
+# dev file is for what only a human needs.
+#
+# **`mise.local.toml` is gitignored and nothing ships one.** It is where a
+# machine-specific path, a personal project handle or a locally built runtime
+# goes — anything true of one laptop and no other. The same applies to
+# `mise.<env>.local.toml` for a per-environment private override.
 
 [settings]
 activate_aggressive  = true     # let mise shims win on PATH
@@ -15,6 +30,22 @@ env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see the CI exception)
 raw                  = true     # streams output
 status.missing_tools = "always"
+
+# Freshness with a quarantine. Fuzzy pins ("latest", "26") resolve to the newest
+# release that is at least this old, so a version yanked hours after publication
+# is never the one a fresh clone installs. mise's own default is 24h; 10h keeps
+# a same-day fix reachable without taking the first minutes of a release.
+minimum_release_age = "10h"
+
+# Record every resolved version in `mise.lock`, which IS committed. That is what
+# makes "latest" reproducible: humans move the lockfile forward deliberately
+# (`mise upgrade`), and the pipeline installs from it (see mise.ci.toml).
+lockfile = true
+
+# Interleave task output rather than buffering per task. Applies when `raw` is
+# off; with `raw = true` above, mise streams straight through and this is inert
+# — it is set so that turning `raw` off does not change the shape of the logs.
+task.output = "interleave"
 
 # Runtime-specific settings blocks — keep ONLY the one matching this repo's
 # runtime, and delete the rest. A block for a runtime the repo does not have is
@@ -34,13 +65,21 @@ status.missing_tools = "always"
 # same everywhere belongs here.
 DISABLE_TELEMETRY = 1
 
+# Project-local binaries on PATH without a `<pm> exec` prefix. Shipped commented
+# because it is a claim about the stack: uncomment it when a package-manager
+# component lands and this repo actually has a `node_modules/.bin`.
+#   _.path = { path = "node_modules/.bin", tools = true }
+
 [tools]
-# The language RUNTIME only — the minimum to run or build the project anywhere.
-# Formatters, linters, scanners and AI tooling are development concerns and
-# belong in mise.dev.toml, so a fresh checkout and a CI build do not pull them.
+# EMPTY by default, and that is the contract: this pack is the toolchain
+# manager, not the toolchain. The language runtime arrives with this repo's
+# language and package-manager components, which write their own tier; a
+# capability provider (a secret manager, say) ships its tool in its own
+# `.config/mise/conf.d/<provider>.toml` fragment rather than editing this file.
+# mise auto-loads `conf.d/*.toml`, so a provider can be added and removed
+# without a single line of this file changing.
 #
-# The runtime pins arrive with this repo's language and package-manager
-# components. For example, a Node repo would carry:
+# For example, a Node repo's package-manager component would carry:
 #   node = { version = "latest" }
 #   pnpm = { version = "latest" }
 

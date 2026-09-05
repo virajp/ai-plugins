@@ -1,0 +1,36 @@
+---
+# grype's config. The scan itself is wired as `code:sec`, which passes
+# `--config .config/grype.yaml` so this file is what applies locally, in the
+# pre-commit gate, and in CI alike.
+
+# Anything medium or above fails the run; low and negligible are reported and
+# do not block. This is a position, not a default — `low` on a typical
+# dependency tree produces a wall of findings, and a gate nobody can clear gets
+# bypassed rather than fixed, which is strictly worse than a higher threshold
+# honestly enforced.
+#
+# `code:sec` also spells `--fail-on medium` at the call site so the threshold is
+# visible where the gate is invoked. The two must be changed together; this file
+# is the home of the decision.
+fail-on-severity: medium
+
+# **An ignore rule is a claim that a finding is wrong, not that it is
+# inconvenient.** Every entry must state four things, in a comment above it:
+#
+#   1. the vulnerability, by id;
+#   2. the package and version it is matched against;
+#   3. why it does not apply here — a reachability argument, not a severity
+#      opinion;
+#   4. what makes it expire — a date, or the upstream release that fixes it.
+#
+# An ignore with no expiry is a permanent silence nobody re-reads, still
+# covering a fix that shipped a year ago. The expiry is what turns this list
+# back into a queue.
+#
+# Scope an entry to the FINDING, never to the package: ignoring the package
+# means the next, unrelated advisory against it arrives silently. Prefer
+# upgrading; ignore only when there is genuinely nothing to upgrade to.
+#
+# An empty list rather than a deleted key: this file is the documented home for
+# the next rule, and the paragraph above it is the bar that rule has to clear.
+ignore: []

@@ -3,65 +3,75 @@
 #MISE description="Set up or upgrade everything this repo needs on your machine"
 #MISE depends=["init"]
 
-#USAGE flag "--all" help="Also set up every git submodule"
-#USAGE flag "--clean" help="Remove caches and installed dependencies before installing"
+#USAGE flag "--all" help="Also set up every member project"
 
-set -e
+# One member flag per project is added here when this repo has members. The ids
+# come from the project registry when there is one, else the member directory
+# name — the same list `[shell_alias]` gets its `setup-<id>` aliases from:
+#
+#   #USAGE flag "--backend" help="Set up the backend project"
+#   #USAGE flag "--frontend" help="Set up the frontend project"
+#
+# A single-project repo has no members and therefore no flags beyond `--all`,
+# which is then a no-op. Leave it as shipped rather than deleting it: `--all` is
+# what a caller passes without knowing the repo's shape.
+
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# The entry point a human runs. Alias it in [shell_alias]:
-#   setup     = "mise run setup:all"
-#   setup-all = "mise run setup:all --all"      # when the repo has submodules
+# The entry point a human runs — on clone, and to re-sync a machine afterwards.
+# Aliased as `setup` in `[shell_alias]`.
 #
 # This file is the ORCHESTRATOR and names no tool. Every step is a task the
 # stack overlay fills; a step with no fill announces itself and the run
 # continues. Keep it that way — a tool named here is a tool every repo
-# scaffolded from this template inherits whether or not it chose it.
+# scaffolded from this pack inherits whether or not it chose it.
+#
+# **Keep it idempotent: re-running must converge, never error.** It is the
+# re-sync command as much as the bootstrap one, so a step that only works on a
+# clean machine is a step that breaks the second run.
 
-have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
-
-CLEAN_FLAG=""
-[[ "${usage_clean:-false}" == "true" ]] && CLEAN_FLAG="--clean"
-
-line_sep "="
+print_header "Setting up the toolchain ..."
 mise run setup:mise
 
-line_sep "="
+print_header "Setting up secrets ..."
 mise run setup:secrets
 
-line_sep "="
-mise run setup:deps:all ${CLEAN_FLAG}
+print_header "Starting external services ..."
+mise run setup:external:start
 
-# External dependencies — emulators, containers, local queues — are OPTIONAL.
-# A repo that needs none has no `setup/external/` at all, so this is a probe
-# rather than a slot: absence is silent, not a placeholder telling the user to
-# go configure something they do not want.
-#
-# Only `update` is wired. It pulls and builds; it does not start anything.
-# Booting services is a deliberate act (`setup:external:start`), not a side
-# effect of refreshing your toolchain.
-if have_task setup:external:update; then
-  line_sep "="
-  mise run setup:external:update
-fi
+print_header "Setting up dependencies ..."
+mise run setup:deps:all
 
-line_sep "="
+print_header "Setting up commit hooks ..."
 mise run setup:precommit
 
-line_sep "="
-mise run setup:ai
+print_header "Setting up AI tooling ..."
+mise run code:ai
 
-# Submodules are set up only on request: the common case is working in one
-# repo, and recursing by default turns every setup into the slowest one.
+# Members are set up only on request: the common case is working in one project,
+# and recursing by default turns every setup into the slowest one. Each member
+# runs its OWN task library through `mise run --cd`, so a polyglot repo gets one
+# library per project rather than one library that knows every language.
+#
+# The generic member list is the repo's submodules. A repo whose members are
+# plain directories replaces the loop below with one `mise run --cd <path>` per
+# id, guarded by that id's flag.
+
+# `$displaypath` is git's own variable and stays single-quoted so git, not this
+# shell, expands it.
+# shellcheck disable=SC2016
+members() {
+  git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true
+}
+
 if [[ "${usage_all:-false}" == "true" ]]; then
-  while read -r submodule; do
-    [ -n "$submodule" ] || continue
-    line_sep "="
-    print_header "Setting up ${submodule} ..."
-    line_sep "="
-    mise run --cd "${MISE_PROJECT_ROOT}/${submodule}" setup:all ${CLEAN_FLAG}
-  done < <(git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true)
+  while read -r member; do
+    [ -n "$member" ] || continue
+    print_header "Setting up ${member} ..."
+    mise run --cd "${MISE_PROJECT_ROOT}/${member}" setup:all
+  done < <(members)
 fi
 
-line_sep "="
 print_header "Setup complete!"

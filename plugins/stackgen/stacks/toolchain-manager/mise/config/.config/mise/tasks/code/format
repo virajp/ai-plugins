@@ -7,7 +7,8 @@
 #USAGE flag "--fix" help="apply fixes"
 #USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
 
-set -e
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # The default fill, not a placeholder: every repo has markdown in it from the
@@ -16,23 +17,25 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # its own sources — and keeps formatting the markdown, which does not stop
 # mattering once code arrives.
 
-eval "files=(${usage_files:-})"
+files=()
+eval "files+=(${usage_files:-})"
 
-if [ ! -f "${MISE_PROJECT_ROOT}/dprint.json" ]; then
-  print_warn "No dprint.json — skipping formatting."
-  print_yellow "Add one to format this repo's markdown; see the dprint skill."
+CONFIG="${MISE_PROJECT_ROOT}/.config/dprint.json"
+
+# The formatter does not discover a config under `.config/`, so every call has
+# to name it. That is the price of keeping the repo root clean, and it is paid
+# in exactly two places: here and the pre-commit hook.
+if [ ! -f "${CONFIG}" ]; then
+  print_warn "No .config/dprint.json — skipping formatting."
+  print_yellow "The formatter component owns that file; materialize it first."
   exit 0
 fi
 
 [[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="debug" || LOG_LEVEL="warn"
 [[ "${usage_fix:-false}" == "true" ]] && ACTION="fmt" || ACTION="check"
 
-print_header "Formatting files ..."
-
 dprint "${ACTION}" \
-  --config "${MISE_PROJECT_ROOT}/dprint.json" \
+  --config "${CONFIG}" \
   --allow-no-files \
   --log-level "${LOG_LEVEL}" \
-  "${files[@]}"
-
-print_header "Formatting done"
+  ${files[@]+"${files[@]}"}

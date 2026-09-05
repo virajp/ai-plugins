@@ -1,0 +1,24 @@
+# Editor defaults, so a file's shape does not depend on whose editor saved it.
+# The formatter stays the authority for everything it has a plugin for; this
+# covers the rest, and covers what an editor does before the formatter runs.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Two trailing spaces are a hard line break in Markdown — trimming them
+# silently rewrites the rendered document.
+[*.md]
+trim_trailing_whitespace = false
+
+# Make requires a literal tab to open a recipe line.
+[Makefile]
+indent_style = tab
+
+[*.{py,dart}]
+indent_size = 4

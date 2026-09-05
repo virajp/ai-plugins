@@ -1,0 +1,38 @@
+# The Doppler CLI's pin and the two variables it reads from the environment,
+# and nothing else. It sits in conf.d/ so that mise.toml stays free of any
+# provider's name: swapping the secrets manager is deleting this file and
+# landing the next provider's, with no edit to a file the toolchain manager
+# owns.
+#
+# conf.d has NO environment scoping — a file named `doppler.dev.toml` here
+# would still load under MISE_ENV=ci, because the directory is read by glob.
+# So the pin is unconditional, and the cost is that CI installs a CLI it never
+# calls. That is the trade for the provider owning its own pin; what matters
+# is that no *task* depends on the injector, which stays true.
+#
+# Key naming — one Doppler project per repository holds every sub-project's
+# keys, and the prefix is what separates them:
+#
+#   <REPO>_<KEY>   this repository's own value      SITE_DATABASE_URL
+#   GLB_<KEY>      shared across repositories       GLB_GITHUB_TOKEN
+#
+# A second project per sub-project would only split the access grant without
+# splitting anything else. Names are [A-Z0-9_].
+
+[tools]
+doppler = { version = "latest" }
+
+[env]
+# The single config every repository uses for local development. Deployed
+# environments take their secrets from the platform that runs them, never from
+# here, so there is no staging or production config to select.
+DOPPLER_CONFIG = "local"
+
+# The repository directory's basename. `config_root` is the repo root for a
+# conf.d file, and `$MISE_PROJECT_ROOT` is NOT yet set while mise renders this
+# template — so the value is taken from `config_root`, in pure template
+# syntax, which also spawns no process on every env resolution.
+#
+# Override it in mise.local.toml when the Doppler project is named something
+# other than the directory.
+DOPPLER_PROJECT = "{{ config_root | split(pat='/') | last }}"

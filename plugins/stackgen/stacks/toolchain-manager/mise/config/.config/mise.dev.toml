@@ -1,37 +1,59 @@
 # The developer laptop — loaded when MISE_ENV=dev.
 #
-# Everything a human needs locally but a pipeline does not. Developers export
+# Everything a human needs locally that a pipeline does not. Developers export
 # MISE_ENV=dev in their shell so this layer loads automatically; a task that
 # guards a local-only side effect does it with [ "$MISE_ENV" != "dev" ] rather
 # than assuming a variant is loaded.
+#
+# Nothing here is loaded under MISE_ENV=ci. A tool the pipeline runs belongs in
+# mise.toml, not here.
 
 [settings]
 env_shell_expand     = true
 status.missing_tools = "always"
 
 [tools]
-# Development tools only — never the runtime, which mise.toml already pins.
-# These are what the shipped task library actually shells out to: code:format
-# runs dprint, setup:precommit runs pre-commit, and a code:sec fill reaches for
-# the scanners. Because they live here, the aggregate gate needs the dev
+# Development tools only — never the language runtime, which the package-manager
+# component pins in mise.toml. These are what the shipped task library actually
+# shells out to: code:format runs dprint, code:sec runs the scanners,
+# setup:precommit runs pre-commit, and the shell gate reads every task file in
+# this library. Because they live here, the aggregate gate needs the dev
 # toolchain loaded — `MISE_ENV=dev mise run code:all`.
+actionlint = { version = "latest" }
 dprint     = { version = "latest" }
 gitleaks   = { version = "latest" }
 grype      = { version = "latest" }
+jq         = { version = "latest" }
 pre-commit = { version = "latest" }
+shellcheck = { version = "latest" }
+shfmt      = { version = "latest" }
 taplo      = { version = "latest" }
 
+# No secret-manager tool here. The pinned capability provider ships its own
+# `[tools]` entry in `.config/mise/conf.d/<provider>.toml`, so swapping
+# providers never touches this file.
+
 [shell_alias]
-# The bootstrap entry point, for the humans who run it.
+# Short names for the three commands a human types most. Aliases need
+# `mise activate` in the shell, and CI never loads this file — so nothing in the
+# pipeline may depend on one.
+precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
-setup-all = "mise run setup:all --all" # when the repo has submodules
+worktrees = "mise run code:worktrees"
+
+# One alias per member project, when this repo has members (submodules, or
+# projects the registry names). The pack cannot know the ids, so these are a
+# template — `setup:all`'s own flags are generated from the same list:
+#   setup-backend  = "mise run setup:all --backend"
+#   setup-frontend = "mise run setup:all --frontend"
 
 [env]
 PRE_COMMIT_HOME = "$HOME/.cache/pre-commit"
 
-# The DEVELOPMENT values of anything the app reads at runtime — verbose
-# logging, local hosts, emulator endpoints, test credentials. The variable
-# NAMES must match what mise.ci.toml overrides, so dev and production differ in
-# value and never in vocabulary.
-LOG_LEVEL   = "trace"
-RUNTIME_ENV = "development"
+# The DEVELOPMENT values of anything the app reads at runtime — verbose logging,
+# local hosts, emulator endpoints, test credentials. The variable NAMES must
+# match what mise.ci.toml overrides, so dev and production differ in value and
+# never in vocabulary. Shipped commented because the vocabulary is this repo's,
+# not this pack's:
+#   LOG_LEVEL   = "trace"
+#   RUNTIME_ENV = "development"

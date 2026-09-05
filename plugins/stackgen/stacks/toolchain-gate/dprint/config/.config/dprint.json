@@ -1,0 +1,112 @@
+{
+  "dockerfile": {
+    "lineWidth": 80
+  },
+  "excludes": [
+    "**/node_modules/",
+    "**/dist/",
+    "**/build/",
+    "**/target/",
+    "**/.turbo/",
+    "**/*-lock.json",
+    "**/*-lock.yaml",
+    "**/*.lock",
+    "**/graphify-out/"
+  ],
+  "exec": {
+    "commands": [
+      {
+        "command": "taplo fmt --config .config/taplo.toml -",
+        "exts": [
+          "toml"
+        ]
+      }
+    ]
+  },
+  "includes": [
+    "**/*.json",
+    "**/*.jsonc",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.mjs",
+    "**/*.cjs",
+    "**/*.css",
+    "**/*.scss",
+    "**/*.htm",
+    "**/*.html",
+    "**/*.md",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.toml",
+    "**/dockerfile",
+    "**/dockerfile.*"
+  ],
+  "json": {
+    "jsonTrailingCommaFiles": [
+      "tsconfig.json",
+      "tsconfig.*.json",
+      ".vscode/settings.json"
+    ],
+    "lineWidth": 80
+  },
+  "malva": {
+    "formatComments": true,
+    "ignoreCommentDirective": "dprint-ignore"
+  },
+  "markdown": {
+    "emphasisKind": "asterisks",
+    "tags": {
+      "json": "json",
+      "markdown": "md",
+      "text": "text",
+      "toml": "toml",
+      "typescript": "ts",
+      "yaml": "yaml",
+      "yml": "yaml"
+    },
+    "textWrap": "always"
+  },
+  "markup": {
+    "formatComments": true,
+    "ignoreCommentDirective": "dprint-fmt-ignore",
+    "preferAttrsSingleLine": true,
+    "scriptIndent": true,
+    "styleIndent": true
+  },
+  "newLineKind": "lf",
+  "plugins": [
+    "https://plugins.dprint.dev/markdown-0.22.1.wasm",
+    "https://plugins.dprint.dev/dockerfile-0.4.0.wasm",
+    "https://plugins.dprint.dev/g-plane/markup_fmt-v0.27.3.wasm",
+    "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.6.0.wasm",
+    "https://plugins.dprint.dev/g-plane/malva-v0.16.0.wasm",
+    "https://plugins.dprint.dev/typescript-0.96.1.wasm",
+    "https://plugins.dprint.dev/json-0.21.3.wasm",
+    "https://plugins.dprint.dev/exec-0.6.2.json@df98f54ffd3092b8a841aedd6d098a2651f16d0a796a40535774f1a8b4b9d463"
+  ],
+  "typescript": {
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "newLineKind": "lf",
+    "quoteProps": "asNeeded",
+    "quoteStyle": "alwaysDouble",
+    "semiColons": "always",
+    "trailingCommas": "onlyMultiLine",
+    "useTabs": false
+  },
+  "yaml": {
+    "dashSpacing": "oneSpace",
+    "formatComments": true,
+    "ignoreCommentDirective": "dprint-yaml-ignore",
+    "indentBlockSequenceInMap": true,
+    "indentWidth": 2,
+    "lineBreak": "lf",
+    "printWidth": 80,
+    "proseWrap": "always",
+    "quotes": "forceDouble",
+    "trailingComma": true,
+    "trimTrailingWhitespaces": true
+  }
+}

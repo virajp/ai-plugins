@@ -1,0 +1,17 @@
+# Merged into `.config/pre-commit-config.yaml` by `/vwf:init`, between the
+# marker comments that name this file. Edit here and re-run init — an edit made
+# inside the merged block is overwritten on the next run.
+
+repos:
+  - repo: local
+    hooks:
+      - id: uv-lock-check
+        name: uv lockfile is current
+        description: Fails when pyproject.toml has moved and uv.lock has not, so
+          the drift is caught at the commit that caused it rather than by the
+          next person to sync.
+        entry: mise x -- uv lock --check
+        files: (^|.*/)pyproject\.toml$
+        language: system
+        pass_filenames: false
+        stages: [ pre-commit ]

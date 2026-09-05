@@ -1,24 +1,41 @@
 #!/usr/bin/env bash
-#MISE description="Lint files"
+
+#MISE description="Lint the repo's files"
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-cd "${MISE_PROJECT_ROOT}"
+# Three gates, and the order is the point: the house linter takes the repo's
+# config files, the dependency check takes `pubspec.yaml`, and the analyzer
+# takes the Dart sources. A dependency the manifest declares but nothing imports
+# is invisible to the analyzer, and an unused import is invisible to the
+# dependency check — neither subsumes the other.
+#
+# `--fatal-infos` is deliberate: an analyzer info that nobody has to fix is an
+# info that accumulates.
 
-print_header "Linting config files ..."
-[[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="--debug" || LOG_LEVEL=""
-[[ "${usage_fix:-false}" == "true" ]] && FIX="--fix"           || FIX=""
-pnpm dlx @askviraj/linter ${LOG_LEVEL} ${FIX}
+args=()
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  args+=(--debug)
+fi
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  args+=(--fix)
+fi
 
-print_header "Validating Dart dependencies ..."
+print_header "Linting files ..."
+
+print_subheader "Linting config files ..."
+pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"}
+
+print_subheader "Validating Dart dependencies ..."
 dart run dependency_validator
 
-print_header "Analyzing Dart sources ..."
+print_subheader "Analyzing Dart sources ..."
 dart analyze --fatal-infos
-
-print_header "Linting done"

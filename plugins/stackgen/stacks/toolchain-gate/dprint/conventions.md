@@ -27,3 +27,54 @@ component for the parity rule this depends on.
 **The repo formatter runs first in `code:format`**, ahead of any language- or
 package-manager-specific formatting step that component wires into the same
 task.
+
+## What this pack writes
+
+Two files. `.config/dprint.json` is the format authority — the includes, the
+exclusion set and the pinned plugin list. `.config/taplo.toml` decides TOML
+layout, and is reached only through dprint's `exec` escape hatch, so the two
+land together or the TOML half formats with taplo's defaults.
+
+The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
+`package.json` and CI workflows remain outside it.
+
+## `--config` on every invocation, and the editor cost of that
+
+dprint discovers `dprint.json` and `dprint.jsonc` by walking up from the file
+being formatted. It does **not** look inside `.config/`. Putting the config
+there with the rest of the repo's tooling is therefore a trade, made
+deliberately, and the price is stated rather than discovered:
+
+- **Every command-line call carries `--config .config/dprint.json`** — the
+  format task, the pre-commit hook, and the CI step alike. A call without it
+  formats with dprint's built-in defaults and reports success, which is the
+  worst of the available failures.
+- **The editor extension has no setting that answers this.** The VS Code
+  extension contributes exactly `dprint.path`, `dprint.verbose` and
+  `dprint.experimentalLsp`; none of them names a config file. Format-on-save is
+  therefore inert in a repo whose only config is under `.config/`, and no
+  warning says so — the extension simply finds nothing and does nothing.
+
+So the trade is asymmetric, and worth naming plainly. The CLI, the pre-commit
+hook and the CI step all pass `--config` and are unaffected — the gate that
+decides whether a commit lands sees the real config every time. Format-on-save
+does not follow `--config`, and there is no setting that makes it: the pointer
+this pack could have written does not exist. Editing without it is not
+unformatted work, it is work the gate formats a moment later.
+
+This pack ships no remedy for that, and none is implied. Format-on-save is a
+repo-level choice about the editor, not a gate concern, and the root allowlist
+in the hygiene doctrine does not carry a file for it. A repo that decides it
+wants one is deciding for itself, with the drift between two configs as the
+thing it takes on.
+
+## Submodules carry a copy, not a symlink
+
+A submodule is a repository. Its checkout does not reliably contain the parent's
+`.config/`, its own tooling runs from its own root, and a relative symlink
+pointing out of it resolves to nothing wherever it is cloned alone. So each
+submodule gets its **own** `.config/dprint.json`, kept identical on purpose.
+
+The cost is that two files can drift; the cost of the symlink is that the gate
+silently formats with defaults in the one context nobody tests. Prefer the
+drift, which a diff shows.

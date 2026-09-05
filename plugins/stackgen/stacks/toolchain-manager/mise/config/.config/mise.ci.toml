@@ -5,6 +5,12 @@
 # selects.
 
 [settings]
+# Install exactly what `mise.lock` records and fail rather than resolve.
+# `lockfile = true` in the base keeps the file current on a laptop; this line is
+# what makes the pipeline a reader of it. A CI run that silently resolves a
+# newer version is a build nobody can reproduce afterwards.
+locked = true
+
 # Per-runtime CI workarounds go here and nowhere else.
 #
 # Node: CI runs on Linux, where mise's bundled Node release-key gpg import can
@@ -18,6 +24,8 @@
 # the pipeline genuinely needs it and development does not.
 
 [env]
-# The PRODUCTION values for the same keys mise.dev.toml sets locally.
-LOG_LEVEL   = "warn"
-RUNTIME_ENV = "production"
+# Empty by default. What belongs here: CI-only and production VALUES for keys
+# mise.dev.toml already names locally (`LOG_LEVEL`, `RUNTIME_ENV`, a deploy
+# target). What never belongs here: a secret. Tokens and credentials are
+# injected by the CI provider or resolved by the pinned secret manager at run
+# time — a value committed to this file is a value in the repo's history.

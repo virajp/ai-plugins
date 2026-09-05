@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+#MISE description="Merge a feature branch into develop and push it"
+
+#USAGE arg "<branch>" help="the local branch to merge into develop"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/merge"
+
+# Integration. The branch is named rather than inferred, because this is
+# routinely run from the worktree the work was done in and the branch you are
+# standing on is not always the one you mean to land.
+#
+# Everything the merge refuses, and why, is in `_scripts/merge`.
+
+# `usage_branch` is set by mise from the `#USAGE arg` above, so shellcheck
+# cannot see the assignment.
+# shellcheck disable=SC2154
+merge_to_destination_branch develop "${usage_branch}"

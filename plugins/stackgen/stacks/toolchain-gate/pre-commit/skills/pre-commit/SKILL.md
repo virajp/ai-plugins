@@ -1,18 +1,22 @@
 ---
 name: pre-commit
-version: 0.1.0
+version: 1.0.0
 category: development
 description: pre-commit as the local gate — config at
-  .config/pre-commit-config.yaml, hooks that call mise tasks so the same command
-  runs locally and in CI, revs pinned and updated deliberately, and `files:`
-  scoping so a hook fires only for what it validates. Auto-applies when editing
-  a pre-commit config.
+  .config/pre-commit-config.yaml, pack fragments merged in from
+  .config/pre-commit.d/, the commit convention it enforces at commit-msg, hooks
+  that call mise tasks so the same command runs locally and in CI, revs pinned
+  and updated deliberately, and `files:` scoping so a hook fires only for what
+  it validates. Auto-applies when editing a pre-commit config, a hook fragment
+  or the commit convention.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/.pre-commit-config.yaml"
   - "**/.config/pre-commit-config.yaml"
+  - "**/.config/pre-commit.d/*.yaml"
+  - "**/.config/git-conventional-commits.yaml"
 ---
 
 # pre-commit — the local gate
@@ -30,9 +34,55 @@ mise run code:precommit --all   # run against everything
 pre-commit run --config .config/pre-commit-config.yaml --all-files
 ```
 
+`pre-commit install -c <path>` **bakes that path into the generated hook
+script**, which is why `git commit` needs no flag afterwards while a manual
+`pre-commit run` still does. Re-run `setup:precommit` after moving the config;
+the old path stays baked in until you do.
+
 `setup:precommit` also clears any `core.hooksPath` the repo has set locally —
-a leftover hooks path silently wins over pre-commit's installed hook, and the
-symptom is a gate that reports nothing rather than one that errors.
+`install` refuses outright while one is set, and a leftover path silently wins
+over pre-commit's installed hook, so the symptom is a gate that reports nothing
+rather than one that errors.
+
+## The config is a base, and packs extend it by fragment
+
+A language or package-manager pack never rewrites
+`.config/pre-commit-config.yaml`. It ships one fragment at
+`.config/pre-commit.d/<pack>.yaml` — a document whose only top-level key is
+`repos:` — and the merge appends each fragment's entries to the base config
+between a pair of markers:
+
+```yaml
+# >>> pre-commit.d/<name>.yaml
+  - repo: local
+    hooks:
+      - id: ...
+# <<< pre-commit.d/<name>.yaml
+```
+
+A re-run replaces what sits between one pair and leaves everything else alone,
+so a fragment landing later is additive. The rule that follows: **a repo's own
+hooks go above the marker block, never inside one** — anything between a pair is
+regenerated, and the loss is silent.
+
+## Two hooks that belong at `manual`, not at commit
+
+`check-hooks-apply` and `check-useless-excludes` audit the config rather than
+the code, and both fail on a **correct** config in a young repo: the first
+reports every hook matching zero files (the normal state of a symlink or
+workflow hook until the repo grows one), the second reports an exclusion for a
+tree that has not been generated yet. Wired at the commit stage they fail the
+first commit of a new repository, and the fix people reach for is deleting the
+hook that complained.
+
+```sh
+pre-commit run --config .config/pre-commit-config.yaml \
+  --hook-stage manual --all-files check-hooks-apply check-useless-excludes
+```
+
+Run them when a hook is added or a scope is changed. What they catch is a
+`files:` regex that stopped matching after a rename — a gate reporting success
+while checking nothing.
 
 ## Local hooks call mise tasks
 
@@ -78,6 +128,22 @@ Every third-party `repo:` entry carries a `rev:`. `pre-commit autoupdate` moves
 them, and it is run as a deliberate act (`setup:precommit`), not silently on
 each commit — an unpinned or auto-moving hook set means a commit can fail on a
 change nobody in the repo made.
+
+## The commit convention lives here too
+
+`.config/git-conventional-commits.yaml` is this component's second file, because
+the `commit-msg` hook is what enforces it — a convention nothing checks is a
+style note, and the file and its gate should not be able to land separately. It
+has a second reader: release notes are generated from the same file, so a type
+missing from `changelog.commitTypes` is work that silently never appears in a
+release.
+
+Two keys are easy to get wrong. `featureCommitTypes` (under `convention:`, not
+`changelog:`) is what decides a **minor** bump — everything else is a patch, and
+a `!` or a `BREAKING CHANGE` footer is a major regardless of type. And
+`commitScopes` is a closed list: a scope that stops existing stays listed with a
+comment saying so, because deleting it retroactively invalidates every commit
+that used it.
 
 ## Never `--no-verify` to get past a red gate
 

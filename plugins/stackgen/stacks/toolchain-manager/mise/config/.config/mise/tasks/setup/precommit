@@ -1,13 +1,30 @@
 #!/usr/bin/env bash
+
 #MISE description="Update and install pre-commit hooks"
 #MISE hide=true
 
-set -e
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-print_header "Updating pre-commit hooks ..."
-pre-commit autoupdate --config .config/pre-commit-config.yaml
+CONFIG=".config/pre-commit-config.yaml"
 
-print_header "Installing pre-commit hooks ..."
+if [ ! -f "${MISE_PROJECT_ROOT}/${CONFIG}" ]; then
+  print_warn "No ${CONFIG} — skipping hook installation."
+  print_yellow "The hook-runner component owns that file; materialize it first."
+  exit 0
+fi
+
+print_subheader "Updating pre-commit hooks ..."
+pre-commit autoupdate --config "${CONFIG}"
+
+# `core.hooksPath` set to anything makes `pre-commit install` refuse outright,
+# and a repo that once used a shared hooks directory still carries the setting.
+# Unsetting is safe when it was never set, which is why the failure is ignored.
+#
+# The hook TYPES are not passed here. `default_install_hook_types` in the config
+# is what declares them, so the commit-msg hook arrives with the config rather
+# than with whoever last edited this line.
+print_subheader "Installing pre-commit hooks ..."
 git config --local --unset-all core.hooksPath || true
-mise x -- pre-commit install --config .config/pre-commit-config.yaml --install-hooks --overwrite
+pre-commit install --config "${CONFIG}" --install-hooks --overwrite

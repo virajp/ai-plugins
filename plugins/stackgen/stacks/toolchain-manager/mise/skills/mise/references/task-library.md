@@ -6,136 +6,173 @@ colon-separated names: `.config/mise/tasks/code/format` →
 `mise run code:format`. Discover them with `mise tasks`; reserve `[tasks.*]`
 toml entries (like `init`) for trivial run-strings and `depends` aggregations.
 
-Every repo ships the same mandatory set. The **contract** — helpers, headers,
-flags — is identical across stacks; only the commands *inside* `code/*` and
-`setup/*` change with the tech stack.
+**Three groups, and every task belongs to exactly one:**
 
-The `common/` set ships as this component's `config/` payload and is copied in,
-already wired to the contract below; the stack-divergent files arrive with the
-language and package-manager components, which materialize **after** this one
-and overwrite at the same paths. **Author from what landed, not from scratch** —
-the snippets below show the shape, the landed files are the source of truth.
+| Group           | Is                                                                   |
+| --------------- | -------------------------------------------------------------------- |
+| `setup:*`       | bootstrap and re-sync — what a machine runs to be able to work here  |
+| `code:*`        | the quality gates and the git operations — what a change runs through |
+| `p:<id>:*`      | one project's own commands — what only that project has              |
+
+The `setup:*` and `code:*` sets are a **contract**: the names are identical on
+every repo, because the names are what the rest of the toolkit invokes. Only the
+commands *inside* them change with the stack. `p:*` is the opposite — every
+name in it is this repo's own.
+
+This pack's `config/` payload ships the whole `setup:*` and `code:*` set, wired
+to the contract below; the stack-divergent files arrive with the language,
+package-manager and gate components, which materialize **after** this one and
+overwrite at the same paths. **Author from what landed, not from scratch** — the
+snippets here show the shape, the landed files are the source of truth.
 
 ## Task-file anatomy
 
 ```bash
 #!/usr/bin/env bash
+
 #MISE description="Check or format files"   # shown in `mise tasks`
 #MISE hide=true                             # hide sub-tasks; aggregators stay visible
 #MISE dir="{{ config_root }}"               # run from repo root, not the caller's cwd
 #MISE depends=["init"]                      # ordering / fan-out
 
 #USAGE flag "--fix"   help="apply fixes"    # arrives inside as $usage_fix ("true"/"false")
-#USAGE flag "--debug" help="emit debug logs"
+#USAGE arg "<branch>" help="what to merge"  # arrives inside as $usage_branch
 
-set -e
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 print_header "Doing the thing ..."
 ```
 
 - **Every task sources `helpers`** as its first real line, for uniform output.
-- `#USAGE flag` args arrive as `$usage_<name>` env vars; the conventions are
-  `--fix` (mutate vs check), `--debug` (verbose), `--clean` (delete first).
-- Guard dev-only side effects (docker, emulators) with
-  `[ "$MISE_ENV" != "dev" ]` so the identical task is a no-op in CI.
-- Every task file is **bash** (`#!/usr/bin/env bash`) — the whole library is
-  bash-only so it runs on CI runners that lack zsh.
+- **Every task file is bash** — `#!/usr/bin/env bash`, `set -euo pipefail`, and
+  clean under `shellcheck -x` and `shfmt -d -i 2 -ci`. The library is bash-only
+  so it runs on CI runners that have no other shell, and the two gates are what
+  keep it that way.
+- **Every flag and every positional gets a `#USAGE` line.** That is what makes
+  `mise run <task> --help` true, and it is where the value's name comes from:
+  `--fix` arrives as `$usage_fix`, `<branch>` as `$usage_branch`. A flag read
+  without a `#USAGE` line is always unset.
+- The flag conventions are `--fix` (mutate rather than check), `--debug`
+  (verbose), `--all` (widen the scope), `--frozen` (do not move the lockfile).
+- Guard dev-only side effects (containers, emulators) with a `MISE_ENV` test so
+  the identical task is a no-op in the pipeline. `MISE_ENV` is a comma list, so
+  test for membership: `[[ ",${MISE_ENV:-}," == *",dev,"* ]]`.
 - Every task file must land **executable (755)**. mise runs the file directly,
   so one without its exec bit fails as an *unknown task* rather than as a
   permission error. `mise run init` is what restores the bit.
 
-## `_scripts/helpers` — sourced by every task
+## `_scripts/` — the libraries every task shares
 
-`_scripts/` is underscore-prefixed, so mise treats it as **not a task**. It
-holds the shared shell library that every task sources for uniform output. Add a
-`helpers.mjs` sibling for any Node-based (`.mjs`) task.
+`_scripts/` is underscore-prefixed, so mise treats it as **not a task
+directory**. The files inside it are named without a second underscore: the
+directory has already said they are libraries, and `_scripts/_helpers` says it
+twice.
 
-The shipped file defines styling constants (`BOLD`, `NORMAL`, and the `GREEN` /
-`YELLOW` / `RED` / `BLUE` colors) and this print/format vocabulary:
+| File            | Is                                                            |
+| --------------- | ------------------------------------------------------------- |
+| `helpers`       | the print vocabulary — sourced by every task, always          |
+| `helpers.mjs`   | the same vocabulary for Node tasks                            |
+| `placeholder`   | what an unfilled slot prints                                  |
+| `checks`        | the git predicates the merge tasks ask                        |
+| `merge`         | the merge procedure both `code:merge:*` tasks run             |
+| `<name>.env`    | a repo-specific value file, sourced rather than executed      |
 
-| Helper              | Output                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------ |
-| `print_header`      | green bold line — a section heading                                                        |
-| `print_header_wait` | green bold, no newline — a heading awaiting a same-line result                             |
-| `print_wait`        | yellow bold, no newline — an in-progress step                                              |
-| `print_ok`          | green bold `OK`                                                                            |
-| `print_newline`     | a blank line                                                                               |
-| `print_warn`        | yellow bold line                                                                           |
-| `print_error`       | red bold line                                                                              |
-| `print_yellow`      | plain yellow line (not bold)                                                               |
-| `line_sep "<char>"` | a full-width separator built from `<char>` (terminal width via `stty`, falling back to 80) |
+`helpers`, `helpers.mjs` and `placeholder` ship with this pack; `checks` and
+`merge` ship with it too, because the merge tasks are part of the contract. A
+repo that grows a library of its own adds a sibling here rather than a directory
+— `_scripts/helpers/` would make `helpers` a path and every `source` line in the
+repo wrong at once.
 
-```bash
-#!/usr/bin/env bash
+### The print vocabulary
 
-#MISE description="Helper functions for mise tasks"
-#MISE hide=true
+Styling constants (`BOLD`, `NORMAL`, and the `GREEN` / `YELLOW` / `RED` / `BLUE`
+colours) plus:
 
-# Style
-readonly BOLD='\033[1m'
-readonly NORMAL='\033[0m'
-# Colors
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[0;33m'
-readonly RED='\033[0;31m'
-readonly BLUE='\033[0;34m'
+| Helper              | Output                                                          |
+| ------------------- | ---------------------------------------------------------------- |
+| `print_header`      | a full-width `=` rule, then the title — a major section         |
+| `print_subheader`   | a full-width `-` rule, then the title — a step inside one       |
+| `print_success`     | a green bold line, no rule                                      |
+| `print_ok`          | green bold `OK`, for the end of a `print_wait` line             |
+| `print_wait`        | yellow bold, no newline — an in-progress step                   |
+| `print_warn`        | yellow bold line                                                |
+| `print_yellow`      | plain yellow line (not bold)                                    |
+| `print_error`       | red bold line, **to stderr**                                    |
+| `print_newline`     | a blank line                                                    |
+| `line_sep "<char>"` | a full-width rule of `<char>` (terminal width, else 80)         |
 
-print_header()      { echo -e "${GREEN}${BOLD}$1${NORMAL}"; }
-print_header_wait() { echo -en "${GREEN}${BOLD}$1${NORMAL}"; }
-print_wait()        { echo -en "${YELLOW}${BOLD}$1${NORMAL}"; }
-print_ok()          { echo -e "${GREEN}${BOLD}OK${NORMAL}"; }
-print_newline()     { echo ""; }
-print_warn()        { echo -e "${YELLOW}${BOLD}$1${NORMAL}"; }
-print_error()       { echo -e "${RED}${BOLD}$1${NORMAL}"; }
-print_yellow()      { echo -e "${YELLOW}$1${NORMAL}"; }
+**The separators are baked into the two headers, not left to the caller.** Every
+task that opened a section used to emit `line_sep "="` first, which made the
+rule a convention half the tasks remembered — and a task that forgot it read as
+part of the previous step. `line_sep` stays public for the rare case that wants
+a rule with no title after it, and calling it before a header now prints two.
 
-line_sep() {
-  local COL
-  COL=$(stty size 2>/dev/null | awk '{print $2}')
-  local line
-  printf -v line '%*s' "${COL:-80}" ''
-  printf '%s\n' "${line// /$1}"
-}
+**A single-step task calls neither header.** A task that does one thing and
+prints one line does not open a section; `print_wait` … `print_ok`, or one
+`print_success`, is its whole vocabulary.
+
+### Node tasks
+
+A `.mjs` task imports from `helpers.mjs` instead of sourcing the bash file, and
+prints identically. Its headers are the same directives behind `//`:
+
+```js
+#!/usr/bin/env node
+
+//MISE description="Generate the API client from the schema"
+//MISE hide=true
+//USAGE flag "--check" help="fail instead of writing"
+
+import { print_header, print_success, run } from "../_scripts/helpers.mjs";
+
+print_header("Generating the client ...");
+run("some-generator", ["--out", "src/generated"]);
+print_success("Client generated.");
 ```
 
-## `code/*` — quality gates
+`run(cmd, args)` is the only thing the Node library adds: it inherits stdio and
+exits the task with the command's status, which is what `set -e` does for free
+on the bash side. **Keep the two libraries in step** — a printer added to one
+and not the other is how the vocabularies drift, and the drift is invisible
+until someone reads two tasks side by side.
 
-The same set everywhere; the **commands inside differ by stack**.
+## The mandatory set
 
-| Task              | Does                                                | Stack-specific bits                                                                  |
-| ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `code/format`     | format (`--fix`) or check formatting                | **common ships a real default** — dprint over the repo's markdown. A Node overlay adds `sort-package-json`; a Flutter one adds `dart format lib/` |
-| `code/lint`       | lint (`--fix` applies fixes)                        | **slot** — common ships a placeholder. A Flutter overlay adds `dart analyze --fatal-infos` + `dependency_validator`                              |
-| `code/sec`        | dependency + secret scan                            | **slot** — the scanners come from the pinned repo-gate components                                                                                |
-| `code/precommit`  | run pre-commit on changed files (`--all` for all)   | identical. **Fails when a hook fails** — the caller decides whether to ignore it                                                                  |
-| `code/git-config` | reject forbidden local git config (`--fix` removes) | identical — identity & gpg keys must stay global, never local                                                                                    |
-| `code/worktrees`  | list worktrees across the repo and its submodules   | identical — git only                                                                                                                             |
-| `code/all`        | aggregator: `format` → `lint` → `sec`               | compiled stacks (a TS monorepo) prepend a typecheck, e.g. `code:check` → `turbo check`                                                          |
+| Task                                                  | Does                                                                        |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `setup:all [--all] [--<id>…]`                         | the bootstrap orchestrator — the order below; `--<id>` per member           |
+| `setup:mise`                                          | reshim, doctor, install, upgrade; formatter plugins and the linter if present |
+| `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                |
+| `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                |
+| `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
+| `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`       |
+| `setup:precommit`                                     | autoupdate, unset `core.hooksPath`, install the hooks                       |
+| `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                   |
+| `code:all [--fix] [--debug]`                          | the one-command gate: `format → lint → sec`                                 |
+| `code:format [--fix]`                                 | format or check; ships a real default                                       |
+| `code:lint [--fix]`                                   | **slot** — the language's linter                                            |
+| `code:sec`                                            | secret scan and vulnerability scan over the tree; ships a real default      |
+| `code:precommit [--all]`                              | run the hooks over what you changed, **before** you stage                   |
+| `code:git-config [--fix]`                             | reject identity and signing keys in the local git-config                    |
+| `code:worktrees`                                      | list worktrees across the repo and its members                              |
+| `code:merge:develop <branch>`                         | merge a feature branch into `develop` and push                              |
+| `code:merge:main`                                     | merge `develop` into `main` and push                                        |
+| `code:ai`                                             | install and reconcile this repo's agent plugins                             |
 
-`code:all` is the one-command gate. `precommit` and `git-config` are wired into
-the pre-commit hooks and `setup` — not into `code:all`.
-
-**Formatting has a default and linting does not**, which looks inconsistent and
-is deliberate: dprint is a single binary and every repo has markdown in it from
-the first commit, so a format default costs nothing. Every linter worth running
-belongs to a language, and the one this ecosystem uses for prose would drag a
-package manager into a repo that holds only docs.
-
-A stack's `code:sec` fill will typically shell out to scanners the three-file
-split places in **`mise.dev.toml`** — so running the aggregate gate requires the
-dev toolchain to be loaded (`MISE_ENV=dev`).
+`code:all` is the one-command gate. `precommit`, `git-config`, `merge:*` and
+`ai` are not in it — they are wired into the hooks, into `setup:all`, or run by
+hand.
 
 ## Slots and their placeholders
 
-Four common tasks ship **unfilled**: `code/lint`, `code/sec`, `setup/secrets`
-and `setup/deps/install`. The task name is the contract; the mechanism belongs
-to whichever stack the repo pins.
-
-Each carries a `#PLACEHOLDER` marker, sources `_scripts/placeholder`, and calls
-`placeholder_notice`. That prints the reason, then greps the repo's own task
-tree for the marker and lists **every** unconfigured task — a user who hits one
-slot will hit the rest, and one round of setup answers all of them.
+A **slot** is a task whose name is part of the contract but whose mechanism
+belongs to a stack nobody has pinned yet. It carries a `#PLACEHOLDER` marker,
+sources `_scripts/placeholder`, and calls `placeholder_notice`. That prints the
+reason, then greps the repo's own task tree for the marker and lists **every**
+unconfigured task — a user who hits one slot will hit the rest, and one round of
+setup answers all of them.
 
 **A placeholder always exits 0.** An unconfigured repo has to be able to run
 `code:all` and `setup:all` end to end: the docs a product is defined in get
@@ -147,89 +184,217 @@ at the same path, marker and all gone. Nothing edits a placeholder in place, and
 nothing fills one by hand: a repo that has picked no stack is *supposed* to see
 the placeholder output.
 
+**Formatting and security scanning have defaults; linting does not.** That looks
+inconsistent and is deliberate. One formatter binary and two scanners that read
+the repo as a *directory* say something true about a repo holding nothing but
+markdown. Every linter worth running belongs to a language, and the one this
+ecosystem uses for prose would drag a package manager into a docs-only repo.
+
 ## `setup/*` — bootstrap & upgrade
 
 `setup:all` is **the entrypoint** a human runs — on clone, and to re-sync a
-machine afterwards. It declares `#MISE depends=["init"]`, and it is **common,
-not stack-specific**: it names no tool at all, only the tasks it calls in order.
+machine afterwards. It declares `#MISE depends=["init"]`, and it names no tool
+at all, only the tasks it calls in order:
 
 ```text
-setup:all  (--clean wipes deps/caches · --all recurses into submodules)
-  ├─ setup:mise        # mise reshim · doctor · install · upgrade --local   (common)
-  ├─ setup:secrets     # install/configure the pinned secret manager        (SLOT)
-  ├─ setup:deps:all    # the package manager's install — see below          (SLOT)
-  ├─ setup:external:update  # pull/build services, if this repo has any     (optional)
-  ├─ setup:precommit   # pre-commit autoupdate + install --install-hooks    (common)
-  ├─ setup:ai          # verify claude, refresh marketplaces + plugins      (common)
-  └─ <each submodule>  # only with --all
-```
-
-Alias it for the humans who run it, in `[shell_alias]`:
-
-```toml
-setup     = "mise run setup:all"
-setup-all = "mise run setup:all --all"   # when the repo has submodules
+setup:all  (--all recurses into every member)
+  ├─ setup:mise            # reshim · doctor · install · upgrade   (common)
+  ├─ setup:secrets         # the pinned secret manager             (SLOT)
+  ├─ setup:external:start  # local services                        (SLOT)
+  ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
+  ├─ setup:precommit       # autoupdate + install the hooks        (common)
+  ├─ code:ai               # install and reconcile agent plugins   (common)
+  └─ <each member>         # only with --all
 ```
 
 **Keep it idempotent: re-running `setup:all` must converge, never error.** It is
 the re-sync command as much as the bootstrap one, so a step that only works on a
 clean machine is a step that breaks the second run.
 
+### Member flags
+
+A repo with members — submodules, or projects the registry names — gets **one
+flag per member** on top of `--all`, and the ids come from the same list the
+`p:` group uses (see below):
+
+```bash
+#USAGE flag "--all" help="Also set up every member project"
+#USAGE flag "--backend" help="Set up the backend project"
+#USAGE flag "--frontend" help="Set up the frontend project"
+```
+
+Each member runs its **own** task library through `mise run --cd <path>
+setup:all`, so a polyglot repo gets one library per project rather than one
+library that knows every language. The short forms live in `[shell_alias]`, one
+`setup-<id>` per member. **A single-project repo has no members and therefore no
+flags beyond `--all`**, which is then a no-op — left in place because a caller
+passes it without knowing the repo's shape.
+
 ### `setup/deps/*` — the package manager, and only that
 
 Two sibling surfaces, kept apart because a repo routinely has one and not the
 other in both directions:
 
-- **`setup/deps/*`** — the language's **package manager**. Always present.
-- **`setup/external/*`** — emulators, containers, local queues. **Optional.**
+- **`setup/deps/*`** — the language's **package manager**.
+- **`setup/external/*`** — emulators, containers, local queues.
 
-`deps/` is a folder rather than a file because a package manager has verbs:
+`deps/` is a folder rather than a file because a package manager has verbs, and
+**all five ship as slots and all five run**:
 
-| Task                  | Required | Is                                                              |
-| --------------------- | -------- | --------------------------------------------------------------- |
-| `setup:deps:all`      | yes      | the aggregator `setup:all` calls                                |
-| `setup:deps:install`  | yes      | **the slot** — install from the lockfile                        |
-| `setup:deps:upgrade`  | no       | move the lockfile forward                                       |
-| `setup:deps:outdated` | no       | report what has moved on                                        |
-| `setup:deps:audit`    | no       | report known vulnerabilities in the tree                        |
-| `setup:deps:cleanup`  | no       | delete installed deps, lockfiles and caches (`--clean` runs it) |
+| Task                  | Is                                                            |
+| --------------------- | -------------------------------------------------------------- |
+| `setup:deps:all`      | the aggregator `setup:all` calls                              |
+| `setup:deps:install`  | install from the lockfile; `--frozen` refuses to resolve      |
+| `setup:deps:cleanup`  | delete the installed tree and the cache, never the lockfile   |
+| `setup:deps:upgrade`  | the one task allowed to move the lockfile forward             |
+| `setup:deps:outdated` | report what has moved on, and exit 0 anyway                   |
+| `setup:deps:audit`    | the manager's own advisory check over the resolved tree       |
 
-**The task path carries no tool name.** `setup:pnpm:*`, `setup:uv:*` and
-`setup:app:*` are gone — the overlay fills `setup:deps:install` and the contract
-reads the same on every stack. One task library serves one package manager; a
-polyglot monorepo already gets one library per project, via
-`mise run --cd <project> setup:all`.
+**A package manager with no such verb fills the slot with an overlay that says
+so and exits 0.** The absence is stated by the pack that knows, never inferred
+from a task that happens not to exist — an inference that would read as "not
+configured" for a manager which is configured perfectly well.
 
-**Only `install` is required, and only it ships as a slot.** The others are
-probed by name. That distinction matters: an overlay with no `upgrade` is not
-unconfigured — some package managers simply do not separate installing from
-upgrading — and a placeholder there would report a gap that does not exist. A
-slot means *the tool is unchosen*; **absence means this manager has no such
-verb**.
+**The task path carries no tool name.** The overlay fills `setup:deps:install`
+and the contract reads the same on every stack.
 
-### `setup/external/*` — optional, and absent when unwanted
+### `setup/external/*` — local services
 
-Not a slot. A repo that runs against no external service has **no
-`setup/external/` folder at all** — no placeholder, no marker, nothing telling
-the user to go configure something they do not want. `setup:all` probes for it
-by name, so its absence is silent.
+`start`, `stop` and `pull` — `pull` fetches and builds, `start` boots. All three
+are **local-only by definition**: the pipeline brings up whatever it needs
+through its own service definitions, so each task exits 0 immediately outside a
+dev shell rather than failing.
 
-Where it exists, the verbs are `update`, `pull`, `check`, `start`, `stop`,
-`restart` — the names brownfield repos already use, so adopting this library is
-a move rather than a rewrite.
+`setup:all` calls `start`, so one bootstrap leaves a developer able to run the
+product. A repo with no external services leaves the three slots as shipped.
 
-`setup:all` wires **only `update`**: it pulls and builds, and starts nothing.
-Booting services is a deliberate act (`setup:external:start`), not a side effect
-of refreshing your toolchain. Guard the lifecycle tasks with
-`[ "$MISE_ENV" != "dev" ]` so CI skips them.
+### `setup:worktree` — the lighter sibling
 
-## `worktree/init` — the lighter sibling
-
-`worktree:init` does submodules, mise, `setup:deps:install`, and nothing else.
-Note it calls `install` directly rather than `deps:all`: a fresh worktree shares
-the machine's tools and the running services, so it needs its own dependencies
-and no service refresh, no secret setup, no plugin reconciliation and no
-upgrades.
+Members checked out, tools installed, secrets set up, `setup:deps:install
+--frozen`. Nothing else: a fresh worktree shares the machine's tools and the
+running services, so it needs its own dependencies and no tool upgrade, no hook
+installation and no plugin reconciliation. `--frozen` on purpose — a worktree is
+a place to work on a branch, not a place to move the lockfile.
 
 **vwf's git-workflow probes for it by name** before falling back to `setup:all`,
 so a repo without it silently takes the slower path.
+
+## `code/*` — the gates and the git operations
+
+### The pre-commit ordering, which is the point
+
+`code:precommit` runs the hooks over the **working tree's** changed files —
+staged and unstaged, plus untracked, minus deletions — and it is meant to run
+**before you stage**:
+
+```text
+mise run code:precommit   →   git add …   →   git commit
+```
+
+The hooks rewrite files: a formatter reflows, a linter fixes. Run first and
+those rewrites fold into the commit you were about to make. Run them from the
+git hook after staging and you get a failed commit and a second "fix hooks"
+commit that means nothing to anyone reading the history.
+
+`code:precommit --all` is the wide form, and it is what the merge tasks use as a
+**safety net**: `pre-commit run --all-files`, then the tree must still be clean.
+A hook that has something to say at merge time means a commit went in without
+one, and the merge **fails** rather than committing the fixup — the repair
+belongs on the branch that caused it, not on a merge commit.
+
+### The merge tasks
+
+`code:merge:develop <branch>` names its source, because it is routinely run from
+the worktree the work was done in and the branch you are standing on is not
+always the one you mean to land. `code:merge:main` names nothing: only `develop`
+reaches `main`.
+
+The shared procedure is `_scripts/merge`; the predicates it asks are
+`_scripts/checks`. In order: refuse a merge **from** `main`; refuse into `main`
+from anywhere but `develop`; refuse a branch merging into itself; refuse when
+you are already standing on the destination; then no untracked files, no
+uncommitted changes, no unpushed commits, then the hook safety net. Only after
+all of that does it touch git — hop to the main worktree if this is a linked
+one, check out the destination, pull with tags, `git merge --no-ff --no-edit`,
+`git push --follow-tags`, and return to where it started.
+
+**A conflict leaves the tree mid-merge on purpose.** Aborting would discard the
+one piece of information worth having — which files disagree — and resolving it
+is a judgement call a task cannot make.
+
+`--no-ff` is also on purpose: a fast-forward would leave the two branches as the
+same commit with no record that a merge happened, and the merge commit is what
+makes "what shipped" a question git can answer.
+
+## `p:<id>:*` — one project's own commands
+
+Everything that is not bootstrap and not a gate. `dev`, `build`, `test`, `e2e`,
+`deploy`, a code generator, a data migration — the commands that exist because
+of what this project *is*, and that no contract can name in advance.
+
+**The `<id>` segment**, in order of preference:
+
+1. the project's **registry id**, where `.config/vwf.yaml` names one;
+2. otherwise the **sub-project directory name**;
+3. for a single-project repo, the **repo's own name** — `p:claude-status:build`,
+   not `p:app:build`. A repo that later becomes a member keeps working, and a
+   task name never has to be re-learned because the repo grew.
+
+Every id is the same one `setup:all`'s member flags and the `setup-<id>` shell
+aliases use. One list, three surfaces.
+
+**Every project gets a `_default` slot.** No pack can know a project's commands,
+so `/vwf:init` creates `p/<id>/_default` as a `#PLACEHOLDER` that prints "no
+project tasks yet" and exits 0 — the group is visible in `mise tasks` from the
+first day, and filling it is authoring rather than discovering that it should
+exist.
+
+A worked example, for a project whose registry id is `site`:
+
+```text
+.config/mise/tasks/p/site/
+  ├─ dev      # `#MISE description="Run the site's dev server"`
+  └─ build    # `#MISE description="Build the site for production"`
+```
+
+```bash
+#!/usr/bin/env bash
+
+#MISE description="Run the site's dev server"
+#MISE dir="{{ config_root }}/site"
+
+#USAGE flag "--host" help="bind on the network rather than localhost"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+print_header "Starting the dev server ..."
+# … the project's own command
+```
+
+Real `p:` tasks are authored per repo — by hand, or by the stack generator for a
+project whose framework has an obvious set. **A gate or a bootstrap step never
+lives under `p:`**: if two projects would both have it, it belongs in `code:*`
+or `setup:*` where the contract can name it.
+
+## Legacy names
+
+Names this contract replaced. `/vwf:init` reads this table to rename tasks on an
+existing repo, which is why it lives here rather than in vwf — the renaming is a
+fact about this task library, and vwf's prose names no tool.
+
+| Was                                                | Is now                | Why it moved                                                             |
+| -------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ |
+| `worktree:init`                                     | → `setup:worktree`    | it is a bootstrap step; `worktree:` was a group of one                   |
+| `merge:develop`, `merge:main`                       | → `code:merge:*`      | a merge is something a change runs through, like the gates               |
+| `setup:pnpm:*`, `setup:uv:*`, `setup:app:*`         | → `setup:deps:*`      | the task path carried the tool's name, so the contract differed per stack |
+| `setup:ai`                                          | → `code:ai`           | it is re-run as the plugin set moves, not once per machine               |
+| `setup:doppler`                                     | → `setup:secrets`     | same reason as `setup:deps:*` — the provider is a choice, the slot is not |
+| `setup:deps:{start,stop,pull,update}`               | → `setup:external:*`  | services a product runs against are not its package manager             |
+| `setup:deps:update`                                 | → `setup:deps:upgrade` | "update" read as both install-and-refresh; the verbs are now separate    |
+| `_scripts/_helpers`, `_scripts/_checks`             | → `_scripts/helpers`  | `_scripts/` already says library; the second underscore says it twice    |
+
+A repo still carrying a left-hand name is not broken, but nothing else in the
+toolkit will find it: vwf probes `setup:worktree`, the aggregators call
+`setup:deps:*`, and `[shell_alias]` points at `code:*`.

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+#MISE description="Move the lockfile forward, then re-install"
+#MISE hide=true
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The package manager upgrades itself first: a resolver a major version behind
+# writes a lockfile the current one then rewrites, so the two steps are ordered,
+# not merely adjacent.
+#
+# `--latest` ignores the ranges in `package.json` on purpose. The ranges say
+# what still works; this task is where a human decides that something newer
+# should, and the diff it leaves is the review surface.
+#
+# No header: the aggregator `setup:deps:all` already frames each verb with its
+# own subheader, so one here would invert the hierarchy. The subheaders below
+# frame the steps inside this task.
+
+print_subheader "Updating the package manager ..."
+pnpm self-update
+
+print_subheader "Resolving the latest versions ..."
+pnpm update --recursive --latest

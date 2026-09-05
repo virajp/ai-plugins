@@ -33,10 +33,13 @@ user's clock.
    name state outside `.claude/`, and each diffs on its own terms below.
 
    **Entries are not all under `.claude/`.** A component may have landed
-   repo config files from its `config/` tree — `.config/mise/tasks/…` and
-   the like — and those are ordinary lockfile entries carrying a `path`, a
-   `component`, a `hash` and a `mode`. Inventory them with the rest; they
-   differ only in where they sit and in the consent line they take.
+   repo config files from its `config/` tree — the toolchain manager's
+   layers and task library, a gate's own config file, the hygiene files at
+   the repo root, a provider's `.config/mise/conf.d/` fragment, a
+   `.config/pre-commit.d/` hook fragment — and those are ordinary lockfile
+   entries carrying a `path`, a `component`, a `hash` and a `mode`.
+   Inventory them with the rest; they differ only in where they sit and in
+   the consent line they take.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
@@ -57,11 +60,24 @@ user's clock.
    as an *unknown task* rather than as a permission error, and
    `mise run init` is the restore. And where two components write into
    one tree, re-derive in composition order — `toolchain-manager`, then
-   `package-manager` / `language`, then `toolchain-gate`, then
-   `app-framework`, later wins — and diff each file against the component
+   `toolchain-gate`, then `repo-hygiene`, then `package-manager` /
+   `language`, then `app-framework`, then `capability-provider`, later
+   wins — and diff each file against the component
    the lockfile says supplied it. A
    file whose supplying component **changed** is a real delta, reported
    as such: it means precedence moved, not that the pack did.
+
+   **`.config/pre-commit-config.yaml` is diffed outside its markers
+   only.** The fragments a pack ships land as
+   `.config/pre-commit.d/<pack>.yaml` files and are diffed there, like any
+   other entry; the merged config is `/vwf:init`'s output, and the regions
+   between its `# >>>` and `# <<<` markers are re-merged by init rather
+   than reconciled here. So compare the file **around** those regions and
+   report drift there; never rewrite inside them, and never treat a
+   fragment that has moved as a reason to edit the merged file — say the
+   fragment moved and that a re-run of init is what folds it in. Two
+   things writing between the same markers is the one way this file could
+   lose an edit.
 
 3. **Offer regeneration per generated component.** A `generated` component
    has no pack to diff against; offer to re-run the generator for that

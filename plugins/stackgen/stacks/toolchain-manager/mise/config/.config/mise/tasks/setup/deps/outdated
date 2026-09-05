@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#MISE description="Report dependencies that have moved on"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# Reports and exits 0 even when there is plenty to report. What is outdated is
+# a decision for a human and a dependency-update bot; failing setup over it
+# would make the bootstrap command depend on the state of the registry.
+
+placeholder_notice "setup:deps:outdated" "no package manager is pinned for this repo"
