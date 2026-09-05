@@ -243,14 +243,14 @@ plan (no `sharp` build) stands.
 
 ## Units
 
-| Id | Wave | Unit file                                                    | Owns                                                                                                                                                                                                                                             | Depends on | Status  | Commit |
-| -- | ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | ------ |
-| U1 | 1    | [01-markdown-mirror.md](01-markdown-mirror.md)               | `site/src/lib/markdown.ts`, `site/src/pages/[...path].md.ts`, `site/src/pages/llms.txt.ts`, `site/src/pages/llms-full.txt.ts`                                                                                                                    | —          | green   |        |
-| U2 | 1    | [02-icons-manifest-headers.md](02-icons-manifest-headers.md) | `.config/mise/tasks/site/icons`, `site/public/favicon.ico`, `site/public/apple-touch-icon.png`, `site/public/icon-192.png`, `site/public/icon-512.png`, `site/public/site.webmanifest`, `site/public/_headers`, `.config/pre-commit-config.yaml` | —          | green   |        |
-| U3 | 2    | [03-head-and-build-shape.md](03-head-and-build-shape.md)     | `site/src/layouts/Base.astro`, `site/src/layouts/Docs.astro`, `site/src/pages/index.astro`, `site/astro.config.ts`, and only under decision 9's fallback `site/src/scripts/docs.ts`                                                              | U1         | pending |        |
-| U4 | 2    | [04-check-links.md](04-check-links.md)                       | `site/scripts/check-links.ts`                                                                                                                                                                                                                    | U1         | pending |        |
-| U5 | 3    | [05-docs.md](05-docs.md)                                     | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/repo-shape.md`, `.claude/docs/ci-and-releases.md`, `site/src/content/docs/**`, `.claude/skills/*-plugin/**`, `docs/memory/decisions/**`                                                | all        | pending |        |
-| U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md)                 | `site/package.json`, `plugins/*/.claude-plugin/plugin.json`, generated files                                                                                                                                                                     | U5         | pending |        |
+| Id | Wave | Unit file                                                    | Owns                                                                                                                                                                                                                                             | Depends on | Status  | Commit   |
+| -- | ---- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | -------- |
+| U1 | 1    | [01-markdown-mirror.md](01-markdown-mirror.md)               | `site/src/lib/markdown.ts`, `site/src/pages/[...path].md.ts`, `site/src/pages/llms.txt.ts`, `site/src/pages/llms-full.txt.ts`                                                                                                                    | —          | green   | 35e5fed5 |
+| U2 | 1    | [02-icons-manifest-headers.md](02-icons-manifest-headers.md) | `.config/mise/tasks/site/icons`, `site/public/favicon.ico`, `site/public/apple-touch-icon.png`, `site/public/icon-192.png`, `site/public/icon-512.png`, `site/public/site.webmanifest`, `site/public/_headers`, `.config/pre-commit-config.yaml` | —          | green   | 59e32a29 |
+| U3 | 2    | [03-head-and-build-shape.md](03-head-and-build-shape.md)     | `site/src/layouts/Base.astro`, `site/src/layouts/Docs.astro`, `site/src/pages/index.astro`, `site/astro.config.ts`, and only under decision 9's fallback `site/src/scripts/docs.ts`                                                              | U1         | pending |          |
+| U4 | 2    | [04-check-links.md](04-check-links.md)                       | `site/scripts/check-links.ts`                                                                                                                                                                                                                    | U1         | pending |          |
+| U5 | 3    | [05-docs.md](05-docs.md)                                     | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/repo-shape.md`, `.claude/docs/ci-and-releases.md`, `site/src/content/docs/**`, `.claude/skills/*-plugin/**`, `docs/memory/decisions/**`                                                | all        | pending |          |
+| U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md)                 | `site/package.json`, `plugins/*/.claude-plugin/plugin.json`, generated files                                                                                                                                                                     | U5         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -434,6 +434,83 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 1    | U2        | inherit | 2     | green             | Decision 6 departure demonstrated, not asserted: the literal `pnpx png-to-ico@3 <16> <32> <48>` exits 0 but writes **4 layers (48/32/16/256)** — the package's `bin/cli.js` calls `pngToIco(argv._[0])`, dropping every argument after the first and upscaling to 256; `pnpm dlx --package=png-to-ico@3 node -e` fails `ERR_MODULE_NOT_FOUND`. The library entry's array branch is the only route to the ruling's 16/32/48. Mechanism kept, departure made legible in a call-site comment. `sizes` kept in the manifest — spec-optional, but it is how a browser reads decision 7's 192/512 pair for installability; orchestrator did not overrule. Adds `CLAUDE.md:153` to DOCS FALSIFIED. `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` all verified unmodified                                                                                                                                                             |        |
 | 1    | R1        | inherit | 2     | findings(4)       | CONTRACT clean, RULINGS clean — the decision 6 departure is documented at `.config/mise/tasks/site/icons:42-50`. Count flat at 4, so the convergence guard stops the loop. Three findings (`site/CLAUDE.md:32`, `site/CLAUDE.md:66`, `.claude/docs/repo-shape.md:188`) are reviewer error — U2 *did* report all three as DOCS FALSIFIED in round 2; they carry to the docs unit either way. The fourth is real: `.config/pre-commit-config.yaml:129`'s new comment called `_headers` "served verbatim", but Workers parses it and never serves it. Verified independently by R1: ICO exactly 16/32/48, PNGs 512/192/180 with alpha, `_headers` and `site.webmanifest` match decisions 8 and 7 verbatim, 19 source docs → 19 mirrors, zero relative links survive, dprint clean                                                                                                                                                          | —      |
 | 1    | U2        | inherit | 3     | green             | Mechanical fix, no ruling needed: corrected the `.config/pre-commit-config.yaml` comment's claim about `_headers` being served                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |        |
+
+| 1 | commit | — | — | green | U2 `59e32a29`, then U1 `35e5fed5`. Order inverted
+from wave order by a mechanical constraint: pre-commit refuses to run while its
+own config file is unstaged, and `.config/pre-commit-config.yaml` is U2's. The
+first U1 attempt also tripped the formatter (dprint re-padded the run-log
+table); re-staged and committed, no `--amend`, no `--no-verify` | | | 1 | orch |
+— | — | note | `pnpm-lock.yaml` carried an unrelated 17+/375− resolution drift
+from the orchestrator's own worktree `setup:pnpm:install`, not from any unit.
+Restored with `git checkout --` before the first commit; verified unmodified
+again after wave 1 | — | | 2 | U3 | inherit | 1 | green | 4 files. DECIDED:
+JSON-LD scripts carry `is:inline` (else Astro bundles a layout `<script>`); the
+three icon/manifest links sit together after the SVG icon link; the landing
+description is a literal, no shared constant exists; **no decision 9 fallback**
+— the grep gate returns nothing after the config change, so the Docs.astro
+script block stayed and `site/src/scripts/docs.ts` was never created. DOCS
+FALSIFIED: site/CLAUDE.md:23 (landing row says "no JS", it now emits a ld+json
+block), site/CLAUDE.md:29 (layouts row lacks the `markdown`/`jsonLd` props).
+GAP: the unit file's "12 woff2, down from 36" is really 12 font *files* (6 latin
+faces × woff2+woff) — verified all 12 are `*-latin-<weight>-normal.*` with no
+cyrillic/latin-ext/symbols2/vietnamese/greek. GAP:
+`grep -c 'application/ld+json'` counts lines and dprint puts the two docs blocks
+on one line, so the "is 2" check reads 1; counted occurrences instead — index 1,
+plugins/vwf 2, plugins/index 2, 404 0. site:check green, W3C Nu zero messages on
+four pages, no inline module script in dist | |
+
+| 2 | U4 | inherit | 1 | green | 1 file. DECIDED: the markdown pass matches only
+`](…)` targets (llms.txt's bare pointer URL ends in a full stop, so a bare-URL
+regex would have to guess where it stops; it resolves anyway); llms.txt and
+llms-full.txt are required, a missing one reported as `not built` rather than
+thrown; the alternate tag is matched with `rel` and `type` tested independently
+so attribute order does not matter; `index.html`, `404.html` and
+`brand/social-preview.html` are skipped and `plugins/index.html` is required to
+carry **zero**, so a stray link there fails rather than being exempt. DOCS
+FALSIFIED: site/CLAUDE.md:31, CLAUDE.md:151,
+`.config/mise/tasks/site/check:11-12` (all describe an HTML-only gate). GAP: the
+unit file expected 1302 links/496 fragments; the build prints 1430/496 — the
+extra 128 are U3's new head links, proved by running the pre-edit checker from
+`git show HEAD:` against the same dist for an identical 1430. Break-and-fix
+exercised on a throwaway dist copy: a renamed page reported 19 dangling URLs, a
+removed alternate link and a stray one on plugins/index both caught | |
+
+| 2 | R2 | inherit | 1 | findings(2) | CONTRACT clean, RULINGS clean. Neither
+finding needs a tree change: `.claude/docs/repo-shape.md:190` still describes an
+HTML-only check-links (carried to U5), and `03-head-and-build-shape.md:133`'s
+"12 woff2" is a wrong number in the plan — the build emits 6 woff2 (fontsource's
+`latin-<weight>.css` references woff2 only), and a gate asserting 12 would fail
+a good build. Loop closed at one round. R2 independently confirmed: 19 pages
+carry exactly one alternate link and
+`index`/`404`/`plugins/index`/`social-preview` carry zero; JSON-LD counts
+1/0/2/2; no inline module script; no non-latin subset shipped;
+`site/src/scripts/docs.ts` absent, so decision 9's fallback genuinely did not
+fire. Noted, not a departure: a section root with its own `index.md` gets
+`isSectionRoot === false`, so `/how-to/` emits breadcrumb positions 2 and 3 with
+the same URL — which mirrors the rendered crumb, as decision 11 asked | — | | 2
+| gate | — | — | green | Six standard lines green. Plan additions: inline-script
+grep returns nothing; `<style` only in `brand/social-preview.html`;
+`plugins/vwf.md` starts `#` with zero relative links; `llms.txt` starts `# vwf`;
+all 19 titles appear exactly once in `llms-full.txt`; all six `public/` files
+reach `dist/`. W3C Nu: **zero messages** on `dist/index.html` and
+`dist/plugins/vwf/index.html` | — | | 2 | orch gate | — | — | green (1 GAP) |
+**CSP proof.** Step 1 passed on the real path — `wrangler dev` emits the
+decision 8 CSP byte for byte plus HSTS, nosniff, DENY, referrer and permissions
+policies, so the meta-tag fallback was never needed. Step 4 passed:
+`/plugins/vwf.md` `200 text/markdown`, `/llms.txt` and `/llms-full.txt`
+`200 text/plain`, `/favicon.ico` `200 image/vnd.microsoft.icon`,
+`/site.webmanifest` `200 application/manifest+json`, `/apple-touch-icon.png` and
+`/icon-512.png` `200 image/png`. Step 3 passed: `<pagefind-modal` in the DOM,
+`pagefind-entry.json` returns JSON, no `Refused to` in the log. **GAP on step
+2**: the plan named `/how-to/greenfield/single-repo/` as "a mermaid page" — it
+has no mermaid fence; the only one is `/plugins/vwf/`. Against that page the
+headless `--dump-dom` shows no rendered SVG inside the article, but **two
+controls prove the CSP is not the cause**: the same `dist` served with no
+headers at all behaves identically, and so does the **live pre-change site** in
+the same browser. Both module scripts also fetch `200 text/javascript` under the
+CSP. So the CSP and U3's build-shape change are both exonerated and the gate's
+intent holds; what is unproven is the positive assertion, because `--dump-dom`
+does not await mermaid's dynamic `import()`. Not treated as a block | — |
 
 ## Launch
 
