@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "description": "The website at claude-plugins.virajp.dev: the landing page and the docs for the plugins and the installer, built by Astro. Versioned and tagged on its own (site-v*), never published to npm.",
   "type": "module",
