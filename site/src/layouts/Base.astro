@@ -1,23 +1,37 @@
 ---
-import "@fontsource/geist-mono/300.css";
-import "@fontsource/geist-mono/400.css";
-import "@fontsource/geist-mono/500.css";
-import "@fontsource/schibsted-grotesk/400.css";
-import "@fontsource/schibsted-grotesk/500.css";
-import "@fontsource/schibsted-grotesk/700.css";
+import "@fontsource/geist-mono/latin-300.css";
+import "@fontsource/geist-mono/latin-400.css";
+import "@fontsource/geist-mono/latin-500.css";
+import "@fontsource/schibsted-grotesk/latin-400.css";
+import "@fontsource/schibsted-grotesk/latin-500.css";
+import "@fontsource/schibsted-grotesk/latin-700.css";
 import "../styles/tokens.css";
 import "../styles/global.css";
 
 // The document shell every page shares: the head, the self-hosted fonts and
 // the two stylesheets. Fonts ship from node_modules, so a build never touches
-// the network.
+// the network; only the latin subset of each face is imported, since the site
+// is English-only. Two optional props feed the head: `markdown`, the page's
+// mirror in the markdown tree, and `jsonLd`, its structured data.
 interface Props {
   title: string;
   description: string;
+  /** Site-relative path of this page's markdown mirror, e.g. `/plugins/vwf.md`. */
+  markdown?: string;
+  /** One schema.org object, or several, emitted as JSON-LD blocks. */
+  jsonLd?: object | object[];
 }
-const { title, description } = Astro.props;
+const { title, description, markdown, jsonLd } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const image = new URL("/brand/social-preview.png", Astro.site);
+// `<` is the one character that can close the script element from inside a
+// JSON string, so every one is escaped.
+const structured = (jsonLd === undefined
+  ? []
+  : Array.isArray(jsonLd)
+  ? jsonLd
+  : [jsonLd])
+  .map(block => JSON.stringify(block).replace(/</g, "\\u003c"));
 ---
 
 <!DOCTYPE html>
@@ -29,7 +43,18 @@ const image = new URL("/brand/social-preview.png", Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/brand/vwf-favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    {markdown && (
+      <link
+        rel="alternate"
+        type="text/markdown"
+        href={markdown}
+        title="Markdown"
+      />
+    )}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="vwf" />
     <meta property="og:title" content={title} />
@@ -40,6 +65,15 @@ const image = new URL("/brand/social-preview.png", Astro.site);
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta property="og:image:alt" content="The vwf mark and wordmark on blue" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:site" content="@askviraj" />
+    <meta name="theme-color" content="#1e3f8f" />
+    {structured.map(block => (
+      <script type="application/ld+json" is:inline set:html={block} />
+    ))}
   </head>
   <body>
     <slot />

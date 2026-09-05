@@ -165,19 +165,22 @@ loads the working tree for that session, no install and no cache.
   PR and every push to `main` or `develop` that touches `site/**` or the
   workflow itself, and on every `site-v*` tag; on a tag only, it uploads
   `site/dist` as an artifact so `deploy` ships exactly the tree the gate
-  checked. **`deploy`** runs only on a pushed `site-v*` tag, after `build`, and
-  only once the tag is proven to match `site/package.json`'s version and to be
-  reachable from `main` — the same two verifications `release.yml` makes, so a
-  merge to `main` ships nothing until `mise run site:release` cuts the tag. It
-  sets up mise and installs the workspace first, so the `wrangler` pinned in
-  `site/package.json` is the one that deploys, then runs
-  `cloudflare/wrangler-action` (pinned by commit) with the repository secrets
-  `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Superseded branch and PR
-  runs are cancelled; a tag's deploy never is. It is deliberately a **separate
-  file** from `release.yml` for the same reason `plugins.yml` is — it publishes
-  nothing to npm and holds no `id-token` permission — and `plugins.yml` is
-  untouched by it: the site's gate runs here alone. The tag glob is namespaced
-  because a bare `v*` would fire it on every plugin and installer release.
+  checked. That artifact is also why the `_headers` file lives in
+  `site/public/`: `deploy` never rebuilds, so anything Cloudflare must read has
+  to be inside `dist/` already. **`deploy`** runs only on a pushed `site-v*`
+  tag, after `build`, and only once the tag is proven to match
+  `site/package.json`'s version and to be reachable from `main` — the same two
+  verifications `release.yml` makes, so a merge to `main` ships nothing until
+  `mise run site:release` cuts the tag. It sets up mise and installs the
+  workspace first, so the `wrangler` pinned in `site/package.json` is the one
+  that deploys, then runs `cloudflare/wrangler-action` (pinned by commit) with
+  the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+  Superseded branch and PR runs are cancelled; a tag's deploy never is. It is
+  deliberately a **separate file** from `release.yml` for the same reason
+  `plugins.yml` is — it publishes nothing to npm and holds no `id-token`
+  permission — and `plugins.yml` is untouched by it: the site's gate runs here
+  alone. The tag glob is namespaced because a bare `v*` would fire it on every
+  plugin and installer release.
 
 ## Supply-chain settings
 
