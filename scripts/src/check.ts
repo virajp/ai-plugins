@@ -83,7 +83,7 @@ export function check(repoRoot: string): Finding[] {
     findings.push(...checkManifest(plugin));
     findings.push(...checkDependencies(plugin, dirs));
     findings.push(...checkHookScripts(plugin));
-    findings.push(...checkPackTaskModes(plugin));
+    findings.push(...checkPackConfigTier(plugin));
     findings.push(...checkFrontmatterYaml(plugin));
     findings.push(...checkAgentReferences(plugin));
     findings.push(...checkExampleLinks(plugin));
@@ -253,32 +253,122 @@ function* hookCommands(
 
 /** Where a pack's `config/` tier puts the file-based mise task library. */
 const PACK_MISE_TASKS = join("config", ".config", "mise", "tasks");
+/** Where a pack's `config/` tier puts its pre-commit hook fragment. */
+const PACK_HOOK_FRAGMENTS = join("config", ".config", "pre-commit.d");
 
 /**
- * A task file a pack ships under `config/` must land executable.
+ * The interpreters a shipped task may name. Closed on purpose: a task library
+ * whose files disagree on language is one nobody can lint, and the shell gate
+ * (`plugins:shellcheck`) picks its argument list by the same rule.
+ */
+const PACK_TASK_SHEBANGS = new Set([
+  "#!/usr/bin/env bash",
+  "#!/usr/bin/env node",
+  "#!/usr/bin/env python3",
+]);
+
+/**
+ * The files a pack may ship at the top of its `config/` tier.
  *
- * `.config/mise/tasks/**` is a *file-based* task library — mise runs each file
- * directly, so one arriving without its exec bit fails as an unknown task
- * rather than as a permission error, which reads as a pack that never shipped
- * it. `plugins:check` is the only reader that sees the bit before it lands.
+ * The tier mirrors the target repo's root, and the repo doctrine puts every
+ * tool's configuration under `.config/`. What is left at the root is the short
+ * list of files a tool or a host *cannot* be told to look elsewhere for, plus
+ * the two humans read first. Anything else arriving here is a pack quietly
+ * widening the root of every repo it materializes into.
+ */
+const PACK_CONFIG_ROOT_FILES = new Set([
+  ".editorconfig",
+  ".gitattributes",
+  ".gitignore",
+  "LICENSE",
+  "SECURITY.md",
+  "eslint.config.mjs",
+  "fnox.toml",
+  "readme.md",
+]);
+
+/**
+ * What a stackgen pack ships under `config/` must be materializable as-is.
+ *
+ * Four assertions, all of them about a file whose failure mode in the target
+ * repo is silence rather than an error:
+ *
+ * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
+ *   task library, so one arriving 644 fails as an unknown task rather than as a
+ *   permission error, which reads as a pack that never shipped it;
+ * - and starts with a **known shebang** — mise executes the file directly, so a
+ *   missing or exotic one is an exec-format error at the first `mise run`;
+ * - the tier's **root stays allowlisted**, because everything else belongs
+ *   under `.config/` and nothing else looks at what a pack puts beside it;
+ * - a **hook fragment parses** and declares `repos:`, because `/vwf:init`
+ *   concatenates the fragments into one pre-commit config and a malformed one
+ *   breaks a file no pack owns.
  *
  * The walk is its own rather than `plugin.files`: every one of these paths runs
  * through `.config/`, and the reader's glob does not descend into a dot
  * segment, so the whole tier is invisible there.
  */
-function checkPackTaskModes(plugin: Plugin): Finding[] {
+function checkPackConfigTier(plugin: Plugin): Finding[] {
   const findings: Finding[] = [];
+  const at = (message: string) => findings.push({ scope: plugin.dir, message });
+  const path = (absolute: string) => relative(plugin.root, absolute);
 
   for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
-    const tasks = join(plugin.root, pack, PACK_MISE_TASKS);
-    for (const absolute of filesUnder(tasks)) {
+    for (
+      const absolute of filesUnder(join(plugin.root, pack, PACK_MISE_TASKS))
+    ) {
       if ((statSync(absolute).mode & 0o111) === 0) {
-        findings.push({
-          scope: plugin.dir,
-          message: `mise task file is not executable: ${
-            relative(plugin.root, absolute)
-          }`,
-        });
+        at(`mise task file is not executable: ${path(absolute)}`);
+      }
+      const shebang = readText(absolute).split("\n", 1)[0] ?? "";
+      if (!PACK_TASK_SHEBANGS.has(shebang)) {
+        at(
+          `mise task file does not start with one of `
+            + `${[...PACK_TASK_SHEBANGS].join(", ")}: ${path(absolute)}`,
+        );
+      }
+    }
+
+    const config = join(plugin.root, pack, "config");
+    if (existsSync(config)) {
+      for (const entry of readdirSync(config, { withFileTypes: true })) {
+        const allowed = entry.isDirectory()
+          ? entry.name === ".config" || entry.name.startsWith("_")
+          : PACK_CONFIG_ROOT_FILES.has(entry.name);
+        if (!allowed) {
+          at(
+            `pack config/ tier holds an unallowlisted root entry — everything `
+              + `else belongs under .config/: ${
+                path(join(config, entry.name))
+              }`,
+          );
+        }
+      }
+    }
+
+    for (
+      const absolute of filesUnder(join(plugin.root, pack, PACK_HOOK_FRAGMENTS))
+    ) {
+      if (!/\.ya?ml$/.test(absolute)) {
+        continue;
+      }
+      let fragment: unknown;
+      try {
+        fragment = parseYaml(readText(absolute));
+      }
+      catch (error) {
+        at(
+          `${path(absolute)}: pre-commit fragment is not valid YAML — `
+            + firstLine(error),
+        );
+        continue;
+      }
+      const repos = (fragment as { repos?: unknown; } | null)?.repos;
+      if (!Array.isArray(repos)) {
+        at(
+          `${path(absolute)}: pre-commit fragment declares no top-level `
+            + `\`repos\` list`,
+        );
       }
     }
   }

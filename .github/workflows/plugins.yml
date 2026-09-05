@@ -58,6 +58,14 @@ jobs:
       - name: Static validation of plugins/
         run: mise run plugins:check
 
+      # The shell half. `shellcheck` and `shfmt` live in mise.dev.toml — the
+      # maintainer's environment — and this job runs with MISE_ENV=ci, so they
+      # are fetched for the length of the step rather than added to the CI tool
+      # set, which exists to stay small.
+      - name: shellcheck and shfmt over every pack task file
+        run: |
+          mise x shellcheck@latest shfmt@latest -- mise run plugins:shellcheck
+
       # Release-branch only. Every entry's `source.ref` is derived from that
       # plugin's manifest version, so bumping a version renames the ref before
       # the tag exists — which is the normal, correct state on `develop` and a

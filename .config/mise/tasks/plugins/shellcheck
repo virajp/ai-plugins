@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#MISE description="shellcheck and shfmt over every pack task file and helper"
+#MISE dir="{{ config_root }}"
+
+# The shell gate for what stackgen packs SHIP rather than what this repo runs.
+#
+# A file under `stacks/<kind>/<pack>/config/.config/mise/tasks/` is never
+# executed here: it is copied into someone else's repo and run by mise there,
+# which means a typo in it surfaces as a broken `setup:all` on a machine with no
+# way to trace it back. Nothing else in this repo reads those files — the linter
+# has no shell parser and pre-commit's own shell hooks only see the repo's own
+# tasks — so this task is the only reader between authoring and materialization.
+#
+# Two flag choices are load-bearing:
+#
+#   -P <pack>/config   a task sources its helpers through ${MISE_PROJECT_ROOT},
+#                      which shellcheck cannot expand; it strips the variable
+#                      and looks for `./.config/mise/tasks/_scripts/helpers`.
+#                      Handing it every pack's `config/` — the materialized repo
+#                      root — is what makes `-x` resolve instead of emitting
+#                      SC1091 on every file in the tree.
+#   -e SC2034 SC2154   the two that are structurally false for this tier and
+#                      nowhere else: `_scripts/helpers` is a sourced library, so
+#                      every colour it exports "appears unused", and a task's
+#                      arguments arrive as `usage_*` variables mise injects and
+#                      `eval`-assigned arrays, which no source path can show.
+#
+# shfmt runs in diff mode with exactly `-i 2 -ci` and nothing else. Those two
+# flags are the canonical format for shell in this repo and in what it ships:
+# the same pair appears in the `shfmt` hook of
+# `plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml`,
+# which is the gate that runs in a materialized repo. Keep the two in step — a
+# flag here that the shipped hook does not set (`-bn` and `-kp` were both tried,
+# and `-bn` rejects the task library's trailing-pipe continuations while `-kp`
+# then preserves the column padding that results) makes this gate fail on files
+# the repos we materialize consider clean.
+#
+# Exits non-zero on any finding.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+for tool in shellcheck shfmt; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    print_error "$tool is not on PATH"
+    print_warn "It comes from .config/mise.dev.toml — run with MISE_ENV=dev, or"
+    print_warn "\`mise x shellcheck@latest shfmt@latest -- mise run plugins:shellcheck\`"
+    exit 1
+  fi
+done
+
+SHFMT_FLAGS=(-i 2 -ci)
+SHELLCHECK_FLAGS=(-x -s bash -e SC2034 -e SC2154)
+
+roots=()
+shopt -s nullglob
+for dir in plugins/*/stacks/*/*/config; do
+  [ -d "$dir/.config" ] && SHELLCHECK_FLAGS+=(-P "$dir")
+  [ -d "$dir/.config/mise/tasks" ] && roots+=("$dir/.config/mise/tasks")
+done
+shopt -u nullglob
+
+if [ "${#roots[@]}" -eq 0 ]; then
+  print_warn "No pack ships a task library — nothing to check"
+  exit 0
+fi
+
+# `.mjs`, `.py` and `.env` are the three extensions the task library uses for a
+# file that is not bash: a task written in another language, and the `_scripts`
+# environment fragments. Everything else in the tree is a bash task or a bash
+# helper, extensionless by mise's own convention.
+files=()
+while IFS= read -r -d '' file; do
+  files+=("$file")
+done < <(
+  find "${roots[@]}" -type f \
+    ! -name '*.mjs' ! -name '*.py' ! -name '*.env' \
+    -print0 | sort -z
+)
+
+if [ "${#files[@]}" -eq 0 ]; then
+  print_warn "No bash task files under ${#roots[@]} pack task libraries"
+  exit 0
+fi
+
+failed=0
+
+print_header "shellcheck over ${#files[@]} pack task files ..."
+if ! shellcheck "${SHELLCHECK_FLAGS[@]}" "${files[@]}"; then
+  print_error "shellcheck findings — see above"
+  failed=1
+fi
+
+print_header "shfmt over ${#files[@]} pack task files ..."
+if ! shfmt -d "${SHFMT_FLAGS[@]}" "${files[@]}"; then
+  print_error "shfmt findings — apply with \`shfmt -w ${SHFMT_FLAGS[*]} <file>\`"
+  failed=1
+fi
+
+[[ "$failed" -eq 0 ]] || exit 1
+
+print_success "${#files[@]} pack task files across ${#roots[@]} packs are clean"
