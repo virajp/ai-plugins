@@ -188,12 +188,17 @@ filename — and never in `site.yml`, which runs the website's own gate):
 - **`site:*`** — the website's family, all under `.config/mise/tasks/site/` and
   all run from `site/`: `site:dev` (the Astro dev server), `site:build`
   (`astro build` then `pagefind --site dist`), `site:check` (the gate:
-  `astro check`, `site:build`, then `scripts/check-links.ts` over
-  `dist/**/*.html`, asserting every internal href resolves to a built file and
-  every `#fragment` to an id in its target), `site:version` (bumps
-  `site/package.json`, no tag) and `site:release` (tags `site-v<version>` from
-  `main` and watches `site.yml`). None of them runs in `plugins.yml` or in
-  pre-commit — `site.yml` owns them.
+  `astro check`, `site:build`, then `scripts/check-links.ts` in two passes —
+  over `dist/**/*.html`, asserting every internal href resolves to a built file
+  and every `#fragment` to an id in its target, and over the markdown mirror the
+  build also emits, asserting every absolute site URL in `dist/**/*.md`,
+  `llms.txt` and `llms-full.txt` resolves the same way and that each docs page
+  carries exactly one markdown alternate link to a file that exists),
+  `site:icons` (rasterizes the committed favicon set from
+  `public/brand/vwf-favicon.svg`, run by hand when the mark changes and part of
+  no gate), `site:version` (bumps `site/package.json`, no tag) and
+  `site:release` (tags `site-v<version>` from `main` and watches `site.yml`).
+  None of them runs in `plugins.yml` or in pre-commit — `site.yml` owns them.
 
 `plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion

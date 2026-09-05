@@ -9,5 +9,7 @@ set -e
 pnpm exec astro check
 mise run site:build
 # Every internal href in dist/**/*.html must resolve to a built file, and every
-# #fragment to an id in its target.
+# #fragment to an id in its target. Then the same over the markdown mirror:
+# every absolute site URL in dist/**/*.md, llms.txt and llms-full.txt resolves,
+# and every docs page carries exactly one markdown alternate link.
 pnpm exec tsx scripts/check-links.ts

@@ -148,9 +148,12 @@ inventory and check in that order — freshness before validity:
 - **`vitest run`** — the `scripts/` and `installer/` suites.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
 - **`site:check`** — the website's gate: `astro check`, `site:build` (Astro plus
-  the pagefind index), then the link checker over `site/dist/**/*.html`. Runs in
-  `site.yml`, not `plugins.yml`, and not in pre-commit. Beside it:
-  **`site:dev`**, **`site:build`**, **`site:version`** and **`site:release`**.
+  the pagefind index), then the link checker over `site/dist/**/*.html` and the
+  markdown mirror it also emits (`dist/**/*.md`, `llms.txt`, `llms-full.txt`,
+  plus each page's markdown alternate link). Runs in `site.yml`, not
+  `plugins.yml`, and not in pre-commit. Beside it: **`site:dev`**,
+  **`site:build`**, **`site:icons`** (rasterizes the committed favicon set, by
+  hand when the mark changes), **`site:version`** and **`site:release`**.
 
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].

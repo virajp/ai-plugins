@@ -153,7 +153,9 @@ These are Claude Code plugins. Other agents — Cursor, OpenCode, Codex — have
 common plugin format to render into, so instead of a bespoke build per tool, the
 route is to **ask your agent to do the adaptation**, pointing it at this repo.
 That works today, and it is how most non-Claude use of this toolkit already
-happens.
+happens. The full manual is available to agents as markdown —
+`https://claude-plugins.virajp.dev/llms.txt` indexes it, every page also exists
+at its `.md` URL, and `/llms-full.txt` is the whole thing in one file.
 
 Paste one of these, adjusting the plugin name:
 
