@@ -307,6 +307,9 @@ const PACK_CONFIG_ROOT_FILES = new Set([
   "eslint.config.mjs",
   "fnox.toml",
   "readme.md",
+  // wrangler discovers its config only at the repo root, so a `static-hosting`
+  // pack shipping a deploy target has nowhere else to put it.
+  "wrangler.jsonc",
 ]);
 
 /**

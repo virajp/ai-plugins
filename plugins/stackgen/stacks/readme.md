@@ -177,14 +177,18 @@ ninth kind and the last one that had been defined but never authored against.
 spans a provider's services — `gcp` and `cloudflare` — and `cloud-service`
 carries one component per service: `cloud-run`, `cloud-sql`, `firestore`,
 `firebase-auth`, `firebase-messaging`, `firebase-storage`, `gke` and
-`zero-trust-access`. Wave D deferred this deliberately, because folding the two
-clouds honestly needed per-topic research with citations rather than a fold of
-their four ~80-line service templates.
+`zero-trust-access`. `workers-static-assets` joined them on 2026-09-05, after
+the wave — the first Cloudflare service here that hosts rather than fronts.
+Wave D deferred this deliberately, because folding the two clouds honestly
+needed per-topic research with citations rather than a fold of their four
+~80-line service templates.
 
-Two `cloud-service` categories were minted for it (`../assets/taxonomy.md`):
-`document`, for Firestore, and `access`, for Zero Trust Access, which is none of
-compute/sql/queue/object-storage/cdn. `access` leaves `capability` unset and
-stays that way — minting a capability token is vwf's move, never the taxonomy's.
+Three `cloud-service` categories have been minted here
+(`../assets/taxonomy.md`): `document`, for Firestore, `access`, for Zero Trust
+Access, and `static-hosting`, for Workers Static Assets — none of them
+compute/sql/queue/object-storage/cdn. `access` and `static-hosting` both leave
+`capability` unset and stay that way — minting a capability token is vwf's
+move, never the taxonomy's.
 
 **Every stack adapter has now retired**, and `stackgen` is the only plugin left
 shipping a `-stack-menu` / `-stack-template` pair. The retirement test stayed

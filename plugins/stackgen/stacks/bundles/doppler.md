@@ -36,10 +36,11 @@ requirement rather than a preference.
 project and configuration names are set without any component editing the
 manager's own config; and an overlay of the manager's `setup/secrets` slot,
 which scopes this directory to the right project and skips cleanly — a
-warning, not a failure — when nobody is logged in. A provider component is
-**last** in composition order for exactly this reason: whatever a language
-pack thought that task should do, the repo's actual secrets manager is the
-more specific answer.
+warning, not a failure — when nobody is logged in. A capability provider
+**outranks every language and framework pack** in composition order for
+exactly this reason: whatever a language pack thought that task should do,
+the repo's actual secrets manager is the more specific answer. Only a cloud
+deploy target composes later still, and it writes different files.
 
 Full judgment: the component's own skill and its references. The contract it
 cites is `assets/contracts/secrets.md`.

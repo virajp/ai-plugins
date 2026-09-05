@@ -45,11 +45,15 @@ stacks/<type>/<slug>/
   under `.config/`, and the materializer refuses a root path that is not on
   it.
 - **`config/_<name>/` is pack-private and is not copied.** A leading
-  underscore marks a payload a *reader* uses rather than a file the repo
-  gets — `config/_licenses/MIT.txt` is the case that needs it: the hygiene
-  pack carries both licence texts, and `/vwf:init` copies the one the user
-  picked to `LICENSE` with the year and holder filled. Copying the directory
-  wholesale would land two licences and answer a question nobody asked.
+  underscore **at the top of the tier** marks a payload a *reader* uses rather
+  than a file the repo gets — `config/_licenses/MIT.txt` is the case that
+  needs it: the hygiene pack carries both licence texts, and `/vwf:init`
+  copies the one the user picked to `LICENSE` with the year and holder filled.
+  Copying the directory wholesale would land two licences and answer a
+  question nobody asked. Nested deeper, the same character means the
+  opposite: `.config/mise/tasks/p/_project/` is a **marked position**, copied
+  and renamed to the project's id as it lands, and the materializer's copy
+  rules are where that behaviour is specified.
 - **Fragments are named `<pack-name>.<ext>`, one per pack.**
   `.config/mise/conf.d/<pack>.toml` is an environment fragment the toolchain
   manager auto-loads, which is how a provider contributes variables without

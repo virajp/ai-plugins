@@ -46,7 +46,7 @@ to a repo, and every write it makes is consent-gated and committed once.
      than riding the file plan
      (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`).
 
-     **Three copy rules inside that tree**, all of them assertions rather
+     **Four copy rules inside that tree**, all of them assertions rather
      than preferences:
 
      - **`config/_<name>/` is never copied.** A leading underscore marks a
@@ -54,10 +54,26 @@ to a repo, and every write it makes is consent-gated and committed once.
        `config/_licenses/` are the case — so copying the directory would
        land every option instead of the one chosen. Skip it silently; it
        is not a landing set member and never appears in the plan.
+     - **A `p/_project/` directory is renamed as it is copied.** Where a
+       payload carries `.config/mise/tasks/p/_project/`, `_project` is a
+       **marked position**, not a task group: rename the directory to the
+       registry id of the project this stack is being pinned for,
+       slugified — a dot becomes a dash, because mise reads
+       `p/virajp.dev/deploy` as a task with an extension — so
+       `p/_project/deploy` lands as `p/<id>/deploy` and runs as
+       `p:<id>:deploy`. This is **not** the skip rule above: that one is
+       about a `config/_<name>/` entry at the top of the tier, and this
+       directory is nested well below it, so it is copied. An unrenamed
+       copy is **inert rather than wrong** — mise ignores a task
+       directory whose name starts with an underscore, the same rule that
+       keeps `_scripts/` out of `mise tasks` — so forgetting the rename
+       costs the task and never publishes one under a name nobody meant.
+       The lockfile records the **landed** path, not the authored one.
      - **A root path must be on the allowlist.** Only `.gitignore`,
        `.editorconfig`, `.gitattributes`, `LICENSE`, `SECURITY.md`,
-       `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs` and a
-       language-mandated manifest or lockfile may land at the repo root
+       `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`,
+       `wrangler.jsonc` and a language-mandated manifest or lockfile may
+       land at the repo root
        (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Any other root
        path in a `config/` tree is a **pack authoring error**: halt the
        landing set, name the pack and the path, and write nothing. This is
@@ -65,7 +81,9 @@ to a repo, and every write it makes is consent-gated and committed once.
        one who can fix it and the plan is the last place anyone would read
        it. `readme.md` and `CLAUDE.md` are on the list because a shaped
        repo has them, not because a pack may ship them — no pack may, and
-       CLAUDE.md is separately out of scope below.
+       CLAUDE.md is separately out of scope below. `wrangler.jsonc` is on
+       it because the deploy tool that reads it discovers its config only
+       at the root, and only a `static-hosting` service pack ships one.
      - **A `.config/pre-commit.d/<pack>.yaml` fragment lands as a file and
        stops there.** It is an ordinary landing-set member with an
        ordinary lockfile entry; merging the fragments into
@@ -82,11 +100,15 @@ to a repo, and every write it makes is consent-gated and committed once.
    the first destination that happens for. Compose by component type in
    the order `toolchain-manager`, then `toolchain-gate`, then
    `repo-hygiene`, then `package-manager` / `language`, then
-   `app-framework`, then `capability-provider`; a **later component's file
-   wins**, and the lockfile records per file which one that was. The
-   manager is first because it ships the baseline library every overlay
-   overlays; the provider is last because a secrets overlay is the most
-   specific answer anything gives to `setup/secrets`. Get it backwards and
+   `app-framework`, then `capability-provider`, then `cloud-provider`,
+   then `cloud-service`; a **later component's file wins**, and the
+   lockfile records per file which one that was. The manager is first
+   because it ships the baseline library every overlay overlays; the
+   secrets provider still outranks every language pack on `setup/secrets`;
+   and the deploy target sits after even it, because how a repo ships is
+   the most specific thing it pins. The two cloud types joined the order
+   on 2026-09-05, when the first cloud pack shipped a `config/` tree
+   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Get it backwards and
    nothing errors: a stale baseline `code/format` shadowing a language's
    would simply format less, in a repo where the task still exists and
    still exits zero.

@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+
+#MISE description="Deploy this project's built static assets to Cloudflare Workers"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--dry-run" help="validate the config and the upload without publishing"
+
+# THIS FILE SHIPS UNDER `p/_project/` AND MUST BE RENAMED.
+#
+# `_project` is a MARKED POSITION, not a task group. The command that pins this
+# stack renames the directory to the project's registry id, so this becomes
+# `p/<id>/deploy` and runs as `p:<id>:deploy` — the same id `setup:all`'s member
+# flags and the `setup-<id>` shell aliases use.
+#
+# The underscore is doing two jobs. `config/_<name>/` at the TOP of a pack's
+# config tier is pack-private and never copied; this is nested well below that,
+# so the materializer does copy it. But mise ignores a task directory whose name
+# starts with an underscore — the same rule that keeps `_scripts/` out of
+# `mise tasks` — so an unrenamed copy is INERT rather than a task called
+# `p:_project:deploy`. Forgetting the rename loses the task; it never publishes
+# something under the wrong name.
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no path
+# here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The id is READ FROM THE DIRECTORY NAME rather than written into the file, so
+# the rename above is the only edit the pinning command has to make and the two
+# can never disagree.
+project_id="$(basename "$(dirname "${BASH_SOURCE[0]}")")"
+
+# `have_task` is not in `helpers` — `setup/mise` defines its own copy for the
+# same reason. Keep the two in step if either moves into the library.
+have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
+
+print_header "Deploying ${project_id} to Cloudflare Workers ..."
+
+# 1. Credentials, BEFORE anything is invoked.
+#
+# Wrangler reads these two from the environment. The secrets provider supplies
+# them from GLB_CLOUDFLARE_API_TOKEN and GLB_CLOUDFLARE_ACCOUNT_ID — account-wide
+# values shared across every repo that deploys to the account, hence the GLB_
+# prefix rather than a per-repo one.
+#
+# Checking here is the whole point of the step: wrangler's own failure for a
+# missing token is an auth error that reads like a network or permissions
+# problem, and diagnosing it costs an afternoon the first time.
+#
+# `--dry-run` is exempt. It neither authenticates nor uploads, so requiring
+# credentials for it would stop a contributor without account access from ever
+# validating the config — which is the one thing the flag exists for.
+if [[ "${usage_dry_run:-false}" != "true" ]]; then
+  missing=""
+  [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]] || missing="CLOUDFLARE_API_TOKEN"
+  [[ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]] || missing="${missing:+${missing} }CLOUDFLARE_ACCOUNT_ID"
+  if [[ -n "${missing}" ]]; then
+    print_error "Missing Cloudflare credentials: ${missing}"
+    print_warn "wrangler reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the"
+    print_warn "environment. This repo's secrets provider supplies them from"
+    print_warn "GLB_CLOUDFLARE_API_TOKEN and GLB_CLOUDFLARE_ACCOUNT_ID — run through"
+    print_warn "\`mise run setup:secrets\` first, or export them for a one-off deploy."
+    print_warn "\`wrangler login\` is the interactive alternative and is a laptop-only"
+    print_warn "convenience: CI has no browser and must use the token."
+    exit 1
+  fi
+fi
+
+# 2. The build is NOT this task's.
+#
+# What produces the asset directory is the framework's business, so this runs
+# whatever build task the project already has and otherwise says what it is
+# assuming. Owning the build here would mean this component deciding how a site
+# is compiled, which it has no basis to do.
+if have_task "p:${project_id}:build"; then
+  print_subheader "Building ${project_id} ..."
+  mise run "p:${project_id}:build"
+else
+  print_subheader "Skipping the build ..."
+  print_warn "No p:${project_id}:build task — assuming the asset directory in"
+  print_warn "wrangler.jsonc is already built."
+fi
+
+# 3. Deploy.
+#
+# THE PACK PINS NO WRANGLER. It is a development dependency of the project that
+# deploys, declared in that project's language manifest — and a manifest is
+# outside the config tier's fence, so nothing here may write one. Calling it
+# through the package manager is what makes the version CI runs the version the
+# lockfile records; a `[tools] wrangler` entry in a mise fragment would be a
+# second, unpinned copy that drifts from it silently.
+if [[ -f "pnpm-lock.yaml" ]]; then
+  wrangler=(pnpm exec wrangler)
+else
+  wrangler=(npx wrangler)
+fi
+
+deploy_args=(deploy)
+if [[ "${usage_dry_run:-false}" == "true" ]]; then
+  deploy_args+=(--dry-run)
+  print_subheader "Validating the deploy (--dry-run) ..."
+else
+  print_subheader "Uploading assets and publishing ..."
+fi
+
+"${wrangler[@]}" "${deploy_args[@]}"

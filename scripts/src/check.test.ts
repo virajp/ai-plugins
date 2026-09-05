@@ -254,6 +254,7 @@ describe("the pack config tier", () => {
         files: {
           [task]: "#!/usr/bin/env bash\n",
           [`${pack}/.gitignore`]: "node_modules/\n",
+          [`${pack}/wrangler.jsonc`]: "{}\n",
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
           [`${pack}/.config/dprint.json`]: "{}\n",
           [fragment]: "repos:\n  - repo: local\n",
@@ -335,6 +336,17 @@ describe("the pack config tier", () => {
     // dropping a config beside it widens the root of every repo it lands in.
     const root = tree({
       alpha: { files: { [`${pack}/dprint.json`]: "{}\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a root config another deploy tool prefers", () => {
+    // `wrangler.jsonc` is on the list because wrangler reads it only from the
+    // root; the widening is that one name, not the class of deploy configs.
+    const root = tree({
+      alpha: { files: { [`${pack}/netlify.toml`]: "[build]\n" } },
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),

@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**39 packs, 33 bundles, 12 kinds.**
+**40 packs, 34 bundles, 12 kinds.**
 
 ## Kinds
 
@@ -15,7 +15,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | ---- | ----: | ------: |
 | `language-bundle` | 9 | 9 |
 | `database` | 1 | 1 |
-| `cloud-provider` | 10 | 5 |
+| `cloud-provider` | 11 | 6 |
 | `repo-gate` | 4 | 1 |
 | `toolchain-manager` | 1 | 1 |
 | `repo-hygiene` | 1 | 1 |
@@ -46,6 +46,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloud-service/firebase-storage` | Cloud Storage for Firebase | `cloud-provider` | backing | object-storage | object-file-storage | 0.1.0 | The provider's object store with a client-direct path in front of it — the same buckets a server reaches, plus a security-rules layer that lets clients upload and download without a service in the middle. |
 | `cloud-service/firestore` | Firestore | `cloud-provider` | backing | document | document-datastore | 0.1.0 | The document datastore with a first-class offline emulator and a governed client-direct path — the fastest way to a working product where the data model is document-shaped. |
 | `cloud-service/gke` | GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | compute |  | 0.1.0 | Managed Kubernetes, for products that have outgrown per-service autoscaling or need workloads a request-scoped platform cannot host — taken deliberately, for a larger operational surface and a per-cluster cost floor. |
+| `cloud-service/workers-static-assets` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | static-hosting |  | 0.1.0 | An assets-only Worker — the build output directory is the whole deployment. No script, no bindings, no server; the edge serves files and `wrangler deploy` uploads them. |
 | `cloud-service/zero-trust-access` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | access |  | 0.1.0 | An identity-aware proxy in front of a project that must not be publicly reachable — an operator plane invisible to the internet rather than merely authenticated, whichever cloud actually hosts it. |
 | `datastore/postgres` | PostgreSQL | `database` | backing | sql | relational-datastore | 0.1.0 | The relational datastore that needs no cloud — open engine, managed equivalent everywhere, no lock-in beyond SQL itself. |
 | `deploy-target/container-image` | OCI image · any container host | `deploy-target` | deploy |  |  | 0.1.0 | Build one standard OCI image, push it to any registry, run it on any host that runs containers — portability bought by declining the managed features one cloud would otherwise supply. |
@@ -77,6 +78,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `bun` | bun · workspaces | `workspace` | repo | `package-manager/bun@generated` |  |
 | `claude-code-plugin` | Claude Code plugin | `language-bundle` | project | `language/markdown@0.1.0`, `language/bash@0.1.0` |  |
 | `claude-design` | Claude Design | `design-tool` | design | `design-tool/claude-design@0.1.0` |  |
+| `cloudflare-workers-static` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-static-assets@0.1.0` |  |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |  |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.1.0` |  |
 | `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.1.0`, `package-manager/pub@0.1.0`, `toolchain-gate/analysis-options@0.1.0` |  |

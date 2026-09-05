@@ -72,5 +72,7 @@ and reports it as an application error.
 ## What choosing it does not decide
 
 **Where the fronted project runs.** Zero Trust Access fronts a service; it
-does not host one. The hosting pin is a separate decision on the same
-axis, and pairing the two is vwf's job.
+does not host one. The hosting pin is a separate decision on the same axis
+— another cloud's, or this provider's own `cloudflare-workers-static` when
+what is being fronted is a static site — and pairing the two is vwf's job.
+Same account or not, they stay two pins.

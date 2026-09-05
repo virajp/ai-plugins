@@ -9,10 +9,16 @@ where none does.
 | --- | --- |
 | The identity-aware proxy | **Does not exist, and must not be simulated** |
 | The identity assertion it passes | Injected as a fake through the project's own seam |
+| Static assets on Workers | **Really runs** — `wrangler dev` serves the built directory |
 | Everything else Cloudflare sells | Out of this stack's scope entirely |
 
 That is the whole map, and its shortness is the point rather than an
-omission — see the scope fence in the `cloudflare` skill.
+omission — see the scope fence in the `cloudflare` skill. One row of it is
+a genuine local runtime rather than a stand-in, and it is the exception:
+the asset server exercises the real routing rules, and its own fidelity
+trap — the edge, the custom domain, the cache — belongs to the
+`workers-static-assets` component's local-dev reference. The rest of this
+page is about the proxy, which has no local existence at all.
 
 ## Why simulating the proxy is the wrong instinct
 

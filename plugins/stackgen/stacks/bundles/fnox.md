@@ -47,9 +47,11 @@ not others. Beside it, through the `config/` tier
 (`assets/output-tree.md`): an environment fragment under
 `.config/mise/conf.d/`, which the toolchain manager auto-loads, and an
 overlay of the manager's `setup/secrets` slot that verifies the tool is
-reachable and reports the keychain prefix in use. A provider component is
-**last** in composition order, so its overlay wins over anything a language
-pack put in that slot. The local override file is gitignored by the hygiene
+reachable and reports the keychain prefix in use. A capability provider
+**outranks every language and framework pack** in composition order, so its
+overlay wins over anything one of them put in that slot; only a cloud
+deploy target composes later still, and it writes different files. The
+local override file is gitignored by the hygiene
 pack, and the ciphertext guard this pack ships is what makes the
 encrypt-into-git allowance safe rather than merely permitted.
 

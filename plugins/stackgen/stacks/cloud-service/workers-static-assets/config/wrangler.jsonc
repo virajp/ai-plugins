@@ -1,0 +1,78 @@
+{
+  // An ASSETS-ONLY Worker: there is no `main`, so no script runs. The edge
+  // matches each request against the uploaded file set and serves it, and
+  // `wrangler deploy` uploads the directory below. Adding `main` here turns
+  // this into a different stack — see the `workers-static-assets` skill.
+  //
+  // CREDENTIALS NEVER LIVE IN THIS FILE. Wrangler reads CLOUDFLARE_API_TOKEN
+  // and CLOUDFLARE_ACCOUNT_ID from the environment; the secrets provider
+  // supplies them from GLB_CLOUDFLARE_API_TOKEN and GLB_CLOUDFLARE_ACCOUNT_ID.
+  //
+  // This file sits at the REPO ROOT because wrangler discovers its config by
+  // walking up from the working directory and cannot be told to look under
+  // .config/ without a --config flag on every invocation.
+
+  // Editor completion and validation. The path is relative to THIS file, so a
+  // repo that installs wrangler inside a sub-project points at that project's
+  // node_modules instead.
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // ---------------------------------------------------------------------
+  // MARKED POSITION — the Worker's name. Filled when this stack is pinned.
+  //
+  // Cloudflare names are account-unique and lowercase: letters, digits and
+  // dashes only. Derive it from the project, not from the domain, so a repo
+  // that moves domains keeps its Worker:
+  //
+  //   "name": "acme-marketing-site",
+  //
+  // The value shipped below is deliberately invalid — uppercase names are
+  // rejected — so an unfilled slot fails at the first deploy rather than
+  // publishing a Worker nobody meant to create.
+  // ---------------------------------------------------------------------
+  "name": "PLACEHOLDER",
+
+  // The runtime behaviour this deployment was written against. It is a date,
+  // not a version: pinning it is what stops a future runtime change from
+  // altering how an already-shipped deployment behaves. Move it deliberately
+  // and read the changelog for the span you skipped.
+  "compatibility_date": "2026-09-05",
+
+  "assets": {
+    // The build output directory, relative to this file. `./dist` is what most
+    // static builders emit at a repo root; a repo whose site is a sub-project
+    // points at that project's output ("./site/dist") instead.
+    "directory": "./dist",
+
+    // What an unmatched request gets. "404-page" serves the directory's
+    // 404.html WITH a 404 status, which is the right answer for a
+    // multi-page site — the build must actually emit that file, or every
+    // unknown path falls back to a bare edge 404 with no branding.
+    //
+    // A client-routed single-page app wants "single-page-application"
+    // instead: it serves index.html with a 200 so the router can handle the
+    // path. Picking that for a multi-page site makes every typo return 200
+    // and disappears the site from search results.
+    "not_found_handling": "404-page",
+  },
+
+  // ---------------------------------------------------------------------
+  // MARKED POSITION — the custom domain, filled when this stack is pinned.
+  //
+  // Uncomment and set the pattern to the hostname this site answers on. The
+  // zone must already be on the same Cloudflare account, and `custom_domain`
+  // is what makes wrangler create and manage the DNS record for it:
+  //
+  //   "routes": [
+  //     {
+  //       "pattern": "www.example.com",
+  //       "custom_domain": true,
+  //     },
+  //   ],
+  //
+  // A repo with no custom domain DELETES this block rather than filling it.
+  // The Worker is then reachable at <name>.<account-subdomain>.workers.dev,
+  // which is a complete and legitimate deployment — a preview surface, an
+  // internal tool, anything not yet worth a hostname.
+  // ---------------------------------------------------------------------
+}

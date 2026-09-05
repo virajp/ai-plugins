@@ -25,9 +25,10 @@ Six of the seven files sit at the repo root, which is the whole of the
 exception list — everything a repo configures otherwise lives under
 `.config/`. The allowlist is `.gitignore`, `.editorconfig`, `.gitattributes`,
 `LICENSE`, `SECURITY.md`, `readme.md`, `CLAUDE.md`, `fnox.toml`, the linter's
-root shim, and the manifests and lockfiles a language mandates at the root. A
-tool that merely *prefers* the root is configured under `.config/` and pointed
-at from the command line.
+root shim, `wrangler.jsonc` — which wrangler discovers only at the root —
+and the manifests and lockfiles a language mandates at the root. A tool that
+merely *prefers* the root is configured under `.config/` and pointed at from
+the command line.
 
 **`config/_licenses/` is the one path in this tree that is NOT copied into a
 repo.** It is a two-file catalogue the initializer reads: it asks which

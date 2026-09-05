@@ -1,0 +1,41 @@
+name: Cloudflare Workers Static Assets
+summary: An assets-only Worker — the build output directory is the whole
+  deployment. No script, no bindings, no server; the edge serves files and
+  `wrangler deploy` uploads them.
+version: 0.1.0
+type: cloud-service
+category: static-hosting
+# `capability` is deliberately unset: `static-hosting` realizes no vwf
+# capability token today (../../../assets/taxonomy.md), and nothing here
+# mints one — minting capabilities is vwf's move.
+kind: cloud-provider
+axis: deploy
+artifact: static-assets
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      Two HTTP probes of the deployed origin, because a static host either
+      serves files or does not — there is no process to be unhealthy and
+      therefore no readiness endpoint to write. `/` returns 200 with the
+      built index, and a path that certainly does not exist returns 404;
+      the second is the one worth having, because it is what proves
+      `not_found_handling` actually landed rather than defaulting to a
+      bare edge 404
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A preview deployment — a second Worker name, or a version uploaded
+      rather than deployed — and the suite targets that URL. Which of the
+      two, and where the URL comes from, is the product's decision to make
+      and record; this component states that pre-production is a separate
+      URL rather than a separate configuration of the same one
+  local_stack:
+    task: n/a
+    mechanism: >-
+      `wrangler dev` serves the same directory through the same asset
+      routing rules, so `not_found_handling` and the redirect and header
+      files are exercised locally. Its fidelity trap is the edge itself —
+      the custom domain, TLS and the CDN cache do not exist on a laptop,
+      so every routing failure that lives in DNS or the route pattern is
+      invisible until a deployed environment sees it

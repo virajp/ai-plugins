@@ -61,7 +61,8 @@ user's clock.
    `mise run init` is the restore. And where two components write into
    one tree, re-derive in composition order — `toolchain-manager`, then
    `toolchain-gate`, then `repo-hygiene`, then `package-manager` /
-   `language`, then `app-framework`, then `capability-provider`, later
+   `language`, then `app-framework`, then `capability-provider`, then
+   `cloud-provider`, then `cloud-service`, later
    wins — and diff each file against the component
    the lockfile says supplied it. A
    file whose supplying component **changed** is a real delta, reported

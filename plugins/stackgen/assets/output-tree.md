@@ -143,16 +143,24 @@ started as:
 enforces it as a ceiling. These files, and only these, may sit at a shaped
 repo's root: `.gitignore`, `.editorconfig`, `.gitattributes`, `LICENSE`,
 `SECURITY.md`, `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`,
-and the manifests and lockfiles a language mandates. A `config/` tree
-landing a root path that is not on this list is a **pack authoring error**:
-the materializer refuses it and reports it, rather than quietly adding one
-more dotfile to a place the doctrine says is closed. Everything else a pack
-configures lives under `.config/`.
+`wrangler.jsonc`, and the manifests and lockfiles a language mandates. A
+`config/` tree landing a root path that is not on this list is a **pack
+authoring error**: the materializer refuses it and reports it, rather than
+quietly adding one more dotfile to a place the doctrine says is closed.
+Everything else a pack configures lives under `.config/`.
+
+`wrangler.jsonc` joined on 2026-09-05, and it is the same exception
+`eslint.config.mjs` already is: a deploy tool that discovers its config only
+at the repo root leaves a pack two ways to ship one — the root file, or
+`--config` on every invocation any caller might type — and a flag every
+caller has to remember is the worse of the two.
 
 Being on that list is a ceiling, never a licence: `readme.md` and `CLAUDE.md`
 are on it because a shaped repo has them, and **no pack may ship either** —
 they belong to `/vwf:readme` and `/vwf:setup`, and the ban on writing
-CLAUDE.md below is unchanged.
+CLAUDE.md below is unchanged. The rule reaches `wrangler.jsonc` unchanged:
+being on the list makes it landable, not standard, and only a
+`static-hosting` service pack ships one.
 
 The rules mirror the ones the other targets already have:
 
@@ -174,15 +182,25 @@ The rules mirror the ones the other targets already have:
 By component type: `toolchain-manager`, then `toolchain-gate` (the
 `repo-gate` kind's components), then `repo-hygiene`, then
 `package-manager` / `language`, then `app-framework`, then
-`capability-provider` — a later component's file wins, and the lockfile
-records per file which component supplied the version that landed.
+`capability-provider`, then `cloud-provider`, then `cloud-service` — a
+later component's file wins, and the lockfile records per file which
+component supplied the version that landed.
 
 The two ends are what the order is for. The **manager goes first** because
 it ships the baseline every overlay overlays — the whole task library,
-including the slots a stack fills in. The **provider goes last** because a
-secrets overlay is the most specific answer anything gives to
-`setup/secrets`: whatever a language pack thought that task should do, the
-repo's actual secrets manager knows better.
+including the slots a stack fills in. The **deploy target goes last**
+because it is the most specific thing a repo pins: a `cloud-service` pack's
+`wrangler.jsonc`, and the `p/<id>/deploy` overlay beside it, are the answer
+to how this repo actually ships, and nothing may overwrite that. The
+**secrets provider still outranks everything before it**, for the reason it
+always did — a secrets overlay is the most specific answer anything gives
+to `setup/secrets`, whatever a language pack thought that task should do.
+
+The two cloud types were absent from this order until 2026-09-05, for a
+plain reason rather than an oversight: no `cloud-provider` or
+`cloud-service` pack shipped a `config/` tree, so there was nothing of
+theirs to compose. `cloud-service/workers-static-assets` is the first that
+does, and is what put them on it.
 
 **Precedent, and its limit.** The `capability-provider/fnox` and
 `package-manager/pnpm` packs already ship hook scripts copied into a target

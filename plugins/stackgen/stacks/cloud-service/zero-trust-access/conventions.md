@@ -47,7 +47,9 @@ version of the first is a green dashboard in front of a dead service.
 **Where the fronted project actually runs is not this component's
 subject.** Zero Trust Access fronts a service; it does not host one.
 Pairing this with a hosting bundle is vwf's job, and any cloud's deploy
-bundle composes with it.
+bundle composes with it — including this provider's own
+`cloudflare-workers-static`, where the proxy and the hosting land in the
+same account and are still two separate pins on the axis.
 
 Full judgment: the `zero-trust-access` skill and its references. The
 provider-wide doctrine it cites is the `cloudflare` skill's.

@@ -191,13 +191,16 @@ component plus one `cloud-service` component per service the product
 uses. The bar splits the same way — four provider topics carried once by
 the provider component, five service topics carried by **every**
 `cloud-service` component, plus a three-topic extension where the
-service's category is `compute`. The seam between the halves is
-citation: a service topic **cites the provider doctrine, never restates
-it**.
+service's category is `compute` or `static-hosting`. Those two share a
+bar because both are deploy targets, and a deploy target must say what it
+publishes, how it gets there and how you know it is up, whether the
+artifact is an image or a directory of files. The seam between the halves
+is citation: a service topic **cites the provider doctrine, never
+restates it**.
 
-- **Axis**: `backing` + `deploy` (a `compute` service is a deploy
-  target, as is anything else that fronts the deployment; the rest are
-  backing).
+- **Axis**: `backing` + `deploy` (a `compute` or `static-hosting`
+  service is a deploy target, as is anything else that fronts the
+  deployment; the rest are backing).
 - **Structure**: the **topic bar** below, hung per the kind-general rule
   — one artifact per topic behind a lean router skill. Judgment skills
   are reference-shaped, not paths-scoped: there is no file glob that
@@ -248,11 +251,14 @@ component in the bundle:
 5. **Local dev** — this service's emulator, or its substitution where
    none exists.
 
-**Compute-category extension** — a `cloud-service` in category
-`compute` is a deploy target and carries three more:
+**Deploy-target extension** — a `cloud-service` in category `compute` or
+`static-hosting` is a deploy target and carries three more:
 
-6. **Artifact** — the image contract: one multi-stage Dockerfile, the
-   same digest promoted across environments.
+6. **Artifact** — what the service publishes, stated per category: for
+   `compute` the image contract, one multi-stage Dockerfile and the same
+   digest promoted across environments; for `static-hosting` the build
+   output directory, and the content hash or immutable-asset rule that
+   makes one deploy distinguishable from the next.
 7. **Pipeline** — release wiring behind mise tasks, satisfying vwf's
    delivery-pipeline contract.
 8. **Health** — readiness/liveness wiring against vwf's `health`
@@ -988,7 +994,9 @@ doctrine is part of the bar. For `cloud-provider` the composition
 supplies the bar in halves — the provider topics by the `cloud-provider`
 component, the service topics by each `cloud-service` component, the
 extension by category — and the cite-not-restate seam between service
-topics and provider doctrine is part of the bar. For `repo-gate` the
+topics and provider doctrine is part of the bar; a `static-hosting`
+service whose artifact is anything but a directory of files, or that
+ships a server-side script fronting them, is a gap. For `repo-gate` the
 composition is the gate components together, and one check carries the
 kind: a **language-specific** linter or formatter appearing here is a gap,
 because it belongs to topic 10 of its language bundle. For

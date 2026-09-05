@@ -51,6 +51,12 @@ credential is not a seat.
 
 ## What this doctrine deliberately does not cover
 
-The bill for **where the product actually runs**. Cloudflare fronts a
-service here; the hosting cloud's own cost doctrine owns the compute,
-the storage and the egress, and this component says nothing about them.
+The bill for **where a project with a running process actually runs**.
+Cloudflare fronts such a service rather than hosting it; the hosting
+cloud's own cost doctrine owns the compute, the storage and the egress,
+and this component says nothing about them.
+
+Nor the bill for **static assets served on Workers**, which is the one
+thing Cloudflare does host at this scope. That surface bills by
+consumption, not by seat — a different shape from the principle above, and
+the `workers-static-assets` component's to state rather than this one's.
