@@ -50,11 +50,11 @@ category-level doctrine + an instance component.
 The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 (`capability-vocabulary.md`); the finer **category taxonomy is stackgen's**. vwf
 never learns what an ORM is; stackgen never redefines a capability — the `cdn`,
-`secrets-manager` and `access` categories' capability tokens are deliberately
-unset until vwf defines them, because a category classifies what a component
-*is*, never whether a product must have one. Categories make components
-substitutable answers to one blueprint capability, which is what lets stack
-menus become category-filtered queries instead of per-plugin lists.
+`secrets-manager`, `access` and `static-hosting` categories' capability tokens
+are deliberately unset until vwf defines them, because a category classifies
+what a component *is*, never whether a product must have one. Categories make
+components substitutable answers to one blueprint capability, which is what lets
+stack menus become category-filtered queries instead of per-plugin lists.
 Category-level doctrine is written once as curated knowledge; instance
 components cite it and stay thin.
 
@@ -126,7 +126,7 @@ in shape while only content varies:
 | `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `language/typescript` bundle)                                                                                                                                                                                                                                                |
 | `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                                                                             |
 | `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                                                                                      |
-| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus artifact/pipeline/health where the service's category is `compute` (archetype: the `cloud-provider/gcp` bundle)                                                                                                                                                                                                                                            |
+| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus a **deploy-target extension** — artifact/pipeline/health — where the service's category is `compute` or `static-hosting`, the two categories that are deploy targets (archetypes: the `cloud-provider/gcp` and `cloudflare-workers-static` bundles)                                                                                                        |
 | `repo-gate`           | repo                   | the `toolchain-gate` components that run over the whole repo, composed together. A **language-specific** linter or formatter appearing here is a gap — it belongs to that language's bundle                                                                                                                                                                                                                                                                                         |
 | `toolchain-manager`   | repo                   | **exactly one component, standing alone** — the thing that pins the repo's tools, holds the environment values they read, and runs its tasks. A **5-topic bar** behind a router skill: the config split, environment values, the task-library contract, the mandatory task set, and bootstrap/CI parity. A polyglot repo materializes it **once**                                                                                                                                   |
 | `repo-hygiene`        | repo                   | **exactly one component, standing alone** — the files every repo carries whatever wrote it. A **4-topic bar**, no router: the ignore set, the editor and attribute defaults, licensing and the security contact, and the dependency-update policy. Not a gate, and that is the distinction the kind holds: a gate *runs, finds something and fails*; hygiene runs nothing and *declares*. It also owns the **root allowlist** every other kind's `config/` tree is measured against |
@@ -191,13 +191,15 @@ than something that rides the landing:
 - **A repo's own config files** belong to the repo, not to `.claude/`. A pack
   that owns some — the toolchain manager owns the `mise.*.toml` layers and the
   task library under `.config/mise/tasks/`; a gate owns its own config file; the
-  hygiene pack owns the root files; a provider drops an env fragment into
-  `.config/mise/conf.d/` and a hook fragment into `.config/pre-commit.d/` —
-  declares them in a `config/` tree mirroring the repo root, and they land
-  there. Everything else goes under `.config/`: a `config/` tree landing a root
-  path outside the fixed allowlist is a pack authoring error the materializer
-  refuses. Mode is preserved, because a task file arriving without its exec bit
-  fails as an *unknown task* rather than as a permission error.
+  hygiene pack owns most of the root files; a provider drops an env fragment
+  into `.config/mise/conf.d/` and a hook fragment into `.config/pre-commit.d/`;
+  a deploy target owns the root config its own tool reads, which is how
+  `cloud-service/workers-static-assets` ships `wrangler.jsonc` — declares them
+  in a `config/` tree mirroring the repo root, and they land there. Everything
+  else goes under `.config/`: a `config/` tree landing a root path outside the
+  fixed allowlist is a pack authoring error the materializer refuses. Mode is
+  preserved, because a task file arriving without its exec bit fails as an
+  *unknown task* rather than as a permission error.
 
 The need still travels as `language_facts` in the template payload for
 `/vwf:doctor` to verify; the local plugin is what actually provides the server.
@@ -243,13 +245,14 @@ come only from curated packs; generation never emits an executable.
 
 **A pack may still need repo files the materializer will not write.** The
 `config/` tree is what a pack *owns*, and the fence around it is still real,
-just drawn further out. Gate and provider configs came inside it on 2026-09-05;
-**four things stay out, enumerated rather than left to judgment** — a language
-manifest and its lockfile (a manifest is the project's own declaration of what
-it is), CI workflow files (a pack states which task names CI must run; the
-workflow is the repo's), editor settings (they belong to the people typing), and
-`CLAUDE.md` (vwf's, out of scope outright). Charters ratchet, which is why they
-are a list: each file the tier absorbs makes the argument for the next one
+just drawn further out. Gate and provider configs came inside it on 2026-09-05,
+and so did a deploy target's own config and its `p:<id>:deploy` task, the same
+day; **four things stay out, enumerated rather than left to judgment** — a
+language manifest and its lockfile (a manifest is the project's own declaration
+of what it is), CI workflow files (a pack states which task names CI must run;
+the workflow is the repo's), editor settings (they belong to the people typing),
+and `CLAUDE.md` (vwf's, out of scope outright). Charters ratchet, which is why
+they are a list: each file the tier absorbs makes the argument for the next one
 easier, and "gate configs went in, so why not the manifest" is the argument that
 list exists to answer.
 
@@ -483,18 +486,28 @@ and `package-manager/uv` supply `setup/deps/*`, `toolchain-gate/ruff` and
 needs, and the secrets providers overlay `setup/secrets`. Composition runs
 `toolchain-manager` first, then the `repo-gate` components, then `repo-hygiene`,
 then `package-manager`/`language`, then `app-framework`, then
-`capability-provider`, so a later component's file wins and the lockfile records
-per file which component supplied it. The two ends are what the order is for:
-the manager goes **first** because it lays the baseline every overlay overlays,
-and a provider goes **last** because a secrets overlay is the most specific
-answer anything gives to `setup:secrets` — whatever a language pack thought that
-task should do, the repo's actual secrets manager knows better.
+`capability-provider`, then `cloud-provider`, then `cloud-service`, so a later
+component's file wins and the lockfile records per file which component supplied
+it. The two ends are what the order is for: the manager goes **first** because
+it lays the baseline every overlay overlays, and the **deploy target goes last**
+because it is the most specific thing a repo pins — a `cloud-service` pack's
+root config and the `p:<id>:deploy` overlay beside it are the answer to how this
+repo actually ships, and nothing may overwrite that. A secrets overlay still
+outranks every language and framework pack, for the reason it always did: it is
+the most specific answer anything gives to `setup:secrets`. The two cloud types
+joined the order on 2026-09-05, when `cloud-service/workers-static-assets`
+became the first cloud pack to ship a `config/` tree at all.
 
 **Two things no pack can know**, and `/vwf:init` fills both: the marked
 positions a pack ships as commented slots (the bootstrap aggregator's member
 flags, the shell aliases) and the per-project `p:<id>:*` groups, which it
 scaffolds as a `_default` placeholder per project. Filling a slot a pack marked
-is init's job; authoring pack-owned content from scratch is not.
+is init's job; authoring pack-owned content from scratch is not. A pack can
+still contribute **one task** to a project's group without knowing its name: a
+`config/` tree's `.config/mise/tasks/p/_project/` directory is itself a marked
+position, and the materializer renames it to the pinned project's id as it
+copies — which is how `cloud-service/workers-static-assets` lands
+`p:<id>:deploy`.
 
 **Legacy names.** The contract replaced these, and the pack carries the table so
 `/vwf:init` can rename them on an existing repo — the renaming is a fact about

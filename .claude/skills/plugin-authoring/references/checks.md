@@ -93,10 +93,14 @@ much smaller than the one it replaced: whole families of assertion became
       there is, since nothing downstream ever reports that it did not run;
     - the tier's **root stays allowlisted** — `.gitignore`, `.editorconfig`,
       `.gitattributes`, `LICENSE`, `SECURITY.md`, `readme.md`, `CLAUDE.md`,
-      `fnox.toml`, `eslint.config.mjs` and a language's mandated manifests.
-      Everything else belongs under `.config/`, and a pack landing one more
-      dotfile beside them is widening the root of every repo it materializes
-      into;
+      `fnox.toml`, `eslint.config.mjs`, `wrangler.jsonc` and a language's
+      mandated manifests. Everything else belongs under `.config/`, and a pack
+      landing one more dotfile beside them is widening the root of every repo it
+      materializes into. `wrangler.jsonc` joined on 2026-09-05 as the same
+      exception `eslint.config.mjs` already is: a tool that discovers its config
+      only at the repo root leaves a pack a choice between the root file and
+      `--config` on every invocation any caller might type, and the flag is the
+      worse of the two;
     - a **pre-commit fragment parses** and declares a top-level `repos:` list,
       because `/vwf:init` concatenates the fragments into one config and a
       malformed one breaks a file no pack owns.

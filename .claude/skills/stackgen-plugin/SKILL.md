@@ -81,8 +81,8 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   language server is to *be* a plugin. User scope is safe because every
   generated `lspServers` entry **must** carry an `extensionToLanguage` map;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
-  a component genuinely owns — **mode preserved**, so a task file lands 755.
-  Five kinds of entry: **(a)** the toolchain manager's own config and its task
+  a component genuinely owns — **mode preserved**, so a task file lands 755. Six
+  kinds of entry: **(a)** the toolchain manager's own config and its task
   library (`.config/mise*.toml`, `.config/mise/tasks/**`); **(b)** a gate's own
   config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
@@ -92,11 +92,19 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   edits `mise.toml`; **(e)** a hook fragment at
   `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
   it**, nothing in stackgen edits the pre-commit config, which is what keeps a
-  fragment a fragment. Still fenced out: `package.json`, any language manifest
-  or lockfile, and CI workflows. What lands at the repo **root** is capped by a
-  fixed allowlist (`plugins:check` rule 11 enforces it); `readme.md` and
-  `CLAUDE.md` are on that list only because a shaped repo has them — **no pack
-  may ship either**.
+  fragment a fragment; and, since 2026-09-05, **(f)** a deploy target's own
+  config and its deploy task — `cloud-service/workers-static-assets` ships
+  `wrangler.jsonc` at the root and a `.config/mise/tasks/p/_project/deploy`
+  overlay, the first `cloud-provider`/`cloud-service` pack to ship a `config/`
+  tree at all, which is also what put those two types on the composition order
+  (**last**, after `capability-provider`). Note the second underscore rule:
+  `config/_<name>/` at the top of the tier is pack-private and never copied, but
+  nested deeper `p/_project/` is a **marked position**, copied and renamed to
+  the pinned project's id. Still fenced out: `package.json`, any language
+  manifest or lockfile, and CI workflows. What lands at the repo **root** is
+  capped by a fixed allowlist (`plugins:check` rule 11 enforces it); `readme.md`
+  and `CLAUDE.md` are on that list only because a shaped repo has them — **no
+  pack may ship either**.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written

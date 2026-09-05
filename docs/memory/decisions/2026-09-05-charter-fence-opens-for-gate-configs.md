@@ -68,3 +68,27 @@ Two costs, both real and both paid during this plan's own run:
   bit and shebang, root allowlist, and every `pre-commit.d/*.yaml` parsing with
   a top-level `repos:` list. Each of those failure modes is silent in the target
   repo, which is why it is a checker rule and not a review note.
+
+## Addendum — 2026-09-05: `wrangler.jsonc` joins the allowlist
+
+The root allowlist above gained a tenth entry the same day, on the
+`2026-09-05-cloudflare-workers-static` branch: `wrangler.jsonc`, alongside
+`.gitignore`, `.editorconfig`, `.gitattributes`, `LICENSE`, `SECURITY.md`,
+`readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs` and a language's
+mandated manifests. Everything the original decision settled stands — what is
+outside the fence, the merges-never-owns terms, the ceiling-not-a-licence rule
+that still bars a pack from shipping `readme.md` or `CLAUDE.md`.
+
+Why it moved: `cloud-service/workers-static-assets` is the first cloud pack to
+ship a `config/` tree at all, and wrangler discovers its config **only at the
+repo root**. That left two ways to ship one — the root file, or `--config` on
+every invocation any caller might type — and a flag every caller has to remember
+is the worse of the two. It is the same exception `eslint.config.mjs` already
+is, which is what makes it a widening of one entry rather than a new principle:
+being on the list makes a file landable, not standard, and only a
+`static-hosting` service pack ships this one.
+
+The widening is carried in `assets/output-tree.md`,
+`skills/stackgen-stack-template/references/materializer.md`, the hygiene pack's
+`conventions.md`, and `plugins:check` rule 11 in `scripts/src/check.ts` with its
+test.

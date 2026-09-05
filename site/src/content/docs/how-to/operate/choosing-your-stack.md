@@ -58,10 +58,13 @@ points at a cloud's answer rather than offering a neutral one.
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and
 any host that runs containers, with the Compose wiring the acceptance verifier's
-readiness gates depend on. The managed alternatives are `cloud-run` and `gke`.
-`zero-trust-access` composes with a host rather than replacing one — a private
-plane in front of a project that must not be publicly reachable, whichever cloud
-hosts it.
+readiness gates depend on. The managed alternatives are `cloud-run`, `gke` and
+`cloudflare-workers-static` — that last one for a project whose whole deployment
+is a build output directory rather than a running server: it lays down a root
+`wrangler.jsonc` for an assets-only Worker and a `p:<id>:deploy` task that
+uploads the directory. `zero-trust-access` composes with a host rather than
+replacing one — a private plane in front of a project that must not be publicly
+reachable, whichever cloud hosts it.
 
 **The repo axis** is the package manager and workspace layout: `pnpm-workspace`,
 `pnpm-turbo`, or `bun`. A single-package repo pins no workspace bundle — that is

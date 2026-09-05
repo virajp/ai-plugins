@@ -138,6 +138,14 @@ started as:
   stops**; `/vwf:init` is what merges them into
   `.config/pre-commit-config.yaml`, between its markers. Nothing in stackgen
   edits that file, which is what keeps a fragment a fragment.
+- **(f) A deploy target's own config and its deploy task** — a root
+  `wrangler.jsonc` and a `.config/mise/tasks/p/_project/deploy` overlay,
+  which `cloud-service/workers-static-assets` was the first
+  `cloud-provider`/`cloud-service` pack to ship at all. `_project` is a
+  **marked position** the materializer renames to the pinned project's id,
+  not a task group. A deploy stack that names the task CI must run and then
+  leaves both that task and the config it reads to be typed by hand is the
+  failure (b) describes, one axis up.
 
 **The root allowlist** is the hygiene doctrine's, and the materializer
 enforces it as a ceiling. These files, and only these, may sit at a shaped
@@ -212,10 +220,13 @@ config lives in a plugin that exists for no other reason.
 **The fence, and where it now runs.** The tier originally stopped at the
 toolchain manager: a gate pack named its config file as a prerequisite and
 wrote nothing. That line was **opened on 2026-09-05, deliberately and once**,
-for gate and provider config files — the (b), (c), (d) and (e) rows above —
-because a gate that ships its doctrine and not its config leaves every repo
-to hand-write the file the doctrine describes, which is the failure the
-tier exists to prevent.
+for gate and provider config files — the (b), (c), (d), (e) and (f) rows
+above — because a gate that ships its doctrine and not its config leaves
+every repo to hand-write the file the doctrine describes, which is the
+failure the tier exists to prevent. Row (f) is that one opening reaching the
+cloud types later the same day, when the first `cloud-service` pack shipped a
+`config/` tree: a deploy target that ships its doctrine and not its config
+leaves the repo hand-writing that file too.
 
 Four things stay **outside** the fence, and they are the whole of it:
 
