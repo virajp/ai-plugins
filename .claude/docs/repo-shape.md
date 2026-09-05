@@ -111,11 +111,16 @@ deletes nothing a receipt or another tool does not account for.
 
 ## Tasks
 
-Run in `plugins.yml`, the first four also locally via pre-commit, with
+Run in `plugins.yml`, the first five also locally via pre-commit, with
 marketplace, inventory and check in that order — freshness before validity
 (never in `release.yml`, which is the installer's and whose trigger surface must
 stay untouched — npm allows one Trusted Publisher and validates the entry-point
 filename — and never in `site.yml`, which runs the website's own gate):
+
+Pre-commit also runs **`actionlint`** over `^\.github/workflows/`, which is not
+on this list because it is not a mise task and checks nothing under `plugins/`:
+the workflows are this repo's own, and a typo in one is otherwise discovered
+only by pushing it.
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
   2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →

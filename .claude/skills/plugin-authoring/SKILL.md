@@ -1,7 +1,7 @@
 ---
 name: plugin-authoring
 description: This repo's plugin doctrine — how a plugin is structured,
-  packaged and registered, the three mise tasks, what plugins:check asserts,
+  packaged and registered, the four mise gates, what plugins:check asserts,
   and the traps specific to this marketplace. Auto-applies when editing
   anything under plugins/.
 user-invocable: false
@@ -47,7 +47,12 @@ A change under `plugins/` is not done until the gates pass:
 mise run plugins:check              # validates the authored tree
 mise run plugins:marketplace        # regenerate, if you touched a manifest
 mise run plugins:inventory          # regenerate, if you touched stackgen's stacks/ or kinds.md
+mise run plugins:shellcheck         # the shell a pack ships, if you touched any
 ```
+
+`plugins:shellcheck` runs `shellcheck -x` and `shfmt -d -i 2 -ci` over **both**
+shell tiers a pack ships — `config/.config/mise/tasks/**` and `hooks/` — and
+pre-commit fires it on `^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/`.
 
 `--check` on the two generators is what CI and pre-commit run. It exists because
 each output is generated **and** committed, so a source edited without a
@@ -94,10 +99,15 @@ hook belongs to:
    the whole verdict if a `hookSpecificOutput` arrives without a matching
    `hookEventName` — which reads exactly like a hook that decided to stay quiet.
 
-`plugins:check`'s hook rule reads only a plugin's own `hooks/hooks.json`; a
-script a stackgen pack ships as payload is covered elsewhere (the
-`stackgen-plugin` skill). The host rules in full are stackgen's
-`assets/artifact-doctrine.md` §4.
+`plugins:check`'s hook *rule* reads only a plugin's own `hooks/hooks.json`, but
+rule 11 covers a stackgen pack's payload scripts from the other end — exec bit
+and shebang, `bash` or `sh` only — and `plugins:shellcheck` lints their bodies.
+The shebang set is narrower than a task's on purpose: a hook is wired into
+`settings.json` as a bare path, so only a shell the host can find on `PATH` will
+do, and `shellcheck` reads that same line to pick its dialect — a POSIX hook
+declaring `bash` would be checked as bash and its bashisms would ship. What the
+`stackgen-plugin` skill still owns is what those scripts are *for*. The host
+rules in full are stackgen's `assets/artifact-doctrine.md` §4.
 
 ## References
 
