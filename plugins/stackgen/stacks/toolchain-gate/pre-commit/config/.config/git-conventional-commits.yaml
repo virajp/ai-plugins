@@ -1,0 +1,80 @@
+---
+# The commit convention, enforced by the `conventional-commits` hook in
+# .config/pre-commit-config.yaml at the `commit-msg` stage, and read again by
+# `git-conventional-commits changelog --release <version>` when release notes
+# are generated. One file, two readers — which is why it lives with the gate
+# that enforces it rather than beside the release task that consumes it.
+
+convention:
+  # Ten types, and no more. A long list is a list nobody consults, and every
+  # extra type is a bucket the changelog then has to decide about. The
+  # absorptions below are deliberate: build, ci, chore, deps, config and
+  # release are all `ops`; style is `refactor`; a specification or a design
+  # document is `docs`.
+  commitTypes:
+    - feat # a new capability a user can observe. Bumps the minor version.
+    - fix # a defect in a shipped capability, not in one added this branch.
+    - perf # same behaviour, measurably cheaper. Say what was measured.
+    - refactor # neither fixes nor adds — including pure formatting changes.
+    - revert # undoes an earlier commit; name it in the body.
+    - test # tests only. A test written alongside a fix belongs to the fix.
+    - ops # tooling, config, dependencies, CI, release mechanics.
+    - docs # prose: README, guides, specifications, design documents.
+    - merge # a merge commit. Written by the merge task, rarely by hand.
+    - wip # work in progress. Never survives a merge; excluded from notes.
+
+  # One scope per sub-project, so a reader can tell which part of the repo a
+  # commit touched without opening it. `/vwf:init` fills this from the project
+  # registry; a single-project repo can leave it empty and use no scope.
+  #
+  # A scope that stops existing stays listed with a comment saying so —
+  # deleting it retroactively invalidates every commit that used it.
+  commitScopes: []
+
+  # What counts as a feature for the version bump. Everything else is a patch;
+  # a `!` or a BREAKING CHANGE footer is a major, whatever the type.
+  featureCommitTypes:
+    - feat
+
+  # Every tag in this repo is a release tag. A repo that namespaces its tags
+  # per component narrows this to that prefix, so `version` measures against
+  # the right previous release rather than against whichever tag came last.
+  releaseTagGlobPattern: "*"
+
+changelog:
+  # What appears in the notes. `test`, `ops`, `docs`, `merge` and `wip` are
+  # deliberately absent: they are real work and they are not what a reader of a
+  # release note came for. `merge` in particular records how a branch landed,
+  # not what changed — the commits it carries are already listed by their own
+  # types.
+  commitTypes:
+    - feat
+    - fix
+    - perf
+    - refactor
+    - revert
+
+  # A message that does not parse is a message nobody can classify; silently
+  # listing it under a heading it never claimed is worse than omitting it.
+  includeInvalidCommits: false
+
+  # `wip` is already excluded by type; this also catches the ones written
+  # before the convention was installed, in either case.
+  commitIgnoreRegexPattern: '^[wW][iI][pP]\b'
+
+  headlines:
+    feat: Features
+    fix: Bug Fixes
+    perf: Performance Improvements
+    refactor: Refactors
+    revert: Reverts
+    breakingChange: BREAKING CHANGES
+
+  # Links, left commented because they name the forge and the repository, which
+  # this pack cannot know. `/vwf:init` fills the placeholders from the remote;
+  # uncomment then. Without them the notes still generate — just without links.
+  #
+  # commitUrl: <forge>/<owner>/<repo>/commit/%commit%
+  # commitRangeUrl: <forge>/<owner>/<repo>/compare/%from%...%to%?diff=split
+  # issueRegexPattern: "#[0-9]+"
+  # issueUrl: <forge>/<owner>/<repo>/issues/%issue%

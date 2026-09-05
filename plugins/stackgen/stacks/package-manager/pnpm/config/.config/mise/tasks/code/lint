@@ -1,19 +1,33 @@
 #!/usr/bin/env bash
-#MISE description="Lint files"
+
+#MISE description="Lint the repo's files"
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-cd "${MISE_PROJECT_ROOT}"
+# Fills the `code:lint` slot with the house linter, which needs no repo config
+# and covers the JSON, YAML, TOML and Markdown a Node repo carries alongside its
+# sources. `toolchain-gate` composes BEFORE `package-manager`, so this file
+# lands last and wins over a gate pack's `code/lint` — a repo that wants a
+# different lint gate to run gets it by not pinning this package manager, or by
+# a component later in the order overlaying the slot again.
+#
+# One step, so no header: whatever called it — `code:all`, or a person — frames
+# it.
 
-print_header "Linting files ..."
-[[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="--debug" || LOG_LEVEL=""
-[[ "${usage_fix:-false}" == "true" ]] && FIX="--fix"           || FIX=""
+args=()
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  args+=(--debug)
+fi
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  args+=(--fix)
+fi
 
-pnpm dlx @askviraj/linter ${LOG_LEVEL} ${FIX}
-
-print_header "Linting done"
+pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"}

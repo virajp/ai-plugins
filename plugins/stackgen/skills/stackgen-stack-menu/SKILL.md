@@ -31,11 +31,11 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
 
    **Skip every `unconditional: true` bundle.** Those are the repo baseline —
    one pack per slot, where a one-entry menu is theatre and where a repo that
-   has picked no stack still needs the thing. `/vwf:setup` materializes them
-   by **fixed slug** — `repo-gates` and `mise` — never a slug constructed
-   from configuration, and never through this menu. Listing one here would
-   offer a choice that is not one, and would let a user decline a baseline
-   nothing else can supply.
+   has picked no stack still needs the thing. `/vwf:init` materializes them
+   by **fixed slug** — `mise`, `repo-gates` and `repo-hygiene` — never a slug
+   constructed from configuration, and never through this menu. Listing one
+   here would offer a choice that is not one, and would let a user decline a
+   baseline nothing else can supply.
 
    **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
    the parts a bundle composes, not options — offering them would ask the user
@@ -68,16 +68,22 @@ generate:
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```
 
-**`kinds:` omits `toolchain-manager` and `workspace` deliberately**, and the
-omission is a recorded decision rather than an oversight — an unstated gap
-here reads as one either way, which is why it is written down. Neither is
-generatable **today**:
+**`kinds:` omits `toolchain-manager`, `repo-hygiene` and `workspace`
+deliberately**, and the omission is a recorded decision rather than an
+oversight — an unstated gap here reads as one either way, which is why it is
+written down. None of the three is generatable **today**:
 
 - **`toolchain-manager`** — making the task runner genuinely pickable is
   explicitly deferred. vwf still names `mise run` directly rather than
   reaching a task through the manager the repo pinned, so there is no
   uncovered tail to generate into: a generated manager would be a second
   vocabulary nothing calls.
+- **`repo-hygiene`** — there is no uncovered tail. The kind's whole content
+  is the files every repo has regardless of what it is written in, which one
+  pack covers by definition; the only per-stack part is the ignore sections,
+  and those are appended from the community templates at init time rather
+  than generated. A generated second hygiene pack would be a second
+  `.gitignore` opinion for the same repo.
 - **`workspace`** — newly minted. Generating one is untested capability, not
   preserved capability, and the open entry is a promise about the former
   only. Its three curated bundles cover the pnpm and bun shapes; an uncovered

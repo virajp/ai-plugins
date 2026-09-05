@@ -21,7 +21,11 @@ diagram rules). Default the target to the current repo root; if `$ARGUMENTS`
 names a directory, operate on `<dir>`.
 
 Update an **existing** readme in place — preserve its filename and casing
-(`README.md` / `readme.md`); otherwise create `README.md`.
+(`README.md` / `readme.md`); otherwise create `readme.md`. Lowercase is the
+default because every other file this toolkit lays at a repo root is lowercase,
+and a readme that shouts is the one exception nobody chose. An existing
+uppercase name is never renamed here — renaming is a repo-shape move, and
+`/vwf:init` is what makes it, as one line of a surveyed plan.
 
 ## Required sections (in this order)
 
@@ -66,8 +70,12 @@ Gather the facts before writing:
   `serverless.yml`), and cloud SDKs/services in dependencies or config (AWS,
   GCP, Azure, Firebase, Supabase, Vercel, Cloudflare, Neon, PlanetScale, …).
 - **Local development.** The toolchain manager (this marketplace standardizes on
-  **mise** — prefer `mise install` plus the `setup:*` tasks), env setup
-  (`.env.example`, doppler, mise `[env]`), and prerequisites.
+  **mise** — prefer `mise install` then `mise run setup:all`, the single
+  bootstrap entrypoint, over the `setup:*` steps it already orders), env setup
+  (`.env.example`, doppler, mise `[env]`), and prerequisites. Note
+  `mise run setup:worktree` too where the repo has one — it is the lighter
+  bootstrap a fresh worktree runs, and a contributor who does not know it exists
+  runs the slow path forever.
 - **Task runner.** Detect the repo's runner — mise (`mise.toml` /
   `.config/mise*.toml` → `mise tasks`), `package.json` `scripts`, a `Makefile`,
   or a `justfile` — preferring mise when more than one is present. Read the
@@ -98,7 +106,8 @@ Write/update the README with the eight sections above, per the
 - **List of projects** as a table: `| Project | Path | Stack | Purpose |`.
 - **Infrastructure** as a table: `| Tool / Service | Used for |`.
 - **Local Development** as ordered, copy-pasteable steps — clone,
-  `mise install`, env setup, the `setup:*` task, and how to run it.
+  `mise install`, env setup, `mise run setup:all`, and how to run it; plus
+  `mise run setup:worktree` for a fresh worktree when the repo defines it.
 - **Projects** — per project: what it is, its stack, how to run/test it, and its
   key tasks.
 - **Important tasks** as a table: `| Task | What it does |` — use real names

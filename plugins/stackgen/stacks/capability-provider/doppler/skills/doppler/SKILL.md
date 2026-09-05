@@ -15,6 +15,7 @@ paths:
   - "**/doppler.yml"
   - "**/.doppler.yaml"
   - "**/.config/doppler.yaml"
+  - "**/.config/mise/conf.d/doppler.toml"
 ---
 
 # Doppler

@@ -1,20 +1,45 @@
 #!/usr/bin/env bash
-#MISE description="Check or format files"
+
+#MISE description="Check or format the repo's files"
+#MISE dir="{{ config_root }}"
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
 
-set -e
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-[[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="debug" || LOG_LEVEL="warn"
-[[ "${usage_fix:-false}" == "true" ]] && CMD="fmt"          || CMD="check"
-[[ "${usage_fix:-false}" == "true" ]] && SORT_FLAG=""       || SORT_FLAG="--check"
+# Overlays the toolchain manager's `code:format`. dprint keeps owning whitespace
+# for every language in the repo — that does not stop mattering once JavaScript
+# arrives — and this pack adds the one thing dprint cannot do: `package.json`
+# key order, which is a convention rather than a format.
 
-print_header "Formatting files (dprint) ..."
-dprint ${CMD} --config "${MISE_PROJECT_ROOT}/dprint.json" --allow-no-files --log-level ${LOG_LEVEL}
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  log_level="debug"
+else
+  log_level="warn"
+fi
 
-print_header "Sorting package.json files ..."
-pnpm dlx sort-package-json ${SORT_FLAG} "**/package.json" --ignore "**/node_modules"
+# The sorter has no `--fix`: sorting is its default and `--check` is the
+# read-only mode, the inverse of dprint's pair.
+sort_args=("**/package.json" --ignore "**/node_modules")
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  action="fmt"
+else
+  action="check"
+  sort_args=(--check "${sort_args[@]}")
+fi
 
-print_header "Formatting done"
+print_header "Formatting files ..."
+
+print_subheader "Formatting with dprint ..."
+dprint "${action}" \
+  --config .config/dprint.json \
+  --allow-no-files \
+  --log-level "${log_level}"
+
+print_subheader "Sorting package.json files ..."
+pnpm dlx sort-package-json "${sort_args[@]}"

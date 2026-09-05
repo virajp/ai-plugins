@@ -28,15 +28,20 @@ plugins: vwf **vendored** their skills. That is the one place third-party code
 is vendored into this repo, and it buys something a dependency could not — see
 The memory layer and The vendored guidelines below.
 
-**stackgen is load-bearing at `setup` too, not only at `architecture`.**
-`/vwf:setup` materializes two **unconditional** bundles through the stack
-adapter, by the fixed slugs `mise` and `repo-gates` — the toolchain manager and
-the repo gates the `devtools` plugin used to scaffold. Fixed rather than
-constructed, because a name assembled from configuration can silently resolve to
-nothing, which is the same failure a skill vwf cannot see already has. Note that
-`mise` legitimately appears in two different meanings: the **bundle** slug
-stackgen materializes, and the **binary** `mise`, which is a mandate
-`/vwf:doctor` blocks on once a stack axis is pinned.
+**stackgen is load-bearing at `init` too, not only at `architecture`.**
+`/vwf:init` materializes three **unconditional** bundles through the stack
+adapter, by the fixed slugs `mise`, `repo-gates` and `repo-hygiene` — the
+toolchain manager and the repo gates the `devtools` plugin used to scaffold,
+plus the hygiene files that had no home at all. Fixed rather than constructed,
+because a name assembled from configuration can silently resolve to nothing,
+which is the same failure a skill vwf cannot see already has. With no stack
+adapter installed, `init` **halts** with the install command rather than
+printing an empty plan that reads like an already-shaped repo. `/vwf:setup` no
+longer fetches any of them: it checks the adapter's lockfile for all three and
+offers `/vwf:init`, which is why `init` is model-invocable. Note that `mise`
+legitimately appears in two different meanings: the **bundle** slug stackgen
+materializes, and the **binary** `mise`, which is a mandate `/vwf:doctor` blocks
+on once a stack axis is pinned.
 
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded

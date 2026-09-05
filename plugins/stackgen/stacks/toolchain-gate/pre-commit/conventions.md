@@ -35,3 +35,46 @@ per-gate copies drift until one gate is scanning what the others skip.
 **A repo with no hook runner records this topic `n/a`** and loses the parity
 guarantee with it. That is a real loss, not a formality — without it, nothing
 makes local and CI run the same command.
+
+## What this pack writes
+
+Two files, both under `.config/`. `pre-commit-config.yaml` is the base hook set
+and the merge point every pack fragment lands in.
+`git-conventional-commits.yaml` is the commit convention the `commit-msg` hook
+enforces.
+
+The convention file lives in **this** pack rather than beside the release task
+that also reads it, because the hook is what enforces it: a convention nothing
+checks is a style note, and the file and its gate should not be able to land
+separately.
+
+The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
+`package.json` and CI workflows remain outside it.
+
+## The base config is a base, and fragments extend it
+
+A language or package-manager pack does not rewrite this file. It ships one
+`.config/pre-commit.d/<pack>.yaml` fragment — a document with a top-level
+`repos:` list and nothing else — and the merge concatenates every fragment
+present into the base between a `# >>> pre-commit.d/<name>.yaml` marker and a
+matching `# <<< pre-commit.d/<name>.yaml`. A re-run replaces what sits between
+one pair and leaves the rest alone, which is what makes the merge safe to run
+again after a new pack lands.
+
+The rule that follows from it: **a repo's own hooks go above the marker block,
+never inside one.** Anything between a pair is regenerated, and the loss is
+silent.
+
+## Two hooks that cannot be commit-stage gates
+
+`check-hooks-apply` and `check-useless-excludes` are shipped at
+`stages: [manual]`, and this is deliberate rather than timid. Both fail on a
+**correct** config in a young repo: the first reports every hook that matches
+zero files, which is the normal state of a symlink or workflow hook until the
+repo grows one of each; the second reports an exclusion for a generated tree
+that has not been generated yet. Wired at the commit stage they would fail the
+first commit of every new repository, and the fix people reach for is deleting
+the hook that complained.
+
+Run them deliberately instead, when a hook is added or a scope is changed —
+they are an audit of the config, not a gate on the code.

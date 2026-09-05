@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
-#MISE description="Configure the Flutter SDK and fetch packages"
+#MISE description="Configure the SDK and fetch packages"
 #MISE hide=true
 
-set -e
+#USAGE flag "--frozen" help="fail rather than write the lockfile"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # Fills the `setup:deps:install` slot.
@@ -14,18 +19,27 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # describing a different app than the one that builds. The old standalone
 # `setup:flutter` was a separate task for something that could never usefully
 # run apart from this one.
+#
+# No header: the aggregator `setup:deps:all` already frames each verb with its
+# own subheader, so one here would invert the hierarchy. The subheaders below
+# frame the steps inside this task.
 
-print_header "Configuring Flutter ..."
+get_args=()
+if [[ "${usage_frozen:-false}" == "true" ]]; then
+  get_args+=(--enforce-lockfile)
+fi
+
+print_subheader "Configuring the SDK ..."
 flutter config --disable-analytics
 flutter config --enable-web
 flutter config --enable-ios
 flutter config --enable-android
 dart --disable-analytics
 
-if [ "$MISE_ENV" = "dev" ]; then
-  print_header "Accepting Android licenses ..."
+if [[ "${MISE_ENV:-}" == "dev" ]]; then
+  print_subheader "Accepting Android licenses ..."
   yes | flutter doctor --android-licenses || true
 fi
 
-print_header "Fetching Flutter packages ..."
-flutter pub get
+print_subheader "Fetching packages ..."
+flutter pub get ${get_args[@]+"${get_args[@]}"}

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+#MISE description="Start the external services this repo runs against locally"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# `setup:external:*` is the sibling of `setup:deps:*`: emulators, containers,
+# local queues — everything a developer runs the product AGAINST, as opposed to
+# what the product is built FROM.
+#
+# It is a local-only concern by definition. The pipeline brings up whatever it
+# needs through its own service definitions, so this whole group is a no-op
+# outside a dev shell rather than a failure.
+if [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
+  exit 0
+fi
+
+placeholder_notice "setup:external:start" "no external services are pinned for this repo"

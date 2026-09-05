@@ -263,8 +263,9 @@ component in the bundle:
 The output is a **Repo-Gate-Bundle**
 (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the `toolchain-gate`
 components that apply to a repository as a whole rather than to one
-toolchain inside it. It is one of the three kinds rooted at the `repo` axis
-— `toolchain-manager` and `workspace` are the others — and like
+toolchain inside it. It is one of the four kinds rooted at the `repo` axis
+— `toolchain-manager`, `repo-hygiene` and `workspace` are the others — and
+like
 `toolchain-manager` a polyglot repo materializes this one **once** rather
 than per language.
 
@@ -282,10 +283,21 @@ bundle, each with its own allowlist.
   file, which is how the curated archetype ships them; there is no
   on-demand reference tier to route to, because a gate's doctrine is one
   screen of judgment and its config is one file.
+- **What it writes**: the skill above **and the config file it governs** —
+  `.config/dprint.json`, `.config/gitleaks.toml`, `.config/grype.yaml`,
+  `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`
+  — through the `config/` tier
+  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). A gate also contributes
+  its hook fragment, `.config/pre-commit.d/<pack>.yaml`, which the
+  materializer copies verbatim and `/vwf:init` merges. Shipping the doctrine
+  without the file it describes was the earlier line, and it left every repo
+  hand-writing the config the skill assumes.
 - **Scope**: what each gate must catch, what it must not scan, and how a
   finding is answered. Never the language's lint rules — those are the
   language bundle's. Never CI system syntax — that is the reserved
-  `ci-system` kind's.
+  `ci-system` kind's. Never the ignore set or the licence — those are
+  `repo-hygiene`'s, and the seam is that a gate *scans* while hygiene
+  *declares what is not there to scan*.
 - **Facts & harness**: gates satisfy no vwf harness capability, so
   `harness:` is `n/a` throughout. What they contribute is the `repo`-axis
   fact of **one task name per gate**, which is what topic 5 exists to pin.
@@ -336,7 +348,7 @@ saying out loud rather than discovering later.
 
 The output is a **Toolchain-Manager-Bundle**
 (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): exactly one
-`toolchain-manager` component, standing alone. It is the second of the three
+`toolchain-manager` component, standing alone. It is the second of the four
 kinds rooted at the `repo` axis, and like `repo-gate` a polyglot repo
 materializes it **once** — the manager is what makes several toolchains one
 command surface.
@@ -361,12 +373,23 @@ other.
   a lean router skill plus on-demand `references/` for the
   reference-shaped topics, which is the shape the curated archetype
   already has.
+- **What it writes**: its own config layers and the whole file-based task
+  library, through the `config/` tier
+  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`) — the layered
+  `mise.*.toml` split, `.config/mise/tasks/**` (executable), and the shared
+  helper library the tasks source. It is the **first** component in
+  composition order, because everything any other pack overlays is a file
+  this one laid down. It also owns the `.config/mise/conf.d/` directory that
+  provider packs drop their environment fragments into — owns the
+  convention, never the fragments.
 - **Scope**: which layer pins what, what the tasks are called, and how the
   same tasks run in the pipeline. Never what a gate *checks* — that is
   `repo-gate`'s. Never the CI system's workflow syntax — that is
   `ci-system`'s, which installs this manager and then calls its task names.
   Never a language's build commands, which the tasks wrap rather than
-  define.
+  define. Never the ignore set — `repo-hygiene` declares that; what the
+  manager owns is **documenting** which of its own local files are meant to
+  be ignored, so the two agree on purpose rather than by luck.
 - **Facts & harness**: `harness:` is `n/a` throughout — a toolchain manager
   satisfies no vwf harness capability; it is what the harness tasks are run
   *by*. What it contributes is the `repo`-axis fact that the task names
@@ -409,16 +432,95 @@ never silently absent.
    names, how the layer is selected there, and the per-runtime workarounds
    a CI runner needs that a laptop does not.
 
+## `repo-hygiene` — the files every repo carries regardless of stack
+
+The output is a **Repo-Hygiene-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): exactly one `repo-hygiene`
+component, standing alone. It is the third of the four kinds rooted at the
+`repo` axis, and like `repo-gate` and `toolchain-manager` a polyglot repo
+materializes it **once** — an `.editorconfig` per language is a repo whose
+files disagree about tab width.
+
+**Why it is not a gate, which is the distinction the kind exists to hold.**
+A gate runs, finds something and fails. Hygiene runs nothing: it *declares*
+— what is ignored, how a file is indented, how a line ending is normalized,
+who to tell about a vulnerability, under what licence the thing may be used,
+and how dependency updates arrive. Folding these into `repo-gate` would have
+filed a licence text behind a secret scanner's doctrine, and the first
+person looking for either would have found neither.
+
+- **Axis**: `repo`.
+- **Structure**: the **topic bar** below — **no router skill**, the same
+  shape `repo-gate` takes and for the same reason. One paths-scoped skill,
+  bound to the files it governs; there is no reference tier, because the
+  judgment here is a screen and the rest is the files themselves.
+- **What it writes**: the root files and `.config/renovate.json`, through
+  the `config/` tier (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). It is
+  the kind the **root allowlist** belongs to — the doctrine of what may sit
+  at a repo root at all — which every other kind's `config/` tree is then
+  measured against. It may also carry a **pack-private** payload under
+  `config/_<name>/`, which is never copied: the licence texts are the case,
+  since a repo gets the one licence it chose, not a directory of them.
+- **Scope**: the files above and nothing that runs. Never a gate's config —
+  that is `repo-gate`'s, and the seam is that a gate scans while hygiene
+  declares what is not there to scan, so an ignore rule and a scanner
+  allowlist are two different decisions that must not be written as one.
+  Never the toolchain manager's own local file patterns — hygiene ignores
+  them, the manager documents them, and each writes only its half. Never a
+  language's ignore rules beyond the generic set: the stack-specific
+  sections are appended per repo from the community templates rather than
+  frozen into this pack, because a pack that hard-codes them ages the moment
+  a language's build directory is renamed.
+- **Facts & harness**: `harness:` is `n/a` throughout, and `capability:` is
+  unset — nothing in a blueprint chooses an ignore file, so there is no vwf
+  token to realize and none is minted here.
+- **Invocation**: the skill is paths-scoped to the files it governs and
+  **not** user-invocable — doctrine the model applies while editing one of
+  them, never a command someone runs.
+
+### The topic bar
+
+A closed list of four topics. A topic the repo has no surface for is
+recorded `n/a`, never silently absent.
+
+1. **The ignore set** — one sectioned `.gitignore`, each section labelled
+   with what it is for, so a line is removable by someone who can tell why
+   it is there. It carries the generic sections every repo needs (the OS's
+   own droppings, agent tooling, the toolchain manager's local overrides,
+   environment and secret files, worktrees and scratch space) and states the
+   rule for the rest: stack sections are **appended per repo**, one section
+   per technology, never duplicating one already present. The seam with
+   secret scanning matters and is stated here: ignoring a file is not the
+   same act as allowlisting it, and a secret that is ignored is still a
+   secret that was never scanned.
+2. **Editor and attribute defaults** — `.editorconfig` for what a person's
+   editor does before a formatter ever runs, and `.gitattributes` for what
+   git does to a file's bytes: line-ending normalization, what is binary,
+   what is generated and should not inflate a diff. Neither overlaps the
+   formatter, and saying so is part of the topic: the formatter is
+   authoritative for files it handles, and these two cover everything and
+   everyone that never reaches it.
+3. **Licensing and the security contact** — the licence the repo is offered
+   under, chosen rather than defaulted, and a `SECURITY.md` naming a private
+   channel for a vulnerability report. The rule the topic exists to enforce
+   is that a public repo with no security contact receives its next report
+   in a public issue.
+4. **Dependency updates** — the automated-update configuration: what is
+   grouped, what is held back, and the cooling-off period before a fresh
+   release is proposed. It states the policy only; the scanner that fails a
+   build on a vulnerability is `repo-gate` topic 3, and a repo needs both —
+   updates keep the surface small, scanning catches what is already there.
+
 ## `workspace` — the repo's members and what crosses between them
 
 The output is a **Workspace-Bundle**
 (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the `package-manager`
 component that installs and locks the repo's members, plus a
-`build-orchestrator` component where the repo has one. It is the third kind
-rooted at the `repo` axis, and the only one of the three a user **picks**:
+`build-orchestrator` component where the repo has one. It is the fourth kind
+rooted at the `repo` axis, and the only one of the four a user **picks**:
 `repo.stack.template` in `.config/vwf.yaml` is the elicited
 workspace-and-package-manager pin, and the bundles of this kind are what it
-selects from. The other two repo-axis kinds are `unconditional:` baselines
+selects from. The other three repo-axis kinds are `unconditional:` baselines
 nobody chooses.
 
 **A single-package repo pins nothing here**, and that is the kind's edge
@@ -878,7 +980,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all eleven kinds the structural checklist **is the
+the kind's ruling. For all twelve kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -894,7 +996,12 @@ because it belongs to topic 10 of its language bundle. For
 checks carry the kind: a task name asserted by a `repo-gate` output that the
 task library does not ship is a gap on this side of the seam, and a router
 skill that is user-invocable is a gap, because this kind's doctrine applies
-while a config is edited rather than on request. For `workspace` the
+while a config is edited rather than on request. For `repo-hygiene` the
+composition is the one component alone, and two checks carry the kind: a
+**stack-specific ignore section frozen into the pack** is a gap, since those
+are appended per repo, and anything that *runs* — a scanner, a formatter, a
+hook — appearing here is a gap, because this kind declares and never
+executes. For `workspace` the
 composition is the `package-manager` component plus a `build-orchestrator`
 where the bundle has one, and two checks carry the kind: **topic 3 left
 unstated is a gap**, because "no orchestrator" is an answer this kind

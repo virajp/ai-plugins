@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+#MISE description="Install and reconcile the AI tooling this repo expects"
+#MISE hide=true
+
+#USAGE flag "--project" help="Install this repo's plugins at project scope instead of user scope"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The agent's own toolchain, reconciled the same way every other tool is.
+#
+# It sits under `code:` rather than `setup:` because it is not a bootstrap step
+# a machine passes once: the plugin set moves with the repo, and re-running this
+# is how a checkout catches up. `setup:all` calls it, and so can a human.
+#
+# Claude Code itself is installed per MACHINE, not per repo — this task verifies
+# it is there and reconciles the plugin side, which is per repo.
+
+if ! command -v claude >/dev/null 2>&1; then
+  print_warn "claude is not on PATH — skipping AI setup."
+  print_yellow "Install it from https://claude.com/code, then re-run this task."
+  exit 0
+fi
+
+# The baseline every repo gets: the workflow plugin, which pulls its own
+# dependencies from the same marketplace, installed through the toolkit's
+# installer CLI so the marketplace registration and the install are one
+# sequenced step rather than two commands that can disagree.
+#
+# Scope: user by default, because the workflow is the person's and follows them
+# between repos. `--project` puts it in this repo's own plugin config instead,
+# for a repo that wants every collaborator on the same set.
+if [[ "${usage_project:-false}" == "true" ]]; then
+  INSTALLER_ARGS=(--project vwf)
+else
+  INSTALLER_ARGS=(--all)
+fi
+
+print_subheader "Installing the workflow plugins ..."
+if command -v pnpx >/dev/null 2>&1; then
+  pnpx @virajp.dev/claude-plugins "${INSTALLER_ARGS[@]}"
+else
+  print_warn "pnpx is not on PATH — falling back to claude's own commands."
+  claude plugin marketplace add virajp/claude-plugins >/dev/null 2>&1 || true
+  claude plugin marketplace update virajp-plugins >/dev/null 2>&1 || true
+  if [[ "${usage_project:-false}" == "true" ]]; then
+    claude plugin install --scope project vwf@virajp-plugins >/dev/null
+  else
+    claude plugin install --scope user vwf@virajp-plugins >/dev/null
+  fi
+fi
+
+# Any FURTHER marketplace this repo installs plugins from, one row per
+# marketplace as `<source>|<marketplace-name>`. The name is what that
+# marketplace's own manifest declares and what `marketplace update` takes; it is
+# not derivable from the source. Registering one already registered is a no-op,
+# so this stays idempotent. Empty for most repos.
+EXTRA_MARKETPLACES=()
+
+# Plugins from those marketplaces, as `<name>@<marketplace>`, installed at the
+# scope chosen above.
+EXTRA_PLUGINS=()
+
+if [ ${#EXTRA_MARKETPLACES[@]} -gt 0 ]; then
+  print_subheader "Refreshing additional marketplaces ..."
+  for row in "${EXTRA_MARKETPLACES[@]}"; do
+    source_ref="${row%%|*}"
+    name="${row##*|}"
+    claude plugin marketplace add "${source_ref}" >/dev/null 2>&1 || true
+    claude plugin marketplace update "${name}" >/dev/null 2>&1 || true
+    print_yellow "- ${source_ref} (${name})"
+  done
+fi
+
+if [ ${#EXTRA_PLUGINS[@]} -gt 0 ]; then
+  SCOPE="user"
+  [[ "${usage_project:-false}" == "true" ]] && SCOPE="project"
+  print_subheader "Installing additional plugins ..."
+  for plugin in "${EXTRA_PLUGINS[@]}"; do
+    print_wait "- ${plugin} ... "
+    claude plugin install --scope "${SCOPE}" "${plugin}" >/dev/null
+    print_ok
+  done
+fi
+
+print_subheader "Updating installed plugins ..."
+claude plugin update --all >/dev/null 2>&1 || true
+
+# Drops plugins nothing references any more — including one that used to arrive
+# as a dependency and no longer does, which an update alone leaves enabled.
+print_subheader "Pruning plugins nothing references ..."
+for scope in user project local; do
+  claude plugin autoremove --scope "${scope}" --yes >/dev/null 2>&1 || true
+done
+
+print_success "AI tooling reconciled."

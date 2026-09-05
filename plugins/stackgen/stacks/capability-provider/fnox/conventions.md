@@ -37,6 +37,51 @@ environment-scoped only if the recipients are.
 current file; every earlier commit still decrypts with the old key. A departed
 member's secrets are rotated.
 
+## What this pack writes
+
+| Lands at                           | Is                                          |
+| ---------------------------------- | ------------------------------------------- |
+| `fnox.toml`                        | the providers and the declared secret names |
+| `.config/mise/conf.d/fnox.toml`    | the CLI pin                                 |
+| `.config/mise/tasks/setup/secrets` | the fill for the toolchain manager's slot   |
+| `hooks/fnox-ciphertext-guard.sh`   | the gate the encrypt-into-git mode requires |
+
+**`fnox.toml` at the repository root is an accepted exception**, and the only
+one this pack takes. fnox searches upward from the working directory; a copy
+under `.config/` is reachable only by passing `--config` on every call, and
+`--config` also bypasses the directory recursion and the local override — so
+moving the file would take `fnox.local.toml` out of the scheme with it. The
+pin, which has no such constraint, does live under `.config/`.
+
+**The task overlays a slot and never prints a value.** `setup:secrets` checks
+that the CLI and the config are both present and reports the keychain service
+and prefix. It never runs a command whose normal output is a secret — `get` is
+that command, and a scrollback and a CI log are both more widely readable than
+the repo.
+
+## The shipped default is the keychain, not ciphertext
+
+The configuration this pack lands declares **one provider, the OS keychain**,
+with `if_missing = "warn"` so a contributor whose keychain is not yet
+populated can still run the repo's tasks. Nothing is encrypted into the tree,
+so the encrypt-into-git allowance and its four conditions do not apply to a
+repo that leaves the default alone — and the shipped ciphertext guard sits
+inert until an `age` or KMS provider is added. Adding one is the moment the
+four conditions start applying, all at once.
+
+## Naming — one set per repo
+
+| Prefix         | Is                          | Example             |
+| -------------- | --------------------------- | ------------------- |
+| `<REPO>_<KEY>` | this repository's own value | `SITE_DATABASE_URL` |
+| `GLB_<KEY>`    | shared across repositories  | `GLB_GITHUB_TOKEN`  |
+
+Names are `[A-Z0-9_]`, the same set every injector can export. The keychain
+provider's `prefix = "global/"` is the shared namespace inside the `fnox`
+service; a repository with its own material declares a second provider with
+its own prefix rather than widening that one. Machine-local additions go in
+`fnox.local.toml`, which is gitignored.
+
 Committing ciphertext requires the repo-wide gate edits the contract's
 encrypt-into-git allowance mandates. Full judgment, and the exact blocks: the
 `fnox` skill's references. The contract it cites is

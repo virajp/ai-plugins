@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+#MISE description="shellcheck and shfmt over every shell file a pack ships"
+#MISE dir="{{ config_root }}"
+
+# The shell gate for what stackgen packs SHIP rather than what this repo runs.
+#
+# A pack ships bash in two places, and neither is ever executed here:
+#
+#   config/.config/mise/tasks/**   the task library — copied into someone
+#                                  else's repo and run by mise there, so a typo
+#                                  surfaces as a broken `setup:all` on a machine
+#                                  with no way to trace it back.
+#   hooks/*.sh                     the hook scripts — copied to that repo's
+#                                  `.claude/hooks/` and wired into settings.json
+#                                  as a bare path. A hook fault is quieter
+#                                  still: nothing downstream reports that it did
+#                                  not run. They also land in a repo whose own
+#                                  pre-commit config runs `shellcheck` and
+#                                  `shfmt -d -i 2 -ci` over them, so a hook this
+#                                  gate never saw fails first for the user.
+#
+# Nothing else in this repo reads either tree — the linter has no shell parser
+# and pre-commit's own shell hooks only see the repo's own tasks — so this task
+# is the only reader between authoring and materialization.
+#
+# The two groups take DIFFERENT flags, because they are different kinds of file;
+# the hook group's block below says why it takes none. For the task library, two
+# choices are load-bearing:
+#
+#   -P <pack>/config   a task sources its helpers through ${MISE_PROJECT_ROOT},
+#                      which shellcheck cannot expand; it strips the variable
+#                      and looks for `./.config/mise/tasks/_scripts/helpers`.
+#                      Handing it every pack's `config/` — the materialized repo
+#                      root — is what makes `-x` resolve instead of emitting
+#                      SC1091 on every file in the tree.
+#   -e SC2034 SC2154   the two that are structurally false for this tier and
+#                      nowhere else: `_scripts/helpers` is a sourced library, so
+#                      every colour it exports "appears unused", and a task's
+#                      arguments arrive as `usage_*` variables mise injects and
+#                      `eval`-assigned arrays, which no source path can show.
+#
+# shfmt runs in diff mode with exactly `-i 2 -ci` and nothing else. Those two
+# flags are the canonical format for shell in this repo and in what it ships:
+# the same pair appears in the `shfmt` hook of
+# `plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml`,
+# which is the gate that runs in a materialized repo. Keep the two in step — a
+# flag here that the shipped hook does not set (`-bn` and `-kp` were both tried,
+# and `-bn` rejects the task library's trailing-pipe continuations while `-kp`
+# then preserves the column padding that results) makes this gate fail on files
+# the repos we materialize consider clean.
+#
+# Exits non-zero on any finding.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+for tool in shellcheck shfmt; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    print_error "$tool is not on PATH"
+    print_warn "It comes from .config/mise.dev.toml — run with MISE_ENV=dev, or"
+    print_warn "\`mise x shellcheck@latest shfmt@latest -- mise run plugins:shellcheck\`"
+    exit 1
+  fi
+done
+
+SHFMT_FLAGS=(-i 2 -ci)
+TASK_FLAGS=(-x -s bash -e SC2034 -e SC2154)
+
+roots=()
+hook_dirs=()
+shopt -s nullglob
+for pack in plugins/*/stacks/*/*; do
+  [ -d "$pack/config/.config" ] && TASK_FLAGS+=(-P "$pack/config")
+  [ -d "$pack/config/.config/mise/tasks" ] &&
+    roots+=("$pack/config/.config/mise/tasks")
+  [ -d "$pack/hooks" ] && hook_dirs+=("$pack/hooks")
+done
+shopt -u nullglob
+
+if [ "${#roots[@]}" -eq 0 ] && [ "${#hook_dirs[@]}" -eq 0 ]; then
+  print_warn "No pack ships shell — nothing to check"
+  exit 0
+fi
+
+# `.mjs`, `.py` and `.env` are the three extensions the task library uses for a
+# file that is not bash: a task written in another language, and the `_scripts`
+# environment fragments. Everything else in the tree is a bash task or a bash
+# helper, extensionless by mise's own convention.
+task_files=()
+if [ "${#roots[@]}" -gt 0 ]; then
+  while IFS= read -r -d '' file; do
+    task_files+=("$file")
+  done < <(
+    find "${roots[@]}" -type f \
+      ! -name '*.mjs' ! -name '*.py' ! -name '*.env' \
+      -print0 | sort -z
+  )
+fi
+
+# A `hooks/` tier holds the scripts plus `hooks.yaml`, the settings.json
+# fragment that wires them, and any prose beside it. Subtracting the metadata
+# rather than globbing `*.sh` is deliberate: the materializer's contract names
+# the extension, but a script that forgot it should be reported, not skipped.
+hook_files=()
+if [ "${#hook_dirs[@]}" -gt 0 ]; then
+  while IFS= read -r -d '' file; do
+    hook_files+=("$file")
+  done < <(
+    find "${hook_dirs[@]}" -type f \
+      ! -name '*.yaml' ! -name '*.yml' ! -name '*.json' ! -name '*.md' \
+      -print0 | sort -z
+  )
+fi
+
+total=$((${#task_files[@]} + ${#hook_files[@]}))
+if [ "$total" -eq 0 ]; then
+  print_warn "No shell under ${#roots[@]} task libraries and ${#hook_dirs[@]} hook tiers"
+  exit 0
+fi
+
+failed=0
+
+if [ "${#task_files[@]}" -gt 0 ]; then
+  print_header "shellcheck over ${#task_files[@]} pack task files ..."
+  if ! shellcheck "${TASK_FLAGS[@]}" "${task_files[@]}"; then
+    print_error "shellcheck findings in the task libraries — see above"
+    failed=1
+  fi
+
+  print_header "shfmt over ${#task_files[@]} pack task files ..."
+  if ! shfmt -d "${SHFMT_FLAGS[@]}" "${task_files[@]}"; then
+    print_error "shfmt findings — apply with \`shfmt -w ${SHFMT_FLAGS[*]} <file>\`"
+    failed=1
+  fi
+fi
+
+# The hook group takes NONE of the task library's three concessions, and each
+# omission is an assertion rather than an oversight:
+#
+#   no -x / -P   a hook sources nothing. It is copied to `.claude/hooks/` on its
+#                own — there is no `_scripts/helpers` beside it to resolve — so
+#                a `source` line appearing in one is a bug the follow mode would
+#                paper over rather than a path shellcheck needs help finding.
+#   no -s bash   the shebang decides. A hook declaring `#!/usr/bin/env sh` is
+#                claiming BSD/POSIX portability (`plugins:check` holds the line
+#                to a closed set of two), and forcing bash would wave through
+#                the exact bashisms that claim forbids.
+#   no excludes  SC2034 and SC2154 are structurally false for the task library
+#                alone — a sourced colour library, and mise's injected `usage_*`
+#                variables. A standalone hook has neither, so an unused or
+#                unassigned variable in one is a real finding.
+#
+# shfmt is the same `-i 2 -ci` for both: the format is the repo's, not the
+# tier's, and a hook lands in a repo whose pre-commit runs exactly that pair
+# over `.claude/hooks/`.
+if [ "${#hook_files[@]}" -gt 0 ]; then
+  print_header "shellcheck over ${#hook_files[@]} pack hook scripts ..."
+  if ! shellcheck "${hook_files[@]}"; then
+    print_error "shellcheck findings in the hook scripts — see above"
+    failed=1
+  fi
+
+  print_header "shfmt over ${#hook_files[@]} pack hook scripts ..."
+  if ! shfmt -d "${SHFMT_FLAGS[@]}" "${hook_files[@]}"; then
+    print_error "shfmt findings — apply with \`shfmt -w ${SHFMT_FLAGS[*]} <file>\`"
+    failed=1
+  fi
+fi
+
+[[ "$failed" -eq 0 ]] || exit 1
+
+print_success "$total shell files across ${#roots[@]} task libraries and ${#hook_dirs[@]} hook tiers are clean"

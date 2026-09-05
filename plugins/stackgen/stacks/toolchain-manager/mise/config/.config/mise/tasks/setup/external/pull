@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+#MISE description="Fetch or build the external services this repo runs against"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# Pulls images and builds what has to be built; starts nothing. Kept apart from
+# `start` so a slow refresh can be run when it suits rather than every time a
+# service is needed.
+#
+# Local-only, like the rest of `setup:external:*` — see `start` for why.
+if [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
+  exit 0
+fi
+
+placeholder_notice "setup:external:pull" "no external services are pinned for this repo"

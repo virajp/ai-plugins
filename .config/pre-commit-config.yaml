@@ -57,6 +57,30 @@ repos:
         pass_filenames: false
         files: ^plugins/
         stages: [ pre-commit ]
+      # The shell half of the same idea. Neither the task files a pack ships
+      # under `config/` nor the hook scripts it ships under `hooks/` are ever
+      # run here — both are copied into someone else's repo and run there — so
+      # nothing else between authoring and materialization ever parses them. The
+      # linter has no shell parser, and the `.sh` exclusion above keeps hook
+      # scripts out of its argument list entirely.
+      #
+      # Both tiers are in the trigger: scoping it to `config/` alone let a
+      # malformed hook through, which is the defect that widened this gate.
+      - id: plugins-shellcheck
+        name: shellcheck and shfmt over every shell file a pack ships
+        entry: mise x -- mise run plugins:shellcheck
+        language: system
+        pass_filenames: false
+        files: ^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/
+        stages: [ pre-commit ]
+      # Not a plugins check: the workflows are this repo's own, and a typo in
+      # one is only ever discovered by pushing it.
+      - id: actionlint
+        name: Lint GitHub Actions workflows
+        entry: mise x -- actionlint
+        language: system
+        files: ^\.github/workflows/
+        stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -103,6 +127,22 @@ repos:
 
   - repo: local
     hooks:
+      # `dprint.json` excludes `plugins/*/stacks/*/*/config/` on top of the
+      # `plugins/**/*.md` exclusion it has always carried, and for the same
+      # reason: a pack's `config/` tree is PAYLOAD, not this repo's source.
+      # Every file in it is copied byte-for-byte into someone else's repo,
+      # where the gate pack's own `.config/dprint.json` is what formats it —
+      # and that config deliberately omits the `bracketSpacing`/`braceSpacing`
+      # this one sets. Formatting a payload here rewrites it to settings the
+      # target does not use, so a freshly initialised repo fails its own first
+      # hook run: `dprint fmt` rewrites four files it just materialized.
+      #
+      # Anything a pack ships as bytes belongs to the target's config, never to
+      # this one. `hooks/` needs no exclusion — its scripts are `.sh`, which
+      # dprint does not format (`plugins:shellcheck` is their gate), and
+      # `hooks.yaml` is a manifest this repo reads rather than a file it ships.
+      # The linter below is not affected: it reports rule violations rather
+      # than reformatting, and finds none across the payload tree.
       - id: formatter
         name: Formatter
         entry: mise x -- dprint fmt --allow-no-files --log-level warn

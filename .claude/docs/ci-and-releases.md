@@ -9,7 +9,10 @@ resolves env variants):
   `pnpm` runtime plus settings/env/`tasks.init`.
 - `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
   has this exported): the full dev toolchain (doppler, pre-commit, dprint,
-  taplo, gitleaks, grype, jq, opencode, python, uv) + shell aliases.
+  taplo, gitleaks, grype, actionlint, shellcheck, shfmt, jq, python, uv) + shell
+  aliases. The last three of the gate tools are `plugins:shellcheck`'s, which is
+  why `plugins.yml` runs that task under `mise x shellcheck@latest shfmt@latest`
+  rather than relying on the runner.
 - `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this):
   CI-only tools/settings. Currently sets `node.gpg_verify = false` to work
   around a mise-on-Linux bug where its bundled Node release-key import fails on
@@ -108,8 +111,10 @@ loads the working tree for that session, no install and no cache.
 
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
   `develop` and every PR: `plugins:marketplace --check`, then
-  `plugins:inventory --check`, then `plugins:check`, then the vitest suites,
-  then `plugins:npm-normalize-test`, then `tsc --noEmit` per project. The order
+  `plugins:inventory --check`, then `plugins:check`, then `plugins:shellcheck`
+  (under `mise x shellcheck@latest shfmt@latest`, since neither is in the
+  runner's base toolchain), then the vitest suites, then
+  `plugins:npm-normalize-test`, then `tsc --noEmit` per project. The order
   matters — proving the two committed generated files are what their sources
   generate *before* validating anything means a stale one fails as staleness
   rather than as some confusing downstream assertion. On `main` only it adds one

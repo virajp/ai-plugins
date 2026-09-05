@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the repo's files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Fills the `code:lint` slot for a repo whose package manager ships no lint
+# overlay of its own. This pack sits on the toolchain-gate axis, which composes
+# BEFORE `package-manager`/`language` — so where the `pnpm` pack is also pinned,
+# its `code/lint` lands after this one and wins, and this file is dead. That is
+# harmless rather than wrong: the two run the same linter. The file earns its
+# place on the stacks where no package-manager overlay exists to shadow it.
+#
+# The linter is zero-config: it bundles its own flat config and every plugin, so
+# nothing needs installing into the repo for this to run.
+#
+# One step, so no header: whatever called it — `code:all`, or a person — frames
+# it.
+
+args=()
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  args+=(--debug)
+fi
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  args+=(--fix)
+fi
+
+pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"}

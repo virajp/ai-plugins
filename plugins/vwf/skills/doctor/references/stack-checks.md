@@ -68,7 +68,7 @@ whole section reports `not checked — no stack resolved` for it:
   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) — never a suggestion to
   drop the token, which would only hide the project.
 - **Toolchain** — the row names a mise tool. Check it appears in the repo's mise
-  config (`.config/mise*.toml`, per the mise skill's three-file split) or
+  config (`.config/mise*.toml`, per the mise skill's five-file split) or
   resolves on `PATH`. Missing → finding, with the `mise use` line as the remedy.
   A `—` in the column means the toolchain is not mise-managed; skip silently.
 
@@ -207,9 +207,11 @@ and no capability claimed, it is a **degradation**: there is no toolchain to
 manage and no harness task to run, so halting `setup` and `execute` over it
 would block a product on day one for a stack nobody has chosen yet. A repo with
 no `.config/mise*.toml` at all is the same finding one level up, at the same
-severity: report it and nudge `/vwf:setup`, which materializes the
-unconditional `mise` bundle by its fixed slug through the stack adapter's
-`-stack-template` skill.
+severity: report it and nudge `/vwf:init`, which materializes the three
+unconditional bundles — `mise`, `repo-gates` and `repo-hygiene` — by their
+fixed slugs through the stack adapter's `-stack-template` skill. `/vwf:setup`
+is not the remedy: it checks whether the repo is shaped and offers
+`/vwf:init`, and materializes no tooling itself.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —

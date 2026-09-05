@@ -3,6 +3,20 @@
 #MISE description="Helper functions for mise tasks"
 #MISE hide=true
 
+# The one library every task in this repo sources, so the whole task surface
+# prints the same way. Siblings live beside it — `checks`, `merge`,
+# `<name>.env` — and each is named without a leading underscore: `_scripts/` is
+# already the segment that tells mise this directory holds no tasks, and a
+# second underscore on every file inside it says nothing the directory has not.
+
+# Sourced more than once in a run (a task sources it, and so does a library that
+# task sources), so the guard is what keeps `readonly` from erroring the second
+# time. Written with `${VAR:-}` so the file stays safe under `set -u`.
+if [ -n "${MISE_HELPERS_SOURCED:-}" ]; then
+  return 0
+fi
+MISE_HELPERS_SOURCED=1
+
 # Style
 readonly BOLD='\033[1m'
 readonly NORMAL='\033[0m'
@@ -10,22 +24,56 @@ readonly NORMAL='\033[0m'
 readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[0;33m'
 readonly RED='\033[0;31m'
+# Unused by the printers below — kept so the palette is complete for a task that
+# wants a fourth colour without redefining one.
+# shellcheck disable=SC2034
 readonly BLUE='\033[0;34m'
 
-print_header()      { echo -e "${GREEN}${BOLD}$1${NORMAL}"; }
-print_header_wait() { echo -en "${GREEN}${BOLD}$1${NORMAL}"; }
-print_wait()        { echo -en "${YELLOW}${BOLD}$1${NORMAL}"; }
-print_ok()          { echo -e "${GREEN}${BOLD}OK${NORMAL}"; }
-print_newline()     { echo ""; }
-print_warn()        { echo -e "${YELLOW}${BOLD}$1${NORMAL}"; }
-print_error()       { echo -e "${RED}${BOLD}$1${NORMAL}"; }
-print_yellow()      { echo -e "${YELLOW}$1${NORMAL}"; }
-
-# Print a full-width separator line built from the given character
+# Print a full-width separator line built from the given character.
+#
+# Public, but rarely the right call: `print_header` and `print_subheader` below
+# already emit theirs. Reach for it directly only where a rule is wanted without
+# a title after it.
 line_sep() {
   local COL
-  COL=$(stty size 2>/dev/null | awk '{print $2}')
+  # `stty size` fails whenever stdin is not a terminal — every `mise run` with
+  # captured output, every CI job, every non-interactive shell. That failure is
+  # expected, and the 80 below is the answer to it, but the fallback is only
+  # ever READ if the status stops here: a bare `VAR=$(...)` takes the command's
+  # exit status, and under the `set -euo pipefail` every task sets, `set -e`
+  # kills the caller on the assignment line — silently, before a single
+  # separator or title is printed. Hence the explicit `|| COL=''`.
+  COL=$(stty size 2>/dev/null | awk '{print $2}') || COL=''
   local line
   printf -v line '%*s' "${COL:-80}" ''
   printf '%s\n' "${line// /$1}"
 }
+
+# A major section: a full-width `=` rule, then the title.
+#
+# The rule is BAKED IN rather than left to the caller. Every task that opened a
+# section used to emit `line_sep "="` first, which meant the separator was a
+# convention half the tasks remembered — and a task that forgot it read as part
+# of the previous step. One call, one section, no way to get it half right.
+print_header() {
+  line_sep "="
+  echo -e "${GREEN}${BOLD}$1${NORMAL}"
+}
+
+# A step inside a section: a full-width `-` rule, then the title.
+print_subheader() {
+  line_sep "-"
+  echo -e "${GREEN}${BOLD}$1${NORMAL}"
+}
+
+# A single-step task calls NEITHER. A task that does one thing and prints one
+# line does not open a section; the printers below are its whole vocabulary.
+print_success() { echo -e "${GREEN}${BOLD}$1${NORMAL}"; }
+print_ok() { echo -e "${GREEN}${BOLD}OK${NORMAL}"; }
+print_wait() { echo -en "${YELLOW}${BOLD}$1${NORMAL}"; }
+print_warn() { echo -e "${YELLOW}${BOLD}$1${NORMAL}"; }
+print_yellow() { echo -e "${YELLOW}$1${NORMAL}"; }
+print_newline() { echo ""; }
+
+# Errors go to stderr, so a caller piping stdout into a report still sees them.
+print_error() { echo -e "${RED}${BOLD}$1${NORMAL}" >&2; }

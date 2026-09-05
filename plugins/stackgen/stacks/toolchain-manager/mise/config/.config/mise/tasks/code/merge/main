@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#MISE description="Merge develop into main and push it"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/merge"
+
+# Release. Both branches are fixed: only `develop` reaches `main`, so there is
+# nothing to name and nothing to get wrong. Run it from `develop` — the merge
+# refuses from anywhere else, and says so before touching a branch.
+
+merge_to_destination_branch main develop

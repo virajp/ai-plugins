@@ -241,9 +241,10 @@ describe("hook scripts", () => {
   });
 });
 
-describe("pack config task modes", () => {
-  const task =
-    "stacks/toolchain-manager/mise/config/.config/mise/tasks/code/format";
+describe("the pack config tier", () => {
+  const pack = "stacks/toolchain-manager/mise/config";
+  const task = `${pack}/.config/mise/tasks/code/format`;
+  const fragment = `${pack}/.config/pre-commit.d/mise.yaml`;
 
   it("accepts an executable task, and ignores the rest of the pack", () => {
     // The `config/` tier mirrors the repo root, so a pack ships plenty there
@@ -252,7 +253,10 @@ describe("pack config task modes", () => {
       alpha: {
         files: {
           [task]: "#!/usr/bin/env bash\n",
-          "stacks/toolchain-manager/mise/config/dprint.json": "{}\n",
+          [`${pack}/.gitignore`]: "node_modules/\n",
+          [`${pack}/_licenses/MIT.txt`]: "MIT\n",
+          [`${pack}/.config/dprint.json`]: "{}\n",
+          [fragment]: "repos:\n  - repo: local\n",
         },
         executable: [task],
       },
@@ -268,6 +272,103 @@ describe("pack config task modes", () => {
     });
     expect(messages(check(root))).toEqual([
       `mise task file is not executable: ${task}`,
+    ]);
+  });
+
+  it("accepts a hook script, and ignores the metadata beside it", () => {
+    const root = tree({
+      alpha: {
+        files: {
+          "stacks/package-manager/pnpm/hooks/guard.sh": "#!/usr/bin/env sh\n",
+          "stacks/package-manager/pnpm/hooks/hooks.yaml": "hooks: {}\n",
+        },
+        executable: ["stacks/package-manager/pnpm/hooks/guard.sh"],
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a hook script that is not executable", () => {
+    // The materializer copies it to `.claude/hooks/` and settings.json names it
+    // as a bare path, so the host execs the file. A hook that cannot run is the
+    // quietest fault there is.
+    const script = "stacks/package-manager/pnpm/hooks/guard.sh";
+    const root = tree({
+      alpha: { files: { [script]: "#!/usr/bin/env bash\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      `hook script is not executable: ${script}`,
+    ]);
+  });
+
+  it("flags a hook script with no shebang a host can exec", () => {
+    // `shellcheck` reads the same line to pick its dialect, so an absent or
+    // exotic one means the shell gate checks it as the wrong language.
+    const script = "stacks/package-manager/pnpm/hooks/guard.sh";
+    const root = tree({
+      alpha: {
+        files: { [script]: "#!/bin/zsh\necho hi\n" },
+        executable: [script],
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(`hook script does not start with one of`),
+    ]);
+  });
+
+  it("flags a task file with no shebang mise can execute", () => {
+    // mise execs the file rather than sourcing it, so a missing or exotic
+    // interpreter line is an exec-format error at the first `mise run`.
+    const root = tree({
+      alpha: {
+        files: { [task]: "#!/bin/zsh\necho hi\n" },
+        executable: [task],
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(`does not start with one of`),
+    ]);
+  });
+
+  it("flags a file the config/ tier root does not allowlist", () => {
+    // Everything a tool can be pointed at lives under `.config/`; a pack
+    // dropping a config beside it widens the root of every repo it lands in.
+    const root = tree({
+      alpha: { files: { [`${pack}/dprint.json`]: "{}\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a directory the config/ tier root does not allowlist", () => {
+    // Same rule for a tree: `.config/` and the `_*` staging dirs, nothing else.
+    const root = tree({
+      alpha: { files: { [`${pack}/scripts/run`]: "#!/usr/bin/env bash\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a hook fragment that is not valid YAML", () => {
+    // The fragments are concatenated into one pre-commit config by init, so a
+    // malformed one breaks a file no pack owns and nothing here would see.
+    const root = tree({
+      alpha: { files: { [fragment]: "repos:\n  - repo: local\n   bad\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("pre-commit fragment is not valid YAML"),
+    ]);
+  });
+
+  it("flags a hook fragment with no top-level repos list", () => {
+    // `repos:` is the only key the concatenation can merge on.
+    const root = tree({
+      alpha: { files: { [fragment]: "hooks:\n  - id: one\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("declares no top-level `repos` list"),
     ]);
   });
 });

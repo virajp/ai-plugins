@@ -1,7 +1,7 @@
 name: gitleaks
 summary: The repo's secret scanner — working tree every commit, history once,
-  allowlist by fingerprint.
-version: 0.1.0
+  allowlist by fingerprint. Ships .config/gitleaks.toml.
+version: 1.0.0
 type: toolchain-gate
 kind: repo-gate
 axis: repo

@@ -18,7 +18,7 @@ pointers current — then remove it. Order matters:
    pushes the submodule's branch). Repeat per changed submodule:
 
    ```bash
-   mise x --cd <submodule> -- mise run merge:develop   # or merge:main
+   mise x --cd <submodule> -- mise run code:merge:develop <branch>
    ```
 
 2. **Update the outer repo's submodule pointers.** Back in the outer worktree,
@@ -31,8 +31,9 @@ pointers current — then remove it. Order matters:
    ```
 
 3. **Land the outer repo.** Merge this branch to the destination — its own
-   `merge:` task if the outer repo defines one, else merge the branch in the
-   main worktree — then `git push`.
+   `code:merge:` task if the outer repo defines one, else merge the branch in
+   the main worktree and `git push`. The task pushes for you; only the manual
+   path needs the push spelled out.
 
 4. **Remove the worktree.**
    - **Native tool:** use its teardown (e.g. `ExitWorktree` or equivalent).
@@ -43,9 +44,9 @@ pointers current — then remove it. Order matters:
    merged** into the destination (`git branch --merged`), and offer to remove
    them. Never remove a worktree with unmerged work.
 
-For a repo with **no submodules**, skip steps 1–2: land the branch (its `merge:`
-task if defined, else merge it in the main worktree), `git push`, then remove
-the worktree.
+For a repo with **no submodules**, skip steps 1–2: land the branch (its
+`code:merge:` task if defined, else merge it in the main worktree and push),
+then remove the worktree.
 
 ## Merge, push & keep worktree
 

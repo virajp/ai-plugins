@@ -1,0 +1,17 @@
+# Merged into `.config/pre-commit-config.yaml` by `/vwf:init`, between the
+# marker comments that name this file. Edit here and re-run init — an edit made
+# inside the merged block is overwritten on the next run.
+
+repos:
+  - repo: local
+    hooks:
+      - id: linter
+        name: Linter
+        description: The correctness gate. It ships its own flat config, so a
+          repo needs no eslint config of its own for this to be meaningful.
+        entry: mise x -- pnpm dlx @askviraj/linter --fix
+        language: system
+        # The linter resolves its own targets from the repo's config, and its
+        # cross-file rules need the whole tree rather than the staged subset.
+        pass_filenames: false
+        stages: [pre-commit]

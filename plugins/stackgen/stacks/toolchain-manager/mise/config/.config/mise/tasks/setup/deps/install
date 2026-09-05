@@ -4,18 +4,15 @@
 #MISE hide=true
 #PLACEHOLDER
 
-#USAGE flag "--clean" help="Delete installed dependencies and caches before installing"
+#USAGE flag "--frozen" help="Install exactly what the lockfile records, and fail rather than resolve"
 
-set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
 
-# The one required verb of `setup:deps:*`, and the only one that ships as a
-# slot: every package manager installs from a lockfile, so a repo with a
-# toolchain always has a fill for this and a repo without one never does.
-#
-# The overlay replaces this file with its package manager's install — and adds
-# whichever of `upgrade` / `outdated` / `audit` / `cleanup` that manager
-# actually has.
+# The one verb of `setup:deps:*` every package manager has, and the one every
+# overlay must fill. `--frozen` is part of the contract, not an option: a fresh
+# worktree and the pipeline both install without moving the lockfile, and a
+# manager whose install is frozen by default simply ignores the flag.
 
-placeholder_notice "setup:deps:install" "no toolchain is pinned for this repo, so there are no packages to install"
+placeholder_notice "setup:deps:install" "no package manager is pinned for this repo, so there are no packages to install"

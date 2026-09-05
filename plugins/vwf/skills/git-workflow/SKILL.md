@@ -24,11 +24,17 @@ disable-model-invocation: false
   belongs. The base repo is a **separate** checkout the caller writes to
   directly; it is never reached by walking up from a member
   (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`)
-- **Initialize** every new worktree with its mise init task (Step 2d), and
+- **Initialize** every new worktree with its mise bootstrap task (Step 2d), and
   **end** every worktree with full coverage — land the branch (plus any
   submodule work and pointer updates), then remove it (Step 4)
-- Use `merge` (not PRs) to land changes: `mise x -- mise run merge:develop` or
-  `mise x -- mise run merge:main`
+- Use `merge` (not PRs) to land changes:
+  `mise x -- mise run code:merge:develop <branch>` or
+  `mise x -- mise run code:merge:main`
+- **The merge tasks refuse a dirty tree** — untracked files, uncommitted
+  changes, or unpushed commits on the branch each stop the merge before it
+  touches git. That is not a nuisance: whatever is uncommitted at merge time is
+  work the merge commit would claim to carry and does not, and the repair
+  belongs on the branch that caused it. Commit or clean first, then re-run
 - Never push without explicit user request — always ask after a successful
   commit
 - Check `no-commit-to-branch` hook in `.config/pre-commit-config.yaml` before
@@ -125,26 +131,31 @@ stopping at the first that applies. Every new worktree ends at **2c** and **2d**
 
 Work from the **repository root**.
 
-1. `code:precommit` — auto-fix lint/format, re-stage. Guard it with the same
-   `have_task` check Step 2d uses; **skip silently** when the task is absent.
+1. `code:precommit` — run the hooks **before you stage**. The task reads the
+   working tree's changed files, staged and unstaged, so nothing has to be
+   staged for it to see your work — and running it first is what folds a
+   formatter's reflow and a linter's fix into the very commit you are about to
+   write, instead of into a second "fix hooks" commit that means nothing to
+   anyone reading the history. Guard it with the same `have_task` check Step 2d
+   uses; **skip silently** when the task is absent.
 
    **Run it twice.** The task fails when a hook fails, and a hook that *fixed*
    a file fails by design — that is how pre-commit reports "I changed something,
    look again". So the first pass is allowed to fail and the second is not: if
    the repeat still fails, a hook found something it cannot fix and that is a
-   real stop, not a fixup. Re-stage between the two.
+   real stop, not a fixup.
 
    ```bash
    have_task code:precommit || exit 0
    mise x -- mise run code:precommit || true   # pass 1: may fix, may fail
-   git add -u                                  # re-stage what it fixed
    mise x -- mise run code:precommit           # pass 2: must be clean
    ```
 
    The `|| true` belongs **here, on the first pass only** — never inside the
    task. A task that swallows its own failures can never gate anything; a caller
    that ignores one failure it expects, once, still can.
-2. `git status` → `git add <files>` (never `git add -A`)
+2. `git status` → `git add <files>` (never `git add -A`) — staging comes
+   **after** step 1, so what you stage is already what the hooks want
 3. `git diff --cached` — review staged changes
 4. Read `.config/git-conventional-commits.yaml` for authoritative types and
    scopes — do not invent scopes

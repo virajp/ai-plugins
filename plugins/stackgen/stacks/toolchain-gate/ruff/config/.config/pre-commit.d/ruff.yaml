@@ -1,0 +1,20 @@
+# Merged into `.config/pre-commit-config.yaml` by `/vwf:init`, between the
+# marker comments that name this file. Edit here and re-run init — an edit made
+# inside the merged block is overwritten on the next run.
+#
+# `rev` is what `setup:precommit`'s autoupdate moves; the value below is only
+# the floor a fresh repo starts from.
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.6
+    hooks:
+      # `ruff-check`, not the `ruff` alias: the short id is kept for
+      # compatibility only and names the same entry.
+      - id: ruff-check
+        name: Ruff lint
+        args: [--fix]
+        stages: [pre-commit]
+      - id: ruff-format
+        name: Ruff format
+        stages: [pre-commit]

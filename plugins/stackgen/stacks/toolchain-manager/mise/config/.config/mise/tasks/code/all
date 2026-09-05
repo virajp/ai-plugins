@@ -1,24 +1,37 @@
 #!/usr/bin/env bash
+
 #MISE description="Format, lint and security-scan all code"
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
 
-set -e
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-[[ "${usage_debug:-false}" == "true" ]] && DEBUG_FLAG="--debug" || DEBUG_FLAG=""
-[[ "${usage_fix:-false}" == "true" ]] && FIX_FLAG="--fix" || FIX_FLAG=""
+# The one-command gate, and the same command the pipeline runs. It needs the dev
+# toolchain loaded, because the formatter and the scanners are pinned in
+# mise.dev.toml — `MISE_ENV=dev mise run code:all`.
 
-# Compiled stacks (e.g. a TS monorepo) prepend a typecheck here:
-#   line_sep "-"; mise run code:check
+# `${ARR[@]+"${ARR[@]}"}` rather than a bare `"${ARR[@]}"`: under `set -u` an
+# empty array is an unbound reference on older bash, and the runner's bash is
+# whatever the machine has.
+FLAGS=()
+[[ "${usage_debug:-false}" == "true" ]] && FLAGS+=("--debug")
+[[ "${usage_fix:-false}" == "true" ]] && FLAGS+=("--fix")
 
-line_sep "-"
-mise run code:format ${DEBUG_FLAG} ${FIX_FLAG}
+SEC_FLAGS=()
+[[ "${usage_debug:-false}" == "true" ]] && SEC_FLAGS+=("--debug")
 
-line_sep "-"
-mise run code:lint ${DEBUG_FLAG} ${FIX_FLAG}
+# Compiled stacks (a typed monorepo, say) prepend a typecheck here:
+#   print_subheader "Typechecking ..."; mise run code:check
 
-line_sep "-"
-mise run code:sec ${DEBUG_FLAG}
+print_subheader "Formatting ..."
+mise run code:format ${FLAGS[@]+"${FLAGS[@]}"}
+
+print_subheader "Linting ..."
+mise run code:lint ${FLAGS[@]+"${FLAGS[@]}"}
+
+print_subheader "Security scanning ..."
+mise run code:sec ${SEC_FLAGS[@]+"${SEC_FLAGS[@]}"}

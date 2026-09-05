@@ -111,11 +111,16 @@ deletes nothing a receipt or another tool does not account for.
 
 ## Tasks
 
-Run in `plugins.yml`, the first four also locally via pre-commit, with
+Run in `plugins.yml`, the first five also locally via pre-commit, with
 marketplace, inventory and check in that order — freshness before validity
 (never in `release.yml`, which is the installer's and whose trigger surface must
 stay untouched — npm allows one Trusted Publisher and validates the entry-point
 filename — and never in `site.yml`, which runs the website's own gate):
+
+Pre-commit also runs **`actionlint`** over `^\.github/workflows/`, which is not
+on this list because it is not a mise task and checks nothing under `plugins/`:
+the workflows are this repo's own, and a typo in one is otherwise discovered
+only by pushing it.
 
 - **`plugins:marketplace`** — generates **both** marketplace manifests from the
   2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
@@ -142,26 +147,30 @@ filename — and never in `site.yml`, which runs the website's own gate):
   and `inventory.test.ts` pins it in vitest too.
 - **`plugins:check`** — validates the authored tree. Twelve rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
-  and executable; **pack task files executable** (every file a stackgen pack
-  ships under `config/.config/mise/tasks/**` carries its exec bit, because mise
-  reports a 644 task as an *unknown* one rather than a permission error);
-  **strict-YAML frontmatter**; relative links under `assets/examples/**`;
-  **root-relative reference resolution** (every such reference resolves inside
-  the plugin that wrote it); **agent cross-reference resolution** in both
-  directions (every role-shaped `` `token` `` in a plugin's own prose names a
-  real agent, and every declared agent is referenced at least once — the two
-  directions cover each other on a rename); the vwf design-adapter contract (all
-  **three** import skills present and model-invocable); the vwf
-  **stack-adapter** contract (both `<plugin>-stack-menu` and
-  `<plugin>-stack-template` present and model-invocable on every plugin
-  keyworded `vwf-stack-adapter`, **and** the keyword declared by every plugin
-  shipping either skill — the same two-directions-cover-each-other idiom, since
-  `stackgen` is now the only adapter left and dropping that one keyword would
-  otherwise have turned the rule off entirely while `check()` still passed); the
-  **technology-free vwf** guard; and **retired vocabulary stated as live** (a
-  closed list of spellings the corpus stopped meaning, flagged per line and
-  exempt on a line that marks itself as history — the only rule that reports a
-  line number).
+  and executable; **a pack's `config/` payload tier being materializable as-is**
+  (five assertions in one rule: exec bit *and* a known shebang on every file
+  under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
+  *unknown* one rather than a permission error and execs the file directly; the
+  same two on every `hooks/*.sh`, which the host execs from a bare path in
+  `settings.json`; the tier's root against the hygiene allowlist; and every
+  `config/.config/pre-commit.d/*.yaml` parsing with a top-level `repos:` list,
+  since `/vwf:init` concatenates them into a file no pack owns); **strict-YAML
+  frontmatter**; relative links under `assets/examples/**`; **root-relative
+  reference resolution** (every such reference resolves inside the plugin that
+  wrote it); **agent cross-reference resolution** in both directions (every
+  role-shaped `` `token` `` in a plugin's own prose names a real agent, and
+  every declared agent is referenced at least once — the two directions cover
+  each other on a rename); the vwf design-adapter contract (all **three** import
+  skills present and model-invocable); the vwf **stack-adapter** contract (both
+  `<plugin>-stack-menu` and `<plugin>-stack-template` present and
+  model-invocable on every plugin keyworded `vwf-stack-adapter`, **and** the
+  keyword declared by every plugin shipping either skill — the same
+  two-directions-cover-each-other idiom, since `stackgen` is now the only
+  adapter left and dropping that one keyword would otherwise have turned the
+  rule off entirely while `check()` still passed); the **technology-free vwf**
+  guard; and **retired vocabulary stated as live** (a closed list of spellings
+  the corpus stopped meaning, flagged per line and exempt on a line that marks
+  itself as history — the only rule that reports a line number).
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
@@ -173,6 +182,17 @@ filename — and never in `site.yml`, which runs the website's own gate):
   pointing at vwf's `delivery-pipeline.md` resolved to nothing at runtime. Both
   are in `.claude/skills/plugin-authoring/references/checks.md`, along with the
   eight rules that retired.
+- **`plugins:shellcheck`** — the shell gate over everything a pack ships as
+  shell, in **two groups with different arguments**. The task libraries and
+  their `_scripts/*` run with `-x` and a source path, `-s bash`, and SC2034 /
+  SC2154 disabled — right for files that source a colour library and read mise's
+  `usage_*` variables. `hooks/*.sh` run with **no flags at all**: a hook lands
+  in `.claude/hooks/` without `_scripts/helpers` beside it, so `-x` would hide a
+  real bug, and one of them declares `#!/usr/bin/env sh` on purpose, so
+  `-s bash` would wave through the bashisms it forbids. `shfmt -d -i 2 -ci` runs
+  over both. Its flags must agree with what the mise pack's own gate ships — a
+  mismatch here rewrites a payload file into something the target repo rejects,
+  which is how it first went wrong.
 - **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed (the BSD-sed portability guarantee), for **both**
   package managers: each table runs in a temp dir seeded with the lockfile that

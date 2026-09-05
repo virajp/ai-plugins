@@ -1,0 +1,37 @@
+# TOML formatting. dprint has no TOML plugin, so `.config/dprint.json` routes
+# every .toml file through taplo via its `exec` escape hatch. This file is what
+# that call reads, and it is the only place TOML layout is decided — a second
+# taplo config anywhere in the tree is a second opinion.
+#
+# `align_entries` and `reorder_keys` together make a TOML diff readable: keys
+# land in a stable order, so a changed value shows as one line rather than as a
+# reshuffled block.
+
+exclude = [
+  "**/.git/**",
+  "**/build/**",
+  "**/dist/**",
+  "**/node_modules/**",
+  "**/target/**",
+]
+include = [ "**/*.toml" ]
+
+[formatting]
+align_comments        = true
+align_entries         = true
+allowed_blank_lines   = 1
+array_auto_collapse   = true
+array_auto_expand     = true
+array_trailing_comma  = true
+column_width          = 80
+compact_arrays        = false
+compact_entries       = false
+compact_inline_tables = false
+crlf                  = false
+indent_entries        = false
+indent_tables         = false
+inline_table_expand   = true
+reorder_arrays        = true
+reorder_inline_tables = true
+reorder_keys          = true
+trailing_newline      = true

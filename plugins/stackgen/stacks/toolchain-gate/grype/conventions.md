@@ -22,3 +22,29 @@ package means the next, unrelated advisory against it arrives silently.
 
 **Wired as one task name**, and CI runs that same task. See the hook-runner
 component for the parity rule this depends on.
+
+## What this pack writes
+
+`.config/grype.yaml` — the threshold and the (empty) ignore list, with the bar
+an ignore entry has to clear written above it.
+
+The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
+`package.json` and CI workflows remain outside it.
+
+**The threshold ships at `medium`**, and `code:sec` runs
+`grype dir:. --config .config/grype.yaml --fail-on medium`. The flag at the call
+site and the key in the file say the same thing on purpose — the call site is
+where somebody reads the gate, the file is where the decision and its reasoning
+live. Change them together.
+
+**There is no pre-commit hook for this one.** gitleaks ships hook definitions;
+grype does not, so it reaches the commit gate only through `code:sec`. That is
+worth knowing before assuming the local gate covers it: remove the task and
+nothing else runs the scanner.
+
+**SBOM-first is the recommended CI shape, and this pack does not write it.**
+Generating an SBOM from the built artifact and scanning that, rather than
+re-scanning the source tree a second time, is what catches the base image's
+system packages — the larger share of a real image's findings and the part no
+lockfile mentions. The workflow that does it is outside this pack's fence; the
+recommendation is here so the gap is deliberate rather than unnoticed.
