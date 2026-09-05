@@ -126,10 +126,12 @@ repos:
         # tests those, through the system sed — and the site's Astro components,
         # which the linter has no parser for (they are dprint's, via the markup
         # plugin) and which linter.yaml already ignores, so passing them only
-        # produces the warnings that fail the run. site/public/brand/ is the logo
-        # — SVG, PNG and the social-preview render source — none of which it
-        # lints, and its HTML rewrite fights dprint's.
-        exclude: ^plugins/vwf/assets/(templates|examples)/|^site/public/brand/|\.sh$|\.astro$
+        # produces the warnings that fail the run. site/public/ is copied
+        # verbatim into dist/ — SVG, PNG, ICO, the web manifest, robots, the
+        # social-preview render source, and _headers, which Cloudflare Workers
+        # Static Assets parses rather than serves — none of which it lints, and
+        # its HTML rewrite fights dprint's.
+        exclude: ^plugins/vwf/assets/(templates|examples)/|^site/public/|\.sh$|\.astro$
         language: system
         stages: [ pre-commit ]
 
