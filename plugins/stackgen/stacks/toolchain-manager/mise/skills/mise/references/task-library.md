@@ -420,7 +420,10 @@ or `setup:*` where the contract can name it.
 
 Names this contract replaced. `/vwf:init` reads this table to rename tasks on an
 existing repo, which is why it lives here rather than in vwf — the renaming is a
-fact about this task library, and vwf's prose names no tool.
+fact about this task library, and vwf's prose names no tool. Apply the rows top
+to bottom: no old name appears on the left twice, but a name a row *produces*
+can be a later row's left-hand side — `setup:pnpm:update` becomes
+`setup:deps:update`, then `setup:deps:upgrade`.
 
 | Was                                                | Is now                | Why it moved                                                             |
 | -------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ |
@@ -429,9 +432,10 @@ fact about this task library, and vwf's prose names no tool.
 | `setup:pnpm:*`, `setup:uv:*`, `setup:app:*`         | → `setup:deps:*`      | the task path carried the tool's name, so the contract differed per stack |
 | `setup:ai`                                          | → `code:ai`           | it is re-run as the plugin set moves, not once per machine               |
 | `setup:doppler`                                     | → `setup:secrets`     | same reason as `setup:deps:*` — the provider is a choice, the slot is not |
-| `setup:deps:{start,stop,pull,update}`               | → `setup:external:*`  | services a product runs against are not its package manager             |
+| `setup:deps:{start,stop,pull}`                      | → `setup:external:*`  | services a product runs against are not its package manager             |
 | `setup:deps:update`                                 | → `setup:deps:upgrade` | "update" read as both install-and-refresh; the verbs are now separate    |
-| `_scripts/_helpers`, `_scripts/_checks`             | → `_scripts/helpers`  | `_scripts/` already says library; the second underscore says it twice    |
+| `_scripts/_helpers`                                 | → `_scripts/helpers`  | `_scripts/` already says library; the second underscore says it twice    |
+| `_scripts/_checks`                                  | → `_scripts/checks`   | same reason — and it is a separate library, not part of `helpers`        |
 
 A repo still carrying a left-hand name is not broken, but nothing else in the
 toolkit will find it: vwf probes `setup:worktree`, the aggregators call

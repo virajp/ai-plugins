@@ -789,9 +789,12 @@ What a shaped repo has when it is done: a sectioned `.gitignore`, a lowercase
 `readme.md`, every tool config under `.config/`, the toolchain manager's
 five-file split, a file-based task library grouped `setup:*`, `code:*` and
 `p:<project>:*` over a shared helper library, pre-commit with the full hook set
-and conventional commits wired for release notes, a secrets provider, the
-security and dependency gates configured, and `.editorconfig`, `.gitattributes`,
-a Renovate config, `SECURITY.md` and the licence you chose.
+and conventional commits wired for release notes, the security and dependency
+gates configured, and `.editorconfig`, `.gitattributes` and a Renovate config.
+Three of its contents follow the answers rather than the shape: a secrets
+provider where you named one — answer *none — decide later* and the packs' slot
+simply stays unfilled and announces itself — a `SECURITY.md` unless you declined
+the security contact, and a `LICENSE` unless you answered *none*.
 
 **Mode resolves from what is on disk**, unless `--new` or `--existing` says
 otherwise: no `.config/` directory *and* no task-library directory means
@@ -812,10 +815,24 @@ none).
 survey walks nine checks — root files against the allowlist, the readme's
 casing, task names against the pack's *legacy-name table*, task shebangs, the
 helper library's shape, missing files, ignore sections and hook fragments,
-commit types, and per-project task groups. What comes back is **one plan** —
-every create, move, rename and fragment merge, listed — applied on a single yes.
-It never asks per file, never writes before the yes, never touches application
-code, and never writes a language manifest, a lockfile or a CI workflow.
+commit types, and per-project task groups. What comes back is **one plan**, in
+six counted sections: moves, creates, renames, appends, merges — all applied on
+a single yes — and `Rewrites (flagged, not applied)`, which is applied by
+nothing. A task file whose shebang names a shell other than bash goes there,
+listed with the shell-specific syntax it uses, and is **never** rewritten:
+auto-translating a shell script is how a working task becomes a subtly broken
+one, so it lands in the report's `Deferred` section for you to rewrite
+deliberately. It never asks per file, never writes before the yes, never touches
+application code, and never writes a language manifest, a lockfile or a CI
+workflow.
+
+**Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
+like any other in the plan — content untouched, applied with `git mv` so the
+history follows the file. A repo already carrying `readme.md` needs nothing, and
+one carrying both names is reported as a conflict for you rather than resolved
+here. `init` writes a stub only where there is no readme at all, and the stub is
+exactly two lines: the H1 and the one-line brief, or the H1 alone when the brief
+is empty.
 
 **Every run ends with the same report** — files written, files moved, tasks
 renamed, sections appended, fragments merged, and anything deferred with the

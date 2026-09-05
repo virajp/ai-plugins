@@ -146,9 +146,12 @@ a materialization rather than discovered from a `hooks/hooks.json`:
   plugin with the package manager it rewrites for — a JS/TS rewrite has no
   business in vwf.
 
-`plugins:check`'s hook rule reads only a plugin's own `hooks/hooks.json`, so it
-sees neither script nor its executable bit.
-`mise run plugins:npm-normalize-test` covers the normalizer instead: it
+Both are still gated here, as payload rather than as hooks: rule 11 asserts each
+script's exec bit and its shebang, and `plugins:shellcheck` lints the body. What
+no rule reads is the `hooks.yaml` beside them — `checkHookScripts`, the older
+rule, follows only a plugin's own `hooks/hooks.json`, so the event and matcher a
+payload hook is wired to are asserted by nothing in this repo.
+`mise run plugins:npm-normalize-test` covers the normalizer's behaviour: it
 table-tests the script through the **system sed** for both package managers,
 each table in a temp dir seeded with the lockfile that selects pnpm or bun. Hook
 scripts must stay portable to macOS BSD `sed` — no `\s`, no `\b`.
