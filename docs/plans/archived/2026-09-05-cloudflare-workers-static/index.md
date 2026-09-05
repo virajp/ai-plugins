@@ -9,9 +9,15 @@ requires: []
 
 ## Status
 
-**RUNNING** — started 2026-09-05, worktree
-`/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-05-cloudflare-workers-static`,
-branch `2026-09-05-cloudflare-workers-static`.
+**COMPLETE** — 2026-09-05. Ran in worktree
+`.worktrees/2026-09-05-cloudflare-workers-static` on branch
+`2026-09-05-cloudflare-workers-static`. Every unit green, in three commits:
+
+| Commit     | Is                                                                               |
+| ---------- | -------------------------------------------------------------------------------- |
+| `1a30d456` | wave 1 — U1–U5, the category, the doctrine, the pack, the bundle and the checker |
+| `50008365` | wave 2 — U6, the docs and the two decision docs                                  |
+| `074fb92b` | wave 3 — U7, stackgen `1.1.0` and the site `1.1.3`                               |
 
 APPROVED 2026-09-05 by the user, after the self-review.
 
@@ -238,15 +244,15 @@ are the review surface.
 
 ## Units
 
-| Id | Wave | Unit file                                                            | Owns                                                                                                                                                                                                                            | Depends on | Status  | Commit   |
-| -- | ---- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-taxonomy-and-kinds.md](01-taxonomy-and-kinds.md)                 | `plugins/stackgen/assets/taxonomy.md`, `plugins/stackgen/assets/kinds.md`                                                                                                                                                       | —          | green   | 1a30d456 |
-| U2 | 1    | [02-allowlist-and-composition.md](02-allowlist-and-composition.md)   | `plugins/stackgen/assets/output-tree.md`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`                                                                                                          | —          | green   | 1a30d456 |
-| U3 | 1    | [03-workers-static-assets-pack.md](03-workers-static-assets-pack.md) | `plugins/stackgen/stacks/cloud-service/workers-static-assets/**`                                                                                                                                                                | —          | green   | 1a30d456 |
-| U4 | 1    | [04-bundle-and-reservation.md](04-bundle-and-reservation.md)         | `plugins/stackgen/stacks/bundles/**`, `plugins/stackgen/stacks/cloud-provider/cloudflare/conventions.md`                                                                                                                        | —          | green   | 1a30d456 |
-| U5 | 1    | [05-checker-allowlist.md](05-checker-allowlist.md)                   | `scripts/src/check.ts`, `scripts/src/check.test.ts`, `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/conventions.md`                                                                                                         | —          | green   | 1a30d456 |
-| U6 | 2    | [06-docs.md](06-docs.md)                                             | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/*` | all        | pending |          |
-| U7 | 3    | [07-gates-and-bump.md](07-gates-and-bump.md)                         | `plugins/*/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                                          | U6         | pending |          |
+| Id | Wave | Unit file                                                            | Owns                                                                                                                                                                                                                            | Depends on | Status | Commit   |
+| -- | ---- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-taxonomy-and-kinds.md](01-taxonomy-and-kinds.md)                 | `plugins/stackgen/assets/taxonomy.md`, `plugins/stackgen/assets/kinds.md`                                                                                                                                                       | —          | green  | 1a30d456 |
+| U2 | 1    | [02-allowlist-and-composition.md](02-allowlist-and-composition.md)   | `plugins/stackgen/assets/output-tree.md`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`                                                                                                          | —          | green  | 1a30d456 |
+| U3 | 1    | [03-workers-static-assets-pack.md](03-workers-static-assets-pack.md) | `plugins/stackgen/stacks/cloud-service/workers-static-assets/**`                                                                                                                                                                | —          | green  | 1a30d456 |
+| U4 | 1    | [04-bundle-and-reservation.md](04-bundle-and-reservation.md)         | `plugins/stackgen/stacks/bundles/**`, `plugins/stackgen/stacks/cloud-provider/cloudflare/conventions.md`                                                                                                                        | —          | green  | 1a30d456 |
+| U5 | 1    | [05-checker-allowlist.md](05-checker-allowlist.md)                   | `scripts/src/check.ts`, `scripts/src/check.test.ts`, `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/conventions.md`                                                                                                         | —          | green  | 1a30d456 |
+| U6 | 2    | [06-docs.md](06-docs.md)                                             | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/*` | all        | green  | 50008365 |
+| U7 | 3    | [07-gates-and-bump.md](07-gates-and-bump.md)                         | `plugins/*/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                                          | U6         | green  | 074fb92b |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
