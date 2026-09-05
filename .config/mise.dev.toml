@@ -21,10 +21,11 @@ taplo  = { version = "latest" }
 gitleaks = { version = "latest" }
 grype    = { version = "latest" }
 
-# Shell gates — `plugins:shellcheck` lints and format-checks every task file a
-# stackgen pack ships under `config/.config/mise/tasks/`, and actionlint the
-# workflows. Those files are executed by mise in someone else's repo, where
-# nothing else ever reads them, so this is the only place a bad one is caught.
+# Shell gates — `plugins:shellcheck` lints and format-checks every shell file a
+# stackgen pack ships: the task library under `config/.config/mise/tasks/` and
+# the hook scripts under `hooks/`. And actionlint the workflows. Those files are
+# executed in someone else's repo, where nothing else ever reads them, so this
+# is the only place a bad one is caught.
 actionlint = { version = "latest" }
 shellcheck = { version = "latest" }
 shfmt      = { version = "latest" }

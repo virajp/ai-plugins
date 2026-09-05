@@ -11,7 +11,8 @@
     "**/*-lock.json",
     "**/*-lock.yaml",
     "**/*.lock",
-    "**/graphify-out/"
+    "**/graphify-out/",
+    "**/.claude/"
   ],
   "exec": {
     "commands": [

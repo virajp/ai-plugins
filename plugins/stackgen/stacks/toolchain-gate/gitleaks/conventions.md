@@ -1,6 +1,6 @@
 # gitleaks — secret scanning
 
-**Two different scans, at two different moments.** The working tree is scanned
+**Two different scans, at two different moments.** The staged change is scanned
 on every commit, which is what stops a credential entering history. History
 itself is scanned **once**, deliberately, because it answers a different
 question: what is already in there. Running the history scan on every commit
@@ -43,7 +43,10 @@ tree with `--config .config/gitleaks.toml --redact`; the history scan is
 `gitleaks git . --log-opts="--all"`, run once and deliberately, not on every
 commit. The pre-commit hook is the upstream `gitleaks-system` hook, which uses
 the binary the toolchain manager pins instead of building one into pre-commit's
-own environment.
+own environment, and scans the staged diff — `gitleaks git --pre-commit
+--staged`. That entry takes at most one positional argument, so the hook must
+carry `pass_filenames: false`; upstream sets it on the `gitleaks` id and not on
+this one, and without it any commit touching two files dies on an arg count.
 
 **Establishing a baseline on an existing repo.** Scan the history once, rotate
 everything real that it finds, then allowlist what remains **by fingerprint**,

@@ -20,37 +20,21 @@ ready for that conversation and nothing more.
 
 In order:
 
-1. **Tooling.** Materialize the two `unconditional: true` repo bundles — the
-   toolchain manager and the repo gates — by fetching each with
-   `/<plugin>:<plugin>-stack-template <slug>` per
-   `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, at the **fixed slugs**
-   `mise` and `repo-gates`. Fixed, never constructed: a name assembled from
-   configuration is one that can silently resolve to nothing, which is the
-   rule the `ux-gate` and design-adapter seams already follow. Neither bundle
-   needs a project axis or any stack knowledge, so both land on a blank repo,
-   and neither is recorded in `.config/vwf.yaml` — nothing was chosen, so
-   there is no choice to record; the landing goes in the materializer's own
-   lockfile. Materialization is consent-gated, and a **declined** write is a
-   deferral exactly like a failed fetch. **This step defers rather than
-   skips** — see
-   [Tooling defers rather than halting](#tooling-defers-rather-than-halting)
-   below; on a blank repo there is no stack to provision against yet, which is
-   the normal case here rather than a fault.
-2. **Docs scaffold.** Create `docs/blueprint/` and `docs/plans/` with
+1. **Docs scaffold.** Create `docs/blueprint/` and `docs/plans/` with
    `docs/plans/archived/`. Nothing inside `docs/blueprint/` is authored here —
    an empty tree is the honest state of a product nobody has described yet, and
    a skeleton full of placeholders is not.
-3. **The memory tree.** `docs/memory/` with its seven rooms and the three
+2. **The memory tree.** `docs/memory/` with its seven rooms and the three
    gitignored ones, plus the product's `mempalace.yaml`, per
    [the memory tree](memory-tree.md).
-4. **The graph ignore file.** Write `.graphifyignore` at the repo root with the
+3. **The graph ignore file.** Write `.graphifyignore` at the repo root with the
    vwf-standard excludes, per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`. A blank repo
    has no repo-specific noise to detect, so the standard set is the whole file.
-5. **CLAUDE.md.** Merge the vwf section from
+4. **CLAUDE.md.** Merge the vwf section from
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` into the repo's
    `CLAUDE.md`, preserving everything already there, per
    [the CLAUDE.md section](claude-md.md).
-6. **The two questions.** `product.name` and `memory.wing`, each one MCQ,
+5. **The two questions.** `product.name` and `memory.wing`, each one MCQ,
    proposed from the repo directory name. These are the **only** questions this
    path asks.
 
@@ -60,23 +44,26 @@ key describing projects that do not exist yet is not a default, it is a claim
 the repo cannot support. Their absence is the **structure-pending** state, which
 `/vwf:doctor` reads as early rather than as drift.
 
-## Tooling defers rather than halting
+## The shape check defers rather than halting
 
-The tooling step — the repo baseline, the task library, harness provisioning —
-is the part of setup that can need a stack to act against, and setup runs
-before `/vwf:architecture` has chosen one. It therefore **defers**: it never
-halts the run, and it never continues silently either.
+The repo shape — the toolchain manager's config and task library, the repo
+gates, the hygiene files — is `/vwf:init`'s, not setup's. Step 0 only
+**checks** for it, reading the stack adapter's lockfile for the three
+unconditional slugs `mise`, `repo-gates` and `repo-hygiene`, and offers init
+when any is missing. Harness provisioning is the other half of the same story:
+it can need a stack to act against, and setup runs before `/vwf:architecture`
+has chosen one. Both therefore **defer** — neither halts the run, and neither
+continues silently.
 
-Whatever it could not provision is **recorded and named, with its unlock**: what
+Whatever could not be settled is **recorded and named, with its unlock**: what
 was skipped, and what would let it happen — an axis to pin via
-`/vwf:architecture`, a stack plugin to install, or a **declined
-materialization** to re-run, whose unlock is `/vwf:setup` again with the config
-write consented. A declined consent is a deferral on exactly those terms: named
-with its unlock, never a halt and never a silent skip. On a blank repo the
-deferred set is usually everything stack-shaped, which is the honest state of a
-repo nobody has described a product for yet. Anything it *can* do without a
-stack — the two unconditional repo bundles, `mise` and `repo-gates` — it still
-does.
+`/vwf:architecture`, a stack plugin to install, or an **unshaped repo** whose
+unlock is `/vwf:init`, run whenever. A declined offer is a deferral on exactly
+those terms: named with its unlock, never a halt and never a silent skip. On a
+blank repo the deferred set is usually everything stack-shaped, which is the
+honest state of a repo nobody has described a product for yet. An unshaped repo
+is not one of those: nothing about the shape waits on a stack, which is why the
+offer is worth making here rather than postponing it.
 
 **setup never writes `unresolved`.** That value arrives only from an
 `/vwf:architecture` run, which offered the axis and had it deferred
@@ -133,7 +120,7 @@ from two sides is a judgment call. A platform no installed plugin ships a
 template for is **never** a free-text pin — the menu is the whole vocabulary.
 It is no longer a halt either: leave that project's axis unrecorded, name what
 would supply it, and let `/vwf:architecture` settle it, per
-[Tooling defers rather than halting](#tooling-defers-rather-than-halting).
+[the deferral rule](#the-shape-check-defers-rather-than-halting).
 
 ### Multi-repo takes two more questions, in order
 
@@ -177,7 +164,10 @@ four facts and acts on that delta alone.
 - **The environment catalog**, when the detected integrations or a
   secrets-manager `config` call for it, per
   [environment bootstrap](environment-bootstrap.md). Names only, never a value.
-- **Tooling, CLAUDE.md and the memory tree** exactly as on the blank path.
+- **CLAUDE.md and the memory tree** exactly as on the blank path. The repo
+  shape is not written here either — Step 0's shape check has already offered
+  `/vwf:init`, and an existing repo is exactly the case init surveys before it
+  changes anything.
 
 ### The recommendations report
 

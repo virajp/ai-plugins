@@ -25,9 +25,29 @@ mise upgrade --local || true
 # and so have to be refreshed here rather than by `mise upgrade`. Both are
 # probed rather than assumed: the formatter's config is written by a gate pack,
 # and the linter arrives as an optional `setup:lint` a linter pack fills.
+# Whether this run has a terminal a command can prompt ON — which is not the
+# same question as `[ -t 0 ]`. A tool that asks for confirmation opens
+# `/dev/tty` directly rather than reading stdin, so it works with stdin piped
+# and output captured, and fails only when the process has no controlling
+# terminal at all: a CI runner, a daemon, an agent's shell.
+can_prompt() { (exec 3<>/dev/tty) >/dev/null 2>&1; }
+
 if [ -f "${MISE_PROJECT_ROOT}/.config/dprint.json" ] && command -v dprint >/dev/null 2>&1; then
-  print_subheader "Updating formatter plugins ..."
-  dprint config update --config "${MISE_PROJECT_ROOT}/.config/dprint.json"
+  # `dprint config update` prompts before moving a PROCESS plugin, because
+  # accepting one means accepting a new checksum for a binary it will execute.
+  # It reads that answer from the terminal, so piping `N` does not reach it and
+  # the whole task dies with "Device not configured (os error 6)" wherever
+  # there is none. Skipped rather than forced with `-y`: the prompt is a
+  # supply-chain decision, and a runner is not who should be answering it.
+  if can_prompt; then
+    print_subheader "Updating formatter plugins ..."
+    dprint config update --config "${MISE_PROJECT_ROOT}/.config/dprint.json"
+  else
+    print_subheader "Skipping formatter plugin updates ..."
+    print_warn "No terminal to prompt on — formatter plugins were left as pinned."
+    print_yellow "Run this in a terminal to update them:"
+    print_yellow "  dprint config update --config .config/dprint.json"
+  fi
 fi
 
 if have_task setup:lint; then

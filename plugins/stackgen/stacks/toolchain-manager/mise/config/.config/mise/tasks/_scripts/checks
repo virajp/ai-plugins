@@ -48,8 +48,12 @@ has_unpushed_commits() {
 # worktree has to do its checkout in the main one.
 is_git_worktree() {
   local git_dir git_common_dir
-  git_dir=$(git rev-parse --git-dir 2>/dev/null)
-  git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null)
+  # Outside a repo both calls fail, and "neither, so not a worktree" is the
+  # right answer — but only if the status is discarded at the assignment. A bare
+  # `VAR=$(...)` takes the command's status, which `set -e` acts on the moment
+  # this predicate is called anywhere other than an `if`.
+  git_dir=$(git rev-parse --git-dir 2>/dev/null) || git_dir=''
+  git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || git_common_dir=''
   [ "${git_dir}" != "${git_common_dir}" ]
 }
 

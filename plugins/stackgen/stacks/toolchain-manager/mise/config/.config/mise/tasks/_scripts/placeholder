@@ -30,7 +30,11 @@ readonly PLACEHOLDER_MARKER="#PLACEHOLDER"
 placeholder_tasks() {
   local root="${MISE_PROJECT_ROOT}/.config/mise/tasks"
   [ -d "$root" ] || return 0
-  grep -rl --exclude-dir=_scripts -- "${PLACEHOLDER_MARKER}" "$root" 2>/dev/null |
+  # `grep -rl` exits 1 on no match — the state of a fully configured repo, and
+  # an empty list rather than an error. Under `pipefail` that status would be
+  # the pipeline's, then the function's, then the caller's assignment's, and
+  # `set -e` would kill the notice instead of letting it print.
+  { grep -rl --exclude-dir=_scripts -- "${PLACEHOLDER_MARKER}" "$root" 2>/dev/null || true; } |
     command sed -e "s#^${root}/##" -e 's#/#:#g' |
     command sort
 }

@@ -36,7 +36,14 @@ readonly BLUE='\033[0;34m'
 # a title after it.
 line_sep() {
   local COL
-  COL=$(stty size 2>/dev/null | awk '{print $2}')
+  # `stty size` fails whenever stdin is not a terminal — every `mise run` with
+  # captured output, every CI job, every non-interactive shell. That failure is
+  # expected, and the 80 below is the answer to it, but the fallback is only
+  # ever READ if the status stops here: a bare `VAR=$(...)` takes the command's
+  # exit status, and under the `set -euo pipefail` every task sets, `set -e`
+  # kills the caller on the assignment line — silently, before a single
+  # separator or title is printed. Hence the explicit `|| COL=''`.
+  COL=$(stty size 2>/dev/null | awk '{print $2}') || COL=''
   local line
   printf -v line '%*s' "${COL:-80}" ''
   printf '%s\n' "${line// /$1}"

@@ -62,7 +62,7 @@ jobs:
       # maintainer's environment — and this job runs with MISE_ENV=ci, so they
       # are fetched for the length of the step rather than added to the CI tool
       # set, which exists to stay small.
-      - name: shellcheck and shfmt over every pack task file
+      - name: shellcheck and shfmt over every shell file a pack ships
         run: |
           mise x shellcheck@latest shfmt@latest -- mise run plugins:shellcheck
 

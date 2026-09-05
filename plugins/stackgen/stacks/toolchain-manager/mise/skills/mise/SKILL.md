@@ -173,6 +173,13 @@ mise, sets `MISE_ENV=ci` in the workflow env, and calls `mise run code:all` —
 a gate that passes locally and fails in the pipeline is a gate that ran a
 different command.
 
+- **A clone trusts nothing, and `mise trust --all` comes first.** mise refuses
+  to read an untrusted config file, so the step precedes `setup:all` — and
+  precedes `mise tasks` listing anything at all. The record is per machine and
+  never committed, so a CI runner checking out fresh needs it too, or
+  `trusted_config_paths` set in the runner's *global* mise config. The two
+  modes and what each breaks are in
+  [references/task-library.md](references/task-library.md).
 - **`setup:all`** is what a human runs on clone and to re-sync afterwards.
   **`setup:worktree`** is the lighter sibling for a fresh worktree — members,
   tools, secrets, `setup:deps:install --frozen`, nothing else. **vwf's

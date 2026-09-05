@@ -275,6 +275,47 @@ describe("the pack config tier", () => {
     ]);
   });
 
+  it("accepts a hook script, and ignores the metadata beside it", () => {
+    const root = tree({
+      alpha: {
+        files: {
+          "stacks/package-manager/pnpm/hooks/guard.sh": "#!/usr/bin/env sh\n",
+          "stacks/package-manager/pnpm/hooks/hooks.yaml": "hooks: {}\n",
+        },
+        executable: ["stacks/package-manager/pnpm/hooks/guard.sh"],
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a hook script that is not executable", () => {
+    // The materializer copies it to `.claude/hooks/` and settings.json names it
+    // as a bare path, so the host execs the file. A hook that cannot run is the
+    // quietest fault there is.
+    const script = "stacks/package-manager/pnpm/hooks/guard.sh";
+    const root = tree({
+      alpha: { files: { [script]: "#!/usr/bin/env bash\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      `hook script is not executable: ${script}`,
+    ]);
+  });
+
+  it("flags a hook script with no shebang a host can exec", () => {
+    // `shellcheck` reads the same line to pick its dialect, so an absent or
+    // exotic one means the shell gate checks it as the wrong language.
+    const script = "stacks/package-manager/pnpm/hooks/guard.sh";
+    const root = tree({
+      alpha: {
+        files: { [script]: "#!/bin/zsh\necho hi\n" },
+        executable: [script],
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(`hook script does not start with one of`),
+    ]);
+  });
+
   it("flags a task file with no shebang mise can execute", () => {
     // mise execs the file rather than sourcing it, so a missing or exotic
     // interpreter line is an exec-format error at the first `mise run`.

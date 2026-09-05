@@ -92,18 +92,33 @@ user how to proceed — do not leave a partially-initialized worktree silently.
 ## 2d. Initialize the Worktree (mise task)
 
 A fresh worktree has no installed dependencies. After submodules are populated,
-bootstrap it so it can build and run — prefer a dedicated `worktree:init` task,
-falling back to the bootstrap entrypoint `setup:all`:
+bootstrap it so it can build and run — prefer the dedicated `setup:worktree`
+task, falling back to the full bootstrap entrypoint `setup:all`:
 
 ```bash
 have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
-if have_task worktree:init; then
-  mise run worktree:init
+if have_task setup:worktree; then
+  mise run setup:worktree
 elif have_task setup:all; then
   mise run setup:all
 fi
 ```
+
+**Why the probe prefers it.** `setup:worktree` is the lighter sibling of
+`setup:all`: members checked out, tools installed, secrets set up, dependencies
+installed **from the lockfile** and nothing else. A worktree shares the
+machine's tools, hooks and running services with the checkout it was cut from,
+so re-doing the tool upgrade, the hook installation and the plugin
+reconciliation costs minutes and changes nothing. The frozen install is the part
+that matters most — a worktree is a place to work on a branch, not a place to
+move the lockfile, and a fallback to `setup:all` here is exactly what quietly
+resolves one.
+
+The name is probed, never constructed. A repo carrying an older spelling of the
+task is not broken, but this probe will not find it and the run silently takes
+the slower path — the toolchain manager's own task library is where the older
+spellings are recorded and mapped forward.
 
 Run it from the worktree root. **Skip silently** if neither task exists. If the
 task fails, report it and ask the user how to proceed rather than working in a

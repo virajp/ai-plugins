@@ -255,6 +255,13 @@ function* hookCommands(
 const PACK_MISE_TASKS = join("config", ".config", "mise", "tasks");
 /** Where a pack's `config/` tier puts its pre-commit hook fragment. */
 const PACK_HOOK_FRAGMENTS = join("config", ".config", "pre-commit.d");
+/** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
+const PACK_HOOKS = "hooks";
+/**
+ * What a pack's `hooks/` tier holds that is not a script: `hooks.yaml`, the
+ * settings.json fragment that wires them, and any prose beside it.
+ */
+const PACK_HOOK_METADATA = /\.(?:ya?ml|json|md)$/;
 
 /**
  * The interpreters a shipped task may name. Closed on purpose: a task library
@@ -265,6 +272,21 @@ const PACK_TASK_SHEBANGS = new Set([
   "#!/usr/bin/env bash",
   "#!/usr/bin/env node",
   "#!/usr/bin/env python3",
+]);
+
+/**
+ * The interpreters a shipped hook script may name.
+ *
+ * A narrower set than a task's, and deliberately so: a hook is wired into
+ * settings.json as a bare path, so the host execs it and only a shell it can
+ * find on `PATH` will do. `sh` is on the list because a hook that means to be
+ * portable says so here — `shellcheck` reads the same line to pick its dialect,
+ * so a POSIX hook declaring `bash` would be checked as bash and its bashisms
+ * would ship.
+ */
+const PACK_HOOK_SHEBANGS = new Set([
+  "#!/usr/bin/env bash",
+  "#!/usr/bin/env sh",
 ]);
 
 /**
@@ -288,9 +310,10 @@ const PACK_CONFIG_ROOT_FILES = new Set([
 ]);
 
 /**
- * What a stackgen pack ships under `config/` must be materializable as-is.
+ * What a stackgen pack ships to run in a target repo must be materializable
+ * as-is.
  *
- * Four assertions, all of them about a file whose failure mode in the target
+ * Five assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
@@ -298,13 +321,19 @@ const PACK_CONFIG_ROOT_FILES = new Set([
  *   permission error, which reads as a pack that never shipped it;
  * - and starts with a **known shebang** — mise executes the file directly, so a
  *   missing or exotic one is an exec-format error at the first `mise run`;
- * - the tier's **root stays allowlisted**, because everything else belongs
- *   under `.config/` and nothing else looks at what a pack puts beside it;
- * - a **hook fragment parses** and declares `repos:`, because `/vwf:init`
+ * - a **hook script** lands executable and shebanged too, on the same reasoning
+ *   from the other end: the materializer copies `hooks/*.sh` to
+ *   `.claude/hooks/` and wires it into settings.json as a bare path, so the
+ *   host execs the file — and a hook fault is the quietest fault there is,
+ *   because nothing downstream of it ever reports that it did not run;
+ * - the `config/` tier's **root stays allowlisted**, because everything else
+ *   belongs under `.config/` and nothing else looks at what a pack puts beside
+ *   it;
+ * - a **pre-commit fragment parses** and declares `repos:`, because `/vwf:init`
  *   concatenates the fragments into one pre-commit config and a malformed one
  *   breaks a file no pack owns.
  *
- * The walk is its own rather than `plugin.files`: every one of these paths runs
+ * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
  * segment, so the whole tier is invisible there.
  */
@@ -325,6 +354,22 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         at(
           `mise task file does not start with one of `
             + `${[...PACK_TASK_SHEBANGS].join(", ")}: ${path(absolute)}`,
+        );
+      }
+    }
+
+    for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
+      if (PACK_HOOK_METADATA.test(absolute)) {
+        continue;
+      }
+      if ((statSync(absolute).mode & 0o111) === 0) {
+        at(`hook script is not executable: ${path(absolute)}`);
+      }
+      const shebang = readText(absolute).split("\n", 1)[0] ?? "";
+      if (!PACK_HOOK_SHEBANGS.has(shebang)) {
+        at(
+          `hook script does not start with one of `
+            + `${[...PACK_HOOK_SHEBANGS].join(", ")}: ${path(absolute)}`,
         );
       }
     }

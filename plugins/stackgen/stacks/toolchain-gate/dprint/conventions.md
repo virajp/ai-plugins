@@ -15,7 +15,8 @@ lands on whoever commits next rather than on whoever upgraded.
 **`excludes` covers every generated tree.** A generated file that gets
 reformatted produces a diff nobody authored and a check nobody can make pass
 without regenerating. Templated markdown is the exclusion that surprises people:
-formatting a template rewrites the placeholders it exists to carry.
+formatting a template rewrites the placeholders it exists to carry. The agent
+tooling tree is the other one, and it gets its own section below.
 
 **`exec` is the escape hatch** for languages dprint has no plugin for — it
 shells out to that language's own formatter, keeping one entry point even where
@@ -37,6 +38,41 @@ land together or the TOML half formats with taplo's defaults.
 
 The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
 `package.json` and CI workflows remain outside it.
+
+## `**/.claude/` is excluded — do not delete that line
+
+The repo's agent tooling tree is **machine-owned end to end**, and the formatter
+owns none of it. `skills/`, `agents/`, `hooks/` and `rules/` are materialized
+there by stackgen; `.claude/stackgen/` carries the lockfile, the template
+payloads and the citation files it regenerates; `.claude/settings.json` is
+rewritten by Claude Code itself. Every one of those files has an author that
+rewrites it, and none of those authors formats.
+
+Left in scope, this is not a cosmetic complaint — it is the first thing a fresh
+repo hits. A pack's `skills/` mirror `.claude/skills/`, so the shipped formatter
+reflows the shipped doctrine, and `pre-commit run --all-files` fails on the very
+first run over files the repo's author never wrote. Worse, the reflow is not
+always harmless: in the pre-commit component's own skill it dedents the fenced
+`# >>> pre-commit.d/<name>.yaml` example from `  - repo: local` to
+`- repo: local`, which is the wrong indentation for a merged fragment. The
+formatter turns a correct example into one that would break the file it teaches.
+The toolkit that ships these packs excludes `plugins/**/*.md` from its own
+formatter for exactly this reason.
+
+**The whole tree, not just its markdown.** Ownership is not visible in the path:
+a hand-written `.claude/skills/<name>/SKILL.md` and a materialized one are the
+same filename in the same directory, so no glob can format one and spare the
+other. And the non-markdown files there — `lock.yaml`, the citation YAML,
+`settings.json` — are regenerated on the same terms. The price is that a repo's
+own hand-written file under `.claude/` goes unformatted; that is the cheaper
+side of the trade, because the alternative is a gate that fails on content the
+repo did not author.
+
+**The reason lives here rather than in the config**, and not by preference:
+`.config/dprint.json` is strict JSON, so the hygiene gate's `check-json` hook
+rejects a `//` comment in it, and dprint rejects an unknown property with a
+config diagnostic. Both routes are closed, so the note is in this file — read it
+before "tidying" the exclusion away.
 
 ## `--config` on every invocation, and the editor cost of that
 

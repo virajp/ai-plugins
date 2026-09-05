@@ -17,9 +17,9 @@ paths:
 
 # gitleaks — the secret scanner
 
-gitleaks is the gate that keeps credentials out of the repo. It runs inside
-`code:sec` alongside `grype`, which means it runs on every commit through
-pre-commit and again in CI.
+gitleaks is the gate that keeps credentials out of the repo, in two places. The
+pre-commit hook scans the **staged change** on every commit; `code:sec` scans
+the whole **working tree** alongside `grype`, by hand and in CI.
 
 The config lives at **`.config/gitleaks.toml`** and ships with the repo, so
 `code:sec` and the pre-commit hook both pass `--config`. The file exists to
@@ -39,7 +39,7 @@ knows, and both gates would keep reporting green. Precedence, highest first:
 `--config`, then `GITLEAKS_CONFIG`, then `<target>/.gitleaks.toml`.
 
 ```sh
-mise run code:sec                    # grype + gitleaks, the commit gate
+mise run code:sec                    # grype + gitleaks over the working tree
 gitleaks dir . --config .config/gitleaks.toml --redact    # working tree
 gitleaks git . --log-opts="--all"    # the whole history, once
 ```
@@ -53,6 +53,13 @@ plain id builds gitleaks from source into pre-commit's own environment; the
 `-system` variant runs the binary the toolchain manager already pins, so the
 commit gate and `code:sec` are the same build. The cost is that it needs
 gitleaks on `PATH` — which it announces as an error rather than as a pass.
+
+Its entry is `gitleaks git --pre-commit --redact --staged --verbose`, which
+takes at most one positional argument, so the hook declares
+**`pass_filenames: false`**. Upstream sets that on the `gitleaks` id and omits
+it here, and pre-commit's default is to append the staged filenames: without
+the line, every commit touching two or more files fails with
+`accepts at most 1 arg(s)` and nothing is scanned.
 
 ## A hit is a credential to rotate
 

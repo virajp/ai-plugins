@@ -175,7 +175,13 @@ repos:
           manager already pins, instead of building one from source into
           pre-commit's own environment. It therefore needs gitleaks on PATH,
           and errors loudly rather than passing quietly when it is missing.
+          `pass_filenames` is restated because upstream sets it on the `gitleaks`
+          id and not on this one — the entry is `gitleaks git --staged`, which
+          takes at most one positional argument, so with filenames appended any
+          commit touching two files dies on an arg-count error rather than
+          scanning.
         args: [ --config, .config/gitleaks.toml ]
+        pass_filenames: false
 
   - repo: https://github.com/qoomon/git-conventional-commits
     rev: v2.9.0

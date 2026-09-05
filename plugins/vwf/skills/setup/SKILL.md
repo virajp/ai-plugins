@@ -52,14 +52,32 @@ Read the one the step needs, not all of them.
   whether to commit, stash, or proceed before creating it.
 - **Never move source.** setup writes and moves documentation only. Layout
   drift is a written recommendation — see Recommendations, never moves.
-- **Don't duplicate tools.** The mise config and the repo gates are
-  materialized by the stack adapter, fetched by the fixed slugs `mise` and
-  `repo-gates` — setup never writes either by hand. **Never write a README by
-  hand** either — `/vwf:readme` owns it, and setup only names it in the chain.
+- **Don't write repo tooling.** The repo shape — the toolchain manager's config
+  and task library, the repo gates, the hygiene files — is `/vwf:init`'s. Setup
+  checks for it and offers init; it never materializes a bundle itself. **Never
+  write a README by hand** either — `/vwf:readme` owns it, and setup only names
+  it in the chain.
 - **Idempotent.** A migrate run reconciles only what drifted; a conforming tree
   yields an empty plan, and Step 0 routes it to `current` before that.
 
 ## Step 0 — Resolve the mode
+
+**The shape check comes first, before the mode fork.** A repo is **shaped** when
+the stack adapter's lockfile records all three unconditional repo slugs —
+`mise`, `repo-gates` and `repo-hygiene`
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly, never
+constructed: a slug assembled from configuration is one that can silently
+resolve to nothing. All three present — say so in one line and read on.
+
+**Any of the three missing, the repo is unshaped: offer `/vwf:init`.** Say what
+is absent and that init is what lays it down, and on a yes invoke `/vwf:init`
+and continue once it returns — init is model-invocable for exactly this seam.
+A **decline** is a recorded deferral on the terms in
+[the onboard pipeline](references/onboard-pipeline.md), named with its unlock
+(`/vwf:init`, run whenever), and the run continues to the mode table. setup
+never materializes a bundle itself and never halts on an unshaped repo: the
+repo shape and the vwf format are two different things, and a repo can be
+onboarded into one without the other.
 
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the

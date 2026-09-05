@@ -192,6 +192,44 @@ ecosystem uses for prose would drag a package manager into a docs-only repo.
 
 ## `setup/*` — bootstrap & upgrade
 
+### The trust step, which comes before all of it
+
+mise will not read a config file it has not been told to trust, and a fresh
+checkout has told it nothing: the trust record is per machine, kept in mise's
+own state outside the repo, and never committed. So the first command run in a
+clone — or in a repo `/vwf:init` has just laid this payload into — is
+
+```bash
+mise trust --all
+```
+
+from the repo root. **`--all` is the form that matters.** Bare `mise trust`
+trusts a single file, and this pack ships up to five config files plus whatever
+`conf.d/*.toml` a capability provider added, so a bare run leaves the rest
+untrusted and the next command fails on a different one.
+
+What untrusted costs depends on mise's `paranoid` setting, and neither column
+is a working repo:
+
+| Setting                      | `mise run <task>`                 | `mise tasks`          |
+| ---------------------------- | --------------------------------- | --------------------- |
+| `paranoid = false` (default) | auto-trusts the config and runs   | **fails** — untrusted |
+| `paranoid = true`            | **fails** — untrusted             | **fails** — untrusted |
+
+Discovery is broken either way, which is what makes this the **first** failure
+a newly initialized repo hits: `mise tasks` is how a human and an agent both
+find out the task library exists, and `setup:mise` asks it through `have_task`
+before deciding whether to run `setup:lint`.
+
+Two ways to stop needing it per clone, both the machine's call and neither this
+pack's to make: `trusted_config_paths` in the **global**
+`~/.config/mise/config.toml` blanket-trusts a directory tree — mise ignores the
+key in any non-global config, deliberately — and a pipeline can set the same.
+**A CI runner checks out fresh and so trusts nothing**, so a workflow that
+calls `mise run code:all` needs one of the two, or the CI parity rule buys
+nothing. Trust is shared into linked worktrees from the main checkout, so
+`setup:worktree` inherits it rather than asking again.
+
 `setup:all` is **the entrypoint** a human runs — on clone, and to re-sync a
 machine afterwards. It declares `#MISE depends=["init"]`, and it names no tool
 at all, only the tasks it calls in order:

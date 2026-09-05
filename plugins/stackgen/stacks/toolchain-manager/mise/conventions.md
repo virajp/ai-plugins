@@ -16,6 +16,13 @@ pipeline and the deployed runtime; `mise.test.toml` as a delta on dev under
 shipped. mise loads the base first and deep-merges the active variants on top,
 so a variant holds **deltas only**.
 
+**A fresh checkout trusts nothing.** mise refuses to read a config file it has
+not been told to trust, and the trust record is per machine, kept outside the
+repo and never committed. So `mise trust --all`, run from the repo root, is the
+first command a clone runs — before `setup:all`, and before `mise tasks` will
+list the library at all. `--all` and not bare `mise trust`, which trusts one
+file and leaves the rest of the split for the next command to fail on.
+
 **Nothing is duplicated across layers.** A tool pinned twice is a version that
 can disagree with itself, and the disagreement surfaces on someone else's
 machine. Each tool, setting and env value goes in the lowest layer that needs

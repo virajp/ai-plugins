@@ -57,18 +57,21 @@ repos:
         pass_filenames: false
         files: ^plugins/
         stages: [ pre-commit ]
-      # The shell half of the same idea. A task file a pack ships under
-      # `config/` is never run here — it is copied into someone else's repo and
-      # run by mise there — so nothing else between authoring and
-      # materialization ever parses it. The linter has no shell parser, and the
-      # `.sh` exclusion above keeps hook scripts out of its argument list
-      # entirely.
+      # The shell half of the same idea. Neither the task files a pack ships
+      # under `config/` nor the hook scripts it ships under `hooks/` are ever
+      # run here — both are copied into someone else's repo and run there — so
+      # nothing else between authoring and materialization ever parses them. The
+      # linter has no shell parser, and the `.sh` exclusion above keeps hook
+      # scripts out of its argument list entirely.
+      #
+      # Both tiers are in the trigger: scoping it to `config/` alone let a
+      # malformed hook through, which is the defect that widened this gate.
       - id: plugins-shellcheck
-        name: shellcheck and shfmt over every pack task file
+        name: shellcheck and shfmt over every shell file a pack ships
         entry: mise x -- mise run plugins:shellcheck
         language: system
         pass_filenames: false
-        files: ^plugins/.*/config/
+        files: ^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/
         stages: [ pre-commit ]
       # Not a plugins check: the workflows are this repo's own, and a typo in
       # one is only ever discovered by pushing it.

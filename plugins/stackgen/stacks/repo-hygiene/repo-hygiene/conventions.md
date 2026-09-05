@@ -49,6 +49,39 @@ hold the file together:
 - **A negation follows the pattern it re-includes.** `!.env.example` after
   `.env.*`, never before, or git never sees it.
 
+### Which template a pinned pack takes
+
+The pack the repo pins names the template — the initializer never infers one
+from a file it happened to find. Every name below resolves at
+`https://raw.githubusercontent.com/github/gitignore/main/<Name>.gitignore`,
+and each was fetched to confirm it does.
+
+| Pinned pack             | Template appended   |
+| ----------------------- | ------------------- |
+| `package-manager/pnpm`  | `Node.gitignore`    |
+| `language/typescript`   | `Node.gitignore`    |
+| `package-manager/uv`    | `Python.gitignore`  |
+| `package-manager/pub`   | `Dart.gitignore`    |
+| `app-framework/flutter` | `Flutter.gitignore` |
+
+A TypeScript repo on pnpm pins two rows naming the same template and gets
+**one** `# ==== Node ====` section — the append rule is per section, not per
+pack. A Flutter repo pins `pub` and `flutter` and gets both: the Dart template
+covers the package tooling, the Flutter one the app build output above it.
+
+The rest of this tree has **no row and needs none**. `language/bash` and
+`language/markdown` have no template upstream at all; `framework/effect` is
+Node, already appended by the pack that pins it; and `toolchain-manager/mise`,
+the toolchain gates, `datastore/postgres`, `ci-system/github-actions`, the
+cloud packs, the deploy targets and the design tools write nothing an ignore
+file has to learn — the base sections already cover them. Absence here is an
+answer, not an omission.
+
+**A pinned pack with no row is proposed, never guessed.** The initializer
+names the template it would fetch and waits for a yes; a wrong name is a 404,
+and a 404 is a section that silently never lands. Once confirmed, the row
+belongs in this table.
+
 **The seam with secret scanning.** Ignoring a file and allowlisting it are two
 different acts, and this file only does the first. A secret that is ignored is
 a secret that was never scanned — so an ignore entry is never the answer to a
