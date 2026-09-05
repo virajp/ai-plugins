@@ -8,12 +8,23 @@ requires: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-APPROVED 2026-09-05 by the user, after the self-review. RUNNING since
-2026-09-05, worktree
-`/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-05-site-seo-and-markdown`,
-branch `2026-09-05-site-seo-and-markdown`.
+APPROVED 2026-09-05 by the user, after the self-review. Executed and COMPLETE
+2026-09-05, all six units green, on branch `2026-09-05-site-seo-and-markdown`
+from the worktree
+`/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-05-site-seo-and-markdown`.
+
+Commits, in order:
+
+| Commit     | Unit | Is                                                                                               |
+| ---------- | ---- | ------------------------------------------------------------------------------------------------ |
+| `59e32a29` | U2   | `feat(site): ship favicon set, web manifest and security headers`                                |
+| `35e5fed5` | U1   | `feat(site): mirror every docs page as markdown, with llms.txt and llms-full.txt`                |
+| `264bf206` | U3   | `feat(site): complete the card tags, add JSON-LD and the markdown alternate, trim fonts`         |
+| `7f6433ac` | U4   | `ops(site): check the markdown mirror, llms files and alternate links`                           |
+| `685d5cea` | U5   | `docs(site): describe the markdown mirror, the favicon set, the headers file and the icons task` |
+| `3230aa29` | U6   | `ops: bump site to 1.1.0`                                                                        |
 
 ## Consent
 
